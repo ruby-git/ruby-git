@@ -1,0 +1,176 @@
+Git Library for Ruby
+-----------------------------
+
+Git
+Git::Repository
+Git::Index 
+Git::WorkingDirectory << Dir
+
+Git::Object 
+
+Git::Commit << Git::Object
+Git::Blob
+Git::Tree
+Git::Tag
+
+Git::Author
+Git::Ref 
+Git::File (in working dir)
+Git::Log
+Git::Sha
+Git::Diff
+Git::Branch 
+Git::Remote << Git::Repository
+
+require 'git'
+
+
+
+# needs read permission only
+
+g = Git.new (working_dir = '.')
+	(git_dir, index_file)
+
+g.index
+g.index.readable?
+g.index.writable?
+g.repo
+g.dir
+
+g.log   # returns array of Git::Commit objects
+g.log.stat
+g.log.stat.summary
+g.log.since('2 weeks ago')
+g.log.between('v2.5', 'v2.6')
+g.log('Makefile').since('v2.5')
+
+g.status
+
+g.diff
+g.diff_cached
+g.diff(commit1, commit2)
+g.diff("commit1..commit2")
+
+g.file('flim/ChangeLog').tags.each {|tag,rev| p [tag,rev.to_s]}
+g.file('flim/ChangeLog').logs.each { |log| log.sha }
+
+g.branches # returns Git::Branch objects
+g.branches.local
+g.branches.remote
+
+g.show(Git::Sha)
+g.show('HEAD^')
+g.show('HEAD^', Git::File)
+g.show(Git::Object)
+
+g.rev_parse('HEAD^')
+g.rev_parse('v2.5:Makefile')  # returns Git::Object
+
+g.grep('hello')
+g.grep('hello', Git::Tag)
+
+g.ls_files
+g.ls_files(:stage => true)
+
+g.diff_tree(Git::Tree, Git::Tree)
+
+g.tag # returns array of Git::Tag objects
+
+c = Git::Commit.new("HEAD^^")
+c = Git::Commit.new("394839")
+
+
+# needs write permission
+
+g = Git.clone(URI, 'name', working_dir = GIT_DIR, {options})
+	(username, password, ssl_key, git_dir, index_file)
+
+g = Git.init
+  Git.init('project')
+  Git.init('/home/schacon/proj', 
+		{ :git_dir => '/opt/git/proj.git', 
+		  :index_file => '/tmp/index'} )
+
+
+
+g.config('user.name', 'Scott Chacon')
+g.config('user.email', 'email@email.com')
+g.config('user.name')  # returns 'Scott Chacon'
+g.config # returns whole config hash
+
+g.add('.')
+g.add([file1, file2])
+
+g.remove('file.txt').and_file
+
+g.commit('message')
+g.commit_a('message')
+
+g.reset # defaults to HEAD
+g.reset_hard(Git::Commit)
+
+g.branch('new_branch')
+g.branch('new_branch').delete
+
+g.checkout('new_branch')
+g.checkout('new_branch', :create_branch => true)
+g.checkout_b('new_branch')
+
+g.merge('new_branch')
+g.merge(Git::Branch)
+g.merge(Git::Branch, Git::Branch)
+
+g.fetch
+g.fetch(Git::Repo)
+
+g.pull
+g.pull(Git::Repo, Git::Branch) # fetch and a merge
+
+g.tag('tag_name') # returns Git::Tag
+
+g.pack
+
+
+
+Git::Object
+  - sha
+  - type
+  - cat_file
+  - raw
+
+Git::Commit
+  - tree
+  - parent 
+  - author      # git author
+  - author_date
+  - committer   # git author
+  - committer_date / date
+  - message
+
+Git::Tree
+  - children
+  - blobs/files
+  - subtrees/subdirs
+
+Git::Blob << File
+  - size
+  - permissions
+
+Git::Tag
+
+Git::Hash
+  - abbrev/short
+
+Git::Repository
+  - heads
+  - refs
+  - branches
+
+Git::WorkingDirectory 
+  - foreach
+  - glob # returns Git::Files
+
+Git::File << File
+  - log
+  - tags
+
