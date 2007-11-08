@@ -51,6 +51,3 @@ module Git
   end
   
 end
-
-g = Git.open('/Users/schacon/Sites/glue')
-g = Git.repo('/Users/schacon/Sites/glue/.git')

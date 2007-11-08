@@ -37,6 +37,8 @@ g.index.writable?
 g.repo
 g.dir
 
+**********
+
 g.log   # returns array of Git::Commit objects
 g.log.stat
 g.log.stat.summary

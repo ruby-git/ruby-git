@@ -25,7 +25,8 @@ task :default => "pkg/#{spec.name}-#{spec.version}.gem" do
     puts "generated latest version"
 end
 
-task :test do
+desc "Run Unit Tests"
+task :test do |t|
     require File.dirname(__FILE__) + '/tests/all_tests.rb'
 end
 
