@@ -28,7 +28,7 @@ require 'git'
 
 # needs read permission only
 
-g = Git.new (working_dir = '.')
+g = Git.open (working_dir = '.')
 	(git_dir, index_file)
 
 g.index
