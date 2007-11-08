@@ -6,16 +6,19 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 require 'git/base'
 require 'git/path'
-#require 'git/lib'
+require 'git/lib'
 
 require 'git/repository'
 require 'git/index'
 require 'git/working_directory'
 
-=begin
+require 'git/log'
 require 'git/object'
 
-require 'git/object/commit'
+require 'git/commit'
+
+=begin
+
 require 'git/object/blob'
 require 'git/object/tree'
 require 'git/object/tag'
@@ -24,7 +27,6 @@ require 'git/author'
 require 'git/ref'
 require 'git/file'
 
-require 'git/log'
 require 'git/sha'
 require 'git/diff'
 

@@ -49,6 +49,15 @@ module Git
       @index
     end
     
+    
+    def log(count = 30)
+      Git::Log.new(self, count)
+    end
+    
+    def lib
+      Git::Lib.new(self)
+    end
+    
     private
     
       def is_git_dir(dir)
