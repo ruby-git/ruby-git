@@ -2,7 +2,7 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class TestInit < Test::Unit::TestCase
+class TestLog < Test::Unit::TestCase
   def setup
     set_file_paths
     @git = Git.open(@wdir)
@@ -10,7 +10,7 @@ class TestInit < Test::Unit::TestCase
 
   def test_get_log_entries
     log = @git.log
-    assert(log.first.is_a?(Git::Commit))
+    assert(log.first.is_a?(Git::Object::Commit))
   end
   
   def test_get_log_entries    
@@ -36,7 +36,7 @@ class TestInit < Test::Unit::TestCase
     assert_equal(30, l.size)
     
     l = @git.log.between('v2.5').file('example.txt')
-    assert_equal(1, l.size)
+    assert_equal(2, l.size)
   
     l = @git.log.between('v2.5', 'test').file('example.txt')
     assert_equal(1, l.size)

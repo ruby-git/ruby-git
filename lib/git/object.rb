@@ -25,6 +25,10 @@ module Git
         raise NotImplementedError
       end
       
+      def to_s
+        "#{@type.ljust(6)} #{@sha}"
+      end
+      
     end
   
     

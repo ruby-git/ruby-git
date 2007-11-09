@@ -2,7 +2,7 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class TestInit < Test::Unit::TestCase
+class TestObject < Test::Unit::TestCase
   def setup
     set_file_paths
     @git = Git.open(@wdir)
@@ -25,6 +25,17 @@ class TestInit < Test::Unit::TestCase
     o = @git.object('1cc8667014381')
     assert_equal('tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', o.contents_array[0])
     assert_equal('parent 546bec6f8872efa41d5d97a369f669165ecda0de', o.contents_array[1])
+  end
+  
+  def test_object_to_s
+    o = @git.object('1cc8667014381')
+    assert_equal('commit 1cc8667014381e2788a94777532a788307f38d26', o.to_s)
+    
+    o = @git.object('1cc8667014381^{tree}')
+    assert_equal('tree   94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', o.to_s)
+    
+    o = @git.object('v2.5:example.txt')
+    assert_equal('blob   ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', o.to_s)
   end
   
   def test_tree

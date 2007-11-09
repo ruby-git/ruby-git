@@ -18,7 +18,7 @@ module Git
       arr_opts << "#{opts[:between][0]}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:file] if opts[:file].is_a? String
       
-      command('log', arr_opts).split("\n").map { |l| Git::Commit.new(l.split.first) }
+      command('log', arr_opts).split("\n").map { |l| Git::Object::Commit.new(@base, l.split.first) }
     end
     
     def revparse(string)

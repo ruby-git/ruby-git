@@ -5,9 +5,18 @@ require File.dirname(__FILE__) + '/../lib/git'
 class Test::Unit::TestCase
   
   def set_file_paths
-    @wdir = File.join(File.dirname(__FILE__), 'files', 'working')
-    @wbare = File.join(File.dirname(__FILE__), 'files', 'working.git')
-    @index = File.join(File.dirname(__FILE__), 'files', 'index')
+    cwd = `pwd`.chomp
+    if File.directory?(File.join(cwd, 'files'))
+      @test_dir = File.join(cwd, 'files')
+    elsif File.directory?(File.join(cwd, '..', 'files'))
+      @test_dir = File.join(cwd, '..', 'files')
+    elsif File.directory?(File.join(cwd, 'tests', 'files'))
+      @test_dir = File.join(cwd, 'tests', 'files')
+    end
+    
+    @wdir = File.join(@test_dir, 'working')
+    @wbare = File.join(@test_dir, 'working.git')
+    @index = File.join(@test_dir, 'index')
   end
   
   def in_temp_dir
