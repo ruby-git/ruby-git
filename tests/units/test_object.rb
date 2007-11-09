@@ -76,4 +76,21 @@ class TestObject < Test::Unit::TestCase
     assert_equal('1f09f2edb9c0d9275d15960771b363ca6940fbe3', sha)
   end
   
+  def test_grep
+    g = @git.tree('a3db7143944dcfa0').grep('search') # there
+    assert_equal(3, g.to_a.flatten.size)
+    assert_equal(1, g.size)
+
+    assert_equal({}, @git.tree('a3db7143944dcfa0').grep('34a566d193'))  # not there
+
+    g = @git.commit('gitsearch1').grep('search') # there
+    assert_equal(8, g.to_a.flatten.size)
+    assert_equal(2, g.size)
+    
+    g = @git.commit('gitsearch1').grep('search', 'scott/new*') # there
+    assert_equal(3, g.to_a.flatten.size)
+    assert_equal(1, g.size)
+  end
+  
+  
 end

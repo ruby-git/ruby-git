@@ -1,131 +1,14 @@
 Git Library for Ruby
 -----------------------------
 
-Git
-Git::Repository
-Git::Index 
-Git::WorkingDirectory << Dir
+Library for using Git in Ruby.
 
-Git::Object 
+Right now I'm forking calls to the 'git' binary, 
+but eventually I'll replace that with either C bindings
+to libgit or libgit-thin, or I'll write pure ruby
+handlers for at least some of the Git stuff.
 
-Git::Commit << Git::Object
-Git::Blob
-Git::Tree
-Git::Tag
-
-Git::Author
-Git::Ref 
-Git::File (in working dir)
-Git::Log
-Git::Sha
-Git::Diff
-Git::Branch 
-Git::Remote << Git::Repository
-
-require 'git'
-
-
-# needs read permission only
-
-g = Git.open (working_dir = '.')
-	(git_dir, index_file)
-
-g.index
-g.index.readable?
-g.index.writable?
-g.repo
-g.dir
-
-g.log   # returns array of Git::Commit objects
-g.log.since('2 weeks ago')
-g.log.between('v2.5', 'v2.6')
-g.log.since('v2.5').file('Makefile')
-g.log.each {|l| puts l.sha }
-
-g.object('HEAD^').to_s  # git show / git rev-parse
-g.object('HEAD^').contents
-g.object('v2.5:Makefile').size
-g.object('v2.5:Makefile').sha
-
-g.revparse('v2.5:Makefile')
-
-**********
-
-g.file('flim/ChangeLog').tags.each {|tag,rev| p [tag,rev.to_s]}
-g.file('flim/ChangeLog').logs.each { |log| log.sha }
-
-g.branches # returns Git::Branch objects
-g.branches.local
-g.branches.remote
-
-g.status
-
-g.grep('hello')
-g.grep('hello', Git::Tag)
-
-
-g.ls_files
-g.ls_files(:stage => true)
-
-g.diff
-g.diff_cached
-g.diff(commit1, commit2)
-g.diff("commit1..commit2")
-
-g.diff_tree(Git::Tree, Git::Tree)
-
-g.tag # returns array of Git::Tag objects
-
-
-# needs write permission
-
-g = Git.clone(URI, 'name', working_dir = GIT_DIR, {options})
-	(username, password, ssl_key, git_dir, index_file)
-
-g = Git.init
-  Git.init('project')
-  Git.init('/home/schacon/proj', 
-		{ :git_dir => '/opt/git/proj.git', 
-		  :index_file => '/tmp/index'} )
-
-
-
-g.config('user.name', 'Scott Chacon')
-g.config('user.email', 'email@email.com')
-g.config('user.name')  # returns 'Scott Chacon'
-g.config # returns whole config hash
-
-g.add('.')
-g.add([file1, file2])
-
-g.remove('file.txt').and_file
-
-g.commit('message')
-g.commit_a('message')
-
-g.reset # defaults to HEAD
-g.reset_hard(Git::Commit)
-
-g.branch('new_branch')
-g.branch('new_branch').delete
-
-g.checkout('new_branch')
-g.checkout('new_branch', :create_branch => true)
-g.checkout_b('new_branch')
-
-g.merge('new_branch')
-g.merge(Git::Branch)
-g.merge(Git::Branch, Git::Branch)
-
-g.fetch
-g.fetch(Git::Repo)
-
-g.pull
-g.pull(Git::Repo, Git::Branch) # fetch and a merge
-
-g.tag('tag_name') # returns Git::Tag
-
-g.pack
+See EXAMPLES file for, well, examples.
 
 
 

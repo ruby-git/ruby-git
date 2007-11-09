@@ -8,8 +8,36 @@ module Git
     @branches = nil
     
     def initialize(base)
+      @branches = {}
+      
       @base = base
-      @branches = @base.lib.branches_all
+      @base.lib.branches_all.each do |b|
+        @branches[b.full] = b
+      end
+    end
+
+    def local
+      self.select { |b| !b.remote }
+    end
+    
+    def remote
+      self.select { |b| b.remote }
+    end
+    
+    # array like methods
+
+    def size
+      @branches.size
+    end    
+    
+    def each
+      @branches.each do |k, b|
+        yield b
+      end
+    end
+    
+    def [](symbol)
+      @branches[symbol.to_s]
     end
     
   end

@@ -29,6 +29,16 @@ module Git
         "#{@type.ljust(6)} #{@sha}"
       end
       
+      def grep(string, path_limiter = nil, opts = {})
+        default = {:object => @sha, :path_limiter => path_limiter}
+        grep_options = default.merge(opts)
+        @base.lib.grep(string, grep_options)
+      end
+      
+      def log(count = 30)
+        Git::Log.new(self, count).object(@sha)
+      end
+      
     end
   
     

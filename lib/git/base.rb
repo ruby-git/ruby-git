@@ -54,6 +54,10 @@ module Git
     def object(objectish)
       Git::Object.new(self, objectish)
     end
+    alias_method :tree, :object
+    alias_method :commit, :object
+    alias_method :blob, :object
+    
     
     def log(count = 30)
       Git::Log.new(self, count)
@@ -65,6 +69,10 @@ module Git
     
     def lib
       Git::Lib.new(self)
+    end
+    
+    def grep(string)
+      self.object('HEAD').grep(string)
     end
     
     # convenience methods

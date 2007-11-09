@@ -32,19 +32,19 @@ class TestLog < Test::Unit::TestCase
   end
   
   def test_get_log_since_file
-    l = @git.log.file('example.txt')
+    l = @git.log.object('example.txt')
     assert_equal(30, l.size)
     
-    l = @git.log.between('v2.5').file('example.txt')
+    l = @git.log.between('v2.5').object('example.txt')
     assert_equal(2, l.size)
   
-    l = @git.log.between('v2.5', 'test').file('example.txt')
+    l = @git.log.between('v2.5', 'test').object('example.txt')
     assert_equal(1, l.size)
   end
   
   def test_log_file_noexist
     assert_raise Git::GitExecuteError do
-      @git.log.file('no-exist.txt').size
+      @git.log.object('no-exist.txt').size
     end
   end
   

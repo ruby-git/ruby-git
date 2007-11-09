@@ -7,7 +7,8 @@ module Git
     @base = nil
     @commits = nil
     
-    @file = nil
+    @object = nil
+    @path = nil
     @count = nil
     @since = nil
     @between = nil
@@ -20,9 +21,15 @@ module Git
       @count = count
     end
 
-    def file(file)
+    def object(objectish)
       dirty_log
-      @file = file
+      @object = objectish
+      return self
+    end
+    
+    def path(path)
+      dirty_log
+      @path = path
       return self
     end
     
@@ -77,7 +84,9 @@ module Git
       
       # actually run the 'git log' command
       def run_log      
-        @commits = @base.lib.log_commits(:count => @count, :file => @file, :since => @since, :between => @between)
+        log = @base.lib.log_commits(:count => @count, :object => @object, 
+                                    :path_limiter => @path, :since => @since, :between => @between)
+        @commits = log.map { |l| Git::Object::Commit.new(@base, l) }
       end
       
   end

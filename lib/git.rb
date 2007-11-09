@@ -15,19 +15,19 @@ require 'git/working_directory'
 require 'git/log'
 require 'git/object'
 
+require 'git/branches'
 require 'git/branch'
+require 'git/remote'
 
 =begin
-
-
 require 'git/author'
-require 'git/ref'
 require 'git/file'
 
-require 'git/sha'
 require 'git/diff'
-
 require 'git/remote'
+
+require 'git/sha'
+require 'git/ref'
 =end
 
 module Git

@@ -1,0 +1,109 @@
+require 'git'
+
+# needs read permission only
+
+g = Git.open (working_dir = '.')
+	(git_dir, index_file)
+
+g.index
+g.index.readable?
+g.index.writable?
+g.repo
+g.dir
+
+g.log   # returns array of Git::Commit objects
+g.log.since('2 weeks ago')
+g.log.between('v2.5', 'v2.6')
+g.log.each {|l| puts l.sha }
+g.blob('v2.5:Makefile').log.since('2 weeks ago')
+
+g.object('HEAD^').to_s  # git show / git rev-parse
+g.object('HEAD^').contents
+g.object('v2.5:Makefile').size
+g.object('v2.5:Makefile').sha
+
+g.tree(treeish)
+g.blob(treeish)
+g.commit(treeish)
+
+g.revparse('v2.5:Makefile')
+
+g.branches # returns Git::Branch objects
+g.branches.local
+g.branches.remote
+g.branches[:master].commit
+g.branches['origin/master'].commit
+
+g.grep('hello')  # implies HEAD
+g.blob('v2.5:Makefile').grep('hello')
+g.tag('v2.5').grep('hello', 'docs/')
+
+
+***** IMPLEMENTED *****
+
+g.diff
+g.diff.shortstat
+g.diff.summary
+g.diff(commit1, commit2)
+g.diff("commit1..commit2")
+
+g.diff_tree(Git::Tree, Git::Tree)
+
+
+g.status
+
+g.ls_files
+g.ls_files(:stage => true)
+
+g.tag # returns array of Git::Tag objects
+
+
+# needs write permission
+
+g = Git.clone(URI, 'name', working_dir = GIT_DIR, {options})
+	(username, password, ssl_key, git_dir, index_file)
+
+g = Git.init
+  Git.init('project')
+  Git.init('/home/schacon/proj', 
+		{ :git_dir => '/opt/git/proj.git', 
+		  :index_file => '/tmp/index'} )
+
+
+
+g.config('user.name', 'Scott Chacon')
+g.config('user.email', 'email@email.com')
+g.config('user.name')  # returns 'Scott Chacon'
+g.config # returns whole config hash
+
+g.add('.')
+g.add([file1, file2])
+
+g.remove('file.txt').and_file
+
+g.commit('message')
+g.commit_a('message')
+
+g.reset # defaults to HEAD
+g.reset_hard(Git::Commit)
+
+g.branch('new_branch')
+g.branch('new_branch').delete
+
+g.checkout('new_branch')
+g.checkout('new_branch', :create_branch => true)
+g.checkout_b('new_branch')
+
+g.merge('new_branch')
+g.merge(Git::Branch)
+g.merge(Git::Branch, Git::Branch)
+
+g.fetch
+g.fetch(Git::Repo)
+
+g.pull
+g.pull(Git::Repo, Git::Branch) # fetch and a merge
+
+g.tag('tag_name') # returns Git::Tag
+
+g.pack
