@@ -18,7 +18,7 @@ module Git
       arr_opts << "#{opts[:between][0]}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:file] if opts[:file].is_a? String
       
-      command('log', arr_opts).split("\n").map { |l| Git::Object::Commit.new(@base, l.split.first) }
+      command_lines('log', arr_opts).map { |l| Git::Object::Commit.new(@base, l.split.first) }
     end
     
     def revparse(string)
@@ -30,14 +30,22 @@ module Git
     end
     
     def object_size(sha)
-      command('cat-file', ['-s', sha])
+      command('cat-file', ['-s', sha]).to_i
     end
     
     def object_contents(sha)
       command('cat-file', ['-p', sha])
     end
+
+    def branches_all
+      command_lines('branch', '-a').map { |l| Git::Branch.new(@base, l) }
+    end
     
     private
+    
+    def command_lines(cmd, opts)
+      command(cmd, opts).split("\n")
+    end
     
     def command(cmd, opts)
       ENV['GIT_DIR'] = @base.repo.path

@@ -59,10 +59,20 @@ module Git
       Git::Log.new(self, count)
     end
     
+    def branches
+      Git::Branches.new(self)
+    end
+    
     def lib
       Git::Lib.new(self)
     end
-
+    
+    # convenience methods
+    
+    def revparse(objectish)
+      self.lib.revparse(objectish)
+    end
+    
   end
   
 end

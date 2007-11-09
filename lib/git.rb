@@ -15,6 +15,8 @@ require 'git/working_directory'
 require 'git/log'
 require 'git/object'
 
+require 'git/branch'
+
 =begin
 
 
@@ -25,7 +27,6 @@ require 'git/file'
 require 'git/sha'
 require 'git/diff'
 
-require 'git/branch'
 require 'git/remote'
 =end
 

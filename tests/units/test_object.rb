@@ -6,6 +6,10 @@ class TestObject < Test::Unit::TestCase
   def setup
     set_file_paths
     @git = Git.open(@wdir)
+    
+    @commit = @git.object('1cc8667014381')
+    @tree = @git.object('1cc8667014381^{tree}')
+    @blob = @git.object('v2.5:example.txt')
   end
   
   def test_commit
@@ -28,14 +32,15 @@ class TestObject < Test::Unit::TestCase
   end
   
   def test_object_to_s
-    o = @git.object('1cc8667014381')
-    assert_equal('commit 1cc8667014381e2788a94777532a788307f38d26', o.to_s)
-    
-    o = @git.object('1cc8667014381^{tree}')
-    assert_equal('tree   94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', o.to_s)
-    
-    o = @git.object('v2.5:example.txt')
-    assert_equal('blob   ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', o.to_s)
+    assert_equal('commit 1cc8667014381e2788a94777532a788307f38d26', @commit.to_s)
+    assert_equal('tree   94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @tree.to_s)
+    assert_equal('blob   ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @blob.to_s)
+  end
+  
+  def test_object_size
+    assert_equal(265, @commit.size)
+    assert_equal(72, @tree.size)
+    assert_equal(128, @blob.size)
   end
   
   def test_tree
@@ -64,6 +69,11 @@ class TestObject < Test::Unit::TestCase
   def test_blob_contents
     o = @git.object('v2.6:example.txt')
     assert_equal('replace with new text', o.contents)
+  end
+  
+  def test_revparse
+    sha = @git.revparse('v2.6:example.txt')
+    assert_equal('1f09f2edb9c0d9275d15960771b363ca6940fbe3', sha)
   end
   
 end
