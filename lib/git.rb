@@ -15,13 +15,8 @@ require 'git/working_directory'
 require 'git/log'
 require 'git/object'
 
-require 'git/commit'
-
 =begin
 
-require 'git/object/blob'
-require 'git/object/tree'
-require 'git/object/tag'
 
 require 'git/author'
 require 'git/ref'

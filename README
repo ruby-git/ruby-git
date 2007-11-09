@@ -25,7 +25,6 @@ Git::Remote << Git::Repository
 require 'git'
 
 
-
 # needs read permission only
 
 g = Git.open (working_dir = '.')
@@ -37,21 +36,20 @@ g.index.writable?
 g.repo
 g.dir
 
-**********
-
 g.log   # returns array of Git::Commit objects
-g.log.stat
-g.log.stat.summary
 g.log.since('2 weeks ago')
 g.log.between('v2.5', 'v2.6')
-g.log('Makefile').since('v2.5')
+g.log.since('v2.5').file('Makefile')
+g.log.each {|l| puts l.sha }
 
-g.status
+**********
 
-g.diff
-g.diff_cached
-g.diff(commit1, commit2)
-g.diff("commit1..commit2")
+
+g.object('HEAD^').to_s  # git show / git rev-parse
+
+g.rev_parse('HEAD^')
+g.rev_parse('v2.5:Makefile')  # returns Git::Object
+
 
 g.file('flim/ChangeLog').tags.each {|tag,rev| p [tag,rev.to_s]}
 g.file('flim/ChangeLog').logs.each { |log| log.sha }
@@ -60,13 +58,10 @@ g.branches # returns Git::Branch objects
 g.branches.local
 g.branches.remote
 
-g.show(Git::Sha)
-g.show('HEAD^')
-g.show('HEAD^', Git::File)
-g.show(Git::Object)
+g.status
 
-g.rev_parse('HEAD^')
-g.rev_parse('v2.5:Makefile')  # returns Git::Object
+g.tag # returns array of Git::Tag objects
+
 
 g.grep('hello')
 g.grep('hello', Git::Tag)
@@ -74,9 +69,13 @@ g.grep('hello', Git::Tag)
 g.ls_files
 g.ls_files(:stage => true)
 
+g.diff
+g.diff_cached
+g.diff(commit1, commit2)
+g.diff("commit1..commit2")
+
 g.diff_tree(Git::Tree, Git::Tree)
 
-g.tag # returns array of Git::Tag objects
 
 c = Git::Commit.new("HEAD^^")
 c = Git::Commit.new("394839")
