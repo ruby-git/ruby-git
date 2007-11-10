@@ -8,8 +8,9 @@ module Git
     @git_dir = nil
     @git_index_file = nil
     @git_work_dir = nil
+    @path = nil
         
-    def initialize(base)
+    def initialize(base = nil)
       if base.is_a?(Git::Base)
         @git_dir = base.repo.path
         @git_index_file = base.index.path   
@@ -23,6 +24,32 @@ module Git
     
     def init
       command('init')
+    end
+    
+    # tries to clone the given repo
+    #
+    # returns {:repository} (if bare)
+    #         {:working_directory} otherwise
+    #
+    # accepts options:
+    #  :remote - name of remote (rather than 'origin')
+    #  :bare   - no working directory
+    # 
+    # TODO - make this work with SSH password or auth_key
+    #
+    def clone(repository, name, opts = {})
+      @path = opts[:path] || '.'
+      clone_dir = File.join(@path, name)
+      
+      arr_opts = []
+      arr_opts << "--bare" if opts[:bare]
+      arr_opts << "-o #{opts[:remote]}" if opts[:remote]
+      arr_opts << repository
+      arr_opts << clone_dir
+      
+      command('clone', arr_opts)
+      
+      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
     
     def log_commits(opts = {})
@@ -142,10 +169,10 @@ module Git
     end
     
     def command(cmd, opts = {})
-      ENV['GIT_DIR'] = @git_dir
+      ENV['GIT_DIR'] = @git_dir if @git_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file if @git_index_file
       ENV['GIT_WORK_DIR'] = @git_work_dir if @git_work_dir
-      Dir.chdir(@git_work_dir || @git_dir) do  
+      Dir.chdir(@git_work_dir || @git_dir || @path) do  
         opts = opts.to_a.join(' ')
         #puts "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp

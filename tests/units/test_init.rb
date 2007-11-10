@@ -21,7 +21,7 @@ class TestInit < Test::Unit::TestCase
   end
   
   def test_git_bare
-    g = Git.repo @wbare
+    g = Git.bare @wbare
     assert_equal(g.repo.path, @wbare)
   end
   
@@ -51,11 +51,19 @@ class TestInit < Test::Unit::TestCase
   
   def test_git_clone
     in_temp_dir do |path|      
-      Git.clone(uri, :repository => dir)
-      assert(File.exists?(File.join(dir, 'config')))
+      g = Git.clone(@wbare, 'bare-co')
+      assert(File.exists?(File.join(g.repo.path, 'config')))
     end
   end
-
+  
+  def test_git_clone_bare
+    in_temp_dir do |path|      
+      g = Git.clone(@wbare, 'bare.git', :bare => true)
+      assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert_nil(g.dir)
+    end
+  end
+  
   # trying to open a git project using a bare repo - rather than using Git.repo
   def test_git_open_error
     assert_raise ArgumentError do

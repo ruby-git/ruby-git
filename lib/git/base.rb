@@ -6,22 +6,26 @@ module Git
     @repository = nil
     @index = nil
 
-    # opens a Git Repository - no working directory options
-    def self.repo(git_dir)
+    # opens a bare Git Repository - no working directory options
+    def self.bare(git_dir)
       self.new :repository => git_dir
     end
     
     # opens a new Git Project from a working directory
     # you can specify non-standard git_dir and index file in the options
     def self.open(working_dir, opts={})    
-      default = {:working_directory => working_dir,
-                 :repository => File.join(working_dir, '.git'), 
-                 :index => File.join(working_dir, '.git', 'index')}
+      default = {:working_directory => working_dir}
       git_options = default.merge(opts)
       
       self.new(git_options)
     end
-    
+
+    # initializes a git repository
+    #
+    # options:
+    #  :repository
+    #  :index_file
+    #
     def self.init(working_dir, opts = {})
       default = {:working_directory => working_dir,
                  :repository => File.join(working_dir, '.git')}
@@ -38,19 +42,36 @@ module Git
       self.new(git_options)
     end
 
-    def self.clone
-      raise NotImplementedError
+    # clones a git repository locally
+    #
+    #  repository - http://repo.or.cz/w/sinatra.git
+    #  name - sinatra
+    #
+    # options:
+    #   :repository
+    #
+    #    :bare
+    #   or 
+    #    :working_directory
+    #    :index_file
+    #
+    def self.clone(repository, name, opts = {})
+      # run git-clone 
+      self.new(Git::Lib.new.clone(repository, name, opts))
     end
         
     def initialize(options = {})
+      if working_dir = options[:working_directory]
+        options[:repository] = File.join(working_dir, '.git') if !options[:repository]
+        options[:index] = File.join(working_dir, '.git', 'index') if !options[:index]
+      end
+      
       @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
       @repository = Git::Repository.new(options[:repository]) if options[:repository]
-      @index = Git::Index.new(options[:index]) if options[:index]
+      @index = Git::Index.new(options[:index], false) if options[:index]
     end
   
-
-
-    
+  
     def dir
       @working_directory
     end

@@ -29,9 +29,9 @@ require 'git/ref'
 =end
 
 module Git
-
-  def self.repo(git_dir)
-    Base.repo(git_dir)
+  
+  def self.bare(git_dir)
+    Base.bare(git_dir)
   end
     
   def self.open(working_dir, options = {})
@@ -42,8 +42,8 @@ module Git
     Base.init(working_dir, options)
   end
 
-  def self.clone(uri, options = {})
-    Base.clone(working_dir, options)
+  def self.clone(repository, name, options = {})
+    Base.clone(repository, name, options)
   end
     
 end

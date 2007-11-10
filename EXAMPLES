@@ -78,15 +78,13 @@ g = Git.init
 		{ :git_dir => '/opt/git/proj.git', 
 		  :index_file => '/tmp/index'} )
 	
+g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout'
+	(git_dir, index_file)
+
 		  
 ***** IMPLEMENTED *****
 
-		  
-g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout'
-	(username, password, ssl_key, git_dir, index_file)
-
-
-		  
+		  		  
 g.config('user.name', 'Scott Chacon')
 g.config('user.email', 'email@email.com')      
 

@@ -82,10 +82,10 @@ class TestLib < Test::Unit::TestCase
   def test_branches_all
     branches = @lib.branches_all
     assert(branches.size > 0)
-    assert(branches.select { |b| b.current }.size > 0)  # has a current branch
-    assert(branches.select { |b| b.remote }.size > 0)   # has a remote branch
-    assert(branches.select { |b| !b.remote }.size > 0)  # has a local branch
-    assert(branches.select { |b| b.name == 'master' }.size > 0)  # has a master branch
+    assert(branches.select { |b| b[1] }.size > 0)  # has a current branch
+    assert(branches.select { |b| /\//.match(b[0]) }.size > 0)   # has a remote branch
+    assert(branches.select { |b| !/\//.match(b[0]) }.size > 0)  # has a local branch
+    assert(branches.select { |b| /master/.match(b[0]) }.size > 0)  # has a master branch
   end
 
   def test_config_remote

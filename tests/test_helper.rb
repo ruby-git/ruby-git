@@ -14,9 +14,9 @@ class Test::Unit::TestCase
       @test_dir = File.join(cwd, 'tests', 'files')
     end
     
-    @wdir = File.join(@test_dir, 'working')
-    @wbare = File.join(@test_dir, 'working.git')
-    @index = File.join(@test_dir, 'index')
+    @wdir = File.expand_path(File.join(@test_dir, 'working'))
+    @wbare = File.expand_path(File.join(@test_dir, 'working.git'))
+    @index = File.expand_path(File.join(@test_dir, 'index'))
   end
   
   def in_temp_dir(remove_after = true)
