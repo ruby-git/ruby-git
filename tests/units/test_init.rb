@@ -24,6 +24,37 @@ class TestInit < Test::Unit::TestCase
     g = Git.repo @wbare
     assert_equal(g.repo.path, @wbare)
   end
+  
+  #g = Git.init
+  #  Git.init('project')
+  #  Git.init('/home/schacon/proj', 
+  #		{ :git_dir => '/opt/git/proj.git', 
+  #		  :index_file => '/tmp/index'} )
+  def test_git_init
+    in_temp_dir do |path|
+      Git.init
+      assert(File.directory?(File.join(path, '.git')))
+      assert(File.exists?(File.join(path, '.git', 'config')))
+    end
+  end
+  
+  def test_git_init_remote_git
+    in_temp_dir do |dir|
+      assert(!File.exists?(File.join(dir, 'config')))
+      
+      in_temp_dir do |path|        
+        Git.init(path, :repository => dir)
+        assert(File.exists?(File.join(dir, 'config')))
+      end
+    end
+  end
+  
+  def test_git_clone
+    in_temp_dir do |path|      
+      Git.clone(uri, :repository => dir)
+      assert(File.exists?(File.join(dir, 'config')))
+    end
+  end
 
   # trying to open a git project using a bare repo - rather than using Git.repo
   def test_git_open_error

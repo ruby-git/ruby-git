@@ -19,12 +19,10 @@ require 'git/branches'
 require 'git/branch'
 require 'git/remote'
 
+require 'git/diff'
 =begin
 require 'git/author'
 require 'git/file'
-
-require 'git/diff'
-require 'git/remote'
 
 require 'git/sha'
 require 'git/ref'
@@ -40,12 +38,12 @@ module Git
     Base.open(working_dir, options)
   end
 
-  def clone
-    Base.clone()
+  def self.init(working_dir = '.', options = {})
+    Base.init(working_dir, options)
   end
 
-  def init(working_dir = '.')
-    Base.clone()
+  def self.clone(uri, options = {})
+    Base.clone(working_dir, options)
   end
-  
+    
 end

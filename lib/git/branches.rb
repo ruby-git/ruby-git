@@ -11,8 +11,9 @@ module Git
       @branches = {}
       
       @base = base
+            
       @base.lib.branches_all.each do |b|
-        @branches[b.full] = b
+        @branches[b[0]] = Git::Branch.new(@base, b[0], b[1])
       end
     end
 

@@ -38,19 +38,24 @@ g.grep('hello')  # implies HEAD
 g.blob('v2.5:Makefile').grep('hello')
 g.tag('v2.5').grep('hello', 'docs/')
 
+g.diff(commit1, commit2).size
+g.diff(commit1, commit2).stats
+g.tree('v2.5').diff('v2.6').insertions
+g.diff('gitsearch1', 'v2.5').path('lib/')
+g.diff('gitsearch1', @git.tree('v2.5'))
+g.diff('gitsearch1', 'v2.5').path('docs/').patch
+g.tree('v2.5').diff('v2.6').patch
+
+g.tree('v2.5').diff('v2.6').each do |file_diff|
+  puts file_diff.path
+  puts file_diff.patch
+  puts file_diff.blob(:src).contents
+end
+
+g.config('user.name')  # returns 'Scott Chacon'
+g.config # returns whole config hash
 
 ***** IMPLEMENTED *****
-
-g.diff
-g.diff.shortstat
-g.diff.summary
-g.diff(commit1, commit2)
-g.diff("commit1..commit2")
-
-g.diff_tree(Git::Tree, Git::Tree)
-
-
-g.status
 
 g.ls_files
 g.ls_files(:stage => true)
@@ -58,23 +63,32 @@ g.ls_files(:stage => true)
 g.tag # returns array of Git::Tag objects
 
 
+
+
+
+
+
+
 # needs write permission
 
-g = Git.clone(URI, 'name', working_dir = GIT_DIR, {options})
-	(username, password, ssl_key, git_dir, index_file)
 
 g = Git.init
   Git.init('project')
   Git.init('/home/schacon/proj', 
 		{ :git_dir => '/opt/git/proj.git', 
 		  :index_file => '/tmp/index'} )
+	
+		  
+***** IMPLEMENTED *****
+
+		  
+g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout'
+	(username, password, ssl_key, git_dir, index_file)
 
 
-
+		  
 g.config('user.name', 'Scott Chacon')
-g.config('user.email', 'email@email.com')
-g.config('user.name')  # returns 'Scott Chacon'
-g.config # returns whole config hash
+g.config('user.email', 'email@email.com')      
 
 g.add('.')
 g.add([file1, file2])

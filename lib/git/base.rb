@@ -22,19 +22,33 @@ module Git
       self.new(git_options)
     end
     
+    def self.init(working_dir, opts = {})
+      default = {:working_directory => working_dir,
+                 :repository => File.join(working_dir, '.git')}
+      git_options = default.merge(opts)
+      
+      if git_options[:working_directory]
+        # if !working_dir, make it
+        FileUtils.mkdir_p(git_options[:working_directory]) if !File.directory?(git_options[:working_directory])
+      end
+      
+      # run git_init there
+      Git::Lib.new(git_options).init
+       
+      self.new(git_options)
+    end
+
+    def self.clone
+      raise NotImplementedError
+    end
+        
     def initialize(options = {})
-      @working_directory = Git::Repository.new(options[:working_directory]) if options[:working_directory]
+      @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
       @repository = Git::Repository.new(options[:repository]) if options[:repository]
       @index = Git::Index.new(options[:index]) if options[:index]
     end
   
-    def self.clone
-      raise NotImplementedError
-    end
-  
-    def self.init
-      raise NotImplementedError
-    end
+
 
     
     def dir
@@ -47,6 +61,23 @@ module Git
     
     def index
       @index
+    end
+    
+    
+    #g.config('user.name', 'Scott Chacon') # sets value
+    #g.config('user.email', 'email@email.com')  # sets value
+    #g.config('user.name')  # returns 'Scott Chacon'
+    #g.config # returns whole config hash
+    def config(name = nil, value = nil)
+      if(name && value)
+        # set value
+      elsif (name)
+        # return value
+        lib.config_get(name)
+      else
+        # return hash
+        lib.config_list
+      end
     end
     
     # factory methods
@@ -73,6 +104,10 @@ module Git
     
     def grep(string)
       self.object('HEAD').grep(string)
+    end
+    
+    def diff(objectish = 'HEAD', obj2 = nil)
+      Git::Diff.new(self, objectish, obj2)
     end
     
     # convenience methods

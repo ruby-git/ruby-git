@@ -2,7 +2,7 @@ module Git
   class Object
     
     class AbstractObject
-      attr_accessor :sha, :size, :type
+      attr_accessor :sha, :size, :type, :mode
     
       @base = nil
     
@@ -26,7 +26,7 @@ module Git
       end
       
       def to_s
-        "#{@type.ljust(6)} #{@sha}"
+        @sha
       end
       
       def grep(string, path_limiter = nil, opts = {})
@@ -35,8 +35,12 @@ module Git
         @base.lib.grep(string, grep_options)
       end
       
+      def diff(objectish)
+        Git::Diff.new(@base, @sha, objectish)
+      end
+      
       def log(count = 30)
-        Git::Log.new(self, count).object(@sha)
+        Git::Log.new(@base, count).object(@sha)
       end
       
     end

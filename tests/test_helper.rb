@@ -19,14 +19,14 @@ class Test::Unit::TestCase
     @index = File.join(@test_dir, 'index')
   end
   
-  def in_temp_dir
+  def in_temp_dir(remove_after = true)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s
     tmp_path = File.join("/tmp/", filename)
     FileUtils.mkdir(tmp_path)
     Dir.chdir tmp_path do
       yield tmp_path
     end
-    FileUtils.rm_r(tmp_path)
+    FileUtils.rm_r(tmp_path) if remove_after
   end
   
 end
