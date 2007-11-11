@@ -97,22 +97,33 @@ end
 g.reset # defaults to HEAD
 g.reset_hard(Git::Commit)
 
+g.branch('new_branch') # creates new or fetches existing
+g.branch('new_branch').checkout
+g.branch('new_branch').delete
+g.branch('existing_branch').checkout
+
+g.checkout('new_branch')
+g.checkout(g.branch('new_branch'))
+
 
 ***** IMPLEMENTED *****
 
-g.branch('new_branch')
-g.branch('new_branch').delete
-
-g.checkout('new_branch')
-g.checkout('new_branch', :create_branch => true)
-g.checkout_b('new_branch')
+g.branch(name).merge(branch2)
+g.branch(branch2).merge
 
 g.merge('new_branch')
 g.merge(Git::Branch)
 g.merge(Git::Branch, Git::Branch)
+g.merge(Git::Remote)
+
+g.add_remote(uri, name)  # Git::Remote
+g.remotes
+g.remote(name).fetch
+g.remote(name).merge
+g.remote(name).merge(branch)
 
 g.fetch
-g.fetch(Git::Repo)
+g.fetch(Git::Remote)
 
 g.pull
 g.pull(Git::Repo, Git::Branch) # fetch and a merge

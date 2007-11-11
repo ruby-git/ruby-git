@@ -124,6 +124,11 @@ module Git
       Git::Branches.new(self)
     end
     
+    def branch(branch_name = 'master')
+      Git::Branch.new(self, branch_name)
+    end
+
+    
     def lib
       Git::Lib.new(self)
     end
@@ -161,6 +166,10 @@ module Git
     def commit_all(message, opts = {})
       opts = {:add_all => true}.merge(opts)
       self.lib.commit(message, opts)
+    end
+
+    def checkout(branch, opts = {})
+      self.lib.checkout(branch, opts)
     end
     
     # convenience methods

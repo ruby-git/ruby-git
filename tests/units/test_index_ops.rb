@@ -91,16 +91,4 @@ class TestIndexOps < Test::Unit::TestCase
     end
   end
   
-  def new_file(name, contents)
-    File.open(name, 'w') do |f|
-      f.puts contents
-    end
-  end
-
-  def append_file(name, contents)
-    File.open(name, 'a') do |f|
-      f.puts contents
-    end
-  end
-  
 end

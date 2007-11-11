@@ -93,6 +93,11 @@ module Git
       arr
     end
 
+    def branch_current
+      branches_all.select { |b| b[1] }.first[0] rescue nil
+    end
+
+
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     # [tree-ish] = [[line_no, match], [line_no, match2]]
@@ -235,6 +240,22 @@ module Git
       command('reset', arr_opts)
     end
 
+
+    def branch_new(branch)
+      command('branch', branch)
+    end
+    
+    def branch_delete(branch)
+      command('branch', ['-d', branch])
+    end
+    
+    def checkout(branch, opts = {})
+      arr_opts = []
+      arr_opts << '-f' if opts[:force]
+      arr_opts << branch.to_s
+      
+      command('checkout', arr_opts)
+    end
     
     private
     
