@@ -31,8 +31,8 @@ g.revparse('v2.5:Makefile')
 g.branches # returns Git::Branch objects
 g.branches.local
 g.branches.remote
-g.branches[:master].commit
-g.branches['origin/master'].commit
+g.branches[:master].gcommit
+g.branches['origin/master'].gcommit
 
 g.grep('hello')  # implies HEAD
 g.blob('v2.5:Makefile').grep('hello')

@@ -43,7 +43,7 @@ class TestBranch < Test::Unit::TestCase
   end
   
   def test_branch_commit
-    assert_equal(270, @git.branches[:test_branches].commit.size)
+    assert_equal(270, @git.branches[:test_branches].gcommit.size)
   end
   
 end
