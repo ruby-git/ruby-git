@@ -39,7 +39,7 @@ module Git
     #
     def clone(repository, name, opts = {})
       @path = opts[:path] || '.'
-      clone_dir = File.join(@path, name)
+      opts[:path] ? clone_dir = File.join(@path, name) : clone_dir = name
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
@@ -225,9 +225,9 @@ module Git
     end
     
     def command(cmd, opts = {})
-      ENV['GIT_DIR'] = @git_dir if @git_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file if @git_index_file
-      ENV['GIT_WORK_DIR'] = @git_work_dir if @git_work_dir
+      ENV['GIT_DIR'] = @git_dir 
+      ENV['GIT_INDEX_FILE'] = @git_index_file 
+      ENV['GIT_WORK_DIR'] = @git_work_dir 
       path = @git_work_dir || @git_dir || @path
       Dir.chdir(path) do  
         opts = opts.to_a.join(' ')
