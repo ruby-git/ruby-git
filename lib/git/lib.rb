@@ -52,6 +52,10 @@ module Git
       opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
     
+    
+    ## READ COMMANDS ##
+    
+    
     def log_commits(opts = {})
       arr_opts = ['--pretty=oneline']
       arr_opts << "-#{opts[:count]}" if opts[:count]
@@ -89,28 +93,6 @@ module Git
       arr
     end
 
-    def config_get(name)
-      command('config', ['--get', name])
-    end
-    
-    def config_list
-      hsh = {}
-      command_lines('config', ['--list']).each do |line|
-        (key, value) = line.split('=')
-        hsh[key] = value
-      end
-      hsh
-    end
-        
-    def config_remote(name)
-      hsh = {}
-      command_lines('config', ['--get-regexp', "remote.#{name}"]).each do |line|
-        (key, value) = line.split
-        hsh[key.gsub("remote.#{name}.", '')] = value
-      end
-      hsh
-    end
-    
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     # [tree-ish] = [[line_no, match], [line_no, match2]]
@@ -161,10 +143,78 @@ module Git
             
       hsh
     end
+
+    # compares the index and the working directory
+    def diff_files
+      hsh = {}
+      command_lines('diff-files').each do |line|
+        (info, file) = line.split("\t")
+        (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
+        hsh[file] = {:path => file, :mode_file => mode_src, :mode_index => mode_dest, 
+                      :sha_file => sha_src, :sha_index => sha_dest, :type => type}
+      end
+      hsh
+    end
     
+    # compares the index and the repository
+    def diff_index(treeish)
+      hsh = {}
+      command_lines('diff-index', treeish).each do |line|
+        (info, file) = line.split("\t")
+        (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
+        hsh[file] = {:path => file, :mode_repo => mode_src, :mode_index => mode_dest, 
+                      :sha_repo => sha_src, :sha_index => sha_dest, :type => type}
+      end
+      hsh
+    end
+            
+    def ls_files
+      hsh = {}
+      command_lines('ls-files', '--stage').each do |line|
+        (info, file) = line.split("\t")
+        (mode, sha, stage) = info.split
+        hsh[file] = {:path => file, :mode_index => mode, :sha_index => sha, :stage => stage}
+      end
+      hsh
+    end
+
+
+    def config_remote(name)
+      hsh = {}
+      command_lines('config', ['--get-regexp', "remote.#{name}"]).each do |line|
+        (key, value) = line.split
+        hsh[key.gsub("remote.#{name}.", '')] = value
+      end
+      hsh
+    end
+
+    def config_get(name)
+      command('config', ['--get', name])
+    end
+    
+    def config_list
+      hsh = {}
+      command_lines('config', ['--list']).each do |line|
+        (key, value) = line.split('=')
+        hsh[key] = value
+      end
+      hsh
+    end
+    
+    ## WRITE COMMANDS ##
+        
+    def config_set(name, value)
+      command('config', [name, "'#{value}'"])
+    end
+          
+    def add(path = '.')
+      command('add', path)
+    end
+    
+
     private
     
-    def command_lines(cmd, opts)
+    def command_lines(cmd, opts = {})
       command(cmd, opts).split("\n")
     end
     
@@ -177,6 +227,7 @@ module Git
         #puts "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp
         #puts out
+        #puts
         if $?.exitstatus > 1
           raise Git::GitExecuteError.new(out)
         end

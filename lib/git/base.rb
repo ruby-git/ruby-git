@@ -92,6 +92,7 @@ module Git
     def config(name = nil, value = nil)
       if(name && value)
         # set value
+        lib.config_set(name, value)
       elsif (name)
         # return value
         lib.config_get(name)
@@ -114,7 +115,11 @@ module Git
     def log(count = 30)
       Git::Log.new(self, count)
     end
-    
+
+    def status
+      Git::Status.new(self)
+    end
+        
     def branches
       Git::Branches.new(self)
     end
@@ -129,6 +134,11 @@ module Git
     
     def diff(objectish = 'HEAD', obj2 = nil)
       Git::Diff.new(self, objectish, obj2)
+    end
+    
+    # adds files from the working directory to the git repository
+    def add(path = '.')
+      self.lib.add(path)
     end
     
     # convenience methods

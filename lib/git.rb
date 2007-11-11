@@ -20,6 +20,7 @@ require 'git/branch'
 require 'git/remote'
 
 require 'git/diff'
+require 'git/status'
 =begin
 require 'git/author'
 require 'git/file'

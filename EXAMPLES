@@ -81,12 +81,12 @@ g = Git.init
 g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout'
 	(git_dir, index_file)
 
+g.config('user.name', 'Scott Chacon')
+g.config('user.email', 'email@email.com')      
+
 		  
 ***** IMPLEMENTED *****
 
-		  		  
-g.config('user.name', 'Scott Chacon')
-g.config('user.email', 'email@email.com')      
 
 g.add('.')
 g.add([file1, file2])

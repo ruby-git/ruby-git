@@ -53,6 +53,7 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |path|      
       g = Git.clone(@wbare, 'bare-co')
       assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert(g.dir)
     end
   end
   
