@@ -105,16 +105,17 @@ g.branch('existing_branch').checkout
 g.checkout('new_branch')
 g.checkout(g.branch('new_branch'))
 
+g.branch(name).merge(branch2)
+g.branch(branch2).merge  # merges HEAD with branch2
+
+g.branch(name).in_branch(message) { # add files }  # auto-commits
+g.merge('new_branch')
+g.merge('origin/remote_branch')
+g.merge(b.branch('master'))
+g.merge([branch1, branch2])
+
 
 ***** IMPLEMENTED *****
-
-g.branch(name).merge(branch2)
-g.branch(branch2).merge
-
-g.merge('new_branch')
-g.merge(Git::Branch)
-g.merge(Git::Branch, Git::Branch)
-g.merge(Git::Remote)
 
 g.add_remote(uri, name)  # Git::Remote
 g.remotes

@@ -27,7 +27,24 @@ module Git
     
     def checkout
       check_if_create
-      @base.lib.checkout(@name)
+      @base.checkout(@name)
+    end
+    
+    
+    # g.branch('new_branch').in_branch do
+    #   # create new file
+    #   # do other stuff
+    #   return true # auto commits and switches back
+    # end
+    def in_branch (message = 'in branch work')
+      old_current = @base.lib.branch_current
+      checkout
+      if yield
+        @base.commit_all(message)
+      else
+        @base.reset_hard
+      end
+      @base.checkout(old_current)
     end
     
     def create
@@ -40,6 +57,19 @@ module Git
     
     def current
       determine_current
+    end
+    
+    def merge(branch = nil, message = nil)
+      if branch
+        in_branch do 
+          @base.merge(branch, message)
+          false
+        end
+        # merge a branch into this one
+      else
+        # merge this branch into the current one
+        @base.merge(@name)
+      end
     end
     
     def to_s

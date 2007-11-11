@@ -156,7 +156,7 @@ module Git
 
     def reset_hard(commitish = nil, opts = {})
       opts = {:hard => true}.merge(opts)
-      self.lib.reset(path, opts)
+      self.lib.reset(commitish, opts)
     end
 
     def commit(message, opts = {})
@@ -172,11 +172,20 @@ module Git
       self.lib.checkout(branch, opts)
     end
     
+    def merge(branch, message = 'merge')
+      self.lib.merge(branch, message)
+    end
+
     # convenience methods
     
     def revparse(objectish)
       self.lib.revparse(objectish)
     end
+
+    def current_branch
+      self.lib.branch_current
+    end
+
     
   end
   

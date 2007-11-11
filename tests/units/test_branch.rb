@@ -68,7 +68,9 @@ class TestBranch < Test::Unit::TestCase
         assert(g.status.untracked.assoc('test-file1'))
         assert(!g.status.added.assoc('test-file1'))
 
-        g.branch('new_branch').delete
+        assert_raise Git::GitExecuteError do
+          g.branch('new_branch').delete 
+        end
         assert_equal(1, g.branches.select { |b| b.name == 'new_branch' }.size)
 
         g.branch('master').checkout

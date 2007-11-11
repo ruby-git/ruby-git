@@ -257,6 +257,14 @@ module Git
       command('checkout', arr_opts)
     end
     
+    def merge(branch, message = nil)
+      arr_opts = []
+      arr_opts << ["-m '#{message}'"] if message
+      arr_opts << branch.to_a.join(' ')
+      command('merge', arr_opts)
+    end
+    
+    
     private
     
     def command_lines(cmd, opts = {})
@@ -278,7 +286,10 @@ module Git
         #puts "git #{cmd} #{opts}"
         #puts out
         #puts
-        if $?.exitstatus > 1
+        if $?.exitstatus > 0
+          if $?.exitstatus == 1 && out == ''
+            return ''
+          end
           raise Git::GitExecuteError.new(out)
         end
         out
