@@ -18,6 +18,10 @@ module Git
     def added
       @files.select { |k, f| f.type == 'A' }
     end
+
+    def deleted
+      @files.select { |k, f| f.type == 'D' }
+    end
     
     def untracked
       @files.select { |k, f| f.untracked }

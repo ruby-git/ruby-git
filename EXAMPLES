@@ -79,17 +79,26 @@ g.config('user.email', 'email@email.com')
 
 g.add('.')
 g.add([file1, file2])
+
+g.remove('file.txt')
+g.remove(['file.txt', 'file2.txt'])
 		  
 g.commit('message')
 g.commit_all('message')
 
-
-***** IMPLEMENTED *****
-
-g.remove('file.txt').and_file
+g = Git.clone(repo, 'myrepo')
+Dir.chdir('myrepo') do
+ new_file('test-file', 'blahblahblah')
+ g.status.untracked.each do |file|
+  puts file.blob(:index).contents
+ end
+end
 
 g.reset # defaults to HEAD
 g.reset_hard(Git::Commit)
+
+
+***** IMPLEMENTED *****
 
 g.branch('new_branch')
 g.branch('new_branch').delete

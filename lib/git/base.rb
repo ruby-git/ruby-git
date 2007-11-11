@@ -141,6 +141,19 @@ module Git
       self.lib.add(path)
     end
 
+    def remove(path = '.', opts = {})
+      self.lib.remove(path, opts)
+    end
+
+    def reset(commitish = nil, opts = {})
+      self.lib.reset(commitish, opts)
+    end
+
+    def reset_hard(commitish = nil, opts = {})
+      opts = {:hard => true}.merge(opts)
+      self.lib.reset(path, opts)
+    end
+
     def commit(message, opts = {})
       self.lib.commit(message, opts)
     end

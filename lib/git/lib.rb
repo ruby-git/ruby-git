@@ -212,11 +212,29 @@ module Git
       command('add', path)
     end
     
+    def remove(path = '.', opts = {})
+      path = path.join(' ') if path.is_a?(Array)
+
+      arr_opts = ['-f']  # overrides the up-to-date check by default
+      arr_opts << ['-r'] if opts[:recursive]
+      arr_opts << path
+
+      command('rm', arr_opts)
+    end
+
     def commit(message, opts = {})
       arr_opts = ["-m '#{message}'"]
       arr_opts << '-a' if opts[:add_all]
       command('commit', arr_opts)
     end
+
+    def reset(commit, opts = {})
+      arr_opts = []
+      arr_opts << '--hard' if opts[:hard]
+      arr_opts << commit.to_s if commit
+      command('reset', arr_opts)
+    end
+
     
     private
     
