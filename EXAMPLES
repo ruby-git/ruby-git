@@ -15,16 +15,16 @@ g.log   # returns array of Git::Commit objects
 g.log.since('2 weeks ago')
 g.log.between('v2.5', 'v2.6')
 g.log.each {|l| puts l.sha }
-g.blob('v2.5:Makefile').log.since('2 weeks ago')
+g.gblob('v2.5:Makefile').log.since('2 weeks ago')
 
 g.object('HEAD^').to_s  # git show / git rev-parse
 g.object('HEAD^').contents
 g.object('v2.5:Makefile').size
 g.object('v2.5:Makefile').sha
 
-g.tree(treeish)
-g.blob(treeish)
-g.commit(treeish)
+g.gtree(treeish)
+g.gblob(treeish)
+g.gcommit(treeish)
 
 g.revparse('v2.5:Makefile')
 
@@ -40,13 +40,13 @@ g.tag('v2.5').grep('hello', 'docs/')
 
 g.diff(commit1, commit2).size
 g.diff(commit1, commit2).stats
-g.tree('v2.5').diff('v2.6').insertions
+g.gtree('v2.5').diff('v2.6').insertions
 g.diff('gitsearch1', 'v2.5').path('lib/')
-g.diff('gitsearch1', @git.tree('v2.5'))
+g.diff('gitsearch1', @git.gtree('v2.5'))
 g.diff('gitsearch1', 'v2.5').path('docs/').patch
-g.tree('v2.5').diff('v2.6').patch
+g.gtree('v2.5').diff('v2.6').patch
 
-g.tree('v2.5').diff('v2.6').each do |file_diff|
+g.gtree('v2.5').diff('v2.6').each do |file_diff|
   puts file_diff.path
   puts file_diff.patch
   puts file_diff.blob(:src).contents
@@ -57,14 +57,7 @@ g.config # returns whole config hash
 
 ***** IMPLEMENTED *****
 
-g.ls_files
-g.ls_files(:stage => true)
-
 g.tag # returns array of Git::Tag objects
-
-
-
-
 
 
 
@@ -84,17 +77,16 @@ g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout'
 g.config('user.name', 'Scott Chacon')
 g.config('user.email', 'email@email.com')      
 
-		  
-***** IMPLEMENTED *****
-
-
 g.add('.')
 g.add([file1, file2])
+		  
+g.commit('message')
+g.commit_all('message')
+
+
+***** IMPLEMENTED *****
 
 g.remove('file.txt').and_file
-
-g.commit('message')
-g.commit_a('message')
 
 g.reset # defaults to HEAD
 g.reset_hard(Git::Commit)

@@ -150,7 +150,7 @@ module Git
       command_lines('diff-files').each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
-        hsh[file] = {:path => file, :mode_file => mode_src, :mode_index => mode_dest, 
+        hsh[file] = {:path => file, :mode_file => mode_src.to_s[1, 7], :mode_index => mode_dest, 
                       :sha_file => sha_src, :sha_index => sha_dest, :type => type}
       end
       hsh
@@ -162,7 +162,7 @@ module Git
       command_lines('diff-index', treeish).each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
-        hsh[file] = {:path => file, :mode_repo => mode_src, :mode_index => mode_dest, 
+        hsh[file] = {:path => file, :mode_repo => mode_src.to_s[1, 7], :mode_index => mode_dest, 
                       :sha_repo => sha_src, :sha_index => sha_dest, :type => type}
       end
       hsh
@@ -208,10 +208,16 @@ module Git
     end
           
     def add(path = '.')
+      path = path.join(' ') if path.is_a?(Array)
       command('add', path)
     end
     
-
+    def commit(message, opts = {})
+      arr_opts = ["-m '#{message}'"]
+      arr_opts << '-a' if opts[:add_all]
+      command('commit', arr_opts)
+    end
+    
     private
     
     def command_lines(cmd, opts = {})
@@ -222,10 +228,15 @@ module Git
       ENV['GIT_DIR'] = @git_dir if @git_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file if @git_index_file
       ENV['GIT_WORK_DIR'] = @git_work_dir if @git_work_dir
-      Dir.chdir(@git_work_dir || @git_dir || @path) do  
+      path = @git_work_dir || @git_dir || @path
+      Dir.chdir(path) do  
         opts = opts.to_a.join(' ')
-        #puts "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp
+        #puts path
+        #puts "gd: #{@git_work_dir}"
+        #puts "gi: #{@git_index_file}"
+        #puts "pp: #{@path}"
+        #puts "git #{cmd} #{opts}"
         #puts out
         #puts
         if $?.exitstatus > 1

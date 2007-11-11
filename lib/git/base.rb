@@ -107,9 +107,9 @@ module Git
     def object(objectish)
       Git::Object.new(self, objectish)
     end
-    alias_method :tree, :object
-    alias_method :commit, :object
-    alias_method :blob, :object
+    alias_method :gtree, :object
+    alias_method :gcommit, :object
+    alias_method :gblob, :object
     
     
     def log(count = 30)
@@ -139,6 +139,15 @@ module Git
     # adds files from the working directory to the git repository
     def add(path = '.')
       self.lib.add(path)
+    end
+
+    def commit(message, opts = {})
+      self.lib.commit(message, opts)
+    end
+        
+    def commit_all(message, opts = {})
+      opts = {:add_all => true}.merge(opts)
+      self.lib.commit(message, opts)
     end
     
     # convenience methods

@@ -31,18 +31,18 @@ class TestDiff < Test::Unit::TestCase
   end
   
   def test_diff_objects
-    d = @git.diff('gitsearch1', @git.tree('v2.5'))
+    d = @git.diff('gitsearch1', @git.gtree('v2.5'))
     assert(3, d.size)
   end
   
   def test_object_diff
-    d = @git.tree('v2.5').diff('gitsearch1')
+    d = @git.gtree('v2.5').diff('gitsearch1')
     assert_equal(3, d.size)
     assert_equal(74, d.lines)
     assert_equal(10, d.insertions)
     assert_equal(64, d.deletions)
     
-    d = @git.tree('v2.6').diff(@git.tree('gitsearch1'))
+    d = @git.gtree('v2.6').diff(@git.gtree('gitsearch1'))
     assert_equal(2, d.size)
     assert_equal(9, d.lines)
   end
