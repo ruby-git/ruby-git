@@ -73,7 +73,7 @@ module Git
     end
     
     def to_s
-      @name
+      @full
     end
     
     private 

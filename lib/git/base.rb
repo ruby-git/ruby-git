@@ -84,6 +84,11 @@ module Git
       @index
     end
     
+    def chdir
+      Dir.chdir(dir.path) do
+        yield dir.path
+      end
+    end
     
     #g.config('user.name', 'Scott Chacon') # sets value
     #g.config('user.email', 'email@email.com')  # sets value
@@ -126,6 +131,10 @@ module Git
     
     def branch(branch_name = 'master')
       Git::Branch.new(self, branch_name)
+    end
+
+    def remote(remote_name = 'origin')
+      Git::Remote.new(self, remote_name)
     end
 
     
@@ -172,11 +181,46 @@ module Git
       self.lib.checkout(branch, opts)
     end
     
+    def fetch(remote = 'origin')
+      self.lib.fetch(remote)
+    end
+
     def merge(branch, message = 'merge')
       self.lib.merge(branch, message)
     end
 
+    def pull(remote = 'origin', branch = 'master', message = 'origin pull')
+      fetch(remote)
+      merge(branch, message)
+    end
+    
+    def remotes
+      self.lib.remotes.map { |r| Git::Remote.new(self, r) }
+    end
+    
+    def add_remote(name, url, opts = {})
+      if url.is_a?(Git::Base)
+        url = url.repo.path
+      end
+      self.lib.remote_add(name, url, opts)
+      Git::Remote.new(self, name)
+    end
+
+    def tags
+      self.lib.tags.map { |r| tag(r) }
+    end
+    
+    def tag(tag_name)
+      Git::Object.new(self, tag_name, true)
+    end
+
+    def add_tag(tag_name)
+      self.lib.tag(tag_name)
+      tag(tag_name)
+    end
+    
     # convenience methods
+
     
     def revparse(objectish)
       self.lib.revparse(objectish)

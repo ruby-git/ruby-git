@@ -55,10 +55,7 @@ end
 g.config('user.name')  # returns 'Scott Chacon'
 g.config # returns whole config hash
 
-***** IMPLEMENTED *****
-
 g.tag # returns array of Git::Tag objects
-
 
 
 
@@ -114,21 +111,25 @@ g.merge('origin/remote_branch')
 g.merge(b.branch('master'))
 g.merge([branch1, branch2])
 
+r = g.add_remote(name, uri)  # Git::Remote
+r = g.add_remote(name, Git::Base)  # Git::Remote
 
-***** IMPLEMENTED *****
-
-g.add_remote(uri, name)  # Git::Remote
-g.remotes
+g.remotes  # array of Git::Remotes
 g.remote(name).fetch
+g.remote(name).remove
 g.remote(name).merge
 g.remote(name).merge(branch)
 
 g.fetch
-g.fetch(Git::Remote)
+g.fetch(g.remotes.first)
 
 g.pull
 g.pull(Git::Repo, Git::Branch) # fetch and a merge
 
-g.tag('tag_name') # returns Git::Tag
+g.add_tag('tag_name') # returns Git::Tag
+
+
+***** IMPLEMENTED *****
+
 
 g.pack

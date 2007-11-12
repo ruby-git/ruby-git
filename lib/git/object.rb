@@ -1,4 +1,8 @@
 module Git
+  
+  class GitTagNameDoesNotExist< StandardError 
+  end
+  
   class Object
     
     class AbstractObject
@@ -64,14 +68,34 @@ module Git
       end
     end
   
-  
+    class Tag < AbstractObject
+      attr_accessor :name
+      
+      def initialize(base, sha, name)
+        super(base, sha)
+        @name = name
+      end
+      
+      def setup
+        @type = 'tag'
+      end
+    end
+    
     class << self
       # if we're calling this, we don't know what type it is yet
       # so this is our little factory method
-      def new(base, objectish)
-        sha = base.lib.revparse(objectish)
-        type = base.lib.object_type(sha)
-      
+      def new(base, objectish, is_tag = false)
+        if is_tag
+          sha = base.lib.tag_sha(objectish)
+          if sha == ''
+            raise Git::GitTagNameDoesNotExist.new(objectish)
+          end
+          return Tag.new(base, sha, objectish)
+        else
+          sha = base.lib.revparse(objectish)
+          type = base.lib.object_type(sha) 
+        end
+        
         klass =
           case type
           when /blob/:   Blob   

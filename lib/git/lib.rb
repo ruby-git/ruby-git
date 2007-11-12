@@ -264,6 +264,43 @@ module Git
       command('merge', arr_opts)
     end
     
+    def remote_add(name, url, opts = {})
+      arr_opts = ['add']
+      arr_opts << '-f' if opts[:with_fetch]
+      arr_opts << name
+      arr_opts << url
+      
+      command('remote', arr_opts)
+    end
+    
+    # this is documented as such, but seems broken for some reason
+    # i'll try to get around it some other way later
+    def remote_remove(name)
+      command('remote', ['rm', name])
+    end
+    
+    def remotes
+      command_lines('remote')
+    end
+
+    def tags
+      command_lines('tag')
+    end
+
+    def tag(tag)
+      command('tag', tag)
+    end
+
+    
+    def fetch(remote)
+      command('fetch', remote.to_s)
+    end
+    
+    def tag_sha(tag_name)
+      command('show-ref',  ['--tags', '-s', tag_name])
+    end  
+    
+    
     
     private
     
@@ -278,19 +315,20 @@ module Git
       path = @git_work_dir || @git_dir || @path
       Dir.chdir(path) do  
         opts = opts.to_a.join(' ')
+        git_cmd = "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp
         #puts path
         #puts "gd: #{@git_work_dir}"
         #puts "gi: #{@git_index_file}"
         #puts "pp: #{@path}"
-        #puts "git #{cmd} #{opts}"
+        #puts git_cmd
         #puts out
         #puts
         if $?.exitstatus > 0
           if $?.exitstatus == 1 && out == ''
             return ''
           end
-          raise Git::GitExecuteError.new(out)
+          raise Git::GitExecuteError.new(git_cmd + out.to_s)
         end
         out
       end
