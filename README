@@ -1,7 +1,10 @@
-Git Library for Ruby
------------------------------
+== Git Library for Ruby
+
+= What it is
 
 Library for using Git in Ruby.
+
+= Roadmap
 
 Right now I'm forking calls to the 'git' binary, 
 but eventually I'll replace that with either C bindings
@@ -10,47 +13,4 @@ handlers for at least some of the Git stuff.
 
 See EXAMPLES file for, well, examples.
 
-
-
-Git::Object
-  - sha
-  - type
-  - cat_file
-  - raw
-
-Git::Commit
-  - tree
-  - parent 
-  - author      # git author
-  - author_date
-  - committer   # git author
-  - committer_date / date
-  - message
-
-Git::Tree
-  - children
-  - blobs/files
-  - subtrees/subdirs
-
-Git::Blob << File
-  - size
-  - permissions
-
-Git::Tag
-
-Git::Hash
-  - abbrev/short
-
-Git::Repository
-  - heads
-  - refs
-  - branches
-
-Git::WorkingDirectory 
-  - foreach
-  - glob # returns Git::Files
-
-Git::File << File
-  - log
-  - tags
 

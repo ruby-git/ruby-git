@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>diff_full (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 123</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_full</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'-p'</span>]
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj2</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">obj2</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-value str">'-- '</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'diff'</span>, <span class="ruby-identifier">diff_opts</span>)
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

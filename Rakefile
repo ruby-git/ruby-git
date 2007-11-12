@@ -5,7 +5,7 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
     s.platform  =   Gem::Platform::RUBY
     s.name      =   "git"
-    s.version   =   "0.1.1"
+    s.version   =   "1.0.0"
     s.author    =   "Scott Chacon"
     s.email     =   "schacon@gmail.com"
     s.summary   =   "A package for using Git in Ruby code."
@@ -23,6 +23,11 @@ end
 
 task :default => "pkg/#{spec.name}-#{spec.version}.gem" do
     puts "generated latest version"
+end
+
+desc "Regenerate Documentation"
+task :doc do |t|
+ system('rdoc lib/ README EXAMPLES --main README --inline-source')
 end
 
 desc "Run Unit Tests"

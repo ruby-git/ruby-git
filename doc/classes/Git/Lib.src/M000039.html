@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>ls_files (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 176</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">ls_files</span>
+      <span class="ruby-identifier">hsh</span> = {}
+      <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'ls-files'</span>, <span class="ruby-value str">'--stage'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
+        (<span class="ruby-identifier">info</span>, <span class="ruby-identifier">file</span>) = <span class="ruby-identifier">line</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">&quot;\t&quot;</span>)
+        (<span class="ruby-identifier">mode</span>, <span class="ruby-identifier">sha</span>, <span class="ruby-identifier">stage</span>) = <span class="ruby-identifier">info</span>.<span class="ruby-identifier">split</span>
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">file</span>] = {<span class="ruby-identifier">:path</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">file</span>, <span class="ruby-identifier">:mode_index</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">mode</span>, <span class="ruby-identifier">:sha_index</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">sha</span>, <span class="ruby-identifier">:stage</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">stage</span>}
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">hsh</span>
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

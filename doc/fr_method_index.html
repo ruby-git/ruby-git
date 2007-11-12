@@ -1,0 +1,179 @@
+
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+
+    Methods
+
+  -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Methods</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="rdoc-style.css" type="text/css" />
+  <base target="docwin" />
+</head>
+<body>
+<div id="index">
+  <h1 class="section-bar">Methods</h1>
+  <div id="index-entries">
+    <a href="classes/Git/Branches.html#M000065">[] (Git::Branches)</a><br />
+    <a href="classes/Git/Status.html#M000011">[] (Git::Status)</a><br />
+    <a href="classes/Git/Diff.html#M000143">[] (Git::Diff)</a><br />
+    <a href="classes/Git/Base.html#M000099">add (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000044">add (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000110">add_remote (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000113">add_tag (Git::Base)</a><br />
+    <a href="classes/Git/Status.html#M000007">added (Git::Status)</a><br />
+    <a href="classes/Git.html#M000001">bare (Git)</a><br />
+    <a href="classes/Git/Base.html#M000076">bare (Git::Base)</a><br />
+    <a href="classes/Git/Log.html#M000019">between (Git::Log)</a><br />
+    <a href="classes/Git/Diff/DiffFile.html#M000146">blob (Git::Diff::DiffFile)</a><br />
+    <a href="classes/Git/Status/StatusFile.html#M000014">blob (Git::Status::StatusFile)</a><br />
+    <a href="classes/Git/Remote.html#M000151">branch (Git::Remote)</a><br />
+    <a href="classes/Git/Base.html#M000094">branch (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000033">branch_current (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000049">branch_delete (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000048">branch_new (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000093">branches (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000032">branches_all (Git::Lib)</a><br />
+    <a href="classes/Git/Status.html#M000006">changed (Git::Status)</a><br />
+    <a href="classes/Git/Base.html#M000084">chdir (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000050">checkout (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000105">checkout (Git::Base)</a><br />
+    <a href="classes/Git/Branch.html#M000068">checkout (Git::Branch)</a><br />
+    <a href="classes/Git/Lib.html#M000026">clone (Git::Lib)</a><br />
+    <a href="classes/Git.html#M000004">clone (Git)</a><br />
+    <a href="classes/Git/Base.html#M000079">clone (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000046">commit (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000103">commit (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000104">commit_all (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000086">config (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000041">config_get (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000042">config_list (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000040">config_remote (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000043">config_set (Git::Lib)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000123">contents (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000124">contents_array (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Branch.html#M000070">create (Git::Branch)</a><br />
+    <a href="classes/Git/Branch.html#M000072">current (Git::Branch)</a><br />
+    <a href="classes/Git/Base.html#M000116">current_branch (Git::Base)</a><br />
+    <a href="classes/Git/Branch.html#M000071">delete (Git::Branch)</a><br />
+    <a href="classes/Git/Status.html#M000008">deleted (Git::Status)</a><br />
+    <a href="classes/Git/Diff.html#M000138">deletions (Git::Diff)</a><br />
+    <a href="classes/Git/Base.html#M000098">diff (Git::Base)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000128">diff (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Lib.html#M000037">diff_files (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000035">diff_full (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000038">diff_index (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000036">diff_stats (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000081">dir (Git::Base)</a><br />
+    <a href="classes/Git/Log.html#M000022">each (Git::Log)</a><br />
+    <a href="classes/Git/Status.html#M000012">each (Git::Status)</a><br />
+    <a href="classes/Git/Diff.html#M000144">each (Git::Diff)</a><br />
+    <a href="classes/Git/Branches.html#M000064">each (Git::Branches)</a><br />
+    <a href="classes/Git/Remote.html#M000149">fetch (Git::Remote)</a><br />
+    <a href="classes/Git/Lib.html#M000057">fetch (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000106">fetch (Git::Base)</a><br />
+    <a href="classes/Git/Log.html#M000023">first (Git::Log)</a><br />
+    <a href="classes/Git/Base.html#M000090">gblob (Git::Base)</a><br />
+    <a href="classes/Git/Branch.html#M000067">gcommit (Git::Branch)</a><br />
+    <a href="classes/Git/Base.html#M000089">gcommit (Git::Base)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000127">grep (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Lib.html#M000034">grep (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000097">grep (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000088">gtree (Git::Base)</a><br />
+    <a href="classes/Git/Branch.html#M000069">in_branch (Git::Branch)</a><br />
+    <a href="classes/Git/Base.html#M000083">index (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000025">init (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000078">init (Git::Base)</a><br />
+    <a href="classes/Git.html#M000003">init (Git)</a><br />
+    <a href="classes/Git/Diff.html#M000139">insertions (Git::Diff)</a><br />
+    <a href="classes/Git/Base.html#M000096">lib (Git::Base)</a><br />
+    <a href="classes/Git/Diff.html#M000137">lines (Git::Diff)</a><br />
+    <a href="classes/Git/Branches.html#M000061">local (Git::Branches)</a><br />
+    <a href="classes/Git/Base.html#M000091">log (Git::Base)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000129">log (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Lib.html#M000027">log_commits (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000039">ls_files (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000051">merge (Git::Lib)</a><br />
+    <a href="classes/Git/Branch.html#M000073">merge (Git::Branch)</a><br />
+    <a href="classes/Git/Remote.html#M000150">merge (Git::Remote)</a><br />
+    <a href="classes/Git/Base.html#M000107">merge (Git::Base)</a><br />
+    <a href="classes/Git/Remote.html#M000147">new (Git::Remote)</a><br />
+    <a href="classes/Git/Status/StatusFile.html#M000013">new (Git::Status::StatusFile)</a><br />
+    <a href="classes/Git/Diff.html#M000134">new (Git::Diff)</a><br />
+    <a href="classes/Git/Branch.html#M000066">new (Git::Branch)</a><br />
+    <a href="classes/Git/Diff/DiffFile.html#M000145">new (Git::Diff::DiffFile)</a><br />
+    <a href="classes/Git/Object/Tag.html#M000130">new (Git::Object::Tag)</a><br />
+    <a href="classes/Git/Base.html#M000080">new (Git::Base)</a><br />
+    <a href="classes/Git/Log.html#M000015">new (Git::Log)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000122">new (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Lib.html#M000024">new (Git::Lib)</a><br />
+    <a href="classes/Git/Object.html#M000120">new (Git::Object)</a><br />
+    <a href="classes/Git/Status.html#M000005">new (Git::Status)</a><br />
+    <a href="classes/Git/Branches.html#M000060">new (Git::Branches)</a><br />
+    <a href="classes/Git/Path.html#M000117">new (Git::Path)</a><br />
+    <a href="classes/Git/Log.html#M000016">object (Git::Log)</a><br />
+    <a href="classes/Git/Base.html#M000087">object (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000031">object_contents (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000030">object_size (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000029">object_type (Git::Lib)</a><br />
+    <a href="classes/Git.html#M000002">open (Git)</a><br />
+    <a href="classes/Git/Base.html#M000077">open (Git::Base)</a><br />
+    <a href="classes/Git/Diff.html#M000141">patch (Git::Diff)</a><br />
+    <a href="classes/Git/Diff.html#M000135">path (Git::Diff)</a><br />
+    <a href="classes/Git/Log.html#M000017">path (Git::Log)</a><br />
+    <a href="classes/Git/Status.html#M000010">pretty (Git::Status)</a><br />
+    <a href="classes/Git/Base.html#M000108">pull (Git::Base)</a><br />
+    <a href="classes/Git/Path.html#M000118">readable? (Git::Path)</a><br />
+    <a href="classes/Git/Branches.html#M000062">remote (Git::Branches)</a><br />
+    <a href="classes/Git/Base.html#M000095">remote (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000052">remote_add (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000053">remote_remove (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000054">remotes (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000109">remotes (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000100">remove (Git::Base)</a><br />
+    <a href="classes/Git/Remote.html#M000152">remove (Git::Remote)</a><br />
+    <a href="classes/Git/Remote.html#M000148">remove (Git::Remote)</a><br />
+    <a href="classes/Git/Lib.html#M000045">remove (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000059">repack (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000114">repack (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000082">repo (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000085">repo_size (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000101">reset (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000047">reset (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000102">reset_hard (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000115">revparse (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000028">revparse (Git::Lib)</a><br />
+    <a href="classes/Git/Object/Blob.html#M000132">setup (Git::Object::Blob)</a><br />
+    <a href="classes/Git/Object/Tag.html#M000131">setup (Git::Object::Tag)</a><br />
+    <a href="classes/Git/Object/Commit.html#M000121">setup (Git::Object::Commit)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000125">setup (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Object/Tree.html#M000133">setup (Git::Object::Tree)</a><br />
+    <a href="classes/Git/Log.html#M000018">since (Git::Log)</a><br />
+    <a href="classes/Git/Log.html#M000021">size (Git::Log)</a><br />
+    <a href="classes/Git/Diff.html#M000136">size (Git::Diff)</a><br />
+    <a href="classes/Git/Branches.html#M000063">size (Git::Branches)</a><br />
+    <a href="classes/Git/Diff.html#M000140">stats (Git::Diff)</a><br />
+    <a href="classes/Git/Base.html#M000092">status (Git::Base)</a><br />
+    <a href="classes/Git/Base.html#M000112">tag (Git::Base)</a><br />
+    <a href="classes/Git/Lib.html#M000056">tag (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000058">tag_sha (Git::Lib)</a><br />
+    <a href="classes/Git/Lib.html#M000055">tags (Git::Lib)</a><br />
+    <a href="classes/Git/Base.html#M000111">tags (Git::Base)</a><br />
+    <a href="classes/Git/Branch.html#M000074">to_a (Git::Branch)</a><br />
+    <a href="classes/Git/Diff.html#M000142">to_s (Git::Diff)</a><br />
+    <a href="classes/Git/Object/AbstractObject.html#M000126">to_s (Git::Object::AbstractObject)</a><br />
+    <a href="classes/Git/Branch.html#M000075">to_s (Git::Branch)</a><br />
+    <a href="classes/Git/Log.html#M000020">to_s (Git::Log)</a><br />
+    <a href="classes/Git/Remote.html#M000153">to_s (Git::Remote)</a><br />
+    <a href="classes/Git/Status.html#M000009">untracked (Git::Status)</a><br />
+    <a href="classes/Git/Path.html#M000119">writable? (Git::Path)</a><br />
+  </div>
+</div>
+</body>
+</html>

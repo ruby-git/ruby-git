@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>grep (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 104</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">grep</span>(<span class="ruby-identifier">string</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>] = <span class="ruby-value str">'HEAD'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>]
+
+      <span class="ruby-identifier">grep_opts</span> = [<span class="ruby-value str">'-n'</span>]
+      <span class="ruby-identifier">grep_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-i'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:ignore_case</span>]
+      <span class="ruby-identifier">grep_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-v'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:invert_match</span>]
+      <span class="ruby-identifier">grep_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-e '#{string}'&quot;</span>
+      <span class="ruby-identifier">grep_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>].<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)
+      <span class="ruby-identifier">grep_opts</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-value str">'-- '</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      <span class="ruby-identifier">hsh</span> = {}
+      <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'grep'</span>, <span class="ruby-identifier">grep_opts</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">m</span> = <span class="ruby-regexp re">/(.*)\:(\d+)\:(.*)/</span>.<span class="ruby-identifier">match</span>(<span class="ruby-identifier">line</span>)        
+          <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">m</span>[<span class="ruby-value">1</span>]] <span class="ruby-operator">||=</span> []
+          <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">m</span>[<span class="ruby-value">1</span>]] <span class="ruby-operator">&lt;&lt;</span> [<span class="ruby-identifier">m</span>[<span class="ruby-value">2</span>].<span class="ruby-identifier">to_i</span>, <span class="ruby-identifier">m</span>[<span class="ruby-value">3</span>]] 
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">hsh</span>
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

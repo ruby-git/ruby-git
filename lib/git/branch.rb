@@ -72,6 +72,10 @@ module Git
       end
     end
     
+    def to_a
+      [@full]
+    end
+    
     def to_s
       @full
     end

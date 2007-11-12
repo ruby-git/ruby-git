@@ -1,4 +1,34 @@
 
+* Git::Object methods
+  - tree recursion
+  - commit information
+  
+  Git::Object
+    - sha
+    - type
+    - cat_file
+    - raw
+
+  Git::Commit
+    - tree
+    - parent 
+    - author      # git author
+    - author_date
+    - committer   # git author
+    - committer_date / date
+    - message
+
+  Git::Tree
+    - children
+    - blobs/files
+    - subtrees/subdirs
+
+  Git::Blob << File
+    - size
+    - permissions
+
+* pushing
+  
 * More Error Examples
 
 * More Git::Status methods

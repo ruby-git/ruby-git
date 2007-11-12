@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>log_commits (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 59</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">log_commits</span>(<span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-value str">'--pretty=oneline'</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-#{opts[:count]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:count</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--since=\&quot;#{opts[:since]}\&quot;&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:since</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;#{opts[:between][0]}..#{opts[:between][1].to_s}&quot;</span> <span class="ruby-keyword kw">if</span> (<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:between</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:between</span>].<span class="ruby-identifier">size</span> <span class="ruby-operator">==</span> <span class="ruby-value">2</span>)
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-- '</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      
+      <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'log'</span>, <span class="ruby-identifier">arr_opts</span>).<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">l</span><span class="ruby-operator">|</span> <span class="ruby-identifier">l</span>.<span class="ruby-identifier">split</span>.<span class="ruby-identifier">first</span> }
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

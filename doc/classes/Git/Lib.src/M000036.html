@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>diff_stats (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 132</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_stats</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'--numstat'</span>]
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj2</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">obj2</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)
+      <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-value str">'-- '</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      
+      <span class="ruby-identifier">hsh</span> = {<span class="ruby-identifier">:total</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:insertions</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>, <span class="ruby-identifier">:deletions</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>, <span class="ruby-identifier">:lines</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>, <span class="ruby-identifier">:files</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>}, <span class="ruby-identifier">:files</span> =<span class="ruby-operator">&gt;</span> {}}
+      
+      <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'diff'</span>, <span class="ruby-identifier">diff_opts</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">file</span><span class="ruby-operator">|</span>
+        (<span class="ruby-identifier">insertions</span>, <span class="ruby-identifier">deletions</span>, <span class="ruby-identifier">filename</span>) = <span class="ruby-identifier">file</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">&quot;\t&quot;</span>)
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:insertions</span>] <span class="ruby-operator">+=</span> <span class="ruby-identifier">insertions</span>.<span class="ruby-identifier">to_i</span>
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:deletions</span>] <span class="ruby-operator">+=</span> <span class="ruby-identifier">deletions</span>.<span class="ruby-identifier">to_i</span>
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:lines</span>] = (<span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:deletions</span>] <span class="ruby-operator">+</span> <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:insertions</span>])
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:total</span>][<span class="ruby-identifier">:files</span>] <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">hsh</span>[<span class="ruby-identifier">:files</span>][<span class="ruby-identifier">filename</span>] = {<span class="ruby-identifier">:insertions</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">insertions</span>.<span class="ruby-identifier">to_i</span>, <span class="ruby-identifier">:deletions</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">deletions</span>.<span class="ruby-identifier">to_i</span>}
+      <span class="ruby-keyword kw">end</span>
+            
+      <span class="ruby-identifier">hsh</span>
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

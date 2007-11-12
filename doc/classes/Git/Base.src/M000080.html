@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>new (Git::Base)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/base.rb, line 63</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">options</span> = {})
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">working_dir</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:working_directory</span>]
+        <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:repository</span>] = <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">working_dir</span>, <span class="ruby-value str">'.git'</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:repository</span>]
+        <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:index</span>] = <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">working_dir</span>, <span class="ruby-value str">'.git'</span>, <span class="ruby-value str">'index'</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:index</span>]
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-ivar">@working_directory</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">WorkingDirectory</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:working_directory</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:working_directory</span>]
+      <span class="ruby-ivar">@repository</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Repository</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:repository</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:repository</span>]
+      <span class="ruby-ivar">@index</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Index</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:index</span>], <span class="ruby-keyword kw">false</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:index</span>]
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

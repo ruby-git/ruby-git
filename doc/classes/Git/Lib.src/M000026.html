@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>clone (Git::Lib)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/git/lib.rb, line 40</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">clone</span>(<span class="ruby-identifier">repository</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-ivar">@path</span> = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">'.'</span>
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">clone_dir</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-ivar">@path</span>, <span class="ruby-identifier">name</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">clone_dir</span> = <span class="ruby-identifier">name</span>
+      
+      <span class="ruby-identifier">arr_opts</span> = []
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">&quot;--bare&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:bare</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-o #{opts[:remote]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:remote</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">repository</span>
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">clone_dir</span>
+      
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'clone'</span>, <span class="ruby-identifier">arr_opts</span>)
+      
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:bare</span>] <span class="ruby-operator">?</span> {<span class="ruby-identifier">:repository</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">clone_dir</span>} <span class="ruby-operator">:</span> {<span class="ruby-identifier">:working_directory</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">clone_dir</span>}
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>
