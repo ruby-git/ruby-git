@@ -1,8 +1,7 @@
 == Git Library for Ruby
 
-= What it is
-
 Library for using Git in Ruby.
+
 
 = Roadmap
 
@@ -11,6 +10,143 @@ but eventually I'll replace that with either C bindings
 to libgit or libgit-thin, or I'll write pure ruby
 handlers for at least some of the Git stuff.
 
-See EXAMPLES file for, well, examples.
 
+= Examples
 
+Here are a bunch of examples of how to use the Ruby/Git package. 
+
+First you have to remember to require rubygems if it's not.  Then include the 'git' gem.
+
+   require 'rubygems'
+   require 'git'
+
+Here are the operations that need read permission only.
+      
+   g = Git.open (working_dir = '.')
+ 	  (git_dir, index_file)
+   
+   g.index
+   g.index.readable?
+   g.index.writable?
+   g.repo
+   g.dir
+   
+   g.log   # returns array of Git::Commit objects
+   g.log.since('2 weeks ago')
+   g.log.between('v2.5', 'v2.6')
+   g.log.each {|l| puts l.sha }
+   g.gblob('v2.5:Makefile').log.since('2 weeks ago')
+   
+   g.object('HEAD^').to_s  # git show / git rev-parse
+   g.object('HEAD^').contents
+   g.object('v2.5:Makefile').size
+   g.object('v2.5:Makefile').sha
+   
+   g.gtree(treeish)
+   g.gblob(treeish)
+   g.gcommit(treeish)
+   
+   g.revparse('v2.5:Makefile')
+   
+   g.branches # returns Git::Branch objects
+   g.branches.local
+   g.branches.remote
+   g.branches[:master].gcommit
+   g.branches['origin/master'].gcommit
+   
+   g.grep('hello')  # implies HEAD
+   g.blob('v2.5:Makefile').grep('hello')
+   g.tag('v2.5').grep('hello', 'docs/')
+   
+   g.diff(commit1, commit2).size
+   g.diff(commit1, commit2).stats
+   g.gtree('v2.5').diff('v2.6').insertions
+   g.diff('gitsearch1', 'v2.5').path('lib/')
+   g.diff('gitsearch1', @git.gtree('v2.5'))
+   g.diff('gitsearch1', 'v2.5').path('docs/').patch
+   g.gtree('v2.5').diff('v2.6').patch
+   
+   g.gtree('v2.5').diff('v2.6').each do |file_diff|
+     puts file_diff.path
+     puts file_diff.patch
+     puts file_diff.blob(:src).contents
+   end
+   
+   g.config('user.name')  # returns 'Scott Chacon'
+   g.config # returns whole config hash
+   
+   g.tag # returns array of Git::Tag objects
+   
+   
+   
+And here are the operations that will need to write to your git repository.
+   
+   
+   g = Git.init
+     Git.init('project')
+     Git.init('/home/schacon/proj', 
+	 	  { :git_dir => '/opt/git/proj.git', 
+		     :index_file => '/tmp/index'} )
+ 	  
+   g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout')   
+   g.config('user.name', 'Scott Chacon')
+   g.config('user.email', 'email@email.com')      
+   
+   g.add('.')
+   g.add([file1, file2])
+   
+   g.remove('file.txt')
+   g.remove(['file.txt', 'file2.txt'])
+		     
+   g.commit('message')
+   g.commit_all('message')
+   
+   g = Git.clone(repo, 'myrepo')
+   g.chdir do
+    new_file('test-file', 'blahblahblah')
+    g.status.changed.each do |file|
+     puts file.blob(:index).contents
+    end
+   end
+   
+   g.reset # defaults to HEAD
+   g.reset_hard(Git::Commit)
+   
+   g.branch('new_branch') # creates new or fetches existing
+   g.branch('new_branch').checkout
+   g.branch('new_branch').delete
+   g.branch('existing_branch').checkout
+   
+   g.checkout('new_branch')
+   g.checkout(g.branch('new_branch'))
+   
+   g.branch(name).merge(branch2)
+   g.branch(branch2).merge  # merges HEAD with branch2
+   
+   g.branch(name).in_branch(message) { # add files }  # auto-commits
+   g.merge('new_branch')
+   g.merge('origin/remote_branch')
+   g.merge(b.branch('master'))
+   g.merge([branch1, branch2])
+   
+   r = g.add_remote(name, uri)  # Git::Remote
+   r = g.add_remote(name, Git::Base)  # Git::Remote
+   
+   g.remotes  # array of Git::Remotes
+   g.remote(name).fetch
+   g.remote(name).remove
+   g.remote(name).merge
+   g.remote(name).merge(branch)
+   
+   g.fetch
+   g.fetch(g.remotes.first)
+   
+   g.pull
+   g.pull(Git::Repo, Git::Branch) # fetch and a merge
+   
+   g.add_tag('tag_name') # returns Git::Tag
+   
+   g.repack
+
+   g.push
+   g.push(g.remote('name'))

@@ -296,6 +296,10 @@ module Git
       command('fetch', remote.to_s)
     end
     
+    def push(remote, branch = 'master')
+      command('push', [remote.to_s, branch.to_s])
+    end
+    
     def tag_sha(tag_name)
       command('show-ref',  ['--tags', '-s', tag_name])
     end  

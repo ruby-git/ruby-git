@@ -88,16 +88,16 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000068">checkout</a>&nbsp;&nbsp;
-      <a href="#M000070">create</a>&nbsp;&nbsp;
-      <a href="#M000072">current</a>&nbsp;&nbsp;
-      <a href="#M000071">delete</a>&nbsp;&nbsp;
-      <a href="#M000067">gcommit</a>&nbsp;&nbsp;
-      <a href="#M000069">in_branch</a>&nbsp;&nbsp;
-      <a href="#M000073">merge</a>&nbsp;&nbsp;
-      <a href="#M000066">new</a>&nbsp;&nbsp;
-      <a href="#M000074">to_a</a>&nbsp;&nbsp;
-      <a href="#M000075">to_s</a>&nbsp;&nbsp;
+      <a href="#M000069">checkout</a>&nbsp;&nbsp;
+      <a href="#M000071">create</a>&nbsp;&nbsp;
+      <a href="#M000073">current</a>&nbsp;&nbsp;
+      <a href="#M000072">delete</a>&nbsp;&nbsp;
+      <a href="#M000068">gcommit</a>&nbsp;&nbsp;
+      <a href="#M000070">in_branch</a>&nbsp;&nbsp;
+      <a href="#M000074">merge</a>&nbsp;&nbsp;
+      <a href="#M000067">new</a>&nbsp;&nbsp;
+      <a href="#M000075">to_a</a>&nbsp;&nbsp;
+      <a href="#M000076">to_s</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -142,19 +142,19 @@
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000066" class="method-detail">
-        <a name="M000066"></a>
+      <div id="method-M000067" class="method-detail">
+        <a name="M000067"></a>
 
         <div class="method-heading">
-          <a href="#M000066" class="method-signature">
+          <a href="#M000067" class="method-signature">
           <span class="method-name">new</span><span class="method-args">(base, name)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000066-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000066-source">
+            onclick="toggleCode('M000067-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000067-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 9</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">name</span>)
@@ -177,19 +177,19 @@
 
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000068" class="method-detail">
-        <a name="M000068"></a>
+      <div id="method-M000069" class="method-detail">
+        <a name="M000069"></a>
 
         <div class="method-heading">
-          <a href="#M000068" class="method-signature">
+          <a href="#M000069" class="method-signature">
           <span class="method-name">checkout</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000068-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000068-source">
+            onclick="toggleCode('M000069-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000069-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 28</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">checkout</span>
@@ -201,23 +201,46 @@
         </div>
       </div>
 
-      <div id="method-M000070" class="method-detail">
-        <a name="M000070"></a>
+      <div id="method-M000071" class="method-detail">
+        <a name="M000071"></a>
 
         <div class="method-heading">
-          <a href="#M000070" class="method-signature">
+          <a href="#M000071" class="method-signature">
           <span class="method-name">create</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000070-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000070-source">
+            onclick="toggleCode('M000071-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000071-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 50</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">create</span>
       <span class="ruby-identifier">check_if_create</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000073" class="method-detail">
+        <a name="M000073"></a>
+
+        <div class="method-heading">
+          <a href="#M000073" class="method-signature">
+          <span class="method-name">current</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000073-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000073-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/branch.rb, line 58</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">current</span>
+      <span class="ruby-identifier">determine_current</span>
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -229,7 +252,7 @@
 
         <div class="method-heading">
           <a href="#M000072" class="method-signature">
-          <span class="method-name">current</span><span class="method-args">()</span>
+          <span class="method-name">delete</span><span class="method-args">()</span>
           </a>
         </div>
       
@@ -237,29 +260,6 @@
           <p><a class="source-toggle" href="#"
             onclick="toggleCode('M000072-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000072-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/branch.rb, line 58</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">current</span>
-      <span class="ruby-identifier">determine_current</span>
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000071" class="method-detail">
-        <a name="M000071"></a>
-
-        <div class="method-heading">
-          <a href="#M000071" class="method-signature">
-          <span class="method-name">delete</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000071-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000071-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 54</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>
@@ -270,19 +270,19 @@
         </div>
       </div>
 
-      <div id="method-M000067" class="method-detail">
-        <a name="M000067"></a>
+      <div id="method-M000068" class="method-detail">
+        <a name="M000068"></a>
 
         <div class="method-heading">
-          <a href="#M000067" class="method-signature">
+          <a href="#M000068" class="method-signature">
           <span class="method-name">gcommit</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000067-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000067-source">
+            onclick="toggleCode('M000068-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000068-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 23</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">gcommit</span>
@@ -294,11 +294,11 @@
         </div>
       </div>
 
-      <div id="method-M000069" class="method-detail">
-        <a name="M000069"></a>
+      <div id="method-M000070" class="method-detail">
+        <a name="M000070"></a>
 
         <div class="method-heading">
-          <a href="#M000069" class="method-signature">
+          <a href="#M000070" class="method-signature">
           <span class="method-name">in_branch</span><span class="method-args">(message = 'in branch work') {|| ...}</span>
           </a>
         </div>
@@ -306,7 +306,7 @@
         <div class="method-description">
           <p>
 g.branch(&#8216;new_branch&#8217;).<a
-href="Branch.html#M000069">in_branch</a> do
+href="Branch.html#M000070">in_branch</a> do
 </p>
 <pre>
   # create new file
@@ -317,8 +317,8 @@ href="Branch.html#M000069">in_branch</a> do
 end
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000069-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000069-source">
+            onclick="toggleCode('M000070-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000070-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 39</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">in_branch</span> (<span class="ruby-identifier">message</span> = <span class="ruby-value str">'in branch work'</span>)
@@ -336,19 +336,19 @@ end
         </div>
       </div>
 
-      <div id="method-M000073" class="method-detail">
-        <a name="M000073"></a>
+      <div id="method-M000074" class="method-detail">
+        <a name="M000074"></a>
 
         <div class="method-heading">
-          <a href="#M000073" class="method-signature">
+          <a href="#M000074" class="method-signature">
           <span class="method-name">merge</span><span class="method-args">(branch = nil, message = nil)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000073-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000073-source">
+            onclick="toggleCode('M000074-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000074-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 62</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">merge</span>(<span class="ruby-identifier">branch</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">message</span> = <span class="ruby-keyword kw">nil</span>)
@@ -368,19 +368,19 @@ end
         </div>
       </div>
 
-      <div id="method-M000074" class="method-detail">
-        <a name="M000074"></a>
+      <div id="method-M000075" class="method-detail">
+        <a name="M000075"></a>
 
         <div class="method-heading">
-          <a href="#M000074" class="method-signature">
+          <a href="#M000075" class="method-signature">
           <span class="method-name">to_a</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000074-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000074-source">
+            onclick="toggleCode('M000075-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000075-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 75</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_a</span>
@@ -391,19 +391,19 @@ end
         </div>
       </div>
 
-      <div id="method-M000075" class="method-detail">
-        <a name="M000075"></a>
+      <div id="method-M000076" class="method-detail">
+        <a name="M000076"></a>
 
         <div class="method-heading">
-          <a href="#M000075" class="method-signature">
+          <a href="#M000076" class="method-signature">
           <span class="method-name">to_s</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000075-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000075-source">
+            onclick="toggleCode('M000076-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000076-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 79</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_s</span>

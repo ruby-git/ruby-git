@@ -41,5 +41,40 @@ class TestRemotes < Test::Unit::TestCase
       #puts loc.remotes.inspect
     end
   end
+  
+  def test_push
+    in_temp_dir do |path|
+      loc = Git.clone(@wbare, 'local')
+      rem = Git.clone(@wbare, 'remote')
+        
+      r = loc.add_remote('testrem', rem)
+
+      loc.chdir do
+        new_file('test-file1', 'blahblahblah1')
+        loc.add
+        loc.commit('master commit')
+        
+        loc.branch('testbranch').in_branch('tb commit') do
+          new_file('test-file3', 'blahblahblah3')
+          loc.add
+          true          
+        end
+      end
+      assert(!rem.status['test-file1'])
+      assert(!rem.status['test-file3'])
+    
+      loc.push('testrem')
+
+      assert(rem.status['test-file1'])    
+      assert(!rem.status['test-file3'])    
+      
+      loc.push('testrem', 'testbranch')
+
+      rem.checkout('testbranch')
+      assert(rem.status['test-file1'])    
+      assert(rem.status['test-file3'])    
+    end
+  end
+
 
 end

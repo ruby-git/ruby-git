@@ -5,11 +5,11 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
     s.platform  =   Gem::Platform::RUBY
     s.name      =   "git"
-    s.version   =   "1.0.0"
+    s.version   =   "1.0.1"
     s.author    =   "Scott Chacon"
     s.email     =   "schacon@gmail.com"
     s.summary   =   "A package for using Git in Ruby code."
-    s.files     =   FileList['lib/*.rb', 'test/*'].to_a
+    s.files     =   FileList['lib/**/*', 'tests/**/*', 'doc/**/*'].to_a
     s.require_path  =   "lib"
     s.autorequire   =   "git"
     s.test_files = Dir.glob('tests/*.rb')
@@ -27,7 +27,7 @@ end
 
 desc "Regenerate Documentation"
 task :doc do |t|
- system('rdoc lib/ README EXAMPLES --main README --inline-source')
+ system('rdoc lib/ README --main README --inline-source')
 end
 
 desc "Run Unit Tests"

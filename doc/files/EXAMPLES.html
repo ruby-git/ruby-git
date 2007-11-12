@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Sun Nov 11 17:51:57 PST 2007</td>
+      <td>Mon Nov 12 10:27:43 PST 2007</td>
     </tr>
     </table>
   </div>
@@ -70,169 +70,148 @@
 
     <div id="description">
       <p>
-require &#8216;git&#8217;
+Here are a bunch of examples of how to use the Ruby/<a
+href="../classes/Git.html">Git</a> package.
 </p>
 <p>
-# needs read permission only
-</p>
-<p>
-g = <a href="../classes/Git.html#M000002">Git.open</a> (working_dir =
-&#8217;.&#8217;)
+First you have to remember to require rubygems if it&#8217;s not. Then
+include the &#8216;git&#8217; gem.
 </p>
 <pre>
-       (git_dir, index_file)
+   require 'rubygems'
+   gem 'git'
 </pre>
 <p>
-g.index g.index.readable? g.index.writable? g.repo g.dir
-</p>
-<p>
-g.log # returns array of Git::Commit objects g.log.since(&#8216;2 weeks
-ago&#8217;) g.log.between(&#8216;v2.5&#8217;, &#8216;v2.6&#8217;)
-g.log.each {|l| puts l.sha }
-g.gblob(&#8216;v2.5:Makefile&#8217;).log.since(&#8216;2 weeks ago&#8217;)
-</p>
-<p>
-g.object(&#8216;HEAD^&#8217;).to_s # git show / git rev-parse
-g.object(&#8216;HEAD^&#8217;).contents
-g.object(&#8216;v2.5:Makefile&#8217;).size
-g.object(&#8216;v2.5:Makefile&#8217;).sha
-</p>
-<p>
-g.gtree(treeish) g.gblob(treeish) g.gcommit(treeish)
-</p>
-<p>
-g.revparse(&#8216;v2.5:Makefile&#8217;)
-</p>
-<p>
-g.branches # returns <a href="../classes/Git/Branch.html">Git::Branch</a>
-objects g.branches.local g.branches.remote g.branches[:master].gcommit
-g.branches[&#8216;origin/master&#8217;].gcommit
-</p>
-<p>
-g.grep(&#8216;hello&#8217;) # implies HEAD
-g.blob(&#8216;v2.5:Makefile&#8217;).grep(&#8216;hello&#8217;)
-g.tag(&#8216;v2.5&#8217;).grep(&#8216;hello&#8217;, &#8216;docs/&#8217;)
-</p>
-<p>
-g.diff(commit1, commit2).size g.diff(commit1, commit2).stats
-g.gtree(&#8216;v2.5&#8217;).diff(&#8216;v2.6&#8217;).insertions
-g.diff(&#8216;gitsearch1&#8217;,
-&#8216;v2.5&#8217;).path(&#8216;lib/&#8217;)
-g.diff(&#8216;gitsearch1&#8217;, @git.gtree(&#8216;v2.5&#8217;))
-g.diff(&#8216;gitsearch1&#8217;,
-&#8216;v2.5&#8217;).path(&#8216;docs/&#8217;).patch
-g.gtree(&#8216;v2.5&#8217;).diff(&#8216;v2.6&#8217;).patch
-</p>
-<p>
-g.gtree(&#8216;v2.5&#8217;).diff(&#8216;v2.6&#8217;).each do |file_diff|
+Here are the operations that need read permission only.
 </p>
 <pre>
-  puts file_diff.path
-  puts file_diff.patch
-  puts file_diff.blob(:src).contents
+   g = Git.open (working_dir = '.')
+          (git_dir, index_file)
+
+   g.index
+   g.index.readable?
+   g.index.writable?
+   g.repo
+   g.dir
+
+   g.log   # returns array of Git::Commit objects
+   g.log.since('2 weeks ago')
+   g.log.between('v2.5', 'v2.6')
+   g.log.each {|l| puts l.sha }
+   g.gblob('v2.5:Makefile').log.since('2 weeks ago')
+
+   g.object('HEAD^').to_s  # git show / git rev-parse
+   g.object('HEAD^').contents
+   g.object('v2.5:Makefile').size
+   g.object('v2.5:Makefile').sha
+
+   g.gtree(treeish)
+   g.gblob(treeish)
+   g.gcommit(treeish)
+
+   g.revparse('v2.5:Makefile')
+
+   g.branches # returns Git::Branch objects
+   g.branches.local
+   g.branches.remote
+   g.branches[:master].gcommit
+   g.branches['origin/master'].gcommit
+
+   g.grep('hello')  # implies HEAD
+   g.blob('v2.5:Makefile').grep('hello')
+   g.tag('v2.5').grep('hello', 'docs/')
+
+   g.diff(commit1, commit2).size
+   g.diff(commit1, commit2).stats
+   g.gtree('v2.5').diff('v2.6').insertions
+   g.diff('gitsearch1', 'v2.5').path('lib/')
+   g.diff('gitsearch1', @git.gtree('v2.5'))
+   g.diff('gitsearch1', 'v2.5').path('docs/').patch
+   g.gtree('v2.5').diff('v2.6').patch
+
+   g.gtree('v2.5').diff('v2.6').each do |file_diff|
+     puts file_diff.path
+     puts file_diff.patch
+     puts file_diff.blob(:src).contents
+   end
+
+   g.config('user.name')  # returns 'Scott Chacon'
+   g.config # returns whole config hash
+
+   g.tag # returns array of Git::Tag objects
 </pre>
 <p>
-end
-</p>
-<p>
-g.config(&#8216;user.name&#8217;) # returns &#8216;Scott Chacon&#8217;
-g.config # returns whole config hash
-</p>
-<p>
-g.tag # returns array of Git::Tag objects
-</p>
-<p>
-# needs write permission
-</p>
-<p>
-g = <a href="../classes/Git.html#M000003">Git.init</a>
+And here are the operations that will need to write to your git repository.
 </p>
 <pre>
-  Git.init('project')
-  Git.init('/home/schacon/proj',
-              { :git_dir =&gt; '/opt/git/proj.git',
-                  :index_file =&gt; '/tmp/index'} )
+   g = Git.init
+     Git.init('project')
+     Git.init('/home/schacon/proj',
+                 { :git_dir =&gt; '/opt/git/proj.git',
+                     :index_file =&gt; '/tmp/index'} )
+
+   g = Git.clone(URI, :name =&gt; 'name', :path =&gt; '/tmp/checkout'
+          (git_dir, index_file)
+
+   g.config('user.name', 'Scott Chacon')
+   g.config('user.email', 'email@email.com')
+
+   g.add('.')
+   g.add([file1, file2])
+
+   g.remove('file.txt')
+   g.remove(['file.txt', 'file2.txt'])
+
+   g.commit('message')
+   g.commit_all('message')
+
+   g = Git.clone(repo, 'myrepo')
+   Dir.chdir('myrepo') do
+    new_file('test-file', 'blahblahblah')
+    g.status.changed.each do |file|
+     puts file.blob(:index).contents
+    end
+   end
+
+   g.reset # defaults to HEAD
+   g.reset_hard(Git::Commit)
+
+   g.branch('new_branch') # creates new or fetches existing
+   g.branch('new_branch').checkout
+   g.branch('new_branch').delete
+   g.branch('existing_branch').checkout
+
+   g.checkout('new_branch')
+   g.checkout(g.branch('new_branch'))
+
+   g.branch(name).merge(branch2)
+   g.branch(branch2).merge  # merges HEAD with branch2
+
+   g.branch(name).in_branch(message) { # add files }  # auto-commits
+   g.merge('new_branch')
+   g.merge('origin/remote_branch')
+   g.merge(b.branch('master'))
+   g.merge([branch1, branch2])
+
+   r = g.add_remote(name, uri)  # Git::Remote
+   r = g.add_remote(name, Git::Base)  # Git::Remote
+
+   g.remotes  # array of Git::Remotes
+   g.remote(name).fetch
+   g.remote(name).remove
+   g.remote(name).merge
+   g.remote(name).merge(branch)
+
+   g.fetch
+   g.fetch(g.remotes.first)
+
+   g.pull
+   g.pull(Git::Repo, Git::Branch) # fetch and a merge
+
+   g.add_tag('tag_name') # returns Git::Tag
+
+   g.repack
 </pre>
-<p>
-g = <a href="../classes/Git.html#M000004">Git.clone</a>(URI, :name =&gt;
-&#8216;name&#8217;, :path =&gt; &#8217;/tmp/checkout&#8216;
-</p>
-<pre>
-       (git_dir, index_file)
-</pre>
-<p>
-g.config(&#8216;user.name&#8217;, &#8216;Scott Chacon&#8217;)
-g.config(&#8216;user.email&#8217;, &#8216;email@email.com&#8217;)
-</p>
-<p>
-g.add(&#8217;.&#8217;) g.add([file1, file2])
-</p>
-<p>
-g.remove(&#8216;file.txt&#8217;) g.remove([&#8216;file.txt&#8217;,
-&#8216;file2.txt&#8217;])
-</p>
-<p>
-g.commit(&#8216;message&#8217;) g.commit_all(&#8216;message&#8217;)
-</p>
-<p>
-g = <a href="../classes/Git.html#M000004">Git.clone</a>(repo,
-&#8216;myrepo&#8217;) Dir.chdir(&#8216;myrepo&#8217;) do
-</p>
-<pre>
- new_file('test-file', 'blahblahblah')
- g.status.untracked.each do |file|
-  puts file.blob(:index).contents
- end
-</pre>
-<p>
-end
-</p>
-<p>
-g.reset # defaults to HEAD g.reset_hard(Git::Commit)
-</p>
-<p>
-g.branch(&#8216;new_branch&#8217;) # creates new or fetches existing
-g.branch(&#8216;new_branch&#8217;).checkout
-g.branch(&#8216;new_branch&#8217;).delete
-g.branch(&#8216;existing_branch&#8217;).checkout
-</p>
-<p>
-g.checkout(&#8216;new_branch&#8217;)
-g.checkout(g.branch(&#8216;new_branch&#8217;))
-</p>
-<p>
-g.branch(name).merge(branch2) g.branch(branch2).merge # merges HEAD with
-branch2
-</p>
-<p>
-g.branch(name).in_branch(message) { # add files } # auto-commits
-g.merge(&#8216;new_branch&#8217;)
-g.merge(&#8216;origin/remote_branch&#8217;)
-g.merge(b.branch(&#8216;master&#8217;)) g.merge([branch1, branch2])
-</p>
-<p>
-r = g.add_remote(name, uri) # <a
-href="../classes/Git/Remote.html">Git::Remote</a> r = g.add_remote(name, <a
-href="../classes/Git/Base.html">Git::Base</a>) # <a
-href="../classes/Git/Remote.html">Git::Remote</a>
-</p>
-<p>
-g.remotes # array of Git::Remotes g.remote(name).fetch
-g.remote(name).remove g.remote(name).merge g.remote(name).merge(branch)
-</p>
-<p>
-g.fetch g.fetch(g.remotes.first)
-</p>
-<p>
-g.pull g.pull(Git::Repo, <a
-href="../classes/Git/Branch.html">Git::Branch</a>) # fetch and a merge
-</p>
-<p>
-g.add_tag(&#8216;tag_name&#8217;) # returns Git::Tag
-</p>
-<p>
-g.repack
-</p>
 
     </div>
 

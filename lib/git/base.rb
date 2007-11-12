@@ -185,7 +185,7 @@ module Git
       self.lib.commit(message, opts)
     end
 
-    def checkout(branch, opts = {})
+    def checkout(branch = 'master', opts = {})
       self.lib.checkout(branch, opts)
     end
     
@@ -193,6 +193,10 @@ module Git
       self.lib.fetch(remote)
     end
 
+    def push(remote = 'origin', branch = 'master')
+      self.lib.push(remote, branch)
+    end
+    
     def merge(branch, message = 'merge')
       self.lib.merge(branch, message)
     end

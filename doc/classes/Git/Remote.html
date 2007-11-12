@@ -88,13 +88,13 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000151">branch</a>&nbsp;&nbsp;
-      <a href="#M000149">fetch</a>&nbsp;&nbsp;
-      <a href="#M000150">merge</a>&nbsp;&nbsp;
-      <a href="#M000147">new</a>&nbsp;&nbsp;
-      <a href="#M000148">remove</a>&nbsp;&nbsp;
-      <a href="#M000152">remove</a>&nbsp;&nbsp;
-      <a href="#M000153">to_s</a>&nbsp;&nbsp;
+      <a href="#M000153">branch</a>&nbsp;&nbsp;
+      <a href="#M000151">fetch</a>&nbsp;&nbsp;
+      <a href="#M000152">merge</a>&nbsp;&nbsp;
+      <a href="#M000149">new</a>&nbsp;&nbsp;
+      <a href="#M000150">remove</a>&nbsp;&nbsp;
+      <a href="#M000154">remove</a>&nbsp;&nbsp;
+      <a href="#M000155">to_s</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -139,19 +139,19 @@
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000147" class="method-detail">
-        <a name="M000147"></a>
+      <div id="method-M000149" class="method-detail">
+        <a name="M000149"></a>
 
         <div class="method-heading">
-          <a href="#M000147" class="method-signature">
+          <a href="#M000149" class="method-signature">
           <span class="method-name">new</span><span class="method-args">(base, name)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000147-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000147-source">
+            onclick="toggleCode('M000149-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000149-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/remote.rb, line 8</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">name</span>)
@@ -168,19 +168,19 @@
 
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000151" class="method-detail">
-        <a name="M000151"></a>
+      <div id="method-M000153" class="method-detail">
+        <a name="M000153"></a>
 
         <div class="method-heading">
-          <a href="#M000151" class="method-signature">
+          <a href="#M000153" class="method-signature">
           <span class="method-name">branch</span><span class="method-args">(branch = 'master')</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000151-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000151-source">
+            onclick="toggleCode('M000153-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000153-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/remote.rb, line 29</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch</span>(<span class="ruby-identifier">branch</span> = <span class="ruby-value str">'master'</span>)
@@ -191,72 +191,23 @@
         </div>
       </div>
 
-      <div id="method-M000149" class="method-detail">
-        <a name="M000149"></a>
+      <div id="method-M000151" class="method-detail">
+        <a name="M000151"></a>
 
         <div class="method-heading">
-          <a href="#M000149" class="method-signature">
+          <a href="#M000151" class="method-signature">
           <span class="method-name">fetch</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000149-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000149-source">
+            onclick="toggleCode('M000151-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000151-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/remote.rb, line 20</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">fetch</span>
       <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">fetch</span>(<span class="ruby-ivar">@name</span>)
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000150" class="method-detail">
-        <a name="M000150"></a>
-
-        <div class="method-heading">
-          <a href="#M000150" class="method-signature">
-          <span class="method-name">merge</span><span class="method-args">(branch = 'master')</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p>
-merge this remote locally
-</p>
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000150-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000150-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/remote.rb, line 25</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">merge</span>(<span class="ruby-identifier">branch</span> = <span class="ruby-value str">'master'</span>)
-      <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-node">&quot;#{@name}/#{branch}&quot;</span>)
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000148" class="method-detail">
-        <a name="M000148"></a>
-
-        <div class="method-heading">
-          <a href="#M000148" class="method-signature">
-          <span class="method-name">remove</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000148-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000148-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/remote.rb, line 16</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>
-      <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">remote_remove</span>(<span class="ruby-ivar">@name</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -268,14 +219,63 @@ merge this remote locally
 
         <div class="method-heading">
           <a href="#M000152" class="method-signature">
+          <span class="method-name">merge</span><span class="method-args">(branch = 'master')</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+merge this remote locally
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000152-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000152-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/remote.rb, line 25</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">merge</span>(<span class="ruby-identifier">branch</span> = <span class="ruby-value str">'master'</span>)
+      <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-node">&quot;#{@name}/#{branch}&quot;</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000150" class="method-detail">
+        <a name="M000150"></a>
+
+        <div class="method-heading">
+          <a href="#M000150" class="method-signature">
           <span class="method-name">remove</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000152-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000152-source">
+            onclick="toggleCode('M000150-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000150-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/remote.rb, line 16</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>
+      <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">remote_remove</span>(<span class="ruby-ivar">@name</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000154" class="method-detail">
+        <a name="M000154"></a>
+
+        <div class="method-heading">
+          <a href="#M000154" class="method-signature">
+          <span class="method-name">remove</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000154-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000154-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/remote.rb, line 33</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>
@@ -286,19 +286,19 @@ merge this remote locally
         </div>
       </div>
 
-      <div id="method-M000153" class="method-detail">
-        <a name="M000153"></a>
+      <div id="method-M000155" class="method-detail">
+        <a name="M000155"></a>
 
         <div class="method-heading">
-          <a href="#M000153" class="method-signature">
+          <a href="#M000155" class="method-signature">
           <span class="method-name">to_s</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000153-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000153-source">
+            onclick="toggleCode('M000155-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000155-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/remote.rb, line 37</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_s</span>
