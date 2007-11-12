@@ -30,6 +30,11 @@ task :doc do |t|
  system('rdoc lib/ README --main README --inline-source')
 end
 
+desc "Upload Docs"
+task :upload_docs do |t|
+ system('rsync -rv --delete doc/ git.rubyforge.org:/var/www/gforge-projects/git')
+end
+
 desc "Run Unit Tests"
 task :test do |t|
     require File.dirname(__FILE__) + '/tests/all_tests.rb'

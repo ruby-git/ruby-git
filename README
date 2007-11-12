@@ -2,6 +2,15 @@
 
 Library for using Git in Ruby.
 
+= Homepage
+
+The Ruby/Git homepage is currently at : 
+
+http://jointheconversation.org/rubygit
+
+Git public hosting of the project source code is at:
+
+http://repo.or.cz/w/rubygit.git
 
 = Roadmap
 

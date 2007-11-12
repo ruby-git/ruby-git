@@ -30,6 +30,8 @@ require 'git/ref'
 =end
 
 module Git
+
+  VERSION = '1.0.1'
   
   def self.bare(git_dir)
     Base.bare(git_dir)
