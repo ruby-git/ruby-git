@@ -300,7 +300,9 @@ module Git
       command('show-ref',  ['--tags', '-s', tag_name])
     end  
     
-    
+    def repack
+      command('repack', ['-a', '-d'])
+    end
     
     private
     

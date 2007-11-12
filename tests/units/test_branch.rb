@@ -13,7 +13,6 @@ class TestBranch < Test::Unit::TestCase
     
     @branches = @git.branches
   end
-
   
   def test_branches_all
     assert(@git.branches[:master].is_a?(Git::Branch))
@@ -38,7 +37,7 @@ class TestBranch < Test::Unit::TestCase
     assert_equal('master', b.name)
     assert_equal('working/master', b.full)
     assert_equal('working', b.remote.name)
-    assert_equal('+refs/heads/*:refs/remotes/working/*', b.remote.fetch)
+    assert_equal('+refs/heads/*:refs/remotes/working/*', b.remote.fetch_opts)
     assert_equal('../working.git', b.remote.url)
   end
   

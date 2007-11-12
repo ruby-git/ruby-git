@@ -90,6 +90,14 @@ module Git
       end
     end
     
+    def repo_size
+      size = 0
+      Dir.chdir(repo.path) do
+        (size, dot) = `du -d0`.chomp.split
+      end
+      size.to_i
+    end
+    
     #g.config('user.name', 'Scott Chacon') # sets value
     #g.config('user.email', 'email@email.com')  # sets value
     #g.config('user.name')  # returns 'Scott Chacon'
@@ -221,6 +229,9 @@ module Git
     
     # convenience methods
 
+    def repack
+      self.lib.repack
+    end
     
     def revparse(objectish)
       self.lib.revparse(objectish)

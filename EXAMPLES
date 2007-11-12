@@ -128,8 +128,4 @@ g.pull(Git::Repo, Git::Branch) # fetch and a merge
 
 g.add_tag('tag_name') # returns Git::Tag
 
-
-***** IMPLEMENTED *****
-
-
-g.pack
+g.repack

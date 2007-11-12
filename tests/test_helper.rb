@@ -14,9 +14,29 @@ class Test::Unit::TestCase
       @test_dir = File.join(cwd, 'tests', 'files')
     end
     
-    @wdir = File.expand_path(File.join(@test_dir, 'working'))
+    @wdir_dot = File.expand_path(File.join(@test_dir, 'working'))
     @wbare = File.expand_path(File.join(@test_dir, 'working.git'))
     @index = File.expand_path(File.join(@test_dir, 'index'))
+    
+    @wdir = create_temp_repo(@wdir_dot)
+  end
+  
+  def teardown
+    if @wdir
+      FileUtils.rm_r(@wdir)
+    end
+  end
+  
+  def create_temp_repo(clone_path)
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s
+    tmp_path = File.join("/tmp/", filename)
+    FileUtils.mkdir_p(tmp_path)
+    FileUtils.cp_r(clone_path, tmp_path)
+    tmp_path = File.join(tmp_path, 'working')
+    Dir.chdir(tmp_path) do
+      FileUtils.mv('dot_git', '.git')
+    end
+    tmp_path
   end
   
   def in_temp_dir(remove_after = true)
