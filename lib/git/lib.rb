@@ -79,6 +79,32 @@ module Git
       command('cat-file', ['-s', sha]).to_i
     end
     
+    # returns useful array of raw commit object data
+    def commit_data(sha)
+      in_message = false
+      
+      hsh = {'message' => '', 'parent' => []}
+      command_lines('cat-file', ['commit', sha.to_s]).each do |line|
+        if in_message
+          hsh['message'] += line + "\n"
+        end
+        
+        if (line != '') && !in_message
+          data = line.split
+          key = data.shift
+          value = data.join(' ')
+          if key == 'parent'
+            hsh[key] << value
+          else
+            hsh[key] = value
+          end
+        else
+          in_message = true
+        end
+      end
+      hsh
+    end
+    
     def object_contents(sha)
       command('cat-file', ['-p', sha])
     end

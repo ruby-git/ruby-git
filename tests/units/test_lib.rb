@@ -13,6 +13,14 @@ class TestLib < Test::Unit::TestCase
     set_file_paths
     @lib = Git.open(@wdir).lib
   end
+  
+  def test_commit_data
+    data = @lib.commit_data('1cc8667014381')
+    assert_equal('scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800', data['author'])
+    assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', data['tree'])
+    assert_equal("test\n", data['message'])
+    assert_equal(["546bec6f8872efa41d5d97a369f669165ecda0de"], data['parent'])
+  end
 
   # takes parameters, returns array of appropriate commit objects
   # :count

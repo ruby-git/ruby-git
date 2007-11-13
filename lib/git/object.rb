@@ -12,7 +12,7 @@ module Git
     
       def initialize(base, sha)
         @base = base
-        @sha = sha
+        @sha = sha.to_s
         @size = @base.lib.object_size(@sha)
         setup
       end
@@ -63,9 +63,74 @@ module Git
     end
   
     class Commit < AbstractObject
+      
+      @tree = nil
+      @parents = nil
+      @author = nil
+      @committer = nil
+      @message = nil
+      
       def setup
         @type = 'commit'
       end
+      
+      def message
+        check_commit
+        @message
+      end
+      
+      def gtree
+        check_commit
+        Tree.new(@base, @tree)
+      end
+      
+      def parent
+        parents.first
+      end
+      
+      # array of all parent commits
+      def parents
+        check_commit
+        @parents        
+      end
+      
+      # git author
+      def author     
+        check_commit
+        @author
+      end
+      
+      def author_date
+        author.date
+      end
+      
+      # git author
+      def committer
+        check_commit
+        @committer
+      end
+      
+      def committer_date 
+        committer.date
+      end
+      alias_method :date, :committer_date
+
+      def diff_parent
+        diff(parent)
+      end
+      
+      private
+      
+        # see if this object has been initialized and do so if not
+        def check_commit
+          data = @base.lib.commit_data(@sha)
+          @committer = Git::Author.new(data['committer'])
+          @author = Git::Author.new(data['author'])
+          @tree = Tree.new(@base, data['tree'])
+          @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
+          @message = data['message'].chomp
+        end
+      
     end
   
     class Tag < AbstractObject

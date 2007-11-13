@@ -21,17 +21,11 @@ require 'git/remote'
 
 require 'git/diff'
 require 'git/status'
-=begin
 require 'git/author'
-require 'git/file'
-
-require 'git/sha'
-require 'git/ref'
-=end
 
 module Git
 
-  VERSION = '1.0.1'
+  VERSION = '1.0.2'
   
   def self.bare(git_dir)
     Base.bare(git_dir)
