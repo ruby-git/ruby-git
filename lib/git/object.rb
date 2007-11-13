@@ -3,6 +3,7 @@ module Git
   class GitTagNameDoesNotExist< StandardError 
   end
   
+  # represents a git object
   class Object
     
     class AbstractObject
@@ -57,9 +58,11 @@ module Git
         @mode = mode
       end
       
-      def setup
-        @type = 'blob'
-      end
+      private
+      
+        def setup
+          @type = 'blob'
+        end
     end
   
     class Tree < AbstractObject
@@ -70,10 +73,6 @@ module Git
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
-      end
-      
-      def setup
-        @type = 'tree'
       end
       
       def children
@@ -92,9 +91,13 @@ module Git
       end
       alias_method :subtrees, :trees
       alias_method :subdirectories, :trees
-        
+       
       private
       
+        def setup
+          @type = 'tree'
+        end 
+
         # actually run the git command
         def check_tree
           if !@trees
@@ -115,10 +118,6 @@ module Git
       @author = nil
       @committer = nil
       @message = nil
-      
-      def setup
-        @type = 'commit'
-      end
       
       def message
         check_commit
@@ -164,9 +163,13 @@ module Git
       def diff_parent
         diff(parent)
       end
-      
+            
       private
       
+        def setup
+          @type = 'commit'
+        end
+  
         # see if this object has been initialized and do so if not
         def check_commit
           if !@tree
@@ -189,9 +192,12 @@ module Git
         @name = name
       end
       
-      def setup
-        @type = 'tag'
-      end
+      private
+        
+        def setup
+          @type = 'tag'
+        end
+        
     end
     
     class << self

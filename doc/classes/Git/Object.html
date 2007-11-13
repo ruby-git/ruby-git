@@ -80,6 +80,12 @@
 
   <div id="contextContent">
 
+    <div id="description">
+      <p>
+represents a git object
+</p>
+
+    </div>
 
 
    </div>
@@ -88,7 +94,7 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000122">new</a>&nbsp;&nbsp;
+      <a href="#M000125">new</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -120,11 +126,11 @@ Class <a href="Object/Tree.html" class="link">Git::Object::Tree</a><br />
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000122" class="method-detail">
-        <a name="M000122"></a>
+      <div id="method-M000125" class="method-detail">
+        <a name="M000125"></a>
 
         <div class="method-heading">
-          <a href="#M000122" class="method-signature">
+          <a href="#M000125" class="method-signature">
           <span class="method-name">new</span><span class="method-args">(base, objectish, is_tag = false)</span>
           </a>
         </div>
@@ -135,10 +141,10 @@ if we&#8217;re calling this, we don&#8217;t know what type it is yet so
 this is our little factory method
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000122-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000122-source">
+            onclick="toggleCode('M000125-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000125-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 87</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 206</span>
       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">objectish</span>, <span class="ruby-identifier">is_tag</span> = <span class="ruby-keyword kw">false</span>)
         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">is_tag</span>
           <span class="ruby-identifier">sha</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">tag_sha</span>(<span class="ruby-identifier">objectish</span>)

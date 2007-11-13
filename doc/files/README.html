@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Mon Nov 12 11:07:58 PST 2007</td>
+      <td>Tue Nov 13 06:53:10 PST 2007</td>
     </tr>
     </table>
   </div>
@@ -94,6 +94,39 @@ Right now I&#8217;m forking calls to the &#8216;git&#8217; binary, but
 eventually I&#8217;ll replace that with either C bindings to libgit or
 libgit-thin, or I&#8217;ll write pure ruby handlers for at least some of
 the <a href="../classes/Git.html">Git</a> stuff.
+</p>
+<h1>Major Objects</h1>
+<p>
+<a href="../classes/Git/Base.html">Git::Base</a> - this is the object
+returned from a <a href="../classes/Git.html#M000002">Git.open</a> or <a
+href="../classes/Git.html#M000004">Git.clone</a>. Most major actions are
+called from this object.
+</p>
+<p>
+<a href="../classes/Git/Object.html">Git::Object</a> - this is the base
+object for your tree, blob and commit objects, returned from @git.gtree or
+@git.object calls. the Git::AbstractObject will have most of the calls in
+common for all those objects.
+</p>
+<p>
+<a href="../classes/Git/Diff.html">Git::Diff</a> - returns from a @git.diff
+command. It is an Enumerable that returns <a
+href="../classes/Git/Diff.html">Git::Diff</a>:DiffFile objects from which
+you can get per file patches and insertion/deletion statistics. You can
+also get total statistics from the <a
+href="../classes/Git/Diff.html">Git::Diff</a> object directly.
+</p>
+<p>
+<a href="../classes/Git/Status.html">Git::Status</a>
+</p>
+<p>
+<a href="../classes/Git/Branches.html">Git::Branches</a>
+</p>
+<p>
+<a href="../classes/Git/Remote.html">Git::Remote</a>
+</p>
+<p>
+<a href="../classes/Git/Log.html">Git::Log</a>
 </p>
 <h1>Examples</h1>
 <p>
@@ -135,6 +168,22 @@ Here are the operations that need read permission only.
    g.gtree(treeish)
    g.gblob(treeish)
    g.gcommit(treeish)
+
+   commit = g.gcommit('1cc8667014381')
+    commit.gtree
+    commit.parent.sha
+    commit.parents.size
+    commit.author.name
+    commit.author.email
+    commit.author.date.strftime(&quot;%m-%d-%y&quot;)
+    commit.committer.name
+    commit.date.strftime(&quot;%m-%d-%y&quot;)
+    commit.message
+
+  tree = g.gtree(&quot;HEAD^{tree}&quot;)
+    tree.blobs
+    tree.subtrees
+    tree.children # blobs and subtrees
 
    g.revparse('v2.5:Makefile')
 

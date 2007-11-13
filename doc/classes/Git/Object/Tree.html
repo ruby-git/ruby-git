@@ -88,7 +88,13 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000135">setup</a>&nbsp;&nbsp;
+      <a href="#M000148">blobs</a>&nbsp;&nbsp;
+      <a href="#M000147">children</a>&nbsp;&nbsp;
+      <a href="#M000149">files</a>&nbsp;&nbsp;
+      <a href="#M000146">new</a>&nbsp;&nbsp;
+      <a href="#M000152">subdirectories</a>&nbsp;&nbsp;
+      <a href="#M000151">subtrees</a>&nbsp;&nbsp;
+      <a href="#M000150">trees</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -108,25 +114,141 @@
 
     <!-- if method_list -->
     <div id="methods">
-      <h3 class="section-bar">Public Instance methods</h3>
+      <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000135" class="method-detail">
-        <a name="M000135"></a>
+      <div id="method-M000146" class="method-detail">
+        <a name="M000146"></a>
 
         <div class="method-heading">
-          <a href="#M000135" class="method-signature">
-          <span class="method-name">setup</span><span class="method-args">()</span>
+          <a href="#M000146" class="method-signature">
+          <span class="method-name">new</span><span class="method-args">(base, sha, mode = nil)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000135-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000135-source">
+            onclick="toggleCode('M000146-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000146-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 60</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setup</span>
-        <span class="ruby-ivar">@type</span> = <span class="ruby-value str">'tree'</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 73</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>, <span class="ruby-identifier">mode</span> = <span class="ruby-keyword kw">nil</span>)
+        <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>)
+        <span class="ruby-ivar">@mode</span> = <span class="ruby-identifier">mode</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000148" class="method-detail">
+        <a name="M000148"></a>
+
+        <div class="method-heading">
+          <a href="#M000148" class="method-signature">
+          <span class="method-name">blobs</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000148-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000148-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 82</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">blobs</span>
+        <span class="ruby-identifier">check_tree</span>
+        <span class="ruby-ivar">@blobs</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000147" class="method-detail">
+        <a name="M000147"></a>
+
+        <div class="method-heading">
+          <a href="#M000147" class="method-signature">
+          <span class="method-name">children</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000147-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000147-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 78</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">children</span>
+        <span class="ruby-identifier">blobs</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-identifier">subtrees</span>)
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000149" class="method-detail">
+        <a name="M000149"></a>
+
+        <div class="method-heading">
+          <span class="method-name">files</span><span class="method-args">()</span>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Alias for <a href="Tree.html#M000148">blobs</a>
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000152" class="method-detail">
+        <a name="M000152"></a>
+
+        <div class="method-heading">
+          <span class="method-name">subdirectories</span><span class="method-args">()</span>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Alias for <a href="Tree.html#M000150">trees</a>
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000151" class="method-detail">
+        <a name="M000151"></a>
+
+        <div class="method-heading">
+          <span class="method-name">subtrees</span><span class="method-args">()</span>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Alias for <a href="Tree.html#M000150">trees</a>
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000150" class="method-detail">
+        <a name="M000150"></a>
+
+        <div class="method-heading">
+          <a href="#M000150" class="method-signature">
+          <span class="method-name">trees</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000150-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000150-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 88</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">trees</span>
+        <span class="ruby-identifier">check_tree</span>
+        <span class="ruby-ivar">@trees</span>
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

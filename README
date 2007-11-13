@@ -19,6 +19,27 @@ but eventually I'll replace that with either C bindings
 to libgit or libgit-thin, or I'll write pure ruby
 handlers for at least some of the Git stuff.
 
+= Major Objects
+
+Git::Base - this is the object returned from a Git.open or Git.clone.  
+Most major actions are called from this object.
+
+Git::Object - this is the base object for your tree, blob and commit objects,
+returned from @git.gtree or @git.object calls.  the Git::AbstractObject will
+have most of the calls in common for all those objects.
+
+Git::Diff - returns from a @git.diff command.  It is an Enumerable that returns
+Git::Diff:DiffFile objects from which you can get per file patches and insertion/deletion
+statistics.  You can also get total statistics from the Git::Diff object directly.
+
+Git::Status
+
+Git::Branches
+
+Git::Remote
+
+Git::Log
+
 
 = Examples
 

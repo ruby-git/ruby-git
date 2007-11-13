@@ -72,24 +72,40 @@ module Git
     end
   
   
+    # returns a reference to the working directory
+    #  @git.dir.path
+    #  @git.dir.writeable?
     def dir
       @working_directory
     end
 
+    # returns reference to the git repository directory
+    #  @git.dir.path
     def repo
       @repository
     end
     
+    # returns reference to the git index file
     def index
       @index
     end
     
+    # changes current working directory for a block
+    # to the git working directory
+    #
+    # example
+    #  @git.chdir do 
+    #    # write files
+    #    @git.add
+    #    @git.commit('message')
+    #  end
     def chdir
       Dir.chdir(dir.path) do
         yield dir.path
       end
     end
     
+    # returns the repository size in bytes
     def repo_size
       size = 0
       Dir.chdir(repo.path) do
@@ -117,6 +133,14 @@ module Git
     
     # factory methods
     
+    # returns a Git::Object of the appropriate type
+    # you can also call @git.gtree('tree'), but that's 
+    # just for readability.  If you call @git.gtree('HEAD') it will
+    # still return a Git::Object::Commit object.  
+    #
+    # @git.object calls a factory method that will run a rev-parse 
+    # on the objectish and determine the type of the object and return 
+    # an appropriate object for that type 
     def object(objectish)
       Git::Object.new(self, objectish)
     end
@@ -124,36 +148,62 @@ module Git
     alias_method :gcommit, :object
     alias_method :gblob, :object
     
-    
+    # returns a Git::Log object with count commits
     def log(count = 30)
       Git::Log.new(self, count)
     end
 
+    # returns a Git::Status object
     def status
       Git::Status.new(self)
     end
         
+    # returns a Git::Branches object of all the Git::Branch objects for this repo
     def branches
       Git::Branches.new(self)
     end
     
+    # returns a Git::Branch object for branch_name
     def branch(branch_name = 'master')
       Git::Branch.new(self, branch_name)
     end
 
+    # returns a Git::Remote object
     def remote(remote_name = 'origin')
       Git::Remote.new(self, remote_name)
     end
 
-    
+    # this is a convenience method for accessing the class that wraps all the 
+    # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
+    # class with one that uses native methods or libgit C bindings
     def lib
       Git::Lib.new(self)
     end
     
+    # will run a grep for 'string' on the HEAD of the git repository
+    # 
+    # to be more surgical in your grep, you can call grep() off a specific
+    # git object.  for example:
+    #
+    #  @git.object("v2.3").grep('TODO')
+    #
+    # in any case, it returns a hash of arrays of the type:
+    #  hsh[tree-ish] = [[line_no, match], [line_no, match2]]
+    #  hsh[tree-ish] = [[line_no, match], [line_no, match2]]
+    #
+    # so you might use it like this:
+    #
+    #   @git.grep("TODO").each do |sha, arr|
+    #     puts "in blob #{sha}:"
+    #     arr.each do |match|
+    #       puts "\t line #{match[0]}: '#{match[1]}'"
+    #     end
+    #   end
     def grep(string)
       self.object('HEAD').grep(string)
     end
     
+    # returns a Git::Diff object
     def diff(objectish = 'HEAD', obj2 = nil)
       Git::Diff.new(self, objectish, obj2)
     end
@@ -163,53 +213,80 @@ module Git
       self.lib.add(path)
     end
 
+    # removes file(s) from the git repository
     def remove(path = '.', opts = {})
       self.lib.remove(path, opts)
     end
 
+    # resets the working directory to the provided commitish
     def reset(commitish = nil, opts = {})
       self.lib.reset(commitish, opts)
     end
 
+    # resets the working directory to the commitish with '--hard'
     def reset_hard(commitish = nil, opts = {})
       opts = {:hard => true}.merge(opts)
       self.lib.reset(commitish, opts)
     end
 
+    # commits all pending changes in the index file to the git repository
     def commit(message, opts = {})
       self.lib.commit(message, opts)
     end
         
+    # commits all pending changes in the index file to the git repository,
+    # but automatically adds all modified files without having to explicitly
+    # calling @git.add() on them.  
     def commit_all(message, opts = {})
       opts = {:add_all => true}.merge(opts)
       self.lib.commit(message, opts)
     end
 
+    # checks out a branch as the new git working directory
     def checkout(branch = 'master', opts = {})
       self.lib.checkout(branch, opts)
     end
     
+    # fetches changes from a remote branch - this does not modify the working directory,
+    # it just gets the changes from the remote if there are any
     def fetch(remote = 'origin')
       self.lib.fetch(remote)
     end
 
+    # pushes changes to a remote repository - easiest if this is a cloned repository,
+    # otherwise you may have to run something like this first to setup the push parameters:
+    #
+    #  @git.config('remote.remote-name.push', 'refs/heads/master:refs/heads/master')
+    #
     def push(remote = 'origin', branch = 'master')
       self.lib.push(remote, branch)
     end
     
+    # merges one or more branches into the current working branch
+    #
+    # you can specify more than one branch to merge by passing an array of branches
     def merge(branch, message = 'merge')
       self.lib.merge(branch, message)
     end
 
+    # fetches a branch from a remote and merges it into the current working branch
     def pull(remote = 'origin', branch = 'master', message = 'origin pull')
       fetch(remote)
       merge(branch, message)
     end
     
+    # returns an array of Git:Remote objects
     def remotes
       self.lib.remotes.map { |r| Git::Remote.new(self, r) }
     end
-    
+
+    # adds a new remote to this repository
+    # url can be a git url or a Git::Base object if it's a local reference
+    # 
+    #  @git.add_remote('scotts_git', 'git://repo.or.cz/rubygit.git')
+    #  @git.fetch('scotts_git')
+    #  @git.merge('scotts_git/master')
+    #
     def add_remote(name, url, opts = {})
       if url.is_a?(Git::Base)
         url = url.repo.path
@@ -218,29 +295,38 @@ module Git
       Git::Remote.new(self, name)
     end
 
+    # returns an array of all Git::Tag objects for this repository
     def tags
       self.lib.tags.map { |r| tag(r) }
     end
     
+    # returns a Git::Tag object
     def tag(tag_name)
       Git::Object.new(self, tag_name, true)
     end
 
+    # creates a new git tag (Git::Tag)
     def add_tag(tag_name)
       self.lib.tag(tag_name)
       tag(tag_name)
     end
     
-    # convenience methods
-
+    # repacks the repository
     def repack
       self.lib.repack
     end
     
+    # runs git rev-parse to convert the objectish to a full sha
+    #
+    #   @git.revparse("HEAD^^")
+    #   @git.revparse('v2.4^{tree}')
+    #   @git.revparse('v2.4:/doc/index.html')
+    #
     def revparse(objectish)
       self.lib.revparse(objectish)
     end
 
+    # returns the name of the branch the working directory is currently on
     def current_branch
       self.lib.branch_current
     end
