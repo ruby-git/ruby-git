@@ -1,12 +1,33 @@
 * more documentation
 
-* compatible with git 1.4
+
+* object.name (git name-rev)
 
 * git archive
+
+* git revert, stash, rebase
+
+* more low level index actions
+  - (with_index), checkout-index, read-tree, write-tree, update-ref
+
+* submodule support
+
+* diff additions
+  - annotate, blame
+
+* repository admin
+  - prune, fsck, pack-refs, gc, count-objects, unpack-objects
+
+* email/patch integration
+  - request-pull(email_address), git-am, git-apply
+  
+  
+* compatible with git 1.4
 
 * More Error Examples
 
 * More Git::Status methods
+
 
 * Speed up through pure ruby
 

@@ -32,13 +32,20 @@ Git::Diff - returns from a @git.diff command.  It is an Enumerable that returns
 Git::Diff:DiffFile objects from which you can get per file patches and insertion/deletion
 statistics.  You can also get total statistics from the Git::Diff object directly.
 
-Git::Status
+Git::Status - returns from a @git.status command.  It is an Enumerable that returns
+Git:Status::StatusFile objects for each object in git, which includes files in the working
+directory, in the index and in the repository.  Similar to running 'git status' on the command
+line to determine untracked and changed files.
 
-Git::Branches
+Git::Branches - Enumerable object that holds Git::Branch objects.  You can call .local or .remote
+on it to filter to just your local or remote branches.
 
-Git::Remote
+Git::Remote - A reference to a remote repository that is tracked by this repository.
 
-Git::Log
+Git::Log - An Enumerable object that references all the Git::Object::Commit objects that encompass
+your log query, which can be constructed through methods on the Git::Log object, like:
+
+ @git.log(20).object("HEAD^").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] } 
 
 
 = Examples
