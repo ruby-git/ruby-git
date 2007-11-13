@@ -22,17 +22,18 @@ class Test::Unit::TestCase
   end
   
   def teardown
-    if @wdir
-      FileUtils.rm_r(@wdir)
+    if @tmp_path
+      #puts "teardown #{@tmp_path}"
+      FileUtils.rm_r(@tmp_path)
     end
   end
   
   def create_temp_repo(clone_path)
-    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s
-    tmp_path = File.join("/tmp/", filename)
-    FileUtils.mkdir_p(tmp_path)
-    FileUtils.cp_r(clone_path, tmp_path)
-    tmp_path = File.join(tmp_path, 'working')
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+    @tmp_path = File.join("/tmp/", filename)
+    FileUtils.mkdir_p(@tmp_path)
+    FileUtils.cp_r(clone_path, @tmp_path)
+    tmp_path = File.join(@tmp_path, 'working')
     Dir.chdir(tmp_path) do
       FileUtils.mv('dot_git', '.git')
     end
@@ -40,7 +41,7 @@ class Test::Unit::TestCase
   end
   
   def in_temp_dir(remove_after = true)
-    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
     tmp_path = File.join("/tmp/", filename)
     FileUtils.mkdir(tmp_path)
     Dir.chdir tmp_path do

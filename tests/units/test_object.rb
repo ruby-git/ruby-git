@@ -59,6 +59,13 @@ class TestObject < Test::Unit::TestCase
     o = @git.object('1cc8667014381^{tree}')
     assert(o.is_a?(Git::Object::Tree))
     
+    o = @git.object('v2.7^{tree}')
+    
+    assert_equal(2, o.children.size)
+    assert_equal(1, o.blobs.size)
+    assert_equal(1, o.subtrees.size)
+    assert_equal(1, o.trees['ex_dir'].blobs.size)
+    
     o = @git.object('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
     assert(o.is_a?(Git::Object::Tree))
     assert_equal('tree', o.type)

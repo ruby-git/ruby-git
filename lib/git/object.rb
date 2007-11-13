@@ -51,15 +51,61 @@ module Git
   
     
     class Blob < AbstractObject
+      
+      def initialize(base, sha, mode = nil)
+        super(base, sha)
+        @mode = mode
+      end
+      
       def setup
         @type = 'blob'
       end
     end
   
     class Tree < AbstractObject
+      
+      @trees = nil
+      @blobs = nil
+      
+      def initialize(base, sha, mode = nil)
+        super(base, sha)
+        @mode = mode
+      end
+      
       def setup
         @type = 'tree'
       end
+      
+      def children
+        blobs.merge(subtrees)
+      end
+      
+      def blobs
+        check_tree
+        @blobs
+      end
+      alias_method :files, :blobs
+      
+      def trees
+        check_tree
+        @trees
+      end
+      alias_method :subtrees, :trees
+      alias_method :subdirectories, :trees
+        
+      private
+      
+        # actually run the git command
+        def check_tree
+          if !@trees
+            @trees = {}
+            @blobs = {}
+            data = @base.lib.ls_tree(@sha)
+            data['tree'].each { |k, d| @trees[k] = Tree.new(@base, d[:sha], d[:mode]) }
+            data['blob'].each { |k, d| @blobs[k] = Blob.new(@base, d[:sha], d[:mode]) }
+          end
+        end
+      
     end
   
     class Commit < AbstractObject
@@ -123,12 +169,14 @@ module Git
       
         # see if this object has been initialized and do so if not
         def check_commit
-          data = @base.lib.commit_data(@sha)
-          @committer = Git::Author.new(data['committer'])
-          @author = Git::Author.new(data['author'])
-          @tree = Tree.new(@base, data['tree'])
-          @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
-          @message = data['message'].chomp
+          if !@tree
+            data = @base.lib.commit_data(@sha)
+            @committer = Git::Author.new(data['committer'])
+            @author = Git::Author.new(data['author'])
+            @tree = Tree.new(@base, data['tree'])
+            @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
+            @message = data['message'].chomp
+          end
         end
       
     end

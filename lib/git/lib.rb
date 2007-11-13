@@ -109,6 +109,16 @@ module Git
       command('cat-file', ['-p', sha])
     end
 
+    def ls_tree(sha)
+      data = {'blob' => {}, 'tree' => {}}
+      command_lines('ls-tree', sha.to_s).each do |line|
+        (info, filenm) = line.split("\t")
+        (mode, type, sha) = info.split
+        data[type][filenm] = {:mode => mode, :sha => sha}
+      end
+      data
+    end
+
     def branches_all
       arr = []
       command_lines('branch', '-a').each do |b| 

@@ -67,6 +67,10 @@ Here are the operations that need read permission only.
     commit.date.strftime("%m-%d-%y")
     commit.message
    
+  tree = g.gtree("HEAD^{tree}")
+    tree.blobs
+    tree.subtrees
+    tree.children # blobs and subtrees
    
    g.revparse('v2.5:Makefile')
    
