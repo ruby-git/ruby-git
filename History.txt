@@ -1,3 +1,8 @@
 == 1.0.1
 
-* New version
+* Initial version
+
+== 1.0.2
+
+* Added methods to the git objects that might be helpful
+

@@ -1,14 +1,4 @@
 
-* Git::Object methods
-  - tree recursion
-  - commit information
-
-  Git::Tree
-    - children
-    - blobs/files
-    - subtrees/subdirs
-  
-
 * More Error Examples
 
 * More Git::Status methods
@@ -16,3 +6,4 @@
 * Speed up through pure ruby
 
 * Speed up through C bindings to libgit-thin
+
