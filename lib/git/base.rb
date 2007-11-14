@@ -311,6 +311,11 @@ module Git
       tag(tag_name)
     end
     
+    # creates an archive file of the given tree-ish
+    def archive(treeish, file = nil, opts = {})
+      self.object(treeish).archive(file, opts)
+    end
+    
     # repacks the repository
     def repack
       self.lib.repack

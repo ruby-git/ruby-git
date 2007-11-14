@@ -1,3 +1,5 @@
+require 'tempfile'
+
 module Git
   
   class GitExecuteError < StandardError 
@@ -344,6 +346,37 @@ module Git
       command('repack', ['-a', '-d'])
     end
     
+    # creates an archive file
+    #
+    # options
+    #  :format  (zip, tar)
+    #  :prefix
+    #  :remote
+    #  :path
+    def archive(sha, file = nil, opts = {})
+      opts[:format] = 'zip' if !opts[:format]
+      
+      if opts[:format] == 'tgz'
+        opts[:format] = 'tar' 
+        opts[:add_gzip] = true
+      end
+      
+      if !file
+        file = Tempfile.new('archive').path
+      end
+      
+      arr_opts = []
+      arr_opts << "--format=#{opts[:format]}" if opts[:format]
+      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
+      arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
+      arr_opts << sha
+      arr_opts << opts[:path] if opts[:path]
+      arr_opts << '| gzip' if opts[:add_gzip]
+      arr_opts << "> #{file.to_s}"
+      command('archive', arr_opts)
+      return file
+    end
+    
     private
     
     def command_lines(cmd, opts = {})
@@ -367,10 +400,11 @@ module Git
         #puts out
         #puts
         if $?.exitstatus > 0
+          puts $?.exitstatus
           if $?.exitstatus == 1 && out == ''
             return ''
           end
-          raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s)
+          raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
         end
         out
       end

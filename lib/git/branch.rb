@@ -21,15 +21,18 @@ module Git
     end
     
     def gcommit
-      @gcommit = @base.object(name) if !@gcommit
+      @gcommit = @base.object(@full) if !@gcommit
       @gcommit
     end
     
     def checkout
       check_if_create
-      @base.checkout(@name)
+      @base.checkout(@full)
     end
     
+    def archive(file, opts = {})
+      @base.lib.archive(@full, file, opts)
+    end
     
     # g.branch('new_branch').in_branch do
     #   # create new file

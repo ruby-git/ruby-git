@@ -48,6 +48,11 @@ module Git
         Git::Log.new(@base, count).object(@sha)
       end
       
+      # creates an archive of this object (tree)
+      def archive(file = nil, opts = {})
+        @base.lib.archive(@sha, file, opts)
+      end
+      
     end
   
     
