@@ -29,7 +29,7 @@ class TestArchive < Test::Unit::TestCase
     f = @git.object('v2.6').archive(tempfile, :format => 'tgz', :prefix => 'test/')
     assert(File.exists?(f))
     
-    f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex')
+    f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
     assert(File.exists?(f))
 
     in_temp_dir do
