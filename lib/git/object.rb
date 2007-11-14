@@ -79,7 +79,7 @@ module Git
         super(base, sha)
         @mode = mode
       end
-      
+            
       def children
         blobs.merge(subtrees)
       end
@@ -127,6 +127,10 @@ module Git
       def message
         check_commit
         @message
+      end
+      
+      def name
+        @base.lib.namerev(@sha)
       end
       
       def gtree

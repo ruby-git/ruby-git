@@ -1,10 +1,5 @@
 * more documentation
 
-
-* object.name (git name-rev)
-
-* git archive
-
 * git revert, stash, rebase
 
 * more low level index actions

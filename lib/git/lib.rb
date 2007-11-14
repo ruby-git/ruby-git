@@ -73,6 +73,10 @@ module Git
       command('rev-parse', string)
     end
     
+    def namerev(string)
+      command('name-rev', string).split[1]
+    end
+    
     def object_type(sha)
       command('cat-file', ['-t', sha])
     end
@@ -400,7 +404,6 @@ module Git
         #puts out
         #puts
         if $?.exitstatus > 0
-          puts $?.exitstatus
           if $?.exitstatus == 1 && out == ''
             return ''
           end
