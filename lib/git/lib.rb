@@ -15,8 +15,8 @@ module Git
     def initialize(base = nil)
       if base.is_a?(Git::Base)
         @git_dir = base.repo.path
-        @git_index_file = base.index.path   
-        @git_work_dir = base.dir.path
+        @git_index_file = base.index.path if base.index
+        @git_work_dir = base.dir.path if base.dir
       elsif base.is_a?(Hash)
         @git_dir = base[:repository]
         @git_index_file = base[:index] 
@@ -389,17 +389,32 @@ module Git
     
     def command(cmd, opts = {})
       ENV['GIT_DIR'] = @git_dir 
-      ENV['GIT_INDEX_FILE'] = @git_index_file 
-      ENV['GIT_WORK_DIR'] = @git_work_dir 
+      
+      if @git_index_file
+        ENV['GIT_INDEX_FILE'] = @git_index_file 
+      else
+        ENV['GIT_INDEX_FILE'].delete rescue nil
+      end
+      
+      if @git_work_dir
+        ENV['GIT_WORK_TREE'] = @git_work_dir if @git_work_dir
+      else
+        ENV['GIT_WORK_TREE'].delete rescue nil
+      end
+      
       path = @git_work_dir || @git_dir || @path
       Dir.chdir(path) do  
         opts = opts.to_a.join(' ')
         git_cmd = "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp
         #puts path
+        #puts "gr: #{@git_dir}"
         #puts "gd: #{@git_work_dir}"
         #puts "gi: #{@git_index_file}"
         #puts "pp: #{@path}"
+        #puts ENV['GIT_DIR']
+        #puts ENV['GIT_WORK_TREE']
+        #puts ENV['GIT_INDEX_FILE']
         #puts git_cmd
         #puts out
         #puts

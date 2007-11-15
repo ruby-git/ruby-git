@@ -1,14 +1,16 @@
 * more documentation
 
-* git revert, stash, rebase
 
 * more low level index actions
   - (with_index), checkout-index, read-tree, write-tree, update-ref
 
-* submodule support
+* git revert, stash, rebase
 
 * diff additions
   - annotate, blame
+
+
+* submodule support
 
 * repository admin
   - prune, fsck, pack-refs, gc, count-objects, unpack-objects
