@@ -380,6 +380,14 @@ module Git
       command('update-ref', [branch.to_s, commit.to_s])
     end
     
+    def checkout_index(opts = {})
+      arr_opts = []
+      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
+      arr_opts << "--force" if opts[:force]
+      arr_opts << "--all" if opts[:all]
+      arr_opts << ('-- ' + opts[:path_limiter]) if opts[:path_limiter].is_a? String
+      command('checkout-index', arr_opts)
+    end
     
     # creates an archive file
     #

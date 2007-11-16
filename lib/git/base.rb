@@ -361,6 +361,10 @@ module Git
       with_index(temp_path, &blk)
     end
     
+    def checkout_index(opts = {})
+      self.lib.checkout_index(opts)
+    end
+    
     def read_tree(treeish, opts = {})
       self.lib.read_tree(treeish, opts)
     end
@@ -381,6 +385,7 @@ module Git
     def update_ref(branch, commit)
       branch(branch).update_ref(commit)
     end
+    
     
     def ls_files
       self.lib.ls_files

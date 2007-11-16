@@ -106,6 +106,14 @@ class TestTreeOps < Test::Unit::TestCase
         
         assert_equal('b40f7a9072cdec637725700668f8fdebe39e6d38', c.gtree.sha)
         
+        g.with_temp_working do 
+          assert(!File.directory?('b1'))
+          g.checkout_index
+          assert(!File.directory?('b1'))
+          g.checkout_index(:all => true)
+          assert(File.directory?('b1'))
+        end
+        
       end
     end
   end

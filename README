@@ -229,3 +229,19 @@ Some examples of more low-level index and tree operations
    end
 
    g.set_index('/path/to/index')
+   
+   
+   g.with_index(path) do 
+     # calls set_index, then switches back after
+   end
+   
+   g.with_working(dir) do
+   # calls set_working, then switches back after
+   end
+   
+   g.with_temp_working(dir) do
+     g.checkout_index(:prefix => dir, :path_limiter => path)
+     # do file work
+     g.commit # commits to index
+   end
+   
