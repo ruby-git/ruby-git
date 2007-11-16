@@ -6,6 +6,8 @@ module Git
     @repository = nil
     @index = nil
 
+    @lib = nil
+    
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir)
       self.new :repository => git_dir
@@ -376,6 +378,10 @@ module Git
       commit_tree(tree, opts)
     end
       
+    def update_ref(branch, commit)
+      branch(branch).update_ref(commit)
+    end
+    
     def ls_files
       self.lib.ls_files
     end

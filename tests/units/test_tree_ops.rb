@@ -95,8 +95,15 @@ class TestTreeOps < Test::Unit::TestCase
           assert(index['b3/test-file3'])
           g.commit('hi')
         end
-        
         assert(c.commit?)
+
+        files = g.ls_files
+        assert(!files['b1/example.txt'])
+        
+        g.branch('newbranch').update_ref(c)        
+        g.checkout('newbranch')
+        assert(!files['b1/example.txt'])
+        
         assert_equal('b40f7a9072cdec637725700668f8fdebe39e6d38', c.gtree.sha)
         
       end

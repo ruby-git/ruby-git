@@ -75,6 +75,10 @@ module Git
       end
     end
     
+    def update_ref(commit)
+      @base.lib.update_ref(@full, commit)
+    end
+    
     def to_a
       [@full]
     end

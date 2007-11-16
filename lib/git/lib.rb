@@ -376,6 +376,11 @@ module Git
       command('commit-tree', arr_opts)
     end
     
+    def update_ref(branch, commit)
+      command('update-ref', [branch.to_s, commit.to_s])
+    end
+    
+    
     # creates an archive file
     #
     # options
