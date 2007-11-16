@@ -10,7 +10,8 @@ module Git
       attr_accessor :sha, :size, :type, :mode
     
       @base = nil
-    
+      @contents = nil
+      
       def initialize(base, sha)
         @base = base
         @sha = sha.to_s
@@ -18,8 +19,9 @@ module Git
         setup
       end
     
+      # caches the contents of this call in memory
       def contents
-        @base.lib.object_contents(@sha)
+        @contents || @contents = @base.lib.object_contents(@sha)
       end
       
       def contents_array

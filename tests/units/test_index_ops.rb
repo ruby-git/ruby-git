@@ -23,7 +23,7 @@ class TestIndexOps < Test::Unit::TestCase
         assert(!g.status.untracked.assoc('test-file'))
         assert(!g.status.changed.assoc('example.txt'))
         
-        append_file('example.txt', 'hahahaha')
+        new_file('example.txt', 'hahahaha')
         assert(g.status.changed.assoc('example.txt'))
         
         g.add

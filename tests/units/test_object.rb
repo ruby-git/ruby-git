@@ -96,6 +96,7 @@ class TestObject < Test::Unit::TestCase
   def test_blob_contents
     o = @git.object('v2.6:example.txt')
     assert_equal('replace with new text', o.contents)
+    assert_equal('replace with new text', o.contents)  # this should be cached
   end
   
   def test_revparse
