@@ -94,7 +94,7 @@ represents a git object
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000125">new</a>&nbsp;&nbsp;
+      <a href="#M000149">new</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -126,12 +126,12 @@ Class <a href="Object/Tree.html" class="link">Git::Object::Tree</a><br />
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000125" class="method-detail">
-        <a name="M000125"></a>
+      <div id="method-M000149" class="method-detail">
+        <a name="M000149"></a>
 
         <div class="method-heading">
-          <a href="#M000125" class="method-signature">
-          <span class="method-name">new</span><span class="method-args">(base, objectish, is_tag = false)</span>
+          <a href="#M000149" class="method-signature">
+          <span class="method-name">new</span><span class="method-args">(base, objectish, type = nil, is_tag = false)</span>
           </a>
         </div>
       
@@ -141,11 +141,11 @@ if we&#8217;re calling this, we don&#8217;t know what type it is yet so
 this is our little factory method
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000125-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000125-source">
+            onclick="toggleCode('M000149-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000149-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 206</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">objectish</span>, <span class="ruby-identifier">is_tag</span> = <span class="ruby-keyword kw">false</span>)
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 242</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">objectish</span>, <span class="ruby-identifier">type</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">is_tag</span> = <span class="ruby-keyword kw">false</span>)
         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">is_tag</span>
           <span class="ruby-identifier">sha</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">tag_sha</span>(<span class="ruby-identifier">objectish</span>)
           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">sha</span> <span class="ruby-operator">==</span> <span class="ruby-value str">''</span>
@@ -153,8 +153,9 @@ this is our little factory method
           <span class="ruby-keyword kw">end</span>
           <span class="ruby-keyword kw">return</span> <span class="ruby-constant">Tag</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>, <span class="ruby-identifier">objectish</span>)
         <span class="ruby-keyword kw">else</span>
-          <span class="ruby-identifier">sha</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">revparse</span>(<span class="ruby-identifier">objectish</span>)
-          <span class="ruby-identifier">type</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">object_type</span>(<span class="ruby-identifier">sha</span>) 
+          <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">type</span>
+            <span class="ruby-identifier">type</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">object_type</span>(<span class="ruby-identifier">objectish</span>) 
+          <span class="ruby-keyword kw">end</span>
         <span class="ruby-keyword kw">end</span>
         
         <span class="ruby-identifier">klass</span> =
@@ -163,7 +164,7 @@ this is our little factory method
           <span class="ruby-keyword kw">when</span> <span class="ruby-regexp re">/commit/</span><span class="ruby-operator">:</span> <span class="ruby-constant">Commit</span>
           <span class="ruby-keyword kw">when</span> <span class="ruby-regexp re">/tree/</span><span class="ruby-operator">:</span>   <span class="ruby-constant">Tree</span>
           <span class="ruby-keyword kw">end</span>
-        <span class="ruby-identifier">klass</span><span class="ruby-operator">::</span><span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>)
+        <span class="ruby-identifier">klass</span><span class="ruby-operator">::</span><span class="ruby-identifier">new</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">objectish</span>)
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

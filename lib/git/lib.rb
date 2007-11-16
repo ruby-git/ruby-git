@@ -427,11 +427,11 @@ module Git
     end
     
     def command(cmd, opts = {})
-      ENV['GIT_DIR'] = @git_dir 
-      ENV['GIT_INDEX_FILE'] = @git_index_file 
-      ENV['GIT_WORK_DIR'] = @git_work_dir 
-      path = @git_work_dir || @git_dir || @path
-      Dir.chdir(path) do  
+      ENV['GIT_DIR'] = @git_dir if (@git_dir != ENV['GIT_DIR'])
+      ENV['GIT_INDEX_FILE'] = @git_index_file if (@git_index_file != ENV['GIT_INDEX_FILE'])
+      ENV['GIT_WORK_DIR'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_DIR'])
+      #path = @git_work_dir || @git_dir || @path
+      #Dir.chdir(path) do  
         opts = opts.to_a.join(' ')
         git_cmd = "git #{cmd} #{opts}"
         out = `git #{cmd} #{opts} 2>&1`.chomp
@@ -449,7 +449,7 @@ module Git
           raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
         end
         out
-      end
+      #end
     end
     
   end

@@ -88,45 +88,52 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000047">add</a>&nbsp;&nbsp;
-      <a href="#M000036">branch_current</a>&nbsp;&nbsp;
-      <a href="#M000052">branch_delete</a>&nbsp;&nbsp;
-      <a href="#M000051">branch_new</a>&nbsp;&nbsp;
-      <a href="#M000035">branches_all</a>&nbsp;&nbsp;
-      <a href="#M000053">checkout</a>&nbsp;&nbsp;
+      <a href="#M000048">add</a>&nbsp;&nbsp;
+      <a href="#M000070">archive</a>&nbsp;&nbsp;
+      <a href="#M000037">branch_current</a>&nbsp;&nbsp;
+      <a href="#M000053">branch_delete</a>&nbsp;&nbsp;
+      <a href="#M000052">branch_new</a>&nbsp;&nbsp;
+      <a href="#M000036">branches_all</a>&nbsp;&nbsp;
+      <a href="#M000054">checkout</a>&nbsp;&nbsp;
+      <a href="#M000069">checkout_index</a>&nbsp;&nbsp;
       <a href="#M000027">clone</a>&nbsp;&nbsp;
-      <a href="#M000049">commit</a>&nbsp;&nbsp;
-      <a href="#M000032">commit_data</a>&nbsp;&nbsp;
-      <a href="#M000044">config_get</a>&nbsp;&nbsp;
-      <a href="#M000045">config_list</a>&nbsp;&nbsp;
-      <a href="#M000043">config_remote</a>&nbsp;&nbsp;
-      <a href="#M000046">config_set</a>&nbsp;&nbsp;
-      <a href="#M000040">diff_files</a>&nbsp;&nbsp;
-      <a href="#M000038">diff_full</a>&nbsp;&nbsp;
-      <a href="#M000041">diff_index</a>&nbsp;&nbsp;
-      <a href="#M000039">diff_stats</a>&nbsp;&nbsp;
-      <a href="#M000060">fetch</a>&nbsp;&nbsp;
-      <a href="#M000037">grep</a>&nbsp;&nbsp;
+      <a href="#M000050">commit</a>&nbsp;&nbsp;
+      <a href="#M000033">commit_data</a>&nbsp;&nbsp;
+      <a href="#M000067">commit_tree</a>&nbsp;&nbsp;
+      <a href="#M000045">config_get</a>&nbsp;&nbsp;
+      <a href="#M000046">config_list</a>&nbsp;&nbsp;
+      <a href="#M000044">config_remote</a>&nbsp;&nbsp;
+      <a href="#M000047">config_set</a>&nbsp;&nbsp;
+      <a href="#M000041">diff_files</a>&nbsp;&nbsp;
+      <a href="#M000039">diff_full</a>&nbsp;&nbsp;
+      <a href="#M000042">diff_index</a>&nbsp;&nbsp;
+      <a href="#M000040">diff_stats</a>&nbsp;&nbsp;
+      <a href="#M000061">fetch</a>&nbsp;&nbsp;
+      <a href="#M000038">grep</a>&nbsp;&nbsp;
       <a href="#M000026">init</a>&nbsp;&nbsp;
       <a href="#M000028">log_commits</a>&nbsp;&nbsp;
-      <a href="#M000042">ls_files</a>&nbsp;&nbsp;
-      <a href="#M000034">ls_tree</a>&nbsp;&nbsp;
-      <a href="#M000054">merge</a>&nbsp;&nbsp;
+      <a href="#M000043">ls_files</a>&nbsp;&nbsp;
+      <a href="#M000035">ls_tree</a>&nbsp;&nbsp;
+      <a href="#M000055">merge</a>&nbsp;&nbsp;
+      <a href="#M000030">namerev</a>&nbsp;&nbsp;
       <a href="#M000025">new</a>&nbsp;&nbsp;
-      <a href="#M000033">object_contents</a>&nbsp;&nbsp;
-      <a href="#M000031">object_size</a>&nbsp;&nbsp;
-      <a href="#M000030">object_type</a>&nbsp;&nbsp;
-      <a href="#M000061">push</a>&nbsp;&nbsp;
-      <a href="#M000055">remote_add</a>&nbsp;&nbsp;
-      <a href="#M000056">remote_remove</a>&nbsp;&nbsp;
-      <a href="#M000057">remotes</a>&nbsp;&nbsp;
-      <a href="#M000048">remove</a>&nbsp;&nbsp;
-      <a href="#M000063">repack</a>&nbsp;&nbsp;
-      <a href="#M000050">reset</a>&nbsp;&nbsp;
+      <a href="#M000034">object_contents</a>&nbsp;&nbsp;
+      <a href="#M000032">object_size</a>&nbsp;&nbsp;
+      <a href="#M000031">object_type</a>&nbsp;&nbsp;
+      <a href="#M000062">push</a>&nbsp;&nbsp;
+      <a href="#M000065">read_tree</a>&nbsp;&nbsp;
+      <a href="#M000056">remote_add</a>&nbsp;&nbsp;
+      <a href="#M000057">remote_remove</a>&nbsp;&nbsp;
+      <a href="#M000058">remotes</a>&nbsp;&nbsp;
+      <a href="#M000049">remove</a>&nbsp;&nbsp;
+      <a href="#M000064">repack</a>&nbsp;&nbsp;
+      <a href="#M000051">reset</a>&nbsp;&nbsp;
       <a href="#M000029">revparse</a>&nbsp;&nbsp;
-      <a href="#M000059">tag</a>&nbsp;&nbsp;
-      <a href="#M000062">tag_sha</a>&nbsp;&nbsp;
-      <a href="#M000058">tags</a>&nbsp;&nbsp;
+      <a href="#M000060">tag</a>&nbsp;&nbsp;
+      <a href="#M000063">tag_sha</a>&nbsp;&nbsp;
+      <a href="#M000059">tags</a>&nbsp;&nbsp;
+      <a href="#M000068">update_ref</a>&nbsp;&nbsp;
+      <a href="#M000066">write_tree</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -162,12 +169,12 @@
             onclick="toggleCode('M000025-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000025-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 13</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 15</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span> = <span class="ruby-keyword kw">nil</span>)
       <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">base</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>)
         <span class="ruby-ivar">@git_dir</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">repo</span>.<span class="ruby-identifier">path</span>
-        <span class="ruby-ivar">@git_index_file</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">index</span>.<span class="ruby-identifier">path</span>   
-        <span class="ruby-ivar">@git_work_dir</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">dir</span>.<span class="ruby-identifier">path</span>
+        <span class="ruby-ivar">@git_index_file</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">index</span>.<span class="ruby-identifier">path</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">base</span>.<span class="ruby-identifier">index</span>
+        <span class="ruby-ivar">@git_work_dir</span> = <span class="ruby-identifier">base</span>.<span class="ruby-identifier">dir</span>.<span class="ruby-identifier">path</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">base</span>.<span class="ruby-identifier">dir</span>
       <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">base</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>)
         <span class="ruby-ivar">@git_dir</span> = <span class="ruby-identifier">base</span>[<span class="ruby-identifier">:repository</span>]
         <span class="ruby-ivar">@git_index_file</span> = <span class="ruby-identifier">base</span>[<span class="ruby-identifier">:index</span>] 
@@ -181,21 +188,21 @@
 
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000047" class="method-detail">
-        <a name="M000047"></a>
+      <div id="method-M000048" class="method-detail">
+        <a name="M000048"></a>
 
         <div class="method-heading">
-          <a href="#M000047" class="method-signature">
+          <a href="#M000048" class="method-signature">
           <span class="method-name">add</span><span class="method-args">(path = '.')</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000047-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000047-source">
+            onclick="toggleCode('M000048-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000048-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 251</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 257</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">add</span>(<span class="ruby-identifier">path</span> = <span class="ruby-value str">'.'</span>)
       <span class="ruby-identifier">path</span> = <span class="ruby-identifier">path</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">' '</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">path</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'add'</span>, <span class="ruby-identifier">path</span>)
@@ -205,23 +212,101 @@
         </div>
       </div>
 
-      <div id="method-M000036" class="method-detail">
-        <a name="M000036"></a>
+      <div id="method-M000070" class="method-detail">
+        <a name="M000070"></a>
 
         <div class="method-heading">
-          <a href="#M000036" class="method-signature">
+          <a href="#M000070" class="method-signature">
+          <span class="method-name">archive</span><span class="method-args">(sha, file = nil, opts = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+creates an archive file
+</p>
+<p>
+options
+</p>
+<pre>
+ :format  (zip, tar)
+ :prefix
+ :remote
+ :path
+</pre>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000070-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000070-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 399</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">archive</span>(<span class="ruby-identifier">sha</span>, <span class="ruby-identifier">file</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>] = <span class="ruby-value str">'zip'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>]
+      
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>] <span class="ruby-operator">==</span> <span class="ruby-value str">'tgz'</span>
+        <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>] = <span class="ruby-value str">'tar'</span> 
+        <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:add_gzip</span>] = <span class="ruby-keyword kw">true</span>
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">file</span>
+        <span class="ruby-identifier">file</span> = <span class="ruby-constant">Tempfile</span>.<span class="ruby-identifier">new</span>(<span class="ruby-value str">'archive'</span>).<span class="ruby-identifier">path</span>
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-identifier">arr_opts</span> = []
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--format=#{opts[:format]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--prefix=#{opts[:prefix]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:prefix</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--remote=#{opts[:remote]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:remote</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">sha</span>
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'| gzip'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:add_gzip</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;&gt; #{file.to_s}&quot;</span>
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'archive'</span>, <span class="ruby-identifier">arr_opts</span>)
+      <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">file</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000037" class="method-detail">
+        <a name="M000037"></a>
+
+        <div class="method-heading">
+          <a href="#M000037" class="method-signature">
           <span class="method-name">branch_current</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000036-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000036-source">
+            onclick="toggleCode('M000037-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000037-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 132</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 138</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_current</span>
       <span class="ruby-identifier">branches_all</span>.<span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">b</span><span class="ruby-operator">|</span> <span class="ruby-identifier">b</span>[<span class="ruby-value">1</span>] }.<span class="ruby-identifier">first</span>[<span class="ruby-value">0</span>] <span class="ruby-keyword kw">rescue</span> <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000053" class="method-detail">
+        <a name="M000053"></a>
+
+        <div class="method-heading">
+          <a href="#M000053" class="method-signature">
+          <span class="method-name">branch_delete</span><span class="method-args">(branch)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000053-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000053-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 290</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_delete</span>(<span class="ruby-identifier">branch</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'branch'</span>, [<span class="ruby-value str">'-d'</span>, <span class="ruby-identifier">branch</span>])
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -233,7 +318,7 @@
 
         <div class="method-heading">
           <a href="#M000052" class="method-signature">
-          <span class="method-name">branch_delete</span><span class="method-args">(branch)</span>
+          <span class="method-name">branch_new</span><span class="method-args">(branch)</span>
           </a>
         </div>
       
@@ -242,30 +327,7 @@
             onclick="toggleCode('M000052-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000052-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 284</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_delete</span>(<span class="ruby-identifier">branch</span>)
-      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'branch'</span>, [<span class="ruby-value str">'-d'</span>, <span class="ruby-identifier">branch</span>])
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000051" class="method-detail">
-        <a name="M000051"></a>
-
-        <div class="method-heading">
-          <a href="#M000051" class="method-signature">
-          <span class="method-name">branch_new</span><span class="method-args">(branch)</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000051-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000051-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 280</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 286</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_new</span>(<span class="ruby-identifier">branch</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'branch'</span>, <span class="ruby-identifier">branch</span>)
     <span class="ruby-keyword kw">end</span>
@@ -274,21 +336,21 @@
         </div>
       </div>
 
-      <div id="method-M000035" class="method-detail">
-        <a name="M000035"></a>
+      <div id="method-M000036" class="method-detail">
+        <a name="M000036"></a>
 
         <div class="method-heading">
-          <a href="#M000035" class="method-signature">
+          <a href="#M000036" class="method-signature">
           <span class="method-name">branches_all</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000035-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000035-source">
+            onclick="toggleCode('M000036-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000036-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 122</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 128</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branches_all</span>
       <span class="ruby-identifier">arr</span> = []
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'branch'</span>, <span class="ruby-value str">'-a'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">b</span><span class="ruby-operator">|</span> 
@@ -303,27 +365,55 @@
         </div>
       </div>
 
-      <div id="method-M000053" class="method-detail">
-        <a name="M000053"></a>
+      <div id="method-M000054" class="method-detail">
+        <a name="M000054"></a>
 
         <div class="method-heading">
-          <a href="#M000053" class="method-signature">
+          <a href="#M000054" class="method-signature">
           <span class="method-name">checkout</span><span class="method-args">(branch, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000053-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000053-source">
+            onclick="toggleCode('M000054-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000054-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 288</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 294</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">checkout</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-f'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:force</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">branch</span>.<span class="ruby-identifier">to_s</span>
       
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'checkout'</span>, <span class="ruby-identifier">arr_opts</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000069" class="method-detail">
+        <a name="M000069"></a>
+
+        <div class="method-heading">
+          <a href="#M000069" class="method-signature">
+          <span class="method-name">checkout_index</span><span class="method-args">(opts = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000069-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000069-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 383</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">checkout_index</span>(<span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">arr_opts</span> = []
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--prefix=#{opts[:prefix]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:prefix</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">&quot;--force&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:force</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">&quot;--all&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:all</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-value str">'-- '</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>]) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path_limiter</span>].<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">String</span>
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'checkout-index'</span>, <span class="ruby-identifier">arr_opts</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -363,7 +453,7 @@ TODO - make this work with SSH password or auth_key
             onclick="toggleCode('M000027-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000027-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 40</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 42</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">clone</span>(<span class="ruby-identifier">repository</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-ivar">@path</span> = <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">'.'</span>
       <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:path</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">clone_dir</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-ivar">@path</span>, <span class="ruby-identifier">name</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">clone_dir</span> = <span class="ruby-identifier">name</span>
@@ -383,21 +473,21 @@ TODO - make this work with SSH password or auth_key
         </div>
       </div>
 
-      <div id="method-M000049" class="method-detail">
-        <a name="M000049"></a>
+      <div id="method-M000050" class="method-detail">
+        <a name="M000050"></a>
 
         <div class="method-heading">
-          <a href="#M000049" class="method-signature">
+          <a href="#M000050" class="method-signature">
           <span class="method-name">commit</span><span class="method-args">(message, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000049-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000049-source">
+            onclick="toggleCode('M000050-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000050-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 266</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 272</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit</span>(<span class="ruby-identifier">message</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-node">&quot;-m '#{message}'&quot;</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-a'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:add_all</span>]
@@ -408,11 +498,11 @@ TODO - make this work with SSH password or auth_key
         </div>
       </div>
 
-      <div id="method-M000032" class="method-detail">
-        <a name="M000032"></a>
+      <div id="method-M000033" class="method-detail">
+        <a name="M000033"></a>
 
         <div class="method-heading">
-          <a href="#M000032" class="method-signature">
+          <a href="#M000033" class="method-signature">
           <span class="method-name">commit_data</span><span class="method-args">(sha)</span>
           </a>
         </div>
@@ -422,10 +512,10 @@ TODO - make this work with SSH password or auth_key
 returns useful array of raw commit object data
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000032-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000032-source">
+            onclick="toggleCode('M000033-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000033-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 83</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 89</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit_data</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">in_message</span> = <span class="ruby-keyword kw">false</span>
       
@@ -455,23 +545,33 @@ returns useful array of raw commit object data
         </div>
       </div>
 
-      <div id="method-M000044" class="method-detail">
-        <a name="M000044"></a>
+      <div id="method-M000067" class="method-detail">
+        <a name="M000067"></a>
 
         <div class="method-heading">
-          <a href="#M000044" class="method-signature">
-          <span class="method-name">config_get</span><span class="method-args">(name)</span>
+          <a href="#M000067" class="method-signature">
+          <span class="method-name">commit_tree</span><span class="method-args">(tree, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000044-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000044-source">
+            onclick="toggleCode('M000067-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000067-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 232</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_get</span>(<span class="ruby-identifier">name</span>)
-      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--get'</span>, <span class="ruby-identifier">name</span>])
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 365</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit_tree</span>(<span class="ruby-identifier">tree</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:message</span>] = <span class="ruby-node">&quot;commit tree #{tree}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:message</span>]
+      <span class="ruby-identifier">t</span> = <span class="ruby-constant">Tempfile</span>.<span class="ruby-identifier">new</span>(<span class="ruby-value str">'commit-message'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">t</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">t</span>.<span class="ruby-identifier">write</span>(<span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:message</span>])
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-identifier">arr_opts</span> = []
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">tree</span>
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-p #{opts[:parent]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:parent</span>]
+      <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:parents</span>].<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">p</span><span class="ruby-operator">|</span> <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-p #{p.to_s}&quot;</span> } <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:parents</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;&lt; #{t.path}&quot;</span>
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'commit-tree'</span>, <span class="ruby-identifier">arr_opts</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -483,7 +583,7 @@ returns useful array of raw commit object data
 
         <div class="method-heading">
           <a href="#M000045" class="method-signature">
-          <span class="method-name">config_list</span><span class="method-args">()</span>
+          <span class="method-name">config_get</span><span class="method-args">(name)</span>
           </a>
         </div>
       
@@ -492,7 +592,30 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000045-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000045-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 236</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 238</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_get</span>(<span class="ruby-identifier">name</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--get'</span>, <span class="ruby-identifier">name</span>])
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000046" class="method-detail">
+        <a name="M000046"></a>
+
+        <div class="method-heading">
+          <a href="#M000046" class="method-signature">
+          <span class="method-name">config_list</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000046-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000046-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 242</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_list</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--list'</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -506,21 +629,21 @@ returns useful array of raw commit object data
         </div>
       </div>
 
-      <div id="method-M000043" class="method-detail">
-        <a name="M000043"></a>
+      <div id="method-M000044" class="method-detail">
+        <a name="M000044"></a>
 
         <div class="method-heading">
-          <a href="#M000043" class="method-signature">
+          <a href="#M000044" class="method-signature">
           <span class="method-name">config_remote</span><span class="method-args">(name)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000043-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000043-source">
+            onclick="toggleCode('M000044-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000044-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 223</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 229</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_remote</span>(<span class="ruby-identifier">name</span>)
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--get-regexp'</span>, <span class="ruby-node">&quot;remote.#{name}&quot;</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -534,11 +657,11 @@ returns useful array of raw commit object data
         </div>
       </div>
 
-      <div id="method-M000046" class="method-detail">
-        <a name="M000046"></a>
+      <div id="method-M000047" class="method-detail">
+        <a name="M000047"></a>
 
         <div class="method-heading">
-          <a href="#M000046" class="method-signature">
+          <a href="#M000047" class="method-signature">
           <span class="method-name">config_set</span><span class="method-args">(name, value)</span>
           </a>
         </div>
@@ -548,10 +671,10 @@ returns useful array of raw commit object data
 WRITE COMMANDS ##
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000046-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000046-source">
+            onclick="toggleCode('M000047-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000047-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 247</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 253</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_set</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">value</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-identifier">name</span>, <span class="ruby-node">&quot;'#{value}'&quot;</span>])
     <span class="ruby-keyword kw">end</span>
@@ -560,11 +683,11 @@ WRITE COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000040" class="method-detail">
-        <a name="M000040"></a>
+      <div id="method-M000041" class="method-detail">
+        <a name="M000041"></a>
 
         <div class="method-heading">
-          <a href="#M000040" class="method-signature">
+          <a href="#M000041" class="method-signature">
           <span class="method-name">diff_files</span><span class="method-args">()</span>
           </a>
         </div>
@@ -574,10 +697,10 @@ WRITE COMMANDS ##
 compares the index and the working directory
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000040-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000040-source">
+            onclick="toggleCode('M000041-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000041-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 189</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 195</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_files</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'diff-files'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -593,21 +716,21 @@ compares the index and the working directory
         </div>
       </div>
 
-      <div id="method-M000038" class="method-detail">
-        <a name="M000038"></a>
+      <div id="method-M000039" class="method-detail">
+        <a name="M000039"></a>
 
         <div class="method-heading">
-          <a href="#M000038" class="method-signature">
+          <a href="#M000039" class="method-signature">
           <span class="method-name">diff_full</span><span class="method-args">(obj1 = 'HEAD', obj2 = nil, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000038-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000038-source">
+            onclick="toggleCode('M000039-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000039-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 159</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 165</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_full</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'-p'</span>]
       <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
@@ -621,11 +744,11 @@ compares the index and the working directory
         </div>
       </div>
 
-      <div id="method-M000041" class="method-detail">
-        <a name="M000041"></a>
+      <div id="method-M000042" class="method-detail">
+        <a name="M000042"></a>
 
         <div class="method-heading">
-          <a href="#M000041" class="method-signature">
+          <a href="#M000042" class="method-signature">
           <span class="method-name">diff_index</span><span class="method-args">(treeish)</span>
           </a>
         </div>
@@ -635,10 +758,10 @@ compares the index and the working directory
 compares the index and the repository
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000041-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000041-source">
+            onclick="toggleCode('M000042-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000042-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 201</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 207</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_index</span>(<span class="ruby-identifier">treeish</span>)
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'diff-index'</span>, <span class="ruby-identifier">treeish</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -654,21 +777,21 @@ compares the index and the repository
         </div>
       </div>
 
-      <div id="method-M000039" class="method-detail">
-        <a name="M000039"></a>
+      <div id="method-M000040" class="method-detail">
+        <a name="M000040"></a>
 
         <div class="method-heading">
-          <a href="#M000039" class="method-signature">
+          <a href="#M000040" class="method-signature">
           <span class="method-name">diff_stats</span><span class="method-args">(obj1 = 'HEAD', obj2 = nil, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000039-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000039-source">
+            onclick="toggleCode('M000040-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000040-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 168</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 174</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_stats</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'--numstat'</span>]
       <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
@@ -693,21 +816,21 @@ compares the index and the repository
         </div>
       </div>
 
-      <div id="method-M000060" class="method-detail">
-        <a name="M000060"></a>
+      <div id="method-M000061" class="method-detail">
+        <a name="M000061"></a>
 
         <div class="method-heading">
-          <a href="#M000060" class="method-signature">
+          <a href="#M000061" class="method-signature">
           <span class="method-name">fetch</span><span class="method-args">(remote)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000060-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000060-source">
+            onclick="toggleCode('M000061-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000061-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 331</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 337</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">fetch</span>(<span class="ruby-identifier">remote</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'fetch'</span>, <span class="ruby-identifier">remote</span>.<span class="ruby-identifier">to_s</span>)
     <span class="ruby-keyword kw">end</span>
@@ -716,11 +839,11 @@ compares the index and the repository
         </div>
       </div>
 
-      <div id="method-M000037" class="method-detail">
-        <a name="M000037"></a>
+      <div id="method-M000038" class="method-detail">
+        <a name="M000038"></a>
 
         <div class="method-heading">
-          <a href="#M000037" class="method-signature">
+          <a href="#M000038" class="method-signature">
           <span class="method-name">grep</span><span class="method-args">(string, opts = {})</span>
           </a>
         </div>
@@ -738,10 +861,10 @@ returns hash
 </dd>
 </dl>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000037-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000037-source">
+            onclick="toggleCode('M000038-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000038-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 140</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 146</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">grep</span>(<span class="ruby-identifier">string</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>] = <span class="ruby-value str">'HEAD'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>]
 
@@ -779,7 +902,7 @@ returns hash
             onclick="toggleCode('M000026-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000026-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 25</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 27</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init</span>
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'init'</span>)
     <span class="ruby-keyword kw">end</span>
@@ -805,7 +928,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000028-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000028-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 59</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 61</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">log_commits</span>(<span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-value str">'--pretty=oneline'</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;-#{opts[:count]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:count</span>]
@@ -821,21 +944,21 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000042" class="method-detail">
-        <a name="M000042"></a>
+      <div id="method-M000043" class="method-detail">
+        <a name="M000043"></a>
 
         <div class="method-heading">
-          <a href="#M000042" class="method-signature">
+          <a href="#M000043" class="method-signature">
           <span class="method-name">ls_files</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000042-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000042-source">
+            onclick="toggleCode('M000043-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000043-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 212</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 218</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">ls_files</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'ls-files'</span>, <span class="ruby-value str">'--stage'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -850,21 +973,21 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000034" class="method-detail">
-        <a name="M000034"></a>
+      <div id="method-M000035" class="method-detail">
+        <a name="M000035"></a>
 
         <div class="method-heading">
-          <a href="#M000034" class="method-signature">
+          <a href="#M000035" class="method-signature">
           <span class="method-name">ls_tree</span><span class="method-args">(sha)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000034-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000034-source">
+            onclick="toggleCode('M000035-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000035-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 112</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 118</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">ls_tree</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">data</span> = {<span class="ruby-value str">'blob'</span> =<span class="ruby-operator">&gt;</span> {}, <span class="ruby-value str">'tree'</span> =<span class="ruby-operator">&gt;</span> {}}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'ls-tree'</span>, <span class="ruby-identifier">sha</span>.<span class="ruby-identifier">to_s</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -879,21 +1002,21 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000054" class="method-detail">
-        <a name="M000054"></a>
+      <div id="method-M000055" class="method-detail">
+        <a name="M000055"></a>
 
         <div class="method-heading">
-          <a href="#M000054" class="method-signature">
+          <a href="#M000055" class="method-signature">
           <span class="method-name">merge</span><span class="method-args">(branch, message = nil)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000054-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000054-source">
+            onclick="toggleCode('M000055-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000055-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 296</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 302</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">merge</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">message</span> = <span class="ruby-keyword kw">nil</span>)      
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> [<span class="ruby-node">&quot;-m '#{message}'&quot;</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">message</span>
@@ -905,23 +1028,69 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000033" class="method-detail">
-        <a name="M000033"></a>
+      <div id="method-M000030" class="method-detail">
+        <a name="M000030"></a>
 
         <div class="method-heading">
-          <a href="#M000033" class="method-signature">
+          <a href="#M000030" class="method-signature">
+          <span class="method-name">namerev</span><span class="method-args">(string)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000030-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000030-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 76</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">namerev</span>(<span class="ruby-identifier">string</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'name-rev'</span>, <span class="ruby-identifier">string</span>).<span class="ruby-identifier">split</span>[<span class="ruby-value">1</span>]
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000034" class="method-detail">
+        <a name="M000034"></a>
+
+        <div class="method-heading">
+          <a href="#M000034" class="method-signature">
           <span class="method-name">object_contents</span><span class="method-args">(sha)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000033-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000033-source">
+            onclick="toggleCode('M000034-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000034-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 108</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 114</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_contents</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-p'</span>, <span class="ruby-identifier">sha</span>])
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000032" class="method-detail">
+        <a name="M000032"></a>
+
+        <div class="method-heading">
+          <a href="#M000032" class="method-signature">
+          <span class="method-name">object_size</span><span class="method-args">(sha)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000032-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000032-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 84</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_size</span>(<span class="ruby-identifier">sha</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">sha</span>]).<span class="ruby-identifier">to_i</span>
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -933,7 +1102,7 @@ READ COMMANDS ##
 
         <div class="method-heading">
           <a href="#M000031" class="method-signature">
-          <span class="method-name">object_size</span><span class="method-args">(sha)</span>
+          <span class="method-name">object_type</span><span class="method-args">(sha)</span>
           </a>
         </div>
       
@@ -942,30 +1111,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000031-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000031-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 78</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_size</span>(<span class="ruby-identifier">sha</span>)
-      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">sha</span>]).<span class="ruby-identifier">to_i</span>
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000030" class="method-detail">
-        <a name="M000030"></a>
-
-        <div class="method-heading">
-          <a href="#M000030" class="method-signature">
-          <span class="method-name">object_type</span><span class="method-args">(sha)</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000030-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000030-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 74</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 80</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_type</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-t'</span>, <span class="ruby-identifier">sha</span>])
     <span class="ruby-keyword kw">end</span>
@@ -974,21 +1120,21 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000061" class="method-detail">
-        <a name="M000061"></a>
+      <div id="method-M000062" class="method-detail">
+        <a name="M000062"></a>
 
         <div class="method-heading">
-          <a href="#M000061" class="method-signature">
+          <a href="#M000062" class="method-signature">
           <span class="method-name">push</span><span class="method-args">(remote, branch = 'master')</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000061-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000061-source">
+            onclick="toggleCode('M000062-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000062-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 335</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 341</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">push</span>(<span class="ruby-identifier">remote</span>, <span class="ruby-identifier">branch</span> = <span class="ruby-value str">'master'</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'push'</span>, [<span class="ruby-identifier">remote</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">branch</span>.<span class="ruby-identifier">to_s</span>])
     <span class="ruby-keyword kw">end</span>
@@ -997,21 +1143,50 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000055" class="method-detail">
-        <a name="M000055"></a>
+      <div id="method-M000065" class="method-detail">
+        <a name="M000065"></a>
 
         <div class="method-heading">
-          <a href="#M000055" class="method-signature">
+          <a href="#M000065" class="method-signature">
+          <span class="method-name">read_tree</span><span class="method-args">(treeish, opts = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+reads a tree into the current index file
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000065-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000065-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 354</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">read_tree</span>(<span class="ruby-identifier">treeish</span>, <span class="ruby-identifier">opts</span> = {})
+      <span class="ruby-identifier">arr_opts</span> = []
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--prefix=#{opts[:prefix]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:prefix</span>]
+      <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">treeish</span>.<span class="ruby-identifier">to_a</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">' '</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'read-tree'</span>, <span class="ruby-identifier">arr_opts</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000056" class="method-detail">
+        <a name="M000056"></a>
+
+        <div class="method-heading">
+          <a href="#M000056" class="method-signature">
           <span class="method-name">remote_add</span><span class="method-args">(name, url, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000055-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000055-source">
+            onclick="toggleCode('M000056-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000056-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 303</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 309</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remote_add</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">url</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-value str">'add'</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-f'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:with_fetch</span>]
@@ -1025,11 +1200,11 @@ READ COMMANDS ##
         </div>
       </div>
 
-      <div id="method-M000056" class="method-detail">
-        <a name="M000056"></a>
+      <div id="method-M000057" class="method-detail">
+        <a name="M000057"></a>
 
         <div class="method-heading">
-          <a href="#M000056" class="method-signature">
+          <a href="#M000057" class="method-signature">
           <span class="method-name">remote_remove</span><span class="method-args">(name)</span>
           </a>
         </div>
@@ -1040,10 +1215,10 @@ this is documented as such, but seems broken for some reason i&#8217;ll try
 to get around it some other way later
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000056-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000056-source">
+            onclick="toggleCode('M000057-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000057-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 314</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 320</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remote_remove</span>(<span class="ruby-identifier">name</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'remote'</span>, [<span class="ruby-value str">'rm'</span>, <span class="ruby-identifier">name</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1052,21 +1227,21 @@ to get around it some other way later
         </div>
       </div>
 
-      <div id="method-M000057" class="method-detail">
-        <a name="M000057"></a>
+      <div id="method-M000058" class="method-detail">
+        <a name="M000058"></a>
 
         <div class="method-heading">
-          <a href="#M000057" class="method-signature">
+          <a href="#M000058" class="method-signature">
           <span class="method-name">remotes</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000057-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000057-source">
+            onclick="toggleCode('M000058-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000058-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 318</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 324</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remotes</span>
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'remote'</span>)
     <span class="ruby-keyword kw">end</span>
@@ -1075,21 +1250,21 @@ to get around it some other way later
         </div>
       </div>
 
-      <div id="method-M000048" class="method-detail">
-        <a name="M000048"></a>
+      <div id="method-M000049" class="method-detail">
+        <a name="M000049"></a>
 
         <div class="method-heading">
-          <a href="#M000048" class="method-signature">
+          <a href="#M000049" class="method-signature">
           <span class="method-name">remove</span><span class="method-args">(path = '.', opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000048-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000048-source">
+            onclick="toggleCode('M000049-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000049-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 256</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 262</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>(<span class="ruby-identifier">path</span> = <span class="ruby-value str">'.'</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">path</span> = <span class="ruby-identifier">path</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">' '</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">path</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)
 
@@ -1104,21 +1279,21 @@ to get around it some other way later
         </div>
       </div>
 
-      <div id="method-M000063" class="method-detail">
-        <a name="M000063"></a>
+      <div id="method-M000064" class="method-detail">
+        <a name="M000064"></a>
 
         <div class="method-heading">
-          <a href="#M000063" class="method-signature">
+          <a href="#M000064" class="method-signature">
           <span class="method-name">repack</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000063-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000063-source">
+            onclick="toggleCode('M000064-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000064-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 343</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 349</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">repack</span>
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'repack'</span>, [<span class="ruby-value str">'-a'</span>, <span class="ruby-value str">'-d'</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1127,21 +1302,21 @@ to get around it some other way later
         </div>
       </div>
 
-      <div id="method-M000050" class="method-detail">
-        <a name="M000050"></a>
+      <div id="method-M000051" class="method-detail">
+        <a name="M000051"></a>
 
         <div class="method-heading">
-          <a href="#M000050" class="method-signature">
+          <a href="#M000051" class="method-signature">
           <span class="method-name">reset</span><span class="method-args">(commit, opts = {})</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000050-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000050-source">
+            onclick="toggleCode('M000051-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000051-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 272</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 278</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reset</span>(<span class="ruby-identifier">commit</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'--hard'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:hard</span>]
@@ -1167,9 +1342,55 @@ to get around it some other way later
             onclick="toggleCode('M000029-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000029-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 70</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 72</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">revparse</span>(<span class="ruby-identifier">string</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'rev-parse'</span>, <span class="ruby-identifier">string</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000060" class="method-detail">
+        <a name="M000060"></a>
+
+        <div class="method-heading">
+          <a href="#M000060" class="method-signature">
+          <span class="method-name">tag</span><span class="method-args">(tag)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000060-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000060-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 332</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag</span>(<span class="ruby-identifier">tag</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'tag'</span>, <span class="ruby-identifier">tag</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000063" class="method-detail">
+        <a name="M000063"></a>
+
+        <div class="method-heading">
+          <a href="#M000063" class="method-signature">
+          <span class="method-name">tag_sha</span><span class="method-args">(tag_name)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000063-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000063-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 345</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag_sha</span>(<span class="ruby-identifier">tag_name</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'show-ref'</span>,  [<span class="ruby-value str">'--tags'</span>, <span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">tag_name</span>])
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -1181,7 +1402,7 @@ to get around it some other way later
 
         <div class="method-heading">
           <a href="#M000059" class="method-signature">
-          <span class="method-name">tag</span><span class="method-args">(tag)</span>
+          <span class="method-name">tags</span><span class="method-args">()</span>
           </a>
         </div>
       
@@ -1190,55 +1411,55 @@ to get around it some other way later
             onclick="toggleCode('M000059-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000059-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 326</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag</span>(<span class="ruby-identifier">tag</span>)
-      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'tag'</span>, <span class="ruby-identifier">tag</span>)
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000062" class="method-detail">
-        <a name="M000062"></a>
-
-        <div class="method-heading">
-          <a href="#M000062" class="method-signature">
-          <span class="method-name">tag_sha</span><span class="method-args">(tag_name)</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000062-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000062-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 339</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag_sha</span>(<span class="ruby-identifier">tag_name</span>)
-      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'show-ref'</span>,  [<span class="ruby-value str">'--tags'</span>, <span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">tag_name</span>])
-    <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000058" class="method-detail">
-        <a name="M000058"></a>
-
-        <div class="method-heading">
-          <a href="#M000058" class="method-signature">
-          <span class="method-name">tags</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000058-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000058-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 322</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 328</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tags</span>
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'tag'</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000068" class="method-detail">
+        <a name="M000068"></a>
+
+        <div class="method-heading">
+          <a href="#M000068" class="method-signature">
+          <span class="method-name">update_ref</span><span class="method-args">(branch, commit)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000068-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000068-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 379</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">update_ref</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">commit</span>)
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'update-ref'</span>, [<span class="ruby-identifier">branch</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">commit</span>.<span class="ruby-identifier">to_s</span>])
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000066" class="method-detail">
+        <a name="M000066"></a>
+
+        <div class="method-heading">
+          <a href="#M000066" class="method-signature">
+          <span class="method-name">write_tree</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000066-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000066-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 361</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write_tree</span>
+      <span class="ruby-identifier">command</span>(<span class="ruby-value str">'write-tree'</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

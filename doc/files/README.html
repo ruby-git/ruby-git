@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Tue Nov 13 08:54:36 PST 2007</td>
+      <td>Fri Nov 16 11:43:31 PST 2007</td>
     </tr>
     </table>
   </div>
@@ -304,6 +304,46 @@ And here are the operations that will need to write to your git repository.
 
    g.push
    g.push(g.remote('name'))
+</pre>
+<p>
+Some examples of more low-level index and tree operations
+</p>
+<pre>
+   g.with_temp_index do
+
+     g.read_tree(tree3) # calls self.index.read_tree
+     g.read_tree(tree1, :prefix =&gt; 'hi/')
+
+     c = g.commit_tree('message')
+     # or #
+     t = g.write_tree
+     c = g.commit_tree(t, :message =&gt; 'message', :parents =&gt; [sha1, sha2])
+
+     g.branch('branch_name').update_ref(c)
+     g.update_ref(branch, c)
+
+     g.with_temp_working do # new blank working directory
+       g.checkout
+       g.checkout(another_index)
+       g.commit # commits to temp_index
+     end
+   end
+
+   g.set_index('/path/to/index')
+
+   g.with_index(path) do
+     # calls set_index, then switches back after
+   end
+
+   g.with_working(dir) do
+   # calls set_working, then switches back after
+   end
+
+   g.with_temp_working(dir) do
+     g.checkout_index(:prefix =&gt; dir, :path_limiter =&gt; path)
+     # do file work
+     g.commit # commits to index
+   end
 </pre>
 
     </div>
