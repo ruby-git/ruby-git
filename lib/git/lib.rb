@@ -350,6 +350,32 @@ module Git
       command('repack', ['-a', '-d'])
     end
     
+    # reads a tree into the current index file
+    def read_tree(treeish, opts = {})
+      arr_opts = []
+      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
+      arr_opts << treeish.to_a.join(' ')
+      command('read-tree', arr_opts)
+    end
+    
+    def write_tree
+      command('write-tree')
+    end
+    
+    def commit_tree(tree, opts = {})
+      opts[:message] = "commit tree #{tree}" if !opts[:message]
+      t = Tempfile.new('commit-message') do |t|
+        t.write(opts[:message])
+      end
+      
+      arr_opts = []
+      arr_opts << tree
+      arr_opts << "-p #{opts[:parent]}" if opts[:parent]
+      opts[:parents].each { |p| arr_opts << "-p #{p.to_s}" } if opts[:parents]
+      arr_opts << "< #{t.path}"
+      command('commit-tree', arr_opts)
+    end
+    
     # creates an archive file
     #
     # options

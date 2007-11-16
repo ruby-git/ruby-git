@@ -90,6 +90,17 @@ module Git
       @index
     end
     
+    
+    def set_working(work_dir, check = true)
+      @lib = nil
+      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
+    end
+
+    def set_index(index_file, check = true)
+      @lib = nil
+      @index = Git::Index.new(index_file.to_s, check)
+    end
+    
     # changes current working directory for a block
     # to the git working directory
     #
@@ -186,7 +197,7 @@ module Git
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
     def lib
-      Git::Lib.new(self)
+      @lib ||= Git::Lib.new(self)
     end
     
     # will run a grep for 'string' on the HEAD of the git repository
@@ -329,6 +340,65 @@ module Git
     def repack
       self.lib.repack
     end
+    
+    
+    ## LOWER LEVEL INDEX OPERATIONS ##
+    
+    def with_index(new_index)
+      old_index = @index
+      set_index(new_index, false)
+      return_value = yield @index
+      set_index(old_index)
+      return_value
+    end
+    
+    def with_temp_index &blk
+      tempfile = Tempfile.new('temp-index')
+      temp_path = tempfile.path
+      tempfile.unlink
+      with_index(temp_path, &blk)
+    end
+    
+    def read_tree(treeish, opts = {})
+      self.lib.read_tree(treeish, opts)
+    end
+    
+    def write_tree
+      self.lib.write_tree
+    end
+    
+    def commit_tree(tree = nil, opts = {})
+      Git::Object::Commit.new(self, self.lib.commit_tree(tree, opts))
+    end
+    
+    def write_and_commit_tree(opts = {})
+      tree = write_tree
+      commit_tree(tree, opts)
+    end
+      
+    def ls_files
+      self.lib.ls_files
+    end
+
+    def with_working(work_dir)
+      return_value = false
+      old_working = @working_directory
+      set_working(work_dir) 
+      Dir.chdir work_dir do
+        return_value = yield @working_directory
+      end
+      set_working(old_working)
+      return_value
+    end
+    
+    def with_temp_working &blk
+      tempfile = Tempfile.new("temp-workdir")
+      temp_dir = tempfile.path
+      tempfile.unlink
+      Dir.mkdir(temp_dir, 0700)
+      with_working(temp_dir, &blk)
+    end
+    
     
     # runs git rev-parse to convert the objectish to a full sha
     #

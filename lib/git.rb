@@ -40,7 +40,7 @@ require 'git/author'
 # License::   MIT License
 module Git
 
-  VERSION = '1.0.2'
+  VERSION = '1.0.3'
   
   # open a bare repository
   #

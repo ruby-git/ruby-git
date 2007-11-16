@@ -19,5 +19,9 @@ module Git
       File.writable?(@path)
     end
     
+    def to_s
+      @path
+    end
+    
   end
 end
