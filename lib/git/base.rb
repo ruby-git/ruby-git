@@ -153,7 +153,7 @@ module Git
       Git::Object.new(self, objectish, 'commit')
     end
     
-    def gcommit(objectish)
+    def gblob(objectish)
       Git::Object.new(self, objectish, 'blob')
     end
     
