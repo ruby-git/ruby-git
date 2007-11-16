@@ -53,6 +53,22 @@ module Git
         @base.lib.archive(@sha, file, opts)
       end
       
+      def tree?
+        @type == 'tree'
+      end
+      
+      def blob?
+        @type == 'blob'
+      end
+      
+      def commit?
+        @type == 'commit'
+      end
+       
+     def tag?
+       @type == 'tag'
+     end
+     
     end
   
     
