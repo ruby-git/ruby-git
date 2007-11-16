@@ -204,3 +204,28 @@ And here are the operations that will need to write to your git repository.
 
    g.push
    g.push(g.remote('name'))
+
+
+Some examples of more low-level index and tree operations
+
+   g.with_temp_index do 
+
+     g.read_tree(tree3) # calls self.index.read_tree
+     g.read_tree(tree1, :prefix => 'hi/')
+
+     c = g.commit_tree('message')
+     # or #
+     t = g.write_tree
+     c = g.commit_tree(t, :message => 'message', :parents => [sha1, sha2])
+
+     g.branch('branch_name').update_ref(c)
+     g.update_ref(branch, c)
+
+     g.with_temp_working do # new blank working directory
+       g.checkout
+       g.checkout(another_index)
+       g.commit # commits to temp_index
+     end    
+   end
+
+   g.set_index('/path/to/index')
