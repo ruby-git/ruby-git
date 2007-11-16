@@ -15,6 +15,8 @@ class TestObject < Test::Unit::TestCase
   def test_commit
     o = @git.object('1cc8667014381')
     assert(o.is_a?(Git::Object::Commit))
+    assert(o.commit?)
+    assert(!o.tag?)
     
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', o.gtree.to_s)
     assert_equal('546bec6f8872efa41d5d97a369f669165ecda0de', o.parent.sha)
@@ -62,6 +64,7 @@ class TestObject < Test::Unit::TestCase
   def test_tree
     o = @git.object('1cc8667014381^{tree}')
     assert(o.is_a?(Git::Object::Tree))
+    assert(o.tree?)
     
     o = @git.object('v2.7^{tree}')
     
@@ -83,6 +86,7 @@ class TestObject < Test::Unit::TestCase
   def test_blob
     o = @git.object('ba492c62b6')
     assert(o.is_a?(Git::Object::Blob))
+    assert(o.blob?)
     
     o = @git.object('v2.5:example.txt')
     assert(o.is_a?(Git::Object::Blob))
