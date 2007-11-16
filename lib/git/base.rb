@@ -144,9 +144,18 @@ module Git
     def object(objectish)
       Git::Object.new(self, objectish)
     end
-    alias_method :gtree, :object
-    alias_method :gcommit, :object
-    alias_method :gblob, :object
+    
+    def gtree(objectish)
+      Git::Object.new(self, objectish, 'tree')
+    end
+    
+    def gcommit(objectish)
+      Git::Object.new(self, objectish, 'commit')
+    end
+    
+    def gcommit(objectish)
+      Git::Object.new(self, objectish, 'blob')
+    end
     
     # returns a Git::Log object with count commits
     def log(count = 30)
@@ -302,7 +311,7 @@ module Git
     
     # returns a Git::Tag object
     def tag(tag_name)
-      Git::Object.new(self, tag_name, true)
+      Git::Object.new(self, tag_name, 'tag', true)
     end
 
     # creates a new git tag (Git::Tag)

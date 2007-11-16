@@ -7,21 +7,30 @@ module Git
   class Object
     
     class AbstractObject
-      attr_accessor :sha, :size, :type, :mode
+      attr_accessor :objectish, :size, :type, :mode
     
       @base = nil
       @contents = nil
+      @size = nil
+      @sha = nil
       
-      def initialize(base, sha)
+      def initialize(base, objectish)
         @base = base
-        @sha = sha.to_s
-        @size = @base.lib.object_size(@sha)
+        @objectish = objectish.to_s
         setup
       end
-    
+
+      def sha
+        @sha || @sha = @base.lib.revparse(@objectish)
+      end
+      
+      def size
+        @size || @size = @base.lib.object_size(@objectish)
+      end
+      
       # caches the contents of this call in memory
       def contents
-        @contents || @contents = @base.lib.object_contents(@sha)
+        @contents || @contents = @base.lib.object_contents(@objectish)
       end
       
       def contents_array
@@ -33,26 +42,26 @@ module Git
       end
       
       def to_s
-        @sha
+        sha
       end
       
       def grep(string, path_limiter = nil, opts = {})
-        default = {:object => @sha, :path_limiter => path_limiter}
+        default = {:object => sha, :path_limiter => path_limiter}
         grep_options = default.merge(opts)
         @base.lib.grep(string, grep_options)
       end
       
       def diff(objectish)
-        Git::Diff.new(@base, @sha, objectish)
+        Git::Diff.new(@base, @objectish, objectish)
       end
       
       def log(count = 30)
-        Git::Log.new(@base, count).object(@sha)
+        Git::Log.new(@base, count).object(@objectish)
       end
       
       # creates an archive of this object (tree)
       def archive(file = nil, opts = {})
-        @base.lib.archive(@sha, file, opts)
+        @base.lib.archive(@objectish, file, opts)
       end
       
       def tree?
@@ -126,7 +135,7 @@ module Git
           if !@trees
             @trees = {}
             @blobs = {}
-            data = @base.lib.ls_tree(@sha)
+            data = @base.lib.ls_tree(@objectish)
             data['tree'].each { |k, d| @trees[k] = Tree.new(@base, d[:sha], d[:mode]) }
             data['blob'].each { |k, d| @blobs[k] = Blob.new(@base, d[:sha], d[:mode]) }
           end
@@ -148,7 +157,7 @@ module Git
       end
       
       def name
-        @base.lib.namerev(@sha)
+        @base.lib.namerev(sha)
       end
       
       def gtree
@@ -200,7 +209,7 @@ module Git
         # see if this object has been initialized and do so if not
         def check_commit
           if !@tree
-            data = @base.lib.commit_data(@sha)
+            data = @base.lib.commit_data(@objectish)
             @committer = Git::Author.new(data['committer'])
             @author = Git::Author.new(data['author'])
             @tree = Tree.new(@base, data['tree'])
@@ -230,7 +239,7 @@ module Git
     class << self
       # if we're calling this, we don't know what type it is yet
       # so this is our little factory method
-      def new(base, objectish, is_tag = false)
+      def new(base, objectish, type = nil, is_tag = false)
         if is_tag
           sha = base.lib.tag_sha(objectish)
           if sha == ''
@@ -238,8 +247,9 @@ module Git
           end
           return Tag.new(base, sha, objectish)
         else
-          sha = base.lib.revparse(objectish)
-          type = base.lib.object_type(sha) 
+          if !type
+            type = base.lib.object_type(objectish) 
+          end
         end
         
         klass =
@@ -248,7 +258,7 @@ module Git
           when /commit/: Commit
           when /tree/:   Tree
           end
-        klass::new(base, sha)
+        klass::new(base, objectish)
       end
     end 
     
