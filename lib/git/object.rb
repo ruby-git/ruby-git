@@ -42,7 +42,7 @@ module Git
       end
       
       def to_s
-        sha
+        @objectish
       end
       
       def grep(string, path_limiter = nil, opts = {})

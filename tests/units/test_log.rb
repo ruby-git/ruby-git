@@ -32,13 +32,10 @@ class TestLog < Test::Unit::TestCase
   end
   
   def test_get_log_since_file
-    l = @git.log.object('example.txt')
+    l = @git.log.path('example.txt')
     assert_equal(30, l.size)
-    
-    l = @git.log.between('v2.5').object('example.txt')
-    assert_equal(3, l.size)
   
-    l = @git.log.between('v2.5', 'test').object('example.txt')
+    l = @git.log.between('v2.5', 'test').path('example.txt')
     assert_equal(1, l.size)
   end
   

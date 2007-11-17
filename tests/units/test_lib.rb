@@ -42,10 +42,7 @@ class TestLib < Test::Unit::TestCase
     a = @lib.log_commits :count => 20, :between => ['v2.5', 'v2.6']
     assert_equal(2, a.size)
     
-    a = @lib.log_commits :count => 20, :object => 'example.txt'
-    assert_equal(20, a.size)
-    
-    a = @lib.log_commits :count => 20, :object => 'ex_dir/ex.txt'
+    a = @lib.log_commits :count => 20, :path_limiter => 'ex_dir/'
     assert_equal(1, a.size)
   end
   

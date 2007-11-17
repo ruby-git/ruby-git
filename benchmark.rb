@@ -1,9 +1,9 @@
 require 'fileutils'
 require 'benchmark'
 require 'rubygems'
-#require 'ruby-prof'
-#require_gem 'git', '1.0.2'
-require 'lib/git'
+require 'ruby-prof'
+require_gem 'git', '1.0.3'
+#require 'lib/git'
 
 def main
   @wbare = File.expand_path(File.join('tests', 'files', 'working.git'))
@@ -12,8 +12,9 @@ def main
     g = Git.clone(@wbare, 'test')
     g.chdir do
       
-      n = 30
-      #result = RubyProf.profile do
+      n = 40
+      result = RubyProf.profile do
+      puts "<pre>"
       
       Benchmark.bm(8) do |x|
         run_code(x, 'objects') do
@@ -94,22 +95,27 @@ def main
                g.write_tree
              end
           end
-        end
+        end rescue nil
 
         x.report('archive ') do
           n.times do
             f = g.gcommit('v2.6').archive # returns path to temp file
           end
         end rescue nil
-        
+   
+	     
       end
     
-      #end
+      end
 
       # Print a graph profile to text
-      #printer = RubyProf::FlatPrinter.new(result)
-      #printer.print(STDOUT, 0)
-      
+      puts "</pre>"
+      printer = RubyProf::GraphHtmlPrinter.new(result)
+      printer.print(STDOUT, 1)
+      printer = RubyProf::FlatPrinter.new(result)
+      puts "<pre>"
+      printer.print(STDOUT, 1)
+      puts "</pre>"
     end
   end
 end

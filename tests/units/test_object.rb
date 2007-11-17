@@ -50,9 +50,9 @@ class TestObject < Test::Unit::TestCase
   end
   
   def test_object_to_s
-    assert_equal('1cc8667014381e2788a94777532a788307f38d26', @commit.to_s)
-    assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @tree.to_s)
-    assert_equal('ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @blob.to_s)
+    assert_equal('1cc8667014381e2788a94777532a788307f38d26', @commit.sha)
+    assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @tree.sha)
+    assert_equal('ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @blob.sha)
   end
   
   def test_object_size

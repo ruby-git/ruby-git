@@ -41,12 +41,12 @@ module Git
     
     def between(sha1, sha2 = nil)
       dirty_log
-      @between = [@base.lib.revparse(sha1), @base.lib.revparse(sha2)]
+      @between = [sha1, sha2]
       return self
     end
     
     def to_s
-      self.map { |c| c.sha }.join("\n")
+      self.map { |c| c.to_s }.join("\n")
     end
     
 
