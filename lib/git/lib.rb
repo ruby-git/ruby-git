@@ -66,7 +66,7 @@ module Git
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String
       
-      command_lines('log', arr_opts).map { |l| l.split.first }
+      command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
     
     def revparse(string)
@@ -422,34 +422,37 @@ module Git
     
     private
     
-    def command_lines(cmd, opts = {})
-      command(cmd, opts).split("\n")
+    def command_lines(cmd, opts = {}, chdir = true)
+      command(cmd, opts, chdir).split("\n")
     end
     
-    def command(cmd, opts = {})
+    def command(cmd, opts = {}, chdir = true)
       ENV['GIT_DIR'] = @git_dir if (@git_dir != ENV['GIT_DIR'])
       ENV['GIT_INDEX_FILE'] = @git_index_file if (@git_index_file != ENV['GIT_INDEX_FILE'])
-      ENV['GIT_WORK_DIR'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_DIR'])
-      #path = @git_work_dir || @git_dir || @path
-      #Dir.chdir(path) do  
-        opts = opts.to_a.join(' ')
-        git_cmd = "git #{cmd} #{opts}"
+      ENV['GIT_WORK_TREE'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_TREE'])
+      path = @git_work_dir || @git_dir || @path
+
+      opts = opts.to_a.join(' ')
+      git_cmd = "git #{cmd} #{opts}"
+
+      out = nil
+      if chdir && (Dir.getwd != path)
+        Dir.chdir(path) { out = `git #{cmd} #{opts} 2>&1`.chomp } 
+      else
         out = `git #{cmd} #{opts} 2>&1`.chomp
-        #puts path
-        #puts "gd: #{@git_work_dir}"
-        #puts "gi: #{@git_index_file}"
-        #puts "pp: #{@path}"
-        #puts git_cmd
-        #puts out
-        #puts
-        if $?.exitstatus > 0
-          if $?.exitstatus == 1 && out == ''
-            return ''
-          end
-          raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
+      end
+      
+      #puts git_cmd
+      #puts out
+      #puts
+      
+      if $?.exitstatus > 0
+        if $?.exitstatus == 1 && out == ''
+          return ''
         end
-        out
-      #end
+        raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
+      end
+      out
     end
     
   end

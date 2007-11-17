@@ -2,8 +2,8 @@ require 'fileutils'
 require 'benchmark'
 require 'rubygems'
 require 'ruby-prof'
-require_gem 'git', '1.0.3'
-#require 'lib/git'
+#require_gem 'git', '1.0.3'
+require 'lib/git'
 
 def main
   @wbare = File.expand_path(File.join('tests', 'files', 'working.git'))
