@@ -2,15 +2,12 @@ require 'rubygems'
 require 'camping'
 require 'git'
 
-# this is meant to be a git-less web head to your git repo
 #
 # install dependencies
 #   sudo gem install camping-omnibus --source http://code.whytheluckystiff.net
 #
 # author : scott chacon
-# thanks to dr. nic for his syntax code highlighting deal
 #
-# /usr/local/lib/ruby/gems/1.8/gems/camping-1.5.180/examples/
 
 Camping.goes :GitWeb
 
@@ -367,6 +364,7 @@ def GitWeb.create
   GitWeb::Models.create_schema
 end
 
+# everything below this line is the css and javascript for syntax-highlighting
 __END__
 pre.sh_sourceCode {
   background-color: white;
