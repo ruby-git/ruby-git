@@ -88,17 +88,19 @@
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000155">author</a>&nbsp;&nbsp;
-      <a href="#M000156">author_date</a>&nbsp;&nbsp;
-      <a href="#M000157">committer</a>&nbsp;&nbsp;
-      <a href="#M000158">committer_date</a>&nbsp;&nbsp;
-      <a href="#M000159">date</a>&nbsp;&nbsp;
-      <a href="#M000160">diff_parent</a>&nbsp;&nbsp;
-      <a href="#M000152">gtree</a>&nbsp;&nbsp;
-      <a href="#M000150">message</a>&nbsp;&nbsp;
-      <a href="#M000151">name</a>&nbsp;&nbsp;
-      <a href="#M000153">parent</a>&nbsp;&nbsp;
-      <a href="#M000154">parents</a>&nbsp;&nbsp;
+      <a href="#M000158">author</a>&nbsp;&nbsp;
+      <a href="#M000159">author_date</a>&nbsp;&nbsp;
+      <a href="#M000160">committer</a>&nbsp;&nbsp;
+      <a href="#M000161">committer_date</a>&nbsp;&nbsp;
+      <a href="#M000162">date</a>&nbsp;&nbsp;
+      <a href="#M000163">diff_parent</a>&nbsp;&nbsp;
+      <a href="#M000155">gtree</a>&nbsp;&nbsp;
+      <a href="#M000153">message</a>&nbsp;&nbsp;
+      <a href="#M000154">name</a>&nbsp;&nbsp;
+      <a href="#M000152">new</a>&nbsp;&nbsp;
+      <a href="#M000156">parent</a>&nbsp;&nbsp;
+      <a href="#M000157">parents</a>&nbsp;&nbsp;
+      <a href="#M000164">set_commit</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -118,13 +120,41 @@
 
     <!-- if method_list -->
     <div id="methods">
-      <h3 class="section-bar">Public Instance methods</h3>
+      <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000155" class="method-detail">
-        <a name="M000155"></a>
+      <div id="method-M000152" class="method-detail">
+        <a name="M000152"></a>
 
         <div class="method-heading">
-          <a href="#M000155" class="method-signature">
+          <a href="#M000152" class="method-signature">
+          <span class="method-name">new</span><span class="method-args">(base, sha, init = nil)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000152-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000152-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 154</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>, <span class="ruby-identifier">init</span> = <span class="ruby-keyword kw">nil</span>)
+        <span class="ruby-keyword kw">super</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">sha</span>)
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">init</span>
+          <span class="ruby-identifier">set_commit</span>(<span class="ruby-identifier">init</span>)
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000158" class="method-detail">
+        <a name="M000158"></a>
+
+        <div class="method-heading">
+          <a href="#M000158" class="method-signature">
           <span class="method-name">author</span><span class="method-args">()</span>
           </a>
         </div>
@@ -134,86 +164,13 @@
 git author
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000155-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000155-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 179</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">author</span>     
-        <span class="ruby-identifier">check_commit</span>
-        <span class="ruby-ivar">@author</span>
-      <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000156" class="method-detail">
-        <a name="M000156"></a>
-
-        <div class="method-heading">
-          <a href="#M000156" class="method-signature">
-          <span class="method-name">author_date</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000156-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000156-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 184</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">author_date</span>
-        <span class="ruby-identifier">author</span>.<span class="ruby-identifier">date</span>
-      <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000157" class="method-detail">
-        <a name="M000157"></a>
-
-        <div class="method-heading">
-          <a href="#M000157" class="method-signature">
-          <span class="method-name">committer</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p>
-git author
-</p>
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000157-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000157-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 189</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">committer</span>
-        <span class="ruby-identifier">check_commit</span>
-        <span class="ruby-ivar">@committer</span>
-      <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000158" class="method-detail">
-        <a name="M000158"></a>
-
-        <div class="method-heading">
-          <a href="#M000158" class="method-signature">
-          <span class="method-name">committer_date</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
             onclick="toggleCode('M000158-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000158-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 194</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">committer_date</span> 
-        <span class="ruby-identifier">committer</span>.<span class="ruby-identifier">date</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 186</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">author</span>     
+        <span class="ruby-identifier">check_commit</span>
+        <span class="ruby-ivar">@author</span>
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -224,13 +181,22 @@ git author
         <a name="M000159"></a>
 
         <div class="method-heading">
-          <span class="method-name">date</span><span class="method-args">()</span>
+          <a href="#M000159" class="method-signature">
+          <span class="method-name">author_date</span><span class="method-args">()</span>
+          </a>
         </div>
       
         <div class="method-description">
-          <p>
-Alias for <a href="Commit.html#M000158">committer_date</a>
-</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000159-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000159-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 191</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">author_date</span>
+        <span class="ruby-identifier">author</span>.<span class="ruby-identifier">date</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
         </div>
       </div>
 
@@ -239,16 +205,80 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
 
         <div class="method-heading">
           <a href="#M000160" class="method-signature">
+          <span class="method-name">committer</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+git author
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000160-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000160-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 196</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">committer</span>
+        <span class="ruby-identifier">check_commit</span>
+        <span class="ruby-ivar">@committer</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000161" class="method-detail">
+        <a name="M000161"></a>
+
+        <div class="method-heading">
+          <a href="#M000161" class="method-signature">
+          <span class="method-name">committer_date</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000161-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000161-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 201</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">committer_date</span> 
+        <span class="ruby-identifier">committer</span>.<span class="ruby-identifier">date</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000162" class="method-detail">
+        <a name="M000162"></a>
+
+        <div class="method-heading">
+          <span class="method-name">date</span><span class="method-args">()</span>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Alias for <a href="Commit.html#M000161">committer_date</a>
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000163" class="method-detail">
+        <a name="M000163"></a>
+
+        <div class="method-heading">
+          <a href="#M000163" class="method-signature">
           <span class="method-name">diff_parent</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000160-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000160-source">
+            onclick="toggleCode('M000163-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000163-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 199</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 206</span>
       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_parent</span>
         <span class="ruby-identifier">diff</span>(<span class="ruby-identifier">parent</span>)
       <span class="ruby-keyword kw">end</span>
@@ -257,71 +287,24 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
         </div>
       </div>
 
-      <div id="method-M000152" class="method-detail">
-        <a name="M000152"></a>
+      <div id="method-M000155" class="method-detail">
+        <a name="M000155"></a>
 
         <div class="method-heading">
-          <a href="#M000152" class="method-signature">
+          <a href="#M000155" class="method-signature">
           <span class="method-name">gtree</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000152-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000152-source">
+            onclick="toggleCode('M000155-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000155-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 163</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 170</span>
       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">gtree</span>
         <span class="ruby-identifier">check_commit</span>
         <span class="ruby-constant">Tree</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@base</span>, <span class="ruby-ivar">@tree</span>)
-      <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000150" class="method-detail">
-        <a name="M000150"></a>
-
-        <div class="method-heading">
-          <a href="#M000150" class="method-signature">
-          <span class="method-name">message</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000150-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000150-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 154</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">message</span>
-        <span class="ruby-identifier">check_commit</span>
-        <span class="ruby-ivar">@message</span>
-      <span class="ruby-keyword kw">end</span>
-</pre>
-          </div>
-        </div>
-      </div>
-
-      <div id="method-M000151" class="method-detail">
-        <a name="M000151"></a>
-
-        <div class="method-heading">
-          <a href="#M000151" class="method-signature">
-          <span class="method-name">name</span><span class="method-args">()</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000151-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000151-source">
-<pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 159</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">name</span>
-        <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">namerev</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -333,7 +316,7 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
 
         <div class="method-heading">
           <a href="#M000153" class="method-signature">
-          <span class="method-name">parent</span><span class="method-args">()</span>
+          <span class="method-name">message</span><span class="method-args">()</span>
           </a>
         </div>
       
@@ -342,9 +325,10 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
             onclick="toggleCode('M000153-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000153-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 168</span>
-      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">parent</span>
-        <span class="ruby-identifier">parents</span>.<span class="ruby-identifier">first</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 161</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">message</span>
+        <span class="ruby-identifier">check_commit</span>
+        <span class="ruby-ivar">@message</span>
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
@@ -356,6 +340,52 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
 
         <div class="method-heading">
           <a href="#M000154" class="method-signature">
+          <span class="method-name">name</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000154-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000154-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 166</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">name</span>
+        <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">namerev</span>(<span class="ruby-identifier">sha</span>)
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000156" class="method-detail">
+        <a name="M000156"></a>
+
+        <div class="method-heading">
+          <a href="#M000156" class="method-signature">
+          <span class="method-name">parent</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000156-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000156-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 175</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">parent</span>
+        <span class="ruby-identifier">parents</span>.<span class="ruby-identifier">first</span>
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000157" class="method-detail">
+        <a name="M000157"></a>
+
+        <div class="method-heading">
+          <a href="#M000157" class="method-signature">
           <span class="method-name">parents</span><span class="method-args">()</span>
           </a>
         </div>
@@ -365,13 +395,40 @@ Alias for <a href="Commit.html#M000158">committer_date</a>
 array of all parent commits
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000154-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000154-source">
+            onclick="toggleCode('M000157-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000157-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/object.rb, line 173</span>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 180</span>
       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">parents</span>
         <span class="ruby-identifier">check_commit</span>
         <span class="ruby-ivar">@parents</span>        
+      <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000164" class="method-detail">
+        <a name="M000164"></a>
+
+        <div class="method-heading">
+          <a href="#M000164" class="method-signature">
+          <span class="method-name">set_commit</span><span class="method-args">(data)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000164-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000164-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/git/object.rb, line 210</span>
+      <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_commit</span>(<span class="ruby-identifier">data</span>)
+        <span class="ruby-ivar">@committer</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Author</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>[<span class="ruby-value str">'committer'</span>])
+        <span class="ruby-ivar">@author</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Author</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>[<span class="ruby-value str">'author'</span>])
+        <span class="ruby-ivar">@tree</span> = <span class="ruby-constant">Tree</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@base</span>, <span class="ruby-identifier">data</span>[<span class="ruby-value str">'tree'</span>])
+        <span class="ruby-ivar">@parents</span> = <span class="ruby-identifier">data</span>[<span class="ruby-value str">'parent'</span>].<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">sha</span><span class="ruby-operator">|</span> <span class="ruby-constant">Commit</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@base</span>, <span class="ruby-identifier">sha</span>) }
+        <span class="ruby-ivar">@message</span> = <span class="ruby-identifier">data</span>[<span class="ruby-value str">'message'</span>].<span class="ruby-identifier">chomp</span>
       <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

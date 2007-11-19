@@ -175,7 +175,7 @@ object that holds the last X commits on given branch
 <span class="ruby-comment cmt"># File lib/git/log.rb, line 42</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">between</span>(<span class="ruby-identifier">sha1</span>, <span class="ruby-identifier">sha2</span> = <span class="ruby-keyword kw">nil</span>)
       <span class="ruby-identifier">dirty_log</span>
-      <span class="ruby-ivar">@between</span> = [<span class="ruby-ivar">@base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">revparse</span>(<span class="ruby-identifier">sha1</span>), <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">lib</span>.<span class="ruby-identifier">revparse</span>(<span class="ruby-identifier">sha2</span>)]
+      <span class="ruby-ivar">@between</span> = [<span class="ruby-identifier">sha1</span>, <span class="ruby-identifier">sha2</span>]
       <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">self</span>
     <span class="ruby-keyword kw">end</span>
 </pre>
@@ -351,7 +351,7 @@ forces git log to run
 <pre>
 <span class="ruby-comment cmt"># File lib/git/log.rb, line 48</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">to_s</span>
-      <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">c</span><span class="ruby-operator">|</span> <span class="ruby-identifier">c</span>.<span class="ruby-identifier">sha</span> }.<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\n&quot;</span>)
+      <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">c</span><span class="ruby-operator">|</span> <span class="ruby-identifier">c</span>.<span class="ruby-identifier">to_s</span> }.<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\n&quot;</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

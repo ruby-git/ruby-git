@@ -94,17 +94,17 @@ object that holds the last X commits on given branch
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000194">[]</a>&nbsp;&nbsp;
-      <a href="#M000189">deletions</a>&nbsp;&nbsp;
-      <a href="#M000195">each</a>&nbsp;&nbsp;
-      <a href="#M000190">insertions</a>&nbsp;&nbsp;
-      <a href="#M000188">lines</a>&nbsp;&nbsp;
-      <a href="#M000185">new</a>&nbsp;&nbsp;
-      <a href="#M000192">patch</a>&nbsp;&nbsp;
-      <a href="#M000186">path</a>&nbsp;&nbsp;
-      <a href="#M000187">size</a>&nbsp;&nbsp;
-      <a href="#M000191">stats</a>&nbsp;&nbsp;
-      <a href="#M000193">to_s</a>&nbsp;&nbsp;
+      <a href="#M000198">[]</a>&nbsp;&nbsp;
+      <a href="#M000193">deletions</a>&nbsp;&nbsp;
+      <a href="#M000199">each</a>&nbsp;&nbsp;
+      <a href="#M000194">insertions</a>&nbsp;&nbsp;
+      <a href="#M000192">lines</a>&nbsp;&nbsp;
+      <a href="#M000189">new</a>&nbsp;&nbsp;
+      <a href="#M000196">patch</a>&nbsp;&nbsp;
+      <a href="#M000190">path</a>&nbsp;&nbsp;
+      <a href="#M000191">size</a>&nbsp;&nbsp;
+      <a href="#M000195">stats</a>&nbsp;&nbsp;
+      <a href="#M000197">to_s</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -139,19 +139,19 @@ object that holds the last X commits on given branch
     <div id="methods">
       <h3 class="section-bar">Public Class methods</h3>
 
-      <div id="method-M000185" class="method-detail">
-        <a name="M000185"></a>
+      <div id="method-M000189" class="method-detail">
+        <a name="M000189"></a>
 
         <div class="method-heading">
-          <a href="#M000185" class="method-signature">
+          <a href="#M000189" class="method-signature">
           <span class="method-name">new</span><span class="method-args">(base, from = nil, to = nil)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000185-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000185-source">
+            onclick="toggleCode('M000189-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000189-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 16</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">base</span>, <span class="ruby-identifier">from</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">to</span> = <span class="ruby-keyword kw">nil</span>)
@@ -166,11 +166,11 @@ object that holds the last X commits on given branch
 
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000194" class="method-detail">
-        <a name="M000194"></a>
+      <div id="method-M000198" class="method-detail">
+        <a name="M000198"></a>
 
         <div class="method-heading">
-          <a href="#M000194" class="method-signature">
+          <a href="#M000198" class="method-signature">
           <span class="method-name">[]</span><span class="method-args">(key)</span>
           </a>
         </div>
@@ -180,8 +180,8 @@ object that holds the last X commits on given branch
 enumerable methods
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000194-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000194-source">
+            onclick="toggleCode('M000198-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000198-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 61</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">key</span>)
@@ -193,19 +193,19 @@ enumerable methods
         </div>
       </div>
 
-      <div id="method-M000189" class="method-detail">
-        <a name="M000189"></a>
+      <div id="method-M000193" class="method-detail">
+        <a name="M000193"></a>
 
         <div class="method-heading">
-          <a href="#M000189" class="method-signature">
+          <a href="#M000193" class="method-signature">
           <span class="method-name">deletions</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000189-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000189-source">
+            onclick="toggleCode('M000193-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000193-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 37</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">deletions</span>
@@ -217,19 +217,19 @@ enumerable methods
         </div>
       </div>
 
-      <div id="method-M000195" class="method-detail">
-        <a name="M000195"></a>
+      <div id="method-M000199" class="method-detail">
+        <a name="M000199"></a>
 
         <div class="method-heading">
-          <a href="#M000195" class="method-signature">
+          <a href="#M000199" class="method-signature">
           <span class="method-name">each</span><span class="method-args">() {|file[1]| ...}</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000195-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000195-source">
+            onclick="toggleCode('M000199-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000199-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 66</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">each</span>
@@ -243,19 +243,19 @@ enumerable methods
         </div>
       </div>
 
-      <div id="method-M000190" class="method-detail">
-        <a name="M000190"></a>
+      <div id="method-M000194" class="method-detail">
+        <a name="M000194"></a>
 
         <div class="method-heading">
-          <a href="#M000190" class="method-signature">
+          <a href="#M000194" class="method-signature">
           <span class="method-name">insertions</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000190-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000190-source">
+            onclick="toggleCode('M000194-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000194-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 42</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">insertions</span>
@@ -267,19 +267,19 @@ enumerable methods
         </div>
       </div>
 
-      <div id="method-M000188" class="method-detail">
-        <a name="M000188"></a>
+      <div id="method-M000192" class="method-detail">
+        <a name="M000192"></a>
 
         <div class="method-heading">
-          <a href="#M000188" class="method-signature">
+          <a href="#M000192" class="method-signature">
           <span class="method-name">lines</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000188-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000188-source">
+            onclick="toggleCode('M000192-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000192-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 32</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">lines</span>
@@ -291,11 +291,11 @@ enumerable methods
         </div>
       </div>
 
-      <div id="method-M000192" class="method-detail">
-        <a name="M000192"></a>
+      <div id="method-M000196" class="method-detail">
+        <a name="M000196"></a>
 
         <div class="method-heading">
-          <a href="#M000192" class="method-signature">
+          <a href="#M000196" class="method-signature">
           <span class="method-name">patch</span><span class="method-args">(file = nil)</span>
           </a>
         </div>
@@ -305,8 +305,8 @@ enumerable methods
 if file is provided and is writable, it will write the patch into the file
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000192-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000192-source">
+            onclick="toggleCode('M000196-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000196-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 53</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">patch</span>(<span class="ruby-identifier">file</span> = <span class="ruby-keyword kw">nil</span>)
@@ -318,19 +318,19 @@ if file is provided and is writable, it will write the patch into the file
         </div>
       </div>
 
-      <div id="method-M000186" class="method-detail">
-        <a name="M000186"></a>
+      <div id="method-M000190" class="method-detail">
+        <a name="M000190"></a>
 
         <div class="method-heading">
-          <a href="#M000186" class="method-signature">
+          <a href="#M000190" class="method-signature">
           <span class="method-name">path</span><span class="method-args">(path)</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000186-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000186-source">
+            onclick="toggleCode('M000190-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000190-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 22</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">path</span>(<span class="ruby-identifier">path</span>)
@@ -342,19 +342,19 @@ if file is provided and is writable, it will write the patch into the file
         </div>
       </div>
 
-      <div id="method-M000187" class="method-detail">
-        <a name="M000187"></a>
+      <div id="method-M000191" class="method-detail">
+        <a name="M000191"></a>
 
         <div class="method-heading">
-          <a href="#M000187" class="method-signature">
+          <a href="#M000191" class="method-signature">
           <span class="method-name">size</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000187-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000187-source">
+            onclick="toggleCode('M000191-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000191-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 27</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">size</span>
@@ -366,19 +366,19 @@ if file is provided and is writable, it will write the patch into the file
         </div>
       </div>
 
-      <div id="method-M000191" class="method-detail">
-        <a name="M000191"></a>
+      <div id="method-M000195" class="method-detail">
+        <a name="M000195"></a>
 
         <div class="method-heading">
-          <a href="#M000191" class="method-signature">
+          <a href="#M000195" class="method-signature">
           <span class="method-name">stats</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000191-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000191-source">
+            onclick="toggleCode('M000195-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000195-source">
 <pre>
 <span class="ruby-comment cmt"># File lib/git/diff.rb, line 47</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">stats</span>
@@ -390,8 +390,8 @@ if file is provided and is writable, it will write the patch into the file
         </div>
       </div>
 
-      <div id="method-M000193" class="method-detail">
-        <a name="M000193"></a>
+      <div id="method-M000197" class="method-detail">
+        <a name="M000197"></a>
 
         <div class="method-heading">
           <span class="method-name">to_s</span><span class="method-args">(file = nil)</span>
@@ -399,7 +399,7 @@ if file is provided and is writable, it will write the patch into the file
       
         <div class="method-description">
           <p>
-Alias for <a href="Diff.html#M000192">patch</a>
+Alias for <a href="Diff.html#M000196">patch</a>
 </p>
         </div>
       </div>
