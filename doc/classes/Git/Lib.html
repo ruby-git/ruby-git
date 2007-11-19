@@ -204,7 +204,7 @@
             onclick="toggleCode('M000050-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000050-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 293</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 296</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">add</span>(<span class="ruby-identifier">path</span> = <span class="ruby-value str">'.'</span>)
       <span class="ruby-identifier">path</span> = <span class="ruby-identifier">path</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">' '</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">path</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'add'</span>, <span class="ruby-identifier">path</span>)
@@ -240,7 +240,7 @@ options
             onclick="toggleCode('M000072-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000072-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 435</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 438</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">archive</span>(<span class="ruby-identifier">sha</span>, <span class="ruby-identifier">file</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>] = <span class="ruby-value str">'zip'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:format</span>]
       
@@ -283,7 +283,7 @@ options
             onclick="toggleCode('M000039-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000039-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 174</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 177</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_current</span>
       <span class="ruby-identifier">branches_all</span>.<span class="ruby-identifier">select</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">b</span><span class="ruby-operator">|</span> <span class="ruby-identifier">b</span>[<span class="ruby-value">1</span>] }.<span class="ruby-identifier">first</span>[<span class="ruby-value">0</span>] <span class="ruby-keyword kw">rescue</span> <span class="ruby-keyword kw">nil</span>
     <span class="ruby-keyword kw">end</span>
@@ -306,7 +306,7 @@ options
             onclick="toggleCode('M000055-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000055-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 326</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 329</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_delete</span>(<span class="ruby-identifier">branch</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'branch'</span>, [<span class="ruby-value str">'-d'</span>, <span class="ruby-identifier">branch</span>])
     <span class="ruby-keyword kw">end</span>
@@ -329,7 +329,7 @@ options
             onclick="toggleCode('M000054-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000054-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 322</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 325</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branch_new</span>(<span class="ruby-identifier">branch</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'branch'</span>, <span class="ruby-identifier">branch</span>)
     <span class="ruby-keyword kw">end</span>
@@ -352,7 +352,7 @@ options
             onclick="toggleCode('M000038-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000038-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 164</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 167</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">branches_all</span>
       <span class="ruby-identifier">arr</span> = []
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'branch'</span>, <span class="ruby-value str">'-a'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">b</span><span class="ruby-operator">|</span> 
@@ -381,7 +381,7 @@ options
             onclick="toggleCode('M000056-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000056-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 330</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 333</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">checkout</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-f'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:force</span>]
@@ -408,7 +408,7 @@ options
             onclick="toggleCode('M000071-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000071-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 419</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 422</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">checkout_index</span>(<span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--prefix=#{opts[:prefix]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:prefix</span>]
@@ -489,7 +489,7 @@ TODO - make this work with SSH password or auth_key
             onclick="toggleCode('M000052-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000052-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 308</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 311</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit</span>(<span class="ruby-identifier">message</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-node">&quot;-m '#{message}'&quot;</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-a'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:add_all</span>]
@@ -517,7 +517,7 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000034-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000034-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 101</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 104</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit_data</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">sha</span> = <span class="ruby-identifier">sha</span>.<span class="ruby-identifier">to_s</span>
       <span class="ruby-identifier">cdata</span> = <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'commit'</span>, <span class="ruby-identifier">sha</span>])
@@ -542,7 +542,7 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000069-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000069-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 401</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 404</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">commit_tree</span>(<span class="ruby-identifier">tree</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:message</span>] = <span class="ruby-node">&quot;commit tree #{tree}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:message</span>]
       <span class="ruby-identifier">t</span> = <span class="ruby-constant">Tempfile</span>.<span class="ruby-identifier">new</span>(<span class="ruby-value str">'commit-message'</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">t</span><span class="ruby-operator">|</span>
@@ -575,7 +575,7 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000047-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000047-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 274</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 277</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_get</span>(<span class="ruby-identifier">name</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--get'</span>, <span class="ruby-identifier">name</span>])
     <span class="ruby-keyword kw">end</span>
@@ -598,7 +598,7 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000048-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000048-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 278</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 281</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_list</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--list'</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -626,7 +626,7 @@ returns useful array of raw commit object data
             onclick="toggleCode('M000046-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000046-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 265</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 268</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_remote</span>(<span class="ruby-identifier">name</span>)
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-value str">'--get-regexp'</span>, <span class="ruby-node">&quot;remote.#{name}&quot;</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -657,7 +657,7 @@ WRITE COMMANDS ##
             onclick="toggleCode('M000049-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000049-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 289</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 292</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">config_set</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">value</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'config'</span>, [<span class="ruby-identifier">name</span>, <span class="ruby-node">&quot;'#{value}'&quot;</span>])
     <span class="ruby-keyword kw">end</span>
@@ -683,7 +683,7 @@ compares the index and the working directory
             onclick="toggleCode('M000043-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000043-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 231</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 234</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_files</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'diff-files'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -713,7 +713,7 @@ compares the index and the working directory
             onclick="toggleCode('M000041-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000041-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 201</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 204</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_full</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'-p'</span>]
       <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
@@ -744,7 +744,7 @@ compares the index and the repository
             onclick="toggleCode('M000044-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000044-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 243</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 246</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_index</span>(<span class="ruby-identifier">treeish</span>)
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'diff-index'</span>, <span class="ruby-identifier">treeish</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -774,7 +774,7 @@ compares the index and the repository
             onclick="toggleCode('M000042-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000042-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 210</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 213</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">diff_stats</span>(<span class="ruby-identifier">obj1</span> = <span class="ruby-value str">'HEAD'</span>, <span class="ruby-identifier">obj2</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">diff_opts</span> = [<span class="ruby-value str">'--numstat'</span>]
       <span class="ruby-identifier">diff_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">obj1</span>
@@ -813,7 +813,7 @@ compares the index and the repository
             onclick="toggleCode('M000063-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000063-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 373</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 376</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">fetch</span>(<span class="ruby-identifier">remote</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'fetch'</span>, <span class="ruby-identifier">remote</span>.<span class="ruby-identifier">to_s</span>)
     <span class="ruby-keyword kw">end</span>
@@ -878,7 +878,7 @@ returns hash
             onclick="toggleCode('M000040-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000040-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 182</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 185</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">grep</span>(<span class="ruby-identifier">string</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>] = <span class="ruby-value str">'HEAD'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:object</span>]
 
@@ -972,7 +972,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000045-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000045-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 254</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 257</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">ls_files</span>
       <span class="ruby-identifier">hsh</span> = {}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'ls-files'</span>, <span class="ruby-value str">'--stage'</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -1001,7 +1001,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000037-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000037-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 154</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 157</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">ls_tree</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">data</span> = {<span class="ruby-value str">'blob'</span> =<span class="ruby-operator">&gt;</span> {}, <span class="ruby-value str">'tree'</span> =<span class="ruby-operator">&gt;</span> {}}
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'ls-tree'</span>, <span class="ruby-identifier">sha</span>.<span class="ruby-identifier">to_s</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
@@ -1030,7 +1030,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000057-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000057-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 338</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 341</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">merge</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">message</span> = <span class="ruby-keyword kw">nil</span>)      
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> [<span class="ruby-node">&quot;-m '#{message}'&quot;</span>] <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">message</span>
@@ -1056,7 +1056,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000031-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000031-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 88</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 91</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">namerev</span>(<span class="ruby-identifier">string</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'name-rev'</span>, <span class="ruby-identifier">string</span>).<span class="ruby-identifier">split</span>[<span class="ruby-value">1</span>]
     <span class="ruby-keyword kw">end</span>
@@ -1079,7 +1079,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000036-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000036-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 150</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 153</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_contents</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-p'</span>, <span class="ruby-identifier">sha</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1102,7 +1102,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000033-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000033-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 96</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 99</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_size</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">sha</span>]).<span class="ruby-identifier">to_i</span>
     <span class="ruby-keyword kw">end</span>
@@ -1125,7 +1125,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000032-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000032-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 92</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 95</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">object_type</span>(<span class="ruby-identifier">sha</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'cat-file'</span>, [<span class="ruby-value str">'-t'</span>, <span class="ruby-identifier">sha</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1148,7 +1148,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000035-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000035-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 107</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 110</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">process_commit_data</span>(<span class="ruby-identifier">data</span>, <span class="ruby-identifier">sha</span> = <span class="ruby-keyword kw">nil</span>)
       <span class="ruby-identifier">in_message</span> = <span class="ruby-keyword kw">false</span>
       
@@ -1210,7 +1210,7 @@ READ COMMANDS ##
             onclick="toggleCode('M000064-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000064-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 377</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 380</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">push</span>(<span class="ruby-identifier">remote</span>, <span class="ruby-identifier">branch</span> = <span class="ruby-value str">'master'</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'push'</span>, [<span class="ruby-identifier">remote</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">branch</span>.<span class="ruby-identifier">to_s</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1236,7 +1236,7 @@ reads a tree into the current index file
             onclick="toggleCode('M000067-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000067-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 390</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 393</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">read_tree</span>(<span class="ruby-identifier">treeish</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;--prefix=#{opts[:prefix]}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:prefix</span>]
@@ -1262,7 +1262,7 @@ reads a tree into the current index file
             onclick="toggleCode('M000058-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000058-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 345</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 348</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remote_add</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">url</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = [<span class="ruby-value str">'add'</span>]
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'-f'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:with_fetch</span>]
@@ -1294,7 +1294,7 @@ to get around it some other way later
             onclick="toggleCode('M000059-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000059-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 356</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 359</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remote_remove</span>(<span class="ruby-identifier">name</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'remote'</span>, [<span class="ruby-value str">'rm'</span>, <span class="ruby-identifier">name</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1317,7 +1317,7 @@ to get around it some other way later
             onclick="toggleCode('M000060-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000060-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 360</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 363</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remotes</span>
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'remote'</span>)
     <span class="ruby-keyword kw">end</span>
@@ -1340,7 +1340,7 @@ to get around it some other way later
             onclick="toggleCode('M000051-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000051-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 298</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 301</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">remove</span>(<span class="ruby-identifier">path</span> = <span class="ruby-value str">'.'</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">path</span> = <span class="ruby-identifier">path</span>.<span class="ruby-identifier">join</span>(<span class="ruby-value str">' '</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">path</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)
 
@@ -1369,7 +1369,7 @@ to get around it some other way later
             onclick="toggleCode('M000066-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000066-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 385</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 388</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">repack</span>
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'repack'</span>, [<span class="ruby-value str">'-a'</span>, <span class="ruby-value str">'-d'</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1392,7 +1392,7 @@ to get around it some other way later
             onclick="toggleCode('M000053-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000053-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 314</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 317</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reset</span>(<span class="ruby-identifier">commit</span>, <span class="ruby-identifier">opts</span> = {})
       <span class="ruby-identifier">arr_opts</span> = []
       <span class="ruby-identifier">arr_opts</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-value str">'--hard'</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">opts</span>[<span class="ruby-identifier">:hard</span>]
@@ -1420,6 +1420,9 @@ to get around it some other way later
 <pre>
 <span class="ruby-comment cmt"># File lib/git/lib.rb, line 84</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">revparse</span>(<span class="ruby-identifier">string</span>)
+      <span class="ruby-keyword kw">if</span> <span class="ruby-regexp re">/\w{40}/</span>.<span class="ruby-identifier">match</span>(<span class="ruby-identifier">string</span>)  <span class="ruby-comment cmt"># passing in a sha - just no-op it</span>
+        <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">string</span>
+      <span class="ruby-keyword kw">end</span>
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'rev-parse'</span>, <span class="ruby-identifier">string</span>)
     <span class="ruby-keyword kw">end</span>
 </pre>
@@ -1441,7 +1444,7 @@ to get around it some other way later
             onclick="toggleCode('M000062-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000062-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 368</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 371</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag</span>(<span class="ruby-identifier">tag</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'tag'</span>, <span class="ruby-identifier">tag</span>)
     <span class="ruby-keyword kw">end</span>
@@ -1464,7 +1467,7 @@ to get around it some other way later
             onclick="toggleCode('M000065-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000065-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 381</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 384</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tag_sha</span>(<span class="ruby-identifier">tag_name</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'show-ref'</span>,  [<span class="ruby-value str">'--tags'</span>, <span class="ruby-value str">'-s'</span>, <span class="ruby-identifier">tag_name</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1487,7 +1490,7 @@ to get around it some other way later
             onclick="toggleCode('M000061-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000061-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 364</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 367</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">tags</span>
       <span class="ruby-identifier">command_lines</span>(<span class="ruby-value str">'tag'</span>)
     <span class="ruby-keyword kw">end</span>
@@ -1510,7 +1513,7 @@ to get around it some other way later
             onclick="toggleCode('M000070-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000070-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 415</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 418</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">update_ref</span>(<span class="ruby-identifier">branch</span>, <span class="ruby-identifier">commit</span>)
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'update-ref'</span>, [<span class="ruby-identifier">branch</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-identifier">commit</span>.<span class="ruby-identifier">to_s</span>])
     <span class="ruby-keyword kw">end</span>
@@ -1533,7 +1536,7 @@ to get around it some other way later
             onclick="toggleCode('M000068-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000068-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/git/lib.rb, line 397</span>
+<span class="ruby-comment cmt"># File lib/git/lib.rb, line 400</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write_tree</span>
       <span class="ruby-identifier">command</span>(<span class="ruby-value str">'write-tree'</span>)
     <span class="ruby-keyword kw">end</span>

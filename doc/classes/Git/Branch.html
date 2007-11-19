@@ -311,7 +311,7 @@
 <pre>
 <span class="ruby-comment cmt"># File lib/git/branch.rb, line 23</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">gcommit</span>
-      <span class="ruby-ivar">@gcommit</span> = <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">object</span>(<span class="ruby-ivar">@full</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@gcommit</span>
+      <span class="ruby-ivar">@gcommit</span> = <span class="ruby-ivar">@base</span>.<span class="ruby-identifier">gcommit</span>(<span class="ruby-ivar">@full</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@gcommit</span>
       <span class="ruby-ivar">@gcommit</span>
     <span class="ruby-keyword kw">end</span>
 </pre>

@@ -424,6 +424,9 @@ array of all parent commits
 <pre>
 <span class="ruby-comment cmt"># File lib/git/object.rb, line 210</span>
       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set_commit</span>(<span class="ruby-identifier">data</span>)
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">data</span>[<span class="ruby-value str">'sha'</span>]
+          <span class="ruby-ivar">@sha</span> = <span class="ruby-identifier">data</span>[<span class="ruby-value str">'sha'</span>]
+        <span class="ruby-keyword kw">end</span>
         <span class="ruby-ivar">@committer</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Author</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>[<span class="ruby-value str">'committer'</span>])
         <span class="ruby-ivar">@author</span> = <span class="ruby-constant">Git</span><span class="ruby-operator">::</span><span class="ruby-constant">Author</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>[<span class="ruby-value str">'author'</span>])
         <span class="ruby-ivar">@tree</span> = <span class="ruby-constant">Tree</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@base</span>, <span class="ruby-identifier">data</span>[<span class="ruby-value str">'tree'</span>])
