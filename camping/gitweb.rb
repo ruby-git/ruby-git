@@ -3,6 +3,10 @@ require 'camping'
 require 'git'
 
 #
+# gitweb is a web frontend on git
+# there is no user auth, so don't run this anywhere that anyone can use it
+# it's read only, but anyone can remove or add references to your repos
+#
 # install dependencies
 #   sudo gem install camping-omnibus --source http://code.whytheluckystiff.net
 #
