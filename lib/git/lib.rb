@@ -82,6 +82,9 @@ module Git
     end
     
     def revparse(string)
+      if /\w{40}/.match(string)  # passing in a sha - just no-op it
+        return string
+      end
       command('rev-parse', string)
     end
     

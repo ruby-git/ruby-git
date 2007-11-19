@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'camping'
-require 'git'
+require 'lib/git'
 
 #
 # gitweb is a web frontend on git
@@ -207,8 +207,9 @@ module GitWeb::Views
     h1 @repo.name
     h2 @repo.path
 
+    gtags = @git.tags
     @tags = {}
-    @git.tags.each { |tag| @tags[tag.sha] ||= []; @tags[tag.sha] << tag.name }
+    gtags.each { |tag| @tags[tag.sha] ||= []; @tags[tag.sha] << tag.name }
         
     url = 'http:' + URL(Fetch, @repo.id, '').to_s
 
@@ -247,7 +248,7 @@ module GitWeb::Views
     end
     
     h3 'tags'
-    @git.tags.each do |tag|
+    gtags.each do |tag|
       li { a tag.name, :href => R(Commit, @repo, tag.sha) }
     end
     

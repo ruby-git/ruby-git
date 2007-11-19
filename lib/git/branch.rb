@@ -21,7 +21,7 @@ module Git
     end
     
     def gcommit
-      @gcommit = @base.object(@full) if !@gcommit
+      @gcommit = @base.gcommit(@full) if !@gcommit
       @gcommit
     end
     
