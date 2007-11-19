@@ -6,6 +6,9 @@ require 'git'
 # install dependencies
 #   sudo gem install camping-omnibus --source http://code.whytheluckystiff.net
 #
+# todo
+#   - diff/patch between any two objects
+#
 # author : scott chacon
 #
 
@@ -26,13 +29,7 @@ module GitWeb::Models
 end
 
 module GitWeb::Controllers
-  class Index < R '/'
-    def get
-      @repos = Repository.find :all
-      render :index
-    end
-  end
-  
+
   class Stylesheet < R '/css/highlight.css'
     def get
       @headers['Content-Type'] = 'text/css'
@@ -48,21 +45,14 @@ module GitWeb::Controllers
     end
   end
   
-  class View < R '/view/(\d+)'
-    def get repo_id
-      @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
-      render :view
+  
+  class Index < R '/'
+    def get
+      @repos = Repository.find :all
+      render :index
     end
   end
-  
-  class Fetch < R '/git/(\d+)'
-    def get repo_id
-      @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)
-    end
-  end
-  
+    
   class Add < R '/add'
     def get
       @repo = Repository.new
@@ -77,7 +67,33 @@ module GitWeb::Controllers
       end
     end
   end
-
+  
+  class RemoveRepo < R '/remove/(\d+)'
+    def get repo_id
+      @repo = Repository.find repo_id
+      @repo.destroy
+      @repos = Repository.find :all
+      render :index
+    end
+  end
+  
+  
+  class View < R '/view/(\d+)'
+    def get repo_id
+      @repo = Repository.find repo_id
+      @git = Git.bare(@repo.path)      
+      render :view
+    end
+  end
+  
+  class Fetch < R '/git/(\d+)/(.*)'
+    def get repo_id, path
+      @repo = Repository.find repo_id
+      @git = Git.bare(@repo.path)
+      File.read(File.join(@git.repo.path, path))
+    end
+  end
+  
   class Commit < R '/commit/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
@@ -181,6 +197,8 @@ module GitWeb::Views
     end
   end
 
+  # git repo views
+  
   def view
     h1 @repo.name
     h2 @repo.path
@@ -188,7 +206,7 @@ module GitWeb::Views
     @tags = {}
     @git.tags.each { |tag| @tags[tag.sha] ||= []; @tags[tag.sha] << tag.name }
         
-    url = 'http:' + URL(Fetch, @repo.id).to_s
+    url = 'http:' + URL(Fetch, @repo.id, '').to_s
 
     h3 'info'
     table.info do
@@ -323,11 +341,7 @@ module GitWeb::Views
     end
   end
   
-  
-  def cycle(v1, v2)
-    (@value == v1) ? @value = v2 : @value = v1
-    @value
-  end
+  # repo management views
   
   def add
     _form(@repo)
@@ -352,12 +366,22 @@ module GitWeb::Views
   def index
     @repos.each do | repo |
       h1 repo.name
+      a 'remove', :href => R(RemoveRepo, repo.id)
+      span.space ' '
       a repo.path, :href => R(View, repo.id)
     end
     br
     br
     a 'add new repo', :href => R(Add)
   end
+  
+  # convenience functions
+  
+  def cycle(v1, v2)
+    (@value == v1) ? @value = v2 : @value = v1
+    @value
+  end
+  
 end
 
 def GitWeb.create
