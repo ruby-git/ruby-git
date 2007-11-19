@@ -11,8 +11,10 @@ module Git
     @git_index_file = nil
     @git_work_dir = nil
     @path = nil
-        
-    def initialize(base = nil)
+    
+    @logger = nil
+    
+    def initialize(base = nil, logger = nil)
       if base.is_a?(Git::Base)
         @git_dir = base.repo.path
         @git_index_file = base.index.path if base.index
@@ -21,6 +23,9 @@ module Git
         @git_dir = base[:repository]
         @git_index_file = base[:index] 
         @git_work_dir = base[:working_directory]
+      end
+      if logger
+        @logger = logger
       end
     end
     
@@ -481,10 +486,11 @@ module Git
         out = `git #{cmd} #{opts} 2>&1`.chomp
       end
       
-      #puts git_cmd
-      #puts out
-      #puts
-      
+      if @logger
+        @logger.info(git_cmd)
+        @logger.debug(out)
+      end
+            
       if $?.exitstatus > 0
         if $?.exitstatus == 1 && out == ''
           return ''

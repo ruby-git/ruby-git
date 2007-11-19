@@ -12,6 +12,9 @@ require 'lib/git'
 #
 # todo
 #   - diff/patch between any two objects
+#   - prettify : http://projects.wh.techno-weenie.net/changesets/3030
+#   - add user model (add/remove repos)
+#   - implement http-push for authenticated users 
 #
 # author : scott chacon
 #

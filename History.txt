@@ -1,3 +1,8 @@
+== 1.0.4
+
+* added camping/gitweb.rb frontend
+* added a number of speed-ups
+
 == 1.0.3
 
 * Sped up most of the operations

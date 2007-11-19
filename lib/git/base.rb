@@ -7,10 +7,14 @@ module Git
     @index = nil
 
     @lib = nil
+    @logger = nil
     
     # opens a bare Git Repository - no working directory options
-    def self.bare(git_dir)
-      self.new :repository => git_dir
+    def self.bare(git_dir, opts = {})
+      default = {:repository => git_dir}
+      git_options = default.merge(opts)
+      
+      self.new(git_options)
     end
     
     # opens a new Git Project from a working directory
@@ -66,6 +70,9 @@ module Git
       if working_dir = options[:working_directory]
         options[:repository] = File.join(working_dir, '.git') if !options[:repository]
         options[:index] = File.join(working_dir, '.git', 'index') if !options[:index]
+      end
+      if options[:log]
+        @logger = options[:log]
       end
       
       @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
@@ -199,7 +206,7 @@ module Git
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
     def lib
-      @lib ||= Git::Lib.new(self)
+      @lib ||= Git::Lib.new(self, @logger)
     end
     
     # will run a grep for 'string' on the HEAD of the git repository

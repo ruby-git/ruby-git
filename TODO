@@ -15,7 +15,7 @@
   - prune, fsck, pack-refs, gc, count-objects, unpack-objects
 
 * email/patch integration
-  - request-pull(email_address), git-am, git-apply
+  - request-pull(email_address), git-am, git-apply, cherry-pick
   
   
 * compatible with git 1.4

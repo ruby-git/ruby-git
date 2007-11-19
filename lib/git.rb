@@ -48,8 +48,8 @@ module Git
   # it expects not to be able to use a working directory
   # so you can't checkout stuff, commit things, etc.
   # but you can do most read operations
-  def self.bare(git_dir)
-    Base.bare(git_dir)
+  def self.bare(git_dir, options = {})
+    Base.bare(git_dir, options)
   end
     
   # open an existing git working directory
