@@ -151,6 +151,13 @@ module Git
       @committer = nil
       @message = nil
       
+      def initialize(base, sha, init = nil)
+        super(base, sha)
+        if init
+          set_commit(init)
+        end
+      end
+      
       def message
         check_commit
         @message
@@ -199,6 +206,14 @@ module Git
       def diff_parent
         diff(parent)
       end
+      
+      def set_commit(data)
+        @committer = Git::Author.new(data['committer'])
+        @author = Git::Author.new(data['author'])
+        @tree = Tree.new(@base, data['tree'])
+        @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
+        @message = data['message'].chomp
+      end
             
       private
       
@@ -210,11 +225,7 @@ module Git
         def check_commit
           if !@tree
             data = @base.lib.commit_data(@objectish)
-            @committer = Git::Author.new(data['committer'])
-            @author = Git::Author.new(data['author'])
-            @tree = Tree.new(@base, data['tree'])
-            @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
-            @message = data['message'].chomp
+            set_commit(data)
           end
         end
       

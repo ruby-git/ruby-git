@@ -142,7 +142,7 @@ module GitWeb::Controllers
       @git = Git.bare(@repo.path)
       @tree1 = tree1
       @tree2 = tree2
-      @diff = @git.diff(tree1, tree2)
+      @diff = @git.diff(tree2, tree1)
       render :diff
     end
   end
@@ -255,7 +255,7 @@ module GitWeb::Views
           @commit.parents.each do |p|
             code { a p.sha, :href => R(Commit, @repo, p.sha) }
             span.space ' '
-            a 'diff', :href => R(DiffTwo, @repo, p.sha, @commit.sha)
+            a 'diff', :href => R(Diff, @repo, p.sha, @commit.sha)
             span.space ' '
             a 'archive', :href => R(Archive, @repo, p.gtree.sha)            
             br

@@ -69,6 +69,18 @@ module Git
       command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
     
+    def full_log_commits(opts = {})
+      arr_opts = ['--pretty=raw']
+      arr_opts << "-#{opts[:count]}" if opts[:count]
+      arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
+      arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
+      arr_opts << opts[:object] if opts[:object].is_a? String
+      arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String
+      
+      full_log = command_lines('log', arr_opts, true)
+      process_commit_data(full_log)
+    end
+    
     def revparse(string)
       command('rev-parse', string)
     end
@@ -87,28 +99,52 @@ module Git
     
     # returns useful array of raw commit object data
     def commit_data(sha)
+      sha = sha.to_s
+      cdata = command_lines('cat-file', ['commit', sha])
+      process_commit_data(cdata, sha)
+    end
+    
+    def process_commit_data(data, sha = nil)
       in_message = false
       
-      hsh = {'message' => '', 'parent' => []}
-      command_lines('cat-file', ['commit', sha.to_s]).each do |line|
-        if in_message
+      if sha
+        hsh = {'sha' => sha, 'message' => '', 'parent' => []}
+      else
+        hsh_array = []        
+      end
+    
+      data.each do |line|
+        if in_message && line != ''
           hsh['message'] += line + "\n"
         end
-        
+
         if (line != '') && !in_message
           data = line.split
           key = data.shift
           value = data.join(' ')
+          if key == 'commit'
+            sha = value
+            hsh_array << hsh if hsh
+            hsh = {'sha' => sha, 'message' => '', 'parent' => []}
+          end
           if key == 'parent'
             hsh[key] << value
           else
             hsh[key] = value
           end
+        elsif in_message && line == ''
+          in_message = false
         else
           in_message = true
         end
       end
-      hsh
+      
+      if hsh_array
+        hsh_array << hsh if hsh
+        hsh_array
+      else
+        hsh
+      end
     end
     
     def object_contents(sha)

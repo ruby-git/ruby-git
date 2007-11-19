@@ -2,8 +2,8 @@ require 'fileutils'
 require 'benchmark'
 require 'rubygems'
 require 'ruby-prof'
-#require_gem 'git', '1.0.3'
-require 'lib/git'
+require_gem 'git', '1.0.3'
+#require 'lib/git'
 
 def main
   @wbare = File.expand_path(File.join('tests', 'files', 'working.git'))
@@ -66,8 +66,8 @@ def main
             log.size
             log.size
             log.first
-            g.log.between('v2.5').object('example.txt').size
-            g.log.since("2 years ago").size
+            g.log.between('v2.5').object('example.txt').map { |c| c.message }
+            g.log.since("2 years ago").map { |c| c.message }
           end
         end
 

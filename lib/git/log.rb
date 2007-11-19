@@ -84,9 +84,9 @@ module Git
       
       # actually run the 'git log' command
       def run_log      
-        log = @base.lib.log_commits(:count => @count, :object => @object, 
+        log = @base.lib.full_log_commits(:count => @count, :object => @object, 
                                     :path_limiter => @path, :since => @since, :between => @between)
-        @commits = log.map { |l| Git::Object::Commit.new(@base, l) }
+        @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       
   end

@@ -44,6 +44,9 @@ class TestLib < Test::Unit::TestCase
     
     a = @lib.log_commits :count => 20, :path_limiter => 'ex_dir/'
     assert_equal(1, a.size)
+
+    a = @lib.full_log_commits :count => 20
+    assert_equal(20, a.size)
   end
   
   def test_revparse

@@ -1,8 +1,7 @@
 * more documentation
 
+* logging (Git.open(:log => Logger.new))
 
-* more low level index actions
-  - (with_index), checkout-index, read-tree, write-tree, update-ref
 
 * git revert, stash, rebase
 
