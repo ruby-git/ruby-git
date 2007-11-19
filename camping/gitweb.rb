@@ -2,6 +2,11 @@ require 'rubygems'
 require 'camping'
 require 'git'
 
+begin
+  require 'syntax/convertors/html'
+rescue LoadError
+end
+
 # this is meant to be a git-less web head to your git repo
 #
 # install dependencies
@@ -33,6 +38,21 @@ module GitWeb::Controllers
     def get
       @repos = Repository.find :all
       render :index
+    end
+  end
+  
+  class Stylesheet < R '/css/highlight.css'
+    def get
+      @headers['Content-Type'] = 'text/css'
+      ending = File.read(__FILE__).gsub(/.*__END__/m, '')
+      ending.gsub(/__END__.*/m, '')
+    end
+  end
+  
+  class JsHighlight < R '/js/highlight.js'
+    def get
+      @headers['Content-Type'] = 'text/css'
+      File.read(__FILE__).gsub(/.*__JS__/m, '')
     end
   end
   
@@ -139,6 +159,11 @@ end
 module GitWeb::Views
   def layout
     html do
+      head do
+        title 'gitweb'
+        #link :href=>R(Stylesheet), :rel=>'stylesheet', :type=>'text/css'
+        #script :type => "text/javascript", :language => "JavaScript", :src => R(JsHighlight)
+      end
       style <<-END, :type => 'text/css'
         body { color: #333; }
         h1 { background: #cce; padding: 10px; margin: 3px; }
@@ -147,6 +172,8 @@ module GitWeb::Views
         p { padding: 5px; }
         .odd { background: #eee; }
         .tag { margin: 5px; padding: 1px 3px; border: 1px solid #8a8; background: #afa;}
+        .indent { padding: 0px 15px;}
+        .tip { border-top: 1px solid #aaa; color: #666; padding: 10px; }
       END
       body do
         self << yield
@@ -277,17 +304,28 @@ module GitWeb::Views
   end
   
   def diff
-    a.options 'repo', :href => R(View, @repo)
-    
-    p { a 'patch', :href => R(Patch, @repo, @tree1, @tree2) }
-    
+    a.options 'repo', :href => R(View, @repo)    
     h1 "diff"
-    p { strong @tree1 + ' : ' + @tree2 }
-    
+
+    p { a 'download patch file', :href => R(Patch, @repo, @tree1, @tree2) }
+
+    p do
+      a @tree1, :href => R(Tree, @repo, @tree1)
+      span.space ' : '
+      a @tree2, :href => R(Tree, @repo, @tree2)
+    end
+  
     @diff.each do |file|
       h3 file.path
-      pre file.patch
+      begin
+        convertor = Syntax::Convertors::HTML.for_syntax "diff"
+        self << convertor.convert( file.patch )
+      rescue
+        div.indent { pre file.patch }
+        div.tip 'tip: if you run "gem install syntax", this will be highlighted'
+      end
     end
+    
   end
   
   
