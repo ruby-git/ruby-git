@@ -90,6 +90,13 @@ module Git
       if /\w{40}/.match(string)  # passing in a sha - just no-op it
         return string
       end
+            
+      head = File.join(@git_dir, 'refs', 'heads', string)
+      return File.read(head) if File.file?(head)
+
+      head = File.join(@git_dir, 'refs', 'remotes', string)
+      return File.read(head) if File.file?(head)
+      
       command('rev-parse', string)
     end
     
@@ -170,15 +177,31 @@ module Git
     end
 
     def branches_all
+      head = File.read(File.join(@git_dir, 'HEAD'))
       arr = []
-      command_lines('branch', '-a').each do |b| 
-        current = false
-        current = true if b[0, 2] == '* '
-        arr << [b.gsub('* ', '').strip, current]
+      
+      if m = /ref: refs\/heads\/(.*)/.match(head)
+        current = m[1]
       end
+      arr += list_files('heads').map { |f| [f, f == current] }
+      arr += list_files('remotes').map { |f| [f, false] }
+      
+      #command_lines('branch', '-a').each do |b| 
+      #  current = false
+      #  current = true if b[0, 2] == '* '
+      #  arr << [b.gsub('* ', '').strip, current]
+      #end
+      
       arr
     end
 
+    def list_files(ref_dir)
+      dir = File.join(@git_dir, 'refs', ref_dir)
+      files = nil
+      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } }
+      files
+    end
+    
     def branch_current
       branches_all.select { |b| b[1] }.first[0] rescue nil
     end
@@ -280,14 +303,38 @@ module Git
     end
 
     def config_get(name)
-      command('config', ['--get', name])
+      c = config_list
+      c[name]
+      #command('config', ['--get', name])
     end
     
     def config_list
+      config = {}
+      config.merge!(parse_config('~/.gitconfig'))
+      config.merge!(parse_config(File.join(@git_dir, 'config')))
+      #hsh = {}
+      #command_lines('config', ['--list']).each do |line|
+      #  (key, value) = line.split('=')
+      #  hsh[key] = value
+      #end
+      #hsh
+    end
+    
+    def parse_config(file)
       hsh = {}
-      command_lines('config', ['--list']).each do |line|
-        (key, value) = line.split('=')
-        hsh[key] = value
+      file = File.expand_path(file)
+      if File.file?(file)
+        current_section = nil
+        File.readlines(file).each do |line|
+          if m = /\[(\w+)\]/.match(line)
+            current_section = m[1]
+          elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
+            current_section = "#{m[1]}.#{m[2]}"
+          elsif m = /(\w+?) = (.*)/.match(line)
+            key = "#{current_section}.#{m[1]}"
+            hsh[key] = m[2] 
+          end
+        end
       end
       hsh
     end
@@ -370,7 +417,11 @@ module Git
     end
 
     def tags
-      command_lines('tag')
+      tag_dir = File.join(@git_dir, 'refs', 'tags')
+      tags = []
+      Dir.chdir(tag_dir) { tags = Dir.glob('*') }
+      return tags
+      #command_lines('tag')
     end
 
     def tag(tag)
@@ -387,6 +438,9 @@ module Git
     end
     
     def tag_sha(tag_name)
+      head = File.join(@git_dir, 'refs', 'tags', tag_name)
+      return File.read(head).chomp if File.exists?(head)
+      
       command('show-ref',  ['--tags', '-s', tag_name])
     end  
     

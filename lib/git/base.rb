@@ -73,6 +73,7 @@ module Git
       end
       if options[:log]
         @logger = options[:log]
+        @logger.info("Starting Git")
       end
       
       @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]

@@ -1,7 +1,5 @@
 * more documentation
 
-* logging (Git.open(:log => Logger.new))
-
 
 * git revert, stash, rebase
 
@@ -15,7 +13,7 @@
   - prune, fsck, pack-refs, gc, count-objects, unpack-objects
 
 * email/patch integration
-  - request-pull(email_address), git-am, git-apply, cherry-pick
+  - request-pull(email_address), git-am, git-apply
   
   
 * compatible with git 1.4

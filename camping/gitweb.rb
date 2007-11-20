@@ -12,6 +12,7 @@ require 'lib/git'
 #
 # todo
 #   - diff/patch between any two objects
+#     - expand patch to entire file
 #   - grep / search function
 #   - prettify : http://projects.wh.techno-weenie.net/changesets/3030
 #   - add user model (add/remove repos)
@@ -89,7 +90,10 @@ module GitWeb::Controllers
   class View < R '/view/(\d+)'
     def get repo_id
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      logger = Logger.new('/tmp/git.log')
+      logger.level = Logger::INFO
+      
+      @git = Git.bare(@repo.path, :log => logger)      
       render :view
     end
   end
@@ -214,7 +218,7 @@ module GitWeb::Views
     gtags = @git.tags
     @tags = {}
     gtags.each { |tag| @tags[tag.sha] ||= []; @tags[tag.sha] << tag.name }
-        
+    
     url = 'http:' + URL(Fetch, @repo.id, '').to_s
 
     h3 'info'
@@ -321,6 +325,9 @@ module GitWeb::Views
     
     case ext
       when 'rb' : classnm = 'sh_ruby'
+      when 'js' : classnm = 'sh_javascript'
+      when 'html' : classnm = 'sh_html'
+      when 'css' : classnm = 'sh_css'
     end
     
     a.options 'repo', :href => R(View, @repo)
