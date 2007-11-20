@@ -263,6 +263,6 @@ module Git
       :tag
     end
   end
-  
+
 end
 end

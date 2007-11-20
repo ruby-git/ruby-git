@@ -23,6 +23,9 @@ require 'git/diff'
 require 'git/status'
 require 'git/author'
 
+require 'git/raw/repository'
+
+
 # Git/Ruby Library
 #
 # This provides bindings for working with git in complex
