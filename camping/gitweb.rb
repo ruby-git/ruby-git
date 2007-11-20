@@ -194,7 +194,10 @@ module GitWeb::Views
         script '', :type => "text/javascript", :language => "JavaScript", :src => R(JsHighlight)
       end
       style <<-END, :type => 'text/css'
-        body { color: #333; }
+        body { font-family: verdana, arial, helvetica, sans-serif; color: #333; 
+                font-size:   13px;
+                line-height: 18px;}
+
         h1 { background: #cce; padding: 10px; margin: 3px; }
         h3 { background: #aea; padding: 5px; margin: 3px; }
         .options { float: right; margin: 10px; }
@@ -202,9 +205,14 @@ module GitWeb::Views
         .odd { background: #eee; }
         .tag { margin: 5px; padding: 1px 3px; border: 1px solid #8a8; background: #afa;}
         .indent { padding: 0px 15px;}
+        table tr td { font-size: 13px; }
+        table.shortlog { width: 100%; }
+        .timer { color: #666; padding: 10px; margin-top: 10px; }
       END
       body :onload => "sh_highlightDocument();" do
+        before = Time.now().usec
         self << yield
+        self << ((Time.now().usec - before).to_f / 60).to_s + ' sec'
       end
     end
   end
@@ -233,7 +241,7 @@ module GitWeb::Views
       @git.log.each do |log|
         tr do
           td log.date.strftime("%Y-%m-%d")
-          td log.sha[0, 8]
+          td { code log.sha[0, 8] }
           td { em log.author.name }
           td do
             span.message log.message[0, 60]

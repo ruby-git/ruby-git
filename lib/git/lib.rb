@@ -295,9 +295,10 @@ module Git
 
     def config_remote(name)
       hsh = {}
-      command_lines('config', ['--get-regexp', "remote.#{name}"]).each do |line|
-        (key, value) = line.split
-        hsh[key.gsub("remote.#{name}.", '')] = value
+      config_list.each do |key, value|
+        if /remote.#{name}/.match(key)
+          hsh[key.gsub("remote.#{name}.", '')] = value
+        end
       end
       hsh
     end
