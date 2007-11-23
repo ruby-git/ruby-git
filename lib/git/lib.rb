@@ -81,7 +81,7 @@ module Git
         sha = revparse(opts[:object] || branch_current || 'master')
         count = opts[:count] || 30
         
-        repo = Git::Raw::Repository.new(@git_dir)
+        repo = get_raw_repo
         return process_commit_data(repo.log(sha, count))
       end
       
@@ -182,7 +182,8 @@ module Git
     end
     
     def object_contents(sha)
-      command('cat-file', ['-p', sha])
+      #command('cat-file', ['-p', sha])
+      get_raw_repo.cat_file(revparse(sha))
     end
 
     def ls_tree(sha)
