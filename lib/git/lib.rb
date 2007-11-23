@@ -13,6 +13,7 @@ module Git
     @path = nil
     
     @logger = nil
+    @raw_repo = nil
     
     def initialize(base = nil, logger = nil)
       if base.is_a?(Git::Base)
@@ -75,6 +76,15 @@ module Git
     end
     
     def full_log_commits(opts = {})
+      if !(opts[:since] || opts[:between] || opts[:path_limiter])
+        # can do this in pure ruby
+        sha = revparse(opts[:object] || branch_current || 'master')
+        count = opts[:count] || 30
+        
+        repo = Git::Raw::Repository.new(@git_dir)
+        return process_commit_data(repo.log(sha, count))
+      end
+      
       arr_opts = ['--pretty=raw']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
@@ -92,10 +102,13 @@ module Git
       end
             
       head = File.join(@git_dir, 'refs', 'heads', string)
-      return File.read(head) if File.file?(head)
+      return File.read(head).chomp if File.file?(head)
 
       head = File.join(@git_dir, 'refs', 'remotes', string)
-      return File.read(head) if File.file?(head)
+      return File.read(head).chomp if File.file?(head)
+      
+      head = File.join(@git_dir, 'refs', 'tags', string)
+      return File.read(head).chomp if File.file?(head)
       
       command('rev-parse', string)
     end
@@ -111,17 +124,22 @@ module Git
     def object_size(sha)
       command('cat-file', ['-s', sha]).to_i
     end
+
+    def get_raw_repo
+      @raw_repo ||= Git::Raw::Repository.new(@git_dir)
+    end
     
     # returns useful array of raw commit object data
     def commit_data(sha)
       sha = sha.to_s
-      cdata = command_lines('cat-file', ['commit', sha])
+      cdata = get_raw_repo.cat_file(revparse(sha))
+      #cdata = command_lines('cat-file', ['commit', sha])
       process_commit_data(cdata, sha)
     end
     
     def process_commit_data(data, sha = nil)
       in_message = false
-      
+            
       if sha
         hsh = {'sha' => sha, 'message' => '', 'parent' => []}
       else
@@ -129,6 +147,7 @@ module Git
       end
     
       data.each do |line|
+        line = line.chomp
         if in_message && line != ''
           hsh['message'] += line + "\n"
         end
