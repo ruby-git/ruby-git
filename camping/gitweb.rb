@@ -7,6 +7,8 @@ require 'lib/git'
 # there is no user auth, so don't run this anywhere that anyone can use it
 # it's read only, but anyone can remove or add references to your repos
 #
+# everything but the archive and diff functions are now in pure ruby
+#
 # install dependencies
 #   sudo gem install camping-omnibus --source http://code.whytheluckystiff.net
 #
@@ -125,10 +127,12 @@ module GitWeb::Controllers
   class Blob < R '/blob/(\d+)/(.*?)/(\w+)'
     def get repo_id, file, sha
       @repo = Repository.find repo_id
-      logger = Logger.new('/tmp/git.log')
-      logger.level = Logger::INFO
-      
-      @git = Git.bare(@repo.path, :log => logger)      
+
+      #logger = Logger.new('/tmp/git.log')
+      #logger.level = Logger::INFO
+      #@git = Git.bare(@repo.path, :log => logger)      
+
+      @git = Git.bare(@repo.path)
       @blob = @git.gblob(sha)
       @file = file
       render :blob
