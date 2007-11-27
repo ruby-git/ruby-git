@@ -428,7 +428,11 @@ module Git
     def revparse(objectish)
       self.lib.revparse(objectish)
     end
-
+    
+    def ls_tree(objectish)
+      self.lib.ls_tree(objectish)
+    end
+    
     def cat_file(objectish)
       self.lib.object_contents(objectish)
     end

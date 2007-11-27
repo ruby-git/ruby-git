@@ -136,8 +136,8 @@ module Git
             @trees = {}
             @blobs = {}
             data = @base.lib.ls_tree(@objectish)
-            data['tree'].each { |k, d| @trees[k] = Tree.new(@base, d[:sha], d[:mode]) }
-            data['blob'].each { |k, d| @blobs[k] = Blob.new(@base, d[:sha], d[:mode]) }
+            data['tree'].each { |k, d| @trees[k] = Git::Object::Tree.new(@base, d[:sha], d[:mode]) }
+            data['blob'].each { |k, d| @blobs[k] = Git::Object::Blob.new(@base, d[:sha], d[:mode]) }
           end
         end
       
@@ -213,8 +213,8 @@ module Git
         end
         @committer = Git::Author.new(data['committer'])
         @author = Git::Author.new(data['author'])
-        @tree = Tree.new(@base, data['tree'])
-        @parents = data['parent'].map{ |sha| Commit.new(@base, sha) }
+        @tree = Git::Object::Tree.new(@base, data['tree'])
+        @parents = data['parent'].map{ |sha| Git::Object::Commit.new(@base, sha) }
         @message = data['message'].chomp
       end
             
@@ -259,7 +259,7 @@ module Git
           if sha == ''
             raise Git::GitTagNameDoesNotExist.new(objectish)
           end
-          return Tag.new(base, sha, objectish)
+          return Git::Object::Tag.new(base, sha, objectish)
         else
           if !type
             type = base.lib.object_type(objectish) 

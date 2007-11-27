@@ -12,9 +12,9 @@
 #   add --log-file 
 #   add --help
 
-#require 'lib/git'
-require 'rubygems'
-require 'git'
+require 'lib/git'
+#require 'rubygems'
+#require 'git'
 require 'logger'
 
 command = ARGV[0]
@@ -25,15 +25,17 @@ if !command
   puts
   puts 'commands: log'
   puts '          log-shas'
-  puts '          cat-file'
-  puts '          rev-parse'
+  puts '          cat-file (treeish)'
+  puts '          rev-parse (treeish)'
   puts '          branches'
   puts '          config'
+  puts '          ls-tree (tree)'
   exit
 end
 
 git_dir = ENV['GIT_DIR'] || '.git'
-@git = Git.bare(git_dir, :log => Logger.new(STDOUT))
+#@git = Git.bare(git_dir, :log => Logger.new(STDOUT))
+@git = Git.bare(git_dir)
 
 case command
 when 'log'
@@ -60,10 +62,17 @@ when 'config'
   @git.config.sort.each do |k,v|
     puts "#{k} : #{v}"
   end
+when 'ls-tree'
+  # gitr ls-tree
+  tree = @git.gtree(ARGV[1])
+  tree.blobs.sort.each do |name, c|
+    puts [[c.mode, c.type, c.sha].join(" "), name].join("\t")
+  end
+  tree.trees.sort.each do |name, c|
+    puts [[c.mode, c.type, c.sha].join(" "), name].join("\t")
+  end
 end
 
-# gitr ls-tree
-# gitr pack-browse
-
-# gitr diff / stats ?
-# output in yaml?
+# todo:
+#  gitr pack-browse
+#  gitr diff / stats ?
