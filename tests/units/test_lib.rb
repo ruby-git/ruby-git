@@ -102,6 +102,15 @@ class TestLib < Test::Unit::TestCase
     assert_equal('+refs/heads/*:refs/remotes/working/*', config['fetch'])
   end
   
+  
+  def test_ls_tree
+    tree = @lib.ls_tree('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
+    assert_equal("3aac4b445017a8fc07502670ec2dbf744213dd48", tree['blob']['example.txt'][:sha])
+    assert_equal("100644", tree['blob']['example.txt'][:mode])
+    assert(tree['tree'])
+  end
+
+
   # options this will accept
   #  :treeish
   #  :path_limiter

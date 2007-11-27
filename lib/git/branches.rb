@@ -41,5 +41,17 @@ module Git
       @branches[symbol.to_s]
     end
     
+    def to_s
+      out = ''
+      @branches.each do |k, b|
+        if b.current
+          out += "* " + b.to_s + "\n"
+        else
+          out += "  " + b.to_s + "\n"
+        end
+      end
+      out
+    end
+    
   end
 end

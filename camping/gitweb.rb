@@ -13,6 +13,7 @@ require 'lib/git'
 # todo
 #   - diff/patch between any two objects
 #     - expand patch to entire file
+#   - set title properly
 #   - grep / search function
 #   - prettify : http://projects.wh.techno-weenie.net/changesets/3030
 #   - add user model (add/remove repos)
@@ -90,10 +91,7 @@ module GitWeb::Controllers
   class View < R '/view/(\d+)'
     def get repo_id
       @repo = Repository.find repo_id
-      logger = Logger.new('/tmp/git.log')
-      logger.level = Logger::INFO
-      
-      @git = Git.bare(@repo.path, :log => logger)      
+      @git = Git.bare(@repo.path)     
       render :view
     end
   end
@@ -109,7 +107,7 @@ module GitWeb::Controllers
   class Commit < R '/commit/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      @git = Git.bare(@repo.path)   
       @commit = @git.gcommit(sha)
       render :commit
     end
@@ -118,7 +116,7 @@ module GitWeb::Controllers
   class Tree < R '/tree/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      @git = Git.bare(@repo.path)   
       @tree = @git.gtree(sha)
       render :tree
     end
@@ -127,7 +125,10 @@ module GitWeb::Controllers
   class Blob < R '/blob/(\d+)/(.*?)/(\w+)'
     def get repo_id, file, sha
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      logger = Logger.new('/tmp/git.log')
+      logger.level = Logger::INFO
+      
+      @git = Git.bare(@repo.path, :log => logger)      
       @blob = @git.gblob(sha)
       @file = file
       render :blob
@@ -212,7 +213,7 @@ module GitWeb::Views
       body :onload => "sh_highlightDocument();" do
         before = Time.now().usec
         self << yield
-        self << ((Time.now().usec - before).to_f / 60).to_s + ' sec'
+        self << '<br/>' + ((Time.now().usec - before).to_f / 60).to_s + ' sec'
       end
     end
   end

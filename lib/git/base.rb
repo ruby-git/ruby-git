@@ -429,6 +429,10 @@ module Git
       self.lib.revparse(objectish)
     end
 
+    def cat_file(objectish)
+      self.lib.object_contents(objectish)
+    end
+
     # returns the name of the branch the working directory is currently on
     def current_branch
       self.lib.branch_current
