@@ -19,6 +19,9 @@ but eventually I'll replace that with either C bindings
 to libgit or libgit-thin, or I'll write pure ruby
 handlers for at least some of the Git stuff.
 
+Many of the simple read-only operations have already been
+moved to pure ruby.
+
 = Major Objects
 
 Git::Base - this is the object returned from a Git.open or Git.clone.  
@@ -47,6 +50,21 @@ your log query, which can be constructed through methods on the Git::Log object,
 
  @git.log(20).object("HEAD^").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] } 
 
+= Gitr
+
+I have included a command line pure-ruby git client called 'gitr'
+
+The following commands are available - they all will run in pure ruby, without forking out the the git binary.
+In fact, they can be run on a machine without git compiled on it.
+
+commands: log
+          log-shas
+          cat-file (treeish)
+          rev-parse (treeish)
+          branches
+          config
+          ls-tree (tree)
+          
 
 = Examples
 
