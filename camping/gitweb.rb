@@ -116,10 +116,7 @@ module GitWeb::Controllers
   class Tree < R '/tree/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
-      logger = Logger.new('/tmp/git.log')
-      logger.level = Logger::INFO
-      
-      @git = Git.bare(@repo.path, :log => logger)      
+      @git = Git.bare(@repo.path)   
       @tree = @git.gtree(sha)
       render :tree
     end
@@ -128,7 +125,10 @@ module GitWeb::Controllers
   class Blob < R '/blob/(\d+)/(.*?)/(\w+)'
     def get repo_id, file, sha
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      logger = Logger.new('/tmp/git.log')
+      logger.level = Logger::INFO
+      
+      @git = Git.bare(@repo.path, :log => logger)      
       @blob = @git.gblob(sha)
       @file = file
       render :blob

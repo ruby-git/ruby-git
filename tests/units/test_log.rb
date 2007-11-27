@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
-
+require 'logger'
 require File.dirname(__FILE__) + '/../test_helper'
 
 class TestLog < Test::Unit::TestCase
   def setup
     set_file_paths
+    #@git = Git.open(@wdir, :log => Logger.new(STDOUT))
     @git = Git.open(@wdir)
   end
 

@@ -22,8 +22,7 @@ class TestRawInternals < Test::Unit::TestCase
   end
   
   def test_commit_object
-    g = Git.bare(@wbare, :log => Logger.new(STDOUT))
-    
+    g = Git.bare(@wbare)    
     c = g.gcommit("v2.5")
     assert_equal('test', c.message)
   end
@@ -34,7 +33,7 @@ class TestRawInternals < Test::Unit::TestCase
     sha = c.sha
     
     repo = Git::Raw::Repository.new(@wbare)
-    puts repo.object(sha).inspect
+    assert_equal('ex_dir', repo.object(sha).entry.first.name)
   end
   
   def t_log(g)
