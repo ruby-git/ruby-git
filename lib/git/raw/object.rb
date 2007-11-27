@@ -1,3 +1,13 @@
+#
+# converted from the gitrb project
+#
+# authors: 
+#    Matthias Lederhofer <matled@gmx.net>
+#    Simon 'corecode' Schubert <corecode@fs.ei.tum.de>
+#
+# provides native ruby access to git objects and pack files
+#
+
 require 'digest/sha1'
 
 module Git
@@ -132,6 +142,21 @@ module Git
       end
     end
 
+    def format_type
+      case type
+      when :link
+        'link'
+      when :directory
+        'tree'
+      when :file
+        'blob'
+      end
+    end
+
+    def format_mode
+      "%06o" % @mode
+    end
+    
     def raw
       "%o %s\0%s" % [@mode, @name, [@sha1].pack("H*")]
     end
@@ -160,8 +185,7 @@ module Git
     def raw_content
       # TODO: sort correctly
       #@entry.sort { |a,b| a.name <=> b.name }.
-      @entry.
-        collect { |e| e.raw }.join
+      @entry.collect { |e| [[e.format_mode, e.format_type, e.sha1].join(' '), e.name].join("\t") }.join("\n")
     end
   end
 

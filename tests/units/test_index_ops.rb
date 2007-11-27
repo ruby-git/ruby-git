@@ -10,7 +10,7 @@ class TestIndexOps < Test::Unit::TestCase
   end
   
   def test_add
-    in_temp_dir(false) do |path|
+    in_temp_dir do |path|
       g = Git.clone(@wbare, 'new')
       Dir.chdir('new') do
         assert_equal('100644', g.status['example.txt'].mode_index)

@@ -107,10 +107,7 @@ module GitWeb::Controllers
   class Commit < R '/commit/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
-      logger = Logger.new('/tmp/git.log')
-      logger.level = Logger::INFO
-      
-      @git = Git.bare(@repo.path, :log => logger)   
+      @git = Git.bare(@repo.path)   
       @commit = @git.gcommit(sha)
       render :commit
     end
@@ -119,7 +116,10 @@ module GitWeb::Controllers
   class Tree < R '/tree/(\d+)/(\w+)'
     def get repo_id, sha
       @repo = Repository.find repo_id
-      @git = Git.bare(@repo.path)      
+      logger = Logger.new('/tmp/git.log')
+      logger.level = Logger::INFO
+      
+      @git = Git.bare(@repo.path, :log => logger)      
       @tree = @git.gtree(sha)
       render :tree
     end

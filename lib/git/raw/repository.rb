@@ -1,3 +1,13 @@
+#
+# converted from the gitrb project
+#
+# authors: 
+#    Matthias Lederhofer <matled@gmx.net>
+#    Simon 'corecode' Schubert <corecode@fs.ei.tum.de>
+#
+# provides native ruby access to git objects and pack files
+#
+
 require 'git/raw/internal/object'
 require 'git/raw/internal/pack'
 require 'git/raw/internal/loose'
@@ -28,9 +38,14 @@ module Git
           puts
         end
       end
-      
+
+      def object(sha)
+        o = get_raw_object_by_sha1(sha)
+        c = Git::Raw::Object.from_raw(o)
+      end
+            
       def cat_file(sha)
-        get_raw_object_by_sha1(sha).content rescue nil
+        object(sha).raw_content
       end
       
       def log(sha, count = 30)

@@ -183,16 +183,22 @@ module Git
     
     def object_contents(sha)
       #command('cat-file', ['-p', sha])
-      get_raw_repo.cat_file(revparse(sha))
+      get_raw_repo.cat_file(revparse(sha)).chomp
     end
 
     def ls_tree(sha)
       data = {'blob' => {}, 'tree' => {}}
-      command_lines('ls-tree', sha.to_s).each do |line|
-        (info, filenm) = line.split("\t")
-        (mode, type, sha) = info.split
-        data[type][filenm] = {:mode => mode, :sha => sha}
+      
+      get_raw_repo.object(revparse(sha)).entry.each do |e|
+        data[e.format_type][e.name] = {:mode => e.format_mode, :sha => e.sha1}
       end
+        
+      #command_lines('ls-tree', sha.to_s).each do |line|
+      #  (info, filenm) = line.split("\t")
+      #  (mode, type, sha) = info.split
+      #  data[type][filenm] = {:mode => mode, :sha => sha}
+      #end
+      
       data
     end
 

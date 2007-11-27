@@ -1,3 +1,13 @@
+#
+# converted from the gitrb project
+#
+# authors: 
+#    Matthias Lederhofer <matled@gmx.net>
+#    Simon 'corecode' Schubert <corecode@fs.ei.tum.de>
+#
+# provides native ruby access to git objects and pack files
+#
+
 require 'zlib'
 require 'git/raw/internal/object'
 require 'git/raw/internal/mmap'

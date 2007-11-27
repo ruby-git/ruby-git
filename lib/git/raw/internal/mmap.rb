@@ -1,3 +1,13 @@
+#
+# converted from the gitrb project
+#
+# authors: 
+#    Matthias Lederhofer <matled@gmx.net>
+#    Simon 'corecode' Schubert <corecode@fs.ei.tum.de>
+#
+# provides native ruby access to git objects and pack files
+#
+
 begin
   require 'mmap'
 rescue LoadError
