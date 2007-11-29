@@ -40,20 +40,28 @@ module GitWeb::Models
   end
 end
 
+module GitWeb::Helpers
+  def inline_data(identifier)
+    section = "__#{identifier.to_s.upcase}__"
+    @@inline_data ||= File.read(__FILE__).gsub(/.*__END__/m, '')
+    data = @@inline_data.match(/(#{section}.)(.*?)((__)|(\Z))/m)
+    data ? data[2] : nil # return nil if no second found
+  end
+end
+
 module GitWeb::Controllers
 
   class Stylesheet < R '/css/highlight.css'
     def get
       @headers['Content-Type'] = 'text/css'
-      ending = File.read(__FILE__).gsub(/.*__END__/m, '')
-      ending.gsub(/__JS__.*/m, '')
+      inline_data(:css)
     end
   end
   
   class JsHighlight < R '/js/highlight.js'
     def get
       @headers['Content-Type'] = 'text/css'
-      File.read(__FILE__).gsub(/.*__JS__/m, '')
+      inline_data(:js)
     end
   end
   
@@ -419,6 +427,8 @@ end
 
 # everything below this line is the css and javascript for syntax-highlighting
 __END__
+
+__CSS__
 pre.sh_sourceCode {
   background-color: white;
   color: black;
