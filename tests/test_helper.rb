@@ -1,5 +1,6 @@
 require 'test/unit'
 require 'fileutils'
+require 'logger'
 require File.dirname(__FILE__) + '/../lib/git'
 
 class Test::Unit::TestCase

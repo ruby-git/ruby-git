@@ -299,6 +299,13 @@ module Git
       self.lib.merge(branch, message)
     end
 
+    # iterates over the files which are unmerged
+    #
+    # yields file, your_version, their_version
+    def each_conflict(&block)
+      self.lib.conflicts(&block)
+    end
+
     # fetches a branch from a remote and merges it into the current working branch
     def pull(remote = 'origin', branch = 'master', message = 'origin pull')
       fetch(remote)

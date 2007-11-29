@@ -425,7 +425,28 @@ module Git
       arr_opts << branch.to_a.join(' ')
       command('merge', arr_opts)
     end
-    
+
+    def unmerged
+      unmerged = []
+      command_lines('diff', ["--cached"]).each do |line|
+        unmerged << $1 if line =~ /^\* Unmerged path (.*)/
+      end
+      unmerged
+    end
+
+    def conflicts #yields :file, :your, :their
+      self.unmerged.each do |f|
+        your = Tempfile.new("YOUR-#{File.basename(f)}").path
+        arr_opts = [":2:#{f}", ">#{your}"]
+        command('show', arr_opts) 
+
+        their = Tempfile.new("THEIR-#{File.basename(f)}").path
+        arr_opts = [":3:#{f}", ">#{their}"]
+        command('show', arr_opts) 
+        yield(f, your, their)
+      end
+    end
+
     def remote_add(name, url, opts = {})
       arr_opts = ['add']
       arr_opts << '-f' if opts[:with_fetch]
@@ -549,11 +570,11 @@ module Git
     
     private
     
-    def command_lines(cmd, opts = {}, chdir = true)
+    def command_lines(cmd, opts = [], chdir = true)
       command(cmd, opts, chdir).split("\n")
     end
     
-    def command(cmd, opts = {}, chdir = true)
+    def command(cmd, opts = [], chdir = true)
       ENV['GIT_DIR'] = @git_dir if (@git_dir != ENV['GIT_DIR'])
       ENV['GIT_INDEX_FILE'] = @git_index_file if (@git_index_file != ENV['GIT_INDEX_FILE'])
       ENV['GIT_WORK_TREE'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_TREE'])
@@ -564,9 +585,9 @@ module Git
 
       out = nil
       if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = `git #{cmd} #{opts} 2>&1`.chomp } 
+        Dir.chdir(path) { out = `#{git_cmd} 2>&1`.chomp } 
       else
-        out = `git #{cmd} #{opts} 2>&1`.chomp
+        out = `#{git_cmd} 2>&1`.chomp
       end
       
       if @logger
