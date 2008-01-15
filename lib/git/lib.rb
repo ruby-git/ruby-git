@@ -512,9 +512,9 @@ module Git
     
     def commit_tree(tree, opts = {})
       opts[:message] = "commit tree #{tree}" if !opts[:message]
-      t = Tempfile.new('commit-message') do |t|
-        t.write(opts[:message])
-      end
+      t = Tempfile.new('commit-message')
+      t.write(opts[:message])
+      t.close
       
       arr_opts = []
       arr_opts << tree
