@@ -130,7 +130,7 @@ module Git
     def repo_size
       size = 0
       Dir.chdir(repo.path) do
-        (size, dot) = `du -d0`.chomp.split
+        (size, dot) = `du -s`.chomp.split
       end
       size.to_i
     end
