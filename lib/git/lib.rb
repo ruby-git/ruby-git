@@ -81,7 +81,7 @@ module Git
         sha = revparse(opts[:object] || branch_current || 'master')
         count = opts[:count] || 30
         
-        if /\w{40}/.match(sha)  # valid sha
+        if /\w{40}$/.match(sha)  # valid sha
           repo = get_raw_repo
           return process_commit_data(repo.log(sha, count))
         end
