@@ -12,8 +12,6 @@ module Git
       @full = name
       @base = base
       
-      @stashes = Git::Stashes.new(@base)
-      
       parts = name.split('/')
       if parts[1]
         @remote = Git::Remote.new(@base, parts[0])
