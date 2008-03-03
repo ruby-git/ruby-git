@@ -23,6 +23,9 @@ require 'git/diff'
 require 'git/status'
 require 'git/author'
 
+require 'git/stashes'
+require 'git/stash'
+
 require 'git/raw/repository'
 
 

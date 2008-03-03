@@ -5,11 +5,14 @@ module Git
     
     @base = nil
     @gcommit = nil
+    @stashes = nil
     
     def initialize(base, name)
       @remote = nil
       @full = name
       @base = base
+      
+      @stashes = Git::Stashes.new(@base)
       
       parts = name.split('/')
       if parts[1]
@@ -23,6 +26,10 @@ module Git
     def gcommit
       @gcommit = @base.gcommit(@full) if !@gcommit
       @gcommit
+    end
+    
+    def stashes
+      @stashes ||= Git::Stashes.new(@base)
     end
     
     def checkout
