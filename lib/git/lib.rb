@@ -401,8 +401,38 @@ module Git
       arr_opts << commit.to_s if commit
       command('reset', arr_opts)
     end
+    
+    def stashes_all
+      arr = []
+      filename = File.join(@git_dir, 'logs/refs/stash')
+      if File.exist?(filename)
+        File.open(filename).each_with_index { |line, i|
+          m = line.match(/:(.*)$/)
+          arr << [i, m[1].strip]
+        }
+      end
+      arr
+    end
+    
+    def stash_save(message)
+      output = command('stash save', [message])
+      return false unless output.match(/HEAD is now at/)
+      return true
+    end
 
-
+    def stash_apply(id)
+      command('stash apply', [id])
+      # Already uptodate! ---???? What then
+    end
+    
+    def stash_clear
+      command('stash clear')
+    end
+    
+    def stash_list
+      command('stash list')
+    end
+    
     def branch_new(branch)
       command('branch', branch)
     end
