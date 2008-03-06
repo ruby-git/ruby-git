@@ -41,8 +41,8 @@ module Git
       end
     end
     
-    def [](symbol)
-      @stashes[symbol.to_s]
+    def [](index)
+      @stashes[index.to_i]
     end
     
   end
