@@ -1,3 +1,6 @@
+[user]
+        name = Scott Chacon
+        email = schacon@gmail.com
 [core]
 	repositoryformatversion = 0
 	filemode = true

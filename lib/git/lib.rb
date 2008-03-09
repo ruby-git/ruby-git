@@ -13,7 +13,6 @@ module Git
     @path = nil
     
     @logger = nil
-    @raw_repo = nil
     
     def initialize(base = nil, logger = nil)
       if base.is_a?(Git::Base)
@@ -76,17 +75,6 @@ module Git
     end
     
     def full_log_commits(opts = {})
-      if !(opts[:since] || opts[:between] || opts[:path_limiter])
-        # can do this in pure ruby
-        sha = revparse(opts[:object] || branch_current || 'master')
-        count = opts[:count] || 30
-        
-        if /\w{40}$/.match(sha)  # valid sha
-          repo = get_raw_repo
-          return process_commit_data(repo.log(sha, count))
-        end
-      end
-      
       arr_opts = ['--pretty=raw']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
@@ -126,16 +114,11 @@ module Git
     def object_size(sha)
       command('cat-file', ['-s', sha]).to_i
     end
-
-    def get_raw_repo
-      @raw_repo ||= Git::Raw::Repository.new(@git_dir)
-    end
     
     # returns useful array of raw commit object data
     def commit_data(sha)
       sha = sha.to_s
-      cdata = get_raw_repo.cat_file(revparse(sha))
-      #cdata = command_lines('cat-file', ['commit', sha])
+      cdata = command_lines('cat-file', ['commit', sha])
       process_commit_data(cdata, sha)
     end
     
@@ -184,22 +167,17 @@ module Git
     end
     
     def object_contents(sha)
-      #command('cat-file', ['-p', sha])
-      get_raw_repo.cat_file(revparse(sha)).chomp
+      command('cat-file', ['-p', sha])
     end
 
     def ls_tree(sha)
       data = {'blob' => {}, 'tree' => {}}
       
-      get_raw_repo.object(revparse(sha)).entry.each do |e|
-        data[e.format_type][e.name] = {:mode => e.format_mode, :sha => e.sha1}
+      command_lines('ls-tree', sha.to_s).each do |line|
+        (info, filenm) = line.split("\t")
+        (mode, type, sha) = info.split
+        data[type][filenm] = {:mode => mode, :sha => sha}
       end
-        
-      #command_lines('ls-tree', sha.to_s).each do |line|
-      #  (info, filenm) = line.split("\t")
-      #  (mode, type, sha) = info.split
-      #  data[type][filenm] = {:mode => mode, :sha => sha}
-      #end
       
       data
     end
@@ -438,7 +416,7 @@ module Git
     end
     
     def branch_delete(branch)
-      command('branch', ['-d', branch])
+      command('branch', ['-D', branch])
     end
     
     def checkout(branch, opts = {})
@@ -497,11 +475,7 @@ module Git
     end
 
     def tags
-      tag_dir = File.join(@git_dir, 'refs', 'tags')
-      tags = []
-      Dir.chdir(tag_dir) { tags = Dir.glob('*') }
-      return tags
-      #command_lines('tag')
+      command_lines('tag')
     end
 
     def tag(tag)

@@ -48,7 +48,7 @@ Git::Remote - A reference to a remote repository that is tracked by this reposit
 Git::Log - An Enumerable object that references all the Git::Object::Commit objects that encompass
 your log query, which can be constructed through methods on the Git::Log object, like:
 
- @git.log(20).object("HEAD^").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] } 
+ @git.log(20).object("some_file").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] } 
 
 = Gitr
 
