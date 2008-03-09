@@ -72,6 +72,11 @@ class TestObject < Test::Unit::TestCase
     assert_equal(1, o.blobs.size)
     assert_equal(1, o.subtrees.size)
     assert_equal(1, o.trees['ex_dir'].blobs.size)
+
+    assert_equal(2, o.full_tree.size)
+    assert_equal("100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tex_dir/ex.txt", o.full_tree.first)
+    
+    assert_equal(2, o.depth)
     
     o = @git.gtree('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
     assert(o.is_a?(Git::Object::Tree))

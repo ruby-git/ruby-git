@@ -181,6 +181,14 @@ module Git
       
       data
     end
+    
+    def full_tree(sha)
+      command_lines('ls-tree', ['-r', sha.to_s])
+    end
+            
+    def tree_depth(sha)
+      full_tree(sha).size
+    end
 
     def branches_all
       head = File.read(File.join(@git_dir, 'HEAD'))
