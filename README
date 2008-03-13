@@ -10,17 +10,7 @@ http://jointheconversation.org/rubygit
 
 Git public hosting of the project source code is at:
 
-http://repo.or.cz/w/rubygit.git
-
-= Roadmap
-
-Right now I'm forking calls to the 'git' binary, 
-but eventually I'll replace that with either C bindings
-to libgit or libgit-thin, or I'll write pure ruby
-handlers for at least some of the Git stuff.
-
-Many of the simple read-only operations have already been
-moved to pure ruby.
+http://github/schacon/ruby-git
 
 = Major Objects
 
@@ -49,22 +39,6 @@ Git::Log - An Enumerable object that references all the Git::Object::Commit obje
 your log query, which can be constructed through methods on the Git::Log object, like:
 
  @git.log(20).object("some_file").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] } 
-
-= Gitr
-
-I have included a command line pure-ruby git client called 'gitr'
-
-The following commands are available - they all will run in pure ruby, without forking out the the git binary.
-In fact, they can be run on a machine without git compiled on it.
-
-commands: log
-          log-shas
-          cat-file (treeish)
-          rev-parse (treeish)
-          branches
-          config
-          ls-tree (tree)
-          
 
 = Examples
 
