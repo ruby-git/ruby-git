@@ -434,6 +434,13 @@ module Git
       
       command('checkout', arr_opts)
     end
+
+    def checkout_file(version, file)
+      arr_opts = []
+      arr_opts << version.to_s
+      arr_opts << file.to_s
+      command('checkout', arr_opts)
+    end
     
     def merge(branch, message = nil)      
       arr_opts = []
