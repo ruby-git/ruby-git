@@ -517,6 +517,10 @@ module Git
       command('repack', ['-a', '-d'])
     end
     
+    def gc
+      command('gc', ['--prune', '--aggressive', '--auto'])
+    end
+    
     # reads a tree into the current index file
     def read_tree(treeish, opts = {})
       arr_opts = []

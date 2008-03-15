@@ -363,6 +363,10 @@ module Git
       self.lib.repack
     end
     
+    def gc
+      self.lib.gc
+    end
+    
     
     ## LOWER LEVEL INDEX OPERATIONS ##
     
