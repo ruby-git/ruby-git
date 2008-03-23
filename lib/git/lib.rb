@@ -181,7 +181,11 @@ module Git
       
       data
     end
-    
+
+    def mv(file1, file2)
+      command_lines('mv', [file1, file2])
+    end
+        
     def full_tree(sha)
       command_lines('ls-tree', ['-r', sha.to_s])
     end
@@ -190,29 +194,24 @@ module Git
       full_tree(sha).size
     end
 
+    def change_head_branch(branch_name)
+      command('symbolic-ref', ['HEAD', "refs/heads/#{branch_name}"])
+    end
+    
     def branches_all
-      head = File.read(File.join(@git_dir, 'HEAD'))
       arr = []
-      
-      if m = /ref: refs\/heads\/(.*)/.match(head)
-        current = m[1]
+      command_lines('branch', '-a').each do |b| 
+        current = false
+        current = true if b[0, 2] == '* '
+        arr << [b.gsub('* ', '').strip, current]
       end
-      arr += list_files('heads').map { |f| [f, f == current] }
-      arr += list_files('remotes').map { |f| [f, false] }
-      
-      #command_lines('branch', '-a').each do |b| 
-      #  current = false
-      #  current = true if b[0, 2] == '* '
-      #  arr << [b.gsub('* ', '').strip, current]
-      #end
-      
       arr
     end
 
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
-      files = nil
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } }
+      files = []
+      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
       files
     end
     
