@@ -371,6 +371,7 @@ module Git
     def commit(message, opts = {})
       arr_opts = ["-m '#{message}'"]
       arr_opts << '-a' if opts[:add_all]
+      arr_opts << '--allow-empty' if opts[:allow_empty]
       command('commit', arr_opts)
     end
 

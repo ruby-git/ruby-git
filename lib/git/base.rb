@@ -252,6 +252,10 @@ module Git
     end
 
     # commits all pending changes in the index file to the git repository
+    # 
+    # options:
+    #   :add_all
+    #   :allow_empty
     def commit(message, opts = {})
       self.lib.commit(message, opts)
     end
