@@ -372,6 +372,7 @@ module Git
       arr_opts = ["-m '#{message}'"]
       arr_opts << '-a' if opts[:add_all]
       arr_opts << '--allow-empty' if opts[:allow_empty]
+      arr_opts << "--author '#{opts[:author]}'" if opts[:author]
       command('commit', arr_opts)
     end
 
