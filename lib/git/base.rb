@@ -189,6 +189,24 @@ module Git
     def branch(branch_name = 'master')
       Git::Branch.new(self, branch_name)
     end
+    
+    # returns +true+ if the branch exists locally
+    def is_local_branch?(branch)
+      branch_names = self.branches.local.map {|b| b.name}
+      branch_names.include?(branch)
+    end
+
+    # returns +true+ if the branch exists remotely
+    def is_remote_branch?(branch)
+      branch_names = self.branches.local.map {|b| b.name}
+      branch_names.include?(branch)
+    end
+
+    # returns +true+ if the branch exists
+    def is_branch?(branch)
+      branch_names = self.branches.map {|b| b.name}
+      branch_names.include?(branch)
+    end
 
     # returns a Git::Remote object
     def remote(remote_name = 'origin')
