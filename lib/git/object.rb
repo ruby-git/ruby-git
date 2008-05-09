@@ -28,9 +28,17 @@ module Git
         @size || @size = @base.lib.object_size(@objectish)
       end
       
-      # caches the contents of this call in memory
-      def contents
-        @contents || @contents = @base.lib.object_contents(@objectish)
+      # get the object's contents
+      # if no block is given, the contents are cached in memory and returned as a string
+      # if a block is given, it yields an IO object (via IO::popen) which could be used to
+      # read a large file in chunks. use this for large files so that they are not held
+      # in memory
+      def contents(&block)
+        if block_given?
+          @base.lib.object_contents(@objectish, &block)
+        else
+          @contents || @contents = @base.lib.object_contents(@objectish)
+        end
       end
       
       def contents_array

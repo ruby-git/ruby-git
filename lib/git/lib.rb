@@ -166,8 +166,8 @@ module Git
       end
     end
     
-    def object_contents(sha)
-      command('cat-file', ['-p', sha])
+    def object_contents(sha, &block)
+      command('cat-file', ['-p', sha], &block)
     end
 
     def ls_tree(sha)
@@ -596,20 +596,20 @@ module Git
       command(cmd, opts, chdir).split("\n")
     end
     
-    def command(cmd, opts = [], chdir = true)
+    def command(cmd, opts = [], chdir = true, &block)
       ENV['GIT_DIR'] = @git_dir if (@git_dir != ENV['GIT_DIR'])
       ENV['GIT_INDEX_FILE'] = @git_index_file if (@git_index_file != ENV['GIT_INDEX_FILE'])
       ENV['GIT_WORK_TREE'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_TREE'])
       path = @git_work_dir || @git_dir || @path
 
       opts = opts.to_a.join(' ')
-      git_cmd = "git #{cmd} #{opts}"
+      git_cmd = "git #{cmd} #{opts} 2>&1"
 
       out = nil
       if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = `#{git_cmd} 2>&1`.chomp } 
+        Dir.chdir(path) { out = run_command(git_cmd, &block) } 
       else
-        out = `#{git_cmd} 2>&1`.chomp
+        out = run_command(git_cmd, &block)
       end
       
       if @logger
@@ -624,6 +624,14 @@ module Git
         raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
       end
       out
+    end
+    
+    def run_command(git_cmd, &block)
+      if block_given?
+        IO.popen(git_cmd, &block)
+      else
+        `#{git_cmd}`.chomp
+      end
     end
     
   end

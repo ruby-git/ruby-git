@@ -102,6 +102,15 @@ class TestObject < Test::Unit::TestCase
     o = @git.gblob('v2.6:example.txt')
     assert_equal('replace with new text', o.contents)
     assert_equal('replace with new text', o.contents)  # this should be cached
+    
+    # make sure the block is called
+    block_called = false
+    o.contents do |f|
+      block_called = true
+      assert_equal('replace with new text', f.read.chomp)
+    end
+    
+    assert(block_called)
   end
   
   def test_revparse
