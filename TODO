@@ -1,16 +1,14 @@
 * more documentation
 
-
-* git revert, stash, rebase
+* git revert, rebase
 
 * diff additions
   - annotate, blame
 
-
 * submodule support
 
 * repository admin
-  - prune, fsck, pack-refs, gc, count-objects, unpack-objects
+  - prune, fsck, pack-refs, count-objects, unpack-objects
 
 * email/patch integration
   - request-pull(email_address), git-am, git-apply

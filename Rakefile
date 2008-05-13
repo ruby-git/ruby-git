@@ -2,20 +2,7 @@ require 'rubygems'
 Gem::manage_gems
 require 'rake/gempackagetask'
 
-spec = Gem::Specification.new do |s|
-    s.platform  =   Gem::Platform::RUBY
-    s.name      =   "git"
-    s.version   =   "1.0.5"
-    s.author    =   "Scott Chacon"
-    s.email     =   "schacon@gmail.com"
-    s.summary   =   "A package for using Git in Ruby code."
-    s.files     =   FileList['lib/**/*', 'tests/**/*', 'doc/**/*'].to_a
-    s.require_path  =   "lib"
-    s.autorequire   =   "git"
-    s.test_files = Dir.glob('tests/*.rb')
-    s.has_rdoc  =   true
-    s.extra_rdoc_files  =   ["README"]
-end
+spec = eval(File.read('ticgit.gemspec'))
 
 Rake::GemPackageTask.new(spec) do |pkg|
     pkg.need_tar = true
