@@ -1,7 +1,7 @@
 spec = Gem::Specification.new do |s|
     s.platform  =   Gem::Platform::RUBY
     s.name      =   "git"
-    s.version   =   "1.0.6"
+    s.version   =   "1.0.7"
     s.author    =   "Scott Chacon"
     s.email     =   "schacon@gmail.com"
     s.summary   =   "A package for using Git in Ruby code."

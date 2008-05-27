@@ -367,6 +367,17 @@ module Git
       self.lib.gc
     end
     
+    def apply(file)
+      if File.exists?(file)
+        self.lib.apply(file)
+      end
+    end
+    
+    def apply_mail(file)
+      if File.exists?(file)
+        self.lib.apply_mail(file)
+      end
+    end
     
     ## LOWER LEVEL INDEX OPERATIONS ##
     

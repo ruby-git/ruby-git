@@ -11,6 +11,7 @@ module Git
     @path = nil
     @count = nil
     @since = nil
+    @until = nil
     @between = nil
     
     @dirty_flag = nil
@@ -36,6 +37,12 @@ module Git
     def since(date)
       dirty_log
       @since = date
+      return self
+    end
+    
+    def until(date)
+      dirty_log
+      @until = date
       return self
     end
     
@@ -85,7 +92,7 @@ module Git
       # actually run the 'git log' command
       def run_log      
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
-                                    :path_limiter => @path, :since => @since, :between => @between)
+                                    :path_limiter => @path, :since => @since, :until => @until, :between => @between)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       

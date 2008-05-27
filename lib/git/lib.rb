@@ -67,6 +67,7 @@ module Git
       arr_opts = ['--pretty=oneline']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
+      arr_opts << "--until=\"#{opts[:until]}\"" if opts[:until].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String
@@ -78,6 +79,7 @@ module Git
       arr_opts = ['--pretty=raw']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
+      arr_opts << "--until=\"#{opts[:until]}\"" if opts[:until].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String
@@ -387,6 +389,18 @@ module Git
       command('reset', arr_opts)
     end
     
+    def apply(patch_file)
+      arr_opts = []
+      arr_opts << patch_file.to_s if patch_file
+      command('apply', arr_opts)
+    end
+    
+    def apply_mail(patch_file)
+      arr_opts = []
+      arr_opts << patch_file.to_s if patch_file
+      command('am', arr_opts)
+    end
+    
     def stashes_all
       arr = []
       filename = File.join(@git_dir, 'logs/refs/stash')
@@ -429,6 +443,7 @@ module Git
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '-f' if opts[:force]
+      arr_opts << ["-b '#{opts[:new_branch]}'"] if opts[:new_branch]      
       arr_opts << branch.to_s
       
       command('checkout', arr_opts)
