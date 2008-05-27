@@ -68,6 +68,8 @@ module Git
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
       arr_opts << "--until=\"#{opts[:until]}\"" if opts[:until].is_a? String
+      arr_opts << "--grep=\"#{opts[:grep]}\"" if opts[:grep].is_a? String
+      arr_opts << "--author=\"#{opts[:author]}\"" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String
@@ -80,6 +82,8 @@ module Git
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=\"#{opts[:since]}\"" if opts[:since].is_a? String
       arr_opts << "--until=\"#{opts[:until]}\"" if opts[:until].is_a? String
+      arr_opts << "--grep=\"#{opts[:grep]}\"" if opts[:grep].is_a? String
+      arr_opts << "--author=\"#{opts[:author]}\"" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '-- ' + opts[:path_limiter] if opts[:path_limiter].is_a? String

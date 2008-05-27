@@ -27,6 +27,18 @@ module Git
       @object = objectish
       return self
     end
+
+    def author(regex)
+      dirty_log
+      @author = regex
+      return self
+    end
+        
+    def grep(regex)
+      dirty_log
+      @grep = regex
+      return self
+    end
     
     def path(path)
       dirty_log
@@ -92,7 +104,9 @@ module Git
       # actually run the 'git log' command
       def run_log      
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
-                                    :path_limiter => @path, :since => @since, :until => @until, :between => @between)
+                                    :path_limiter => @path, :since => @since, 
+                                    :author => @author, :grep => @grep,
+                                    :until => @until, :between => @between)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       
