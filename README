@@ -12,6 +12,12 @@ Git public hosting of the project source code is at:
 
 http://github/schacon/ruby-git
 
+= Install
+
+You can install Ruby/Git like this:
+
+$ sudo gem install schacon-git --source=http://gems.github.com
+
 = Major Objects
 
 Git::Base - this is the object returned from a Git.open or Git.clone.  
