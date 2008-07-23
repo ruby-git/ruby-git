@@ -22,7 +22,7 @@ class TestConfig < Test::Unit::TestCase
   def test_set_config
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'bare')
-      assert_equal('Scott Chacon', g.config('user.name'))
+      assert_not_equal('bully', g.config('user.name'))
       g.config('user.name', 'bully')
       assert_equal('bully', g.config('user.name'))
     end
