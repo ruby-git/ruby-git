@@ -11,6 +11,7 @@ module Git
     @path = nil
     @count = nil
     @since = nil
+    @skip = nil
     @until = nil
     @between = nil
     
@@ -43,6 +44,12 @@ module Git
     def path(path)
       dirty_log
       @path = path
+      return self
+    end
+    
+    def skip(num)
+      dirty_log
+      @skip = num
       return self
     end
     
@@ -103,7 +110,7 @@ module Git
       def run_log      
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
                                     :path_limiter => @path, :since => @since, 
-                                    :author => @author, :grep => @grep,
+                                    :author => @author, :grep => @grep, :skip => @skip,
                                     :until => @until, :between => @between)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
