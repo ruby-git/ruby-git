@@ -23,6 +23,14 @@ class TestLog < Test::Unit::TestCase
   def test_get_log_to_s
     assert_equal(@git.log.to_s.split("\n").first, @git.log.first.sha)
   end
+
+  def test_log_skip
+    three1 = @git.log(3).to_a[-1]
+    three2 = @git.log(2).skip(1).to_a[-1]
+    three3 = @git.log(1).skip(2).to_a[-1]
+    assert_equal(three2.sha, three3.sha)
+    assert_equal(three1.sha, three2.sha)
+  end
   
   def test_get_log_since
     l = @git.log.since("2 seconds ago")

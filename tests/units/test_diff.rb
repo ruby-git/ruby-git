@@ -24,6 +24,8 @@ class TestDiff < Test::Unit::TestCase
 
   def test_diff_path
     d = @git.diff('gitsearch1', 'v2.5').path('scott/')
+    assert_equal(d.from, 'gitsearch1')
+    assert_equal(d.to, 'v2.5')
     assert_equal(2, d.size)
     assert_equal(9, d.lines)
     assert_equal(9, d.deletions)
