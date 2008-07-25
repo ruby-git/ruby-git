@@ -18,6 +18,7 @@ module Git
       @from = from.to_s
       @to = to.to_s
     end
+    attr_reader :from, :to
     
     def path(path)
       @path = path
@@ -80,6 +81,11 @@ module Git
         @src = hash[:src]
         @dst = hash[:dst]
         @type = hash[:type]
+        @binary = hash[:binary]
+      end
+
+      def binary?
+        !!@binary
       end
       
       def blob(type = :dst)
@@ -130,6 +136,9 @@ module Git
             if m = /(.*?) file mode (......)/.match(line)
               final[current_file][:type] = m[1]
               final[current_file][:mode] = m[2]
+            end
+            if m = /^Binary files /.match(line)
+              final[current_file][:binary] = true
             end
             final[current_file][:patch] << "\n" + line 
           end
