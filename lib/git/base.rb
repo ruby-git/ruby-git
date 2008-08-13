@@ -239,8 +239,8 @@ module Git
     #       puts "\t line #{match[0]}: '#{match[1]}'"
     #     end
     #   end
-    def grep(string)
-      self.object('HEAD').grep(string)
+    def grep(string, path_limiter = nil, opts = {})
+      self.object('HEAD').grep(string, path_limiter, opts)
     end
     
     # returns a Git::Diff object
