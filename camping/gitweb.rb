@@ -60,7 +60,7 @@ module GitWeb::Controllers
   
   class JsHighlight < R '/js/highlight.js'
     def get
-      @headers['Content-Type'] = 'text/css'
+      @headers['Content-Type'] = 'text/javascript'
       inline_data(:js)
     end
   end
