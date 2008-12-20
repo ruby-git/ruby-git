@@ -53,6 +53,7 @@ class TestRemotes < Test::Unit::TestCase
         new_file('test-file1', 'blahblahblah1')
         loc.add
         loc.commit('master commit')
+        loc.add_tag('test-tag')
         
         loc.branch('testbranch').in_branch('tb commit') do
           new_file('test-file3', 'blahblahblah3')
@@ -67,12 +68,16 @@ class TestRemotes < Test::Unit::TestCase
 
       assert(rem.status['test-file1'])    
       assert(!rem.status['test-file3'])    
+      assert_raise Git::GitTagNameDoesNotExist do
+        rem.tag('test-tag')
+      end
       
-      loc.push('testrem', 'testbranch')
+      loc.push('testrem', 'testbranch', true)
 
       rem.checkout('testbranch')
       assert(rem.status['test-file1'])    
       assert(rem.status['test-file3'])    
+      assert(rem.tag('test-tag'))
     end
   end
 

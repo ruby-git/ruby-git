@@ -507,8 +507,9 @@ module Git
       command('fetch', remote.to_s)
     end
     
-    def push(remote, branch = 'master')
+    def push(remote, branch = 'master', tags = false)
       command('push', [remote.to_s, branch.to_s])
+      command('push', ['--tags', remote.to_s]) if tags
     end
     
     def tag_sha(tag_name)
