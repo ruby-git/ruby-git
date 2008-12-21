@@ -17,7 +17,6 @@ module Git
       def initialize(base, objectish)
         @base = base
         @objectish = objectish.to_s
-        setup
       end
 
       def sha
@@ -45,10 +44,6 @@ module Git
         self.contents.split("\n")
       end
       
-      def setup
-        raise NotImplementedError
-      end
-      
       def to_s
         @objectish
       end
@@ -72,21 +67,13 @@ module Git
         @base.lib.archive(@objectish, file, opts)
       end
       
-      def tree?
-        @type == 'tree'
-      end
+      def tree?; false; end
       
-      def blob?
-        @type == 'blob'
-      end
+      def blob?; false; end
       
-      def commit?
-        @type == 'commit'
-      end
+      def commit?; false; end
        
-     def tag?
-       @type == 'tag'
-     end
+     def tag?; false; end
      
     end
   
@@ -98,11 +85,10 @@ module Git
         @mode = mode
       end
       
-      private
+      def blob?
+        true
+      end
       
-        def setup
-          @type = 'blob'
-        end
     end
   
     class Tree < AbstractObject
@@ -139,12 +125,12 @@ module Git
       def depth
         @base.lib.tree_depth(@objectish)
       end
+      
+      def tree?
+        true
+      end
        
       private
-      
-        def setup
-          @type = 'tree'
-        end 
 
         # actually run the git command
         def check_tree
@@ -233,12 +219,12 @@ module Git
         @parents = data['parent'].map{ |sha| Git::Object::Commit.new(@base, sha) }
         @message = data['message'].chomp
       end
+      
+      def commit?
+        true
+      end
             
       private
-      
-        def setup
-          @type = 'commit'
-        end
   
         # see if this object has been initialized and do so if not
         def check_commit
@@ -258,39 +244,32 @@ module Git
         @name = name
       end
       
-      private
-        
-        def setup
-          @type = 'tag'
-        end
+      def tag?
+        true
+      end
         
     end
     
-    class << self
-      # if we're calling this, we don't know what type it is yet
-      # so this is our little factory method
-      def new(base, objectish, type = nil, is_tag = false)
-        if is_tag
-          sha = base.lib.tag_sha(objectish)
-          if sha == ''
-            raise Git::GitTagNameDoesNotExist.new(objectish)
-          end
-          return Git::Object::Tag.new(base, sha, objectish)
-        else
-          if !type
-            type = base.lib.object_type(objectish) 
-          end
+    # if we're calling this, we don't know what type it is yet
+    # so this is our little factory method
+    def self.new(base, objectish, type = nil, is_tag = false)
+      if is_tag
+        sha = base.lib.tag_sha(objectish)
+        if sha == ''
+          raise Git::GitTagNameDoesNotExist.new(objectish)
         end
-        
-        klass =
-          case type
-          when /blob/:   Blob   
-          when /commit/: Commit
-          when /tree/:   Tree
-          end
-        klass::new(base, objectish)
+        return Git::Object::Tag.new(base, sha, objectish)
       end
-    end 
+      
+      type ||= base.lib.object_type(objectish) 
+      klass =
+        case type
+        when /blob/:   Blob   
+        when /commit/: Commit
+        when /tree/:   Tree
+        end
+      klass.new(base, objectish)
+    end
     
   end
 end

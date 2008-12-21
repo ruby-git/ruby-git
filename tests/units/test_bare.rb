@@ -31,11 +31,11 @@ class TestBare < Test::Unit::TestCase
     
     o = @git.object('HEAD')
     assert(o.is_a?(Git::Object::Commit))
-    assert_equal('commit', o.type)
+    assert(o.commit?)
     
     o = @git.object('test_object')
     assert(o.is_a?(Git::Object::Commit))
-    assert_equal('commit', o.type)
+    assert(o.commit?)
   end
   
 end

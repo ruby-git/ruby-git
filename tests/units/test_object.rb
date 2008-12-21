@@ -36,11 +36,11 @@ class TestObject < Test::Unit::TestCase
     
     o = @git.gcommit('HEAD')
     assert(o.is_a?(Git::Object::Commit))
-    assert_equal('commit', o.type)
+    assert(o.commit?)
     
     o = @git.gcommit('test_object')
     assert(o.is_a?(Git::Object::Commit))
-    assert_equal('commit', o.type)
+    assert(o.commit?)
   end
   
   def test_commit_contents
@@ -80,7 +80,7 @@ class TestObject < Test::Unit::TestCase
     
     o = @git.gtree('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
     assert(o.is_a?(Git::Object::Tree))
-    assert_equal('tree', o.type)
+    assert(o.tree?)
   end
   
   def test_tree_contents
@@ -95,7 +95,7 @@ class TestObject < Test::Unit::TestCase
     
     o = @git.gblob('v2.5:example.txt')
     assert(o.is_a?(Git::Object::Blob))
-    assert_equal('blob', o.type)
+    assert(o.blob?)
   end
   
   def test_blob_contents
