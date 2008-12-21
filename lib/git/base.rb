@@ -11,19 +11,13 @@ module Git
     
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})
-      default = {:repository => git_dir}
-      git_options = default.merge(opts)
-      
-      self.new(git_options)
+      self.new({:repository => git_dir}.merge(opts))
     end
     
     # opens a new Git Project from a working directory
     # you can specify non-standard git_dir and index file in the options
-    def self.open(working_dir, opts={})    
-      default = {:working_directory => working_dir}
-      git_options = default.merge(opts)
-      
-      self.new(git_options)
+    def self.open(working_dir, opts={})
+      self.new({:working_directory => working_dir}.merge(opts))
     end
 
     # initializes a git repository
@@ -33,19 +27,17 @@ module Git
     #  :index_file
     #
     def self.init(working_dir, opts = {})
-      default = {:working_directory => working_dir,
-                 :repository => File.join(working_dir, '.git')}
-      git_options = default.merge(opts)
+      opts = {
+        :working_directory => working_dir,
+        :repository => File.join(working_dir, '.git')
+      }.merge(opts)
       
-      if git_options[:working_directory]
-        # if !working_dir, make it
-        FileUtils.mkdir_p(git_options[:working_directory]) if !File.directory?(git_options[:working_directory])
-      end
+      FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
       
       # run git_init there
-      Git::Lib.new(git_options).init
+      Git::Lib.new(opts).init
        
-      self.new(git_options)
+      self.new(opts)
     end
 
     # clones a git repository locally
@@ -68,8 +60,8 @@ module Git
         
     def initialize(options = {})
       if working_dir = options[:working_directory]
-        options[:repository] = File.join(working_dir, '.git') if !options[:repository]
-        options[:index] = File.join(working_dir, '.git', 'index') if !options[:index]
+        options[:repository] ||= File.join(working_dir, '.git')
+        options[:index] ||= File.join(working_dir, '.git', 'index')
       end
       if options[:log]
         @logger = options[:log]
@@ -120,7 +112,7 @@ module Git
     #    @git.add
     #    @git.commit('message')
     #  end
-    def chdir
+    def chdir # :yields: the Git::Path
       Dir.chdir(dir.path) do
         yield dir.path
       end
@@ -305,9 +297,7 @@ module Git
     end
 
     # iterates over the files which are unmerged
-    #
-    # yields file, your_version, their_version
-    def each_conflict(&block)
+    def each_conflict(&block) # :yields: file, your_version, their_version
       self.lib.conflicts(&block)
     end
 
@@ -330,9 +320,7 @@ module Git
     #  @git.merge('scotts_git/master')
     #
     def add_remote(name, url, opts = {})
-      if url.is_a?(Git::Base)
-        url = url.repo.path
-      end
+      url = url.repo.path if url.is_a?(Git::Base)
       self.lib.remote_add(name, url, opts)
       Git::Remote.new(self, name)
     end
@@ -374,14 +362,12 @@ module Git
     end
     
     def apply_mail(file)
-      if File.exists?(file)
-        self.lib.apply_mail(file)
-      end
+      self.lib.apply_mail(file) if File.exists?(file)
     end
     
     ## LOWER LEVEL INDEX OPERATIONS ##
     
-    def with_index(new_index)
+    def with_index(new_index) # :yields: new_index
       old_index = @index
       set_index(new_index, false)
       return_value = yield @index
@@ -426,7 +412,7 @@ module Git
       self.lib.ls_files
     end
 
-    def with_working(work_dir)
+    def with_working(work_dir) # :yields: the Git::WorkingDirectory
       return_value = false
       old_working = @working_directory
       set_working(work_dir) 

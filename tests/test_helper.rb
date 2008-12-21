@@ -29,16 +29,6 @@ class Test::Unit::TestCase
     end
   end
   
-  
-  def with_temp_bare
-    in_temp_dir do |path|
-      g = Git.clone(@wbare, 'new')
-      Dir.chdir('new') do
-        yield g
-      end
-    end
-  end
-  
   def create_temp_repo(clone_path)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
     @tmp_path = File.join("/tmp/", filename)
@@ -51,7 +41,7 @@ class Test::Unit::TestCase
     tmp_path
   end
   
-  def in_temp_dir(remove_after = true)
+  def in_temp_dir(remove_after = true) # :yields: the temporary dir's path
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
     tmp_path = File.join("/tmp/", filename)
     FileUtils.mkdir(tmp_path)

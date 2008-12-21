@@ -63,11 +63,9 @@ module Git
       @full_diff_files.assoc(key)[1]
     end
     
-    def each
+    def each(&block) # :yields: each Git::DiffFile in turn
       process_full
-      @full_diff_files.each do |file|
-        yield file[1]
-      end
+      @full_diff_files.map { |file| file[1] }.each(&block)
     end
     
     class DiffFile
@@ -96,20 +94,20 @@ module Git
     private
     
       def cache_full
-        if !@full_diff
+        unless @full_diff
           @full_diff = @base.lib.diff_full(@from, @to, {:path_limiter => @path})
         end
       end
       
       def process_full
-        if !@full_diff_files
+        unless @full_diff_files
           cache_full
           @full_diff_files = process_full_diff
         end
       end
       
       def cache_stats
-        if !@stats
+        unless @stats
           @stats = @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
         end
       end

@@ -76,11 +76,9 @@ module Git
       @commits.size rescue nil
     end
     
-    def each
+    def each(&block)
       check_log
-      @commits.each do |c|
-        yield c
-      end
+      @commits.each(&block)
     end
     
     def first

@@ -35,10 +35,8 @@ module Git
       @stashes.size
     end
     
-    def each
-      @stashes.each do |s|
-        yield s
-      end
+    def each(&block)
+      @stashes.each(&block)
     end
     
     def [](index)

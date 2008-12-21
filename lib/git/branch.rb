@@ -22,7 +22,7 @@ module Git
     end
     
     def gcommit
-      @gcommit = @base.gcommit(@full) if !@gcommit
+      @gcommit ||= @base.gcommit(@full)
       @gcommit
     end
     

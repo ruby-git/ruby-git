@@ -48,10 +48,8 @@ module Git
       @files[file]
     end
     
-    def each
-      @files.each do |k, file|
-        yield file
-      end
+    def each(&block)
+      @files.values.each(&block)
     end
     
     class StatusFile
@@ -92,9 +90,7 @@ module Git
         # find untracked in working dir
         Dir.chdir(@base.dir.path) do
           Dir.glob('**/*') do |file|
-            if !@files[file]
-              @files[file] = {:path => file, :untracked => true} if !File.directory?(file)
-            end
+            @files[file] = {:path => file, :untracked => true} unless @files[file] || File.directory?(file)
           end
         end
 

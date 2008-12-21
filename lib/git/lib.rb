@@ -24,9 +24,7 @@ module Git
         @git_index_file = base[:index] 
         @git_work_dir = base[:working_directory]
       end
-      if logger
-        @logger = logger
-      end
+      @logger = logger
     end
     
     def init
@@ -39,18 +37,20 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :remote - name of remote (rather than 'origin')
-    #  :bare   - no working directory
+    #  :remote:: name of remote (rather than 'origin')
+    #  :bare::   no working directory
+    #  :depth::  the number of commits back to pull
     # 
     # TODO - make this work with SSH password or auth_key
     #
     def clone(repository, name, opts = {})
       @path = opts[:path] || '.'
-      opts[:path] ? clone_dir = File.join(@path, name) : clone_dir = name
+      clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
       arr_opts << "-o #{opts[:remote]}" if opts[:remote]
+      arr_opts << "--depth #{opts[:depth].to_i}" if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << repository
       arr_opts << clone_dir
       
@@ -93,19 +93,13 @@ module Git
     end
     
     def revparse(string)
-      if /\w{40}/.match(string)  # passing in a sha - just no-op it
-        return string
+      return string if string =~ /\w{40}/  # passing in a sha - just no-op it
+      rev = ['head', 'remotes', 'tags'].map do |d|
+        File.join(@git_dir, 'refs', d, string)
+      end.find do |path|
+        File.file?(path)
       end
-            
-      head = File.join(@git_dir, 'refs', 'heads', string)
-      return File.read(head).chomp if File.file?(head)
-
-      head = File.join(@git_dir, 'refs', 'remotes', string)
-      return File.read(head).chomp if File.file?(head)
-      
-      head = File.join(@git_dir, 'refs', 'tags', string)
-      return File.read(head).chomp if File.file?(head)
-      
+      return File.read(rev).chomp if rev
       command('rev-parse', string)
     end
     
@@ -139,11 +133,11 @@ module Git
     
       data.each do |line|
         line = line.chomp
-        if in_message && line != ''
-          hsh['message'] += line + "\n"
-        end
-
-        if (line != '') && !in_message
+        if line == ''
+          in_message = !in_message
+        elsif in_message
+          hsh['message'] << line << "\n"
+        else
           data = line.split
           key = data.shift
           value = data.join(' ')
@@ -157,10 +151,6 @@ module Git
           else
             hsh[key] = value
           end
-        elsif in_message && line == ''
-          in_message = false
-        else
-          in_message = true
         end
       end
       
@@ -207,8 +197,7 @@ module Git
     def branches_all
       arr = []
       command_lines('branch', '-a').each do |b| 
-        current = false
-        current = true if b[0, 2] == '* '
+        current = (b[0, 2] == '* ')
         arr << [b.gsub('* ', '').strip, current]
       end
       arr
@@ -230,7 +219,7 @@ module Git
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     def grep(string, opts = {})
-      opts[:object] = 'HEAD' if !opts[:object]
+      opts[:object] ||= 'HEAD'
 
       grep_opts = ['-n']
       grep_opts << '-i' if opts[:ignore_case]
@@ -323,8 +312,7 @@ module Git
     end
 
     def config_get(name)
-      c = config_list
-      c[name]
+      config_list[name]
       #command('config', ['--get', name])
     end
     
@@ -419,8 +407,7 @@ module Git
     
     def stash_save(message)
       output = command('stash save', [message])
-      return false unless output.match(/HEAD is now at/)
-      return true
+      output =~ /HEAD is now at/
     end
 
     def stash_apply(id)
@@ -475,7 +462,7 @@ module Git
       unmerged
     end
 
-    def conflicts #yields :file, :your, :their
+    def conflicts # :yields: file, your, their
       self.unmerged.each do |f|
         your = Tempfile.new("YOUR-#{File.basename(f)}").path
         arr_opts = [":2:#{f}", ">#{your}"]
@@ -552,7 +539,7 @@ module Git
     end
     
     def commit_tree(tree, opts = {})
-      opts[:message] = "commit tree #{tree}" if !opts[:message]
+      opts[:message] ||= "commit tree #{tree}"
       t = Tempfile.new('commit-message')
       t.write(opts[:message])
       t.close
@@ -560,7 +547,7 @@ module Git
       arr_opts = []
       arr_opts << tree
       arr_opts << "-p #{opts[:parent]}" if opts[:parent]
-      opts[:parents].each { |p| arr_opts << "-p #{p.to_s}" } if opts[:parents]
+      arr_opts += opts[:parents].map { |p| "-p #{p.to_s}" } if opts[:parents]
       arr_opts << "< #{t.path}"
       command('commit-tree', arr_opts)
     end
@@ -586,16 +573,14 @@ module Git
     #  :remote
     #  :path
     def archive(sha, file = nil, opts = {})
-      opts[:format] = 'zip' if !opts[:format]
+      opts[:format] ||= 'zip'
       
       if opts[:format] == 'tgz'
         opts[:format] = 'tar' 
         opts[:add_gzip] = true
       end
       
-      if !file
-        file = Tempfile.new('archive').path
-      end
+      file ||= Tempfile.new('archive').path
       
       arr_opts = []
       arr_opts << "--format=#{opts[:format]}" if opts[:format]
@@ -616,9 +601,9 @@ module Git
     end
     
     def command(cmd, opts = [], chdir = true, &block)
-      ENV['GIT_DIR'] = @git_dir if (@git_dir != ENV['GIT_DIR'])
-      ENV['GIT_INDEX_FILE'] = @git_index_file if (@git_index_file != ENV['GIT_INDEX_FILE'])
-      ENV['GIT_WORK_TREE'] = @git_work_dir if (@git_work_dir != ENV['GIT_WORK_TREE'])
+      ENV['GIT_DIR'] = @git_dir
+      ENV['GIT_INDEX_FILE'] = @git_index_file
+      ENV['GIT_WORK_TREE'] = @git_work_dir
       path = @git_work_dir || @git_dir || @path
 
       opts = opts.to_a.join(' ')

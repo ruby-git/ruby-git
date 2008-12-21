@@ -20,23 +20,24 @@ module Git
       end
 
       def sha
-        @sha || @sha = @base.lib.revparse(@objectish)
+        @sha ||= @base.lib.revparse(@objectish)
       end
       
       def size
-        @size || @size = @base.lib.object_size(@objectish)
+        @size ||= @base.lib.object_size(@objectish)
       end
       
-      # get the object's contents
-      # if no block is given, the contents are cached in memory and returned as a string
-      # if a block is given, it yields an IO object (via IO::popen) which could be used to
-      # read a large file in chunks. use this for large files so that they are not held
-      # in memory
+      # Get the object's contents.
+      # If no block is given, the contents are cached in memory and returned as a string.
+      # If a block is given, it yields an IO object (via IO::popen) which could be used to
+      # read a large file in chunks.
+      #
+      # Use this for large files so that they are not held in memory.
       def contents(&block)
         if block_given?
           @base.lib.object_contents(@objectish, &block)
         else
-          @contents || @contents = @base.lib.object_contents(@objectish)
+          @contents ||= @base.lib.object_contents(@objectish)
         end
       end
       
@@ -49,9 +50,8 @@ module Git
       end
       
       def grep(string, path_limiter = nil, opts = {})
-        default = {:object => sha, :path_limiter => path_limiter}
-        grep_options = default.merge(opts)
-        @base.lib.grep(string, grep_options)
+        opts = {:object => sha, :path_limiter => path_limiter}.merge(opts)
+        @base.lib.grep(string, opts)
       end
       
       def diff(objectish)
@@ -72,8 +72,8 @@ module Git
       def blob?; false; end
       
       def commit?; false; end
-       
-     def tag?; false; end
+
+      def tag?; false; end
      
     end
   
@@ -88,7 +88,7 @@ module Git
       def blob?
         true
       end
-      
+
     end
   
     class Tree < AbstractObject
@@ -134,7 +134,7 @@ module Git
 
         # actually run the git command
         def check_tree
-          if !@trees
+          unless @trees
             @trees = {}
             @blobs = {}
             data = @base.lib.ls_tree(@objectish)
@@ -223,12 +223,12 @@ module Git
       def commit?
         true
       end
-            
+
       private
   
         # see if this object has been initialized and do so if not
         def check_commit
-          if !@tree
+          unless @tree
             data = @base.lib.commit_data(@objectish)
             set_commit(data)
           end
@@ -243,7 +243,7 @@ module Git
         super(base, sha)
         @name = name
       end
-      
+
       def tag?
         true
       end
@@ -261,7 +261,7 @@ module Git
         return Git::Object::Tag.new(base, sha, objectish)
       end
       
-      type ||= base.lib.object_type(objectish) 
+      type ||= base.lib.object_type(objectish)
       klass =
         case type
         when /blob/:   Blob   

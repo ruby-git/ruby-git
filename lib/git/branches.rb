@@ -31,10 +31,8 @@ module Git
       @branches.size
     end    
     
-    def each
-      @branches.each do |k, b|
-        yield b
-      end
+    def each(&block)
+      @branches.values.each(&block)
     end
     
     def [](symbol)
@@ -44,11 +42,7 @@ module Git
     def to_s
       out = ''
       @branches.each do |k, b|
-        if b.current
-          out += "* " + b.to_s + "\n"
-        else
-          out += "  " + b.to_s + "\n"
-        end
+        out << (b.current ? '* ' : '  ') << b.to_s << "\n"
       end
       out
     end
