@@ -92,5 +92,19 @@ module Git
   def self.clone(repository, name, options = {})
     Base.clone(repository, name, options)
   end
+  
+  # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
+  # is specified) into the +name+ directory, then remove all traces of git from the
+  # directory.
+  #
+  # See +clone+ for options.  Does not obey the <tt>:remote</tt> option,
+  # since the .git info will be deleted anyway; always uses the default
+  # remote, 'origin.'
+  def self.export(repository, name, options = {})
+    options.delete(:remote)
+    repo = clone(repository, name, {:depth => 1}.merge(options))
+    repo.checkout("origin/#{options[:branch]}") if options[:branch]
+    Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
+  end
     
 end
