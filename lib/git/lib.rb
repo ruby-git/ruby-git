@@ -49,14 +49,10 @@ module Git
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
-      if opts[:remote]
-        arr_opts << "-o"
-        arr_opts << opts[:remote]
-      end
-      if opts[:depth] && opts[:depth].to_i > 0
-        arr_opts << "--depth"
-        arr_opts << opts[:depth].to_i
-      end
+      arr_opts << "-o" << opts[:remote] if opts[:remote]
+      arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+
+      arr_opts << '--'
       arr_opts << repository
       arr_opts << clone_dir
       
@@ -78,10 +74,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
-      if opts[:path_limiter].is_a? String
-        arr_opts << '--'
-        arr_opts << opts[:path_limiter]
-      end
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
@@ -96,10 +89,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
-      if opts[:path_limiter].is_a? String
-        arr_opts << '--'
-        arr_opts << opts[:path_limiter]
-      end
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
       
       full_log = command_lines('log', arr_opts, true)
       process_commit_data(full_log)
@@ -192,7 +182,7 @@ module Git
     end
 
     def mv(file1, file2)
-      command_lines('mv', [file1, file2])
+      command_lines('mv', ['--', file1, file2])
     end
         
     def full_tree(sha)
@@ -240,11 +230,7 @@ module Git
       grep_opts << '-e'
       grep_opts << string
       grep_opts << opts[:object] if opts[:object].is_a?(String)
-
-      if opts[:path_limiter].is_a? String
-        grep_opts << '--'
-        grep_opts << opts[:path_limiter]
-      end
+      grep_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       hsh = {}
       command_lines('grep', grep_opts).each do |line|
@@ -260,11 +246,7 @@ module Git
       diff_opts = ['-p']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
-
-      if opts[:path_limiter].is_a? String
-        diff_opts << '--'
-        diff_opts << opts[:path_limiter]
-      end      
+      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       command('diff', diff_opts)
     end
@@ -273,11 +255,7 @@ module Git
       diff_opts = ['--numstat']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
-
-      if opts[:path_limiter].is_a? String
-        diff_opts << '--'
-        diff_opts << opts[:path_limiter]
-      end            
+      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       hsh = {:total => {:insertions => 0, :deletions => 0, :lines => 0, :files => 0}, :files => {}}
       
@@ -381,12 +359,19 @@ module Git
     end
           
     def add(path = '.')
-      command('add', path)
+      arr_opts = ['--']
+      if path.is_a?(Array)
+        arr_opts += path
+      else
+        arr_opts << path
+      end
+      command('add', arr_opts)
     end
     
     def remove(path = '.', opts = {})
       arr_opts = ['-f']  # overrides the up-to-date check by default
       arr_opts << ['-r'] if opts[:recursive]
+      arr_opts << '--'
       if path.is_a?(Array)
         arr_opts += path
       else
@@ -416,13 +401,13 @@ module Git
     
     def apply(patch_file)
       arr_opts = []
-      arr_opts << patch_file if patch_file
+      arr_opts << '--' << patch_file if patch_file
       command('apply', arr_opts)
     end
     
     def apply_mail(patch_file)
       arr_opts = []
-      arr_opts << patch_file if patch_file
+      arr_opts << '--' << patch_file if patch_file
       command('am', arr_opts)
     end
     
@@ -439,7 +424,7 @@ module Git
     end
     
     def stash_save(message)
-      output = command('stash save', [message])
+      output = command('stash save', ['--', message])
       output =~ /HEAD is now at/
     end
 
@@ -467,10 +452,7 @@ module Git
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '-f' if opts[:force]
-      if opts[:new_branch]
-        arr_opts << '-b'
-        arr_opts << opts[:new_branch]
-      end
+      arr_opts << '-b' << opts[:new_branch] if opts[:new_branch]
       arr_opts << branch
       
       command('checkout', arr_opts)
@@ -485,10 +467,7 @@ module Git
     
     def merge(branch, message = nil)      
       arr_opts = []
-      if message
-        arr_opts << '-m' 
-        arr_opts << message
-      end
+      arr_opts << '-m' << message if message
       arr_opts += branch.to_a
       command('merge', arr_opts)
     end
@@ -515,6 +494,7 @@ module Git
     def remote_add(name, url, opts = {})
       arr_opts = ['add']
       arr_opts << '-f' if opts[:with_fetch]
+      arr_opts << '--'
       arr_opts << name
       arr_opts << url
       
@@ -524,7 +504,7 @@ module Git
     # this is documented as such, but seems broken for some reason
     # i'll try to get around it some other way later
     def remote_remove(name)
-      command('remote', ['rm', name])
+      command('remote', ['rm', '--', name])
     end
     
     def remotes
@@ -584,10 +564,7 @@ module Git
       
       arr_opts = []
       arr_opts << tree
-      if opts[:parent]
-        arr_opts << '-p'
-        arr_opts << opts[:parent]
-      end
+      arr_opts << '-p' << opts[:parent] if opts[:parent]
       arr_opts += opts[:parents].map { |p| ['-p', p] }.flatten if opts[:parents]
       command('commit-tree', arr_opts, true, "< #{escape t.path}")
     end
@@ -601,11 +578,7 @@ module Git
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
       arr_opts << "--force" if opts[:force]
       arr_opts << "--all" if opts[:all]
-
-      if opts[:path_limiter].is_a? String
-        arr_opts << '--'
-        arr_opts << opts[:path_limiter]
-      end
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       command('checkout-index', arr_opts)
     end
@@ -632,7 +605,7 @@ module Git
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
-      arr_opts << opts[:path] if opts[:path]
+      arr_opts << '--' << opts[:path] if opts[:path]
       command('archive', arr_opts, true, (opts[:add_gzip] ? '| gzip' : '') + " > #{escape file}")
       return file
     end
