@@ -139,7 +139,8 @@ module Git
         if line == ''
           in_message = !in_message
         elsif in_message
-          hsh['message'] << line << "\n"
+          hsh['message'] << "\n" if hsh['message'] != ''
+          hsh['message'] << line[4..-1]
         else
           data = line.split
           key = data.shift
@@ -385,10 +386,7 @@ module Git
       arr_opts = ['-m', message]
       arr_opts << '-a' if opts[:add_all]
       arr_opts << '--allow-empty' if opts[:allow_empty]
-      if opts[:author]
-        arr_opts << "--author"
-        arr_opts << opts[:author]
-      end
+      arr_opts << "--author" << opts[:author] if opts[:author]
       command('commit', arr_opts)
     end
 
