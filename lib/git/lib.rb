@@ -122,10 +122,10 @@ module Git
     def commit_data(sha)
       sha = sha.to_s
       cdata = command_lines('cat-file', ['commit', sha])
-      process_commit_data(cdata, sha)
+      process_commit_data(cdata, sha, 0)
     end
     
-    def process_commit_data(data, sha = nil)
+    def process_commit_data(data, sha = nil, indent = 4)
       in_message = false
             
       if sha
@@ -139,8 +139,7 @@ module Git
         if line == ''
           in_message = !in_message
         elsif in_message
-          hsh['message'] << "\n" if hsh['message'] != ''
-          hsh['message'] << line[4..-1]
+          hsh['message'] << line[indent..-1] << "\n"
         else
           data = line.split
           key = data.shift
