@@ -7,14 +7,12 @@ module Git
   
   class Lib
       
-    @git_dir = nil
-    @git_index_file = nil
-    @git_work_dir = nil
-    @path = nil
-    
-    @logger = nil
-    
     def initialize(base = nil, logger = nil)
+      @git_dir = nil
+      @git_index_file = nil
+      @git_work_dir = nil
+      @path = nil
+      
       if base.is_a?(Git::Base)
         @git_dir = base.repo.path
         @git_index_file = base.index.path if base.index

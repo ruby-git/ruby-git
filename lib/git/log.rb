@@ -4,23 +4,20 @@ module Git
   class Log
     include Enumerable
     
-    @base = nil
-    @commits = nil
-    
-    @object = nil
-    @path = nil
-    @count = nil
-    @since = nil
-    @skip = nil
-    @until = nil
-    @between = nil
-    
-    @dirty_flag = nil
-    
     def initialize(base, count = 30)
       dirty_log
       @base = base
       @count = count
+ 
+      @commits = nil
+      @author = nil
+      @grep = nil
+      @object = nil
+      @path = nil
+      @since = nil
+      @skip = nil
+      @until = nil
+      @between = nil
     end
 
     def object(objectish)

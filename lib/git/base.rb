@@ -2,13 +2,6 @@ module Git
   
   class Base
 
-    @working_directory = nil
-    @repository = nil
-    @index = nil
-
-    @lib = nil
-    @logger = nil
-    
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})
       self.new({:repository => git_dir}.merge(opts))
@@ -66,11 +59,13 @@ module Git
       if options[:log]
         @logger = options[:log]
         @logger.info("Starting Git")
+      else
+        @logger = nil
       end
-      
-      @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
-      @repository = Git::Repository.new(options[:repository]) if options[:repository]
-      @index = Git::Index.new(options[:index], false) if options[:index]
+     
+      @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
+      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
+      @index = options[:index] ? Git::Index.new(options[:index], false) : nil
     end
   
   

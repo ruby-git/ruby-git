@@ -8,15 +8,14 @@ module Git
     
     class AbstractObject
       attr_accessor :objectish, :size, :type, :mode
-    
-      @base = nil
-      @contents = nil
-      @size = nil
-      @sha = nil
       
       def initialize(base, objectish)
         @base = base
         @objectish = objectish.to_s
+        @contents = nil
+        @trees = nil
+        @size = nil
+        @sha = nil
       end
 
       def sha
@@ -147,14 +146,13 @@ module Git
   
     class Commit < AbstractObject
       
-      @tree = nil
-      @parents = nil
-      @author = nil
-      @committer = nil
-      @message = nil
-      
       def initialize(base, sha, init = nil)
         super(base, sha)
+        @tree = nil
+        @parents = nil
+        @author = nil
+        @committer = nil
+        @message = nil
         if init
           set_commit(init)
         end

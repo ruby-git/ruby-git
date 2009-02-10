@@ -24,6 +24,7 @@ end
 
 desc "Run Unit Tests"
 task :test do |t|
+    $VERBOSE = true
     require File.dirname(__FILE__) + '/tests/all_tests.rb'
 end
 

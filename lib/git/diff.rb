@@ -4,19 +4,15 @@ module Git
   class Diff
     include Enumerable
     
-    @base = nil
-    @from = nil
-    @to = nil
-    @path = nil
-    
-    @full_diff = nil
-    @full_diff_files = nil
-    @stats = nil
-    
     def initialize(base, from = nil, to = nil)
       @base = base
       @from = from.to_s
       @to = to.to_s
+
+      @path = nil
+      @full_diff = nil
+      @full_diff_files = nil
+      @stats = nil
     end
     attr_reader :from, :to
     
