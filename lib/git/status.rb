@@ -3,9 +3,6 @@ module Git
   class Status
     include Enumerable
     
-    @base = nil
-    @files = nil
-    
     def initialize(base)
       @base = base
       construct_status
@@ -56,9 +53,7 @@ module Git
       attr_accessor :path, :type, :stage, :untracked
       attr_accessor :mode_index, :mode_repo
       attr_accessor :sha_index, :sha_repo
-      
-      @base = nil
-      
+
       def initialize(base, hash)
         @base = base
         @path = hash[:path]

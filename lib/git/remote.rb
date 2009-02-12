@@ -3,8 +3,6 @@ module Git
     
     attr_accessor :name, :url, :fetch_opts
     
-    @base = nil
-    
     def initialize(base, name)
       @base = base
       config = @base.lib.config_remote(name)

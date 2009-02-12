@@ -4,9 +4,6 @@ module Git
   class Branches
     include Enumerable
     
-    @base = nil
-    @branches = nil
-    
     def initialize(base)
       @branches = {}
       

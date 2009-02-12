@@ -3,14 +3,12 @@ module Git
     
     attr_accessor :full, :remote, :name
     
-    @base = nil
-    @gcommit = nil
-    @stashes = nil
-    
     def initialize(base, name)
       @remote = nil
       @full = name
       @base = base
+      @gcommit = nil
+      @stashes = nil
       
       parts = name.split('/')
       if parts[1]

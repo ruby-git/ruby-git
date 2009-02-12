@@ -4,9 +4,6 @@ module Git
   class Stashes
     include Enumerable
     
-    @base = nil
-    @stashes = nil
-    
     def initialize(base)
       @stashes = []
       
