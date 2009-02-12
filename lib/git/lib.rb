@@ -463,7 +463,7 @@ module Git
     def merge(branch, message = nil)      
       arr_opts = []
       arr_opts << '-m' << message if message
-      arr_opts += branch.to_a
+      arr_opts += [branch]
       command('merge', arr_opts)
     end
 
@@ -543,7 +543,7 @@ module Git
     def read_tree(treeish, opts = {})
       arr_opts = []
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
-      arr_opts += treeish.to_a
+      arr_opts += [treeish]
       command('read-tree', arr_opts)
     end
     
@@ -560,7 +560,7 @@ module Git
       arr_opts = []
       arr_opts << tree
       arr_opts << '-p' << opts[:parent] if opts[:parent]
-      arr_opts += opts[:parents].map { |p| ['-p', p] }.flatten if opts[:parents]
+      arr_opts += [opts[:parents]].map { |p| ['-p', p] }.flatten if opts[:parents]
       command('commit-tree', arr_opts, true, "< #{escape t.path}")
     end
     
@@ -617,7 +617,7 @@ module Git
       ENV['GIT_WORK_TREE'] = @git_work_dir
       path = @git_work_dir || @git_dir || @path
 
-      opts = opts.map {|s| escape(s) }.join(' ')
+      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
