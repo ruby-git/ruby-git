@@ -1,2 +1,4 @@
 *.kpf
 pkg/*
+doc/*
+coverage/*

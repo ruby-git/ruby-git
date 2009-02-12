@@ -19,8 +19,8 @@ module Git
       @stashes.unshift(s) if s.saved?
     end
     
-    def apply(index=0)
-      @base.lib.stash_apply(index.to_i)
+    def apply(index=nil)
+      @base.lib.stash_apply(index)
     end
     
     def clear
