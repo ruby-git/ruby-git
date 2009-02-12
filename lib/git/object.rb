@@ -264,9 +264,9 @@ module Git
       type ||= base.lib.object_type(objectish)
       klass =
         case type
-        when /blob/:   Blob   
-        when /commit/: Commit
-        when /tree/:   Tree
+        when /blob/   then Blob   
+        when /commit/ then Commit
+        when /tree/   then Tree
         end
       klass.new(base, objectish)
     end
