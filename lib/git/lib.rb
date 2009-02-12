@@ -413,9 +413,12 @@ module Git
       output =~ /HEAD is now at/
     end
 
-    def stash_apply(id)
-      command('stash apply', [id])
-      # Already uptodate! ---???? What then
+    def stash_apply(id = nil)
+      if id
+        command('stash apply', [id])
+      else
+        command('stash apply')
+      end
     end
     
     def stash_clear
