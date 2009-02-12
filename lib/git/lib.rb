@@ -551,7 +551,7 @@ module Git
       arr_opts = []
       arr_opts << tree
       arr_opts << "-p #{opts[:parent]}" if opts[:parent]
-      arr_opts += opts[:parents].map { |p| "-p #{p.to_s}" } if opts[:parents]
+      arr_opts += [opts[:parents]].flatten.map { |p| "-p #{p.to_s}" } if opts[:parents]
       arr_opts << "< #{t.path}"
       command('commit-tree', arr_opts)
     end
