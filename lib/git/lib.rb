@@ -304,6 +304,11 @@ module Git
     end
 
 
+    def ignored_files
+      command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
+    end
+
+
     def config_remote(name)
       hsh = {}
       config_list.each do |key, value|
