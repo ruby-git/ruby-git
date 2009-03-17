@@ -298,6 +298,7 @@ module Git
       command_lines('ls-files', '--stage').each do |line|
         (info, file) = line.split("\t")
         (mode, sha, stage) = info.split
+        file = eval(file) if file =~ /^\".*\"$/ # This takes care of quoted strings returned from git
         hsh[file] = {:path => file, :mode_index => mode, :sha_index => sha, :stage => stage}
       end
       hsh

@@ -89,7 +89,7 @@ module Git
             @files[file] = {:path => file, :untracked => true} unless @files[file] || File.directory?(file) || ignore.include?(file)
           end
         end
-
+        
         # find modified in tree
         @base.lib.diff_files.each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data
