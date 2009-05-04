@@ -1,4 +1,7 @@
 *.kpf
-pkg/*
-doc/*
-coverage/*
+*.sw?
+.DS_Store
+coverage
+rdoc
+pkg
+
