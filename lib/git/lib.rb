@@ -698,7 +698,6 @@ module Git
 
     def run_command(git_cmd, &block)
       if block_given?
-        puts "IO"
         IO.popen(git_cmd, &block)
       else
         `#{git_cmd}`.chomp
