@@ -1,12 +1,12 @@
 module Git
-  
+
   class Base
 
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})
       self.new({:repository => git_dir}.merge(opts))
     end
-    
+
     # opens a new Git Project from a working directory
     # you can specify non-standard git_dir and index file in the options
     def self.open(working_dir, opts={})
@@ -24,12 +24,12 @@ module Git
         :working_directory => working_dir,
         :repository => File.join(working_dir, '.git')
       }.merge(opts)
-      
+
       FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
-      
+
       # run git_init there
       Git::Lib.new(opts).init
-       
+
       self.new(opts)
     end
 
@@ -42,15 +42,15 @@ module Git
     #   :repository
     #
     #    :bare
-    #   or 
+    #   or
     #    :working_directory
     #    :index_file
     #
     def self.clone(repository, name, opts = {})
-      # run git-clone 
+      # run git-clone
       self.new(Git::Lib.new.clone(repository, name, opts))
     end
-        
+
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')
@@ -62,13 +62,13 @@ module Git
       else
         @logger = nil
       end
-     
+
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
-      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
+      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
     end
-  
-  
+
+
     # returns a reference to the working directory
     #  @git.dir.path
     #  @git.dir.writeable?
@@ -81,13 +81,13 @@ module Git
     def repo
       @repository
     end
-    
+
     # returns reference to the git index file
     def index
       @index
     end
-    
-    
+
+
     def set_working(work_dir, check = true)
       @lib = nil
       @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
@@ -97,12 +97,12 @@ module Git
       @lib = nil
       @index = Git::Index.new(index_file.to_s, check)
     end
-    
+
     # changes current working directory for a block
     # to the git working directory
     #
     # example
-    #  @git.chdir do 
+    #  @git.chdir do
     #    # write files
     #    @git.add
     #    @git.commit('message')
@@ -112,7 +112,7 @@ module Git
         yield dir.path
       end
     end
-    
+
     # returns the repository size in bytes
     def repo_size
       size = 0
@@ -121,7 +121,7 @@ module Git
       end
       size.to_i
     end
-    
+
     #g.config('user.name', 'Scott Chacon') # sets value
     #g.config('user.email', 'email@email.com')  # sets value
     #g.config('user.name')  # returns 'Scott Chacon'
@@ -138,33 +138,33 @@ module Git
         lib.config_list
       end
     end
-    
+
     # factory methods
-    
+
     # returns a Git::Object of the appropriate type
-    # you can also call @git.gtree('tree'), but that's 
+    # you can also call @git.gtree('tree'), but that's
     # just for readability.  If you call @git.gtree('HEAD') it will
-    # still return a Git::Object::Commit object.  
+    # still return a Git::Object::Commit object.
     #
-    # @git.object calls a factory method that will run a rev-parse 
-    # on the objectish and determine the type of the object and return 
-    # an appropriate object for that type 
+    # @git.object calls a factory method that will run a rev-parse
+    # on the objectish and determine the type of the object and return
+    # an appropriate object for that type
     def object(objectish)
       Git::Object.new(self, objectish)
     end
-    
+
     def gtree(objectish)
       Git::Object.new(self, objectish, 'tree')
     end
-    
+
     def gcommit(objectish)
       Git::Object.new(self, objectish, 'commit')
     end
-    
+
     def gblob(objectish)
       Git::Object.new(self, objectish, 'blob')
     end
-    
+
     # returns a Git::Log object with count commits
     def log(count = 30)
       Git::Log.new(self, count)
@@ -174,17 +174,36 @@ module Git
     def status
       Git::Status.new(self)
     end
-        
+
     # returns a Git::Branches object of all the Git::Branch objects for this repo
     def branches
       Git::Branches.new(self)
     end
-    
+
     # returns a Git::Branch object for branch_name
     def branch(branch_name = 'master')
       Git::Branch.new(self, branch_name)
     end
-    
+
+    # returns a Git::Submodules object of all the Git::Submodule objects for this repo
+    def submodules
+      Git::Submodules.new(self)
+    end
+
+    # returns a Git::Submodule object for a specific submodule path
+    def submodule(path)
+      Git::Submodule.new(path)
+    end
+
+    # Add a submodule to a repository.
+    # To specify a path use option:
+    #
+    #   :path => 'path/to/submodule'
+    #
+    def add_submodule(url, opts = {})
+      self.lib.submodule_add(url, opts)
+    end
+
     # returns +true+ if the branch exists locally
     def is_local_branch?(branch)
       branch_names = self.branches.local.map {|b| b.name}
@@ -208,15 +227,15 @@ module Git
       Git::Remote.new(self, remote_name)
     end
 
-    # this is a convenience method for accessing the class that wraps all the 
+    # this is a convenience method for accessing the class that wraps all the
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
     def lib
       @lib ||= Git::Lib.new(self, @logger)
     end
-    
+
     # will run a grep for 'string' on the HEAD of the git repository
-    # 
+    #
     # to be more surgical in your grep, you can call grep() off a specific
     # git object.  for example:
     #
@@ -237,12 +256,12 @@ module Git
     def grep(string, path_limiter = nil, opts = {})
       self.object('HEAD').grep(string, path_limiter, opts)
     end
-    
+
     # returns a Git::Diff object
     def diff(objectish = 'HEAD', obj2 = nil)
       Git::Diff.new(self, objectish, obj2)
     end
-    
+
     # adds files from the working directory to the git repository
     def add(path = '.')
       self.lib.add(path)
@@ -265,7 +284,7 @@ module Git
     end
 
     # commits all pending changes in the index file to the git repository
-    # 
+    #
     # options:
     #   :add_all
     #   :allow_empty
@@ -273,10 +292,10 @@ module Git
     def commit(message, opts = {})
       self.lib.commit(message, opts)
     end
-        
+
     # commits all pending changes in the index file to the git repository,
     # but automatically adds all modified files without having to explicitly
-    # calling @git.add() on them.  
+    # calling @git.add() on them.
     def commit_all(message, opts = {})
       opts = {:add_all => true}.merge(opts)
       self.lib.commit(message, opts)
@@ -286,7 +305,7 @@ module Git
     def checkout(branch = 'master', opts = {})
       self.lib.checkout(branch, opts)
     end
-    
+
     # checks out an old version of a file
     def checkout_file(version, file)
       self.lib.checkout_file(version,file)
@@ -306,7 +325,7 @@ module Git
     def push(remote = 'origin', branch = 'master', tags = false)
       self.lib.push(remote, branch, tags)
     end
-    
+
     # merges one or more branches into the current working branch
     #
     # you can specify more than one branch to merge by passing an array of branches
@@ -324,7 +343,7 @@ module Git
       fetch(remote)
       merge(branch, message)
     end
-    
+
     # returns an array of Git:Remote objects
     def remotes
       self.lib.remotes.map { |r| Git::Remote.new(self, r) }
@@ -332,7 +351,7 @@ module Git
 
     # adds a new remote to this repository
     # url can be a git url or a Git::Base object if it's a local reference
-    # 
+    #
     #  @git.add_remote('scotts_git', 'git://repo.or.cz/rubygit.git')
     #  @git.fetch('scotts_git')
     #  @git.merge('scotts_git/master')
@@ -347,7 +366,7 @@ module Git
     def tags
       self.lib.tags.map { |r| tag(r) }
     end
-    
+
     # returns a Git::Tag object
     def tag(tag_name)
       Git::Object.new(self, tag_name, 'tag', true)
@@ -358,33 +377,33 @@ module Git
       self.lib.tag(tag_name)
       tag(tag_name)
     end
-    
+
     # creates an archive file of the given tree-ish
     def archive(treeish, file = nil, opts = {})
       self.object(treeish).archive(file, opts)
     end
-    
+
     # repacks the repository
     def repack
       self.lib.repack
     end
-    
+
     def gc
       self.lib.gc
     end
-    
+
     def apply(file)
       if File.exists?(file)
         self.lib.apply(file)
       end
     end
-    
+
     def apply_mail(file)
       self.lib.apply_mail(file) if File.exists?(file)
     end
-    
+
     ## LOWER LEVEL INDEX OPERATIONS ##
-    
+
     def with_index(new_index) # :yields: new_index
       old_index = @index
       set_index(new_index, false)
@@ -392,40 +411,40 @@ module Git
       set_index(old_index)
       return_value
     end
-    
+
     def with_temp_index &blk
       tempfile = Tempfile.new('temp-index')
       temp_path = tempfile.path
       tempfile.unlink
       with_index(temp_path, &blk)
     end
-    
+
     def checkout_index(opts = {})
       self.lib.checkout_index(opts)
     end
-    
+
     def read_tree(treeish, opts = {})
       self.lib.read_tree(treeish, opts)
     end
-    
+
     def write_tree
       self.lib.write_tree
     end
-    
+
     def commit_tree(tree = nil, opts = {})
       Git::Object::Commit.new(self, self.lib.commit_tree(tree, opts))
     end
-    
+
     def write_and_commit_tree(opts = {})
       tree = write_tree
       commit_tree(tree, opts)
     end
-      
+
     def update_ref(branch, commit)
       branch(branch).update_ref(commit)
     end
-    
-    
+
+
     def ls_files
       self.lib.ls_files
     end
@@ -433,14 +452,14 @@ module Git
     def with_working(work_dir) # :yields: the Git::WorkingDirectory
       return_value = false
       old_working = @working_directory
-      set_working(work_dir) 
+      set_working(work_dir)
       Dir.chdir work_dir do
         return_value = yield @working_directory
       end
       set_working(old_working)
       return_value
     end
-    
+
     def with_temp_working &blk
       tempfile = Tempfile.new("temp-workdir")
       temp_dir = tempfile.path
@@ -448,8 +467,8 @@ module Git
       Dir.mkdir(temp_dir, 0700)
       with_working(temp_dir, &blk)
     end
-    
-    
+
+
     # runs git rev-parse to convert the objectish to a full sha
     #
     #   @git.revparse("HEAD^^")
@@ -459,11 +478,11 @@ module Git
     def revparse(objectish)
       self.lib.revparse(objectish)
     end
-    
+
     def ls_tree(objectish)
       self.lib.ls_tree(objectish)
     end
-    
+
     def cat_file(objectish)
       self.lib.object_contents(objectish)
     end
@@ -473,7 +492,5 @@ module Git
       self.lib.branch_current
     end
 
-    
   end
-  
 end
