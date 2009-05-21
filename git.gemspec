@@ -5,9 +5,9 @@ Gem::Specification.new do |s|
   s.version = "1.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Scott Chacon"]
+  s.authors = ["Scott Chacon", "Birkir A. Barkarson"]
   s.date = %q{2009-05-04}
-  s.email = %q{schacon@gmail.com}
+  s.email = %q{schacon@gmail.com birkirb@stoicviking.net}
   s.extra_rdoc_files = [
     "README"
   ]
@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
     "lib/git/working_directory.rb"
   ]
   s.has_rdoc = true
-  s.homepage = %q{http://github.com/schacon/ruby-git}
+  s.homepage = %q{http://github.com/birkirb/ruby-git}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{git}
