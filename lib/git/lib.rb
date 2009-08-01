@@ -321,45 +321,75 @@ module Git
     end
 
     def config_get(name)
-      config_list[name]
-      #command('config', ['--get', name])
+      do_get = lambda do
+        command('config', ['--get', name])
+      end
+
+      if @git_dir
+        Dir.chdir(@git_dir, &do_get)
+      else
+        build_list.call
+      end
+    end
+
+    def global_config_get(name)
+      command('config', ['--global', '--get', name], false)
     end
     
     def config_list
-      config = {}
-      config.merge!(parse_config('~/.gitconfig'))
-      config.merge!(parse_config(File.join(@git_dir, 'config')))
-      #hsh = {}
-      #command_lines('config', ['--list']).each do |line|
-      #  (key, value) = line.split('=')
-      #  hsh[key] = value
-      #end
-      #hsh
+      build_list = lambda do
+        parse_config_list command_lines('config', ['--list'])
+      end
+      
+      if @git_dir
+        Dir.chdir(@git_dir, &build_list)
+      else
+        build_list.call
+      end
+    end
+
+    def global_config_list
+      parse_config_list command_lines('config', ['--global', '--list'], false)
     end
     
-    def parse_config(file)
+    def parse_config_list(lines)
       hsh = {}
-      file = File.expand_path(file)
-      if File.file?(file)
-        current_section = nil
-        File.readlines(file).each do |line|
-          if m = /\[(\w+)\]/.match(line)
-            current_section = m[1]
-          elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
-            current_section = "#{m[1]}.#{m[2]}"
-          elsif m = /(\w+?) = (.*)/.match(line)
-            key = "#{current_section}.#{m[1]}"
-            hsh[key] = m[2] 
-          end
-        end
+      lines.each do |line|
+        (key, *values) = line.split('=')
+        hsh[key] = values.join('=')
       end
       hsh
+    end
+
+    def parse_config(file)
+      hsh = {}
+      parse_config_list command_lines('config', ['--list', '--file', file], false)
+      #hsh = {}
+      #file = File.expand_path(file)
+      #if File.file?(file)
+      #  current_section = nil
+      #  File.readlines(file).each do |line|
+      #    if m = /\[(\w+)\]/.match(line)
+      #      current_section = m[1]
+      #    elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
+      #      current_section = "#{m[1]}.#{m[2]}"
+      #    elsif m = /(\w+?) = (.*)/.match(line)
+      #      key = "#{current_section}.#{m[1]}"
+      #      hsh[key] = m[2] 
+      #    end
+      #  end
+      #end
+      #hsh
     end
     
     ## WRITE COMMANDS ##
         
     def config_set(name, value)
       command('config', [name, value])
+    end
+
+    def global_config_set(name, value)
+      command('config', ['--global', name, value], false)
     end
           
     def add(path = '.')
