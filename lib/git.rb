@@ -26,13 +26,9 @@ require 'git/author'
 require 'git/stashes'
 require 'git/stash'
 
-minimum_version = [1, 6, 0, 0]
-current_version = Git::Lib.new(nil, nil).command_version
-if current_version[0] < minimum_version[0] || 
-   current_version[1] < minimum_version[1] ||
-   current_version[2] < minimum_version[2] ||
-   current_version[3] < minimum_version[3]
-  $stderr.puts "The git gem requires git #{minimum_version.join('.')} or later, but only found #{current_version.join('.')}. You should probably upgrad.e"
+lib = Git::Lib.new(nil, nil)
+unless lib.meets_required_version?
+  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
 end
 
 # Git/Ruby Library

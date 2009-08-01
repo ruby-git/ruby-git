@@ -645,11 +645,25 @@ module Git
     end
 
     # returns the current version of git, as an Array of Fixnums.
-    def command_version
+    def current_command_version
       output = command('version', [], false)
       version = output[/(\d+)\.(\d+)\.(\d+)\.(\d+)/]
       version.split('.').collect {|i| i.to_i}
     end
+
+    def required_command_version
+      [1, 6, 0, 0]
+    end
+
+    def meets_required_version?
+      current_version  = self.current_command_version
+      required_version = self.required_command_version
+      return current_version[0] >= required_version[0] && 
+             current_version[1] >= required_version[1] &&
+             current_version[2] >= required_version[2] &&
+             current_version[3] >= required_version[3]
+    end
+
 
     private
     
