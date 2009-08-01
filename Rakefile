@@ -1,11 +1,10 @@
 require 'rubygems'
-require 'rake/gempackagetask'
 
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "git"
-    gem.summary = %Q{TODO}
+    gem.summary = %Q{Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary}
     gem.email = "schacon@gmail.com"
     gem.homepage = "http://github.com/schacon/ruby-git"
     gem.authors = "Scott Chacon"
@@ -13,6 +12,8 @@ begin
     gem.files = FileList["lib/**/*.rb"]
     gem.test_files = FileList["test/*.rb"]
     gem.extra_rdoc_files = ["README"]
+    gem.requirements << 'git 1.6.0.0, or greater'
+    
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
 rescue LoadError
