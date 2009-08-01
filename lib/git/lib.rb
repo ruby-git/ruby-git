@@ -643,7 +643,14 @@ module Git
       command('archive', arr_opts, true, (opts[:add_gzip] ? '| gzip' : '') + " > #{escape file}")
       return file
     end
-    
+
+    # returns the current version of git, as an Array of Fixnums.
+    def command_version
+      output = command('version', [], false)
+      version = output[/(\d+)\.(\d+)\.(\d+)\.(\d+)/]
+      version.split('.').collect {|i| i.to_i}
+    end
+
     private
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
