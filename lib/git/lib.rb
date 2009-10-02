@@ -337,7 +337,7 @@ module Git
     end
     
     def config_list
-      build_list = lambda do
+      build_list = lambda do |path|
         parse_config_list command_lines('config', ['--list'])
       end
       
