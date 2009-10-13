@@ -426,8 +426,8 @@ module Git
     end
     
     
-    def ls_files
-      self.lib.ls_files
+    def ls_files(location=nil)
+      self.lib.ls_files(location)
     end
 
     def with_working(work_dir) # :yields: the Git::WorkingDirectory

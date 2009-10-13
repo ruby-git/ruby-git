@@ -293,9 +293,9 @@ module Git
       hsh
     end
             
-    def ls_files
+    def ls_files(location=nil)
       hsh = {}
-      command_lines('ls-files', '--stage').each do |line|
+      command_lines('ls-files', ['--stage', location]).each do |line|
         (info, file) = line.split("\t")
         (mode, sha, stage) = info.split
         file = eval(file) if file =~ /^\".*\"$/ # This takes care of quoted strings returned from git
