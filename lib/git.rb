@@ -21,6 +21,7 @@ require 'git/remote'
 
 require 'git/diff'
 require 'git/status'
+require 'git/blame'
 require 'git/author'
 
 require 'git/stashes'
