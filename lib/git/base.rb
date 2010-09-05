@@ -176,8 +176,8 @@ module Git
     end
 
     # return a Git::Blame object
-    def blame(file = '', start = '', fin = '')
-      Git::Blame.new(self, file, start, fin)
+    def blame(file = '', opts = {})
+      Git::Blame.new(self, file, opts)
     end
         
     # returns a Git::Branches object of all the Git::Branch objects for this repo

@@ -3,10 +3,10 @@ module Git
   class Blame
     include Enumerable
     
-    def initialize(base, file = '', start = '', fin = '')
+    def initialize(base, file = '', opts = {})
       @base = base
 
-      construct_blame(file, start, fin)
+      construct_blame(file, opts)
     end
 
     # Todo - factor this in to BlameLine instead, and have this loop?    
@@ -79,10 +79,12 @@ module Git
 
 
       # This will run the blame (via our lib.rb), and parse the porcelain-formatted blame output into BlameLine objects
-      def construct_blame(file = '', start = '', fin = '')
+      def construct_blame(file = '', opts = {})
         @lines = {}
 
-        lines = @base.lib.blame({:file => file, :start => start, :fin => fin})
+        opts[:file] = file
+
+        lines = @base.lib.blame(opts)
 
         parsed_lines = {}
         commits = {}
