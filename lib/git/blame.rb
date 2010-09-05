@@ -2,6 +2,8 @@ module Git
   
   class Blame
     include Enumerable
+
+    attr_reader :lines
     
     def initialize(base, file = '', opts = {})
       @base = base
@@ -133,7 +135,7 @@ module Git
         parsed_lines.each do |line, commit|
           commits[commit][:line] = line
 
-          @lines[line] = BlameLine.new(line, commits[commit])
+          @lines[line.to_i] = BlameLine.new(line.to_i, commits[commit])
         end
       end
 
