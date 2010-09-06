@@ -100,7 +100,14 @@ module Git
             commit = new_commit[0]
 
             line_num = line.sub(/^[a-f0-9]{40} [0-9]+ /, '')
-            line_num = line_num.sub(/\s[0-9]+.*$/, '') if line_num.match(/\s/)
+
+            if line_num.match(/\s[0-9]+/)
+              block_length = line_num.sub(/^[0-9]+\s/, '').sub(/\s.*$/, '')
+
+              line_num = line_num.sub(/\s[0-9]+.*$/, '')
+            else
+              block_length = 1
+            end
 
             # this looks odd, but it's correct... we're initializing this commit's hash, which
             # should contain a :hash -> <sha hash> element, among other things, and the hash
@@ -108,7 +115,9 @@ module Git
             #
             commits[commit] = {:commit => commit} if ! commits[commit]
 
-            parsed_lines[line_num] = commit
+            for i in line_num.to_i..(line_num.to_i + block_length.to_i - 1)
+              parsed_lines[i] = commit
+            end
           end
 
           if /^author\s/.match(line)
@@ -134,8 +143,8 @@ module Git
 
         parsed_lines.each do |line, commit|
           commits[commit][:line] = line
-
-          @lines[line.to_i] = BlameLine.new(line.to_i, commits[commit])
+puts 'line ' + line.to_s + ' added to @lines of Blame'
+          @lines[line] = BlameLine.new(line, commits[commit])
         end
       end
 
