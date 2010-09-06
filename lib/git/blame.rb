@@ -143,7 +143,7 @@ module Git
 
         parsed_lines.each do |line, commit|
           commits[commit][:line] = line
-puts 'line ' + line.to_s + ' added to @lines of Blame'
+
           @lines[line] = BlameLine.new(line, commits[commit])
         end
       end
