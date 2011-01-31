@@ -28,6 +28,10 @@ require 'git/author'
 require 'git/stashes'
 require 'git/stash'
 
+lib = Git::Lib.new(nil, nil)
+unless lib.meets_required_version?
+  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+end
 
 # Git/Ruby Library
 #
@@ -107,6 +111,48 @@ module Git
     repo = clone(repository, name, {:depth => 1}.merge(options))
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
     Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
+  end
+
+  #g.config('user.name', 'Scott Chacon') # sets value
+  #g.config('user.email', 'email@email.com')  # sets value
+  #g.config('user.name')  # returns 'Scott Chacon'
+  #g.config # returns whole config hash
+  def config(name = nil, value = nil)
+    lib = Git::Lib.new
+    if(name && value)
+      # set value
+      lib.config_set(name, value)
+    elsif (name)
+      # return value
+      lib.config_get(name)
+    else
+      # return hash
+      lib.config_list
+    end
+  end
+
+  # Same as g.config, but forces it to be at the global level
+  #
+  #g.config('user.name', 'Scott Chacon') # sets value
+  #g.config('user.email', 'email@email.com')  # sets value
+  #g.config('user.name')  # returns 'Scott Chacon'
+  #g.config # returns whole config hash
+  def self.global_config(name = nil, value = nil)
+    lib = Git::Lib.new(nil, nil)
+    if(name && value)
+      # set value
+      lib.global_config_set(name, value)
+    elsif (name)
+      # return value
+      lib.global_config_get(name)
+    else
+      # return hash
+      lib.global_config_list
+    end
+  end
+
+  def global_config(name = nil, value = nil)
+    self.class.global_config(name, value)
   end
 
 end

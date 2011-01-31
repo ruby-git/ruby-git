@@ -14,19 +14,15 @@ Library for using Git in Ruby. Test.
 
 = Homepage
 
-The Ruby/Git homepage is currently at : 
-
-http://jointheconversation.org/rubygit
-
 Git public hosting of the project source code is at:
 
-http://github/schacon/ruby-git
+http://github.com/schacon/ruby-git
 
 = Install
 
 You can install Ruby/Git like this:
 
-$ sudo gem install schacon-git --source=http://gems.github.com
+$ sudo gem install git
 
 = Major Objects
 

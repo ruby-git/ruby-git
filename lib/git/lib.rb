@@ -294,9 +294,9 @@ module Git
       hsh
     end
 
-    def ls_files
+    def ls_files(location=nil)
       hsh = {}
-      command_lines('ls-files', '--stage').each do |line|
+      command_lines('ls-files', ['--stage', location]).each do |line|
         (info, file) = line.split("\t")
         (mode, sha, stage) = info.split
         file = eval(file) if file =~ /^\".*\"$/ # This takes care of quoted strings returned from git
@@ -322,45 +322,75 @@ module Git
     end
 
     def config_get(name)
-      config_list[name]
-      #command('config', ['--get', name])
+      do_get = lambda do
+        command('config', ['--get', name])
+      end
+
+      if @git_dir
+        Dir.chdir(@git_dir, &do_get)
+      else
+        build_list.call
+      end
+    end
+
+    def global_config_get(name)
+      command('config', ['--global', '--get', name], false)
     end
 
     def config_list
-      config = {}
-      config.merge!(parse_config('~/.gitconfig'))
-      config.merge!(parse_config(File.join(@git_dir, 'config')))
-      #hsh = {}
-      #command_lines('config', ['--list']).each do |line|
-      #  (key, value) = line.split('=')
-      #  hsh[key] = value
-      #end
-      #hsh
+      build_list = lambda do |path|
+        parse_config_list command_lines('config', ['--list'])
+      end
+
+      if @git_dir
+        Dir.chdir(@git_dir, &build_list)
+      else
+        build_list.call
+      end
+    end
+
+    def global_config_list
+      parse_config_list command_lines('config', ['--global', '--list'], false)
+    end
+
+    def parse_config_list(lines)
+      hsh = {}
+      lines.each do |line|
+        (key, *values) = line.split('=')
+        hsh[key] = values.join('=')
+      end
+      hsh
     end
 
     def parse_config(file)
       hsh = {}
-      file = File.expand_path(file)
-      if File.file?(file)
-        current_section = nil
-        File.readlines(file).each do |line|
-          if m = /\[(\w+)\]/.match(line)
-            current_section = m[1]
-          elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
-            current_section = "#{m[1]}.#{m[2]}"
-          elsif m = /(\w+?) = (.*)/.match(line)
-            key = "#{current_section}.#{m[1]}"
-            hsh[key] = m[2]
-          end
-        end
-      end
-      hsh
+      parse_config_list command_lines('config', ['--list', '--file', file], false)
+      #hsh = {}
+      #file = File.expand_path(file)
+      #if File.file?(file)
+      #  current_section = nil
+      #  File.readlines(file).each do |line|
+      #    if m = /\[(\w+)\]/.match(line)
+      #      current_section = m[1]
+      #    elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
+      #      current_section = "#{m[1]}.#{m[2]}"
+      #    elsif m = /(\w+?) = (.*)/.match(line)
+      #      key = "#{current_section}.#{m[1]}"
+      #      hsh[key] = m[2]
+      #    end
+      #  end
+      #end
+      #hsh
     end
 
     ## WRITE COMMANDS ##
 
     def config_set(name, value)
       command('config', [name, value])
+    end
+
+    def global_config_set(name, value)
+      command('config', ['--global', name, value], false)
     end
 
     def add(path = '.')
@@ -616,6 +646,27 @@ module Git
     end
 
 
+    # returns the current version of git, as an Array of Fixnums.
+    def current_command_version
+      output = command('version', [], false)
+      version = output[/\d+\.\d+(\.\d+)+/]
+      version.split('.').collect {|i| i.to_i}
+    end
+
+    def required_command_version
+      [1, 6, 0, 0]
+    end
+
+    def meets_required_version?
+      current_version  = self.current_command_version
+      required_version = self.required_command_version
+
+      return current_version[0] >= required_version[0] &&
+             current_version[1] >= required_version[1] &&
+             (current_version[2] ? current_version[2] >= required_version[2] : true) &&
+             (current_version[3] ? current_version[3] >= required_version[3] : true)
+    end
+
     def submodule_status(path = nil, opts = {})
       arr_opts = []
       arr_opts << '--quiet' if opts[:quiet]
@@ -705,7 +756,8 @@ module Git
     end
 
     def escape(s)
-      "'" + s.to_s.gsub('\'', '\'\\\'\'') + "'"
+      escaped = s.to_s.gsub('\'', '\'\\\'\'')
+      %Q{"#{escaped}"}
     end
 
   end
