@@ -200,7 +200,7 @@ module Git
       arr = []
       command_lines('branch', '-a').each do |b|
         current = (b[0, 2] == '* ')
-        arr << [b.gsub('* ', '').strip, current]
+        arr << [b.gsub('* ', '').gsub('remotes/', '').strip, current]
       end
       arr
     end
