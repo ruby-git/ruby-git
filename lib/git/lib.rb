@@ -321,9 +321,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do
-        command('config', ['--get', name])
-      end
+      do_get = ->(name){command('config', ['--get', name])}
 
       if @git_dir
         Dir.chdir(@git_dir, &do_get)
