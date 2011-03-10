@@ -249,8 +249,8 @@ module Git
     end
     
     # adds files from the working directory to the git repository
-    def add(path = '.')
-      self.lib.add(path)
+    def add(path = '.', opts = {})
+      self.lib.add(path, opts)
     end
 
     # removes file(s) from the git repository
