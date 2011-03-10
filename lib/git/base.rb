@@ -66,6 +66,10 @@ module Git
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
       @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
+     
+      unless lib.meets_required_version?
+        $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+      end
     end
   
   
