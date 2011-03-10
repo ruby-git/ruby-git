@@ -64,8 +64,9 @@ module Git
       end
      
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
-      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
+      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
+      @path_to_git = options[:path_to_git]
      
       unless lib.meets_required_version?
         $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
@@ -216,7 +217,7 @@ module Git
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
     def lib
-      @lib ||= Git::Lib.new(self, @logger)
+      @lib ||= Git::Lib.new(self, @logger, @path_to_git)
     end
     
     # will run a grep for 'string' on the HEAD of the git repository

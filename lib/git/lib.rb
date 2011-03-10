@@ -7,7 +7,7 @@ module Git
   
   class Lib
       
-    def initialize(base = nil, logger = nil)
+    def initialize(base = nil, logger = nil, path_to_git = "git")
       @git_dir = nil
       @git_index_file = nil
       @git_work_dir = nil
@@ -23,6 +23,7 @@ module Git
         @git_work_dir = base[:working_directory]
       end
       @logger = logger
+      @path_to_git = path_to_git
     end
     
     def init
@@ -679,7 +680,7 @@ module Git
       path = @git_work_dir || @git_dir || @path
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-      git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{@path_to_git} #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
       if chdir && (Dir.getwd != path)
