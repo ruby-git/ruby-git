@@ -176,8 +176,8 @@ module Git
     end
 
     # returns a Git::Status object
-    def status
-      Git::Status.new(self)
+    def status(location=nil)
+      Git::Status.new(self, location)
     end
         
     # returns a Git::Branches object of all the Git::Branch objects for this repo

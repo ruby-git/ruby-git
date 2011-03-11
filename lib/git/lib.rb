@@ -271,9 +271,9 @@ module Git
     end
 
     # compares the index and the working directory
-    def diff_files
+    def diff_files(location=nil)
       hsh = {}
-      command_lines('diff-files').each do |line|
+      command_lines('diff-files', ["--", location]).each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
         hsh[file] = {:path => file, :mode_file => mode_src.to_s[1, 7], :mode_index => mode_dest, 
@@ -283,9 +283,9 @@ module Git
     end
     
     # compares the index and the repository
-    def diff_index(treeish)
+    def diff_index(treeish, location=nil)
       hsh = {}
-      command_lines('diff-index', treeish).each do |line|
+      command_lines('diff-index', [treeish, "--", location]).each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
         hsh[file] = {:path => file, :mode_repo => mode_src.to_s[1, 7], :mode_index => mode_dest, 
@@ -306,8 +306,8 @@ module Git
     end
 
 
-    def ignored_files
-      command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
+    def ignored_files(location=nil)
+      command_lines('ls-files', ['--others', '-i', '--exclude-standard', location])
     end
 
 
