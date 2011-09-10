@@ -162,6 +162,41 @@ module Git
         hsh
       end
     end
+
+    def tag_data(tag_name)
+      tag_name = tag_name.to_s
+      if command('show', [tag_name]) =~ /^tag/
+        command('show-ref', ['--tags', '-q', tag_name])
+        data = command_lines('cat-file', ['tag', tag_name])
+        process_tag_data(data, tag_name)
+      end
+    end
+
+    def process_tag_data(data, tag_name)
+      in_message = false
+      hsh = {'message' => ''}
+      data.each do |line|
+        line = line.chomp
+        if line == ''
+          in_message = !in_message
+        elsif in_message
+          hsh['message'] << line << "\n"
+        else
+          data = line.split
+          key = data.shift
+          value = data.join(' ')
+          if key == 'tree'
+            # It's an unannotated lightweight tag
+            return nil
+          elsif key == 'object'
+            hsh['sha'] = value
+          elsif key == 'tagger'
+            hsh['tagger'] = value
+          end
+        end
+      end
+      hsh
+    end
     
     def object_contents(sha, &block)
       command('cat-file', ['-p', sha], &block)
@@ -549,8 +584,12 @@ module Git
       command_lines('tag')
     end
 
-    def tag(tag)
-      command('tag', tag)
+    def tag(tag, message = nil)
+      if message
+        command('tag', ['-a', tag, '-m', message])
+      else
+        command('tag', tag)
+      end
     end
 
     
