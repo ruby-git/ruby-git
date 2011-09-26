@@ -46,9 +46,12 @@ your log query, which can be constructed through methods on the Git::Log object,
 
 Here are a bunch of examples of how to use the Ruby/Git package. 
 
-First you have to remember to require rubygems if it's not.  Then include the 'git' gem.
+(Only if Ruby < 1.9) Start by requiring rubygems.   
 
    require 'rubygems'
+
+Include the 'git' gem.
+
    require 'git'
 
 Here are the operations that need read permission only.
