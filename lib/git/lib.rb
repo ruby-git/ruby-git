@@ -321,7 +321,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do
+      do_get = lambda do |path|
         command('config', ['--get', name])
       end
 
