@@ -304,6 +304,18 @@ module Git
       hsh
     end
 
+    def ls_remote(location=nil)
+      Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
+        command_lines('ls-remote', [location], false).each do |line|
+          (sha, info) = line.split("\t")
+          (ref, type, name) = info.split('/', 3)
+          type ||= 'head'
+          type = 'branches' if type == 'heads'
+          value = {:ref => ref, :sha => sha}
+          hsh[type].update( name.nil? ? value : { name => value })
+        end
+      end
+    end
 
     def ignored_files
       command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
