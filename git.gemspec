@@ -6,7 +6,7 @@
 Gem::Specification.new do |s|
   s.name = %q{git}
   s.version = "1.2.5"
-
+  
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Scott Chacon"]
   s.date = %q{2009-10-17}

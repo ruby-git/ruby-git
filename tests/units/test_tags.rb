@@ -30,6 +30,15 @@ class TestTags < Test::Unit::TestCase
       
       assert(r2.tags.map{|t| t.name}.include?('third'))
       assert(!r2.tags.map{|t| t.name}.include?('second'))
+      
+      #can't tag same name twice
+      assert_raise do
+        r1.tag('third')
+      end
+      
+      # can tag same name twice with force
+      r2.add_tag('third'.{:force=>true})
+      assert(r2.tags.map{|t| t.name}.include?('third'))
     end
   end
 end

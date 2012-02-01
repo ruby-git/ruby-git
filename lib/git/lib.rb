@@ -549,8 +549,12 @@ module Git
       command_lines('tag')
     end
 
-    def tag(tag)
-      command('tag', tag)
+    def tag(tag, opts={})
+      arr_opts = [tag]
+      arr_opts << opts[:sha] unless opts[:sha].nil?
+      arr_opts << '-f' if opts[:force]
+      
+      command('tag', arr_opts)
     end
 
     
