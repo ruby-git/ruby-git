@@ -498,7 +498,23 @@ module Git
       arr_opts << file
       command('checkout', arr_opts)
     end
-    
+
+    def merge_base(commit1, commit2, *other_commits)
+      arr_opts = []
+      arr_opts << commit1
+      arr_opts << commit2
+      arr_opts += other_commits
+      command('merge-base', arr_opts)
+    end
+
+    def merge_tree(base_tree, branch1, branch2)
+      arr_opts = []
+      arr_opts << base_tree
+      arr_opts << branch1
+      arr_opts << branch2
+      command('merge-tree', arr_opts)
+    end
+
     def merge(branch, message = nil)      
       arr_opts = []
       arr_opts << '-m' << message if message
