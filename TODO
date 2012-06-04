@@ -3,7 +3,8 @@
 * git revert, rebase
 
 * diff additions
-  - annotate, blame
+  - annotate
+  - blame complete, but perhaps needs some more work/addition of missing cli options
 
 * submodule support
 

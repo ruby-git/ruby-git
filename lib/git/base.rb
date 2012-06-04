@@ -174,6 +174,11 @@ module Git
     def status
       Git::Status.new(self)
     end
+
+    # return a Git::Blame object
+    def blame(file = '', opts = {})
+      Git::Blame.new(self, file, opts)
+    end
         
     # returns a Git::Branches object of all the Git::Branch objects for this repo
     def branches

@@ -92,6 +92,30 @@ module Git
       full_log = command_lines('log', arr_opts, true)
       process_commit_data(full_log)
     end
+
+    def blame(opts = {})
+      if '' == opts[:file]
+        raise "Can't blame a null filename!"
+      end
+
+      arr_opts = []
+
+      arr_opts << '-b' if opts[:blank_boundaries]
+      arr_opts << '--root' if opts[:root]
+      arr_opts << '-t' if opts[:raw_timestamps]
+      arr_opts << '-p'
+      arr_opts << '-w' if opts[:ignore_whitespace]
+      arr_opts << '--incremental'
+      arr_opts << "-S #{opts[:rev_file]}" if (opts[:rev_file] && opts[:rev_file].is_a?(String))
+      arr_opts << '-L' && arr_opts << "#{opts[:start]},#{opts[:fin]}"
+      arr_opts << "--since=#{opts[:since]}" if (opts[:since] && opts[:since].is_a?(String))
+
+      arr_opts << opts[:rev] if (opts[:rev] && opts[:rev].is_a?(String))
+
+      arr_opts << opts[:file]
+
+      command_lines('blame', arr_opts, true)
+    end
     
     def revparse(string)
       return string if string =~ /[A-Fa-f0-9]{40}/  # passing in a sha - just no-op it
