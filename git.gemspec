@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{git}
-  s.version = "1.2.5"
+  s.version = "1.2.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Scott Chacon"]
-  s.date = %q{2009-10-17}
+  s.date = %q{2010-10-15}
   s.email = %q{schacon@gmail.com}
   s.extra_rdoc_files = [
     "README"
@@ -38,7 +38,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.requirements = ["git 1.6.0.0, or greater"]
   s.rubyforge_project = %q{git}
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary}
 
   if s.respond_to? :specification_version then
