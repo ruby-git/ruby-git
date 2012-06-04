@@ -3,8 +3,9 @@ module Git
   class Status
     include Enumerable
     
-    def initialize(base)
+    def initialize(base, location)
       @base = base
+	  @location = location
       construct_status
     end
     
@@ -80,8 +81,8 @@ module Git
     private
     
       def construct_status
-        @files = @base.lib.ls_files
-        ignore = @base.lib.ignored_files
+        @files = @base.lib.ls_files(@location)
+        ignore = @base.lib.ignored_files(@location)
         
         # find untracked in working dir
         Dir.chdir(@base.dir.path) do
@@ -91,12 +92,12 @@ module Git
         end
         
         # find modified in tree
-        @base.lib.diff_files.each do |path, data|
+        @base.lib.diff_files(@location).each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data
         end
         
         # find added but not committed - new files
-        @base.lib.diff_index('HEAD').each do |path, data|
+        @base.lib.diff_index('HEAD', @location).each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data
         end
         

@@ -26,11 +26,6 @@ require 'git/author'
 require 'git/stashes'
 require 'git/stash'
 
-lib = Git::Lib.new(nil, nil)
-unless lib.meets_required_version?
-  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
-end
-
 # Git/Ruby Library
 #
 # This provides bindings for working with git in complex

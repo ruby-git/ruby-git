@@ -7,7 +7,7 @@ module Git
   
   class Lib
       
-    def initialize(base = nil, logger = nil)
+    def initialize(base = nil, logger = nil, path_to_git = "git")
       @git_dir = nil
       @git_index_file = nil
       @git_work_dir = nil
@@ -23,6 +23,7 @@ module Git
         @git_work_dir = base[:working_directory]
       end
       @logger = logger
+      @path_to_git = path_to_git
     end
     
     def init
@@ -270,9 +271,9 @@ module Git
     end
 
     # compares the index and the working directory
-    def diff_files
+    def diff_files(location=nil)
       hsh = {}
-      command_lines('diff-files').each do |line|
+      command_lines('diff-files', ["--", location]).each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
         hsh[file] = {:path => file, :mode_file => mode_src.to_s[1, 7], :mode_index => mode_dest, 
@@ -282,9 +283,9 @@ module Git
     end
     
     # compares the index and the repository
-    def diff_index(treeish)
+    def diff_index(treeish, location=nil)
       hsh = {}
-      command_lines('diff-index', treeish).each do |line|
+      command_lines('diff-index', [treeish, "--", location]).each do |line|
         (info, file) = line.split("\t")
         (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
         hsh[file] = {:path => file, :mode_repo => mode_src.to_s[1, 7], :mode_index => mode_dest, 
@@ -305,8 +306,8 @@ module Git
     end
 
 
-    def ignored_files
-      command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
+    def ignored_files(location=nil)
+      command_lines('ls-files', ['--others', '-i', '--exclude-standard', location])
     end
 
 
@@ -392,8 +393,11 @@ module Git
       command('config', ['--global', name, value], false)
     end
           
-    def add(path = '.')
-      arr_opts = ['--']
+    def add(path = '.', opts = {})
+      arr_opts = []
+      arr_opts << ['-A'] if opts[:all]
+      arr_opts << ['-u'] if opts[:update]
+      arr_opts << '--'
       if path.is_a?(Array)
         arr_opts += path
       else
@@ -679,7 +683,7 @@ module Git
       path = @git_work_dir || @git_dir || @path
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-      git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{@path_to_git} #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
       if chdir && (Dir.getwd != path)
