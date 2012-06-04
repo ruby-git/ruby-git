@@ -31,6 +31,8 @@ Gem::Specification.new do |s|
      "lib/git/stash.rb",
      "lib/git/stashes.rb",
      "lib/git/status.rb",
+     "lib/git/submodule.rb",
+     "lib/git/submodules.rb",
      "lib/git/working_directory.rb"
   ]
   s.homepage = %q{http://github.com/schacon/ruby-git}

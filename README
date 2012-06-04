@@ -1,3 +1,13 @@
+Modifcation of the original to support submodules.
+
+= Install
+
+You can install Ruby/Git like this:
+
+$ sudo gem install birkirb-git --source=http://gems.github.com
+
+Original readme below:
+
 == Git Library for Ruby
 
 Library for using Git in Ruby. Test.
@@ -133,9 +143,9 @@ And here are the operations that will need to write to your git repository.
      Git.init('project')
      Git.init('/home/schacon/proj', 
 	 	  { :git_dir => '/opt/git/proj.git', 
-		     :index_file => '/tmp/index'} )
- 	  
-   g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout')   
+		    :index_file => '/tmp/index'} )
+
+   g = Git.clone(URI, 'name', :path => '/tmp/checkout')   
    g.config('user.name', 'Scott Chacon')
    g.config('user.email', 'email@email.com')      
    
