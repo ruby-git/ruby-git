@@ -426,7 +426,7 @@ module Git
     def reset(commit, opts = {})
       arr_opts = []
       arr_opts << '--hard' if opts[:hard]
-      arr_opts << commit if commit
+      arr_opts << commit.sha if commit
       command('reset', arr_opts)
     end
     
