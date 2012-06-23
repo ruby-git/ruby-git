@@ -8,6 +8,7 @@ module Git
     
     class AbstractObject
       attr_accessor :objectish, :size, :type, :mode
+	  attr_reader :sha
       
       def initialize(base, objectish)
         @base = base
@@ -15,15 +16,11 @@ module Git
         @contents = nil
         @trees = nil
         @size = nil
-        @sha = nil
+        @sha = @base.lib.revparse(@objectish)
       end
 
-      def sha
-        @sha ||= @base.lib.revparse(@objectish)
-      end
-      
       def size
-        @size ||= @base.lib.object_size(@objectish)
+        @size ||= @base.lib.object_size(@sha)
       end
       
       # Get the object's contents.
@@ -34,9 +31,9 @@ module Git
       # Use this for large files so that they are not held in memory.
       def contents(&block)
         if block_given?
-          @base.lib.object_contents(@objectish, &block)
+          @base.lib.object_contents(@sha, &block)
         else
-          @contents ||= @base.lib.object_contents(@objectish)
+          @contents ||= @base.lib.object_contents(@sha)
         end
       end
       
@@ -45,7 +42,7 @@ module Git
       end
       
       def to_s
-        @objectish
+        @sha
       end
       
       def grep(string, path_limiter = nil, opts = {})
@@ -54,16 +51,16 @@ module Git
       end
       
       def diff(objectish)
-        Git::Diff.new(@base, @objectish, objectish)
+        Git::Diff.new(@base, @sha, objectish)
       end
       
       def log(count = 30)
-        Git::Log.new(@base, count).object(@objectish)
+        Git::Log.new(@base, count).object(@sha)
       end
       
       # creates an archive of this object (tree)
       def archive(file = nil, opts = {})
-        @base.lib.archive(@objectish, file, opts)
+        @base.lib.archive(@sha, file, opts)
       end
       
       def tree?; false; end
@@ -118,11 +115,11 @@ module Git
       alias_method :subdirectories, :trees
        
       def full_tree
-        @base.lib.full_tree(@objectish)
+        @base.lib.full_tree(@sha)
       end
                   
       def depth
-        @base.lib.tree_depth(@objectish)
+        @base.lib.tree_depth(@sha)
       end
       
       def tree?
@@ -136,7 +133,7 @@ module Git
           unless @trees
             @trees = {}
             @blobs = {}
-            data = @base.lib.ls_tree(@objectish)
+            data = @base.lib.ls_tree(@sha)
             data['tree'].each { |k, d| @trees[k] = Git::Object::Tree.new(@base, d[:sha], d[:mode]) }
             data['blob'].each { |k, d| @blobs[k] = Git::Object::Blob.new(@base, d[:sha], d[:mode]) }
           end
@@ -227,7 +224,7 @@ module Git
         # see if this object has been initialized and do so if not
         def check_commit
           unless @tree
-            data = @base.lib.commit_data(@objectish)
+            data = @base.lib.commit_data(@sha)
             set_commit(data)
           end
         end
