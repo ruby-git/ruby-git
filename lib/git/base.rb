@@ -322,7 +322,10 @@ module Git
     # fetches a branch from a remote and merges it into the current working branch
     def pull(remote = 'origin', branch = 'master', message = 'origin pull')
       fetch(remote)
-      merge(branch, message)
+      old_branch = self.lib.branch_current
+      if self.lib.branch_current != branch then checkout(branch) end
+      merge(remote, message)
+      if self.lib.branch_current != branch then checkout(old_branch) end
     end
     
     # returns an array of Git:Remote objects
