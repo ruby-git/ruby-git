@@ -10,6 +10,5 @@ spec = Gem::Specification.new do |s|
     s.require_path  =   "lib"
     s.autorequire   =   "git"
     s.test_files = Dir.glob('tests/*.rb')
-    s.has_rdoc  =   true
     s.extra_rdoc_files  =   ["README"]
 end
