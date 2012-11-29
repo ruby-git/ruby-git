@@ -144,7 +144,9 @@ module Git
           value = data.join(' ')
           if key == 'commit'
             sha = value
-            hsh_array << hsh if hsh
+            if hsh_array
+              hsh_array << hsh if hsh
+            end
             hsh = {'sha' => sha, 'message' => '', 'parent' => []}
           end
           if key == 'parent'
