@@ -135,7 +135,7 @@ And here are the operations that will need to write to your git repository.
 	 	  { :git_dir => '/opt/git/proj.git', 
 		     :index_file => '/tmp/index'} )
  	  
-   g = Git.clone(URI, :name => 'name', :path => '/tmp/checkout')   
+   g = Git.clone(URI, 'name', :path => '/tmp/checkout')   
    g.config('user.name', 'Scott Chacon')
    g.config('user.email', 'email@email.com')      
    
