@@ -493,7 +493,7 @@ module Git
       else
         arr_opts << '-b' << opts[:new_branch] if opts[:new_branch]
       end
-      arr_opts << branch
+      arr_opts << branch if branch
       
       command('checkout', arr_opts)
     end
