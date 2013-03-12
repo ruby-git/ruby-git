@@ -392,8 +392,10 @@ module Git
       command('config', ['--global', name, value], false)
     end
           
-    def add(path = '.')
-      arr_opts = ['--']
+    def add(path = '.', opts={})
+      arr_opts = []
+      arr_opts << ['-A'] if opts[:add_remove]      
+      arr_opts << ['--']
       if path.is_a?(Array)
         arr_opts += path
       else
@@ -497,6 +499,12 @@ module Git
       arr_opts << version
       arr_opts << file
       command('checkout', arr_opts)
+    end
+
+    def show_file(version, file)
+      arr_opts = []
+      arr_opts << "#{version}:#{file}"
+      command('show', arr_opts)
     end
     
     def merge(branch, message = nil)      
