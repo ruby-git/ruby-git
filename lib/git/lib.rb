@@ -72,7 +72,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String or opts[:path_limiter].is_a?(Array)
 
       command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
@@ -87,7 +87,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
       arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String) or opts[:path_limiter].is_a?(Array)
       
       full_log = command_lines('log', arr_opts, true)
       process_commit_data(full_log)
@@ -228,7 +228,7 @@ module Git
       grep_opts << '-e'
       grep_opts << string
       grep_opts << opts[:object] if opts[:object].is_a?(String)
-      grep_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      grep_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String) or opts[:path_limiter].is_a?(Array)
 
       hsh = {}
       command_lines('grep', grep_opts).each do |line|
@@ -244,7 +244,7 @@ module Git
       diff_opts = ['-p']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
-      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String) or opts[:path_limiter].is_a?(Array)
 
       command('diff', diff_opts)
     end
@@ -253,7 +253,7 @@ module Git
       diff_opts = ['--numstat']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
-      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String) or opts[:path_limiter].is_a?(Array)
 
       hsh = {:total => {:insertions => 0, :deletions => 0, :lines => 0, :files => 0}, :files => {}}
       
@@ -612,7 +612,7 @@ module Git
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
       arr_opts << "--force" if opts[:force]
       arr_opts << "--all" if opts[:all]
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String) or opts[:path_limiter].is_a?(Array)
 
       command('checkout-index', arr_opts)
     end
