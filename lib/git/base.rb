@@ -264,6 +264,11 @@ module Git
       self.lib.reset(commitish, opts)
     end
 
+    def clean(opts = {})
+      opts = { :force => true, :d => true }.merge(opts)
+      self.lib.clean(opts)
+    end
+
     # commits all pending changes in the index file to the git repository
     # 
     # options:

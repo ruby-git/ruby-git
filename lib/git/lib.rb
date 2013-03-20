@@ -429,6 +429,13 @@ module Git
       arr_opts << commit if commit
       command('reset', arr_opts)
     end
+
+    def clean(opts = {})
+      arr_opts = []
+      arr_opts << '--force' if opts[:force]
+      arr_opts << '-d' if opts[:d]
+      command('clean', arr_opts)
+    end
     
     def apply(patch_file)
       arr_opts = []
