@@ -507,6 +507,10 @@ module Git
       command('merge', arr_opts)
     end
 
+    def pull(remote, branch)
+      command('pull', [remote, branch])
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
