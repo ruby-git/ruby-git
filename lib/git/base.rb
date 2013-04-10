@@ -310,8 +310,8 @@ module Git
     # merges one or more branches into the current working branch
     #
     # you can specify more than one branch to merge by passing an array of branches
-    def merge(branch, message = 'merge')
-      self.lib.merge(branch, message)
+    def merge(branch, message = 'merge', arr = [])
+      self.lib.merge(branch, message, arr)
     end
 
     # iterates over the files which are unmerged
@@ -320,9 +320,8 @@ module Git
     end
 
     # fetches a branch from a remote and merges it into the current working branch
-    def pull(remote = 'origin', branch = 'master', message = 'origin pull')
-      fetch(remote)
-      merge(branch, message)
+    def pull(remote = 'origin', branch = 'master')
+      self.lib.pull(remote, branch)
     end
     
     # returns an array of Git:Remote objects

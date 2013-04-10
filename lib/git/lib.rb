@@ -144,7 +144,9 @@ module Git
           value = data.join(' ')
           if key == 'commit'
             sha = value
-            hsh_array << hsh if hsh
+            if hsh_array
+              hsh_array << hsh if hsh
+            end
             hsh = {'sha' => sha, 'message' => '', 'parent' => []}
           end
           if key == 'parent'
@@ -499,11 +501,14 @@ module Git
       command('checkout', arr_opts)
     end
     
-    def merge(branch, message = nil)      
-      arr_opts = []
+    def merge(branch, message = nil, arr_opts = [])
       arr_opts << '-m' << message if message
       arr_opts += [branch]
       command('merge', arr_opts)
+    end
+
+    def pull(remote, branch)
+      command('pull', [remote, branch])
     end
 
     def unmerged
