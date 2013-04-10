@@ -1,0 +1,22 @@
+PATH
+  remote: .
+  specs:
+    git (1.2.6)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (1.7.7)
+    rdoc (4.0.1)
+      json (~> 1.4)
+    ruby-prof (0.13.0)
+    test-unit (2.5.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  git!
+  rdoc
+  ruby-prof
+  test-unit
