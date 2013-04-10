@@ -60,6 +60,35 @@ class TestIndexOps < Test::Unit::TestCase
     end
   end
   
+  def test_add_all
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'new')
+      Dir.chdir('new') do
+
+        new_file('test-file1', 'blahblahblah1')
+        new_file('test-file2', 'blahblahblah2')
+        assert(g.status.untracked.assoc('test-file1'))
+
+        g.add("-A")
+        assert(g.status.added.assoc('test-file1'))
+        assert(g.status.added.assoc('test-file1'))
+        assert(!g.status.untracked.assoc('test-file1'))
+
+        g.commit('my message')
+        assert(!g.status.added.assoc('test-file1'))
+        assert(!g.status.untracked.assoc('test-file1')) 
+        assert_equal('blahblahblah1', g.status['test-file1'].blob.contents)
+
+        assert(g.status['test-file1'])
+        File.unlink('test-file1')
+        g.add("-A")
+        assert(g.status.deleted.assoc('test-file1')) 
+        g.commit('deleted file')
+        assert(!g.status['test-file1'])
+      end
+    end
+  end
+  
   def test_remove
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'remove_test')

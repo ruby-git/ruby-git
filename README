@@ -141,6 +141,7 @@ And here are the operations that will need to write to your git repository.
    
    g.add('.')
    g.add([file1, file2])
+   g.add("-A")
    
    g.remove('file.txt')
    g.remove(['file.txt', 'file2.txt'])

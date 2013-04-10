@@ -396,6 +396,8 @@ module Git
       arr_opts = ['--']
       if path.is_a?(Array)
         arr_opts += path
+      elsif path.is_a?(String) && path == "-A"
+        arr_opts = path
       else
         arr_opts << path
       end
