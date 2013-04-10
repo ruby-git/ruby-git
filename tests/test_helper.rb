@@ -1,6 +1,7 @@
-require 'test/unit'
 require 'fileutils'
 require 'logger'
+require 'test/unit'
+require 'ruby-debug'
 
 require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
 

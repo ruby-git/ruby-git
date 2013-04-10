@@ -32,7 +32,7 @@ class TestLib < Test::Unit::TestCase
     assert(a.first.is_a?(String))
     assert_equal(10, a.size)
     
-    a = @lib.log_commits :count => 20, :since => '3 years ago'
+    a = @lib.log_commits :count => 20, :since => "#{Date.today.year - 2007} years ago"
     assert(a.first.is_a?(String))
     assert_equal(20, a.size)
     

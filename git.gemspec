@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.requirements = ['git 1.6.0.0, or greater']
 
+  s.add_development_dependency 'ruby-debug'
   s.add_development_dependency 'rdoc'
   s.add_development_dependency 'ruby-prof'
   s.add_development_dependency 'test-unit'
