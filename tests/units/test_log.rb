@@ -9,9 +9,13 @@ class TestLog < Test::Unit::TestCase
     @git = Git.open(@wdir)
   end
 
-  def test_get_log_entries
+  def test_get_fisrt_and_last_entries
     log = @git.log
     assert(log.first.is_a?(Git::Object::Commit))
+    assert_equal('5e53019b3238362144c2766f02a2c00d91fcc023', log.first.objectish)
+
+    assert(log.last.is_a?(Git::Object::Commit))
+    assert_equal('f1410f8735f6f73d3599eb9b5cdd2fb70373335c', log.last.objectish)
   end
   
   def test_get_log_entries    
