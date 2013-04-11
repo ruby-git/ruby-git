@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'ruby-prof'
   s.add_development_dependency 'test-unit'
   
-  s.extra_rdoc_files = ['README']
+  s.extra_rdoc_files = ['README.md']
   s.rdoc_options = ['--charset=UTF-8']
 
   s.files = [
