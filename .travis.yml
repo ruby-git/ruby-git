@@ -9,3 +9,13 @@ rvm:
   - jruby-head
   - ree
   - ruby-head
+matrix:
+  - rvm: jruby-18mode
+    env:
+      - JRUBY_OPTS="-Xcext.enable=true"
+  - rvm: jruby-19mode
+    env:
+      - JRUBY_OPTS="-Xcext.enable=true"
+  - rvm: jruby-head
+    env:
+      - JRUBY_OPTS="-Xcext.enable=true"
