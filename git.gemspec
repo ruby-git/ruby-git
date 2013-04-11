@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.date = Date.today.to_s
   s.email = 'schacon@gmail.com'
   s.homepage = 'http://github.com/schacon/ruby-git'
+  s.license = 'MIT'
   s.name = 'git'
   s.summary = 'Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary.'
   s.version = Git::VERSION
