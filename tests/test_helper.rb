@@ -1,7 +1,9 @@
-require 'test/unit'
+require 'date'
 require 'fileutils'
 require 'logger'
-require File.dirname(__FILE__) + '/../lib/git'
+require 'test/unit'
+
+require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
 
 class Test::Unit::TestCase
   
@@ -24,7 +26,6 @@ class Test::Unit::TestCase
   
   def teardown
     if @tmp_path
-      #puts "teardown #{@tmp_path}"
       FileUtils.rm_r(@tmp_path)
     end
   end

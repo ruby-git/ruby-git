@@ -30,15 +30,18 @@ class TestBranch < Test::Unit::TestCase
   end
   
   def test_branches_single
-    b = @git.branches[:test_object]
-    assert_equal('test_object', b.name)
+    branch = @git.branches[:test_object]
+    assert_equal('test_object', branch.name)
 
-    b = @git.branches['working/master']
-    assert_equal('master', b.name)
-    assert_equal('working/master', b.full)
-    assert_equal('working', b.remote.name)
-    assert_equal('+refs/heads/*:refs/remotes/working/*', b.remote.fetch_opts)
-    assert_equal('../working.git', b.remote.url)
+    %w{working/master remotes/working/master}.each do |branch_name|
+      branch = @git.branches[branch_name]
+     
+      assert_equal('master', branch.name)
+      assert_equal('remotes/working/master', branch.full)
+      assert_equal('working', branch.remote.name)
+      assert_equal('+refs/heads/*:refs/remotes/working/*', branch.remote.fetch_opts)
+      assert_equal('../working.git', branch.remote.url)
+    end
   end
   
   def test_branch_commit

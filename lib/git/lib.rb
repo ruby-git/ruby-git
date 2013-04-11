@@ -49,6 +49,7 @@ module Git
       arr_opts << "--bare" if opts[:bare]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << "--config" << opts[:config] if opts[:config]
 
       arr_opts << '--'
       arr_opts << repository
@@ -321,7 +322,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do
+      do_get = lambda do |path|
         command('config', ['--get', name])
       end
 

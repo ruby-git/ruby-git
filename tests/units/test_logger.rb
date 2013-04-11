@@ -19,7 +19,7 @@ class TestLogger < Test::Unit::TestCase
     @git.branches.size
     
     logc = File.read(log.path)
-    assert(/INFO -- : git branch '-a'/.match(logc))
+    assert(/INFO -- : git branch "-a"/.match(logc))
     assert(/DEBUG -- : \* git_grep/.match(logc))
 
     log = Tempfile.new('logfile')
@@ -31,7 +31,7 @@ class TestLogger < Test::Unit::TestCase
     @git.branches.size
     
     logc = File.read(log.path)
-    assert(/INFO -- : git branch '-a'/.match(logc))
+    assert(/INFO -- : git branch "-a"/.match(logc))
     assert(!/DEBUG -- : \* git_grep/.match(logc))
   end
   

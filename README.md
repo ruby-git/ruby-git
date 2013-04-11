@@ -39,19 +39,20 @@ like:
 
 Here are a bunch of examples of how to use the Ruby/Git package.
 
-First you have to remember to require rubygems if it's not.  Then include the 'git' gem.
+Ruby < 1.9 will require rubygems to be loaded. 
 
 ```ruby
-
     require 'rubygems'
-    require 'git'
+```
 
+Require the 'git' gem.
+```ruby
+    require 'git'
 ```
 
 Here are the operations that need read permission only.
 
 ```ruby
-
     g = Git.open(working_dir, :log => Logger.new(STDOUT))
 
     g.index
@@ -124,13 +125,11 @@ Here are the operations that need read permission only.
     g.config # returns whole config hash
 
     g.tag # returns array of Git::Tag objects
-
 ```
 
 And here are the operations that will need to write to your git repository.
 
 ```ruby
-
       g = Git.init
        Git.init('project')
        Git.init('/home/schacon/proj',
@@ -199,13 +198,11 @@ And here are the operations that will need to write to your git repository.
 
      g.push
      g.push(g.remote('name'))
-
 ```
 
 Some examples of more low-level index and tree operations
 
 ```ruby
-
      g.with_temp_index do
 
        g.read_tree(tree3) # calls self.index.read_tree
@@ -242,9 +239,7 @@ Some examples of more low-level index and tree operations
        # do file work
        g.commit # commits to index
      end
-
 ```
-
 
 ## License
 
