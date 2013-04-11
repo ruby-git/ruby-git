@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ['--charset=UTF-8']
 
   s.files = [
+    'LICENSE',
     'lib/git.rb',
     'lib/git/author.rb',
     'lib/git/base.rb',
