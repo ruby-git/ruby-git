@@ -528,8 +528,8 @@ module Git
 
     def remote_add(name, url, opts = {})
       arr_opts = ['add']
-      arr_opts << '-f' if opts[:with_fetch]
-      arr_opts << '-t' << opts[:with_track] if opts[:with_track]
+      arr_opts << '-f' if opts[:with_fetch] || opts[:fetch]
+      arr_opts << '-t' << opts[:track] if opts[:track]
       arr_opts << '--'
       arr_opts << name
       arr_opts << url
