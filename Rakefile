@@ -3,6 +3,8 @@ require 'rubygems'
 
 require "#{File.expand_path(File.dirname(__FILE__))}/lib/git/version"
 
+task :default => :test
+
 desc "Upload Docs"
 task :upload_docs do |t|
  system('rsync -rv --delete doc/ git.rubyforge.org:/var/www/gforge-projects/git')

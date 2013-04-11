@@ -45,7 +45,7 @@ class TestRemotes < Test::Unit::TestCase
   def test_push
     in_temp_dir do |path|
       loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote')
+      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
         
       r = loc.add_remote('testrem', rem)
 
@@ -63,7 +63,7 @@ class TestRemotes < Test::Unit::TestCase
       end
       assert(!rem.status['test-file1'])
       assert(!rem.status['test-file3'])
-    
+      
       loc.push('testrem')
 
       assert(rem.status['test-file1'])    
