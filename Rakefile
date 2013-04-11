@@ -4,6 +4,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "git"
+    gem.license = "MIT"
     gem.summary = %Q{Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary}
     gem.email = "schacon@gmail.com"
     gem.homepage = "http://github.com/schacon/ruby-git"
