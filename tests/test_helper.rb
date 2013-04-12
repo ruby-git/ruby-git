@@ -43,8 +43,11 @@ class Test::Unit::TestCase
   end
   
   def in_temp_dir(remove_after = true) # :yields: the temporary dir's path
-    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-    tmp_path = File.join("/tmp/", filename)
+    tmp_path = nil
+    while tmp_path.nil? || File.directory?(tmp_path)
+      filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+      tmp_path = File.join("/tmp/", filename)
+    end
     FileUtils.mkdir(tmp_path)
     Dir.chdir tmp_path do
       yield tmp_path
