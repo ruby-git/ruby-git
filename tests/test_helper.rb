@@ -55,11 +55,22 @@ class Test::Unit::TestCase
     FileUtils.rm_r(tmp_path) if remove_after
   end
   
+  def create_file(path, content)
+    File.open(path,'w') do |file|
+      file.puts(content)
+    end
+  end
+
+  def update_file(path, content)
+    create_file(path,content)
+  end
+
+  def delete_file(path)
+    File.delete(path)
+  end
   
   def new_file(name, contents)
-    File.open(name, 'w') do |f|
-      f.puts contents
-    end
+    create_file(name,contents)
   end
 
   def append_file(name, contents)

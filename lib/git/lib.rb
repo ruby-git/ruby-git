@@ -392,14 +392,29 @@ module Git
     def global_config_set(name, value)
       command('config', ['--global', name, value], false)
     end
-          
-    def add(path = '.')
-      arr_opts = ['--']
-      if path.is_a?(Array)
-        arr_opts += path
-      else
-        arr_opts << path
-      end
+         
+    # updates the repository index using the workig dorectory content
+    # 
+    #    lib.add('path/to/file')
+    #    lib.add(['path/to/file1','path/to/file2'])
+    #    lib.add(:all => true)
+    #
+    # options:
+    #   :all => true
+    #
+    # @param [String,Array] paths files paths to be added to the repository
+    # @param [Hash] options
+    def add(paths='.',options={})
+      arr_opts = []
+      
+      arr_opts << '--all' if options[:all]
+
+      arr_opts << '--' 
+
+      arr_opts << paths
+      
+      arr_opts.flatten!
+
       command('add', arr_opts)
     end
     

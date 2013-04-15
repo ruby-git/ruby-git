@@ -243,9 +243,23 @@ module Git
       Git::Diff.new(self, objectish, obj2)
     end
     
-    # adds files from the working directory to the git repository
-    def add(path = '.')
-      self.lib.add(path)
+    # updates the repository index using the workig dorectory content
+    #
+    #    @git.add('path/to/file')
+    #    @git.add(['path/to/file1','path/to/file2'])
+    #    @git.add(:all => true)
+    #
+    # options:
+    #   :all => true
+    #
+    # @param [String,Array] paths files paths to be added (optional, default='.')
+    # @param [Hash] options
+    def add(*args)
+      if args[0].instance_of?(String) || args[0].instance_of?(Array)
+        self.lib.add(args[0],args[1]||{})
+      else
+        self.lib.add('.', args[0]||{})
+      end
     end
 
     # removes file(s) from the git repository
