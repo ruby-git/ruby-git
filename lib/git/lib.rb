@@ -35,9 +35,10 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :remote:: name of remote (rather than 'origin')
-    #  :bare::   no working directory
-    #  :depth::  the number of commits back to pull
+    #  :remote::    name of remote (rather than 'origin')
+    #  :bare::      no working directory
+    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    #  :depth::     the number of commits back to pull
     # 
     # TODO - make this work with SSH password or auth_key
     #
@@ -47,8 +48,9 @@ module Git
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
+      arr_opts << "--recursive" if opts[:recursive]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
-      arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0      
 
       arr_opts << '--'
       arr_opts << repository
