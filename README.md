@@ -140,8 +140,11 @@ And here are the operations that will need to write to your git repository.
      g.config('user.name', 'Scott Chacon')
      g.config('user.email', 'email@email.com')
 
-     g.add('.')
-     g.add([file1, file2])
+     g.add                                   # git add -- "."
+     g.add(:all=>true)                       # git add --all -- "."
+     g.add('file_path')                      # git add -- "file_path"
+     g.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
+
 
      g.remove('file.txt')
      g.remove(['file.txt', 'file2.txt'])
