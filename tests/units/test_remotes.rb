@@ -35,10 +35,12 @@ class TestRemotes < Test::Unit::TestCase
       remote = Git.clone(@wbare, 'remote')
       
       local.add_remote('testremote', remote)
-
-      assert(local.remotes.map{|b| b.name}.include?('testremote'))
- 
       local.remove_remote('testremote')
+      
+      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+
+      local.add_remote('testremote', remote)
+      local.remote('testremote').remove
       
       assert(!local.remotes.map{|b| b.name}.include?('testremote'))
     end
