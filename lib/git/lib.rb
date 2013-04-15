@@ -64,7 +64,7 @@ module Git
     
     
     def log_commits(opts = {})
-      arr_opts = ['--pretty=oneline']
+      arr_opts = ['--pretty=oneline', '--no-color']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
       arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
@@ -78,7 +78,7 @@ module Git
     end
     
     def full_log_commits(opts = {})
-      arr_opts = ['--pretty=raw']
+      arr_opts = ['--pretty=raw', '--no-color']
       arr_opts << "-#{opts[:count]}" if opts[:count]
       arr_opts << "--skip=#{opts[:skip]}" if opts[:skip]
       arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
