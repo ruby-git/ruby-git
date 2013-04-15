@@ -346,6 +346,13 @@ module Git
       Git::Remote.new(self, name)
     end
 
+    # removes a remote from this repository
+    #
+    # @git.remove_remote('scott_git')
+    def remove_remote(name)
+      self.lib.remote_remove(name)
+    end
+
     # returns an array of all Git::Tag objects for this repository
     def tags
       self.lib.tags.map { |r| tag(r) }

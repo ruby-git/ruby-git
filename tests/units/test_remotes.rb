@@ -15,15 +15,33 @@ class TestRemotes < Test::Unit::TestCase
       local.add_remote('testremote', remote)
 
       assert(!local.branches.map{|b| b.full}.include?('testremote/master'))
+      assert(local.remotes.map{|b| b.name}.include?('testremote'))
 
       local.add_remote('testremote2', remote, :fetch => true)
 
       assert(local.branches.map{|b| b.full}.include?('remotes/testremote2/master'))
+      assert(local.remotes.map{|b| b.name}.include?('testremote2'))
 
       local.add_remote('testremote3', remote, :track => 'master')
       
       assert(local.branches.map{|b| b.full}.include?('master')) #We actually a new branch ('test_track') on the remote and track that one intead. 
+      assert(local.remotes.map{|b| b.name}.include?('testremote3'))
     end 
+  end
+
+  def test_remove_remote_remove
+    in_temp_dir do |path|
+      local = Git.clone(@wbare, 'local')
+      remote = Git.clone(@wbare, 'remote')
+      
+      local.add_remote('testremote', remote)
+
+      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+ 
+      local.remove_remote('testremote')
+      
+      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+    end
   end
   
   def test_remote_fun
