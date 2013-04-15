@@ -537,8 +537,6 @@ module Git
       command('remote', arr_opts)
     end
     
-    # this is documented as such, but seems broken for some reason
-    # i'll try to get around it some other way later
     def remote_remove(name)
       command('remote', ['rm', name])
     end
