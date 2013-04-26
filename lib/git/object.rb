@@ -7,7 +7,9 @@ module Git
   class Object
     
     class AbstractObject
-      attr_accessor :objectish, :size, :type, :mode
+      attr_accessor :objectish, :type, :mode
+
+      attr_writer :size
       
       def initialize(base, objectish)
         @base = base

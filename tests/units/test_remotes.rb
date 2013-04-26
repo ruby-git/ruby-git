@@ -86,7 +86,7 @@ class TestRemotes < Test::Unit::TestCase
       loc = Git.clone(@wbare, 'local')
       rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
         
-      r = loc.add_remote('testrem', rem)
+      loc.add_remote('testrem', rem)
 
       loc.chdir do
         new_file('test-file1', 'blahblahblah1')

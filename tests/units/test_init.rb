@@ -77,7 +77,7 @@ class TestInit < Test::Unit::TestCase
   # trying to open a git project using a bare repo - rather than using Git.repo
   def test_git_open_error
     assert_raise ArgumentError do
-      g = Git.open @wbare
+      Git.open @wbare
     end
   end
   

@@ -110,7 +110,7 @@ module Git
       # param [String] name branch full name.
       # return [<Git::Remote,NilClass,String>] an Array containing the remote and branch names. 
       def parse_name(name)
-        if name.match /^(?:remotes)?\/([^\/]+)\/(.+)/
+        if name.match(/^(?:remotes)?\/([^\/]+)\/(.+)/)
           return [Git::Remote.new(@base, $1), $2]
         end
 

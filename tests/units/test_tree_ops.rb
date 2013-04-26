@@ -91,7 +91,8 @@ class TestTreeOps < Test::Unit::TestCase
         tmp = Tempfile.new('tesxt')
         tmppath = tmp.path
         tmp.unlink
-        tr2 = g.with_index(tmppath) do
+        
+        g.with_index(tmppath) do
           g.read_tree('testbranch1', :prefix => 'b1/')
           g.read_tree('testbranch3', :prefix => 'b3/')
           index = g.ls_files
@@ -99,6 +100,7 @@ class TestTreeOps < Test::Unit::TestCase
           assert(index['b3/test-file3'])
           g.commit('hi')
         end
+
         assert(c.commit?)
 
         files = g.ls_files

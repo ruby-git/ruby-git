@@ -363,24 +363,7 @@ module Git
     end
 
     def parse_config(file)
-      hsh = {}
       parse_config_list command_lines('config', ['--list', '--file', file], false)
-      #hsh = {}
-      #file = File.expand_path(file)
-      #if File.file?(file)
-      #  current_section = nil
-      #  File.readlines(file).each do |line|
-      #    if m = /\[(\w+)\]/.match(line)
-      #      current_section = m[1]
-      #    elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
-      #      current_section = "#{m[1]}.#{m[2]}"
-      #    elsif m = /(\w+?) = (.*)/.match(line)
-      #      key = "#{current_section}.#{m[1]}"
-      #      hsh[key] = m[2] 
-      #    end
-      #  end
-      #end
-      #hsh
     end
     
     ## WRITE COMMANDS ##
