@@ -13,6 +13,12 @@ http://github.com/schacon/ruby-git
 You can install Ruby/Git like this:
 
     $ sudo gem install git
+    
+## Code Status
+
+* [![Build Status](https://api.travis-ci.org/schacon/ruby-git.png)](https://travis-ci.org/schacon/ruby-git)
+* [![Code Climate](https://codeclimate.com/github/schacon/ruby-git.png)](https://codeclimate.com/github/schacon/ruby-git)
+* [![Dependencies](https://gemnasium.com/schacon/ruby-git.png?travis)](https://gemnasium.com/schacon/ruby-git)
 
 ## Major Objects
 
