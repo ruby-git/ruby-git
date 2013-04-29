@@ -65,8 +65,12 @@ class TestTreeOps < Test::Unit::TestCase
         tr = nil
         g.with_temp_working do
           tr = g.with_temp_index do
-            assert_raises Git::GitExecuteError do
-              g.add  # add whats in our working tree - should be nothing
+            begin 
+              g.add
+            rescue Exception => e
+              # Adding nothig is now validd on Git 1.7.x
+              # If an error ocurres (Git 1.6.x) it MUST rise Git::GitExecuteError
+              assert_equal(e.class, Git::GitExecuteError)
             end
             g.read_tree('testbranch1', :prefix => 'b1/')
             g.read_tree('testbranch3', :prefix => 'b1/b3/')
@@ -86,8 +90,10 @@ class TestTreeOps < Test::Unit::TestCase
         
         tmp = Tempfile.new('tesxt')
         tmppath = tmp.path
+        tmp.close
         tmp.unlink
-        tr2 = g.with_index(tmppath) do
+        
+        g.with_index(tmppath) do
           g.read_tree('testbranch1', :prefix => 'b1/')
           g.read_tree('testbranch3', :prefix => 'b3/')
           index = g.ls_files
@@ -95,6 +101,7 @@ class TestTreeOps < Test::Unit::TestCase
           assert(index['b3/test-file3'])
           g.commit('hi')
         end
+
         assert(c.commit?)
 
         files = g.ls_files

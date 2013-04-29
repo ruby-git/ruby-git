@@ -115,11 +115,9 @@ module Git
     
     # returns the repository size in bytes
     def repo_size
-      size = 0
       Dir.chdir(repo.path) do
-        (size, dot) = `du -s`.chomp.split
+        return `du -s`.chomp.split.first.to_i
       end
-      size.to_i
     end
     
     #g.config('user.name', 'Scott Chacon') # sets value
@@ -243,9 +241,23 @@ module Git
       Git::Diff.new(self, objectish, obj2)
     end
     
-    # adds files from the working directory to the git repository
-    def add(path = '.')
-      self.lib.add(path)
+    # updates the repository index using the workig dorectory content
+    #
+    #    @git.add('path/to/file')
+    #    @git.add(['path/to/file1','path/to/file2'])
+    #    @git.add(:all => true)
+    #
+    # options:
+    #   :all => true
+    #
+    # @param [String,Array] paths files paths to be added (optional, default='.')
+    # @param [Hash] options
+    def add(*args)
+      if args[0].instance_of?(String) || args[0].instance_of?(Array)
+        self.lib.add(args[0],args[1]||{})
+      else
+        self.lib.add('.', args[0]||{})
+      end
     end
 
     # removes file(s) from the git repository
@@ -337,10 +349,20 @@ module Git
     #  @git.fetch('scotts_git')
     #  @git.merge('scotts_git/master')
     #
+    # Options:
+    #   :fetch => true
+    #   :track => <branch_name>
     def add_remote(name, url, opts = {})
       url = url.repo.path if url.is_a?(Git::Base)
       self.lib.remote_add(name, url, opts)
       Git::Remote.new(self, name)
+    end
+
+    # removes a remote from this repository
+    #
+    # @git.remove_remote('scott_git')
+    def remove_remote(name)
+      self.lib.remote_remove(name)
     end
 
     # returns an array of all Git::Tag objects for this repository
@@ -394,9 +416,17 @@ module Git
     end
     
     def with_temp_index &blk
-      tempfile = Tempfile.new('temp-index')
-      temp_path = tempfile.path
-      tempfile.unlink
+      # Workaround for JRUBY, since they handle the TempFile path different.
+      # MUST be improved to be safer and OS independent. 
+      if RUBY_PLATFORM == 'java'
+        temp_path = "/tmp/temp-index-#{(0...15).map{ ('a'..'z').to_a[rand(26)] }.join}"
+      else
+        tempfile = Tempfile.new('temp-index')
+        temp_path = tempfile.path
+        tempfile.close
+        tempfile.unlink
+      end
+
       with_index(temp_path, &blk)
     end
     
@@ -444,6 +474,7 @@ module Git
     def with_temp_working &blk
       tempfile = Tempfile.new("temp-workdir")
       temp_dir = tempfile.path
+      tempfile.close
       tempfile.unlink
       Dir.mkdir(temp_dir, 0700)
       with_working(temp_dir, &blk)

@@ -6,6 +6,45 @@ class TestRemotes < Test::Unit::TestCase
   def setup
     set_file_paths
   end
+
+  def test_add_remote
+    in_temp_dir do |path|
+      local = Git.clone(@wbare, 'local')
+      remote = Git.clone(@wbare, 'remote')
+
+      local.add_remote('testremote', remote)
+
+      assert(!local.branches.map{|b| b.full}.include?('testremote/master'))
+      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+
+      local.add_remote('testremote2', remote, :fetch => true)
+
+      assert(local.branches.map{|b| b.full}.include?('remotes/testremote2/master'))
+      assert(local.remotes.map{|b| b.name}.include?('testremote2'))
+
+      local.add_remote('testremote3', remote, :track => 'master')
+      
+      assert(local.branches.map{|b| b.full}.include?('master')) #We actually a new branch ('test_track') on the remote and track that one intead. 
+      assert(local.remotes.map{|b| b.name}.include?('testremote3'))
+    end 
+  end
+
+  def test_remove_remote_remove
+    in_temp_dir do |path|
+      local = Git.clone(@wbare, 'local')
+      remote = Git.clone(@wbare, 'remote')
+      
+      local.add_remote('testremote', remote)
+      local.remove_remote('testremote')
+      
+      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+
+      local.add_remote('testremote', remote)
+      local.remote('testremote').remove
+      
+      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+    end
+  end
   
   def test_remote_fun
     in_temp_dir do |path|
@@ -45,9 +84,9 @@ class TestRemotes < Test::Unit::TestCase
   def test_push
     in_temp_dir do |path|
       loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote')
+      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
         
-      r = loc.add_remote('testrem', rem)
+      loc.add_remote('testrem', rem)
 
       loc.chdir do
         new_file('test-file1', 'blahblahblah1')
@@ -63,7 +102,7 @@ class TestRemotes < Test::Unit::TestCase
       end
       assert(!rem.status['test-file1'])
       assert(!rem.status['test-file3'])
-    
+      
       loc.push('testrem')
 
       assert(rem.status['test-file1'])    

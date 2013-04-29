@@ -35,9 +35,10 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :remote:: name of remote (rather than 'origin')
-    #  :bare::   no working directory
-    #  :depth::  the number of commits back to pull
+    #  :remote::    name of remote (rather than 'origin')
+    #  :bare::      no working directory
+    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    #  :depth::     the number of commits back to pull
     # 
     # TODO - make this work with SSH password or auth_key
     #
@@ -47,8 +48,10 @@ module Git
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
+      arr_opts << "--recursive" if opts[:recursive]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << "--config" << opts[:config] if opts[:config]
 
       arr_opts << '--'
       arr_opts << repository
@@ -62,36 +65,29 @@ module Git
     
     ## READ COMMANDS ##
     
+    def log_commits(opts={})
+      arr_opts = log_common_options(opts)
     
-    def log_commits(opts = {})
-      arr_opts = ['--pretty=oneline']
-      arr_opts << "-#{opts[:count]}" if opts[:count]
-      arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
-      arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
-      arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
-      arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
-      arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
-      arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      arr_opts << '--pretty=oneline'
+     
+      arr_opts += log_path_options(opts)
 
       command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
     
-    def full_log_commits(opts = {})
-      arr_opts = ['--pretty=raw']
-      arr_opts << "-#{opts[:count]}" if opts[:count]
+    def full_log_commits(opts={})
+      arr_opts = log_common_options(opts)
+    
+      arr_opts << '--pretty=raw'
       arr_opts << "--skip=#{opts[:skip]}" if opts[:skip]
-      arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
-      arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
-      arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
-      arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
-      arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
-      arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+   
+      arr_opts += log_path_options(opts)
       
       full_log = command_lines('log', arr_opts, true)
       process_commit_data(full_log)
     end
+
+
     
     def revparse(string)
       return string if string =~ /[A-Fa-f0-9]{40}/  # passing in a sha - just no-op it
@@ -271,26 +267,12 @@ module Git
 
     # compares the index and the working directory
     def diff_files
-      hsh = {}
-      command_lines('diff-files').each do |line|
-        (info, file) = line.split("\t")
-        (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
-        hsh[file] = {:path => file, :mode_file => mode_src.to_s[1, 7], :mode_index => mode_dest, 
-                      :sha_file => sha_src, :sha_index => sha_dest, :type => type}
-      end
-      hsh
+      diff_as_hash('diff-files')
     end
     
     # compares the index and the repository
     def diff_index(treeish)
-      hsh = {}
-      command_lines('diff-index', treeish).each do |line|
-        (info, file) = line.split("\t")
-        (mode_src, mode_dest, sha_src, sha_dest, type) = info.split
-        hsh[file] = {:path => file, :mode_repo => mode_src.to_s[1, 7], :mode_index => mode_dest, 
-                      :sha_repo => sha_src, :sha_index => sha_dest, :type => type}
-      end
-      hsh
+      diff_as_hash('diff-index', treeish)
     end
             
     def ls_files(location=nil)
@@ -321,7 +303,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do
+      do_get = lambda do |path|
         command('config', ['--get', name])
       end
 
@@ -362,24 +344,7 @@ module Git
     end
 
     def parse_config(file)
-      hsh = {}
       parse_config_list command_lines('config', ['--list', '--file', file], false)
-      #hsh = {}
-      #file = File.expand_path(file)
-      #if File.file?(file)
-      #  current_section = nil
-      #  File.readlines(file).each do |line|
-      #    if m = /\[(\w+)\]/.match(line)
-      #      current_section = m[1]
-      #    elsif m = /\[(\w+?) "(.*?)"\]/.match(line)
-      #      current_section = "#{m[1]}.#{m[2]}"
-      #    elsif m = /(\w+?) = (.*)/.match(line)
-      #      key = "#{current_section}.#{m[1]}"
-      #      hsh[key] = m[2] 
-      #    end
-      #  end
-      #end
-      #hsh
     end
     
     ## WRITE COMMANDS ##
@@ -391,14 +356,29 @@ module Git
     def global_config_set(name, value)
       command('config', ['--global', name, value], false)
     end
-          
-    def add(path = '.')
-      arr_opts = ['--']
-      if path.is_a?(Array)
-        arr_opts += path
-      else
-        arr_opts << path
-      end
+         
+    # updates the repository index using the workig dorectory content
+    # 
+    #    lib.add('path/to/file')
+    #    lib.add(['path/to/file1','path/to/file2'])
+    #    lib.add(:all => true)
+    #
+    # options:
+    #   :all => true
+    #
+    # @param [String,Array] paths files paths to be added to the repository
+    # @param [Hash] options
+    def add(paths='.',options={})
+      arr_opts = []
+      
+      arr_opts << '--all' if options[:all]
+
+      arr_opts << '--' 
+
+      arr_opts << paths
+      
+      arr_opts.flatten!
+
       command('add', arr_opts)
     end
     
@@ -527,7 +507,8 @@ module Git
 
     def remote_add(name, url, opts = {})
       arr_opts = ['add']
-      arr_opts << '-f' if opts[:with_fetch]
+      arr_opts << '-f' if opts[:with_fetch] || opts[:fetch]
+      arr_opts << '-t' << opts[:track] if opts[:track]
       arr_opts << '--'
       arr_opts << name
       arr_opts << url
@@ -535,10 +516,8 @@ module Git
       command('remote', arr_opts)
     end
     
-    # this is documented as such, but seems broken for some reason
-    # i'll try to get around it some other way later
     def remote_remove(name)
-      command('remote', ['rm', '--', name])
+      command('remote', ['rm', name])
     end
     
     def remotes
@@ -700,6 +679,60 @@ module Git
         raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
       end
       out
+    end
+
+    # Takes the diff command line output (as Array) and parse it into a Hash
+    #
+    # @param [String] diff_command the diff commadn to be used
+    # @param [Array] opts the diff options to be used
+    # @return [Hash] the diff as Hash
+    def diff_as_hash(diff_command, opts=[])
+      command_lines(diff_command, opts).inject({}) do |memo, line|
+        info, file = line.split("\t")
+        mode_src, mode_dest, sha_src, sha_dest, type = info.split
+        
+        memo[file] = {
+          :mode_index => mode_dest, 
+          :mode_repo => mode_src.to_s[1, 7], 
+          :path => file, 
+          :sha_repo => sha_src, 
+          :sha_index => sha_dest, 
+          :type => type
+        }
+
+        memo
+      end
+    end
+    
+    # Returns an array holding the common options for the log commands 
+    #
+    # @param [Hash] opts the given options
+    # @return [Array] the set of common options that the log command will use
+    def log_common_options(opts)
+      arr_opts = []
+
+      arr_opts << "-#{opts[:count]}" if opts[:count]
+      arr_opts << "--no-color"
+      arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
+      arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
+      arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
+      arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
+      arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
+
+      arr_opts
+    end
+    
+    # Retrurns an array holding path options for the log commands
+    #
+    # @param [Hash] opts the given options
+    # @return [Array] the set of path options that the log command will use
+    def log_path_options(opts)
+      arr_opts = []
+     
+      arr_opts << opts[:object] if opts[:object].is_a? String
+      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+
+      arr_opts
     end
     
     def run_command(git_cmd, &block)

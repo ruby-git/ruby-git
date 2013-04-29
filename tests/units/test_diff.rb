@@ -34,7 +34,7 @@ class TestDiff < Test::Unit::TestCase
   
   def test_diff_objects
     d = @git.diff('gitsearch1', @git.gtree('v2.5'))
-    assert(3, d.size)
+    assert_equal(3, d.size)
   end
   
   def test_object_diff

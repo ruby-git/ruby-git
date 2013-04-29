@@ -64,11 +64,20 @@ class TestInit < Test::Unit::TestCase
       assert_nil(g.dir)
     end
   end
+
+  def test_git_clone_config
+    in_temp_dir do |path|     
+      g = Git.clone(@wbare, 'config.git', :config => "receive.denyCurrentBranch=ignore")
+      assert_equal('ignore', g.config['receive.denycurrentbranch'])
+      assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert(g.dir)
+    end
+  end
   
   # trying to open a git project using a bare repo - rather than using Git.repo
   def test_git_open_error
     assert_raise ArgumentError do
-      g = Git.open @wbare
+      Git.open @wbare
     end
   end
   

@@ -1,22 +1,17 @@
+require 'git/path'
+
 module Git
+
   class Branch < Path
     
     attr_accessor :full, :remote, :name
     
     def initialize(base, name)
-      @remote = nil
       @full = name
       @base = base
       @gcommit = nil
       @stashes = nil
-      
-      parts = name.split('/')
-      if parts[1]
-        @remote = Git::Remote.new(@base, parts[0])
-        @name = parts[1]
-      else
-        @name = parts[0]
-      end
+      @remote, @name = parse_name(name)
     end
     
     def gcommit
@@ -100,5 +95,28 @@ module Git
         @base.lib.branch_current == @name
       end
     
+      # Given a full branch name return an Array containing the remote and branch names.
+      #
+      # Removes 'remotes' from the beggining of the name (if present).
+      # Takes the second part (splittign by '/') as the remote name.
+      # Takes the rest as the repo name (can also hold one or more '/').
+      #
+      # Example:
+      #   parse_name('master') #=> [nil, 'master']
+      #   parse_name('origin/master') #=> ['origin', 'master']
+      #   parse_name('remotes/origin/master') #=> ['origin', 'master']
+      #   parse_name('origin/master/v2') #=> ['origin', 'master/v2'] 
+      #
+      # param [String] name branch full name.
+      # return [<Git::Remote,NilClass,String>] an Array containing the remote and branch names. 
+      def parse_name(name)
+        if name.match(/^(?:remotes)?\/([^\/]+)\/(.+)/)
+          return [Git::Remote.new(@base, $1), $2]
+        end
+
+        return [nil, name]
+      end
+    
   end
+  
 end

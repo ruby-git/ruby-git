@@ -1,7 +1,8 @@
+*.gem
 *.kpf
 *.sw?
 .DS_Store
 coverage
-rdoc
 pkg
-
+rdoc
+Gemfile.lock
