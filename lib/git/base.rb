@@ -264,6 +264,13 @@ module Git
       self.lib.reset(commitish, opts)
     end
 
+    # reverts the working directory to the provided commitish.
+    # Accepts a range, such as comittish..HEAD
+    # Note: automatically adds --no-edit flag.
+    def revert(commitish = nil, opts = {})
+      self.lib.revert(commitish, opts)
+    end
+
     # commits all pending changes in the index file to the git repository
     # 
     # options:

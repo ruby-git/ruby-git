@@ -429,7 +429,13 @@ module Git
       arr_opts << commit if commit
       command('reset', arr_opts)
     end
-    
+
+    def revert(commit_or_range, opts = {})
+      arr_opts = ["--no-edit"]
+      arr_opts << commit_or_range if commit_or_range
+      command('revert', arr_opts)
+    end
+
     def apply(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
