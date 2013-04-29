@@ -37,7 +37,31 @@ class TestIndexOps < Test::Unit::TestCase
       end
     end
   end
-  
+
+  def test_clean
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'clean_me')
+      Dir.chdir('clean_me') do
+        new_file('test-file', 'blahblahbal')
+        g.add
+        g.commit("first commit")
+
+        new_file('file-to-clean', 'blablahbla')
+        FileUtils.mkdir_p("dir_to_clean")
+
+        Dir.chdir('dir_to_clean') do
+          new_file('clean-me-too', 'blablahbla')
+        end
+
+        assert(File.exists?('file-to-clean'))
+        assert(File.exists?('dir_to_clean'))
+        g.clean
+        assert(!File.exists?('file-to-clean'))
+        assert(!File.exists?('dir_to_clean'))
+      end
+    end
+  end
+
   def test_add_array
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'new')
