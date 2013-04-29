@@ -90,6 +90,7 @@ class TestTreeOps < Test::Unit::TestCase
         
         tmp = Tempfile.new('tesxt')
         tmppath = tmp.path
+        tmp.close
         tmp.unlink
         
         g.with_index(tmppath) do

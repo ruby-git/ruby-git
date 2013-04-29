@@ -416,9 +416,17 @@ module Git
     end
     
     def with_temp_index &blk
-      tempfile = Tempfile.new('temp-index')
-      temp_path = tempfile.path
-      tempfile.unlink
+      # Workaround for JRUBY, since they handle the TempFile path different.
+      # MUST be improved to be safer and OS independent. 
+      if RUBY_PLATFORM == 'java'
+        temp_path = "/tmp/temp-index-#{(0...15).map{ ('a'..'z').to_a[rand(26)] }.join}"
+      else
+        tempfile = Tempfile.new('temp-index')
+        temp_path = tempfile.path
+        tempfile.close
+        tempfile.unlink
+      end
+
       with_index(temp_path, &blk)
     end
     
@@ -466,6 +474,7 @@ module Git
     def with_temp_working &blk
       tempfile = Tempfile.new("temp-workdir")
       temp_dir = tempfile.path
+      tempfile.close
       tempfile.unlink
       Dir.mkdir(temp_dir, 0700)
       with_working(temp_dir, &blk)
