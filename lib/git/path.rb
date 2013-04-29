@@ -7,7 +7,7 @@ module Git
       if !check_path || File.exists?(path)
         @path = File.expand_path(path)
       else
-        raise ArgumentError, "path does not exist", File.expand_path(path)
+        raise ArgumentError, 'path does not exist', [File.expand_path(path)]
       end
     end
     
