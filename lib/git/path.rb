@@ -24,6 +24,6 @@ module Git
       @path
     end
     
-  end
+ end
 
 end
