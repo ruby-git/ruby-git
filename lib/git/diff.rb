@@ -6,8 +6,8 @@ module Git
     
     def initialize(base, from = nil, to = nil)
       @base = base
-      @from = from.to_s
-      @to = to.to_s
+      @from = from && from.to_s
+      @to = to && to.to_s
 
       @path = nil
       @full_diff = nil
