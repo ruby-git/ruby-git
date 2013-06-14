@@ -54,6 +54,15 @@ module Git
       }
 
       opts.delete(:working_directory) if opts[:bare]
+      
+      # Submodules have a .git *file* not a .git folder.
+      # This file's contents point to the location of
+      # where the git refs are held (In the parent repo)
+      if File.file?('.git')
+        git_file = File.open('.git').read[8..-1].strip
+        opts[:repository] = git_file
+        opts[:index] = git_file + '/index'
+      end
 
       Git::Lib.new(opts).init(init_opts)
        
