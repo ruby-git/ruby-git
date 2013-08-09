@@ -1,17 +1,18 @@
 module Git
- 
+
  class Path
-    
+
     attr_accessor :path
-    
+
     def initialize(path, check_path=true)
-      if check_path && !File.exists?(path)
-        raise ArgumentError, 'path does not exist', [File.expand_path(path)]
+      expanded_path = File.expand_path(path)
+      if check_path && !File.exists?(expanded_path)
+        raise ArgumentError, 'path does not exist', [expanded_path]
       end
-      
-      @path = File.expand_path(path)
+
+      @path = expanded_path
     end
-    
+
     def readable?
       File.readable?(@path)
     end
@@ -19,11 +20,11 @@ module Git
     def writable?
       File.writable?(@path)
     end
-    
+
     def to_s
       @path
     end
-    
+
   end
 
 end
