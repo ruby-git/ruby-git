@@ -420,7 +420,13 @@ module Git
       arr_opts << commit if commit
       command('reset', arr_opts)
     end
-    
+
+    def clean(opts = {})
+      arr_opts = ["--force"] # Some configurations require a --force
+      arr_opts << ["-d"] # Remove untracked directories in addition to untracked files.
+      command('clean', arr_opts)
+    end
+
     def apply(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
