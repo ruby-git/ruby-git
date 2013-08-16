@@ -280,6 +280,12 @@ module Git
       self.lib.reset(commitish, opts)
     end
 
+
+    # cleans the working directory, removing directories, too.
+    def clean(opts = {})
+      self.lib.clean(opts)
+    end
+
     # commits all pending changes in the index file to the git repository
     # 
     # options:
