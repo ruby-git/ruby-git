@@ -16,19 +16,23 @@ module Git
     # initializes a git repository
     #
     # options:
+    #  :bare
+    #  :index
     #  :repository
-    #  :index_file
     #
     def self.init(working_dir, opts = {})
-      opts = {
-        :working_directory => working_dir,
-        :repository => File.join(working_dir, '.git')
-      }.merge(opts)
+      opts[:working_directory] = working_dir if !opts[:working_directory] 
+      opts[:repository] = File.join(opts[:working_directory], '.git') if !opts[:repository]
       
       FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
       
-      # run git_init there
-      Git::Lib.new(opts).init
+      init_opts = {
+        bare: opts[:bare]
+      }
+
+      opts.delete(:working_directory) if opts[:bare]
+
+      Git::Lib.new(opts).init(init_opts)
        
       self.new(opts)
     end

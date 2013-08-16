@@ -32,9 +32,19 @@ class TestInit < Test::Unit::TestCase
   #		  :index_file => '/tmp/index'} )
   def test_git_init
     in_temp_dir do |path|
-      Git.init
+      repo = Git.init(path)
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exists?(File.join(path, '.git', 'config')))
+      assert_equal('false', repo.config('core.bare'))
+    end
+  end
+
+  def test_git_init_bare
+    in_temp_dir do |path|
+      repo = Git.init(path, bare: true)
+      assert(File.directory?(File.join(path, '.git')))
+      assert(File.exists?(File.join(path, '.git', 'config')))
+      assert_equal('true', repo.config('core.bare'))
     end
   end
   

@@ -24,9 +24,18 @@ module Git
       end
       @logger = logger
     end
-    
-    def init
-      command('init')
+
+    # creates or reinitializes the repository
+    #
+    # options:
+    #   :bare
+    #   :working_directory
+    #
+    def init(opts={})
+      arr_opts = []
+      arr_opts << '--bare' if opts[:bare]
+
+      command('init', arr_opts, false)
     end
     
     # tries to clone the given repo
@@ -659,11 +668,13 @@ module Git
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
       ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
       ENV['GIT_WORK_TREE'] = @git_work_dir
+      ENV['GIT_INDEX_FILE'] = @git_index_file
+
       path = @git_work_dir || @git_dir || @path
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
+
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
