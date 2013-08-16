@@ -63,6 +63,15 @@ class TestLog < Test::Unit::TestCase
     l = @git.log.between('v2.5', 'test').path('example.txt')
     assert_equal(1, l.size)
   end
+
+  def test_get_log_path
+    log = @git.log.path('example.txt')
+    assert_equal(30, log.size)
+    log = @git.log.path('example*')
+    assert_equal(30, log.size)
+    log = @git.log.path(['example.txt','scott/text.txt'])
+    assert_equal(30, log.size)
+  end
   
   def test_log_file_noexist
     assert_raise Git::GitExecuteError do
