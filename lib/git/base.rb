@@ -281,7 +281,12 @@ module Git
     end
 
 
-    # cleans the working directory, removing directories, too.
+    # cleans the working directory
+    #
+    # options:
+    #  :force
+    #  :d
+    #
     def clean(opts = {})
       self.lib.clean(opts)
     end

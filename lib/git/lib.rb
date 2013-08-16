@@ -422,8 +422,10 @@ module Git
     end
 
     def clean(opts = {})
-      arr_opts = ["--force"] # Some configurations require a --force
-      arr_opts << ["-d"] # Remove untracked directories in addition to untracked files.
+      arr_opts = [] 
+      arr_opts << '--force' if opts[:force]
+      arr_opts << '-d' if opts[:d]
+      
       command('clean', arr_opts)
     end
 
