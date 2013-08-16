@@ -22,6 +22,15 @@ module Git
         @git_index_file = base[:index] 
         @git_work_dir = base[:working_directory]
       end
+      if not @git_dir.nil? and not File.directory?(@git_dir)
+        File.open(@git_dir).each do |line|
+          /^gitdir: (.*)$/ =~ line
+          if not $~.nil? and $~.length == 2
+            @git_dir = $~[1]
+            break
+          end
+        end
+      end
       @logger = logger
     end
     
