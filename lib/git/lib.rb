@@ -544,7 +544,7 @@ module Git
       command('push', ['--tags', remote]) if tags
     end
 
-		def pull(remote = 'origin', branch = 'master')
+		def pull(remote='origin', branch='master')
 			command('pull', [remote, branch])
 		end
 

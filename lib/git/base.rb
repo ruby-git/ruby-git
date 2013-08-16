@@ -331,8 +331,13 @@ module Git
       self.lib.conflicts(&block)
     end
 
-    # fetches a branch from a remote and merges it into the current working branch
-    def pull(remote = 'origin', branch = 'master')
+    # pulls the given branch from the given remote into the current branch
+    #
+    #  @git.pull                          # pulls from origin/master
+    #  @git.pull('upstream')              # pulls from upstream/master
+    #  @git.pull('upstream', 'develope')  # pulls from upstream/develop
+    #
+    def pull(remote='origin', branch='master')
 			self.lib.pull(remote, branch)
     end
     
