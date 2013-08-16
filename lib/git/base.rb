@@ -27,7 +27,7 @@ module Git
       FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
       
       init_opts = {
-        bare: opts[:bare]
+        :bare => opts[:bare]
       }
 
       opts.delete(:working_directory) if opts[:bare]

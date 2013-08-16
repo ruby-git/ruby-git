@@ -56,14 +56,14 @@ class TestIndexOps < Test::Unit::TestCase
         assert(File.exists?('file-to-clean'))
         assert(File.exists?('dir_to_clean'))
         
-        g.clean(force:true)
+        g.clean(:force => true)
         
         assert(!File.exists?('file-to-clean'))
         assert(File.exists?('dir_to_clean'))
         
         new_file('file-to-clean', 'blablahbla')
         
-        g.clean(force:true, d:true)
+        g.clean(:force => true, :d => true)
 
         assert(!File.exists?('file-to-clean'))
         assert(!File.exists?('dir_to_clean'))
