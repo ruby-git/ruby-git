@@ -365,6 +365,7 @@ module Git
     #
     # options:
     #   :all => true
+    #   :force => true
     #
     # @param [String,Array] paths files paths to be added to the repository
     # @param [Hash] options
@@ -372,6 +373,7 @@ module Git
       arr_opts = []
       
       arr_opts << '--all' if options[:all]
+      arr_opts << '--force' if options[:force]
 
       arr_opts << '--' 
 
