@@ -280,7 +280,6 @@ module Git
       self.lib.reset(commitish, opts)
     end
 
-
     # cleans the working directory
     #
     # options:
@@ -289,6 +288,16 @@ module Git
     #
     def clean(opts = {})
       self.lib.clean(opts)
+    end
+
+    # reverts the working directory to the provided commitish.
+    # Accepts a range, such as comittish..HEAD
+    #
+    # options:
+    #   :no_edit
+    #
+    def revert(commitish = nil, opts = {})
+      self.lib.revert(commitish, opts)
     end
 
     # commits all pending changes in the index file to the git repository

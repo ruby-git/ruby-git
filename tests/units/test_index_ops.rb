@@ -70,6 +70,28 @@ class TestIndexOps < Test::Unit::TestCase
       end
     end
   end
+  
+  def test_revert
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'new')
+      Dir.chdir('new') do
+        new_file('test-file', 'blahblahbal')
+        g.add
+        g.commit("first commit")
+        first_commit = g.gcommit('HEAD')
+
+        new_file('test-file2', 'blablahbla')
+        g.add
+        g.commit("second-commit")
+        second_commit = g.gcommit('HEAD')
+
+        commits = g.log(1e4).count
+        g.revert(first_commit.sha)
+        assert_equal(commits + 1, g.log(1e4).count)
+        assert(!File.exists?('test-file2'))
+      end
+    end
+  end
 
   def test_add_array
     in_temp_dir do |path|

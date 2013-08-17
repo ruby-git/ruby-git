@@ -428,6 +428,13 @@ module Git
       
       command('clean', arr_opts)
     end
+    
+    def revert(commitish, opts = {})
+      arr_opts = []
+      arr_opts << '--no-edit' if opts[:no_edit] || opts[:'no-edit']
+      arr_opts << commitish
+      command('revert', arr_opts)
+    end
 
     def apply(patch_file)
       arr_opts = []
