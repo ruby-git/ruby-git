@@ -1,6 +1,6 @@
 * more documentation
 
-* git revert, rebase
+* git rebase
 
 * diff additions
   - annotate, blame
@@ -13,13 +13,11 @@
 * email/patch integration
   - request-pull(email_address), git-am, git-apply
   
-  
 * compatible with git 1.4
 
 * More Error Examples
 
 * More Git::Status methods
-
 
 * Speed up through pure ruby
 

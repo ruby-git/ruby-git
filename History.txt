@@ -1,3 +1,19 @@
+== 1.2.6
+
+* Ruby 1.9.X/2.0 fully supported
+* JRuby 1.8/1.9 support
+* Rubinius support
+* Git.clone - supporting --recursive and --config
+* Git.log - supporting last and [] over the results
+* Git.add_remote - supporting -f and -t
+* Git.add - supporting --fore
+* Git.init - supporting --bare
+* Git.commit - supporting --all and --amend
+* Added Git.remote_remote, Git.revert and Git.clean 
+* Added Bundler to the formula
+* Travis configuration 
+* Licence included with the gem
+
 == 1.0.4
 
 * added camping/gitweb.rb frontend
