@@ -5,11 +5,13 @@ module Git
     attr_accessor :path
     
     def initialize(path, check_path=true)
+      path = File.expand_path(path)
+      
       if check_path && !File.exists?(path)
-        raise ArgumentError, 'path does not exist', [File.expand_path(path)]
+        raise ArgumentError, 'path does not exist', [path]
       end
       
-      @path = File.expand_path(path)
+      @path = path
     end
     
     def readable?
