@@ -78,4 +78,31 @@ class TestBase < Test::Unit::TestCase
     end
   end
 
+  def test_commit
+    in_temp_dir do |path|
+      git = Git.clone(@wdir, 'test_commit')
+      
+      create_file('test_commit/test_file_1', 'content tets_file_1')
+      create_file('test_commit/test_file_2', 'content test_file_2')
+
+      git.add('test_file_1')
+      git.add('test_file_2')
+
+      base_commit_id = git.log[0].objectish
+
+      git.commit("Test Commit")
+
+      original_commit_id = git.log[0].objectish
+
+      create_file('test_commit/test_file_3', 'content test_file_3')
+      
+      git.add('test_file_3')
+
+      git.commit(nil, :amend => true)
+
+      assert(git.log[0].objectish != original_commit_id)
+      assert(git.log[1].objectish == base_commit_id)
+    end
+  end
+
 end

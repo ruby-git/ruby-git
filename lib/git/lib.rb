@@ -407,10 +407,13 @@ module Git
     end
 
     def commit(message, opts = {})
-      arr_opts = ['-m', message]
-      arr_opts << '-a' if opts[:add_all]
+      arr_opts = []
+      arr_opts << "--message=#{message}" if message
+      arr_opts << '--amend' << '--no-edit' if opts[:amend]
+      arr_opts << '--all' if opts[:add_all] || opts[:all] 
       arr_opts << '--allow-empty' if opts[:allow_empty]
-      arr_opts << "--author" << opts[:author] if opts[:author]
+      arr_opts << "--author=#{opts[:author]}" if opts[:author]
+      
       command('commit', arr_opts)
     end
 

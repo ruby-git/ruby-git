@@ -94,6 +94,12 @@ module Git
       check_log
       @commits.last rescue nil
     end
+
+    def [](index)
+      check_log
+      @commits[index] rescue nil
+    end
+
     
     private 
     

@@ -303,9 +303,11 @@ module Git
     # commits all pending changes in the index file to the git repository
     # 
     # options:
-    #   :add_all
+    #   :all
     #   :allow_empty
+    #   :amend
     #   :author
+    #
     def commit(message, opts = {})
       self.lib.commit(message, opts)
     end
