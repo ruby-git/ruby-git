@@ -430,9 +430,13 @@ module Git
     end
     
     def revert(commitish, opts = {})
+      # Forcing --no-edit as default since it's not an interactive session.
+      opts = {:'no-edit' => true}.merge(opts)
+      
       arr_opts = []
-      arr_opts << '--no-edit' if opts[:no_edit] || opts[:'no-edit']
+      arr_opts << '--no-edit' if opts[:'no-edit'] 
       arr_opts << commitish
+
       command('revert', arr_opts)
     end
 

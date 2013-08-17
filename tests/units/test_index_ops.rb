@@ -83,7 +83,7 @@ class TestIndexOps < Test::Unit::TestCase
         new_file('test-file2', 'blablahbla')
         g.add
         g.commit("second-commit")
-        second_commit = g.gcommit('HEAD')
+        g.gcommit('HEAD')
 
         commits = g.log(1e4).count
         g.revert(first_commit.sha)
