@@ -30,6 +30,7 @@ module Git
         :bare => opts[:bare]
       }
 
+      opts[:repository] = opts[:working_directory] if opts[:bare]
       opts.delete(:working_directory) if opts[:bare]
 
       Git::Lib.new(opts).init(init_opts)
