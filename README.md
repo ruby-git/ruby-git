@@ -17,8 +17,8 @@ You can install Ruby/Git like this:
 ## Code Status
 
 * [![Build Status](https://api.travis-ci.org/schacon/ruby-git.png)](https://travis-ci.org/schacon/ruby-git)
-* [![Gem Version](https://badge.fury.io/rb/git.png)](http://badge.fury.io/rb/git)
 * [![Code Climate](https://codeclimate.com/github/schacon/ruby-git.png)](https://codeclimate.com/github/schacon/ruby-git)
+* [![Gem Version](https://badge.fury.io/rb/git.png)](http://badge.fury.io/rb/git)
 * [![Dependencies](https://gemnasium.com/schacon/ruby-git.png?travis)](https://gemnasium.com/schacon/ruby-git)
 
 ## Major Objects
