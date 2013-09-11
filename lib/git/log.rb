@@ -18,6 +18,7 @@ module Git
       @skip = nil
       @until = nil
       @between = nil
+      @cherry = nil
     end
 
     def object(objectish)
@@ -65,6 +66,12 @@ module Git
     def between(sha1, sha2 = nil)
       dirty_log
       @between = [sha1, sha2]
+      return self
+    end
+
+    def cherry
+      dirty_log
+      @cherry = true
       return self
     end
     
@@ -119,7 +126,7 @@ module Git
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
                                     :path_limiter => @path, :since => @since, 
                                     :author => @author, :grep => @grep, :skip => @skip,
-                                    :until => @until, :between => @between)
+                                    :until => @until, :between => @between, :cherry => @cherry)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       
