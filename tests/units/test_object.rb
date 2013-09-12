@@ -48,7 +48,12 @@ class TestObject < Test::Unit::TestCase
     assert_equal('tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', o.contents_array[0])
     assert_equal('parent 546bec6f8872efa41d5d97a369f669165ecda0de', o.contents_array[1])
   end
-  
+ 
+  def test_commit_multiline
+    o = @git.gcommit('3277d9f9880e662bf701c7f42a50db6e5053b001')
+    assert_equal("test-empty-lines\n\n1\n2\n\n3\n4", o.message) 
+  end
+ 
   def test_object_to_s
     assert_equal('1cc8667014381e2788a94777532a788307f38d26', @commit.sha)
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @tree.sha)
