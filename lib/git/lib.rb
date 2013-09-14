@@ -323,6 +323,10 @@ module Git
       end
     end
 
+    def config_fetch_bare_to_update
+      command('config', ['remote.origin.fetch','refs/heads/*:refs/heads/*'])
+    end
+    
     def global_config_get(name)
       command('config', ['--global', '--get', name], false)
     end
