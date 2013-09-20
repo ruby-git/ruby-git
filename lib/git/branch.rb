@@ -72,6 +72,13 @@ module Git
         @base.merge(@name)
       end
     end
+
+    def rebase(branch = 'master')
+      in_branch do 
+        r = @base.rebase(branch)
+        false
+      end
+    end
     
     def update_ref(commit)
       @base.lib.update_ref(@full, commit)

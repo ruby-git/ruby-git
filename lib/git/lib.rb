@@ -519,6 +519,12 @@ module Git
       command('merge', arr_opts)
     end
 
+    def rebase(branch)      
+      arr_opts = []
+      arr_opts += [branch]
+      command('rebase', arr_opts)
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
