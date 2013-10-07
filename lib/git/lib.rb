@@ -711,7 +711,7 @@ module Git
         @logger.debug(out)
       end
             
-      if $?.exitstatus > 0
+      if $?.exitstatus.to_i > 0
         if $?.exitstatus == 1 && out == ''
           return ''
         end
