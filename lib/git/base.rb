@@ -195,7 +195,7 @@ module Git
 
     # returns +true+ if the branch exists remotely
     def is_remote_branch?(branch)
-      branch_names = self.branches.local.map {|b| b.name}
+      branch_names = self.branches.remote.map {|b| b.name}
       branch_names.include?(branch)
     end
 
