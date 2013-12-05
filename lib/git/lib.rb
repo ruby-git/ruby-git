@@ -575,9 +575,9 @@ module Git
       command('push', ['--tags', remote]) if tags
     end
 
-		def pull(remote='origin', branch='master')
-			command('pull', [remote, branch])
-		end
+    def pull(remote='origin', branch='master')
+      command('pull', [remote, branch])
+    end
 
     def tag_sha(tag_name)
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
