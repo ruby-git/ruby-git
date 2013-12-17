@@ -131,7 +131,7 @@ Here are the operations that need read permission only.
     g.config('user.name')  # returns 'Scott Chacon'
     g.config # returns whole config hash
 
-    g.tag # returns array of Git::Tag objects
+    g.tags # returns array of Git::Tag objects
 ```
 
 And here are the operations that will need to write to your git repository.
