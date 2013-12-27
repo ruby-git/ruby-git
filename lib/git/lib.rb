@@ -689,7 +689,7 @@ module Git
       s = "rev-list "
       s+= branch
       s+= " --count"
-      return command(s)
+      return command(s).to_i
     end
 
     private
