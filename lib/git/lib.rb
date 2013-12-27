@@ -684,7 +684,13 @@ module Git
              (current_version[2] ? current_version[2] >= required_version[2] : true) &&
              (current_version[3] ? current_version[3] >= required_version[3] : true)
     end
-
+    
+    def count_commits branch
+      s = "rev-list "
+      s+= branch
+      s+= " --count"
+      return command(s)
+    end
 
     private
     
