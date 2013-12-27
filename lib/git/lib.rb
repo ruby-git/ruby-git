@@ -689,7 +689,11 @@ module Git
     private
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
-      command(cmd, opts, chdir).split("\n")
+      begin
+	command(cmd, opts, chdir).split("\n")
+      rescue
+	command(cmd, opts, chdir).encode("UTF-16BE", :invalid=>:replace, :replace=>"?").encode("UTF-8").split("\n")
+      end
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
