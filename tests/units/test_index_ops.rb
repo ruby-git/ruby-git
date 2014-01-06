@@ -43,6 +43,9 @@ class TestIndexOps < Test::Unit::TestCase
       g = Git.clone(@wbare, 'clean_me')
       Dir.chdir('clean_me') do
         new_file('test-file', 'blahblahbal')
+        new_file('ignored_file', 'ignored file contents')
+        new_file('.gitignore', 'ignored_file')
+
         g.add
         g.commit("first commit")
 
@@ -55,18 +58,24 @@ class TestIndexOps < Test::Unit::TestCase
 
         assert(File.exists?('file-to-clean'))
         assert(File.exists?('dir_to_clean'))
-        
+        assert(File.exists?('ignored_file'))
+
         g.clean(:force => true)
         
         assert(!File.exists?('file-to-clean'))
         assert(File.exists?('dir_to_clean'))
-        
+        assert(File.exists?('ignored_file'))
+
         new_file('file-to-clean', 'blablahbla')
         
         g.clean(:force => true, :d => true)
 
         assert(!File.exists?('file-to-clean'))
         assert(!File.exists?('dir_to_clean'))
+        assert(File.exists?('ignored_file'))
+
+        g.clean(:force => true, :x => true)
+        assert(!File.exists?('ignored_file'))
       end
     end
   end
