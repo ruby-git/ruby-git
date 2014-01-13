@@ -61,7 +61,9 @@ class TestBranch < Test::Unit::TestCase
 
         new_file('test-file1', 'blahblahblah1')
         new_file('test-file2', 'blahblahblah2')
+        new_file('.test-dot-file1', 'blahblahblahdot1')
         assert(g.status.untracked.assoc('test-file1'))
+        assert(g.status.untracked.assoc('.test-dot-file1'))
         
         g.add(['test-file1', 'test-file2'])
         assert(!g.status.untracked.assoc('test-file1'))
