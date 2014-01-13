@@ -428,7 +428,8 @@ module Git
       arr_opts = [] 
       arr_opts << '--force' if opts[:force]
       arr_opts << '-d' if opts[:d]
-      
+      arr_opts << '-x' if opts[:x]
+
       command('clean', arr_opts)
     end
     
