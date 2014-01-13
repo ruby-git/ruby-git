@@ -341,8 +341,11 @@ module Git
     #
     #  @git.config('remote.remote-name.push', 'refs/heads/master:refs/heads/master')
     #
-    def push(remote = 'origin', branch = 'master', tags = false)
-      self.lib.push(remote, branch, tags)
+    def push(remote = 'origin', branch = 'master', opts = {})
+      # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
+      opts = {tags: opts} if [true, false].include?(opts)
+
+      self.lib.push(remote, branch, opts)
     end
     
     # merges one or more branches into the current working branch

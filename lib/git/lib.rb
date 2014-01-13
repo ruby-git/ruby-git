@@ -571,9 +571,16 @@ module Git
       command('fetch', remote)
     end
     
-    def push(remote, branch = 'master', tags = false)
-      command('push', [remote, branch])
-      command('push', ['--tags', remote]) if tags
+    def push(remote, branch = 'master', opts = {})
+      # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
+      opts = {tags: opts} if [true, false].include?(opts) 
+      
+      arr_opts = []
+      arr_opts << '--f'    if opts[:force] || opts[:f]
+      arr_opts << remote
+
+      command('push', arr_opts + [branch])
+      command('push', ['--tags'] + arr_opts) if opts[:tags]
     end
 
     def pull(remote='origin', branch='master')
