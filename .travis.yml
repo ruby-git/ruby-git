@@ -10,4 +10,7 @@ rvm:
   - rbx-18mode
   - rbx-19mode
   - ree
-#  - ruby-head
+matrix:
+  allow_failures:
+    - rbx-18mode
+    - rbx-19mode
