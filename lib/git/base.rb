@@ -343,7 +343,7 @@ module Git
     #
     def push(remote = 'origin', branch = 'master', opts = {})
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
-      opts = {tags: opts} if [true, false].include?(opts)
+      opts = {:tags => opts} if [true, false].include?(opts)
 
       self.lib.push(remote, branch, opts)
     end
