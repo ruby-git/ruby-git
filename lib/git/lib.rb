@@ -490,7 +490,7 @@ module Git
     end
     
     def branch_new(branch)
-      command('branch', branch)
+      command('checkout', ['-b', branch])
     end
     
     def branch_delete(branch)
