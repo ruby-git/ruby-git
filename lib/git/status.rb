@@ -27,16 +27,21 @@ module Git
     def pretty
       out = ''
       self.each do |file|
-        out << file.path
-        out << "\n\tsha(r) " + file.sha_repo.to_s + ' ' + file.mode_repo.to_s
-        out << "\n\tsha(i) " + file.sha_index.to_s + ' ' + file.mode_index.to_s
-        out << "\n\ttype   " + file.type.to_s
-        out << "\n\tstage  " + file.stage.to_s
-        out << "\n\tuntrac " + file.untracked.to_s
-        out << "\n"
+        out << pretty_file(file)
       end
       out << "\n"
       out
+    end
+
+    def pretty_file(file)
+      <<FILE
+#{file.path}
+\tsha(r) #{file.sha_repo.to_s} #{file.mode_repo.to_s}
+\tsha(i) #{file.sha_index.to_s} #{file.mode_index.to_s}
+\ttype   #{file.type.to_s}
+\tstage  #{file.stage.to_s}
+\tuntrac #{file.untracked.to_s}
+FILE
     end
     
     # enumerable method
