@@ -24,12 +24,36 @@ class TestTags < Test::Unit::TestCase
       r1.commit('my commit')
       r1.add_tag('second')
       
-      assert(r1.tags.map{|t| t.name}.include?('first'))
+      assert(r1.tags.any?{|t| t.name == 'first'})
       
       r2.add_tag('third')
       
-      assert(r2.tags.map{|t| t.name}.include?('third'))
-      assert(!r2.tags.map{|t| t.name}.include?('second'))
+      assert(r2.tags.any?{|t| t.name == 'third'})
+      assert(r2.tags.none?{|t| t.name == 'second'})
+      
+      assert_raise RuntimeError do
+        r2.add_tag('fourth', {:a => true})
+      end
+        
+      r2.add_tag('fourth', {:a => true, :m => 'test message'})
+
+      assert(r2.tags.any?{|t| t.name == 'fourth'})
+      
+      r2.add_tag('fifth', r2.tags.detect{|t| t.name == 'third'}.objectish)
+
+      assert(r2.tags.detect{|t| t.name == 'third'}.objectish == r2.tags.detect{|t| t.name == 'fifth'}.objectish)
+
+      assert_raise Git::GitExecuteError do
+        r2.add_tag('third')
+      end
+
+      r2.add_tag('third', {:f => true})
+      
+      r2.delete_tag('third')
+      
+      assert_raise Git::GitTagNameDoesNotExist do
+        r2.tag('third')
+      end
     end
   end
 end

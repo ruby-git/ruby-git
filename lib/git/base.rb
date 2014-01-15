@@ -408,10 +408,26 @@ module Git
       Git::Object.new(self, tag_name, 'tag', true)
     end
 
-    # creates a new git tag (Git::Tag)
-    def add_tag(tag_name)
-      self.lib.tag(tag_name)
-      tag(tag_name)
+    # Creates a new git tag (Git::Tag)
+    # Usage:
+    #     repo.add_tag('tag_name', object_reference)
+    #     repo.add_tag('tag_name', object_reference, {:options => 'here'})
+    #     repo.add_tag('tag_name', {:options => 'here'})
+    #
+    # Options:
+    #   :a | :annotate -> true
+    #   :d             -> true
+    #   :m | :message  -> String
+    #   :s             -> true
+    #   
+    def add_tag(name, *opts)
+      self.lib.tag(name, *opts)
+      tag(name)
+    end
+ 
+    # deletes a tag 
+    def delete_tag(name) 
+      self.lib.tag(name, {:d => true})
     end
     
     # creates an archive file of the given tree-ish

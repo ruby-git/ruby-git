@@ -562,8 +562,26 @@ module Git
       command_lines('tag')
     end
 
-    def tag(tag)
-      command('tag', tag)
+    def tag(name, *opts)
+      target = opts[0].instance_of?(String) ? opts[0] : nil
+      
+      opts = opts.last.instance_of?(Hash) ? opts.last : {}
+
+      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
+        raise  "Can not create an [:a|:annotate] tag without the precense of [:m|:message]."
+      end
+
+      arr_opts = []
+
+      arr_opts << '-f' if opts[:force] || opts[:f]
+      arr_opts << '-a' if opts[:a] || opts[:annotate]
+      arr_opts << '-s' if opts[:s] || opts[:sign]
+      arr_opts << '-d' if opts[:d] || opts[:delete]
+      arr_opts << name
+      arr_opts << target if target
+      arr_opts << "-m #{opts[:m] || opts[:message]}" if opts[:m] || opts[:message]
+      
+      command('tag', arr_opts)
     end
 
     
