@@ -676,17 +676,11 @@ module Git
     end
 
     def required_command_version
-      [1, 6, 0, 0]
+      [1, 6]
     end
 
     def meets_required_version?
-      current_version  = self.current_command_version
-      required_version = self.required_command_version
-
-      return current_version[0] >= required_version[0] && 
-             current_version[1] >= required_version[1] &&
-             (current_version[2] ? current_version[2] >= required_version[2] : true) &&
-             (current_version[3] ? current_version[3] >= required_version[3] : true)
+      (self.current_command_version <=>  self.required_command_version) >= 0
     end
 
 
