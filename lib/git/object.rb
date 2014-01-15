@@ -94,12 +94,11 @@ module Git
   
     class Tree < AbstractObject
       
-      @trees = nil
-      @blobs = nil
-      
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
+        @trees = nil
+        @blobs = nil
       end
             
       def children
@@ -107,14 +106,12 @@ module Git
       end
       
       def blobs
-        check_tree
-        @blobs
+        @blobs ||= check_tree[:blobs]
       end
       alias_method :files, :blobs
       
       def trees
-        check_tree
-        @trees
+        @trees ||= check_tree[:trees]
       end
       alias_method :subtrees, :trees
       alias_method :subdirectories, :trees
@@ -135,13 +132,23 @@ module Git
 
         # actually run the git command
         def check_tree
-          unless @trees
-            @trees = {}
-            @blobs = {}
-            data = @base.lib.ls_tree(@objectish)
-            data['tree'].each { |k, d| @trees[k] = Git::Object::Tree.new(@base, d[:sha], d[:mode]) }
-            data['blob'].each { |k, d| @blobs[k] = Git::Object::Blob.new(@base, d[:sha], d[:mode]) }
+          @trees = {}
+          @blobs = {}
+          
+          data = @base.lib.ls_tree(@objectish)
+
+          data['tree'].each do |key, tree| 
+            @trees[key] = Git::Object::Tree.new(@base, tree[:sha], tree[:mode]) 
           end
+          
+          data['blob'].each do |key, blob| 
+            @blobs[key] = Git::Object::Blob.new(@base, blob[:sha], blob[:mode]) 
+          end
+
+          {
+            :trees => @trees,
+            :blobs => @blobs
+          }
         end
       
     end
