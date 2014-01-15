@@ -573,7 +573,7 @@ module Git
     
     def push(remote, branch = 'master', opts = {})
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
-      opts = {tags: opts} if [true, false].include?(opts) 
+      opts = {:tags => opts} if [true, false].include?(opts) 
       
       arr_opts = []
       arr_opts << '--f'    if opts[:force] || opts[:f]
