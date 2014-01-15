@@ -203,6 +203,18 @@ And here are the operations that will need to write to your git repository.
      g.pull(Git::Repo, Git::Branch) # fetch and a merge
 
      g.add_tag('tag_name') # returns Git::Tag
+     g.add_tag('tag_name', 'object_reference')
+     g.add_tag('tag_name', 'object_reference', {:options => 'here'})
+     g.add_tag('tag_name', {:options => 'here'})
+
+     Options:
+       :a | :annotate
+       :d
+       :f
+       :m | :message
+       :s
+
+     g.delete_tag('tag_name')
 
      g.repack
 
