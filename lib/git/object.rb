@@ -242,12 +242,36 @@ module Git
       def initialize(base, sha, name)
         super(base, sha)
         @name = name
+        @message = @tagger = @tag_checked = nil
       end
 
       def tag?
         true
       end
-        
+
+      def annotated?
+        !message.nil?
+      end
+
+      def tagger
+        check_tag
+        @tagger
+      end
+
+      def message
+        check_tag
+        @message
+      end
+
+      private
+        def check_tag
+          return if @tag_checked
+          @tag_checked = true
+          data = @base.lib.tag_data(@name)
+          return unless data
+          @tagger = Git::Author.new(data['tagger'])
+          @message = data['message'].chomp
+        end
     end
     
     # if we're calling this, we don't know what type it is yet

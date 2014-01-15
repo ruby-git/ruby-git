@@ -409,8 +409,8 @@ module Git
     end
 
     # creates a new git tag (Git::Tag)
-    def add_tag(tag_name)
-      self.lib.tag(tag_name)
+    def add_tag(tag_name, message = nil)
+      self.lib.tag(tag_name, message)
       tag(tag_name)
     end
     
