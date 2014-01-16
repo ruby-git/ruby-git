@@ -139,8 +139,10 @@ module Git
     
       data.each do |line|
         line = line.chomp
-        if line == ''
+        if line == '' and hsh_array
           in_message = !in_message
+        elsif line == '' and !hsh_array and !in_message
+          in_message = true
         elsif in_message
           hsh['message'] << line[indent..-1] << "\n"
         else
