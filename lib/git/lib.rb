@@ -93,7 +93,8 @@ module Git
       arr_opts += log_path_options(opts)
       
       full_log = command_lines('log', arr_opts, true)
-      process_commit_data(full_log)
+
+      process_commit_log_data(full_log)
     end
 
 
@@ -129,6 +130,30 @@ module Git
     end
     
     def process_commit_data(data, sha = nil, indent = 4)
+      hsh = {
+        'sha'     => sha,
+        'message' => '',
+        'parent'  => []
+      }
+      
+      loop do
+        key, *value = data.shift.split
+
+        break if key.nil?
+
+        if key == 'parent'
+          hsh['parent'] << value.join(' ')
+        else
+          hsh[key] = value.join(' ')
+        end
+      end
+      
+      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+
+      return hsh
+    end
+    
+    def process_commit_log_data(data, sha = nil, indent = 4)
       in_message = false
             
       if sha
