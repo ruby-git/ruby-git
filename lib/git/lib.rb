@@ -96,8 +96,6 @@ module Git
 
       process_commit_log_data(full_log)
     end
-
-
     
     def revparse(string)
       return string if string =~ /[A-Fa-f0-9]{40}/  # passing in a sha - just no-op it
@@ -153,44 +151,43 @@ module Git
       return hsh
     end
     
-    def process_commit_log_data(data, sha = nil, indent = 4)
+    def process_commit_log_data(data)
       in_message = false
             
-      if sha
-        hsh = {'sha' => sha, 'message' => '', 'parent' => []}
-      else
-        hsh_array = []        
-      end
+      hsh_array = []       
+
+      hsh = nil
     
       data.each do |line|
         line = line.chomp
-        if line == ''
-          in_message = !in_message
-        elsif in_message
-          hsh['message'] << line[indent..-1] << "\n"
-        else
-          data = line.split
-          key = data.shift
-          value = data.join(' ')
-          if key == 'commit'
-            sha = value
+        
+        if line[0].nil?
+          in_message = !in_message 
+          next
+        end
+       
+        if in_message
+          hsh['message'] << "#{line[4..-1]}\n"
+          next
+        end
+
+        key, *value = line.split
+        value = value.join(' ')
+        
+        case key
+          when 'commit'
             hsh_array << hsh if hsh
-            hsh = {'sha' => sha, 'message' => '', 'parent' => []}
-          end
-          if key == 'parent'
-            hsh[key] << value
+            hsh = {'sha' => value, 'message' => '', 'parent' => []}
+          when 'parent'
+            hsh['parent'] << value
           else
             hsh[key] = value
-          end
         end
       end
       
-      if hsh_array
-        hsh_array << hsh if hsh
-        hsh_array
-      else
-        hsh
-      end
+      hsh_array << hsh if hsh
+        
+      return hsh_array
     end
     
     def object_contents(sha, &block)
@@ -748,6 +745,7 @@ module Git
       if chdir && (Dir.getwd != path)
         Dir.chdir(path) { out = run_command(git_cmd, &block) } 
       else
+
         out = run_command(git_cmd, &block)
       end
       
