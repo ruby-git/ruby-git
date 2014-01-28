@@ -616,7 +616,7 @@ module Git
       opts = {:tags => opts} if [true, false].include?(opts) 
       
       arr_opts = []
-      arr_opts << '--f'    if opts[:force] || opts[:f]
+      arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
       command('push', arr_opts + [branch])
