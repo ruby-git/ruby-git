@@ -332,8 +332,8 @@ module Git
 
     # fetches changes from a remote branch - this does not modify the working directory,
     # it just gets the changes from the remote if there are any
-    def fetch(remote = 'origin')
-      self.lib.fetch(remote)
+    def fetch(remote = 'origin', opts={})
+      self.lib.fetch(remote, opts)
     end
 
     # pushes changes to a remote repository - easiest if this is a cloned repository,
