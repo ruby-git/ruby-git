@@ -80,6 +80,33 @@ class TestRemotes < Test::Unit::TestCase
       #puts loc.remotes.inspect
     end
   end
+
+  def test_fetch
+    in_temp_dir do |path|
+      loc = Git.clone(@wbare, 'local')
+      rem = Git.clone(@wbare, 'remote')
+
+      r = loc.add_remote('testrem', rem)
+
+      Dir.chdir('remote') do
+        rem.branch('testbranch').in_branch('tb commit') do
+          new_file('test-file', 'add file')
+          rem.add
+          true
+        end
+        rem.branch('testbranch').in_branch do
+          rem.add_tag('test-tag-in-deleted-branch')
+          false
+        end
+        rem.branch('testbranch').delete
+      end
+
+      r.fetch
+      assert(!loc.tags.map(&:name).include?('test-tag-in-deleted-branch'))
+      r.fetch :tags => true
+      assert(loc.tags.map(&:name).include?('test-tag-in-deleted-branch'))
+    end
+  end
   
   def test_push
     in_temp_dir do |path|

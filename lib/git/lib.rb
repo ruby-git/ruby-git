@@ -607,8 +607,11 @@ module Git
     end
 
     
-    def fetch(remote)
-      command('fetch', remote)
+    def fetch(remote, opts)
+      arr_opts = [remote]
+      arr_opts << '--tags' if opts[:t] || opts[:tags]
+
+      command('fetch', arr_opts)
     end
     
     def push(remote, branch = 'master', opts = {})
@@ -616,7 +619,7 @@ module Git
       opts = {:tags => opts} if [true, false].include?(opts) 
       
       arr_opts = []
-      arr_opts << '--f'    if opts[:force] || opts[:f]
+      arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
       command('push', arr_opts + [branch])
