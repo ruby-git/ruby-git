@@ -829,7 +829,7 @@ module Git
     end
 
     def escape(s)
-      "'#{s && s.to_s.gsub("'","\\'")}'"
+      "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'"
     end
 
   end
