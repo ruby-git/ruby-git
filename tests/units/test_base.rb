@@ -16,7 +16,8 @@ class TestBase < Test::Unit::TestCase
       create_file('test_add/test_file_2', 'content test_file_2')
       create_file('test_add/test_file_3', 'content test_file_3')
       create_file('test_add/test_file_4', 'content test_file_4')
-      
+      create_file('test_add/test file with \' quote', 'content test_file_4')
+
       assert(!git.status.added.assoc('test_file_1'))
       
       # Adding a single file, usign String
@@ -33,10 +34,11 @@ class TestBase < Test::Unit::TestCase
       assert(!git.status.added.assoc('test_file_4'))
 
       # Adding multiple files, using Array
-      git.add(['test_file_3','test_file_4'])
+      git.add(['test_file_3','test_file_4', 'test file with \' quote'])
 
       assert(git.status.added.assoc('test_file_3'))
       assert(git.status.added.assoc('test_file_4'))
+      assert(git.status.added.assoc('test file with \' quote'))
       
       git.commit('test_add commit #1')
 
