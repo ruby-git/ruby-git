@@ -305,7 +305,14 @@ module Git
     def diff_index(treeish)
       diff_as_hash('diff-index', treeish)
     end
-            
+
+    def ls_remote(location = nil, opts = {})
+      args = []
+      args << (opts[:tags] ? '--tags' : '')
+      args << location
+      command_lines('ls-remote', args)
+    end
+
     def ls_files(location=nil)
       hsh = {}
       command_lines('ls-files', ['--stage', location]).each do |line|
