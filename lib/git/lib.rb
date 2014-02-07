@@ -308,7 +308,9 @@ module Git
 
     def ls_remote(location = nil, opts = {})
       args = []
-      args << (opts[:tags] ? '--tags' : '')
+      if (opts != {})
+        args << (opts[:tags] ? '--tags' : '')
+      end
       args << location
       command_lines('ls-remote', args)
     end

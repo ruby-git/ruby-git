@@ -507,16 +507,18 @@ module Git
 
     def ls_remote(location = nil, opts = {})
       tmp = self.lib.ls_remote(location, opts)
-      if (opts[:tags])
-        ret = []
-        tmp.each { |line|
-          split = line.split
+      ret = []
+      tmp.each { |line|
+        split = line.split
+        if (opts[:tags])
           short_name = split[1].sub(/refs\/tags\//, '')
           obj = {:sha => split[0], :tag_ref => split[1], :name => short_name}
-          ret.push obj
-        }
+        else
+          obj = {:sha => split[0], :ref => split[1]}
+        end
+        ret.push obj
         return ret
-      end
+      }
     end
 
     def ls_files(location=nil)
