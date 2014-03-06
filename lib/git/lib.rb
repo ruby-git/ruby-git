@@ -751,7 +751,7 @@ module Git
       command('fetch', arr_opts)
     end
 
-    def push(remote, branch = 'master', opts = {})
+    def push(remote, branch = 'master', opts = {}, &block)
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
       opts = {:tags => opts} if [true, false].include?(opts)
 
@@ -762,10 +762,10 @@ module Git
       arr_opts << remote
 
       if opts[:mirror]
-          command('push', arr_opts)
+          command('push', arr_opts, &block)
       else
-          command('push', arr_opts + [branch])
-          command('push', ['--tags'] + arr_opts) if opts[:tags]
+          command('push', arr_opts + [branch], &block)
+          command('push', ['--tags'] + arr_opts, &block) if opts[:tags]
       end
     end
 

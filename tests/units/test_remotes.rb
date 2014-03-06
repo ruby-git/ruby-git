@@ -190,5 +190,25 @@ class TestRemotes < Test::Unit::TestCase
     end
   end
 
+  def test_push_with_block
+    in_temp_dir do |path|
+      loc = Git.clone(@wbare, 'local')
+      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
 
+      loc.add_remote('testrem', rem)
+
+      loc.chdir do
+        new_file('test-file', 'blahblahblah')
+        loc.add
+        loc.commit('master commit')
+      end
+
+      block_called = false
+      loc.push('testrem') do |output|
+        assert_match(/master -> master/, output.read, 'expected block to receive output of push command.')
+        block_called = true
+      end
+      assert(block_called, 'block was not called.')
+    end
+  end
 end
