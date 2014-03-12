@@ -59,7 +59,7 @@ module Git
         Git::Diff.new(@base, @objectish, objectish)
       end
       
-      def log(count = 30)
+      def log(count=nil)
         Git::Log.new(@base, count).object(@objectish)
       end
       
