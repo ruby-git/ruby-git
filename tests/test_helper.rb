@@ -24,7 +24,9 @@ class Test::Unit::TestCase
     @wdir = create_temp_repo(@wdir_dot)
   end
   
-  teardown
+  def teardown
+    git_teardown
+  end
   def git_teardown
     if @tmp_path
       FileUtils.rm_r(@tmp_path)
