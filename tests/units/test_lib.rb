@@ -14,6 +14,10 @@ class TestLib < Test::Unit::TestCase
     @lib = Git.open(@wdir).lib
   end
   
+  def test_checkout
+    assert(@lib.checkout('test_checkout_-b',{:new_branch=>true}))
+  end
+  
   def test_checkout_file_from_branch
     assert(@lib.checkout_file_from_branch('example.txt'))
   end
