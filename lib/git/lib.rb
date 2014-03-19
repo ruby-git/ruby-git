@@ -535,6 +535,12 @@ module Git
       command('checkout', arr_opts)
     end
     
+    def checkout_file_from_branch(file,branch='master')
+      arr_opts = []
+      arr_opts << file
+      command("checkout #{branch} --", arr_opts)
+    end
+    
     def merge(branch, message = nil)      
       arr_opts = []
       arr_opts << '-m' << message if message
