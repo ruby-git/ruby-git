@@ -23,9 +23,11 @@ module Git
       @stashes ||= Git::Stashes.new(@base)
     end
     
-    def checkout
-      check_if_create
-      @base.checkout(@full)
+    def checkout(opts={:orphan=>false,:orphaninit=>nil}) 
+      if !opts[:orphan]
+        check_if_create
+      end
+      @base.lib.checkout(@full,opts)  
     end
     
     def archive(file, opts = {})

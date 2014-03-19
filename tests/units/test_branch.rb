@@ -89,7 +89,9 @@ class TestBranch < Test::Unit::TestCase
 
         g.checkout(g.branch('other_branch'))
         assert(g.branch('other_branch').current)
-        
+        g.checkout('orphan_branch',{:orphan=>true,:orphaninit=>'example.txt'})
+        assert(g.branch('orphan_branch').current)
+        assert_equal('initial commit: copied example.txt from master',g.log[0].message)
       end
     end
   end
