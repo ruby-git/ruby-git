@@ -16,6 +16,10 @@ class TestLib < Test::Unit::TestCase
   
   def test_checkout
     assert(@lib.checkout('test_checkout_-b',{:new_branch=>true}))
+    assert(@lib.checkout('master'))
+    assert(@lib.checkout('test_checkout_--orphan',{:orphan=>true}))
+    assert(@lib.checkout('master'))
+    assert(@lib.checkout('test_checkout_--orphan_with_initial_commit',{:orphan=>true,:orphaninit=>'example.txt'}))
   end
   
   def test_checkout_file_from_branch
