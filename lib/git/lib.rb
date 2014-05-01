@@ -61,7 +61,7 @@ module Git
       arr_opts << "-o" << opts[:remote] if opts[:remote]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << "--config" << opts[:config] if opts[:config]
-      arr_opts << "--mirror" << opts[:config] if opts[:config]
+      arr_opts << "--mirror" if opts[:mirror]
 
       arr_opts << '--'
       arr_opts << repository
@@ -69,7 +69,7 @@ module Git
       
       command('clone', arr_opts)
       
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
     
     
@@ -227,7 +227,8 @@ module Git
       arr = []
       command_lines('branch', '-a').each do |b| 
         current = (b[0, 2] == '* ')
-        arr << [b.gsub('* ', '').strip, current]
+        branch = b.gsub('* ', '').strip
+        arr << [branch, current] unless branch == '(no branch)'
       end
       arr
     end
@@ -575,6 +576,15 @@ module Git
     
     def remote_remove(name)
       command('remote', ['rm', name])
+    end
+    
+    def remote_update(opts={})
+      remotes=opts.delete(:remotes)
+      arr_opts = ['update']
+      arr_opts << '-p' if opts[:prune]
+      arr_opts.concat remotes if remotes
+
+      command('remote', arr_opts)
     end
     
     def remotes

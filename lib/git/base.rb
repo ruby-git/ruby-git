@@ -52,7 +52,9 @@ module Git
     #
     def self.clone(repository, name, opts = {})
       # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      logger = opts[:log]
+
+      self.new(Git::Lib.new(nil, logger).clone(repository, name, opts))
     end
         
     def initialize(options = {})
