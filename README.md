@@ -140,8 +140,8 @@ And here are the operations that will need to write to your git repository.
       g = Git.init
        Git.init('project')
        Git.init('/home/schacon/proj',
-        { :git_dir => '/opt/git/proj.git',
-           :index_file => '/tmp/index'} )
+        { :repository => '/opt/git/proj.git',
+           :index => '/tmp/index'} )
 
      g = Git.clone(URI, NAME, :path => '/tmp/checkout')
      g.config('user.name', 'Scott Chacon')
