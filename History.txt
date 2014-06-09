@@ -1,3 +1,15 @@
+== 1.2.7 
+
+* Fixing mesages encoding
+* Fixing -f flag in git push
+* Fixing log parser for multiline messages
+* Supporting object references on Git.add_tag
+* Including dotfiles on Git.status
+* Git.fetch - supporting --tags
+* Git.clean - supporting -x
+* Git.add_tag options - supporting -a, -m and -s
+* Added Git.delete_tag
+
 == 1.2.6
 
 * Ruby 1.9.X/2.0 fully supported
