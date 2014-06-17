@@ -7,7 +7,8 @@ module Git
   
   class Lib
 
-    @@git_binary = 'git'
+    DEFAULT_GIT_BINARY = 'git'
+    @@git_binary = DEFAULT_GIT_BINARY
 
     def initialize(base = nil, logger = nil)
       @git_dir = nil

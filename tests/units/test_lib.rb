@@ -20,7 +20,7 @@ class TestLib < Test::Unit::TestCase
     assert_equal(Git::Lib.git_binary, '/path/to/binary')
 
     # reset
-    Git::Lib.git_binary = 'git'
+    Git::Lib.git_binary = Git::Lib::DEFAULT_GIT_BINARY
   end
 
   def test_commit_data
