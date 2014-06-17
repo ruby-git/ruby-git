@@ -13,7 +13,16 @@ class TestLib < Test::Unit::TestCase
     set_file_paths
     @lib = Git.open(@wdir).lib
   end
-  
+
+  def test_set_git_binary
+    assert_equal(Git::Lib.git_binary, 'git')
+    Git::Lib.git_binary = '/path/to/binary'
+    assert_equal(Git::Lib.git_binary, '/path/to/binary')
+
+    # reset
+    Git::Lib.git_binary = 'git'
+  end
+
   def test_commit_data
     data = @lib.commit_data('1cc8667014381')
     assert_equal('scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800', data['author'])

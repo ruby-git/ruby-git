@@ -6,7 +6,9 @@ module Git
   end
   
   class Lib
-      
+
+    @@git_binary = 'git'
+
     def initialize(base = nil, logger = nil)
       @git_dir = nil
       @git_index_file = nil
@@ -23,6 +25,14 @@ module Git
         @git_work_dir = base[:working_directory]
       end
       @logger = logger
+    end
+
+    def self.git_binary=(new_git_binary)
+      @@git_binary = new_git_binary
+    end
+
+    def self.git_binary
+      @@git_binary
     end
 
     # creates or reinitializes the repository
@@ -742,7 +752,7 @@ module Git
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
-      git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{@@git_binary} #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
       if chdir && (Dir.getwd != path)
