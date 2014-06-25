@@ -98,7 +98,7 @@ module Git
     end
     
     def revparse(string)
-      return string if string =~ /[A-Fa-f0-9]{40}/  # passing in a sha - just no-op it
+      return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
       rev = ['head', 'remotes', 'tags'].map do |d|
         File.join(@git_dir, 'refs', d, string)
       end.find do |path|
