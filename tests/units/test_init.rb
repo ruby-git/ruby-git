@@ -42,8 +42,8 @@ class TestInit < Test::Unit::TestCase
   def test_git_init_bare
     in_temp_dir do |path|
       repo = Git.init(path, :bare => true)
-      assert(File.directory?(File.join(path, '.git')))
-      assert(File.exists?(File.join(path, '.git', 'config')))
+      assert(File.directory?(path))
+      assert(File.exists?(File.join(path, 'config')))
       assert_equal('true', repo.config('core.bare'))
     end
   end
