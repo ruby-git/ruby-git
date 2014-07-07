@@ -7,7 +7,7 @@ module Git
     def initialize(path, check_path=true)
       path = File.expand_path(path)
       
-      if check_path && !File.exists?(path)
+      if check_path && !File.exist?(path)
         raise ArgumentError, 'path does not exist', [path]
       end
       

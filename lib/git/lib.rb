@@ -632,7 +632,7 @@ module Git
 
     def tag_sha(tag_name)
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
-      return File.read(head).chomp if File.exists?(head)
+      return File.read(head).chomp if File.exist?(head)
       
       command('show-ref',  ['--tags', '-s', tag_name])
     end  
