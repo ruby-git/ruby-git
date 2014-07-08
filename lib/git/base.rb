@@ -446,13 +446,13 @@ module Git
     end
     
     def apply(file)
-      if File.exists?(file)
+      if File.exist?(file)
         self.lib.apply(file)
       end
     end
     
     def apply_mail(file)
-      self.lib.apply_mail(file) if File.exists?(file)
+      self.lib.apply_mail(file) if File.exist?(file)
     end
     
     ## LOWER LEVEL INDEX OPERATIONS ##
