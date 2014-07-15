@@ -1,3 +1,4 @@
+require 'open3'
 require 'tempfile'
 
 module Git
@@ -734,9 +735,10 @@ module Git
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
-      ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_WORK_TREE'] = @git_work_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
+      env = {}
+      env['GIT_DIR'] = @git_dir
+      env['GIT_WORK_TREE'] = @git_work_dir
+      env['GIT_INDEX_FILE'] = @git_index_file
 
       path = @git_work_dir || @git_dir || @path
 
@@ -744,26 +746,26 @@ module Git
 
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
-      out = nil
+      proc_status = {}
       if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = run_command(git_cmd, &block) } 
+        Dir.chdir(path) { proc_status = run_command(env, git_cmd, &block) } 
       else
 
-        out = run_command(git_cmd, &block)
+        proc_status = run_command(env, git_cmd, &block)
       end
       
       if @logger
         @logger.info(git_cmd)
-        @logger.debug(out)
+        @logger.debug(proc_status[:out])
       end
             
-      if $?.exitstatus > 0
-        if $?.exitstatus == 1 && out == ''
+      if proc_status[:return_code] > 0
+        if proc_status[:return_code] == 1 && proc_status[:out] == ''
           return ''
         end
-        raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
+        raise Git::GitExecuteError.new(git_cmd + ':' + proc_status[:out].to_s) 
       end
-      out
+      return proc_status[:out] 
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -820,12 +822,18 @@ module Git
       arr_opts
     end
     
-    def run_command(git_cmd, &block)
+    def run_command(env, git_cmd, &block)
+      proc_status = {}
       if block_given?
-        IO.popen(git_cmd, &block)
+        proc_status[:out] = IO.popen(env, git_cmd, &block)
+        proc_status[:return_code] = $?.exitstatus
       else
-        `#{git_cmd}`.chomp
+        Open3.popen3(env, git_cmd) do |stdin, stdout, stderr, wait_thr|
+          proc_status[:out] = stdout.read.strip
+          proc_status[:return_code] = wait_thr.value.exitstatus
+        end
       end
+      return proc_status
     end
 
     def escape(s)
