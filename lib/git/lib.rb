@@ -620,6 +620,7 @@ module Git
       
       arr_opts = []
       arr_opts << '--force'  if opts[:force] || opts[:f]
+      arr_opts << '--set-upstream' if opts[:set_upstream] || opts[:u]
       arr_opts << remote
 
       command('push', arr_opts + [branch])
