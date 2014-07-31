@@ -1,3 +1,9 @@
+== 1.2.8
+
+* Keeping the old escape format for windows users
+* revparse: Supporting ref names containing SHA like substrings (40-hex strings)
+* Fix warnings on Ruby 2.1.2
+
 == 1.2.7 
 
 * Fixing mesages encoding

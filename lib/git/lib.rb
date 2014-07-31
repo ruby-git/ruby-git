@@ -829,7 +829,11 @@ module Git
     end
 
     def escape(s)
-      "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'"
+      return "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      
+      # Keeping the old escape format for windows users
+      escaped = s.to_s.gsub('\'', '\'\\\'\'')
+      return %Q{"#{escaped}"}
     end
 
   end
