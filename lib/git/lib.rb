@@ -734,10 +734,6 @@ module Git
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
-      ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_WORK_TREE'] = @git_work_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
-
       path = @git_work_dir || @git_dir || @path
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
@@ -745,11 +741,14 @@ module Git
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
       out = nil
-      if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = run_command(git_cmd, &block) } 
-      else
-
-        out = run_command(git_cmd, &block)
+      chenv(:GIT_DIR => @git_dir,
+            :GIT_WORK_TREE => @git_work_dir,
+            :GIT_INDEX_FILE => @git_index_file) do
+        if chdir && (Dir.getwd != path)
+          Dir.chdir(path) { out = run_command(git_cmd, &block) }
+        else
+          out = run_command(git_cmd, &block)
+        end
       end
       
       if @logger
@@ -834,6 +833,22 @@ module Git
       # Keeping the old escape format for windows users
       escaped = s.to_s.gsub('\'', '\'\\\'\'')
       return %Q{"#{escaped}"}
+    end
+
+    def chenv(environments)
+      saved = {}
+      begin
+        environments.each do |key, value|
+          key = key.to_s
+          saved[key] = ENV[key]
+          ENV[key] = value
+        end
+        yield
+      ensure
+        saved.each do |key, value|
+          ENV[key] = value
+        end
+      end
     end
 
   end
