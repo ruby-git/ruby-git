@@ -75,6 +75,14 @@ class TestInit < Test::Unit::TestCase
     end
   end
 
+  def test_git_clone_mirror
+    in_temp_dir do |path|      
+      g = Git.clone(@wbare, 'bare.git', :mirror => true)
+      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert_nil(g.dir)
+    end
+  end
+
   def test_git_clone_config
     in_temp_dir do |path|     
       g = Git.clone(@wbare, 'config.git', :config => "receive.denyCurrentBranch=ignore")

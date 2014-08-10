@@ -57,6 +57,7 @@ module Git
       
       arr_opts = []
       arr_opts << "--bare" if opts[:bare]
+      arr_opts << "--mirror" if opts[:mirror]
       arr_opts << "--recursive" if opts[:recursive]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
@@ -68,7 +69,7 @@ module Git
       
       command('clone', arr_opts)
       
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
     
     
@@ -616,14 +617,19 @@ module Git
     
     def push(remote, branch = 'master', opts = {})
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
-      opts = {:tags => opts} if [true, false].include?(opts) 
+      opts = {:tags => opts} if [true, false].include?(opts)
       
       arr_opts = []
+      arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
-      command('push', arr_opts + [branch])
-      command('push', ['--tags'] + arr_opts) if opts[:tags]
+      if opts[:mirror]
+          command('push', arr_opts)
+      else
+          command('push', arr_opts + [branch])
+          command('push', ['--tags'] + arr_opts) if opts[:tags]
+      end
     end
 
     def pull(remote='origin', branch='master')
