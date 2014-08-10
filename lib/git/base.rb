@@ -391,6 +391,18 @@ module Git
       Git::Remote.new(self, name)
     end
 
+    # sets the url of a remote
+    #
+    # @git.set_remote_url('scott_git', 'https://github.com/larsxschneider/ruby-git')
+    #
+    # Options:
+    #   :push => true
+    def set_remote_url(name, url, opts = {})
+        url = url.repo.path if url.is_a?(Git::Base)
+        self.lib.remote_set_url(name, url, opts)
+        Git::Remote.new(self, name)
+    end
+
     # removes a remote from this repository
     #
     # @git.remove_remote('scott_git')

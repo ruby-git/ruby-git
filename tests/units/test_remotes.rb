@@ -29,6 +29,20 @@ class TestRemotes < Test::Unit::TestCase
     end 
   end
 
+  def test_set_remote
+    in_temp_dir do |path|
+      local = Git.clone(@wbare, 'local')
+      remote = Git.clone(@wbare, 'remote')
+
+      local.add_remote('testremote', remote)
+      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+
+      assert(!local.remotes.map{|b| b.url()}.include?('http://test.com'))
+      local.set_remote_url('testremote', 'http://test.com')
+      assert(local.remotes.map{|b| b.url()}.include?('http://test.com'))
+    end
+  end
+  
   def test_remove_remote_remove
     in_temp_dir do |path|
       local = Git.clone(@wbare, 'local')
