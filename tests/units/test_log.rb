@@ -17,8 +17,8 @@ class TestLog < Test::Unit::TestCase
     assert(log.last.is_a?(Git::Object::Commit))
     assert_equal('f1410f8735f6f73d3599eb9b5cdd2fb70373335c', log.last.objectish)
   end
-  
-  def test_get_log_entries    
+
+  def test_get_log_entries
     assert_equal(30, @git.log.size)
     assert_equal(50, @git.log(50).size)
     assert_equal(10, @git.log(10).size)
@@ -35,15 +35,15 @@ class TestLog < Test::Unit::TestCase
     assert_equal(three2.sha, three3.sha)
     assert_equal(three1.sha, three2.sha)
   end
-  
+
   def test_get_log_since
     l = @git.log.since("2 seconds ago")
     assert_equal(0, l.size)
-    
+
     l = @git.log.since("#{Date.today.year - 2007} years ago")
     assert_equal(30, l.size)
   end
-  
+
   def test_get_log_grep
     l = @git.log.grep("search")
     assert_equal(2, l.size)
@@ -55,11 +55,11 @@ class TestLog < Test::Unit::TestCase
     l = @git.log(5).author("lazySusan")
     assert_equal(0, l.size)
   end
-  
-  def test_get_log_since_file    
+
+  def test_get_log_since_file
     l = @git.log.object('example.txt')
     assert_equal(30, l.size)
-  
+
     l = @git.log.between('v2.5', 'test').path('example.txt')
     assert_equal(1, l.size)
   end
@@ -72,11 +72,16 @@ class TestLog < Test::Unit::TestCase
     log = @git.log.path(['example.txt','scott/text.txt'])
     assert_equal(30, log.size)
   end
-  
+
   def test_log_file_noexist
     assert_raise Git::GitExecuteError do
       @git.log.object('no-exist.txt').size
     end
   end
-  
+
+  def test_log_name_status
+     l = @git.log.name_status('v2.5', 'test')
+     assert_equal(1, l.size)
+  end
+
 end
