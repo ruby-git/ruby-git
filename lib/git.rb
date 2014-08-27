@@ -1,28 +1,8 @@
-# Add the directory containing this file to the start of the load path if it
-# isn't there already.
-$:.unshift(File.dirname(__FILE__)) unless
-  $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
-
-require 'git/author'
-require 'git/base'
-require 'git/branch'
-require 'git/branches'
-require 'git/diff'
-require 'git/index'
-require 'git/lib'
-require 'git/log'
-require 'git/object'
-require 'git/path'
-require 'git/remote'
-require 'git/repository'
-require 'git/status'
-require 'git/stash'
-require 'git/stashes'
-require 'git/working_directory'
+Dir['git'].each { |file| require file }
 
 lib = Git::Lib.new(nil, nil)
 unless lib.meets_required_version?
-  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+  $stderr.puts "[WARNING] This gem requires Git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
 end
 
 # Git/Ruby Library
@@ -38,20 +18,21 @@ end
 # open a bare repository, initialize a new repo or clone an
 # existing remote repository.
 #
-# Author::    Scott Chacon (mailto:schacon@gmail.com)
-# License::   MIT License
+# Author: Scott Chacon (mailto:schacon@gmail.com)
+# License: MIT
+
 module Git
-  
   #g.config('user.name', 'Scott Chacon') # sets value
   #g.config('user.email', 'email@email.com')  # sets value
   #g.config('user.name')  # returns 'Scott Chacon'
   #g.config # returns whole config hash
+
   def config(name = nil, value = nil)
     lib = Git::Lib.new
-    if(name && value)
+    if name && value
       # set value
       lib.config_set(name, value)
-    elsif (name)
+    elsif name
       # return value
       lib.config_get(name)
     else
@@ -73,7 +54,7 @@ module Git
   def self.bare(git_dir, options = {})
     Base.bare(git_dir, options)
   end
-    
+
   # clones a remote repository
   #
   # options
@@ -101,7 +82,7 @@ module Git
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
     Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
   end
-  
+
   # Same as g.config, but forces it to be at the global level
   #
   #g.config('user.name', 'Scott Chacon') # sets value
@@ -110,10 +91,10 @@ module Git
   #g.config # returns whole config hash
   def self.global_config(name = nil, value = nil)
     lib = Git::Lib.new(nil, nil)
-    if(name && value)
+    if name && value
       # set value
       lib.global_config_set(name, value)
-    elsif (name)
+    elsif name
       # return value
       lib.global_config_get(name)
     else
@@ -144,5 +125,5 @@ module Git
   def self.open(working_dir, options = {})
     Base.open(working_dir, options)
   end
-    
+
 end
