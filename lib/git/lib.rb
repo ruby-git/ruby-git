@@ -279,12 +279,17 @@ module Git
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
       diff_opts = ['--numstat']
       diff_opts << obj1
-      diff_opts << obj2 if obj2.is_a?(String) && !obj2.empty?
+
+      if obj2.is_a?(String) && !obj2.empty?
+        diff_command = 'diff'
+        diff_opts << obj2
+      else
+        diff_command = 'show'
+        diff_opts << '--pretty=format:'
+      end
       diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       hsh = {:total => {:insertions => 0, :deletions => 0, :lines => 0, :files => 0}, :files => {}}
-
-      diff_command = obj2.is_a?(String) && !obj2.empty? ? 'diff' : 'show'
 
       command_lines(diff_command, diff_opts).each do |file|
         (insertions, deletions, filename) = file.split("\t")
