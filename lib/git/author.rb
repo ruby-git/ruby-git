@@ -7,7 +7,7 @@ module Git
         @name = m[1]
         @email = m[2]
         @date = Time.at(m[3].to_i)
-        @date.localtime(m[4].gsub(/([-\+]\d{2})(\d{2})/, '\1:\2'))
+        @date.localtime(m[4].gsub(/([-\+]\d{2})(\d{2})/, '\1:\2')) unless Time.instance_method(:localtime).arity == 0
       end
     end
     
