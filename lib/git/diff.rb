@@ -6,8 +6,11 @@ module Git
     
     def initialize(base, from = nil, to = nil)
       @base = base
-      @from = from.to_s
-      @to = to.to_s
+      # don't convert to empty string if from/to is nil
+      @from = nil
+      @to = nil
+      @from = from.to_s if from
+      @to = to.to_s if to
 
       @path = nil
       @full_diff = nil
