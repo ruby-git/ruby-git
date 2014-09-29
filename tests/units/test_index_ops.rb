@@ -94,9 +94,9 @@ class TestIndexOps < Test::Unit::TestCase
         g.commit("second-commit")
         g.gcommit('HEAD')
 
-        commits = g.log(1e4).count
+        commits = g.log(10000).count
         g.revert(first_commit.sha)
-        assert_equal(commits + 1, g.log(1e4).count)
+        assert_equal(commits + 1, g.log(10000).count)
         assert(!File.exist?('test-file2'))
       end
     end

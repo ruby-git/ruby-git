@@ -739,31 +739,29 @@ module Git
       ENV['GIT_INDEX_FILE'] = @git_index_file
 
       path = @git_work_dir || @git_dir || @path
-
+      
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
-      out = nil
-      if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = run_command(git_cmd, &block) } 
-      else
+      output = nil
 
-        out = run_command(git_cmd, &block)
+      if chdir && (Dir.getwd != path)
+        Dir.chdir(path) { output = run_command(git_cmd, &block) } 
+      else
+        output = run_command(git_cmd, &block)
       end
       
       if @logger
         @logger.info(git_cmd)
-        @logger.debug(out)
+        @logger.debug(output)
       end
             
-      if $?.exitstatus > 0
-        if $?.exitstatus == 1 && out == ''
-          return ''
-        end
-        raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
+      if $?.exitstatus > 1 || ($?.exitstatus == 1 && output != '')
+        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
       end
-      out
+
+      return output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -821,11 +819,9 @@ module Git
     end
     
     def run_command(git_cmd, &block)
-      if block_given?
-        IO.popen(git_cmd, &block)
-      else
-        `#{git_cmd}`.chomp
-      end
+      return IO.popen(git_cmd, &block) if block_given?
+      
+      `#{git_cmd}`.chomp
     end
 
     def escape(s)
