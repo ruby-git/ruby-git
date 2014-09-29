@@ -74,7 +74,6 @@ class TestBase < Test::Unit::TestCase
       
       git.commit('test_add commit #3')
 
-      assert(!git.status.deleted.empty?)
       assert(git.status.changed.empty?)
       assert(git.status.added.empty?)
     end
