@@ -734,24 +734,18 @@ module Git
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
-      ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_WORK_TREE'] = @git_work_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
+      env = {}
+      env['GIT_DIR'] = @git_dir if @git_dir
+      env['GIT_WORK_TREE'] = @git_work_dir if @git_work_dir
+      env['GIT_INDEX_FILE'] = @git_index_file if @git_index_file
 
-      path = @git_work_dir || @git_dir || @path
-      
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
       git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
 
       output = nil
-
-      if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { output = run_command(git_cmd, &block) } 
-      else
-        output = run_command(git_cmd, &block)
-      end
-      
+      output = run_command(env, git_cmd, &block)
+     
       if @logger
         @logger.info(git_cmd)
         @logger.debug(output)
@@ -818,10 +812,11 @@ module Git
       arr_opts
     end
     
-    def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+    def run_command(env, git_cmd, &block)
+      return IO.popen(env, git_cmd, &block) if block_given?
       
-      `#{git_cmd}`.chomp
+      inline_env = env.map { |k, v| "#{k}=#{v}" }.join(' ')
+      `#{inline_env} #{git_cmd}`.chomp
     end
 
     def escape(s)
