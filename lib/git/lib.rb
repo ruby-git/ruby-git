@@ -524,6 +524,9 @@ module Git
       arr_opts << '-f' if opts[:force]
       arr_opts << '-b' << opts[:new_branch] if opts[:new_branch]
       arr_opts << branch
+      # if tag specified,
+      # we need to remove branch name from arr_opts and use tag name instead
+      arr_opts[-1] = ['tags', opts[:tag]].join('/') if opts[:tag]
       
       command('checkout', arr_opts)
     end
