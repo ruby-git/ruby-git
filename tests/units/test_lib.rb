@@ -49,6 +49,18 @@ class TestLib < Test::Unit::TestCase
     assert_equal(20, a.size)
   end
   
+  def test_environment_reset
+    ENV['GIT_DIR'] = '/my/git/dir'
+    ENV['GIT_WORK_TREE'] = '/my/work/tree'
+    ENV['GIT_INDEX_FILE'] = 'my_index'
+
+    @lib.log_commits :count => 10
+
+    assert_equal(ENV['GIT_DIR'], '/my/git/dir')
+    assert_equal(ENV['GIT_WORK_TREE'], '/my/work/tree')
+    assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
+  end
+
   def test_revparse
     assert_equal('1cc8667014381e2788a94777532a788307f38d26', @lib.revparse('1cc8667014381')) # commit
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @lib.revparse('1cc8667014381^{tree}')) #tree

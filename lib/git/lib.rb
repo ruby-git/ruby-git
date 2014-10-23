@@ -734,6 +734,10 @@ module Git
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
+      old_git_dir = ENV['GIT_DIR']
+      old_git_work_dir = ENV['GIT_WORK_TREE']
+      old_git_index_file = ENV['GIT_INDEX_FILE']
+
       ENV['GIT_DIR'] = @git_dir
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
@@ -762,6 +766,10 @@ module Git
       end
 
       return output
+    ensure
+      ENV['GIT_DIR'] = old_git_dir
+      ENV['GIT_WORK_TREE'] = old_git_work_dir
+      ENV['GIT_INDEX_FILE'] = old_git_index_file
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
