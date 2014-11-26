@@ -751,9 +751,9 @@ module Git
       output = nil
 
       if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { output = run_command(git_cmd, &block) } 
+        output, process_status = run_command(git_cmd, path, &block)
       else
-        output = run_command(git_cmd, &block)
+        output, process_status = run_command(git_cmd, &block)
       end
       
       if @logger
@@ -761,7 +761,7 @@ module Git
         @logger.debug(output)
       end
             
-      if $?.exitstatus > 1 || ($?.exitstatus == 1 && output != '')
+      if process_status.exitstatus > 1 || (process_status.exitstatus == 1 && output != '')
         raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
       end
 
@@ -822,10 +822,16 @@ module Git
       arr_opts
     end
     
-    def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+    def run_command(git_cmd, chdir = nil, &block)
+      commands = [git_cmd]
+      commands << {chdir: chdir} unless chdir.nil?
+      if block_given?
+        retval = IO.popen(*commands, &block)
+        return retval, $?
+      end
+      out, process_status = Open3.capture2(*commands)
       
-      `#{git_cmd}`.chomp
+      return out.chomp, process_status
     end
 
     def escape(s)
