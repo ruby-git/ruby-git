@@ -233,9 +233,7 @@ module Git
 
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
-      files = []
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
-      files
+      Dir.glob("#{dir}/**/*").select { |f| File.file?(f) } rescue nil
     end
     
     def branch_current
