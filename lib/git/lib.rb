@@ -808,7 +808,7 @@ module Git
     
     def run_command(git_cmd, chdir = nil, &block)
       commands = [git_cmd]
-      commands << {chdir: chdir} unless chdir.nil?
+      commands << {:chdir => chdir} unless chdir.nil?
       if block_given?
         retval = IO.popen(*commands, &block)
         return retval, $?
