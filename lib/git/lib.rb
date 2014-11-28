@@ -332,15 +332,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do |path|
-        command('config', ['--get', name])
-      end
-
-      if @git_dir
-        Dir.chdir(@git_dir, &do_get)
-      else
-        build_list.call
-      end
+      command('config', ['--get', name])
     end
 
     def global_config_get(name)
