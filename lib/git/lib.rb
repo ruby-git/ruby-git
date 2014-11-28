@@ -340,15 +340,7 @@ module Git
     end
     
     def config_list
-      build_list = lambda do |path|
-        parse_config_list command_lines('config', ['--list'])
-      end
-      
-      if @git_dir
-        Dir.chdir(@git_dir, &build_list)
-      else
-        build_list.call
-      end
+      parse_config_list command_lines('config', ['--list'])
     end
 
     def global_config_list
