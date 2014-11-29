@@ -699,8 +699,14 @@ module Git
         opts[:add_gzip] = true
       end
       
-      file ||= Tempfile.new('archive').path
-      
+      if !file
+        tempfile = Tempfile.new('archive')
+        file = tempfile.path
+        # delete it now, before we write to it, so that Ruby doesn't delete it
+        # when it finalizes the Tempfile.
+        tempfile.close!
+      end
+
       arr_opts = []
       arr_opts << "--format=#{opts[:format]}" if opts[:format]
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
