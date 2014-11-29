@@ -233,9 +233,7 @@ module Git
 
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
-      files = []
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
-      files
+      Dir.glob("#{dir}/**/*").select { |f| File.file?(f) } rescue nil
     end
     
     def branch_current
@@ -334,15 +332,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do |path|
-        command('config', ['--get', name])
-      end
-
-      if @git_dir
-        Dir.chdir(@git_dir, &do_get)
-      else
-        build_list.call
-      end
+      command('config', ['--get', name])
     end
 
     def global_config_get(name)
@@ -350,15 +340,7 @@ module Git
     end
     
     def config_list
-      build_list = lambda do |path|
-        parse_config_list command_lines('config', ['--list'])
-      end
-      
-      if @git_dir
-        Dir.chdir(@git_dir, &build_list)
-      else
-        build_list.call
-      end
+      parse_config_list command_lines('config', ['--list'])
     end
 
     def global_config_list
@@ -747,9 +729,9 @@ module Git
       output = nil
 
       if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { output = run_command(git_cmd, &block) } 
+        output, process_status = run_command(git_cmd, path, &block)
       else
-        output = run_command(git_cmd, &block)
+        output, process_status = run_command(git_cmd, &block)
       end
       
       if @logger
@@ -757,7 +739,7 @@ module Git
         @logger.debug(output)
       end
             
-      if $?.exitstatus > 1 || ($?.exitstatus == 1 && output != '')
+      if process_status.exitstatus > 1 || (process_status.exitstatus == 1 && output != '')
         raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
       end
 
@@ -818,10 +800,16 @@ module Git
       arr_opts
     end
     
-    def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+    def run_command(git_cmd, chdir = nil, &block)
+      commands = [git_cmd]
+      commands << {:chdir => chdir} unless chdir.nil?
+      if block_given?
+        retval = IO.popen(*commands, &block)
+        return retval, $?
+      end
+      out, process_status = Open3.capture2(*commands)
       
-      `#{git_cmd}`.chomp
+      return out.chomp, process_status
     end
 
     def escape(s)

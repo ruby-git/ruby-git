@@ -119,9 +119,7 @@ module Git
     
     # returns the repository size in bytes
     def repo_size
-      Dir.chdir(repo.path) do
-        return `du -s`.chomp.split.first.to_i
-      end
+      return IO.popen("du -s", {:chdir => repo.path}).read.chomp.split.first.to_i
     end
     
     #g.config('user.name', 'Scott Chacon') # sets value
