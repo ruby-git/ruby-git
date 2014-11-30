@@ -57,6 +57,12 @@ Require the 'git' gem.
     require 'git'
 ```
 
+This gem will use the first `git` that it finds in your `PATH` (i.e. when you type `git` on the commandline), if you require a specific executable, you can override it by doing something like the following:
+
+```ruby
+    Git::Lib.git_binary = '/path/to/git'
+```
+
 Here are the operations that need read permission only.
 
 ```ruby
