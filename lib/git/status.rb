@@ -91,7 +91,7 @@ FILE
         # find untracked in working dir
         prefix = "#{@base.dir.path}/"
         Dir.glob(prefix+"**/*", File::FNM_DOTMATCH) do |abs_file|
-          file = abs_file.byteslice(prefix.length..-1)
+          file = abs_file.slice(prefix.length..-1)
           next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
 
           @files[file] = {:path => file, :untracked => true}
