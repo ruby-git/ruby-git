@@ -806,16 +806,27 @@ module Git
       arr_opts
     end
     
-    def run_command(git_cmd, chdir = nil, &block)
-      commands = [git_cmd]
-      commands << {:chdir => chdir} unless chdir.nil?
-      if block_given?
-        retval = IO.popen(*commands, &block)
-        return retval, $?
+    # run_command
+    if (RUBY_VERSION.to_f < 1.9)
+      # in Ruby 1.8 we just have to run inside Dir.chdir. No getting around it
+      def run_command(git_cmd, chdir = nil, &block)
+        Dir.chdir(chdir || Dir.getwd) do
+          return IO.popen(git_cmd, &block), $? if block_given?
+          return `#{git_cmd}`.chomp, $?
+        end
       end
-      out, process_status = Open3.capture2(*commands)
+    else
+      def run_command(git_cmd, chdir = nil, &block)
+        commands = [git_cmd]
+        commands << {:chdir => chdir} unless chdir.nil?
+        if block_given?
+          retval = IO.popen(*commands, &block)
+          return retval, $?
+        end
+        out, process_status = Open3.capture2(*commands)
       
-      return out.chomp, process_status
+        return out.chomp, process_status
+      end
     end
 
     def escape(s)
