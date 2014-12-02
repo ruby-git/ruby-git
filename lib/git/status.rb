@@ -89,12 +89,12 @@ FILE
         ignore = @base.lib.ignored_files
         
         # find untracked in working dir
-        Dir.chdir(@base.dir.path) do
-          Dir.glob('**/*', File::FNM_DOTMATCH) do |file|
-            next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
+        prefix = "#{@base.dir.path}/"
+        Dir.glob(prefix+"**/*", File::FNM_DOTMATCH) do |abs_file|
+          file = abs_file.slice(prefix.length..-1)
+          next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
 
-            @files[file] = {:path => file, :untracked => true}
-          end
+          @files[file] = {:path => file, :untracked => true}
         end
         
         # find modified in tree

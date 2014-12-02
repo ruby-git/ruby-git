@@ -118,9 +118,15 @@ module Git
     end
     
     # returns the repository size in bytes
-    def repo_size
-      Dir.chdir(repo.path) do
-        return `du -s`.chomp.split.first.to_i
+    if (RUBY_VERSION.to_f < 1.9)
+      def repo_size
+        Dir.chdir(repo.path) do
+          return IO.popen("du -s").read.chomp.split.first.to_i
+        end
+      end
+    else
+      def repo_size
+        return IO.popen("du -s", {:chdir => repo.path}).read.chomp.split.first.to_i
       end
     end
     
