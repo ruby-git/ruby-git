@@ -734,48 +734,77 @@ module Git
 
 
     private
+
+    # Systen ENV variables involved in the git commands.
+    #
+    # @return [<String>] the names of the EVN variables involved in the git commands 
+    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       command(cmd, opts, chdir).split("\n")
     end
     
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
-      old_git_dir = ENV['GIT_DIR']
-      old_git_work_dir = ENV['GIT_WORK_TREE']
-      old_git_index_file = ENV['GIT_INDEX_FILE']
+    # Takes the current git's system ENV variables and store them.
+    def store_git_system_env_variables
+      @git_system_env_variables = {}
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
+      end
+    end
 
+    # Takes the previously stored git's ENV variables and set them again on ENV.
+    def restore_git_system_env_variables
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        ENV[env_variable_name] = @git_system_env_variables[env_variable_name] 
+      end
+    end
+
+    # Sets git's ENV variables to the custom values for the current instance.
+    def set_custom_git_env_variables
       ENV['GIT_DIR'] = @git_dir
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
+    end
 
-      path = @git_work_dir || @git_dir || @path
-      
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-
-      git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
-
-      output = nil
-
-      if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { output = run_command(git_cmd, &block) } 
-      else
-        output = run_command(git_cmd, &block)
-      end
-      
-      if @logger
-        @logger.info(git_cmd)
-        @logger.debug(output)
-      end
-            
-      if $?.exitstatus > 1 || ($?.exitstatus == 1 && output != '')
-        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
-      end
-
-      return output
+    # Runs a block inside an environment with customized ENV variables.
+    # It restores the ENV after execution.
+    #
+    # @param [Proc] block block to be executed within the customized environment
+    def with_custom_env_variables(&block)
+      store_git_system_env_variables()
+      set_custom_git_env_variables()
+      return block.call()
     ensure
-      ENV['GIT_DIR'] = old_git_dir
-      ENV['GIT_WORK_TREE'] = old_git_work_dir
-      ENV['GIT_INDEX_FILE'] = old_git_index_file
+      restore_git_system_env_variables()
+    end
+
+    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+      with_custom_env_variables do
+        path = @git_work_dir || @git_dir || @path
+          
+        opts = [opts].flatten.map {|s| escape(s) }.join(' ')
+
+        git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
+
+        output = nil
+
+        if chdir && (Dir.getwd != path)
+          Dir.chdir(path) { output = run_command(git_cmd, &block) } 
+        else
+          output = run_command(git_cmd, &block)
+        end
+        
+        if @logger
+          @logger.info(git_cmd)
+          @logger.debug(output)
+        end
+                
+        if $?.exitstatus > 1 || ($?.exitstatus == 1 && output != '')
+          raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
+        end
+
+        return output
+      end
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
