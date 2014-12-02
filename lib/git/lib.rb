@@ -736,7 +736,9 @@ module Git
     private
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
-      command(cmd, opts, chdir).split("\n")
+      cmd_op = command(cmd, opts, chdir)
+      op = cmd_op.encode("UTF-8", "binary", invalid: :replace, undef: :replace)
+      op.split("\n")
     end
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
