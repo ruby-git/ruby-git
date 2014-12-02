@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'open3' unless (RUBY_VERSION.to_f < 1.9)
 
 module Git
   
