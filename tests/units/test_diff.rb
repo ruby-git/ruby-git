@@ -22,6 +22,14 @@ class TestDiff < Test::Unit::TestCase
     assert_equal(64, d.insertions)
   end
 
+  # Patch files on diff outputs used to be parsed as 
+  # part of the diff adding invalid modificaction
+  # to the diff results.
+  def test_diff_patch
+    d = @git.diff('diff_over_patches~2', 'diff_over_patches')
+    assert_equal(1, d.count)
+  end
+
   def test_diff_path
     d = @git.diff('gitsearch1', 'v2.5').path('scott/')
     assert_equal(d.from, 'gitsearch1')
