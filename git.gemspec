@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop', '~> 0.27.1'
   s.add_development_dependency 'test-unit', '~> 3.0.7'
 
-  s.extra_rdoc_files = %w(LICENSE.txt README.md)
+  s.extra_rdoc_files = %w(History.txt LICENSE.txt README.md)
   s.rdoc_options = ['--charset=UTF-8']
 
   s.files = Dir.glob File.join('lib', '**', '*.rb')
