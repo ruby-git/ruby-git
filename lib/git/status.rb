@@ -1,17 +1,16 @@
 module Git
-  
   class Status
     include Enumerable
-    
+
     def initialize(base)
       @base = base
       construct_status
     end
-    
+
     def changed
       @files.select { |k, f| f.type == 'M' }
     end
-    
+
     def added
       @files.select { |k, f| f.type == 'A' }
     end
@@ -19,11 +18,11 @@ module Git
     def deleted
       @files.select { |k, f| f.type == 'D' }
     end
-    
+
     def untracked
       @files.select { |k, f| f.untracked }
     end
-    
+
     def pretty
       out = ''
       self.each do |file|
@@ -43,17 +42,17 @@ module Git
 \tuntrac #{file.untracked.to_s}
 FILE
     end
-    
+
     # enumerable method
-    
+
     def [](file)
       @files[file]
     end
-    
+
     def each(&block)
       @files.values.each(&block)
     end
-    
+
     class StatusFile
       attr_accessor :path, :type, :stage, :untracked
       attr_accessor :mode_index, :mode_repo
@@ -70,7 +69,7 @@ FILE
         @sha_repo = hash[:sha_repo]
         @untracked = hash[:untracked]
       end
-      
+
       def blob(type = :index)
         if type == :repo
           @base.object(@sha_repo)
@@ -78,40 +77,36 @@ FILE
           @base.object(@sha_index) rescue @base.object(@sha_repo)
         end
       end
-      
-      
     end
-    
-    private
-    
-      def construct_status
-        @files = @base.lib.ls_files
-        ignore = @base.lib.ignored_files
-        
-        # find untracked in working dir
-        Dir.chdir(@base.dir.path) do
-          Dir.glob('**/*', File::FNM_DOTMATCH) do |file|
-            next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
 
-            @files[file] = {:path => file, :untracked => true}
-          end
-        end
-        
-        # find modified in tree
-        @base.lib.diff_files.each do |path, data|
-          @files[path] ? @files[path].merge!(data) : @files[path] = data
-        end
-        
-        # find added but not committed - new files
-        @base.lib.diff_index('HEAD').each do |path, data|
-          @files[path] ? @files[path].merge!(data) : @files[path] = data
-        end
-        
-        @files.each do |k, file_hash|
-          @files[k] = StatusFile.new(@base, file_hash)
+    private
+
+    def construct_status
+      @files = @base.lib.ls_files
+      ignore = @base.lib.ignored_files
+
+      # find untracked in working dir
+      Dir.chdir(@base.dir.path) do
+        Dir.glob('**/*', File::FNM_DOTMATCH) do |file|
+          next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
+
+          @files[file] = {:path => file, :untracked => true}
         end
       end
-      
+
+      # find modified in tree
+      @base.lib.diff_files.each do |path, data|
+        @files[path] ? @files[path].merge!(data) : @files[path] = data
+      end
+
+      # find added but not committed - new files
+      @base.lib.diff_index('HEAD').each do |path, data|
+        @files[path] ? @files[path].merge!(data) : @files[path] = data
+      end
+
+      @files.each do |k, file_hash|
+        @files[k] = StatusFile.new(@base, file_hash)
+      end
+    end
   end
-  
 end

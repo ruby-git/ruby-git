@@ -2,12 +2,6 @@
 
 Library for using Git in Ruby.
 
-## Homepage
-
-Git public hosting of the project source code is at:
-
-http://github.com/schacon/ruby-git
-
 ## Install
 
 You can install Ruby/Git like this:
