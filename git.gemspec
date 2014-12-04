@@ -16,11 +16,11 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.requirements = ['Git 1.6.0.0 or greater']
 
-  s.add_development_dependency 'bundler', '~> 1.7'
-  s.add_development_dependency 'rake', '~> 10.0'
-  s.add_development_dependency 'rdoc', '~> 4.1.2'
-  s.add_development_dependency 'rubocop', '~> 0.27.1'
-  s.add_development_dependency 'test-unit', '~> 3.0.7'
+  s.add_development_dependency 'bundler'
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'rdoc'
+  s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'test-unit'
 
   s.extra_rdoc_files = %w(History.txt LICENSE.txt README.md)
   s.rdoc_options = ['--charset=UTF-8']
