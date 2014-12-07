@@ -105,7 +105,7 @@ FILE
         # find added but not committed - new files
         @base.lib.diff_index('HEAD').each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data
-        end
+        end unless ! File.exists?(@base.index.path)
         
         @files.each do |k, file_hash|
           @files[k] = StatusFile.new(@base, file_hash)
