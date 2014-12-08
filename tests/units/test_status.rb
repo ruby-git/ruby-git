@@ -24,4 +24,11 @@ class TestStatus < Test::Unit::TestCase
     end
   end
 
+  def test_empty_repo_status
+    in_temp_dir do |path|
+      git = Git.init('empty_repo')
+      assert git.status
+    end
+  end
+
 end
