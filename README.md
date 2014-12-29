@@ -57,6 +57,20 @@ Require the 'git' gem.
     require 'git'
 ```
 
+Git env config
+
+```ruby
+  Git.config do |config|
+    # If you want to use a custom git binary
+    config.binary_path = '/git/bin/path'
+
+    # If you need to use a custom SSH Key
+    config.ssh_key = '/path/to/ssh/key'
+  end
+
+```
+
+
 Here are the operations that need read permission only.
 
 ```ruby
