@@ -773,9 +773,11 @@ module Git
     #
     # @param [Proc] block block to be executed within the customized environment
     def with_custom_env_variables(&block)
-      store_git_system_env_variables()
-      set_custom_git_env_variables()
-      return block.call()
+      @@semaphore.synchronize do
+        store_git_system_env_variables()
+        set_custom_git_env_variables()
+        return block.call()
+      end
     ensure
       restore_git_system_env_variables()
     end
@@ -799,17 +801,14 @@ module Git
       
       exitstatus = nil
 
-      @@semaphore.synchronize do
-        with_custom_env_variables do
-          command_thread = Thread.new do 
-            output = run_command(git_cmd, &block)
-            exitstatus = $?.exitstatus
-          end
+      with_custom_env_variables do
+        command_thread = Thread.new do 
+          output = run_command(git_cmd, &block)
+          exitstatus = $?.exitstatus
         end
+        command_thread.join
       end
 
-      command_thread.join
-      
       if @logger
         @logger.info(git_cmd)
         @logger.debug(output)
