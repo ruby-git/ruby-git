@@ -140,6 +140,10 @@ module Git
         lib.config_list
       end
     end
+
+    def self.config
+      return @@config ||= Config.new
+    end
     
     # factory methods
     

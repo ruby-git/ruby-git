@@ -134,7 +134,7 @@ module Git
               final[current_file][:dst] = m[2]
               final[current_file][:mode] = m[3].strip if m[3]
             end
-           if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
+            if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
               final[current_file][:type] = m[1]
               final[current_file][:mode] = m[2]
             end

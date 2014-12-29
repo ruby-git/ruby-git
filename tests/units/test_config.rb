@@ -27,5 +27,19 @@ class TestConfig < Test::Unit::TestCase
       assert_equal('bully', g.config('user.name'))
     end
   end  
+
+  def test_env_config
+    Git.configure do |config|
+      config.binary_path = "/usr/bin/git"
+      config.ssh_key = "/path/to/ssh"
+    end
+
+    @git.log
+  ensure
+    Git.configure do |config|
+      config.binary_path = nil
+      config.ssh_key = nil
+    end
+  end
   
 end

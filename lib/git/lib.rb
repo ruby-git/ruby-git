@@ -783,7 +783,7 @@ module Git
     # Systen ENV variables involved in the git commands.
     #
     # @return [<String>] the names of the EVN variables involved in the git commands 
-    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']
+    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       command(cmd, opts, chdir).split("\n")
@@ -809,6 +809,7 @@ module Git
       ENV['GIT_DIR'] = @git_dir
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
+      ENV['GIT_SSH'] = Git::Base.config.ssh_key
     end
 
     # Runs a block inside an environment with customized ENV variables.
@@ -834,11 +835,9 @@ module Git
       
       global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
       
-      git_cmd = "git #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
       
       output = nil
-      
-      path = @git_work_dir || @git_dir || @path
       
       command_thread = nil; 
       

@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
     'lib/git/base.rb',
     'lib/git/branch.rb',
     'lib/git/branches.rb',
+    'lib/git/config.rb',
     'lib/git/diff.rb',
     'lib/git/index.rb',
     'lib/git/lib.rb',

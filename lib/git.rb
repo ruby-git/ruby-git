@@ -7,6 +7,7 @@ require 'git/author'
 require 'git/base'
 require 'git/branch'
 require 'git/branches'
+require 'git/config'
 require 'git/diff'
 require 'git/index'
 require 'git/lib'
@@ -58,6 +59,14 @@ module Git
       # return hash
       lib.config_list
     end
+  end
+
+  def self.configure
+    yield Base.config
+  end
+
+  def self.config
+    return Base.config
   end
 
   def global_config(name = nil, value = nil)
