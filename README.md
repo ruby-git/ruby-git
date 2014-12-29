@@ -113,7 +113,10 @@ Here are the operations that need read permission only.
     g.grep('hello')  # implies HEAD
     g.blob('v2.5:Makefile').grep('hello')
     g.tag('v2.5').grep('hello', 'docs/')
-
+    g.describe() 
+    g.describe('0djf2aa')
+    g.describe('HEAD', {:all => true, :tags => true})
+  
     g.diff(commit1, commit2).size
     g.diff(commit1, commit2).stats
     g.gtree('v2.5').diff('v2.6').insertions
