@@ -290,6 +290,25 @@ module Git
       self.lib.clean(opts)
     end
 
+    #  returns the most recent tag that is reachable from a commit
+    #
+    # options:
+    #  :all
+    #  :tags
+    #  :contains
+    #  :debug
+    #  :exact_match
+    #  :dirty
+    #  :abbrev
+    #  :candidates
+    #  :long
+    #  :always
+    #  :match
+    #
+    def describe(committish=nil, opts={})
+      self.lib.describe(committish, opts)
+    end
+
     # reverts the working directory to the provided commitish.
     # Accepts a range, such as comittish..HEAD
     #
