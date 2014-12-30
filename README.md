@@ -60,7 +60,7 @@ Require the 'git' gem.
 Git env config
 
 ```ruby
-  Git.config do |config|
+  Git.configure do |config|
     # If you want to use a custom git binary
     config.binary_path = '/git/bin/path'
 
