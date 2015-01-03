@@ -4,7 +4,7 @@ module Git
 
     attr_writer :binary_path
 
-    attr_accessor :ssh_key
+    attr_accessor :ssh_wrapper_path
 
     def initialize
       @binary_path = nil

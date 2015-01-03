@@ -65,7 +65,7 @@ Git env config
     config.binary_path = '/git/bin/path'
 
     # If you need to use a custom SSH Key
-    config.ssh_key = '/path/to/ssh/key'
+    config.ssh_wrapper_path = '/path/to/ssh/wrapper'
   end
 
 ```
