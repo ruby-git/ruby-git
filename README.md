@@ -13,7 +13,7 @@ http://github.com/schacon/ruby-git
 You can install Ruby/Git like this:
 
     $ sudo gem install git
-    
+
 ## Code Status
 
 * [![Build Status](https://api.travis-ci.org/schacon/ruby-git.png)](https://travis-ci.org/schacon/ruby-git)
@@ -46,7 +46,7 @@ like:
 
 Here are a bunch of examples of how to use the Ruby/Git package.
 
-Ruby < 1.9 will require rubygems to be loaded. 
+Ruby < 1.9 will require rubygems to be loaded.
 
 ```ruby
     require 'rubygems'
@@ -127,10 +127,10 @@ Here are the operations that need read permission only.
     g.grep('hello')  # implies HEAD
     g.blob('v2.5:Makefile').grep('hello')
     g.tag('v2.5').grep('hello', 'docs/')
-    g.describe() 
+    g.describe()
     g.describe('0djf2aa')
     g.describe('HEAD', {:all => true, :tags => true})
-  
+
     g.diff(commit1, commit2).size
     g.diff(commit1, commit2).stats
     g.gtree('v2.5').diff('v2.6').insertions
