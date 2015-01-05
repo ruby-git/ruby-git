@@ -21,6 +21,11 @@ class TestLib < Test::Unit::TestCase
     assert_equal("test\n", data['message'])
     assert_equal(["546bec6f8872efa41d5d97a369f669165ecda0de"], data['parent'])
   end
+  
+  def test_checkout
+    assert(@lib.checkout('test_checkout_b',{:new_branch=>true}))
+    assert(@lib.checkout('master'))
+  end
 
   # takes parameters, returns array of appropriate commit objects
   # :count
