@@ -59,7 +59,7 @@ module Git
       clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
-      arr_opts << "-b" << opts[:branch] if opts[:branch]
+      arr_opts << "--branch" << opts[:branch] if opts[:branch]
       arr_opts << "--bare" if opts[:bare]
       arr_opts << "--recursive" if opts[:recursive]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
