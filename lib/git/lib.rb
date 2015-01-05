@@ -47,6 +47,7 @@ module Git
     #
     # accepts options:
     #  :remote::    name of remote (rather than 'origin')
+    #  :branch::    name of branch to track (rather than 'master')
     #  :bare::      no working directory
     #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
     #  :depth::     the number of commits back to pull
@@ -58,6 +59,7 @@ module Git
       clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
+      arr_opts << "-b" << opts[:branch] if opts[:branch]
       arr_opts << "--bare" if opts[:bare]
       arr_opts << "--recursive" if opts[:recursive]
       arr_opts << "-o" << opts[:remote] if opts[:remote]
