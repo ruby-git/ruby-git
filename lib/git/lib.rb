@@ -51,6 +51,7 @@ module Git
     #  :bare::      no working directory
     #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
     #  :depth::     the number of commits back to pull
+    #  :branch::    name of branch
     # 
     # TODO - make this work with SSH password or auth_key
     #
@@ -65,6 +66,7 @@ module Git
       arr_opts << "-o" << opts[:remote] if opts[:remote]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << "--config" << opts[:config] if opts[:config]
+      arr_opts << "--branch" << opts[:branch] if opts[:branch]
 
       arr_opts << '--'
       arr_opts << repository
