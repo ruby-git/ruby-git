@@ -4,7 +4,7 @@ module Git
   class Log
     include Enumerable
     
-    def initialize(base, count = 30)
+    def initialize(base, count=nil)
       dirty_log
       @base = base
       @count = count

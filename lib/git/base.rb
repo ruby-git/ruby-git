@@ -172,7 +172,7 @@ module Git
     end
     
     # returns a Git::Log object with count commits
-    def log(count = 30)
+    def log(count=nil)
       Git::Log.new(self, count)
     end
 
