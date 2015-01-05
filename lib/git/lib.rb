@@ -571,11 +571,21 @@ module Git
     
     def checkout(branch, opts = {})
       arr_opts = []
+      arr_opts << '--orphan' if opts[:orphan]
       arr_opts << '-f' if opts[:force]
-      arr_opts << '-b' << opts[:new_branch] if opts[:new_branch]
+      arr_opts << '-b' if opts[:new_branch]
       arr_opts << branch
       
-      command('checkout', arr_opts)
+      result = command('checkout', arr_opts)
+      if (opts[:orphan] && opts[:orphaninit] != nil)
+        ## start orphan headless repo with an empty .gitignore
+        r1 = remove('.',{:recursive => true})
+        r2 = checkout_file_from_branch(opts[:orphaninit])
+        r3 = add(opts[:orphaninit])
+        r4 = commit("initial commit: copied #{opts[:orphaninit]} from master",{:all=>true})  
+        result = (result != nil && r1 != nil && r2 != nil && r3 != nil && r4 != nil)
+      end
+      result
     end
 
     def checkout_file(version, file)
@@ -583,6 +593,12 @@ module Git
       arr_opts << version
       arr_opts << file
       command('checkout', arr_opts)
+    end
+    
+    def checkout_file_from_branch(file,branch='master')
+      arr_opts = []
+      arr_opts << file
+      command("checkout #{branch} --", arr_opts)
     end
     
     def merge(branch, message = nil)      

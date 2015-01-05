@@ -191,6 +191,15 @@ And here are the operations that will need to write to your git repository.
      g.branch('new_branch').checkout
      g.branch('new_branch').delete
      g.branch('existing_branch').checkout
+               
+     # creates a new orphan branch and switches to it 
+     g.branch('new_branch').checkout({:orphan=>true}) 
+     # note: branch will be lost if you do not create any commit in it before switching to another branch
+     
+     # creates a new orphan branch, switches to it and copies a defined file from the master branch to the new orphan branch 
+     # and commits the copied file as the initial commit
+     g.branch('new_branch').checkout({:orphan=>true,:orphaninit=>'.orphan_init'})
+     g.branch('new_branch').checkout({:orphan=>true,:orphaninit=>'example.txt'})
 
      g.checkout('new_branch')
      g.checkout(g.branch('new_branch'))

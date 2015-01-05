@@ -14,6 +14,18 @@ class TestLib < Test::Unit::TestCase
     @lib = Git.open(@wdir).lib
   end
   
+  def test_checkout
+    assert(@lib.checkout('test_checkout_-b',{:new_branch=>true}))
+    assert(@lib.checkout('master'))
+    assert(@lib.checkout('test_checkout_--orphan',{:orphan=>true}))
+    assert(@lib.checkout('master'))
+    assert(@lib.checkout('test_checkout_--orphan_with_initial_commit',{:orphan=>true,:orphaninit=>'example.txt'}))
+  end
+  
+  def test_checkout_file_from_branch
+    assert(@lib.checkout_file_from_branch('example.txt'))
+  end
+  
   def test_commit_data
     data = @lib.commit_data('1cc8667014381')
     assert_equal('scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800', data['author'])
