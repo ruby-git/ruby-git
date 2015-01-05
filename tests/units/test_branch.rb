@@ -54,6 +54,7 @@ class TestBranch < Test::Unit::TestCase
       Dir.chdir('branch_test') do
         assert(!g.branch('new_branch').current)
         g.branch('other_branch').create
+        assert(!g.branch('other_branch').current)
         g.branch('new_branch').checkout
         assert(g.branch('new_branch').current)
 
