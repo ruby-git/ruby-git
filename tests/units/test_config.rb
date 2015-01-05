@@ -31,14 +31,14 @@ class TestConfig < Test::Unit::TestCase
   def test_env_config
     Git.configure do |config|
       config.binary_path = "/usr/bin/git"
-      config.ssh_key = "/path/to/ssh"
+      config.git_ssh = "/path/to/ssh/script"
     end
 
     @git.log
   ensure
     Git.configure do |config|
       config.binary_path = nil
-      config.ssh_key = nil
+      config.git_ssh = nil
     end
   end
   

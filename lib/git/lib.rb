@@ -809,7 +809,7 @@ module Git
       ENV['GIT_DIR'] = @git_dir
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
-      ENV['GIT_SSH'] = Git::Base.config.ssh_key
+      ENV['GIT_SSH'] = Git::Base.config.git_ssh
     end
 
     # Runs a block inside an environment with customized ENV variables.
