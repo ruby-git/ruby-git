@@ -14,6 +14,14 @@ class TestDiff < Test::Unit::TestCase
   #  assert(1, d.size)
   #end
 
+  def test_diff_current_vs_head
+    #test git diff without specifying source/destination commits
+    update_file(File.join(@wdir,"example.txt"),"FRANCO")
+    d = @git.diff
+    patch = d.patch
+    assert(patch.match(/\+FRANCO/))
+  end
+
   def test_diff_tags
     d = @git.diff('gitsearch1', 'v2.5')
     assert_equal(3, d.size)
