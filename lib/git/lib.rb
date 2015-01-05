@@ -46,11 +46,13 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :remote::    name of remote (rather than 'origin')
-    #  :branch::    name of branch to track (rather than 'master')
     #  :bare::      no working directory
-    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    #  :branch::    name of branch to track (rather than 'master')
     #  :depth::     the number of commits back to pull
+    #  :origin::    name of remote (same as remote)
+    #  :path::      directory where the repo will be cloned
+    #  :remote::    name of remote (rather than 'origin')
+    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
     # 
     # TODO - make this work with SSH password or auth_key
     #
@@ -59,14 +61,15 @@ module Git
       clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
-      arr_opts << "--branch" << opts[:branch] if opts[:branch]
       arr_opts << "--bare" if opts[:bare]
-      arr_opts << "--recursive" if opts[:recursive]
-      arr_opts << "-o" << opts[:remote] if opts[:remote]
+      arr_opts << "--branch" << opts[:branch] if opts[:branch]
       arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << "--config" << opts[:config] if opts[:config]
+      arr_opts << "--origin" << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << "--recursive" if opts[:recursive]
 
       arr_opts << '--'
+
       arr_opts << repository
       arr_opts << clone_dir
       
