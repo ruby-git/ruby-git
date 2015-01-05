@@ -67,6 +67,13 @@ class TestInit < Test::Unit::TestCase
     end
   end
   
+  def test_git_clone_with_branch
+    in_temp_dir do |path|      
+      g = Git.clone(@wbare, 'clone-branch', :branch => 'test')
+      assert_equal(g.current_branch, 'test')
+    end
+  end
+  
   def test_git_clone_bare
     in_temp_dir do |path|      
       g = Git.clone(@wbare, 'bare.git', :bare => true)
