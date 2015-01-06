@@ -149,8 +149,6 @@ module Git
       @lib = nil
       @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
     end
-
-
     
     # returns +true+ if the branch exists locally
     def is_local_branch?(branch)
@@ -168,11 +166,6 @@ module Git
     def is_branch?(branch)
       branch_names = self.branches.map {|b| b.name}
       branch_names.include?(branch)
-    end
-
-    # returns a Git::Remote object
-    def remote(remote_name = 'origin')
-      Git::Remote.new(self, remote_name)
     end
 
     # this is a convenience method for accessing the class that wraps all the 
@@ -203,11 +196,6 @@ module Git
     #   end
     def grep(string, path_limiter = nil, opts = {})
       self.object('HEAD').grep(string, path_limiter, opts)
-    end
-    
-    # returns a Git::Diff object
-    def diff(objectish = 'HEAD', obj2 = nil)
-      Git::Diff.new(self, objectish, obj2)
     end
     
     # updates the repository index using the workig dorectory content
@@ -386,11 +374,6 @@ module Git
     def tags
       self.lib.tags.map { |r| tag(r) }
     end
-    
-    # returns a Git::Tag object
-    def tag(tag_name)
-      Git::Object.new(self, tag_name, 'tag', true)
-    end
 
     # Creates a new git tag (Git::Tag)
     # Usage:
@@ -476,10 +459,6 @@ module Git
       self.lib.write_tree
     end
     
-    def commit_tree(tree = nil, opts = {})
-      Git::Object::Commit.new(self, self.lib.commit_tree(tree, opts))
-    end
-    
     def write_and_commit_tree(opts = {})
       tree = write_tree
       commit_tree(tree, opts)
@@ -537,7 +516,6 @@ module Git
     def current_branch
       self.lib.branch_current
     end
-
     
   end
   
