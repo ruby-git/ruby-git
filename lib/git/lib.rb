@@ -61,12 +61,12 @@ module Git
       clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
-      arr_opts << "--bare" if opts[:bare]
-      arr_opts << "--branch" << opts[:branch] if opts[:branch]
-      arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
-      arr_opts << "--config" << opts[:config] if opts[:config]
-      arr_opts << "--origin" << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
-      arr_opts << "--recursive" if opts[:recursive]
+      arr_opts << '--bare' if opts[:bare]
+      arr_opts << '--branch' << opts[:branch] if opts[:branch]
+      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--config' << opts[:config] if opts[:config]
+      arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << '--recursive' if opts[:recursive]
 
       arr_opts << '--'
 
@@ -438,6 +438,19 @@ module Git
 
     def parse_config(file)
       parse_config_list command_lines('config', ['--list', '--file', file], false)
+    end
+
+    # Shows objects
+    #
+    # @param [String|NilClass] objectish the target object reference (nil == HEAD)
+    # @param [String|NilClass] path the path of the file to be shown
+    # @return [String] the object information
+    def show(objectish=nil, path=nil)
+      arr_opts = []
+
+      arr_opts << (path ? "#{objectish}:#{path}" : objectish)
+      
+      command('show', arr_opts.compact)
     end
     
     ## WRITE COMMANDS ##

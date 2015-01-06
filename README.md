@@ -149,6 +149,10 @@ Here are the operations that need read permission only.
     g.config # returns whole config hash
 
     g.tags # returns array of Git::Tag objects
+    
+    g.show()
+    g.show('HEAD')
+    g.show('v2.8', 'README.md')
 ```
 
 And here are the operations that will need to write to your git repository.

@@ -421,6 +421,15 @@ module Git
     def apply_mail(file)
       self.lib.apply_mail(file) if File.exist?(file)
     end
+
+    # Shows objects
+    #
+    # @param [String|NilClass] objectish the target object reference (nil == HEAD)
+    # @param [String|NilClass] path the path of the file to be shown
+    # @return [String] the object information
+    def show(objectish=nil, path=nil)
+      self.lib.show(objectish, path)
+    end
     
     ## LOWER LEVEL INDEX OPERATIONS ##
     

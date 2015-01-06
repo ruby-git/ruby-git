@@ -199,4 +199,10 @@ class TestLib < Test::Unit::TestCase
     assert_equal(2, match.size)
   end
   
+  def test_show
+    assert(/^commit 5e53019b3238362144c2766f02a2c00d91fcc023.+\+replace with new text - diff test$/m.match(@lib.show))
+    assert(/^commit 935badc874edd62a8629aaf103418092c73f0a56.+\+nothing!$/m.match(@lib.show('gitsearch1')))
+    assert(/^hello.+nothing!$/m.match(@lib.show('gitsearch1', 'scott/text.txt')))
+  end
+  
 end
