@@ -1,10 +1,10 @@
-require 'git/base/factories'
+require 'git/base/factory'
 
 module Git
   
   class Base
 
-    include Git::Base::Factories
+    include Git::Base::Factory
 
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})

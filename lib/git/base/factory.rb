@@ -2,7 +2,7 @@ module Git
 
   class Base
 
-    module Factories
+    module Factory
       
       # returns a Git::Branch object for branch_name
       def branch(branch_name = 'master')
