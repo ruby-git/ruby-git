@@ -1,16 +1,39 @@
+require 'git/base/factories'
+
 module Git
   
   class Base
+
+    include Git::Base::Factories
 
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})
       self.new({:repository => git_dir}.merge(opts))
     end
     
-    # opens a new Git Project from a working directory
-    # you can specify non-standard git_dir and index file in the options
-    def self.open(working_dir, opts={})
-      self.new({:working_directory => working_dir}.merge(opts))
+    # clones a git repository locally
+    #
+    #  repository - http://repo.or.cz/w/sinatra.git
+    #  name - sinatra
+    #
+    # options:
+    #   :repository
+    #
+    #    :bare
+    #   or 
+    #    :working_directory
+    #    :index_file
+    #
+    def self.clone(repository, name, opts = {})
+      # run git-clone 
+      self.new(Git::Lib.new.clone(repository, name, opts))
+    end
+    
+    # Returns (and initialize if needed) a Git::Config instance
+    #
+    # @return [Git::Config] the current config instance.
+    def self.config
+      return @@config ||= Config.new
     end
 
     # initializes a git repository
@@ -36,25 +59,13 @@ module Git
        
       self.new(opts)
     end
-
-    # clones a git repository locally
-    #
-    #  repository - http://repo.or.cz/w/sinatra.git
-    #  name - sinatra
-    #
-    # options:
-    #   :repository
-    #
-    #    :bare
-    #   or 
-    #    :working_directory
-    #    :index_file
-    #
-    def self.clone(repository, name, opts = {})
-      # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+    
+    # opens a new Git Project from a working directory
+    # you can specify non-standard git_dir and index file in the options
+    def self.open(working_dir, opts={})
+      self.new({:working_directory => working_dir}.merge(opts))
     end
-        
+    
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')
@@ -71,36 +82,6 @@ module Git
       @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
     end
-  
-  
-    # returns a reference to the working directory
-    #  @git.dir.path
-    #  @git.dir.writeable?
-    def dir
-      @working_directory
-    end
-
-    # returns reference to the git repository directory
-    #  @git.dir.path
-    def repo
-      @repository
-    end
-    
-    # returns reference to the git index file
-    def index
-      @index
-    end
-    
-    
-    def set_working(work_dir, check = true)
-      @lib = nil
-      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
-    end
-
-    def set_index(index_file, check = true)
-      @lib = nil
-      @index = Git::Index.new(index_file.to_s, check)
-    end
     
     # changes current working directory for a block
     # to the git working directory
@@ -114,13 +95,6 @@ module Git
     def chdir # :yields: the Git::Path
       Dir.chdir(dir.path) do
         yield dir.path
-      end
-    end
-    
-    # returns the repository size in bytes
-    def repo_size
-      Dir.chdir(repo.path) do
-        return `du -s`.chomp.split.first.to_i
       end
     end
     
@@ -140,56 +114,43 @@ module Git
         lib.config_list
       end
     end
-
-    def self.config
-      return @@config ||= Config.new
+  
+    # returns a reference to the working directory
+    #  @git.dir.path
+    #  @git.dir.writeable?
+    def dir
+      @working_directory
     end
     
-    # factory methods
-    
-    # returns a Git::Object of the appropriate type
-    # you can also call @git.gtree('tree'), but that's 
-    # just for readability.  If you call @git.gtree('HEAD') it will
-    # still return a Git::Object::Commit object.  
-    #
-    # @git.object calls a factory method that will run a rev-parse 
-    # on the objectish and determine the type of the object and return 
-    # an appropriate object for that type 
-    def object(objectish)
-      Git::Object.new(self, objectish)
-    end
-    
-    def gtree(objectish)
-      Git::Object.new(self, objectish, 'tree')
-    end
-    
-    def gcommit(objectish)
-      Git::Object.new(self, objectish, 'commit')
-    end
-    
-    def gblob(objectish)
-      Git::Object.new(self, objectish, 'blob')
-    end
-    
-    # returns a Git::Log object with count commits
-    def log(count = 30)
-      Git::Log.new(self, count)
+    # returns reference to the git index file
+    def index
+      @index
     end
 
-    # returns a Git::Status object
-    def status
-      Git::Status.new(self)
-    end
-        
-    # returns a Git::Branches object of all the Git::Branch objects for this repo
-    def branches
-      Git::Branches.new(self)
+    # returns reference to the git repository directory
+    #  @git.dir.path
+    def repo
+      @repository
     end
     
-    # returns a Git::Branch object for branch_name
-    def branch(branch_name = 'master')
-      Git::Branch.new(self, branch_name)
+    # returns the repository size in bytes
+    def repo_size
+      Dir.chdir(repo.path) do
+        return `du -s`.chomp.split.first.to_i
+      end
     end
+    
+    def set_index(index_file, check = true)
+      @lib = nil
+      @index = Git::Index.new(index_file.to_s, check)
+    end
+    
+    def set_working(work_dir, check = true)
+      @lib = nil
+      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
+    end
+
+
     
     # returns +true+ if the branch exists locally
     def is_local_branch?(branch)
