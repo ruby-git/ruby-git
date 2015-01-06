@@ -159,10 +159,10 @@ class TestLib < Test::Unit::TestCase
       lib = Git::Lib.new
       ls = lib.ls_remote(@wbare)
 
-      assert_equal(%w( gitsearch1 v2.5 v2.6 v2.7 v2.8 ), ls['tags'].keys)
+      assert_equal(%w( gitsearch1 v2.5 v2.6 v2.7 v2.8 ), ls['tags'].keys.sort)
       assert_equal("935badc874edd62a8629aaf103418092c73f0a56", ls['tags']['gitsearch1'][:sha])
 
-      assert_equal(%w( git_grep master test test_branches test_object ), ls['branches'].keys)
+      assert_equal(%w( git_grep master test test_branches test_object ), ls['branches'].keys.sort)
       assert_equal("5e392652a881999392c2757cf9b783c5d47b67f7", ls['branches']['master'][:sha])
 
       assert_equal("HEAD", ls['head'][:ref])
