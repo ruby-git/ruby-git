@@ -198,7 +198,7 @@ module Git
       self.object('HEAD').grep(string, path_limiter, opts)
     end
     
-    # updates the repository index using the workig dorectory content
+    # updates the repository index using the working directory content
     #
     #    @git.add('path/to/file')
     #    @git.add(['path/to/file1','path/to/file2'])
