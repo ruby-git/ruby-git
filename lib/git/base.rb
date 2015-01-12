@@ -44,8 +44,8 @@ module Git
     #  :repository
     #
     def self.init(working_dir, opts = {})
-      opts[:working_directory] = working_dir if !opts[:working_directory] 
-      opts[:repository] = File.join(opts[:working_directory], '.git') if !opts[:repository]
+      opts[:working_directory] ||= working_dir 
+      opts[:repository] ||= File.join(opts[:working_directory], '.git')
       
       FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
       
