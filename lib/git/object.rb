@@ -235,10 +235,10 @@ module Git
   
         # see if this object has been initialized and do so if not
         def check_commit
-          unless @tree
-            data = @base.lib.commit_data(@objectish)
-            set_commit(data)
-          end
+          return if @tree
+          
+          data = @base.lib.commit_data(@objectish)
+          set_commit(data)
         end
       
     end
@@ -250,14 +250,41 @@ module Git
         super(base, sha)
         @name = name
         @annotated = nil
-      end
-
-      def tag?
-        true
+        @loaded = false
       end
 
       def annotated?
         @annotated ||= (@base.lib.object_type(self.name) == 'tag')
+      end
+
+      def message
+        check_tag()
+        return @message
+      end
+      
+      def tag?
+        true
+      end
+
+      def tagger
+        check_tag()
+        return @tagger
+      end
+
+      private
+
+      def check_tag
+        return if @loaded
+
+        if !self.annotated? 
+          @message = @tagger = nil
+        else
+          tdata = @base.lib.tag_data(@name)
+          @message = tdata['message'].chomp
+          @tagger = Git::Author.new(tdata['tagger'])
+        end
+
+        @loaded = true
       end
         
     end

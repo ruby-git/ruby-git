@@ -390,7 +390,7 @@ module Git
     #   
     def add_tag(name, *opts)
       self.lib.tag(name, *opts)
-      tag(name)
+      self.tag(name)
     end
  
     # deletes a tag 

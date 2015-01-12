@@ -200,6 +200,31 @@ module Git
 
       return hsh
     end
+
+    def tag_data(name)
+      sha = sha.to_s
+      tdata = command_lines('cat-file', ['tag', name])
+      process_tag_data(tdata, name, 0)
+    end
+
+    def process_tag_data(data, name, indent=4)
+      hsh = {
+        'name'    => name,
+        'message' => ''
+      }
+
+      loop do
+        key, *value = data.shift.split
+
+        break if key.nil?
+
+        hsh[key] = value.join(' ')
+      end
+      
+      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+
+      return hsh
+    end
     
     def process_commit_log_data(data)
       in_message = false
