@@ -393,6 +393,7 @@ module Git
     end
 
     def ls_remote(location=nil)
+      location ||= '.'
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
         command_lines('ls-remote', [location], false).each do |line|
           (sha, info) = line.split("\t")

@@ -153,6 +153,11 @@ Here are the operations that need read permission only.
     g.show()
     g.show('HEAD')
     g.show('v2.8', 'README.md')
+
+    Git.ls_remote('https://github.com/schacon/ruby-git.git') # returns a hash containing the available references of the repo.
+    Git.ls_remote('/path/to/local/repo')
+    Git.ls_remote() # same as Git.ls_remote('.')
+
 ```
 
 And here are the operations that will need to write to your git repository.
