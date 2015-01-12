@@ -2,7 +2,7 @@ require 'date'
 
 Gem::Specification.new do |s|
   s.authors = ['Scott Chacon']
-  s.date = '2015-01-07' 
+  s.date = '2015-01-12' 
   s.email = 'schacon@gmail.com'
   s.homepage = 'http://github.com/schacon/ruby-git'
   s.license = 'MIT'
