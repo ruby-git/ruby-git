@@ -249,10 +249,15 @@ module Git
       def initialize(base, sha, name)
         super(base, sha)
         @name = name
+        @annotated = nil
       end
 
       def tag?
         true
+      end
+
+      def annotated?
+        @annotated ||= (@base.lib.object_type(self.name) == 'tag')
       end
         
     end

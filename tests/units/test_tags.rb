@@ -54,6 +54,9 @@ class TestTags < Test::Unit::TestCase
       assert_raise Git::GitTagNameDoesNotExist do
         r2.tag('third')
       end
+
+      assert_true(r2.tag('fourth').annotated?)
+      assert_false(r2.tag('fifth').annotated?)
     end
   end
 end
