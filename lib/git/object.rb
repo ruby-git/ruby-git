@@ -217,9 +217,7 @@ module Git
       end
       
       def set_commit(data)
-        if data['sha']
-          @sha = data['sha']
-        end
+        @sha ||= data['sha']
         @committer = Git::Author.new(data['committer'])
         @author = Git::Author.new(data['author'])
         @tree = Git::Object::Tree.new(@base, data['tree'])

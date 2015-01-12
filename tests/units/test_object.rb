@@ -11,6 +11,13 @@ class TestObject < Test::Unit::TestCase
     @tree = @git.gtree('1cc8667014381^{tree}')
     @blob = @git.gblob('v2.5:example.txt')
   end
+
+  def test_sha_state
+    o = @git.object('HEAD')
+    original_sha = o.sha
+    o.date
+    assert_equal(original_sha, o.sha)
+  end
   
   def test_commit
     o = @git.gcommit('1cc8667014381')
