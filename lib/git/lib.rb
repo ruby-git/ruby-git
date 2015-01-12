@@ -463,7 +463,7 @@ module Git
       command('config', ['--global', name, value], false)
     end
          
-    # updates the repository index using the workig dorectory content
+    # updates the repository index using the working directory content
     # 
     #    lib.add('path/to/file')
     #    lib.add(['path/to/file1','path/to/file2'])
