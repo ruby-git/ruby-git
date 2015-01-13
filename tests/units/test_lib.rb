@@ -66,6 +66,29 @@ class TestLib < Test::Unit::TestCase
     assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
   end
 
+  def test_git_ssh_from_environment_is_passed_to_binary
+    ENV['GIT_SSH'] = 'my/git-ssh-wrapper'
+
+    Dir.mktmpdir do |dir|
+      output_path = File.join(dir, 'git_ssh_value')
+      binary_path = File.join(dir, 'git')
+      Git::Base.config.binary_path = binary_path
+      File.open(binary_path, 'w') { |f|
+        f << "echo $GIT_SSH > #{output_path}"
+      }
+      FileUtils.chmod(0700, binary_path)
+      @lib.checkout('something')
+      assert_equal("my/git-ssh-wrapper\n", File.read(output_path))
+    end
+  ensure
+    Git.configure do |config|
+      config.binary_path = nil
+      config.git_ssh = nil
+    end
+
+    ENV['GIT_SSH'] = nil
+  end
+
   def test_revparse
     assert_equal('1cc8667014381e2788a94777532a788307f38d26', @lib.revparse('1cc8667014381')) # commit
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @lib.revparse('1cc8667014381^{tree}')) #tree
