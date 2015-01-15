@@ -485,8 +485,23 @@ module Git
     def update_ref(branch, commit)
       branch(branch).update_ref(commit)
     end
-    
-    
+
+    def ls_remote(location = nil, opts = {})
+      tmp = self.lib.ls_remote(location, opts)
+      ret = []
+      tmp.each { |line|
+        split = line.split
+        if (opts[:tags])
+          short_name = split[1].sub(/refs\/tags\//, '')
+          obj = {:sha => split[0], :tag_ref => split[1], :name => short_name}
+        else
+          obj = {:sha => split[0], :ref => split[1]}
+        end
+        ret.push obj
+        return ret
+      }
+    end
+
     def ls_files(location=nil)
       self.lib.ls_files(location)
     end
