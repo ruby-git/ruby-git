@@ -15,7 +15,11 @@ module Git
       @stats = nil
     end
     attr_reader :from, :to
-    
+   
+    def name_status
+      cache_name_status
+    end
+
     def path(path)
       @path = path
       return self
@@ -96,22 +100,21 @@ module Git
     private
     
       def cache_full
-        unless @full_diff
-          @full_diff = @base.lib.diff_full(@from, @to, {:path_limiter => @path})
-        end
+        @full_diff ||= @base.lib.diff_full(@from, @to, {:path_limiter => @path})
       end
       
       def process_full
-        unless @full_diff_files
-          cache_full
-          @full_diff_files = process_full_diff
-        end
+        return if @full_diff_files
+        cache_full
+        @full_diff_files = process_full_diff
       end
       
       def cache_stats
-        unless @stats
-          @stats = @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
-        end
+        @stats ||=  @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
+      end
+
+      def cache_name_status
+        @name_status ||= @base.lib.diff_name_status(@from, @to, {:path => @path})
       end
       
       # break up @diff_full
