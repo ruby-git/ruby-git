@@ -49,6 +49,13 @@ class TestLog < Test::Unit::TestCase
     assert_equal(2, l.size)
   end
 
+  def test_get_log_all
+    @git.checkout(@git.log(999).all.first)
+    assert_equal(@git.log(999).size, @git.log(999).all.size)
+    @git.checkout('HEAD^')
+    assert_not_equal(@git.log(999).size, @git.log(999).all.size)
+  end
+
   def test_get_log_author
     l = @git.log(5).author("chacon")
     assert_equal(5, l.size)

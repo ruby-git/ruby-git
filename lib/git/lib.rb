@@ -128,6 +128,7 @@ module Git
       arr_opts = log_common_options(opts)
     
       arr_opts << '--pretty=oneline'
+      arr_opts << '--all' if opts[:all]
      
       arr_opts += log_path_options(opts)
 
@@ -138,6 +139,7 @@ module Git
       arr_opts = log_common_options(opts)
     
       arr_opts << '--pretty=raw'
+      arr_opts << '--all' if opts[:all]
       arr_opts << "--skip=#{opts[:skip]}" if opts[:skip]
    
       arr_opts += log_path_options(opts)
