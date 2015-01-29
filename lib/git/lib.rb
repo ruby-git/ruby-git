@@ -673,6 +673,16 @@ module Git
       command('remote', arr_opts)
     end
     
+    def remote_set_url(name, url, opts = {})
+      arr_opts = ['set-url']
+      arr_opts << '--push' if opts[:push]
+      arr_opts << '--'
+      arr_opts << name
+      arr_opts << url
+
+      command('remote', arr_opts)
+    end
+    
     def remote_remove(name)
       command('remote', ['rm', name])
     end

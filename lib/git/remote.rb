@@ -28,6 +28,10 @@ module Git
       @base.lib.remote_remove(@name)     
     end
     
+    def url
+      @url
+    end
+
     def to_s
       @name
     end
