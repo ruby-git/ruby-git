@@ -299,7 +299,7 @@ module Git
     
     def branches_all
       arr = []
-      command_lines('branch', '-a').each do |b| 
+      command_lines('branch', ['-a', '--no-color']).each do |b| 
         current = (b[0, 2] == '* ')
         arr << [b.gsub('* ', '').strip, current]
       end
