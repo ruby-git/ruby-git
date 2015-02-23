@@ -38,6 +38,13 @@ class TestDiff < Test::Unit::TestCase
     assert_equal(1, d.count)
   end
 
+  def test_diff_with_clashing_files
+    d = @git.diff('diff_over_clashing_objects^', 'diff_over_clashing_objects')
+    d.each do |df|
+      assert_not_nil df.blob(:dst)
+    end
+  end
+
   def test_diff_path
     d = @git.diff('gitsearch1', 'v2.5').path('scott/')
     assert_equal(d.from, 'gitsearch1')

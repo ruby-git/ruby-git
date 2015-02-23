@@ -20,7 +20,7 @@ class TestLogger < Test::Unit::TestCase
     
     logc = File.read(log.path)
     assert(/INFO -- : git '--git-dir=[^']+' '--work-tree=[^']+' branch '-a'/.match(logc))
-    assert(/DEBUG -- :   diff_over_patches/.match(logc))
+    assert(/DEBUG -- :   diff_over_clashing_objects/.match(logc))
 
     log = Tempfile.new('logfile')
     log.close
@@ -32,7 +32,7 @@ class TestLogger < Test::Unit::TestCase
     
     logc = File.read(log.path)
     assert(/INFO -- : git '--git-dir=[^']+' '--work-tree=[^']+' branch '-a'/.match(logc))
-    assert(!/DEBUG -- :   diff_over_patches/.match(logc))
+    assert(!/DEBUG -- :   diff_over_clashing_objects/.match(logc))
   end
   
 end
