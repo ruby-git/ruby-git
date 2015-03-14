@@ -21,6 +21,11 @@ class TestLib < Test::Unit::TestCase
     assert_equal("test\n", data['message'])
     assert_equal(["546bec6f8872efa41d5d97a369f669165ecda0de"], data['parent'])
   end
+  
+  def test_checkout
+    assert(@lib.checkout('test_checkout_b',{:new_branch=>true}))
+    assert(@lib.checkout('master'))
+  end
 
   # takes parameters, returns array of appropriate commit objects
   # :count
@@ -32,7 +37,7 @@ class TestLib < Test::Unit::TestCase
     assert(a.first.is_a?(String))
     assert_equal(10, a.size)
     
-    a = @lib.log_commits :count => 20, :since => "#{Date.today.year - 2007} years ago"
+    a = @lib.log_commits :count => 20, :since => "#{Date.today.year - 2006} years ago"
     assert(a.first.is_a?(String))
     assert_equal(20, a.size)
     
@@ -49,6 +54,41 @@ class TestLib < Test::Unit::TestCase
     assert_equal(20, a.size)
   end
   
+  def test_environment_reset
+    ENV['GIT_DIR'] = '/my/git/dir'
+    ENV['GIT_WORK_TREE'] = '/my/work/tree'
+    ENV['GIT_INDEX_FILE'] = 'my_index'
+
+    @lib.log_commits :count => 10
+
+    assert_equal(ENV['GIT_DIR'], '/my/git/dir')
+    assert_equal(ENV['GIT_WORK_TREE'], '/my/work/tree')
+    assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
+  end
+
+  def test_git_ssh_from_environment_is_passed_to_binary
+    ENV['GIT_SSH'] = 'my/git-ssh-wrapper'
+
+    Dir.mktmpdir do |dir|
+      output_path = File.join(dir, 'git_ssh_value')
+      binary_path = File.join(dir, 'git')
+      Git::Base.config.binary_path = binary_path
+      File.open(binary_path, 'w') { |f|
+        f << "echo $GIT_SSH > #{output_path}"
+      }
+      FileUtils.chmod(0700, binary_path)
+      @lib.checkout('something')
+      assert_equal("my/git-ssh-wrapper\n", File.read(output_path))
+    end
+  ensure
+    Git.configure do |config|
+      config.binary_path = nil
+      config.git_ssh = nil
+    end
+
+    ENV['GIT_SSH'] = nil
+  end
+
   def test_revparse
     assert_equal('1cc8667014381e2788a94777532a788307f38d26', @lib.revparse('1cc8667014381')) # commit
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @lib.revparse('1cc8667014381^{tree}')) #tree
@@ -137,6 +177,23 @@ class TestLib < Test::Unit::TestCase
     assert(tree['tree'])
   end
 
+  def test_ls_remote
+    in_temp_dir do |path|
+      lib = Git::Lib.new
+      ls = lib.ls_remote(@wbare)
+
+      assert_equal(%w( gitsearch1 v2.5 v2.6 v2.7 v2.8 ), ls['tags'].keys.sort)
+      assert_equal("935badc874edd62a8629aaf103418092c73f0a56", ls['tags']['gitsearch1'][:sha])
+
+      assert_equal(%w( git_grep master test test_branches test_object ), ls['branches'].keys.sort)
+      assert_equal("5e392652a881999392c2757cf9b783c5d47b67f7", ls['branches']['master'][:sha])
+
+      assert_equal("HEAD", ls['head'][:ref])
+      assert_equal("5e392652a881999392c2757cf9b783c5d47b67f7", ls['head'][:sha])
+      assert_equal(nil, ls['head'][:name])
+    end
+  end
+
 
   # options this will accept
   #  :treeish
@@ -163,6 +220,12 @@ class TestLib < Test::Unit::TestCase
     match = @lib.grep('search', :object => 'gitsearch1', :invert_match => true)
     assert_equal(6, match['gitsearch1:scott/text.txt'].size)
     assert_equal(2, match.size)
+  end
+  
+  def test_show
+    assert(/^commit 5e53019b3238362144c2766f02a2c00d91fcc023.+\+replace with new text - diff test$/m.match(@lib.show))
+    assert(/^commit 935badc874edd62a8629aaf103418092c73f0a56.+\+nothing!$/m.match(@lib.show('gitsearch1')))
+    assert(/^hello.+nothing!$/m.match(@lib.show('gitsearch1', 'scott/text.txt')))
   end
   
 end

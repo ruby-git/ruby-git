@@ -15,16 +15,16 @@ class TestArchive < Test::Unit::TestCase
   
   def test_archive
     f = @git.archive('v2.6', tempfile)
-    assert(File.exists?(f))
+    assert(File.exist?(f))
 
     f = @git.object('v2.6').archive(tempfile)  # writes to given file
-    assert(File.exists?(f))
+    assert(File.exist?(f))
 
     f = @git.object('v2.6').archive # returns path to temp file
-    assert(File.exists?(f))
+    assert(File.exist?(f))
     
     f = @git.object('v2.6').archive(nil, :format => 'tar') # returns path to temp file
-    assert(File.exists?(f))
+    assert(File.exist?(f))
     
     lines = `cd /tmp; tar xvpf #{f}`.split("\n")
     assert_equal('ex_dir/', lines[0])
@@ -34,10 +34,10 @@ class TestArchive < Test::Unit::TestCase
     assert(File.file?(f))
 
     f = @git.object('v2.6').archive(tempfile, :format => 'tgz', :prefix => 'test/')
-    assert(File.exists?(f))
+    assert(File.exist?(f))
     
     f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
-    assert(File.exists?(f))
+    assert(File.exist?(f))
     
     lines = `cd /tmp; tar xvpf #{f}`.split("\n")
     assert_equal('test/', lines[0])
@@ -47,7 +47,7 @@ class TestArchive < Test::Unit::TestCase
       c = Git.clone(@wbare, 'new')
       c.chdir do
         f = @git.remote('origin').branch('master').archive(tempfile, :format => 'tgz')
-        assert(File.exists?(f))
+        assert(File.exist?(f))
       end
     end
   end

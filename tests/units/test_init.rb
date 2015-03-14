@@ -34,7 +34,7 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |path|
       repo = Git.init(path)
       assert(File.directory?(File.join(path, '.git')))
-      assert(File.exists?(File.join(path, '.git', 'config')))
+      assert(File.exist?(File.join(path, '.git', 'config')))
       assert_equal('false', repo.config('core.bare'))
     end
   end
@@ -43,18 +43,18 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |path|
       repo = Git.init(path, :bare => true)
       assert(File.directory?(File.join(path, '.git')))
-      assert(File.exists?(File.join(path, '.git', 'config')))
+      assert(File.exist?(File.join(path, '.git', 'config')))
       assert_equal('true', repo.config('core.bare'))
     end
   end
   
   def test_git_init_remote_git
     in_temp_dir do |dir|
-      assert(!File.exists?(File.join(dir, 'config')))
+      assert(!File.exist?(File.join(dir, 'config')))
       
       in_temp_dir do |path|        
         Git.init(path, :repository => dir)
-        assert(File.exists?(File.join(dir, 'config')))
+        assert(File.exist?(File.join(dir, 'config')))
       end
     end
   end
@@ -62,15 +62,22 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone
     in_temp_dir do |path|      
       g = Git.clone(@wbare, 'bare-co')
-      assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
+    end
+  end
+  
+  def test_git_clone_with_branch
+    in_temp_dir do |path|      
+      g = Git.clone(@wbare, 'clone-branch', :branch => 'test')
+      assert_equal(g.current_branch, 'test')
     end
   end
   
   def test_git_clone_bare
     in_temp_dir do |path|      
       g = Git.clone(@wbare, 'bare.git', :bare => true)
-      assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.path, 'config')))
       assert_nil(g.dir)
     end
   end
@@ -79,7 +86,7 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |path|     
       g = Git.clone(@wbare, 'config.git', :config => "receive.denyCurrentBranch=ignore")
       assert_equal('ignore', g.config['receive.denycurrentbranch'])
-      assert(File.exists?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
     end
   end

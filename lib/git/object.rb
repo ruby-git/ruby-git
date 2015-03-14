@@ -94,12 +94,11 @@ module Git
   
     class Tree < AbstractObject
       
-      @trees = nil
-      @blobs = nil
-      
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
+        @trees = nil
+        @blobs = nil
       end
             
       def children
@@ -107,14 +106,12 @@ module Git
       end
       
       def blobs
-        check_tree
-        @blobs
+        @blobs ||= check_tree[:blobs]
       end
       alias_method :files, :blobs
       
       def trees
-        check_tree
-        @trees
+        @trees ||= check_tree[:trees]
       end
       alias_method :subtrees, :trees
       alias_method :subdirectories, :trees
@@ -135,13 +132,23 @@ module Git
 
         # actually run the git command
         def check_tree
-          unless @trees
-            @trees = {}
-            @blobs = {}
-            data = @base.lib.ls_tree(@objectish)
-            data['tree'].each { |k, d| @trees[k] = Git::Object::Tree.new(@base, d[:sha], d[:mode]) }
-            data['blob'].each { |k, d| @blobs[k] = Git::Object::Blob.new(@base, d[:sha], d[:mode]) }
+          @trees = {}
+          @blobs = {}
+          
+          data = @base.lib.ls_tree(@objectish)
+
+          data['tree'].each do |key, tree| 
+            @trees[key] = Git::Object::Tree.new(@base, tree[:sha], tree[:mode]) 
           end
+          
+          data['blob'].each do |key, blob| 
+            @blobs[key] = Git::Object::Blob.new(@base, blob[:sha], blob[:mode]) 
+          end
+
+          {
+            :trees => @trees,
+            :blobs => @blobs
+          }
         end
       
     end
@@ -210,9 +217,7 @@ module Git
       end
       
       def set_commit(data)
-        if data['sha']
-          @sha = data['sha']
-        end
+        @sha ||= data['sha']
         @committer = Git::Author.new(data['committer'])
         @author = Git::Author.new(data['author'])
         @tree = Git::Object::Tree.new(@base, data['tree'])
@@ -228,10 +233,10 @@ module Git
   
         # see if this object has been initialized and do so if not
         def check_commit
-          unless @tree
-            data = @base.lib.commit_data(@objectish)
-            set_commit(data)
-          end
+          return if @tree
+          
+          data = @base.lib.commit_data(@objectish)
+          set_commit(data)
         end
       
     end
@@ -242,10 +247,42 @@ module Git
       def initialize(base, sha, name)
         super(base, sha)
         @name = name
+        @annotated = nil
+        @loaded = false
       end
 
+      def annotated?
+        @annotated ||= (@base.lib.object_type(self.name) == 'tag')
+      end
+
+      def message
+        check_tag()
+        return @message
+      end
+      
       def tag?
         true
+      end
+
+      def tagger
+        check_tag()
+        return @tagger
+      end
+
+      private
+
+      def check_tag
+        return if @loaded
+
+        if !self.annotated? 
+          @message = @tagger = nil
+        else
+          tdata = @base.lib.tag_data(@name)
+          @message = tdata['message'].chomp
+          @tagger = Git::Author.new(tdata['tagger'])
+        end
+
+        @loaded = true
       end
         
     end

@@ -14,12 +14,28 @@ class TestDiff < Test::Unit::TestCase
   #  assert(1, d.size)
   #end
 
+  def test_diff_current_vs_head
+    #test git diff without specifying source/destination commits
+    update_file(File.join(@wdir,"example.txt"),"FRANCO")
+    d = @git.diff
+    patch = d.patch
+    assert(patch.match(/\+FRANCO/))
+  end
+
   def test_diff_tags
     d = @git.diff('gitsearch1', 'v2.5')
     assert_equal(3, d.size)
     assert_equal(74, d.lines)
     assert_equal(10, d.deletions)
     assert_equal(64, d.insertions)
+  end
+
+  # Patch files on diff outputs used to be parsed as 
+  # part of the diff adding invalid modificaction
+  # to the diff results.
+  def test_diff_patch
+    d = @git.diff('diff_over_patches~2', 'diff_over_patches')
+    assert_equal(1, d.count)
   end
 
   def test_diff_path

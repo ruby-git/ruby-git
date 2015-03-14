@@ -43,6 +43,9 @@ class TestIndexOps < Test::Unit::TestCase
       g = Git.clone(@wbare, 'clean_me')
       Dir.chdir('clean_me') do
         new_file('test-file', 'blahblahbal')
+        new_file('ignored_file', 'ignored file contents')
+        new_file('.gitignore', 'ignored_file')
+
         g.add
         g.commit("first commit")
 
@@ -53,20 +56,26 @@ class TestIndexOps < Test::Unit::TestCase
           new_file('clean-me-too', 'blablahbla')
         end
 
-        assert(File.exists?('file-to-clean'))
-        assert(File.exists?('dir_to_clean'))
-        
+        assert(File.exist?('file-to-clean'))
+        assert(File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
         g.clean(:force => true)
         
-        assert(!File.exists?('file-to-clean'))
-        assert(File.exists?('dir_to_clean'))
-        
+        assert(!File.exist?('file-to-clean'))
+        assert(File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
         new_file('file-to-clean', 'blablahbla')
         
         g.clean(:force => true, :d => true)
 
-        assert(!File.exists?('file-to-clean'))
-        assert(!File.exists?('dir_to_clean'))
+        assert(!File.exist?('file-to-clean'))
+        assert(!File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
+        g.clean(:force => true, :x => true)
+        assert(!File.exist?('ignored_file'))
       end
     end
   end
@@ -85,10 +94,10 @@ class TestIndexOps < Test::Unit::TestCase
         g.commit("second-commit")
         g.gcommit('HEAD')
 
-        commits = g.log(1e4).count
+        commits = g.log(10000).count
         g.revert(first_commit.sha)
-        assert_equal(commits + 1, g.log(1e4).count)
-        assert(!File.exists?('test-file2'))
+        assert_equal(commits + 1, g.log(10000).count)
+        assert(!File.exist?('test-file2'))
       end
     end
   end

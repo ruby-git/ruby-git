@@ -7,6 +7,7 @@ require 'git/author'
 require 'git/base'
 require 'git/branch'
 require 'git/branches'
+require 'git/config'
 require 'git/diff'
 require 'git/index'
 require 'git/lib'
@@ -58,6 +59,14 @@ module Git
       # return hash
       lib.config_list
     end
+  end
+
+  def self.configure
+    yield Base.config
+  end
+
+  def self.config
+    return Base.config
   end
 
   def global_config(name = nil, value = nil)
@@ -129,6 +138,15 @@ module Git
   #   :index => '/path/to/alt_index_file'
   def self.init(working_dir = '.', options = {})
     Base.init(working_dir, options)
+  end
+    
+  # returns a Hash containing information about the references 
+  # of the target repository
+  #
+  # @param [String|NilClass] location the target repository location or nil for '.'
+  # @return [{String=>Hash}] the available references of the target repo.
+  def self.ls_remote(location=nil)
+    Git::Lib.new.ls_remote(location)
   end
 
   # open an existing git working directory

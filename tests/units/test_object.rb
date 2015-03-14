@@ -11,6 +11,13 @@ class TestObject < Test::Unit::TestCase
     @tree = @git.gtree('1cc8667014381^{tree}')
     @blob = @git.gblob('v2.5:example.txt')
   end
+
+  def test_sha_state
+    o = @git.object('HEAD')
+    original_sha = o.sha
+    o.date
+    assert_equal(original_sha, o.sha)
+  end
   
   def test_commit
     o = @git.gcommit('1cc8667014381')
@@ -23,11 +30,11 @@ class TestObject < Test::Unit::TestCase
     assert_equal(1, o.parents.size)
     assert_equal('scott Chacon', o.author.name)
     assert_equal('schacon@agadorsparticus.corp.reactrix.com', o.author.email)
-    assert_equal('11-08-07', o.author.date.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.author_date.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.author.date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.author_date.getutc.strftime("%m-%d-%y"))
     assert_equal('scott Chacon', o.committer.name)
-    assert_equal('11-08-07', o.committer_date.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.date.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.committer_date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.date.getutc.strftime("%m-%d-%y"))
     assert_equal('test', o.message)
     
     assert_equal('tags/v2.5', o.parent.name)

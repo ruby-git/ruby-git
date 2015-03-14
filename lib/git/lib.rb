@@ -6,7 +6,9 @@ module Git
   end
   
   class Lib
-      
+     
+    @@semaphore = Mutex.new
+
     def initialize(base = nil, logger = nil)
       @git_dir = nil
       @git_index_file = nil
@@ -44,10 +46,13 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :remote::    name of remote (rather than 'origin')
     #  :bare::      no working directory
-    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    #  :branch::    name of branch to track (rather than 'master')
     #  :depth::     the number of commits back to pull
+    #  :origin::    name of remote (same as remote)
+    #  :path::      directory where the repo will be cloned
+    #  :remote::    name of remote (rather than 'origin')
+    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
     # 
     # TODO - make this work with SSH password or auth_key
     #
@@ -56,13 +61,15 @@ module Git
       clone_dir = opts[:path] ? File.join(@path, name) : name
       
       arr_opts = []
-      arr_opts << "--bare" if opts[:bare]
-      arr_opts << "--recursive" if opts[:recursive]
-      arr_opts << "-o" << opts[:remote] if opts[:remote]
-      arr_opts << "--depth" << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
-      arr_opts << "--config" << opts[:config] if opts[:config]
+      arr_opts << '--bare' if opts[:bare]
+      arr_opts << '--branch' << opts[:branch] if opts[:branch]
+      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--config' << opts[:config] if opts[:config]
+      arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << '--recursive' if opts[:recursive]
 
       arr_opts << '--'
+
       arr_opts << repository
       arr_opts << clone_dir
       
@@ -74,6 +81,49 @@ module Git
     
     ## READ COMMANDS ##
     
+    #
+    # Returns most recent tag that is reachable from a commit
+    #
+    # accepts options:
+    #  :all
+    #  :tags
+    #  :contains
+    #  :debug
+    #  :exact_match
+    #  :dirty
+    #  :abbrev
+    #  :candidates
+    #  :long
+    #  :always
+    #  :math
+    #
+    #  @param [String|NilClass] committish target commit sha or object name
+    #  @param [{Symbol=>Object}] opts the given options
+    #  @return [String] the tag name
+    #
+    def describe(committish=nil, opts={})
+      arr_opts = []
+
+      arr_opts << '--all' if opts[:all]
+      arr_opts << '--tags' if opts[:tags]
+      arr_opts << '--contains' if opts[:contains]
+      arr_opts << '--debug' if opts[:debug]
+      arr_opts << '--long' if opts[:long]
+      arr_opts << '--always' if opts[:always]
+      arr_opts << '--exact-match' if opts[:exact_match] || opts[:"exact-match"]
+      
+      arr_opts << '--dirty' if opts['dirty'] == true
+      arr_opts << "--dirty=#{opts['dirty']}" if opts['dirty'].is_a?(String)
+
+      arr_opts << "--abbrev=#{opts['abbrev']}" if opts[:abbrev]
+      arr_opts << "--candidates=#{opts['candidates']}" if opts[:candidates]
+      arr_opts << "--match=#{opts['match']}" if opts[:match]
+      
+      arr_opts << committish if committish
+
+      return command('describe', arr_opts)
+    end
+
     def log_commits(opts={})
       arr_opts = log_common_options(opts)
     
@@ -93,13 +143,12 @@ module Git
       arr_opts += log_path_options(opts)
       
       full_log = command_lines('log', arr_opts, true)
-      process_commit_data(full_log)
+
+      process_commit_log_data(full_log)
     end
-
-
     
     def revparse(string)
-      return string if string =~ /[A-Fa-f0-9]{40}/  # passing in a sha - just no-op it
+      return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
       rev = ['head', 'remotes', 'tags'].map do |d|
         File.join(@git_dir, 'refs', d, string)
       end.find do |path|
@@ -129,43 +178,91 @@ module Git
     end
     
     def process_commit_data(data, sha = nil, indent = 4)
-      in_message = false
-            
-      if sha
-        hsh = {'sha' => sha, 'message' => '', 'parent' => []}
-      else
-        hsh_array = []        
-      end
-    
-      data.each do |line|
-        line = line.chomp
-        if line == ''
-          in_message = !in_message
-        elsif in_message
-          hsh['message'] << line[indent..-1] << "\n"
+      hsh = {
+        'sha'     => sha,
+        'message' => '',
+        'parent'  => []
+      }
+      
+      loop do
+        key, *value = data.shift.split
+
+        break if key.nil?
+
+        if key == 'parent'
+          hsh['parent'] << value.join(' ')
         else
-          data = line.split
-          key = data.shift
-          value = data.join(' ')
-          if key == 'commit'
-            sha = value
-            hsh_array << hsh if hsh
-            hsh = {'sha' => sha, 'message' => '', 'parent' => []}
-          end
-          if key == 'parent'
-            hsh[key] << value
-          else
-            hsh[key] = value
-          end
+          hsh[key] = value.join(' ')
         end
       end
       
-      if hsh_array
-        hsh_array << hsh if hsh
-        hsh_array
-      else
-        hsh
+      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+
+      return hsh
+    end
+
+    def tag_data(name)
+      sha = sha.to_s
+      tdata = command_lines('cat-file', ['tag', name])
+      process_tag_data(tdata, name, 0)
+    end
+
+    def process_tag_data(data, name, indent=4)
+      hsh = {
+        'name'    => name,
+        'message' => ''
+      }
+
+      loop do
+        key, *value = data.shift.split
+
+        break if key.nil?
+
+        hsh[key] = value.join(' ')
       end
+      
+      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+
+      return hsh
+    end
+    
+    def process_commit_log_data(data)
+      in_message = false
+            
+      hsh_array = []       
+
+      hsh = nil
+    
+      data.each do |line|
+        line = line.chomp
+        
+        if line[0].nil?
+          in_message = !in_message 
+          next
+        end
+       
+        if in_message
+          hsh['message'] << "#{line[4..-1]}\n"
+          next
+        end
+
+        key, *value = line.split
+        value = value.join(' ')
+        
+        case key
+          when 'commit'
+            hsh_array << hsh if hsh
+            hsh = {'sha' => value, 'message' => '', 'parent' => []}
+          when 'parent'
+            hsh['parent'] << value
+          else
+            hsh[key] = value
+        end
+      end
+      
+      hsh_array << hsh if hsh
+        
+      return hsh_array
     end
     
     def object_contents(sha, &block)
@@ -295,6 +392,19 @@ module Git
       hsh
     end
 
+    def ls_remote(location=nil)
+      location ||= '.'
+      Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
+        command_lines('ls-remote', [location], false).each do |line|
+          (sha, info) = line.split("\t")
+          (ref, type, name) = info.split('/', 3)
+          type ||= 'head'
+          type = 'branches' if type == 'heads'
+          value = {:ref => ref, :sha => sha}
+          hsh[type].update( name.nil? ? value : { name => value })
+        end
+      end
+    end
 
     def ignored_files
       command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
@@ -359,6 +469,19 @@ module Git
     def parse_config(file)
       parse_config_list command_lines('config', ['--list', '--file', file], false)
     end
+
+    # Shows objects
+    #
+    # @param [String|NilClass] objectish the target object reference (nil == HEAD)
+    # @param [String|NilClass] path the path of the file to be shown
+    # @return [String] the object information
+    def show(objectish=nil, path=nil)
+      arr_opts = []
+
+      arr_opts << (path ? "#{objectish}:#{path}" : objectish)
+      
+      command('show', arr_opts.compact)
+    end
     
     ## WRITE COMMANDS ##
         
@@ -370,7 +493,7 @@ module Git
       command('config', ['--global', name, value], false)
     end
          
-    # updates the repository index using the workig dorectory content
+    # updates the repository index using the working directory content
     # 
     #    lib.add('path/to/file')
     #    lib.add(['path/to/file1','path/to/file2'])
@@ -432,7 +555,8 @@ module Git
       arr_opts = [] 
       arr_opts << '--force' if opts[:force]
       arr_opts << '-d' if opts[:d]
-      
+      arr_opts << '-x' if opts[:x]
+
       command('clean', arr_opts)
     end
     
@@ -502,8 +626,8 @@ module Git
     
     def checkout(branch, opts = {})
       arr_opts = []
-      arr_opts << '-f' if opts[:force]
-      arr_opts << '-b' << opts[:new_branch] if opts[:new_branch]
+      arr_opts << '-b' if opts[:new_branch] || opts[:b]
+      arr_opts << '--force' if opts[:force] || opts[:f]
       arr_opts << branch
       
       command('checkout', arr_opts)
@@ -565,27 +689,56 @@ module Git
       command_lines('tag')
     end
 
-    def tag(tag)
-      command('tag', tag)
+    def tag(name, *opts)
+      target = opts[0].instance_of?(String) ? opts[0] : nil
+      
+      opts = opts.last.instance_of?(Hash) ? opts.last : {}
+
+      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
+        raise  "Can not create an [:a|:annotate] tag without the precense of [:m|:message]."
+      end
+
+      arr_opts = []
+
+      arr_opts << '-f' if opts[:force] || opts[:f]
+      arr_opts << '-a' if opts[:a] || opts[:annotate]
+      arr_opts << '-s' if opts[:s] || opts[:sign]
+      arr_opts << '-d' if opts[:d] || opts[:delete]
+      arr_opts << name
+      arr_opts << target if target
+      arr_opts << "-m #{opts[:m] || opts[:message]}" if opts[:m] || opts[:message]
+      
+      command('tag', arr_opts)
     end
 
     
-    def fetch(remote)
-      command('fetch', remote)
+    def fetch(remote, opts)
+      arr_opts = [remote]
+      arr_opts << '--tags' if opts[:t] || opts[:tags]
+      arr_opts << '--prune' if opts[:p] || opts[:prune]
+
+      command('fetch', arr_opts)
     end
     
-    def push(remote, branch = 'master', tags = false)
-      command('push', [remote, branch])
-      command('push', ['--tags', remote]) if tags
+    def push(remote, branch = 'master', opts = {})
+      # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
+      opts = {:tags => opts} if [true, false].include?(opts) 
+      
+      arr_opts = []
+      arr_opts << '--force'  if opts[:force] || opts[:f]
+      arr_opts << remote
+
+      command('push', arr_opts + [branch])
+      command('push', ['--tags'] + arr_opts) if opts[:tags]
     end
 
-		def pull(remote='origin', branch='master')
-			command('pull', [remote, branch])
-		end
+    def pull(remote='origin', branch='master')
+      command('pull', [remote, branch])
+    end
 
     def tag_sha(tag_name)
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
-      return File.read(head).chomp if File.exists?(head)
+      return File.read(head).chomp if File.exist?(head)
       
       command('show-ref',  ['--tags', '-s', tag_name])
     end  
@@ -652,8 +805,14 @@ module Git
         opts[:add_gzip] = true
       end
       
-      file ||= Tempfile.new('archive').path
-      
+      if !file
+        tempfile = Tempfile.new('archive')
+        file = tempfile.path
+        # delete it now, before we write to it, so that Ruby doesn't delete it
+        # when it finalizes the Tempfile.
+        tempfile.close!
+      end
+
       arr_opts = []
       arr_opts << "--format=#{opts[:format]}" if opts[:format]
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
@@ -672,17 +831,11 @@ module Git
     end
 
     def required_command_version
-      [1, 6, 0, 0]
+      [1, 6]
     end
 
     def meets_required_version?
-      current_version  = self.current_command_version
-      required_version = self.required_command_version
-
-      return current_version[0] >= required_version[0] && 
-             current_version[1] >= required_version[1] &&
-             (current_version[2] ? current_version[2] >= required_version[2] : true) &&
-             (current_version[3] ? current_version[3] >= required_version[3] : true)
+      (self.current_command_version <=>  self.required_command_version) >= 0
     end
     
     def count_commits branch
@@ -693,6 +846,11 @@ module Git
     end
 
     private
+
+    # Systen ENV variables involved in the git commands.
+    #
+    # @return [<String>] the names of the EVN variables involved in the git commands 
+    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       begin
@@ -702,36 +860,78 @@ module Git
       end
     end
     
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+    # Takes the current git's system ENV variables and store them.
+    def store_git_system_env_variables
+      @git_system_env_variables = {}
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
+      end
+    end
+
+    # Takes the previously stored git's ENV variables and set them again on ENV.
+    def restore_git_system_env_variables
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        ENV[env_variable_name] = @git_system_env_variables[env_variable_name] 
+      end
+    end
+
+    # Sets git's ENV variables to the custom values for the current instance.
+    def set_custom_git_env_variables
       ENV['GIT_DIR'] = @git_dir
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
+      ENV['GIT_SSH'] = Git::Base.config.git_ssh
+    end
 
-      path = @git_work_dir || @git_dir || @path
-
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-
-      git_cmd = "git #{cmd} #{opts} #{redirect} 2>&1"
-
-      out = nil
-      if chdir && (Dir.getwd != path)
-        Dir.chdir(path) { out = run_command(git_cmd, &block) } 
-      else
-        out = run_command(git_cmd, &block)
+    # Runs a block inside an environment with customized ENV variables.
+    # It restores the ENV after execution.
+    #
+    # @param [Proc] block block to be executed within the customized environment
+    def with_custom_env_variables(&block)
+      @@semaphore.synchronize do
+        store_git_system_env_variables()
+        set_custom_git_env_variables()
+        return block.call()
       end
+    ensure
+      restore_git_system_env_variables()
+    end
+    
+    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+      global_opts = []
+      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
+      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
       
+      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
+      
+      global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
+      
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
+      
+      output = nil
+      
+      command_thread = nil; 
+      
+      exitstatus = nil
+
+      with_custom_env_variables do
+        command_thread = Thread.new do 
+          output = run_command(git_cmd, &block)
+          exitstatus = $?.exitstatus
+        end
+        command_thread.join
+      end
+
       if @logger
         @logger.info(git_cmd)
-        @logger.debug(out)
+        @logger.debug(output)
       end
             
-      if $?.exitstatus > 0
-        if $?.exitstatus == 1 && out == ''
-          return ''
-        end
-        raise Git::GitExecuteError.new(git_cmd + ':' + out.to_s) 
+      if exitstatus > 1 || (exitstatus == 1 && output != '')
+        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
       end
-      out
+
+      return output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -784,21 +984,21 @@ module Git
      
       arr_opts << opts[:object] if opts[:object].is_a? String
       arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter]
-
       arr_opts
     end
     
     def run_command(git_cmd, &block)
-      if block_given?
-        IO.popen(git_cmd, &block)
-      else
-        `#{git_cmd}`.chomp
-      end
+      return IO.popen(git_cmd, &block) if block_given?
+      
+      `#{git_cmd}`.chomp
     end
 
     def escape(s)
+      return "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      
+      # Keeping the old escape format for windows users
       escaped = s.to_s.gsub('\'', '\'\\\'\'')
-      %Q{"#{escaped}"}
+      return %Q{"#{escaped}"}
     end
 
   end
