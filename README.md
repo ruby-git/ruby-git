@@ -196,7 +196,8 @@ And here are the operations that will need to write to your git repository.
      g.reset # defaults to HEAD
      g.reset_hard(Git::Commit)
 
-     g.branch('new_branch') # creates new or fetches existing
+     g.branch('new_branch') # creates a Git::Branch object representing the new or existing branch
+     g.branch('new_branch').create # creates a branch in the repository but does not check it out
      g.branch('new_branch').checkout
      g.branch('new_branch').delete
      g.branch('existing_branch').checkout
