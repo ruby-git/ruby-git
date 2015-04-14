@@ -329,6 +329,10 @@ module Git
       self.lib.push(remote, branch, opts)
     end
     
+    def merge_base(commit1, commit2, *other_commits)
+      Git::Object.new self, self.lib.merge_base(commit1, commit2, *other_commits)
+    end
+
     # merges one or more branches into the current working branch
     #
     # you can specify more than one branch to merge by passing an array of branches
