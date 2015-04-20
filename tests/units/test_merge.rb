@@ -120,7 +120,7 @@ class TestMerge < Test::Unit::TestCase
 
 
         g.merge('new_branch')
-        g.merge('new_branch2', nil, { x: 'theirs' })
+        g.merge('new_branch2', nil, { :x => 'theirs' })
 
         assert(g.status['example.txt'])  # file has been merged in
       end
