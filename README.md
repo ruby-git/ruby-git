@@ -246,6 +246,7 @@ And here are the operations that will need to write to your git repository.
 
      g.push
      g.push(g.remote('name'))
+     g.push('origin', 'master', {:tags => true}) # push tags, too
 ```
 
 Some examples of more low-level index and tree operations
