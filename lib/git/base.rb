@@ -333,7 +333,7 @@ module Git
     #
     # you can specify more than one branch to merge by passing an array of branches
     def merge(branch, message = 'merge')
-      self.lib.merge(branch, message)
+      self.lib.merge(branch, message: message)
     end
 
     # iterates over the files which are unmerged

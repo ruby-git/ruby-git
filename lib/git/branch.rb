@@ -62,8 +62,8 @@ module Git
     
     def merge(branch = nil, message = nil)
       if branch
-        in_branch do 
-          @base.merge(branch, message)
+        in_branch do
+          @base.merge(branch, message: message)
           false
         end
         # merge a branch into this one

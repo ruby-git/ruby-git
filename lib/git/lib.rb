@@ -635,10 +635,12 @@ module Git
       arr_opts << file
       command('checkout', arr_opts)
     end
-    
-    def merge(branch, message = nil)      
+
+    def merge(branch, opts = {})
       arr_opts = []
+      message = opts[:message] || opts[:m]
       arr_opts << '-m' << message if message
+      arr_opts << '--no-ff' if opts[:no_ff]
       arr_opts += [branch]
       command('merge', arr_opts)
     end
