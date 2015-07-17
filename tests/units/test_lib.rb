@@ -36,11 +36,8 @@ class TestLib < Test::Unit::TestCase
   end
 
   def test_checkout_and_track
-    begin
-      @lib.checkout('test_track',{:new_branch=>true, :t=>"origin/test_track"})
-    rescue Exception
-    end
-      assert(@logger_mock.string =~ /git '--git-dir=\/tmp\/git_test\d+\/working\/\.git' '--work-tree=\/tmp\/git_test\d+\/working' checkout '-b' 'test_track' '--track' 'origin\/test_track'/)
+    ignore_exception { @lib.checkout('test_track',{:new_branch=>true, :t=>"origin/test_track"}) } # This will throw an exception because there is no remote set up.
+    assert(@logger_mock.string =~ /git '--git-dir=\/tmp\/git_test\d+\/working\/\.git' '--work-tree=\/tmp\/git_test\d+\/working' checkout '-b' 'test_track' '--track' 'origin\/test_track'/)
   end
 
   # takes parameters, returns array of appropriate commit objects

@@ -79,5 +79,12 @@ class Test::Unit::TestCase
       f.puts contents
     end
   end
+
+  def ignore_exception
+    begin
+      yield  
+    rescue Exception
+    end
+  end
   
 end
