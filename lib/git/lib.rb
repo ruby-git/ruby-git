@@ -621,13 +621,14 @@ module Git
     end
     
     def checkout(branch, opts = {})
+      remote_branch = opts[:track] || opts[:t]
+      
       arr_opts = []
       arr_opts << '--force' if opts[:force] || opts[:f]
-      arr_opts << '--track' if opts[:track] || opts[:t]
+      arr_opts << '--track' if remote_branch
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << branch
-      arr_opts << opts[:track] if opts[:track]
-      arr_opts << opts[:t] if opts[:t]
+      arr_opts << remote_branch if remote_branch
       
       command('checkout', arr_opts)
     end
