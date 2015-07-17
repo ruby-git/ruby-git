@@ -623,8 +623,11 @@ module Git
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '--force' if opts[:force] || opts[:f]
+      arr_opts << '--track' if opts[:track] || opts[:t]
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << branch
+      arr_opts << opts[:track] if opts[:track]
+      arr_opts << opts[:t] if opts[:t]
       
       command('checkout', arr_opts)
     end
