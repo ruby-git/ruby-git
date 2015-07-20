@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require File.dirname(__FILE__) + '/../test_helper'
+require 'stringio'
 
 # tests all the low level git communication
 #
@@ -11,7 +12,10 @@ require File.dirname(__FILE__) + '/../test_helper'
 class TestLib < Test::Unit::TestCase
   def setup
     set_file_paths
-    @lib = Git.open(@wdir).lib
+    @logger_mock = StringIO.new
+    logger = Logger.new(@logger_mock)
+    logger.level = Logger::INFO
+    @lib = Git.open(@wdir, :log => logger).lib
   end
   
   def test_commit_data
@@ -25,6 +29,15 @@ class TestLib < Test::Unit::TestCase
   def test_checkout
     assert(@lib.checkout('test_checkout_b',{:new_branch=>true}))
     assert(@lib.checkout('master'))
+  end
+
+  def test_checkout_new_and_force
+    assert(@lib.checkout('test_checkout_b',{:new_branch=>true, :f=>true}))
+  end
+
+  def test_checkout_and_track
+    ignore_exception { @lib.checkout('test_track',{:new_branch=>true, :t=>"origin/test_track"}) } # This will throw an exception because there is no remote set up.
+    assert(@logger_mock.string =~ /git '--git-dir=\/tmp\/git_test\d+\/working\/\.git' '--work-tree=\/tmp\/git_test\d+\/working' checkout '-b' 'test_track' '--track' 'origin\/test_track'/)
   end
 
   # takes parameters, returns array of appropriate commit objects
