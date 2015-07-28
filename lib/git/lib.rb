@@ -144,7 +144,7 @@ module Git
       
       full_log = command_lines('log', arr_opts, true)
 
-      process_commit_log_data(full_log)
+      process_commit_log_data(full_log, opts[:stat])
     end
     
     def revparse(string)
@@ -226,43 +226,76 @@ module Git
       return hsh
     end
     
-    def process_commit_log_data(data)
+    def process_commit_log_data(data, with_stats = false)
       in_message = false
-            
-      hsh_array = []       
+      in_stats = false
+      last_line = nil
+      skipped = false
+      hsh_array = []     
 
       hsh = nil
-    
+
       data.each do |line|
         line = line.chomp
         
         if line[0].nil?
-          in_message = !in_message 
+	  in_message = !in_message unless with_stats
           next
         end
        
+	skipped = true if line.include?("SVN_SILENT")
+	
         if in_message
           hsh['message'] << "#{line[4..-1]}\n"
+	  last_line = line
           next
         end
 
+	if with_stats && line[0] == ' '
+	  last_line = line
+	  next
+	end
+	
         key, *value = line.split
         value = value.join(' ')
-        
+
         case key
           when 'commit'
-            hsh_array << hsh if hsh
-            hsh = {'sha' => value, 'message' => '', 'parent' => []}
+	    if hsh && (!with_stats || !skipped)
+	      calc_modifications(hsh,last_line)
+	      hsh_array << hsh
+	    end
+	    hsh = {'sha' => value, 'message' => '', 'parent' => []}
+	    skipped = false
           when 'parent'
             hsh['parent'] << value
           else
-            hsh[key] = value
+            hsh[key] = value unless with_stats && key != 'author'
         end
+	last_line = line
+      end  
+
+      if hsh
+	calc_modifications(hsh, last_line)
+	hsh_array << hsh
       end
-      
-      hsh_array << hsh if hsh
-        
+
       return hsh_array
+    end
+    
+    def calc_modifications(hsh, line)
+      insertions = line.match(/(\d+) insertion/)
+      if insertions
+	hsh['insertions'] = insertions[1].to_i
+      else
+	hsh['insertions'] = 0
+      end
+      deletions = line.match(/(\d+) deletion/)
+      if deletions
+	hsh['deletions'] = deletions[1].to_i
+      else
+	hsh['deletions'] = 0
+      end
     end
     
     def object_contents(sha, &block)
@@ -971,7 +1004,7 @@ module Git
       arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
-
+      arr_opts << "--stat" if opts[:stat]
       arr_opts
     end
     
