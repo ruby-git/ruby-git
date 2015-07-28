@@ -317,6 +317,16 @@ module Git
       self.lib.fetch(remote, opts)
     end
 
+    # Makes a bare repository update when running fetch so that log shows latest commits.
+    def make_bare_repo_update_on_fetch
+      self.lib.config_fetch_bare_to_update
+    end
+    
+    # Returns number of commits.
+    def number_of_commits branch= "HEAD"
+      self.lib.count_commits branch
+    end
+    
     # pushes changes to a remote repository - easiest if this is a cloned repository,
     # otherwise you may have to run something like this first to setup the push parameters:
     #

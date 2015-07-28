@@ -4,11 +4,12 @@ module Git
   class Log
     include Enumerable
     
-    def initialize(base, count = 30)
+    def initialize(base, count = 30, bring_stats = false)
       dirty_log
       @base = base
       @count = count
- 
+      @stat = bring_stats
+      
       @commits = nil
       @author = nil
       @grep = nil
@@ -119,8 +120,8 @@ module Git
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
                                     :path_limiter => @path, :since => @since, 
                                     :author => @author, :grep => @grep, :skip => @skip,
-                                    :until => @until, :between => @between)
-        @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
+                                    :until => @until, :between => @between, :stat => @stat)
+	@commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       
   end

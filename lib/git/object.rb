@@ -162,6 +162,8 @@ module Git
         @author = nil
         @committer = nil
         @message = nil
+	@insertions = nil
+	@deletions = nil
         if init
           set_commit(init)
         end
@@ -216,6 +218,14 @@ module Git
         diff(parent)
       end
       
+      def insertions
+	@insertions
+      end
+      
+      def deletions
+	@deletions
+      end
+      
       def set_commit(data)
         @sha ||= data['sha']
         @committer = Git::Author.new(data['committer'])
@@ -223,6 +233,8 @@ module Git
         @tree = Git::Object::Tree.new(@base, data['tree'])
         @parents = data['parent'].map{ |sha| Git::Object::Commit.new(@base, sha) }
         @message = data['message'].chomp
+	@insertions = data['insertions']
+	@deletions = data['deletions']
       end
       
       def commit?
