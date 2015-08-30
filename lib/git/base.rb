@@ -332,8 +332,13 @@ module Git
     # merges one or more branches into the current working branch
     #
     # you can specify more than one branch to merge by passing an array of branches
-    def merge(branch, message = 'merge')
-      self.lib.merge(branch, message)
+    # Pass merge specific options through Hash opts, e.g.:
+    #  :message => 'merge'
+    #  :strategy => 'recursive'
+    #  :strategy_option => 'theirs'
+    #  :no_arg_opts => '--ff-only -q --stat'
+    def merge(branch, opts = {:message => 'merge'})
+      self.lib.merge(branch, opts)
     end
 
     # iterates over the files which are unmerged

@@ -636,10 +636,13 @@ module Git
       command('checkout', arr_opts)
     end
     
-    def merge(branch, message = nil)      
+    def merge(branch, opts = {}) 
       arr_opts = []
-      arr_opts << '-m' << message if message
-      arr_opts += [branch]
+      arr_opts << "-m '#{opts[:message]}'" if opts[:message]
+      arr_opts << "--strategy #{opts[:strategy]}" if opts[:strategy]
+      arr_opts << "--strategy-option #{opts[:strategy_option]}" if opts[:strategy_option]
+      arr_opts << "#{opts[:no_arg_opts]}" if opts[:no_arg_opts]
+      arr_opts += [branch] 
       command('merge', arr_opts)
     end
 
@@ -887,9 +890,17 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
-      
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-      
+
+      opts = [opts].flatten.map do |option|        
+        if option.is_a?(String) && option.start_with?('-')
+          # option that must not be escaped (e.g. --ff-only)
+          option
+        else
+          # option that must be escaped (e.g. branch name)
+          escape(option)
+        end
+      end.join(' ')
+
       global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
       
       git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
