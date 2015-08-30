@@ -892,7 +892,7 @@ module Git
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
 
       opts = [opts].flatten.map do |option|        
-        if option.is_a?(String) && option.start_with?('-')
+        if option.is_a?(String) && option.start_with?('-') && !option.include?('=')
           # option that must not be escaped (e.g. --ff-only)
           option
         else
