@@ -888,8 +888,8 @@ module Git
     
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
       global_opts = []
-      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
-      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << "--git-dir=#{escape(@git_dir)}" if !@git_dir.nil?
+      global_opts << "--work-tree=#{escape(@git_work_dir)}" if !@git_work_dir.nil?
 
       opts = [opts].flatten.map do |option|        
         if option.is_a?(String) && option.start_with?('-') && !option.include?('=')
@@ -901,8 +901,8 @@ module Git
         end
       end.join(' ')
 
-      global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
-      
+      global_opts = global_opts.flatten.join(' ')
+
       git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
       
       output = nil
