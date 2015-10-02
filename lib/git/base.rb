@@ -396,7 +396,7 @@ module Git
     #
     # Options:
     #   :a | :annotate -> true
-    #   :d             -> true 
+    #   :d             -> true
     #   :f             -> true
     #   :m | :message  -> String
     #   :s             -> true

@@ -269,6 +269,12 @@ module Git
         return @tagger
       end
 
+      def date
+        if tagger
+          tagger.date
+        end
+      end
+
       private
 
       def check_tag
