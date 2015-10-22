@@ -174,7 +174,7 @@ module Git
     # returns +true+ if the branch exists
     def is_branch?(branch)
       branch_names = self.branches.map {|b| b.name}
-      branch_names.include?(branch)
+      branch_names.include?(branch.to_s)
     end
 
     # this is a convenience method for accessing the class that wraps all the 
