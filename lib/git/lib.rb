@@ -95,7 +95,7 @@ module Git
     #  :candidates
     #  :long
     #  :always
-    #  :math
+    #  :match
     #
     #  @param [String|NilClass] committish target commit sha or object name
     #  @param [{Symbol=>Object}] opts the given options
@@ -112,12 +112,13 @@ module Git
       arr_opts << '--always' if opts[:always]
       arr_opts << '--exact-match' if opts[:exact_match] || opts[:"exact-match"]
 
-      arr_opts << '--dirty' if opts['dirty'] == true
-      arr_opts << "--dirty=#{opts['dirty']}" if opts['dirty'].is_a?(String)
+      opts[:dirty] = opts['dirty'] if opts['dirty']
+      arr_opts << '--dirty' if opts[:dirty] == true
+      arr_opts << "--dirty=#{opts[:dirty]}" if opts[:dirty].is_a?(String)
 
-      arr_opts << "--abbrev=#{opts['abbrev']}" if opts[:abbrev]
-      arr_opts << "--candidates=#{opts['candidates']}" if opts[:candidates]
-      arr_opts << "--match=#{opts['match']}" if opts[:match]
+      arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
+      arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
+      arr_opts << "--match=#{opts[:match]}" if opts[:match]
 
       arr_opts << committish if committish
 
