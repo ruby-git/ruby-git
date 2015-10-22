@@ -722,11 +722,30 @@ module Git
       command('tag', arr_opts)
     end
 
-
+    #
+    # Fetch from given remote
+    #
+    # accepts options:
+    #  :all
+    #  :t or :tags
+    #  :p or :prune
+    #  :refspec
+    #  :refspecs
+    #
+    #  @param [String|NilClass] remote to fetch from
+    #  @param [{Symbol=>Object}] opts the given options
+    #
     def fetch(remote, opts)
-      arr_opts = [remote]
+      arr_opts = []
+      if remote == :all
+        arr_opts << '--all'
+      else
+        arr_opts << remote
+      end
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
+      arr_opts << opts[:refspec] if opts[:refspec]
+      arr_opts << opts[:refspecs].join(' ') if opts[:refspecs]
 
       command('fetch', arr_opts)
     end
