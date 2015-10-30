@@ -72,11 +72,14 @@ class TestLog < Test::Unit::TestCase
     log = @git.log.path(['example.txt','scott/text.txt'])
     assert_equal(30, log.size)
   end
-  
+
   def test_log_file_noexist
-    assert_raise Git::GitExecuteError do
+    e = assert_raise Git::GitExecuteError do
       @git.log.object('no-exist.txt').size
     end
+    assert_not_nil(e.command)
+    assert_not_nil(e.output)
+    assert_not_nil(e.exit_status)
   end
-  
+
 end

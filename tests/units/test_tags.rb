@@ -47,12 +47,15 @@ class TestTags < Test::Unit::TestCase
 
       assert(r2.tags.detect{|t| t.name == 'third'}.objectish == r2.tags.detect{|t| t.name == 'fifth'}.objectish)
 
-      assert_raise Git::GitExecuteError do
+      e = assert_raise Git::GitExecuteError do
         r2.add_tag('third')
       end
+      assert_not_nil(e.command)
+      assert_not_nil(e.output)
+      assert_not_nil(e.exit_status)
 
       r2.add_tag('third', {:f => true})
-      
+
       r2.delete_tag('third')
       
       assert_raise Git::GitTagNameDoesNotExist do

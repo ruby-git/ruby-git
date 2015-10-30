@@ -289,6 +289,16 @@ Some examples of more low-level index and tree operations
      end
 ```
 
+## Git::GitExecuteError
+
+**Git::GitExecuteError** - Whenever a `git` command fails, a `Git::GitExecuteError` exception is raised. The exception object rescued stores the `git` command executed along with the output of the command and the exit status. You can access these using `command`, `output` and `exit_status` (getter) methods.
+
+If you are contributing to this gem and need to raise a custom `Git::GitExecuteError` for your `git` command, you can set the `command`, `output`, and `exit_status` as follows:
+
+```ruby
+raise Git::GitExecuteError.new("this is a test", command: "test", output: "It didn't work!!!", exit_status: 1)
+```
+
 ## License
 
 licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further details.
