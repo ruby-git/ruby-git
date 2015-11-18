@@ -880,9 +880,9 @@ module Git
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
       op = cmd_op.encode("UTF-8", "binary", {
-	  	:invalid => :replace,
-		:undef => :replace
-	  })
+        :invalid => :replace,
+        :undef => :replace
+      })
       op.split("\n")
     end
 
