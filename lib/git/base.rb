@@ -111,13 +111,16 @@ module Git
     #g.config('user.email', 'email@email.com')  # sets value
     #g.config('user.name')  # returns 'Scott Chacon'
     #g.config # returns whole config hash
-    def config(name = nil, value = nil)
-      if(name && value)
-        # set value
-        lib.config_set(name, value)
-      elsif (name)
+    def config(name = nil, value = Git::GETTER)
+      if name && value == Git::GETTER
         # return value
         lib.config_get(name)
+      elsif name && value
+        # set value
+        lib.config_set(name, value)
+      elsif name
+        # unset value
+        lib.config_unset(name)
       else
         # return hash
         lib.config_list

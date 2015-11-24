@@ -19,12 +19,15 @@ class TestConfig < Test::Unit::TestCase
     assert_equal('false', @git.config('core.bare'))
   end
   
-  def test_set_config
+  def test_set_unset_config
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'bare')
       assert_not_equal('bully', g.config('user.name'))
       g.config('user.name', 'bully')
       assert_equal('bully', g.config('user.name'))
+
+      g.config('user.name', nil)
+      assert_equal(Git.global_config('user.name'), g.config('user.name'))
     end
   end  
 
