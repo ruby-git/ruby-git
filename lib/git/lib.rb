@@ -485,8 +485,16 @@ module Git
       command('config', [name, value])
     end
 
+    def config_unset(name)
+      command('config', ['--unset', name])
+    end
+
     def global_config_set(name, value)
       command('config', ['--global', name, value], false)
+    end
+
+    def global_config_unset(name)
+      command('config', ['--global', '--unset', name], false)
     end
          
     # updates the repository index using the working directory content
