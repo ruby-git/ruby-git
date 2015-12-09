@@ -535,6 +535,10 @@ module Git
       self.lib.branch_current
     end
     
+    def update_server_info(force = false)
+      self.lib.update_server_info(force)
+    end
+    
   end
   
 end
