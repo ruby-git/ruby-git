@@ -505,6 +505,7 @@ module Git
       arr_opts = []
       
       arr_opts << '--all' if options[:all]
+      arr_opts << '--intent-to-add' if options[:intent_to_add]
       arr_opts << '--force' if options[:force]
 
       arr_opts << '--' 
