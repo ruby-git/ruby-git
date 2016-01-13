@@ -5,12 +5,12 @@ module Git
 
     include Enumerable
     
-    def initialize(base)
+    def initialize(base, opts=[])
       @branches = {}
       
       @base = base
             
-      @base.lib.branches_all.each do |b|
+      @base.lib.branches_all(opts).each do |b|
         @branches[b[0]] = Git::Branch.new(@base, b[0])
       end
     end

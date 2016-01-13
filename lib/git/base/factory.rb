@@ -11,8 +11,8 @@ module Git
 
       # returns a Git::Branches object of all the Git::Branch 
       # objects for this repo
-      def branches
-        Git::Branches.new(self)
+      def branches(opts=[])
+        Git::Branches.new(self, opts)
       end
       
       def commit_tree(tree = nil, opts = {})

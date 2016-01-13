@@ -297,9 +297,9 @@ module Git
       command('symbolic-ref', ['HEAD', "refs/heads/#{branch_name}"])
     end
     
-    def branches_all
+    def branches_all(opts=[])
       arr = []
-      command_lines('branch', '-a').each do |b| 
+      command_lines('branch', opts.unshift('-a')).each do |b|
         current = (b[0, 2] == '* ')
         arr << [b.gsub('* ', '').strip, current]
       end
