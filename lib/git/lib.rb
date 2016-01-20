@@ -147,6 +147,10 @@ module Git
       process_commit_log_data(full_log)
     end
     
+    def checkattr (file)
+      command( 'check-attr', ['-a', file] )
+    end
+
     def revparse(string)
       return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
       rev = ['head', 'remotes', 'tags'].map do |d|
