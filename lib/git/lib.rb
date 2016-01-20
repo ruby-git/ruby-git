@@ -536,6 +536,7 @@ module Git
       arr_opts << '--all' if opts[:add_all] || opts[:all] 
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
+      arr_opts << '--no-verify' if opts[:no_verify]
       
       command('commit', arr_opts)
     end
@@ -723,6 +724,7 @@ module Git
       arr_opts = []
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
+      arr_opts << '--no-verify' if opts[:no_verify]
 
       command('push', arr_opts + [branch])
       command('push', ['--tags'] + arr_opts) if opts[:tags]
