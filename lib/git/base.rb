@@ -26,7 +26,7 @@ module Git
     #
     def self.clone(repository, name, opts = {})
       # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      self.new(Git::Lib.new(nil, opts[:log]).clone(repository, name, opts))
     end
     
     # Returns (and initialize if needed) a Git::Config instance

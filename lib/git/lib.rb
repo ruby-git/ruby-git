@@ -1,4 +1,6 @@
 require 'tempfile'
+require 'pty'
+require 'logger'
 
 module Git
   
@@ -72,9 +74,25 @@ module Git
 
       arr_opts << repository
       arr_opts << clone_dir
-      
-      command('clone', arr_opts)
-      
+
+      if opts[:log]
+        if opts[:log] == true
+          @logger = Logger.new(STDOUT)
+          @logger.formatter = proc { |s, d, p, msg| msg } # just print message
+        else
+          @logger = opts[:log]
+        end
+
+        command('clone', arr_opts, true, '')  do |stdout, stdin, pid|
+          begin
+            stdout.each("\r") { |line| @logger.info line }
+          rescue Errno::EIO
+          end
+        end
+      else
+        command('clone', arr_opts)
+      end
+
       opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
     
@@ -974,8 +992,14 @@ module Git
     end
     
     def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
-      
+      if block_given?
+        return begin
+          PTY.spawn(git_cmd, &block)
+        rescue PTY::ChildExited
+          puts "The child process exited!"
+        end
+      end
+
       `#{git_cmd}`.chomp
     end
 
