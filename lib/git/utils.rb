@@ -4,8 +4,8 @@ module Git
   module Utils
     module_function
 
-    def is_web_url?( url)
-      return true if url =~ /\A#{URI::regexp(['http', 'https'])}\z/
+    def is_web_url?( url )
+      url =~ /\A#{URI::regexp(['http', 'https'])}\z/
     end
 
     def url_to_ssh( url )
