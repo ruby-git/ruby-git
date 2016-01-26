@@ -79,6 +79,7 @@ module Git
         if opts[:log] == true
           @logger = Logger.new(STDOUT)
           @logger.formatter = proc { |s, d, p, msg| msg } # just print message
+          @logger.level = Logger::INFO
         else
           @logger = opts[:log]
         end
@@ -927,7 +928,7 @@ module Git
       end
 
       if @logger
-        @logger.info(git_cmd)
+        @logger.debug(git_cmd)
         @logger.debug(output)
       end
             
