@@ -174,4 +174,10 @@ module Git
       end
     end
   end
+
+  # open branch with parsing URL
+  def self.get_branch(url, options = {})
+    options[:name] ||= URI( url ).path[1..-1]
+    self.get(options[:name], url, Dir.pwd, options)
+  end
 end
