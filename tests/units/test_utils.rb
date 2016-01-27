@@ -17,6 +17,10 @@ class TestUtils < Test::Unit::TestCase
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git/branch/develop').branch)
     assert_equal(nil,
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git').branch)
+    assert_equal('user@github.com:project/repo.git',
+                 Git::Utils.url_to_ssh('https://user@github.com/project/repo.git').to_repo_s)
+    assert_equal('user@github.com:project/repo.git',
+                 Git::Utils.url_to_ssh('https://user@github.com/project/repo.git/branch/develop').to_repo_s)
     assert_equal('git@github.com:project/repo.git',
                  Git::Utils.url_to_ssh('https://github.com/project/repo.git').to_s)
     assert_equal('git@bitbucket.org:project/repo.git',
