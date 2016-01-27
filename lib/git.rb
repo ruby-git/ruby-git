@@ -21,6 +21,7 @@ require 'git/stash'
 require 'git/stashes'
 require 'git/working_directory'
 require 'git/utils'
+require 'git/uri'
 
 lib = Git::Lib.new(nil, nil)
 unless lib.meets_required_version?
