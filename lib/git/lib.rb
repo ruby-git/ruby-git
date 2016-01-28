@@ -147,6 +147,10 @@ module Git
       process_commit_log_data(full_log)
     end
     
+    def checkattr (file)
+      command( 'check-attr', ['-a', file] )
+    end
+
     def revparse(string)
       return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
       rev = ['head', 'remotes', 'tags'].map do |d|
@@ -643,6 +647,16 @@ module Git
       command('merge', arr_opts)
     end
 
+
+    # Returns "start of a branch" (merge-base command)
+    #
+    # @param [Git::Commit] branch1 Commit-ish of a first branch
+    # @param [Git::Commit] branch2 Commit-ish of a second branch
+    # @return [Git::Commit] closest common point of branches
+    def merge_base(branch1, branch2)
+      command('merge-base', [branch1.to_s, branch2.to_s])
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
@@ -942,8 +956,8 @@ module Git
         memo
       end
     end
-    
-    # Returns an array holding the common options for the log commands 
+
+    # Returns an array holding the common options for the log commands
     #
     # @param [Hash] opts the given options
     # @return [Array] the set of common options that the log command will use

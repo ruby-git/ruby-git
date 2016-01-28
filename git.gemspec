@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.authors = ['Scott Chacon']
-  s.date = '2015-01-13' 
+  s.date = '2015-01-13'
   s.email = 'schacon@gmail.com'
   s.homepage = 'http://github.com/schacon/ruby-git'
   s.license = 'MIT'
@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rdoc'
   s.add_development_dependency 'test-unit', '>=2', '< 4'
-  
+
   s.extra_rdoc_files = ['README.md']
   s.rdoc_options = ['--charset=UTF-8']
 
@@ -43,6 +43,7 @@ Gem::Specification.new do |s|
     'lib/git/stashes.rb',
     'lib/git/status.rb',
     'lib/git/version.rb',
-    'lib/git/working_directory.rb'
+    'lib/git/working_directory.rb',
+    'lib/git/utils.rb'
   ]
 end

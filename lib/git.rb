@@ -20,6 +20,8 @@ require 'git/status'
 require 'git/stash'
 require 'git/stashes'
 require 'git/working_directory'
+require 'git/utils'
+require 'git/uri'
 
 lib = Git::Lib.new(nil, nil)
 unless lib.meets_required_version?
@@ -34,7 +36,7 @@ end
 # and more.  You should be able to do most fundamental git
 # operations with this library.
 #
-# This module provides the basic functions to open a git 
+# This module provides the basic functions to open a git
 # reference to work with. You can open a working directory,
 # open a bare repository, initialize a new repo or clone an
 # existing remote repository.
@@ -42,7 +44,7 @@ end
 # Author::    Scott Chacon (mailto:schacon@gmail.com)
 # License::   MIT License
 module Git
-  
+
   #g.config('user.name', 'Scott Chacon') # sets value
   #g.config('user.email', 'email@email.com')  # sets value
   #g.config('user.name')  # returns 'Scott Chacon'
@@ -82,7 +84,7 @@ module Git
   def self.bare(git_dir, options = {})
     Base.bare(git_dir, options)
   end
-    
+
   # clones a remote repository
   #
   # options
@@ -110,7 +112,7 @@ module Git
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
     Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
   end
-  
+
   # Same as g.config, but forces it to be at the global level
   #
   #g.config('user.name', 'Scott Chacon') # sets value
@@ -139,8 +141,8 @@ module Git
   def self.init(working_dir = '.', options = {})
     Base.init(working_dir, options)
   end
-    
-  # returns a Hash containing information about the references 
+
+  # returns a Hash containing information about the references
   # of the target repository
   #
   # @param [String|NilClass] location the target repository location or nil for '.'
@@ -150,7 +152,7 @@ module Git
   end
 
   # open an existing git working directory
-  # 
+  #
   # this will most likely be the most common way to create
   # a git reference, referring to a working directory.
   # if not provided in the options, the library will assume
@@ -162,5 +164,21 @@ module Git
   def self.open(working_dir, options = {})
     Base.open(working_dir, options)
   end
-    
+
+  # open existing git working directory or clone a remote one
+  def self.get(name, url, working_dir = Dir.pwd, options = {})
+    Dir.chdir(working_dir) do
+      if File.writable? name
+        Base.open(name, options)
+      else
+        Base.clone(url, name, options)
+      end
+    end
+  end
+
+  # open branch with parsing URL
+  def self.get_branch(url, options = {})
+    options[:name] ||= Git::Utils.url_to_ssh( url ).repo
+    self.get(options[:name], url, Dir.pwd, options)
+  end
 end

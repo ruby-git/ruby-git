@@ -336,6 +336,12 @@ module Git
       self.lib.merge(branch, message)
     end
 
+    def merge_base(commit1, commit2)
+      commit1 = self.gcommit(commit1) unless commit1.is_a? Git::Object::Commit
+      commit2 = self.gcommit(commit2) unless commit2.is_a? Git::Object::Commit
+      self.gcommit(self.lib.merge_base(commit1, commit2))
+    end
+
     # iterates over the files which are unmerged
     def each_conflict(&block) # :yields: file, your_version, their_version
       self.lib.conflicts(&block)
