@@ -11,7 +11,7 @@ class TestBase < Test::Unit::TestCase
   def test_add
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_add')
-      
+
       create_file('test_add/test_file_1', 'content tets_file_1')
       create_file('test_add/test_file_2', 'content test_file_2')
       create_file('test_add/test_file_3', 'content test_file_3')
@@ -19,7 +19,7 @@ class TestBase < Test::Unit::TestCase
       create_file('test_add/test file with \' quote', 'content test_file_4')
 
       assert(!git.status.added.assoc('test_file_1'))
-      
+
       # Adding a single file, usign String
       git.add('test_file_1')
 
@@ -39,11 +39,11 @@ class TestBase < Test::Unit::TestCase
       assert(git.status.added.assoc('test_file_3'))
       assert(git.status.added.assoc('test_file_4'))
       assert(git.status.added.assoc('test file with \' quote'))
-      
+
       git.commit('test_add commit #1')
 
       assert(git.status.added.empty?)
-       
+
       delete_file('test_add/test_file_3')
       update_file('test_add/test_file_4', 'content test_file_4 update #1')
       create_file('test_add/test_file_5', 'content test_file_5')
@@ -54,24 +54,24 @@ class TestBase < Test::Unit::TestCase
       assert(git.status.deleted.assoc('test_file_3'))
       assert(git.status.changed.assoc('test_file_4'))
       assert(git.status.added.assoc('test_file_5'))
-      
+
       git.commit('test_add commit #2')
-      
+
       assert(git.status.deleted.empty?)
       assert(git.status.changed.empty?)
       assert(git.status.added.empty?)
-      
+
       delete_file('test_add/test_file_4')
       update_file('test_add/test_file_5', 'content test_file_5 update #1')
       create_file('test_add/test_file_6', 'content test_fiile_6')
-      
+
       # Adding all files (new or updated), without params
       git.add
-      
+
       assert(git.status.deleted.assoc('test_file_4'))
       assert(git.status.changed.assoc('test_file_5'))
       assert(git.status.added.assoc('test_file_6'))
-      
+
       git.commit('test_add commit #3')
 
       assert(git.status.changed.empty?)
@@ -82,7 +82,7 @@ class TestBase < Test::Unit::TestCase
   def test_commit
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_commit')
-      
+
       create_file('test_commit/test_file_1', 'content tets_file_1')
       create_file('test_commit/test_file_2', 'content test_file_2')
 
@@ -96,7 +96,7 @@ class TestBase < Test::Unit::TestCase
       original_commit_id = git.log[0].objectish
 
       create_file('test_commit/test_file_3', 'content test_file_3')
-      
+
       git.add('test_file_3')
 
       git.commit(nil, :amend => true)
@@ -106,4 +106,20 @@ class TestBase < Test::Unit::TestCase
     end
   end
 
+  def test_get_attrs
+    in_temp_dir() do |path|
+      expected = {
+        "ATTR1" => ['VAL1'],
+        "ATTR2" => ['VAL1', 'VAL2']
+      }
+
+      git = Git.clone(@wdir, 'test_commit')
+      create_file('test_commit/test_file_1', 'content tets_file_1')
+
+      create_file('test_commit/.gitattributes', 'test_file_1 ATTR1=VAL1')
+      append_file('test_commit/.gitattributes', 'test_file_1 ATTR2=VAL1,VAL2')
+
+      assert(git.get_attrs('test_commit/test_file_1').eql? expected )
+    end
+  end
 end
