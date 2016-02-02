@@ -543,10 +543,10 @@ module Git
 
     # returns file attributes
     def get_attrs( file )
-      self.lib.checkattr(file).split("\n")                        # Split by newline
-                              .map{ |i| i.split(': ').drop(1) }   # Remove filename
-                              .map{ |i| [i[0], i[1].split(',')] } # Split values
-                              .to_h                               # Convert to hash
+      self.lib.checkattr(file).split("\x0")                       # split output
+                              .each_slice(3)                      # each record
+                              .map{ |i| [i[1], i[2].split(',')] } # split values
+                              .to_h                               # convert to hash
     end
   end
 
