@@ -108,17 +108,20 @@ class TestBase < Test::Unit::TestCase
 
   def test_get_attrs
     in_temp_dir() do |path|
+      git = Git.clone(@wdir, 'test_commit')
+      create_file('test_commit/test_file_1', 'content tets_file_1')
+
+      # returns array if .gitattribute file does not exist
+      assert(git.get_attrs('test_commit/test_file_1')['attr_key'].is_a? Array )
+
+      # returns array if .gitattribute file exists
+      create_file('test_commit/.gitattributes', 'test_file_1 ATTR1=VAL1')
+      append_file('test_commit/.gitattributes', 'test_file_1 ATTR2=VAL1,VAL2')
+
       expected = {
         "ATTR1" => ['VAL1'],
         "ATTR2" => ['VAL1', 'VAL2']
       }
-
-      git = Git.clone(@wdir, 'test_commit')
-      create_file('test_commit/test_file_1', 'content tets_file_1')
-
-      create_file('test_commit/.gitattributes', 'test_file_1 ATTR1=VAL1')
-      append_file('test_commit/.gitattributes', 'test_file_1 ATTR2=VAL1,VAL2')
-
       assert(git.get_attrs('test_commit/test_file_1').eql? expected )
     end
   end
