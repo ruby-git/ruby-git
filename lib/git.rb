@@ -169,7 +169,10 @@ module Git
   def self.get(name, url, working_dir = Dir.pwd, options = {})
     Dir.chdir(working_dir) do
       if File.writable? name
-        Base.open(name, options)
+        base = Base.open( name, options )
+        base.reset_hard( "origin/#{base.current_branch}" )
+        base.pull
+        base
       else
         Base.clone(url, name, options)
       end
