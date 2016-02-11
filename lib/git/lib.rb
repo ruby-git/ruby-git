@@ -87,6 +87,7 @@ module Git
         command('clone', arr_opts, true, '')  do |stdout, stdin, pid|
           begin
             stdout.each("\r") { |line| @logger.info line }
+            Process.wait(pid)
           rescue Errno::EIO
           end
         end
