@@ -420,6 +420,20 @@ module Git
     def gc
       self.lib.gc
     end
+
+    # Check connectivity and validity of the objects and returns array of Git::Object
+    #   @git.fsck
+    #
+    # Options :
+    #  :unreachable => boolean
+    #  :no_dangling => boolean
+    #  :root        => boolean
+    #  :cache       => boolean
+    #  :no_reflogs  => boolean
+    #  :lost_found  => boolean
+    def fsck(opts = {})
+      self.lib.fsck(opts).map{ |objectish| self.object(objectish) }
+    end
     
     def apply(file)
       if File.exist?(file)

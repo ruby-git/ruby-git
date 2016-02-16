@@ -747,7 +747,19 @@ module Git
     def gc
       command('gc', ['--prune', '--aggressive', '--auto'])
     end
-    
+
+    def fsck(opts)
+      arr_opts = []
+      arr_opts << "--unreachable" if opts[:unreachable]
+      arr_opts << "--no-dangling" if opts[:no_dangling]
+      arr_opts << "--root"        if opts[:root]
+      arr_opts << "--cache"       if opts[:cache]
+      arr_opts << "--no-reflogs"  if opts[:no_reflogs]
+      arr_opts << "--lost-found"  if opts[:lost_found]
+
+      command_lines('fsck', arr_opts).map{ |line| line.split(' ').last }
+    end
+
     # reads a tree into the current index file
     def read_tree(treeish, opts = {})
       arr_opts = []
