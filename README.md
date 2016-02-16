@@ -13,7 +13,7 @@ http://github.com/schacon/ruby-git
 You can install Ruby/Git like this:
 
     $ sudo gem install git
-    
+
 ## Code Status
 
 * [![Build Status](https://api.travis-ci.org/schacon/ruby-git.png)](https://travis-ci.org/schacon/ruby-git)
@@ -46,7 +46,7 @@ like:
 
 Here are a bunch of examples of how to use the Ruby/Git package.
 
-Ruby < 1.9 will require rubygems to be loaded. 
+Ruby < 1.9 will require rubygems to be loaded.
 
 ```ruby
     require 'rubygems'
@@ -127,10 +127,10 @@ Here are the operations that need read permission only.
     g.grep('hello')  # implies HEAD
     g.blob('v2.5:Makefile').grep('hello')
     g.tag('v2.5').grep('hello', 'docs/')
-    g.describe() 
+    g.describe()
     g.describe('0djf2aa')
     g.describe('HEAD', {:all => true, :tags => true})
-  
+
     g.diff(commit1, commit2).size
     g.diff(commit1, commit2).stats
     g.gtree('v2.5').diff('v2.6').insertions
@@ -149,7 +149,7 @@ Here are the operations that need read permission only.
     g.config # returns whole config hash
 
     g.tags # returns array of Git::Tag objects
-    
+
     g.show()
     g.show('HEAD')
     g.show('v2.8', 'README.md')
@@ -178,9 +178,11 @@ And here are the operations that will need to write to your git repository.
      g.add('file_path')                      # git add -- "file_path"
      g.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
 
-
-     g.remove('file.txt')
-     g.remove(['file.txt', 'file2.txt'])
+     g.remove()									# git rm -f -- "."
+     g.remove('file.txt')						# git rm -f -- "file.txt"
+     g.remove(['file.txt', 'file2.txt'])		# git rm -f -- "file.txt" "file2.txt"
+     g.remove('file.txt', :recursive => true) 	# git rm -f -r -- "file.txt"
+     g.remove('file.txt', :cached => true)		# git rm -f --cached -- "file.txt"
 
      g.commit('message')
      g.commit_all('message')
