@@ -519,6 +519,7 @@ module Git
     def remove(path = '.', opts = {})
       arr_opts = ['-f']  # overrides the up-to-date check by default
       arr_opts << ['-r'] if opts[:recursive]
+      arr_opts << ['--cached'] if opts[:cached]
       arr_opts << '--'
       if path.is_a?(Array)
         arr_opts += path
