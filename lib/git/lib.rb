@@ -843,7 +843,9 @@ module Git
     ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
     
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
-      command(cmd, opts, chdir).split("\n")
+      cmd_op = command(cmd, opts, chdir)
+      op = cmd_op.encode("UTF-8", "binary", :invalid => "replace", :undef => "replace")
+      op.split("\n")
     end
     
     # Takes the current git's system ENV variables and store them.
