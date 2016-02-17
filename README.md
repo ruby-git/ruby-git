@@ -206,7 +206,11 @@ And here are the operations that will need to write to your git repository.
      g.checkout('new_branch')
      g.checkout(g.branch('new_branch'))
 
+     # merge branch2 into branch name
      g.branch(name).merge(branch2)
+     g.branch(name).merge(
+       branch2, message: 'my message', strategy: 'recursive', 
+       strategy_option: 'ours', no_arg_opts: '--ff-only')
      g.branch(branch2).merge  # merges HEAD with branch2
 
      g.branch(name).in_branch(message) { # add files }  # auto-commits

@@ -60,16 +60,16 @@ module Git
       determine_current
     end
     
-    def merge(branch = nil, message = nil)
+    def merge(branch = nil, opts = {})
       if branch
         in_branch do 
-          @base.merge(branch, message)
+          @base.merge(branch, opts)
           false
         end
         # merge a branch into this one
       else
         # merge this branch into the current one
-        @base.merge(@name)
+        @base.merge(@name, opts)
       end
     end
     

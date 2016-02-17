@@ -65,7 +65,7 @@ class TestTags < Test::Unit::TestCase
       assert_equal(tag1.tagger.name, 'Test User')
       assert_equal(tag1.tagger.email, 'test@email.com')
       assert_true((Time.now - tag1.tagger.date) <  10)
-      assert_equal(tag1.message, ' test message')
+      assert_equal(tag1.message, 'test message')
       
       tag2 = r2.tag('fifth')
       assert_false(tag2.annotated?)
