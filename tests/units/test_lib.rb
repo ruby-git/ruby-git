@@ -116,40 +116,41 @@ class TestLib < Test::Unit::TestCase
     commit << "committer scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
     commit << "\ntest"
     assert_equal(commit, @lib.object_contents('1cc8667014381')) # commit
-    
+
     tree =  "040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed\tex_dir\n"
     tree << "100644 blob 3aac4b445017a8fc07502670ec2dbf744213dd48\texample.txt"
     assert_equal(tree, @lib.object_contents('1cc8667014381^{tree}')) #tree
-    
+
     blob = "1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n2"
     assert_equal(blob, @lib.object_contents('v2.5:example.txt')) #blob
-    
+
   end
-  
+
   def test_object_contents_with_block
-    commit =  "tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7\n"
-    commit << "parent 546bec6f8872efa41d5d97a369f669165ecda0de\n"
-    commit << "author scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
-    commit << "committer scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
-    commit << "\ntest"
-    
-    @lib.object_contents('1cc8667014381') do |f|
-      assert_equal(commit, f.read.chomp)
+    commit =  "tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7\r\n"
+    commit << "parent 546bec6f8872efa41d5d97a369f669165ecda0de\r\n"
+    commit << "author scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\r\n"
+    commit << "committer scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\r\n"
+    commit << "\r\ntest\r\n"
+
+    @lib.object_contents('1cc8667014381') do |stdout, stdin, pid|
+      assert_equal(commit, stdout.readlines.join)
+      Process.wait(pid)
     end
-    
+
      # commit
-    
-    tree =  "040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed\tex_dir\n"
-    tree << "100644 blob 3aac4b445017a8fc07502670ec2dbf744213dd48\texample.txt"
 
-    @lib.object_contents('1cc8667014381^{tree}') do |f|
-      assert_equal(tree, f.read.chomp) #tree
+    tree =  "040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed\tex_dir\r\n"
+    tree << "100644 blob 3aac4b445017a8fc07502670ec2dbf744213dd48\texample.txt\r\n"
+
+    @lib.object_contents('1cc8667014381^{tree}') do |stdout, stdin, pid|
+      assert_equal(tree, stdout.readlines.join) #tree
     end
-    
-    blob = "1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n2"
 
-    @lib.object_contents('v2.5:example.txt') do |f|
-      assert_equal(blob, f.read.chomp) #blob
+    blob = "1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n1\r\n2\r\n"
+
+    @lib.object_contents('v2.5:example.txt') do |stdout, stdin, pid|
+      assert_equal(blob, stdout.readlines.join) #blob
     end
   end
 

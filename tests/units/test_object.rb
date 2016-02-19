@@ -82,49 +82,52 @@ class TestObject < Test::Unit::TestCase
 
     assert_equal(2, o.full_tree.size)
     assert_equal("100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tex_dir/ex.txt", o.full_tree.first)
-    
+
     assert_equal(2, o.depth)
-    
+
     o = @git.gtree('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
     assert(o.is_a?(Git::Object::Tree))
     assert(o.tree?)
   end
-  
+
   def test_tree_contents
     o = @git.gtree('1cc8667014381^{tree}')
     assert_equal('040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed	ex_dir', o.contents_array.first)
   end
-  
+
   def test_blob
     o = @git.gblob('ba492c62b6')
     assert(o.is_a?(Git::Object::Blob))
     assert(o.blob?)
-    
+
     o = @git.gblob('v2.5:example.txt')
     assert(o.is_a?(Git::Object::Blob))
     assert(o.blob?)
   end
-  
+
   def test_blob_contents
     o = @git.gblob('v2.6:example.txt')
     assert_equal('replace with new text', o.contents)
     assert_equal('replace with new text', o.contents)  # this should be cached
-    
+
     # make sure the block is called
     block_called = false
-    o.contents do |f|
+    output = ""
+    o.contents do |stdout, stdin, pid|
       block_called = true
-      assert_equal('replace with new text', f.read.chomp)
+      stdout.each("\r") { |line| output << line }
+      Process.wait(pid)
     end
-    
+    assert_equal("replace with new text\r\n", output)
+
     assert(block_called)
   end
-  
+
   def test_revparse
     sha = @git.revparse('v2.6:example.txt')
     assert_equal('1f09f2edb9c0d9275d15960771b363ca6940fbe3', sha)
   end
-  
+
   def test_grep
     g = @git.gtree('a3db7143944dcfa0').grep('search') # there
     assert_equal(3, g.to_a.flatten.size)
