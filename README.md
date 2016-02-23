@@ -211,6 +211,8 @@ And here are the operations that will need to write to your git repository.
 
      g.branch(name).in_branch(message) { # add files }  # auto-commits
      g.merge('new_branch')
+     g.merge('new_branch', message: 'merge message')
+     g.merge('new_branch', message: 'merge message', no_ff: true) # Merge with --no-ff option
      g.merge('origin/remote_branch')
      g.merge(g.branch('master'))
      g.merge([branch1, branch2])
