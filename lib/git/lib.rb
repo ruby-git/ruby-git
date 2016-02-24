@@ -1,12 +1,20 @@
 require 'tempfile'
 
 module Git
-  
-  class GitExecuteError < StandardError 
+
+  class GitExecuteError < StandardError
+    attr_reader :command, :output, :exit_status
+
+    def initialize(msg, options={})
+      super(msg)
+      @command = options[:command]
+      @output = options[:output]
+      @exit_status = options[:exit_status]
+    end
   end
-  
+
   class Lib
-     
+
     @@semaphore = Mutex.new
 
     def initialize(base = nil, logger = nil)
@@ -917,7 +925,7 @@ module Git
       end
             
       if exitstatus > 1 || (exitstatus == 1 && output != '')
-        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s) 
+        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s, command: git_cmd, output: output, exit_status: exitstatus)
       end
 
       return output
