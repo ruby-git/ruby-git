@@ -133,6 +133,7 @@ Here are the operations that need read permission only.
 
     g.diff(commit1, commit2).size
     g.diff(commit1, commit2).stats
+    g.diff(commit1, commit2).name_status
     g.gtree('v2.5').diff('v2.6').insertions
     g.diff('gitsearch1', 'v2.5').path('lib/')
     g.diff('gitsearch1', @git.gtree('v2.5'))
