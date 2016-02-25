@@ -15,3 +15,6 @@ matrix:
     - rbx-18mode
     - rbx-19mode
     - ree
+before_install:
+  - gem install bundler
+  - bundle --version
