@@ -8,8 +8,9 @@ Gem::Specification.new do |s|
   s.summary = 'Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary.'
   s.version = '1.2.10'
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ['lib']
+  s.required_ruby_version = '>= 1.9'
+  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.requirements = ['git 1.6.0.0, or greater']
 
   s.add_development_dependency 'rake'
