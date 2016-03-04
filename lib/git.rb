@@ -182,6 +182,7 @@ module Git
   # open branch with parsing URL
   def self.get_branch(url, options = {})
     options[:name] ||= Git::Utils.url_to_ssh( url ).repo
-    self.get(options[:name], url, Dir.pwd, options)
+    options[:workdir] ||= Dir.pwd
+    self.get(options[:name], url, options[:workdir], options)
   end
 end
