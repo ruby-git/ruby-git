@@ -12,10 +12,10 @@ class TestLog < Test::Unit::TestCase
   def test_get_fisrt_and_last_entries
     log = @git.log
     assert(log.first.is_a?(Git::Object::Commit))
-    assert_equal('5e53019b3238362144c2766f02a2c00d91fcc023', log.first.objectish)
+    assert_equal('102225b8296ac3887ef53d6a1bf3edf647784f61', log.first.objectish)
 
     assert(log.last.is_a?(Git::Object::Commit))
-    assert_equal('f1410f8735f6f73d3599eb9b5cdd2fb70373335c', log.last.objectish)
+    assert_equal('9fa43bcd45af28e109e6f7b9a6ccd26e8e193a63', log.last.objectish)
   end
   
   def test_get_log_entries    
@@ -71,6 +71,13 @@ class TestLog < Test::Unit::TestCase
     assert_equal(30, log.size)
     log = @git.log.path(['example.txt','scott/text.txt'])
     assert_equal(30, log.size)
+  end
+  
+  def test_get_log_follow
+    log = @git.log.path('renamed.txt')
+    assert_equal(1, log.size)
+    log = @git.log.path('renamed.txt').follow
+    assert_equal(3, log.size)
   end
   
   def test_log_file_noexist
