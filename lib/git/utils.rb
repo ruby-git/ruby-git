@@ -11,7 +11,7 @@ module Git
     def url_to_ssh( url )
       if is_web_url? url
         uri = URI( url )
-        user = uri.userinfo || 'git'
+        user = uri.user || 'git'
         path = uri.path[1..-1]
         url = "#{user}@#{uri.host}:#{path}"
       end
