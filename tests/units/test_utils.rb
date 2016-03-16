@@ -15,7 +15,7 @@ class TestUtils < Test::Unit::TestCase
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git/branch/develop').repo)
     assert_equal('develop',
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git/branch/develop').branch)
-    assert_equal(nil,
+    assert_equal('master',
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git').branch)
     assert_equal('user@github.com:project/repo.git',
                  Git::Utils.url_to_ssh('https://user@github.com/project/repo.git').to_repo_s)

@@ -7,7 +7,7 @@ module URI
         str << "#{host}:#{path}"
       end
       def branch
-        path.split('/branch/')[1]
+        path.split('/branch/')[1] || 'master'
       end
       def repo
         path.split('/branch/')[0]
