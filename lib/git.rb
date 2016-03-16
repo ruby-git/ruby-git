@@ -170,6 +170,7 @@ module Git
     Dir.chdir(working_dir) do
       if File.writable? name
         base = Base.open( name, options )
+        base.fetch
         base.reset_hard( "origin/#{base.current_branch}" )
         base.pull
         base
