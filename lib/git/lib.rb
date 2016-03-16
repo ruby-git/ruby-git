@@ -742,8 +742,11 @@ module Git
       command('push', ['--tags'] + arr_opts) if opts[:tags]
     end
 
-    def pull(remote='origin', branch='master')
-      command('pull', [remote, branch])
+    def pull(remote='origin', branch='master', opts = {})
+      arr_opts = [remote, branch]
+      arr_opts = ['--all'] if opts[:a] || opts[:all]
+
+      command('pull', arr_opts)
     end
 
     def tag_sha(tag_name)

@@ -26,7 +26,7 @@ module Git
     #
     def self.clone(repository, name, opts = {})
       # run git-clone
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      self.new(Git::Lib.new(nil, opts[:log]).clone(repository, name, opts))
     end
 
     # Returns (and initialize if needed) a Git::Config instance
@@ -353,8 +353,8 @@ module Git
     #  @git.pull('upstream')              # pulls from upstream/master
     #  @git.pull('upstream', 'develope')  # pulls from upstream/develop
     #
-    def pull(remote='origin', branch='master')
-			self.lib.pull(remote, branch)
+    def pull(remote='origin', branch='master', opts = {})
+      self.lib.pull(remote, branch, opts)
     end
 
     # returns an array of Git:Remote objects
