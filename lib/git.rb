@@ -166,13 +166,18 @@ module Git
   end
 
   # open existing git working directory or clone a remote one
-  def self.get(name, url, working_dir = Dir.pwd, options = {})
+  def self.get(name, url, working_dir = nil, options = {})
+    working_dir ||= Dir.pwd
+    options[:branch] ||= Git::Utils.url_to_ssh( url ).branch
     Dir.chdir(working_dir) do
       if File.writable? name
         base = Base.open( name, options )
-        base.fetch
         base.reset_hard( "origin/#{base.current_branch}" )
-        base.pull
+        base.checkout(options[:branch])
+        base.reset_hard( "origin/#{options[:branch]}" )
+        base.pull 'origin',
+                  options[:branch],
+                  :all => true
         base
       else
         Base.clone(url, name, options)
@@ -183,7 +188,7 @@ module Git
   # open branch with parsing URL
   def self.get_branch(url, options = {})
     options[:name] ||= Git::Utils.url_to_ssh( url ).repo
-    options[:workdir] ||= Dir.pwd
+    options[:branch] ||= Git::Utils.url_to_ssh( url ).branch
     self.get(options[:name], url, options[:workdir], options)
   end
 end
