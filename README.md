@@ -292,6 +292,13 @@ Some examples of more low-level index and tree operations
      end
 ```
 
+Creating a bare git repository
+
+```
+    # Creates a bare repo in /path/to/repo.git without the .git directory or working directory
+    bare_git = Git.init(nil, :bare => true, :repository => '/path/to/repo.git')
+```
+
 ## License
 
 licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further details.
