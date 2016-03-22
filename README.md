@@ -1,5 +1,7 @@
 # Git Library for Ruby
 
+[![Join the chat at https://gitter.im/schacon/ruby-git](https://badges.gitter.im/schacon/ruby-git.svg)](https://gitter.im/schacon/ruby-git?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Library for using Git in Ruby.
 
 ## Homepage
