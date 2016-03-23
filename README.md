@@ -98,7 +98,7 @@ Here are the operations that need read permission only.
     g.gcommit(treeish)
 
 
-    commit = g.gcommit('1cc8667014381')
+    commit = g.object('1cc8667014381')
 
     commit.gtree
     commit.parent.sha
