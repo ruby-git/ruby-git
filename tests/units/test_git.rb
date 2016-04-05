@@ -13,10 +13,6 @@ class TestGit < Test::Unit::TestCase
     set_file_paths
   end
   def test_get_branch
-    Git.get_branch( 'https://github.com/onetwotrip/ruby-git.git' )
-    assert_equal(Git.get_branch( 'https://github.com/onetwotrip/ruby-git.git' ).index.path,
-                 Git.get('onetwotrip/ruby-git.git',
-                         'https://github.com/onetwotrip/ruby-git.git',
-                         ).index.path)
+    assert_equal(Git.get_branch( 'https://github.com/onetwotrip/ruby-git.git' ).class, Git::Base)
   end
 end
