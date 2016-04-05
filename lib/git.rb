@@ -172,7 +172,6 @@ module Git
     Dir.chdir(working_dir) do
       if File.writable? name
         base = Base.open( name, options )
-        base.reset_hard( "origin/#{base.current_branch}" )
         base.checkout(options[:branch])
         base.reset_hard( "origin/#{options[:branch]}" )
         base.pull 'origin',
