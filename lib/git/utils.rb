@@ -5,7 +5,11 @@ module Git
     module_function
 
     def is_web_url?( url )
-      url =~ /\A#{URI::regexp(['http', 'https'])}\z/
+      begin
+        ['http', 'https'].include? URI(url).scheme
+      rescue URI::InvalidURIError
+        false
+      end
     end
 
     def url_to_ssh( url )
