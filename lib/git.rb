@@ -182,6 +182,6 @@ module Git
 
   # open branch with parsing URL
   def self.get_branch(full_url)
-    repo = Git::Utils.url_to_ssh( full_url )
+    self.get Git::Utils.url_to_ssh( full_url )
   end
 end
