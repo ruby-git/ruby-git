@@ -169,14 +169,14 @@ module Git
   def self.get(repo)
     if File.writable? repo.repo
       base = Base.open(repo.repo)
-      base.reset_hard( "origin/#{repo.branch}" )
-      base.pull 'origin',
-                repo.branch,
-                :all => true
+      base.fetch 'origin'
+      base.reset_hard "origin/#{repo.branch}"
+      base.checkout repo.branch
+      base.merge "origin/#{repo.branch}"
     else
       base = Base.clone(repo, repo.repo)
     end
-    base.checkout(repo.branch)
+    base.checkout repo.branch
     base
   end
 
