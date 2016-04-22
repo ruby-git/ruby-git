@@ -177,6 +177,11 @@ module Git
       branch_names.include?(branch)
     end
 
+    # returns +true+ if the branch found
+    def find_branch?(branch)
+      !!repo_path.branches.find { |e| /#{branch}/  =~ e.name }
+    end
+
     # this is a convenience method for accessing the class that wraps all the
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
