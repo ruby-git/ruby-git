@@ -624,6 +624,10 @@ module Git
       command('branch', ['-D', branch])
     end
 
+    def branch_delete_remote(branch)
+      command('push', ['origin', '--delete', branch])
+    end
+
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
