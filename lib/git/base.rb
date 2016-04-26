@@ -179,7 +179,7 @@ module Git
 
     # returns +true+ if the branch found
     def find_branch?(branch)
-      !!repo_path.branches.find { |e| /#{branch}/  =~ e.name }
+      !!self.branches.find { |e| /#{branch}/  =~ e.name }
     end
 
     # this is a convenience method for accessing the class that wraps all the
