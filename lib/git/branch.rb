@@ -54,12 +54,12 @@ module Git
 
     # Delete branch locally
     def delete
-      @base.lib.branch_delete(@name)
+      @base.lib.branch_delete(@name) if @base.is_local_branch?(@name)
     end
 
     # Delete branch remotely
     def delete_remote
-      @base.lib.branch_delete_remote(@name)
+      @base.lib.branch_delete_remote(@name) if @base.is_remote_branch?(@name)
     end
 
     # Delete branch locally and remotely
