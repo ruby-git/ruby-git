@@ -457,10 +457,12 @@ module Git
         parse_config_list command_lines('config', ['--list'])
       end
 
-      if @git_dir
-        Dir.chdir(@git_dir, &build_list)
-      else
-        build_list.call
+      @config_list ||= begin
+        if @git_dir
+          Dir.chdir(@git_dir, &build_list)
+        else
+          build_list.call
+        end
       end
     end
 
