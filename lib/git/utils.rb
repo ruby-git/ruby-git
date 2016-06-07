@@ -13,6 +13,7 @@ module Git
     end
 
     def url_to_ssh( url )
+      return nil unless url =~ URI::Parser.new.make_regexp
       if is_web_url? url
         uri = URI( url )
         user = uri.user || 'git'
