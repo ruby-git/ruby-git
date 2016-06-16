@@ -22,6 +22,10 @@ module Git
     def apply(index=nil)
       @base.lib.stash_apply(index)
     end
+
+    def pop(index=nil)
+      @base.lib.stash_pop(index)
+    end
     
     def clear
       @base.lib.stash_clear
