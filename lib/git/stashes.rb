@@ -32,6 +32,10 @@ module Git
       @stashes = []
     end
 
+    def drop(index=nil)
+      @base.lib.stash_drop(index)
+    end
+
     def size
       @stashes.size
     end
