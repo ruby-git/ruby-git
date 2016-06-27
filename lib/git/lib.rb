@@ -42,11 +42,12 @@ module Git
 
     # tries to clone the given repo
     #
-    # returns {:repository} (if bare)
+    # returns {:repository} (if bare or mirror)
     #         {:working_directory} otherwise
     #
     # accepts options:
     #  :bare::      no working directory
+    #  :mirror::    similar, but maps all refs, not only branches
     #  :branch::    name of branch to track (rather than 'master')
     #  :depth::     the number of commits back to pull
     #  :origin::    name of remote (same as remote)
@@ -62,6 +63,7 @@ module Git
 
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
+      arr_opts << '--mirror' if opts[:mirror]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << '--config' << opts[:config] if opts[:config]
@@ -75,7 +77,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      ( opts[:bare] || opts[:mirror] ) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
 
 

@@ -17,9 +17,8 @@ module Git
     #  name - sinatra
     #
     # options:
-    #   :repository
-    #
-    #    :bare
+    #    :repository
+    #    :bare or :mirror
     #   or
     #    :working_directory
     #    :index_file
