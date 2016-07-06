@@ -365,6 +365,7 @@ module Git
     # Options:
     #   :fetch => true
     #   :track => <branch_name>
+    #   :mirror => fetch or push
     def add_remote(name, url, opts = {})
       url = url.repo.path if url.is_a?(Git::Base)
       self.lib.remote_add(name, url, opts)

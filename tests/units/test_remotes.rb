@@ -26,6 +26,14 @@ class TestRemotes < Test::Unit::TestCase
       
       assert(local.branches.map{|b| b.full}.include?('master')) #We actually a new branch ('test_track') on the remote and track that one intead. 
       assert(local.remotes.map{|b| b.name}.include?('testremote3'))
+
+      local.add_remote('testremote4', remote, :mirror => 'fetch')
+
+      assert(local.config('remote.testremote4.fetch') == '+refs/*:refs/*')
+
+      local.add_remote('testremote5', remote, :mirror => 'push')
+
+      assert(local.config('remote.testremote5.mirror') == 'true')
     end 
   end
 
