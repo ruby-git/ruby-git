@@ -684,6 +684,7 @@ module Git
       arr_opts = ['add']
       arr_opts << '-f' if opts[:with_fetch] || opts[:fetch]
       arr_opts << '-t' << opts[:track] if opts[:track]
+      arr_opts << "--mirror=#{opts[:mirror]}" if opts[:mirror]
       arr_opts << '--'
       arr_opts << name
       arr_opts << url
