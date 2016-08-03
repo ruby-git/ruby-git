@@ -727,6 +727,7 @@ module Git
       arr_opts = [remote]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
+      arr_opts << '--unshallow' if opts[:unshallow]
 
       command('fetch', arr_opts)
     end
