@@ -658,6 +658,10 @@ module Git
       command('merge', arr_opts)
     end
 
+    def abort_merge
+      command('merge', ["--abort"])
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
