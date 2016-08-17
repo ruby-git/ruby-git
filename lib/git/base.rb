@@ -348,6 +348,11 @@ module Git
       self.lib.conflicts(&block)
     end
 
+    # returns whether the repo has something unmerged or not
+    def has_unmerged_files?
+      self.lib.unmerged.count > 0
+    end
+
     # pulls the given branch from the given remote into the current branch
     #
     #  @git.pull                          # pulls from origin/master
