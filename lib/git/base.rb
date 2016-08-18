@@ -331,7 +331,7 @@ module Git
 
     # aborts the current conflict resolution process, and try to reconstruct the pre-merge state.
     # rauses an error if there are no umerged files
-    def abort_merge(branch, message = 'merge')
+    def abort_merge
       raise "nothing to abort - no unmerged files" if self.lib.unmerged.count == 0
       self.lib.abort_merge
     end
