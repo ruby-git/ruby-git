@@ -577,6 +577,7 @@ module Git
 
       arr_opts = []
       arr_opts << '--no-edit' if opts[:no_edit]
+      arr_opts << '--no-commit' if opts[:no_commit]
       arr_opts << commitish
 
       command('revert', arr_opts)
