@@ -988,6 +988,15 @@ module Git
 
     # Returns an array holding the common options for the log commands
     #
+    # accepts options:
+    #  :count
+    #  :since
+    #  :until
+    #  :grep
+    #  :author
+    #  :between
+    #  :up_to
+    #
     # @param [Hash] opts the given options
     # @return [Array] the set of common options that the log command will use
     def log_common_options(opts)
@@ -1000,11 +1009,12 @@ module Git
       arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
+      arr_opts << "#{opts[:up_to].to_s}" if opts[:up_to]
 
       arr_opts
     end
 
-    # Retrurns an array holding path options for the log commands
+    # Returns an array holding path options for the log commands
     #
     # @param [Hash] opts the given options
     # @return [Array] the set of path options that the log command will use
