@@ -64,6 +64,11 @@ class TestLog < Test::Unit::TestCase
     assert_equal(1, l.size)
   end
 
+  def test_get_log_up_to
+    l = @git.log.up_to('test')
+    assert_equal(30, l.size)
+  end
+
   def test_get_log_path
     log = @git.log.path('example.txt')
     assert_equal(30, log.size)
