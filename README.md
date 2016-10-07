@@ -201,7 +201,7 @@ And here are the operations that will need to write to your git repository.
 
      g.current_branch # returns the name of the currently checked out branch
 
-     g.branch('new_branch') # creates new or fetches existing
+     g.branch('new_branch').create # creates new or fetches existing
      g.branch('new_branch').checkout
      g.branch('new_branch').delete
      g.branch('existing_branch').checkout
