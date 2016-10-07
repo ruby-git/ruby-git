@@ -46,13 +46,14 @@ module Git
     #         {:working_directory} otherwise
     #
     # accepts options:
-    #  :bare::      no working directory
-    #  :branch::    name of branch to track (rather than 'master')
-    #  :depth::     the number of commits back to pull
-    #  :origin::    name of remote (same as remote)
-    #  :path::      directory where the repo will be cloned
-    #  :remote::    name of remote (rather than 'origin')
-    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    #  :bare::             no working directory
+    #  :branch::           name of branch to track (rather than 'master')
+    #  :depth::            the number of commits back to pull
+    #  :origin::           name of remote (same as remote)
+    #  :path::             directory where the repo will be cloned
+    #  :remote::           name of remote (rather than 'origin')
+    #  :recursive::        after the clone is created, initialize all submodules within, using their default settings.
+    #  :no_single_branch:: fetch the history near the tips of all branches when used with :depth
     #
     # TODO - make this work with SSH password or auth_key
     #
@@ -67,6 +68,7 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
+      arr_opts << '--no-single-branch' if opts[:no_single_branch]
 
       arr_opts << '--'
 
