@@ -26,7 +26,7 @@ module Git
     #
     def self.clone(repository, name, opts = {})
       # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      self.new(Git::Lib.new(env: opts.delete(:env)).clone(repository, name, opts))
     end
     
     # Returns (and initialize if needed) a Git::Config instance
@@ -75,6 +75,8 @@ module Git
       self.new({:working_directory => working_dir}.merge(opts))
     end
     
+    attr_reader :env
+    
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')
@@ -90,6 +92,7 @@ module Git
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
       @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil 
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
+      @env = (options[:env] || {}).freeze
     end
     
     # changes current working directory for a block

@@ -19,11 +19,14 @@ module Git
         @git_dir = base.repo.path
         @git_index_file = base.index.path if base.index
         @git_work_dir = base.dir.path if base.dir
+        @git_extra_env = base.env
       elsif base.is_a?(Hash)
         @git_dir = base[:repository]
         @git_index_file = base[:index]
         @git_work_dir = base[:working_directory]
+        @git_extra_env = base[:env].freeze
       end
+      @git_extra_env ||= {}.freeze
       @logger = logger
     end
 
@@ -871,14 +874,14 @@ module Git
     # Takes the current git's system ENV variables and store them.
     def store_git_system_env_variables
       @git_system_env_variables = {}
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
+      (ENV_VARIABLE_NAMES + @git_extra_env.keys).each do |env_variable_name|
         @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
       end
     end
 
     # Takes the previously stored git's ENV variables and set them again on ENV.
     def restore_git_system_env_variables
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
+      (ENV_VARIABLE_NAMES + @git_extra_env.keys).each do |env_variable_name|
         ENV[env_variable_name] = @git_system_env_variables[env_variable_name]
       end
     end
@@ -889,6 +892,9 @@ module Git
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
       ENV['GIT_SSH'] = Git::Base.config.git_ssh
+      @git_extra_env.each do |k, v|
+        ENV[k] = v
+      end
     end
 
     # Runs a block inside an environment with customized ENV variables.
