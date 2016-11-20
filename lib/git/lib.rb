@@ -726,6 +726,7 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = [remote]
+      arr_opts << opts[:refs] if opts[:refs]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
       arr_opts << '--unshallow' if opts[:unshallow]
