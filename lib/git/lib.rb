@@ -64,6 +64,7 @@ module Git
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--no-single-branch' if opts[:no_single_branch]
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
