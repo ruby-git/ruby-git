@@ -857,7 +857,7 @@ module Git
     end
 
 
-    private
+    protected
 
     # Systen ENV variables involved in the git commands.
     #
