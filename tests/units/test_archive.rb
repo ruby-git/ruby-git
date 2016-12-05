@@ -25,11 +25,11 @@ class TestArchive < Test::Unit::TestCase
     
     f = @git.object('v2.6').archive(nil, :format => 'tar') # returns path to temp file
     assert(File.exist?(f))
-    
-    lines = `cd /tmp; tar xvpf #{f}`.split("\n")
+
+    lines = `cd /tmp; tar tpf #{f}`.split("\n")
     assert_equal('ex_dir/', lines[0])
     assert_equal('example.txt', lines[2])
-    
+
     f = @git.object('v2.6').archive(tempfile, :format => 'zip')
     assert(File.file?(f))
 
@@ -39,17 +39,9 @@ class TestArchive < Test::Unit::TestCase
     f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
     assert(File.exist?(f))
     
-    lines = `cd /tmp; tar xvpf #{f}`.split("\n")
+    lines = `cd /tmp; tar tpf #{f}`.split("\n")
     assert_equal('test/', lines[0])
     assert_equal('test/ex_dir/ex.txt', lines[2])
-
-    in_temp_dir do
-      c = Git.clone(@wbare, 'new')
-      c.chdir do
-        f = @git.remote('origin').branch('master').archive(tempfile, :format => 'tgz')
-        assert(File.exist?(f))
-      end
-    end
   end
   
 end
