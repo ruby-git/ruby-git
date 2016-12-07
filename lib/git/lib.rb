@@ -859,12 +859,27 @@ module Git
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
-      op = cmd_op.encode("UTF-8", "binary", {
-	  	:invalid => :replace,
-		:undef => :replace
-	  })
-      op.split("\n")
+      split_utf8(cmd_op)
     end
+
+    def split_utf8(s)
+      # ruby can think the string is utf8 but any action on the strings chars
+      # will trigger errors. Here we try to split utf8 strings.
+      # It it isn't utf8 or if it fails, we fallback to assume the input is
+      # "binary" encoding
+      result = begin
+                 s.encoding == Encoding::UTF_8 && s.split("\n")
+               rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+                 nil
+               end
+
+      result ||= s.encode("UTF-8", "binary", {
+        :invalid => :replace,
+        :undef => :replace,
+      }).split("\n")
+      result
+    end
+
 
     # Takes the current git's system ENV variables and store them.
     def store_git_system_env_variables
