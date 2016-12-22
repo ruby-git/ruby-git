@@ -661,6 +661,11 @@ module Git
       command('merge', arr_opts)
     end
 
+    def merge_base(commits)
+      arr_opts = commits
+      command('merge-base', arr_opts)
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|

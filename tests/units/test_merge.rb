@@ -72,6 +72,7 @@ class TestMerge < Test::Unit::TestCase
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'branch_merge_test')
       Dir.chdir('branch_merge_test') do
+        init_commit = g.revparse("HEAD")
 
         g.branch('new_branch').in_branch('test') do
           assert_equal('new_branch', g.current_branch)
@@ -89,6 +90,8 @@ class TestMerge < Test::Unit::TestCase
           true
         end
 
+        assert(g.merge_base(['new_branch', 'new_branch2']) == init_commit)
+
         assert(!g.status['new_file_1'])  # still in master branch
         assert(!g.status['new_file_3'])  # still in master branch
 
@@ -96,9 +99,7 @@ class TestMerge < Test::Unit::TestCase
 
         assert(g.status['new_file_1'])  # file has been merged in
         assert(g.status['new_file_3'])  # file has been merged in
-                
       end
     end
   end
-  
 end

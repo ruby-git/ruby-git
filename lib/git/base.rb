@@ -335,6 +335,11 @@ module Git
       self.lib.merge(branch, message)
     end
 
+    # find the common denominator between two-commits/branches
+    def merge_base(commits)
+      self.lib.merge_base(commits)
+    end
+
     # iterates over the files which are unmerged
     def each_conflict(&block) # :yields: file, your_version, their_version
       self.lib.conflicts(&block)
