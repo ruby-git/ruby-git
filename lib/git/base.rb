@@ -335,6 +335,16 @@ module Git
       self.lib.merge(branch, message)
     end
 
+    # finds best common ancestor(s) between two commits to use in a three-way merge
+    #
+    #    lib.merge_base(['commit1','commit2'])
+    #
+    # @param [Array] commits
+    # @return [String] best common ancestor(s) as a string
+    def merge_base(commits)
+      self.lib.merge_base(commits)
+    end
+
     # iterates over the files which are unmerged
     def each_conflict(&block) # :yields: file, your_version, their_version
       self.lib.conflicts(&block)

@@ -661,6 +661,11 @@ module Git
       command('merge', arr_opts)
     end
 
+    def merge_base(commits)
+      arr_opts = commits
+      command('merge-base', arr_opts)
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
@@ -877,7 +882,7 @@ module Git
 
     # Systen ENV variables involved in the git commands.
     #
-    # @return [<String>] the names of the EVN variables involved in the git commands
+    # @return [<String>] the names of the ENV variables involved in the git commands
     ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
