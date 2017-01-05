@@ -1,6 +1,5 @@
 language: ruby
 rvm:
-  - 1.8.7
   - 1.9.2
   - 1.9.3
   - 2.0.0
@@ -8,8 +7,6 @@ rvm:
   - 2.1.2
   - jruby-18mode
   - jruby-19mode
-  - ree
-matrix:
-  allow_failures:
-    - rbx-18mode
-    - rbx-19mode
+before_install:
+  - gem install bundler
+  - bundle --version

@@ -1,3 +1,12 @@
+== 1.3.0
+
+ * Dropping Ruby 1.8.x support
+
+== 1.2.10
+
+ * Adding Git::Diff.name_status
+ * Checking and fixing encoding on commands output to prevent encoding errors afterwards
+
 == 1.2.9
 
 * Adding Git.configure (to configure the git env)
@@ -14,9 +23,9 @@
 * Improving Git::Object::Tag. Adding annotated?, tagger and message
 * Supporting a submodule path as a valid repo
 * Git.checkout - supporting -f and -b
-* Git.clone - supporting --branch 
+* Git.clone - supporting --branch
 * Git.fetch - supporting --prune
-* Git.tag - supporting 
+* Git.tag - supporting
 
 == 1.2.8
 
@@ -24,7 +33,7 @@
 * revparse: Supporting ref names containing SHA like substrings (40-hex strings)
 * Fix warnings on Ruby 2.1.2
 
-== 1.2.7 
+== 1.2.7
 
 * Fixing mesages encoding
 * Fixing -f flag in git push
@@ -47,9 +56,9 @@
 * Git.add - supporting --fore
 * Git.init - supporting --bare
 * Git.commit - supporting --all and --amend
-* Added Git.remote_remote, Git.revert and Git.clean 
+* Added Git.remote_remote, Git.revert and Git.clean
 * Added Bundler to the formula
-* Travis configuration 
+* Travis configuration
 * Licence included with the gem
 
 == 1.0.4
