@@ -414,6 +414,7 @@ module Git
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
         command_lines('ls-remote', [location], false).each do |line|
           (sha, info) = line.split("\t")
+          next if not info
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
           type = 'branches' if type == 'heads'
