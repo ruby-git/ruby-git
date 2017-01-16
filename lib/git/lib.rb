@@ -147,7 +147,7 @@ module Git
       process_commit_log_data(full_log)
     end
 
-    def revparse(string)
+    def revparse(string, opts={})
       return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
       rev = ['head', 'remotes', 'tags'].map do |d|
         File.join(@git_dir, 'refs', d, string)
@@ -155,7 +155,12 @@ module Git
         File.file?(path)
       end
       return File.read(rev).chomp if rev
-      command('rev-parse', string)
+
+      arr_opts = []
+      arr_opts << "--short=#{opts[:short]}" if opts[:short]
+      arr_opts << string
+
+      command('rev-parse', arr_opts)
     end
 
     def namerev(string)

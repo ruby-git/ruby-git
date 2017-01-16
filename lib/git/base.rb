@@ -523,8 +523,8 @@ module Git
     #   @git.revparse('v2.4^{tree}')
     #   @git.revparse('v2.4:/doc/index.html')
     #
-    def revparse(objectish)
-      self.lib.revparse(objectish)
+    def revparse(objectish, opts={})
+      self.lib.revparse(objectish, opts)
     end
 
     def ls_tree(objectish)
