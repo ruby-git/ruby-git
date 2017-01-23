@@ -55,8 +55,9 @@ module Git
         @base.lib.grep(string, opts)
       end
       
-      def diff(objectish)
-        Git::Diff.new(@base, @objectish, objectish)
+      def diff(objectish,inverse)
+        return Git::Diff.new(@base, @objectish, objectish) unless inverse
+        Git::Diff.new(@base, objectish, @objectish)
       end
       
       def log(count = 30)
@@ -212,8 +213,8 @@ module Git
       end
       alias_method :date, :committer_date
 
-      def diff_parent
-        diff(parent)
+      def diff_parent(inverse=false)
+        diff(parent,inverse)
       end
       
       def set_commit(data)
