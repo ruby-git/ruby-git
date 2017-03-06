@@ -12,6 +12,12 @@ module URI
       def repo
         path.split('/branch/')[0]
       end
+      def owner
+        repo.split('/')[0]
+      end
+      def slug
+        repo.split('/')[1]
+      end
       def to_s
         str = ''
         str << "#{user}@" if user && !user.empty?
