@@ -477,7 +477,10 @@ module Git
       self.lib.branch_current
     end
 
-    
+    def clean
+      puts "cleaning"
+      self.lib.clean
+    end  
   end
   
 end

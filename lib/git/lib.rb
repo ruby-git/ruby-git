@@ -28,6 +28,10 @@ module Git
     def init
       command('init')
     end
+
+    def clean
+      command('clean -f')
+    end
     
     # tries to clone the given repo
     #
@@ -103,7 +107,7 @@ module Git
       return File.read(rev).chomp if rev
       command('rev-parse', string)
     end
-    
+
     def namerev(string)
       command('name-rev', string).split[1]
     end
