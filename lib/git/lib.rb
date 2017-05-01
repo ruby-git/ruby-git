@@ -68,6 +68,7 @@ module Git
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << '--reference' << opts[:reference] if opts[:reference]
       arr_opts << '--recursive' if opts[:recursive]
 
       arr_opts << '--'
