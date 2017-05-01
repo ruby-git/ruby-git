@@ -53,6 +53,7 @@ module Git
     #  :origin::    name of remote (same as remote)
     #  :path::      directory where the repo will be cloned
     #  :remote::    name of remote (rather than 'origin')
+    #  :reference:: try to use remote as reference
     #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
     #
     # TODO - make this work with SSH password or auth_key
@@ -68,6 +69,7 @@ module Git
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << '--reference' << opts[:reference] if opts[:reference]
       arr_opts << '--recursive' if opts[:recursive]
 
       arr_opts << '--'
