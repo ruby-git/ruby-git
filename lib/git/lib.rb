@@ -79,7 +79,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir, :env => @git_extra_env}
     end
 
 
