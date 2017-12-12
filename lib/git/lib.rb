@@ -42,11 +42,12 @@ module Git
 
     # tries to clone the given repo
     #
-    # returns {:repository} (if bare)
+    # returns {:repository} (if bare or mirror)
     #         {:working_directory} otherwise
     #
     # accepts options:
     #  :bare::      no working directory
+    #  :mirror::    similar, but maps all refs, not only branches
     #  :branch::    name of branch to track (rather than 'master')
     #  :depth::     the number of commits back to pull
     #  :origin::    name of remote (same as remote)
@@ -62,10 +63,12 @@ module Git
 
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
+      arr_opts << '--mirror' if opts[:mirror]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
+      arr_opts << '--reference' << opts[:reference] if opts[:reference]
       arr_opts << '--recursive' if opts[:recursive]
 
       arr_opts << '--'
@@ -75,7 +78,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      ( opts[:bare] || opts[:mirror] ) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
 
 
@@ -95,7 +98,7 @@ module Git
     #  :candidates
     #  :long
     #  :always
-    #  :math
+    #  :match
     #
     #  @param [String|NilClass] committish target commit sha or object name
     #  @param [{Symbol=>Object}] opts the given options
@@ -112,12 +115,13 @@ module Git
       arr_opts << '--always' if opts[:always]
       arr_opts << '--exact-match' if opts[:exact_match] || opts[:"exact-match"]
 
-      arr_opts << '--dirty' if opts['dirty'] == true
-      arr_opts << "--dirty=#{opts['dirty']}" if opts['dirty'].is_a?(String)
+      opts[:dirty] = opts['dirty'] if opts['dirty']
+      arr_opts << '--dirty' if opts[:dirty] == true
+      arr_opts << "--dirty=#{opts[:dirty]}" if opts[:dirty].is_a?(String)
 
-      arr_opts << "--abbrev=#{opts['abbrev']}" if opts[:abbrev]
-      arr_opts << "--candidates=#{opts['candidates']}" if opts[:candidates]
-      arr_opts << "--match=#{opts['match']}" if opts[:match]
+      arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
+      arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
+      arr_opts << "--match=#{opts[:match]}" if opts[:match]
 
       arr_opts << committish if committish
 
@@ -411,6 +415,7 @@ module Git
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
         command_lines('ls-remote', [location], false).each do |line|
           (sha, info) = line.split("\t")
+          next if not info
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
           type = 'branches' if type == 'heads'
@@ -658,6 +663,11 @@ module Git
       command('merge', arr_opts)
     end
 
+    def merge_base(commits)
+      arr_opts = commits
+      command('merge-base', arr_opts)
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|
@@ -681,6 +691,7 @@ module Git
       arr_opts = ['add']
       arr_opts << '-f' if opts[:with_fetch] || opts[:fetch]
       arr_opts << '-t' << opts[:track] if opts[:track]
+      arr_opts << "--mirror=#{opts[:mirror]}" if opts[:mirror]
       arr_opts << '--'
       arr_opts << name
       arr_opts << url
@@ -722,11 +733,30 @@ module Git
       command('tag', arr_opts)
     end
 
-
+    #
+    # Fetch from given remote
+    #
+    # accepts options:
+    #  :all
+    #  :t or :tags
+    #  :p or :prune
+    #  :refspec
+    #  :refspecs
+    #
+    #  @param [String|NilClass] remote to fetch from
+    #  @param [{Symbol=>Object}] opts the given options
+    #
     def fetch(remote, opts)
-      arr_opts = [remote]
+      arr_opts = []
+      if remote == :all
+        arr_opts << '--all'
+      else
+        arr_opts << remote
+      end
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
+      arr_opts << opts[:refspec] if opts[:refspec]
+      arr_opts << opts[:refspecs].join(' ') if opts[:refspecs]
 
       command('fetch', arr_opts)
     end
@@ -860,9 +890,9 @@ module Git
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
       op = cmd_op.encode("UTF-8", "binary", {
-	  	:invalid => :replace,
-		:undef => :replace
-	  })
+        :invalid => :replace,
+        :undef => :replace
+      })
       op.split("\n")
     end
 
@@ -977,6 +1007,7 @@ module Git
       arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
       arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
+      arr_opts << "#{opts[:up_to].to_s}" if opts[:up_to]
 
       arr_opts
     end
