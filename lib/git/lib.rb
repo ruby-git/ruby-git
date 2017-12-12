@@ -1035,9 +1035,12 @@ module Git
     end
 
     def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+      return IO.popen(git_cmd, :err=>"/dev/null", &block) if block_given?
 
-      `#{git_cmd}`.chomp
+      io = IO.popen(git_cmd, :err=>"/dev/null")
+      output = io.read.chomp
+      io.close
+      output
     end
 
     def escape(s)
