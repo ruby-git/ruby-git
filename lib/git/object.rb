@@ -182,7 +182,7 @@ module Git
       end
       
       def parent
-        parents.first
+        parents.first || self
       end
       
       # array of all parent commits

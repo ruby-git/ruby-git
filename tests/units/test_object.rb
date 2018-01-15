@@ -48,6 +48,9 @@ class TestObject < Test::Unit::TestCase
     o = @git.gcommit('test_object')
     assert(o.is_a?(Git::Object::Commit))
     assert(o.commit?)
+
+    o = @git.gcommit('545ffc79786f268524c35e1e05b1770c7c74faf1')
+    assert('545ffc79786f268524c35e1e05b1770c7c74faf1', o.parent.sha)
   end
   
   def test_commit_contents
