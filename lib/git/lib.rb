@@ -619,8 +619,24 @@ module Git
       end
     end
 
+    def stash_pop(id = nil)
+      if id
+        command('stash pop', [id])
+      else
+        command('stash pop')
+      end
+    end
+
     def stash_clear
       command('stash clear')
+    end
+
+    def stash_drop(id = nil)
+      if id
+        command('stash drop', [id])
+      else
+        command('stash drop')
+      end
     end
 
     def stash_list
