@@ -242,8 +242,12 @@ module Git
         end
 
         if in_message
-          hsh['message'] << "#{line[4..-1]}\n"
-          next
+          if line[0..5] != "commit" # if commit have no comment
+            hsh['message'] << "#{line[4..-1]}\n"
+            next
+          else
+            in_message = !in_message
+          end
         end
 
         key, *value = line.split
