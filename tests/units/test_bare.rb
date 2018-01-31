@@ -26,9 +26,9 @@ class TestBare < Test::Unit::TestCase
     assert_equal('test', o.message)
 
     assert_equal('tags/v2.5', o.parent.name)
-    assert_equal('master', o.parent.parent.name)
-    assert_equal('master~1', o.parent.parent.parent.name)
-    
+    assert_equal('tags/v2.5~1', o.parent.parent.name)
+    assert_equal('tags/v2.5~2', o.parent.parent.parent.name)
+
     o = @git.object('HEAD')
     assert(o.is_a?(Git::Object::Commit))
     assert(o.commit?)
