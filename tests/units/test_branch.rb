@@ -30,15 +30,18 @@ class TestBranch < Test::Unit::TestCase
   end
   
   def test_branches_single
-    b = @git.branches[:test_object]
-    assert_equal('test_object', b.name)
+    branch = @git.branches[:test_object]
+    assert_equal('test_object', branch.name)
 
-    b = @git.branches['working/master']
-    assert_equal('master', b.name)
-    assert_equal('working/master', b.full)
-    assert_equal('working', b.remote.name)
-    assert_equal('+refs/heads/*:refs/remotes/working/*', b.remote.fetch_opts)
-    assert_equal('../working.git', b.remote.url)
+    %w{working/master remotes/working/master}.each do |branch_name|
+      branch = @git.branches[branch_name]
+     
+      assert_equal('master', branch.name)
+      assert_equal('remotes/working/master', branch.full)
+      assert_equal('working', branch.remote.name)
+      assert_equal('+refs/heads/*:refs/remotes/working/*', branch.remote.fetch_opts)
+      assert_equal('../working.git', branch.remote.url)
+    end
   end
   
   def test_branch_commit
@@ -51,6 +54,7 @@ class TestBranch < Test::Unit::TestCase
       Dir.chdir('branch_test') do
         assert(!g.branch('new_branch').current)
         g.branch('other_branch').create
+        assert(!g.branch('other_branch').current)
         g.branch('new_branch').checkout
         assert(g.branch('new_branch').current)
 
@@ -58,7 +62,9 @@ class TestBranch < Test::Unit::TestCase
 
         new_file('test-file1', 'blahblahblah1')
         new_file('test-file2', 'blahblahblah2')
+        new_file('.test-dot-file1', 'blahblahblahdot1')
         assert(g.status.untracked.assoc('test-file1'))
+        assert(g.status.untracked.assoc('.test-dot-file1'))
         
         g.add(['test-file1', 'test-file2'])
         assert(!g.status.untracked.assoc('test-file1'))

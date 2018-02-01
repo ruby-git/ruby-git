@@ -1,7 +1,9 @@
-require 'test/unit'
+require 'date'
 require 'fileutils'
 require 'logger'
-require File.dirname(__FILE__) + '/../lib/git'
+require 'test/unit'
+
+require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
 
 class Test::Unit::TestCase
   
@@ -22,20 +24,10 @@ class Test::Unit::TestCase
     @wdir = create_temp_repo(@wdir_dot)
   end
   
-  def teardown
+  teardown
+  def git_teardown
     if @tmp_path
-      #puts "teardown #{@tmp_path}"
       FileUtils.rm_r(@tmp_path)
-    end
-  end
-  
-  
-  def with_temp_bare
-    in_temp_dir do |path|
-      g = Git.clone(@wbare, 'new')
-      Dir.chdir('new') do
-        yield g
-      end
     end
   end
   
@@ -51,9 +43,12 @@ class Test::Unit::TestCase
     tmp_path
   end
   
-  def in_temp_dir(remove_after = true)
-    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-    tmp_path = File.join("/tmp/", filename)
+  def in_temp_dir(remove_after = true) # :yields: the temporary dir's path
+    tmp_path = nil
+    while tmp_path.nil? || File.directory?(tmp_path)
+      filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+      tmp_path = File.join("/tmp/", filename)
+    end
     FileUtils.mkdir(tmp_path)
     Dir.chdir tmp_path do
       yield tmp_path
@@ -61,11 +56,22 @@ class Test::Unit::TestCase
     FileUtils.rm_r(tmp_path) if remove_after
   end
   
+  def create_file(path, content)
+    File.open(path,'w') do |file|
+      file.puts(content)
+    end
+  end
+
+  def update_file(path, content)
+    create_file(path,content)
+  end
+
+  def delete_file(path)
+    File.delete(path)
+  end
   
   def new_file(name, contents)
-    File.open(name, 'w') do |f|
-      f.puts contents
-    end
+    create_file(name,contents)
   end
 
   def append_file(name, contents)

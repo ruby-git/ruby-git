@@ -4,9 +4,6 @@ module Git
   class Stashes
     include Enumerable
     
-    @base = nil
-    @stashes = nil
-    
     def initialize(base)
       @stashes = []
       
@@ -22,8 +19,8 @@ module Git
       @stashes.unshift(s) if s.saved?
     end
     
-    def apply(index=0)
-      @base.lib.stash_apply(index.to_i)
+    def apply(index=nil)
+      @base.lib.stash_apply(index)
     end
     
     def clear
@@ -35,14 +32,12 @@ module Git
       @stashes.size
     end
     
-    def each
-      @stashes.each do |s|
-        yield s
-      end
+    def each(&block)
+      @stashes.each(&block)
     end
     
-    def [](symbol)
-      @stashes[symbol.to_s]
+    def [](index)
+      @stashes[index.to_i]
     end
     
   end

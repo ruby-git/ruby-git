@@ -1,33 +1,30 @@
-
 # Add the directory containing this file to the start of the load path if it
 # isn't there already.
 $:.unshift(File.dirname(__FILE__)) unless
   $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
 
+require 'git/author'
 require 'git/base'
-require 'git/path'
-require 'git/lib'
-
-require 'git/repository'
+require 'git/branch'
+require 'git/branches'
+require 'git/config'
+require 'git/diff'
 require 'git/index'
-require 'git/working_directory'
-
+require 'git/lib'
 require 'git/log'
 require 'git/object'
-
-require 'git/branches'
-require 'git/branch'
+require 'git/path'
 require 'git/remote'
-
-require 'git/diff'
+require 'git/repository'
 require 'git/status'
-require 'git/author'
-
-require 'git/stashes'
 require 'git/stash'
+require 'git/stashes'
+require 'git/working_directory'
 
-require 'git/raw/repository'
-
+lib = Git::Lib.new(nil, nil)
+unless lib.meets_required_version?
+  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+end
 
 # Git/Ruby Library
 #
@@ -45,9 +42,37 @@ require 'git/raw/repository'
 # Author::    Scott Chacon (mailto:schacon@gmail.com)
 # License::   MIT License
 module Git
-
-  VERSION = '1.0.4'
   
+  #g.config('user.name', 'Scott Chacon') # sets value
+  #g.config('user.email', 'email@email.com')  # sets value
+  #g.config('user.name')  # returns 'Scott Chacon'
+  #g.config # returns whole config hash
+  def config(name = nil, value = nil)
+    lib = Git::Lib.new
+    if(name && value)
+      # set value
+      lib.config_set(name, value)
+    elsif (name)
+      # return value
+      lib.config_get(name)
+    else
+      # return hash
+      lib.config_list
+    end
+  end
+
+  def self.configure
+    yield Base.config
+  end
+
+  def self.config
+    return Base.config
+  end
+
+  def global_config(name = nil, value = nil)
+    self.class.global_config(name, value)
+  end
+
   # open a bare repository
   #
   # this takes the path to a bare git repo
@@ -58,29 +83,6 @@ module Git
     Base.bare(git_dir, options)
   end
     
-  # open an existing git working directory
-  # 
-  # this will most likely be the most common way to create
-  # a git reference, referring to a working directory.
-  # if not provided in the options, the library will assume
-  # your git_dir and index are in the default place (.git/, .git/index)
-  #
-  # options
-  #   :repository => '/path/to/alt_git_dir'
-  #   :index => '/path/to/alt_index_file'
-  def self.open(working_dir, options = {})
-    Base.open(working_dir, options)
-  end
-
-  # initialize a new git repository, defaults to the current working directory
-  #
-  # options
-  #   :repository => '/path/to/alt_git_dir'
-  #   :index => '/path/to/alt_index_file'
-  def self.init(working_dir = '.', options = {})
-    Base.init(working_dir, options)
-  end
-
   # clones a remote repository
   #
   # options
@@ -93,6 +95,72 @@ module Git
   #
   def self.clone(repository, name, options = {})
     Base.clone(repository, name, options)
+  end
+
+  # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
+  # is specified) into the +name+ directory, then remove all traces of git from the
+  # directory.
+  #
+  # See +clone+ for options.  Does not obey the <tt>:remote</tt> option,
+  # since the .git info will be deleted anyway; always uses the default
+  # remote, 'origin.'
+  def self.export(repository, name, options = {})
+    options.delete(:remote)
+    repo = clone(repository, name, {:depth => 1}.merge(options))
+    repo.checkout("origin/#{options[:branch]}") if options[:branch]
+    Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
+  end
+  
+  # Same as g.config, but forces it to be at the global level
+  #
+  #g.config('user.name', 'Scott Chacon') # sets value
+  #g.config('user.email', 'email@email.com')  # sets value
+  #g.config('user.name')  # returns 'Scott Chacon'
+  #g.config # returns whole config hash
+  def self.global_config(name = nil, value = nil)
+    lib = Git::Lib.new(nil, nil)
+    if(name && value)
+      # set value
+      lib.global_config_set(name, value)
+    elsif (name)
+      # return value
+      lib.global_config_get(name)
+    else
+      # return hash
+      lib.global_config_list
+    end
+  end
+
+  # initialize a new git repository, defaults to the current working directory
+  #
+  # options
+  #   :repository => '/path/to/alt_git_dir'
+  #   :index => '/path/to/alt_index_file'
+  def self.init(working_dir = '.', options = {})
+    Base.init(working_dir, options)
+  end
+    
+  # returns a Hash containing information about the references 
+  # of the target repository
+  #
+  # @param [String|NilClass] location the target repository location or nil for '.'
+  # @return [{String=>Hash}] the available references of the target repo.
+  def self.ls_remote(location=nil)
+    Git::Lib.new.ls_remote(location)
+  end
+
+  # open an existing git working directory
+  # 
+  # this will most likely be the most common way to create
+  # a git reference, referring to a working directory.
+  # if not provided in the options, the library will assume
+  # your git_dir and index are in the default place (.git/, .git/index)
+  #
+  # options
+  #   :repository => '/path/to/alt_git_dir'
+  #   :index => '/path/to/alt_index_file'
+  def self.open(working_dir, options = {})
+    Base.open(working_dir, options)
   end
     
 end

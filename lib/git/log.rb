@@ -4,26 +4,37 @@ module Git
   class Log
     include Enumerable
     
-    @base = nil
-    @commits = nil
-    
-    @object = nil
-    @path = nil
-    @count = nil
-    @since = nil
-    @between = nil
-    
-    @dirty_flag = nil
-    
     def initialize(base, count = 30)
       dirty_log
       @base = base
       @count = count
+ 
+      @commits = nil
+      @author = nil
+      @grep = nil
+      @object = nil
+      @path = nil
+      @since = nil
+      @skip = nil
+      @until = nil
+      @between = nil
     end
 
     def object(objectish)
       dirty_log
       @object = objectish
+      return self
+    end
+
+    def author(regex)
+      dirty_log
+      @author = regex
+      return self
+    end
+        
+    def grep(regex)
+      dirty_log
+      @grep = regex
       return self
     end
     
@@ -33,9 +44,21 @@ module Git
       return self
     end
     
+    def skip(num)
+      dirty_log
+      @skip = num
+      return self
+    end
+    
     def since(date)
       dirty_log
       @since = date
+      return self
+    end
+    
+    def until(date)
+      dirty_log
+      @until = date
       return self
     end
     
@@ -57,17 +80,26 @@ module Git
       @commits.size rescue nil
     end
     
-    def each
+    def each(&block)
       check_log
-      @commits.each do |c|
-        yield c
-      end
+      @commits.each(&block)
     end
     
     def first
       check_log
       @commits.first rescue nil
     end
+
+    def last
+      check_log
+      @commits.last rescue nil
+    end
+
+    def [](index)
+      check_log
+      @commits[index] rescue nil
+    end
+
     
     private 
     
@@ -85,7 +117,9 @@ module Git
       # actually run the 'git log' command
       def run_log      
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
-                                    :path_limiter => @path, :since => @since, :between => @between)
+                                    :path_limiter => @path, :since => @since, 
+                                    :author => @author, :grep => @grep, :skip => @skip,
+                                    :until => @until, :between => @between)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       

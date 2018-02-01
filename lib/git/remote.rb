@@ -3,8 +3,6 @@ module Git
     
     attr_accessor :name, :url, :fetch_opts
     
-    @base = nil
-    
     def initialize(base, name)
       @base = base
       config = @base.lib.config_remote(name)
@@ -13,12 +11,8 @@ module Git
       @fetch_opts = config['fetch']
     end
     
-    def remove
-      @base.remote_remove(@name)
-    end
-    
-    def fetch
-      @base.fetch(@name)
+    def fetch(opts={})
+      @base.fetch(@name, opts)
     end
     
     # merge this remote locally

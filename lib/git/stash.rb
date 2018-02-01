@@ -1,9 +1,10 @@
 module Git
   class Stash
+    
     def initialize(base, message, existing=false)
       @base = base
       @message = message
-      save if existing == false
+      save unless existing
     end
     
     def save

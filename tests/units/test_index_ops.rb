@@ -37,7 +37,71 @@ class TestIndexOps < Test::Unit::TestCase
       end
     end
   end
+
+  def test_clean
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'clean_me')
+      Dir.chdir('clean_me') do
+        new_file('test-file', 'blahblahbal')
+        new_file('ignored_file', 'ignored file contents')
+        new_file('.gitignore', 'ignored_file')
+
+        g.add
+        g.commit("first commit")
+
+        new_file('file-to-clean', 'blablahbla')
+        FileUtils.mkdir_p("dir_to_clean")
+
+        Dir.chdir('dir_to_clean') do
+          new_file('clean-me-too', 'blablahbla')
+        end
+
+        assert(File.exist?('file-to-clean'))
+        assert(File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
+        g.clean(:force => true)
+        
+        assert(!File.exist?('file-to-clean'))
+        assert(File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
+        new_file('file-to-clean', 'blablahbla')
+        
+        g.clean(:force => true, :d => true)
+
+        assert(!File.exist?('file-to-clean'))
+        assert(!File.exist?('dir_to_clean'))
+        assert(File.exist?('ignored_file'))
+
+        g.clean(:force => true, :x => true)
+        assert(!File.exist?('ignored_file'))
+      end
+    end
+  end
   
+  def test_revert
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'new')
+      Dir.chdir('new') do
+        new_file('test-file', 'blahblahbal')
+        g.add
+        g.commit("first commit")
+        first_commit = g.gcommit('HEAD')
+
+        new_file('test-file2', 'blablahbla')
+        g.add
+        g.commit("second-commit")
+        g.gcommit('HEAD')
+
+        commits = g.log(10000).count
+        g.revert(first_commit.sha)
+        assert_equal(commits + 1, g.log(10000).count)
+        assert(!File.exist?('test-file2'))
+      end
+    end
+  end
+
   def test_add_array
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'new')

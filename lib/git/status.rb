@@ -3,9 +3,6 @@ module Git
   class Status
     include Enumerable
     
-    @base = nil
-    @files = nil
-    
     def initialize(base)
       @base = base
       construct_status
@@ -30,16 +27,21 @@ module Git
     def pretty
       out = ''
       self.each do |file|
-        out << file.path
-        out << "\n\tsha(r) " + file.sha_repo.to_s + ' ' + file.mode_repo.to_s
-        out << "\n\tsha(i) " + file.sha_index.to_s + ' ' + file.mode_index.to_s
-        out << "\n\ttype   " + file.type.to_s
-        out << "\n\tstage  " + file.stage.to_s
-        out << "\n\tuntrac " + file.untracked.to_s
-        out << "\n"
+        out << pretty_file(file)
       end
       out << "\n"
       out
+    end
+
+    def pretty_file(file)
+      <<FILE
+#{file.path}
+\tsha(r) #{file.sha_repo.to_s} #{file.mode_repo.to_s}
+\tsha(i) #{file.sha_index.to_s} #{file.mode_index.to_s}
+\ttype   #{file.type.to_s}
+\tstage  #{file.stage.to_s}
+\tuntrac #{file.untracked.to_s}
+FILE
     end
     
     # enumerable method
@@ -48,19 +50,15 @@ module Git
       @files[file]
     end
     
-    def each
-      @files.each do |k, file|
-        yield file
-      end
+    def each(&block)
+      @files.values.each(&block)
     end
     
     class StatusFile
       attr_accessor :path, :type, :stage, :untracked
       attr_accessor :mode_index, :mode_repo
       attr_accessor :sha_index, :sha_repo
-      
-      @base = nil
-      
+
       def initialize(base, hash)
         @base = base
         @path = hash[:path]
@@ -88,16 +86,17 @@ module Git
     
       def construct_status
         @files = @base.lib.ls_files
+        ignore = @base.lib.ignored_files
         
         # find untracked in working dir
         Dir.chdir(@base.dir.path) do
-          Dir.glob('**/*') do |file|
-            if !@files[file]
-              @files[file] = {:path => file, :untracked => true} if !File.directory?(file)
-            end
+          Dir.glob('**/*', File::FNM_DOTMATCH) do |file|
+            next if @files[file] || File.directory?(file) || ignore.include?(file) || file =~ /^.git\/.+/
+
+            @files[file] = {:path => file, :untracked => true}
           end
         end
-
+        
         # find modified in tree
         @base.lib.diff_files.each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data

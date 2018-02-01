@@ -1,1 +1,8 @@
+*.gem
 *.kpf
+*.sw?
+.DS_Store
+coverage
+pkg
+rdoc
+Gemfile.lock
