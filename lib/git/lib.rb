@@ -943,7 +943,7 @@ module Git
 
       global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
 
-      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect}"
 
       output = nil
 
