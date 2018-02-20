@@ -3,7 +3,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class TestDescribe < Test::Unit::TestCase
-  
+
   def setup
     set_file_paths
     @git = Git.open(@wdir)

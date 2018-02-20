@@ -128,9 +128,9 @@ module Git
         final = {}
         current_file = nil
         full_diff_utf8_encoded = @full_diff.encode("UTF-8", "binary", {
-			:invalid => :replace,
-			:undef => :replace
-		})
+          :invalid => :replace,
+          :undef => :replace
+        })
         full_diff_utf8_encoded.split("\n").each do |line|
           if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
             current_file = m[1]
