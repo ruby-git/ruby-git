@@ -36,7 +36,7 @@ module Git
       @files.select { |_k, f| f.untracked }
     end
 
-    def untracked?
+    def untracked?(file)
       untracked.member?(file)
     end
     
