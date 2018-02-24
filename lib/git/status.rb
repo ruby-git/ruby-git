@@ -9,19 +9,35 @@ module Git
     end
     
     def changed
-      @files.select { |k, f| f.type == 'M' }
+      @files.select { |_k, f| f.type == 'M' }
+    end
+
+    def changed?(file)
+      changed.member?(file)
     end
     
     def added
-      @files.select { |k, f| f.type == 'A' }
+      @files.select { |_k, f| f.type == 'A' }
+    end
+
+    def added?(file)
+      added.member?(file)
     end
 
     def deleted
-      @files.select { |k, f| f.type == 'D' }
+      @files.select { |_k, f| f.type == 'D' }
+    end
+
+    def deleted?(file)
+      deleted.member?(file)
     end
     
     def untracked
-      @files.select { |k, f| f.untracked }
+      @files.select { |_k, f| f.untracked }
+    end
+
+    def untracked?
+      untracked.member?(file)
     end
     
     def pretty
