@@ -34,7 +34,7 @@ class TestStatus < Test::Unit::TestCase
       git.add('test_file_1')
 
       assert(git.status.added?('test_file_1'))
-      assert !git.status.added?('test_file_2')
+      assert(!git.status.added?('test_file_2'))
     end
   end
 
