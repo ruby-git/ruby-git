@@ -51,7 +51,7 @@ class TestStatus < Test::Unit::TestCase
       update_file('test_dot_files_status/test_file_1', 'update_content tets_file_1')
 
       assert(git.status.changed?('test_file_1'))
-      assert !git.status.changed?('test_file_2')
+      assert(!git.status.changed?('test_file_2'))
     end
   end
 
@@ -67,7 +67,7 @@ class TestStatus < Test::Unit::TestCase
       delete_file('test_dot_files_status/test_file_1')
 
       assert(git.status.deleted?('test_file_1'))
-      assert !git.status.deleted?('test_file_2')
+      assert(!git.status.deleted?('test_file_2'))
     end
   end
 
@@ -80,7 +80,7 @@ class TestStatus < Test::Unit::TestCase
       git.add('test_file_2')
 
       assert(git.status.untracked?('test_file_1'))
-      assert !git.status.untracked?('test_file_2')
+      assert(!git.status.untracked?('test_file_2'))
     end
   end
 end
