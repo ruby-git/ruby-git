@@ -12,7 +12,7 @@ Use your best judgment, and feel free to propose changes to this document in a p
   * [Contribution Process](#contribution-process)
   * [Code Review Process](#code-review-process)
   * [Code Review Process](#code-review-process)
-  * [Developer Certification of Origin (DCO)](#developer-certification-of-origin)
+  * [Developer Certification of Origin (DCO)](#developer-certification-of-origin-dco)
 
 
 ## How Can I Contribute?
