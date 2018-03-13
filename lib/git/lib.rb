@@ -19,11 +19,14 @@ module Git
         @git_dir = base.repo.path
         @git_index_file = base.index.path if base.index
         @git_work_dir = base.dir.path if base.dir
+        @git_extra_env = base.env
       elsif base.is_a?(Hash)
         @git_dir = base[:repository]
         @git_index_file = base[:index]
         @git_work_dir = base[:working_directory]
+        @git_extra_env = base[:env].freeze
       end
+      @git_extra_env ||= {}.freeze
       @logger = logger
     end
 
@@ -64,6 +67,7 @@ module Git
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--no-single-branch' if opts[:no_single_branch]
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
@@ -75,7 +79,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir, :env => @git_extra_env}
     end
 
 
@@ -577,6 +581,7 @@ module Git
 
       arr_opts = []
       arr_opts << '--no-edit' if opts[:no_edit]
+      arr_opts << '--no-commit' if opts[:no_commit]
       arr_opts << commitish
 
       command('revert', arr_opts)
@@ -725,8 +730,10 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = [remote]
+      arr_opts << opts[:refs] if opts[:refs]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
+      arr_opts << '--unshallow' if opts[:unshallow]
 
       command('fetch', arr_opts)
     end
@@ -850,7 +857,7 @@ module Git
     end
 
 
-    private
+    protected
 
     # Systen ENV variables involved in the git commands.
     #
@@ -869,14 +876,14 @@ module Git
     # Takes the current git's system ENV variables and store them.
     def store_git_system_env_variables
       @git_system_env_variables = {}
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
+      (ENV_VARIABLE_NAMES + @git_extra_env.keys).each do |env_variable_name|
         @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
       end
     end
 
     # Takes the previously stored git's ENV variables and set them again on ENV.
     def restore_git_system_env_variables
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
+      (ENV_VARIABLE_NAMES + @git_extra_env.keys).each do |env_variable_name|
         ENV[env_variable_name] = @git_system_env_variables[env_variable_name]
       end
     end
@@ -887,6 +894,9 @@ module Git
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
       ENV['GIT_SSH'] = Git::Base.config.git_ssh
+      @git_extra_env.each do |k, v|
+        ENV[k] = v
+      end
     end
 
     # Runs a block inside an environment with customized ENV variables.
