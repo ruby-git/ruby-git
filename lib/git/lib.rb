@@ -124,6 +124,20 @@ module Git
       return command('describe', arr_opts)
     end
 
+
+    # list all the branches that include the commit.
+    # git branch --all --contains fd891813e0f4a85e4b55a25d12f6d4d7de35c90b in prasadsurase/code-curiosity
+    def commit_branches(committish = nil, opts = {})
+      arr_opts = []
+
+      arr_opts << '--all' if opts[:all]
+      arr_opts << '--contains' if opts[:contains]
+
+      arr_opts << committish if committish
+
+      return command('branch', arr_opts)
+    end
+
     def log_commits(opts={})
       arr_opts = log_common_options(opts)
 
