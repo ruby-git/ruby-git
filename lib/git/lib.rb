@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'thread'
 
 module Git
 
@@ -637,10 +638,14 @@ module Git
 
     def checkout(branch, opts = {})
       arr_opts = []
-      arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << '--force' if opts[:force] || opts[:f]
+      arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << branch
-
+      if remote_branch = opts[:track] || opts[:t]
+        arr_opts << '--track'
+        arr_opts << remote_branch
+      end
+      
       command('checkout', arr_opts)
     end
 
@@ -725,6 +730,7 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = [remote]
+      arr_opts << '--all' if opts[:a] || opts[:all]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
 
