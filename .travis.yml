@@ -10,3 +10,4 @@ rvm:
 before_install:
   - gem install bundler
   - bundle --version
+  - git --version
