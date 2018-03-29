@@ -6,7 +6,7 @@ module Git
       if m = /(.*?) <(.*?)> (\d+) (.*)/.match(author_string)
         @name = m[1]
         @email = m[2]
-        @date = Time.at(m[3].to_i)
+        
       end
     end
     
