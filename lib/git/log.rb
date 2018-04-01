@@ -18,6 +18,7 @@ module Git
       @skip = nil
       @until = nil
       @between = nil
+      @follow = false
     end
 
     def object(objectish)
@@ -71,7 +72,12 @@ module Git
     def to_s
       self.map { |c| c.to_s }.join("\n")
     end
-    
+
+    def follow(should_follow)
+      dirty_log
+      @follow = should_follow
+      return self
+    end
 
     # forces git log to run
     
@@ -119,7 +125,8 @@ module Git
         log = @base.lib.full_log_commits(:count => @count, :object => @object, 
                                     :path_limiter => @path, :since => @since, 
                                     :author => @author, :grep => @grep, :skip => @skip,
-                                    :until => @until, :between => @between)
+                                    :until => @until, :between => @between,
+                                    :follow => @follow)
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
       
