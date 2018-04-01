@@ -13,4 +13,9 @@ class TestDescribe < Test::Unit::TestCase
     assert_equal(@git.describe(nil, {:tags => true}), 'v2.8')
   end
 
+  def test_describe_match_argument
+    # Make sure arguments are properly passed
+    assert_equal(@git.describe(nil, {:tags => true, :match => 'v*'}), 'v2.8')
+  end
+
 end
