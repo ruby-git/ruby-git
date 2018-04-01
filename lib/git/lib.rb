@@ -638,8 +638,13 @@ module Git
 
     def checkout(branch, opts = {})
       arr_opts = []
-      arr_opts << '-b' if opts[:new_branch] || opts[:b]
-      arr_opts << '--force' if opts[:force] || opts[:f]
+      if (opts[:force] || opts[:f]) && (opts[:new_branch] || opts[:b])
+        arr_opts << '--force'
+        arr_opts << '-B' # enables checkout of the branch if it already exists
+      else
+        arr_opts << '--force' if opts[:force] || opts[:f]
+        arr_opts << '-b' if opts[:new_branch] || opts[:b]
+      end
       arr_opts << branch
 
       command('checkout', arr_opts)
