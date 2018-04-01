@@ -1,12 +1,17 @@
 language: ruby
 rvm:
-  - 1.9.2
   - 1.9.3
   - 2.0.0
-  - 2.1.1
-  - 2.1.2
-  - jruby-18mode
-  - jruby-19mode
+  - 2.1.10
+  - 2.3.4
+  - 2.4.3
+  - 2.5.0
+  - jruby-9.1.15.0
+matrix:
+  allow_failures:
+  - rvm: jruby-9.1.15.0
+  fast_finish: true
 before_install:
   - gem install bundler
   - bundle --version
+  - git --version

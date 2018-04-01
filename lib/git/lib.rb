@@ -396,6 +396,7 @@ module Git
     end
 
     def ls_files(location=nil)
+      location ||= '.'
       hsh = {}
       command_lines('ls-files', ['--stage', location]).each do |line|
         (info, file) = line.split("\t")
