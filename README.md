@@ -139,6 +139,7 @@ Here are the operations that need read permission only.
     g.diff('gitsearch1', @git.gtree('v2.5'))
     g.diff('gitsearch1', 'v2.5').path('docs/').patch
     g.gtree('v2.5').diff('v2.6').patch
+    g.diff # diff between your working directory and HEAD
 
     g.gtree('v2.5').diff('v2.6').each do |file_diff|
        puts file_diff.path
