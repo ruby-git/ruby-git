@@ -850,6 +850,10 @@ module Git
       (self.current_command_version <=>  self.required_command_version) >= 0
     end
 
+    def update_server_info(force = false)
+      command('update-server-info', force ? ['--force'] : [])
+    end
+
 
     private
 
