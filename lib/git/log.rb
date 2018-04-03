@@ -95,6 +95,11 @@ module Git
       @commits.last rescue nil
     end
 
+    def commits
+      check_log
+      @commits rescue nil
+    end
+
     def [](index)
       check_log
       @commits[index] rescue nil
