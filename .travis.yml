@@ -7,6 +7,11 @@ rvm:
   - 2.4.3
   - 2.5.0
   - jruby-9.1.15.0
+matrix:
+  allow_failures:
+  - rvm: jruby-9.1.15.0
+  fast_finish: true
 before_install:
   - gem install bundler
   - bundle --version
+  - git --version
