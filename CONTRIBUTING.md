@@ -19,7 +19,7 @@ Use your best judgment, and feel free to propose changes to this document in a p
 
 ### Submitting Issues
 
-We utilize **Github Issues** for issue tracking and contributions. You can contribute in two ways:
+We utilize **GitHub Issues** for issue tracking and contributions. You can contribute in two ways:
 
 1. Reporting an issue or making a feature request [here](https://github.com/ruby-git/ruby-git/issues/new).
 2. Adding features or fixing bugs yourself and contributing your code to ruby-git.
@@ -29,7 +29,7 @@ We utilize **Github Issues** for issue tracking and contributions. You can contr
 We have a 3 step process for contributions:
 
 1. Commit changes to a git branch in your fork.  Making sure to sign-off those changes for the [Developer Certificate of Origin](#developer-certification-of-origin-dco).
-2. Create a Github Pull Request for your change, following the instructions in the pull request template.
+2. Create a GitHub Pull Request for your change, following the instructions in the pull request template.
 3. Perform a [Code Review](#code-review-process) with the project maintainers on the pull request.
 
 ### Pull Request Requirements
@@ -41,7 +41,7 @@ In order to ensure high quality, we require that all pull requests to this proje
 
 ### Code Review Process
 
-Code review takes place in Github pull requests. See [this article](https://help.github.com/articles/about-pull-requests/) if you're not familiar with Github Pull Requests.
+Code review takes place in GitHub pull requests. See [this article](https://help.github.com/articles/about-pull-requests/) if you're not familiar with GitHub Pull Requests.
 
 Once you open a pull request, project maintainers will review your code and respond to your pull request with any feedback they might have. 
 
