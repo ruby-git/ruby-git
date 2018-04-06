@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'thread'
 
 module Git
 
