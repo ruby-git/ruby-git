@@ -384,6 +384,14 @@ module Git
       self.lib.tags.map { |r| tag(r) }
     end
 
+    def tags_pointing_at(objectish)
+      self.lib.tags_pointing_at(objectish)
+    end
+
+    def tags_containing(objectish)
+      self.lib.tags_containing(objectish)
+    end
+
     # Creates a new git tag (Git::Tag)
     # Usage:
     #     repo.add_tag('tag_name', object_reference)

@@ -701,6 +701,14 @@ module Git
       command_lines('tag')
     end
 
+    def tags_pointing_at(objectish)
+      command_lines('tag', ['--points-at', objectish])
+    end
+
+    def tags_containing(objectish)
+      command_lines('tag', ['--contains', objectish])
+    end
+
     def tag(name, *opts)
       target = opts[0].instance_of?(String) ? opts[0] : nil
 
