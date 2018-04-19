@@ -12,7 +12,7 @@ module Git
     end
     
     def fetch(opts={})
-      @base.fetch(@name, opts)
+      @base.fetch(@name, nil, opts)
     end
     
     # merge this remote locally
