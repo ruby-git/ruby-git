@@ -227,6 +227,7 @@ And here are the operations that will need to write to your git repository.
 
      g.fetch
      g.fetch(g.remotes.first)
+     g.fetch('origin', 'some/ref/head')
 
      g.pull
      g.pull(Git::Repo, Git::Branch) # fetch and a merge
