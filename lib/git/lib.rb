@@ -67,6 +67,7 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
+      arr_opts << "--mirror" if opts[:mirror]
 
       arr_opts << '--'
 
@@ -75,7 +76,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
 
 
@@ -737,11 +738,16 @@ module Git
       opts = {:tags => opts} if [true, false].include?(opts)
 
       arr_opts = []
+      arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
-      command('push', arr_opts + [branch])
-      command('push', ['--tags'] + arr_opts) if opts[:tags]
+      if opts[:mirror]
+          command('push', arr_opts)
+      else
+          command('push', arr_opts + [branch])
+          command('push', ['--tags'] + arr_opts) if opts[:tags]
+      end
     end
 
     def pull(remote='origin', branch='master')
