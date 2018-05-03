@@ -67,6 +67,7 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
+      arr_opts << "--mirror" if opts[:mirror]
 
       arr_opts << '--'
 
@@ -75,7 +76,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
 
 
@@ -396,6 +397,7 @@ module Git
     end
 
     def ls_files(location=nil)
+      location ||= '.'
       hsh = {}
       command_lines('ls-files', ['--stage', location]).each do |line|
         (info, file) = line.split("\t")
@@ -744,11 +746,16 @@ module Git
       opts = {:tags => opts} if [true, false].include?(opts)
 
       arr_opts = []
+      arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
-      command('push', arr_opts + [branch])
-      command('push', ['--tags'] + arr_opts) if opts[:tags]
+      if opts[:mirror]
+          command('push', arr_opts)
+      else
+          command('push', arr_opts + [branch])
+          command('push', ['--tags'] + arr_opts) if opts[:tags]
+      end
     end
 
     def pull(remote='origin', branch='master')
@@ -867,10 +874,14 @@ module Git
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
-      op = cmd_op.encode("UTF-8", "binary", {
-	  	:invalid => :replace,
-		:undef => :replace
-	  })
+      if cmd_op.encoding.name != "UTF-8"
+        op = cmd_op.encode("UTF-8", "binary", {
+          :invalid => :replace,
+          :undef => :replace
+        })
+      else
+        op = cmd_op
+      end
       op.split("\n")
     end
 
