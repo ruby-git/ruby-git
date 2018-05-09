@@ -952,7 +952,7 @@ module Git
         @logger.debug(output)
       end
 
-      if exitstatus > 1 || (exitstatus == 1 && output != '')
+      if exitstatus && (exitstatus > 1) || (exitstatus == 1 && output != '')
         raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
       end
 
