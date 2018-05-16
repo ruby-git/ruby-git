@@ -1,3 +1,4 @@
+require 'bundler/gem_tasks'
 require 'rubygems'
 
 require "#{File.expand_path(File.dirname(__FILE__))}/lib/git/version"
@@ -13,5 +14,3 @@ task :test do |t|
 
   require File.dirname(__FILE__) + '/tests/all_tests.rb'
 end
-
-
