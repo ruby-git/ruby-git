@@ -39,7 +39,7 @@ module Git
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
 
-      command('init', arr_opts, false)
+      command('init', arr_opts, chdir: false)
     end
 
     # tries to clone the given repo
@@ -134,7 +134,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command_lines('log', arr_opts, true).map { |l| l.split.first }
+      command_lines('log', arr_opts, chdir: true).map { |l| l.split.first }
     end
 
     def full_log_commits(opts={})
@@ -145,7 +145,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      full_log = command_lines('log', arr_opts, true)
+      full_log = command_lines('log', arr_opts, chdir: true)
 
       process_commit_log_data(full_log)
     end
@@ -451,7 +451,7 @@ module Git
     def ls_remote(location=nil)
       location ||= '.'
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
-        command_lines('ls-remote', [location], false).each do |line|
+        command_lines('ls-remote', [location], chdir: false).each do |line|
           (sha, info) = line.split("\t")
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
@@ -490,7 +490,7 @@ module Git
     end
 
     def global_config_get(name)
-      command('config', ['--global', '--get', name], false)
+      command('config', ['--global', '--get', name], chdir: false)
     end
 
     def config_list
@@ -506,7 +506,7 @@ module Git
     end
 
     def global_config_list
-      parse_config_list command_lines('config', ['--global', '--list'], false)
+      parse_config_list command_lines('config', ['--global', '--list'], chdir: false)
     end
 
     def parse_config_list(lines)
@@ -519,7 +519,7 @@ module Git
     end
 
     def parse_config(file)
-      parse_config_list command_lines('config', ['--list', '--file', file], false)
+      parse_config_list command_lines('config', ['--list', '--file', file], chdir: false)
     end
 
     # Shows objects
@@ -542,7 +542,7 @@ module Git
     end
 
     def global_config_set(name, value)
-      command('config', ['--global', name, value], false)
+      command('config', ['--global', name, value], chdir: false)
     end
 
     # updates the repository index using the working directory content
@@ -746,12 +746,12 @@ module Git
         your_tempfile = Tempfile.new("YOUR-#{File.basename(f)}")
         your = your_tempfile.path
         your_tempfile.close # free up file for git command process
-        command('show', ":2:#{f}", true, "> #{escape your}")
+        command('show', ":2:#{f}", chdir: true, redirect: "> #{escape your}")
 
         their_tempfile = Tempfile.new("THEIR-#{File.basename(f)}")
         their = their_tempfile.path
         their_tempfile.close # free up file for git command process
-        command('show', ":3:#{f}", true, "> #{escape their}")
+        command('show', ":3:#{f}", chdir: true, redirect: "> #{escape their}")
         yield(f, your, their)
       end
     end
@@ -882,7 +882,7 @@ module Git
       arr_opts << tree
       arr_opts << '-p' << opts[:parent] if opts[:parent]
       arr_opts += [opts[:parents]].map { |p| ['-p', p] }.flatten if opts[:parents]
-      command('commit-tree', arr_opts, true, "< #{escape t.path}")
+      command('commit-tree', arr_opts, chdir: true, redirect: "< #{escape t.path}")
     end
 
     def update_ref(branch, commit)
@@ -928,7 +928,7 @@ module Git
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
-      command('archive', arr_opts, true, " > #{escape file}")
+      command('archive', arr_opts, chdir: true, redirect: " > #{escape file}")
       if opts[:add_gzip]
         file_content = File.read(file)
         Zlib::GzipWriter.open(file) do |gz|
@@ -940,7 +940,7 @@ module Git
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
-      output = command('version', [], false)
+      output = command('version', [], chdir: false)
       version = output[/\d+\.\d+(\.\d+)+/]
       version.split('.').collect {|i| i.to_i}
     end
@@ -961,8 +961,17 @@ module Git
     # @return [<String>] the names of the EVN variables involved in the git commands
     ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
 
-    def command_lines(cmd, opts = [], chdir = true, redirect = '')
-      command(cmd, opts, chdir).lines.map(&:chomp)
+    def command_lines(cmd, *opts)
+      cmd_op = command(cmd, *opts)
+      if cmd_op.encoding.name != "UTF-8"
+        op = cmd_op.encode("UTF-8", "binary", {
+          :invalid => :replace,
+          :undef => :replace
+        })
+      else
+        op = cmd_op
+      end
+      op.split("\n")
     end
 
     # Takes the current git's system ENV variables and store them.
@@ -1002,7 +1011,15 @@ module Git
       restore_git_system_env_variables()
     end
 
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+    def command(cmd, *opts, &block)
+      command_opts = { chdir: true, redirect: '' }
+      if opts.last.is_a?(Hash)
+        command_opts.merge!(opts.pop)
+      end
+      command_opts.keys.each do |k|
+        raise ArgumentError.new("Unsupported option: #{k}") unless [:chdir, :redirect].include?(k)
+      end
+
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
@@ -1012,7 +1029,7 @@ module Git
 
       global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
 
-      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{command_opts[:redirect]} 2>&1"
 
       output = nil
 
