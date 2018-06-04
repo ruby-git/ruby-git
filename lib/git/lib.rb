@@ -532,7 +532,7 @@ module Git
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
 
-      command('show', arr_opts.compact)
+      command('show', arr_opts.compact, chomp: false)
     end
 
     ## WRITE COMMANDS ##
@@ -1012,12 +1012,12 @@ module Git
     end
 
     def command(cmd, *opts, &block)
-      command_opts = { redirect: '' }
+      command_opts = { chomp: true, redirect: '' }
       if opts.last.is_a?(Hash)
         command_opts.merge!(opts.pop)
       end
       command_opts.keys.each do |k|
-        raise ArgumentError.new("Unsupported option: #{k}") unless [:redirect].include?(k)
+        raise ArgumentError.new("Unsupported option: #{k}") unless [:chomp, :redirect].include?(k)
       end
 
       global_opts = []
@@ -1052,6 +1052,10 @@ module Git
 
       if exitstatus > 1 || (exitstatus == 1 && output != '')
         raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
+      end
+
+      if command_opts[:chomp]
+        output.chomp! if output
       end
 
       return output
@@ -1138,7 +1142,7 @@ module Git
     def run_command(git_cmd, &block)
       return IO.popen(git_cmd, &block) if block_given?
 
-      `#{git_cmd}`.chomp.lines.map { |l| normalize_encoding(l) }.join
+      `#{git_cmd}`.lines.map { |l| normalize_encoding(l) }.join
     end
 
     def escape(s)
