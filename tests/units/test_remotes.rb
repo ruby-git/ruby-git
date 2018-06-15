@@ -46,6 +46,21 @@ class TestRemotes < Test::Unit::TestCase
     end
   end
   
+  def test_set_remote_url
+    in_temp_dir do |path|
+      local = Git.clone(@wbare, 'local')
+      remote1 = Git.clone(@wbare, 'remote1')
+      remote2 = Git.clone(@wbare, 'remote2')
+
+      local.add_remote('testremote', remote1)
+      local.set_remote_url('testremote', remote2)
+
+      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+      assert(local.remote('testremote').url != remote1.repo.path)
+      assert(local.remote('testremote').url == remote2.repo.path)
+    end
+  end
+
   def test_remote_fun
     in_temp_dir do |path|
       loc = Git.clone(@wbare, 'local')

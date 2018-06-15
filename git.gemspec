@@ -1,16 +1,18 @@
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+require 'git/version'
+
 Gem::Specification.new do |s|
-  s.authors = ['Scott Chacon']
-  s.date = '2016-02-25'
+  s.author = 'Scott Chacon and others'
   s.email = 'schacon@gmail.com'
-  s.homepage = 'http://github.com/schacon/ruby-git'
+  s.homepage = 'http://github.com/ruby-git/ruby-git'
   s.license = 'MIT'
   s.name = 'git'
   s.summary = 'Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary.'
-  s.version = '1.3.0'
+  s.version = Git::VERSION
 
   s.require_paths = ['lib']
   s.required_ruby_version = '>= 1.9'
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to?(:required_rubygems_version=)
   s.requirements = ['git 1.6.0.0, or greater']
 
   s.add_development_dependency 'rake'
