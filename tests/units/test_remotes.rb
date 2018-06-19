@@ -133,20 +133,20 @@ class TestRemotes < Test::Unit::TestCase
         new_file('test-file1', 'gonnaCommitYou')
         loc.add
         loc.commit('master commit 1')
-        first_commit = loc.log.first.sha
+        first_commit_sha = loc.log.first.sha
         
         new_file('test-file2', 'gonnaCommitYouToo')
         loc.add
         loc.commit('master commit 2')
-        second_commit = loc.log.first.sha
+        second_commit_sha = loc.log.first.sha
 
         # Make sure fetch message only has the first commit when we fetch the first commit
-        assert(loc.fetch('origin', {:ref => first_commit}).include?(first_commit))
-        assert(!loc.fetch('origin', {:ref => first_commit}).include?(second_commit))
+        assert(loc.fetch('origin', {:ref => first_commit_sha}).include?(first_commit_sha))
+        assert(!loc.fetch('origin', {:ref => first_commit_sha}).include?(second_commit_sha))
 
         # Make sure fetch message only has the second commit when we fetch the second commit
-        assert(loc.fetch('origin', {:ref => second_commit}).include?(second_commit))
-        assert(!loc.fetch('origin', {:ref => second_commit}).include?(first_commit))        
+        assert(loc.fetch('origin', {:ref => second_commit_sha}).include?(second_commit_sha))
+        assert(!loc.fetch('origin', {:ref => second_commit_sha}).include?(first_commit_sha))        
       end      
     end
   end
