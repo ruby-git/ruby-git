@@ -107,6 +107,34 @@ class TestRemotes < Test::Unit::TestCase
       assert(loc.tags.map(&:name).include?('test-tag-in-deleted-branch'))
     end
   end
+
+  def test_fetch_ref_adds_ref_option
+    in_temp_dir do |path|
+      loc = Git.clone(@wbare, 'local')
+      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
+      loc.add_remote('testrem', rem)
+      
+      loc.chdir do
+        new_file('test-file1', 'gonnaCommitYou')
+        loc.add
+        loc.commit('master commit 1')
+        first_commit = loc.log.first.sha
+        
+        new_file('test-file2', 'gonnaCommitYouToo')
+        loc.add
+        loc.commit('master commit 2')
+        second_commit = loc.log.first.sha
+
+        # Make sure fetch message only has the first commit when we fetch the first commit
+        assert(loc.fetch('origin', {:ref => first_commit}).include?(first_commit))
+        assert(!loc.fetch('origin', {:ref => first_commit}).include?(second_commit))
+
+        # Make sure fetch message only has the second commit when we fetch the second commit
+        assert(loc.fetch('origin', {:ref => second_commit}).include?(second_commit))
+        assert(!loc.fetch('origin', {:ref => second_commit}).include?(first_commit))        
+      end      
+    end
+  end
   
   def test_push
     in_temp_dir do |path|
