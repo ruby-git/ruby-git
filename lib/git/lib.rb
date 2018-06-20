@@ -727,7 +727,10 @@ module Git
       arr_opts << '-d' if opts[:d] || opts[:delete]
       arr_opts << name
       arr_opts << target if target
-      arr_opts << "-m #{opts[:m] || opts[:message]}" if opts[:m] || opts[:message]
+
+      if opts[:m] || opts[:message]
+        arr_opts << '-m' << (opts[:m] || opts[:message])
+      end
 
       command('tag', arr_opts)
     end
