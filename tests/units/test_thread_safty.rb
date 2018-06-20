@@ -10,18 +10,18 @@ class TestThreadSafety < Test::Unit::TestCase
   def test_git_init_bare
     dirs = []
     threads = []
-    
-    5.times do 
+
+    5.times do
       dirs << Dir.mktmpdir
     end
-    
+
     dirs.each do |dir|
       threads << Thread.new do
         Git.init(dir, :bare => true)
       end
     end
 
-    threads.each {|thread| thread.join}
+    threads.each(&:join)
 
     dirs.each do |dir|
       Git.bare("#{dir}/.git").ls_files
