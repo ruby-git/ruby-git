@@ -65,12 +65,21 @@ class TestTags < Test::Unit::TestCase
       assert_equal(tag1.tagger.name, 'Test User')
       assert_equal(tag1.tagger.email, 'test@email.com')
       assert_true((Time.now - tag1.tagger.date) <  10)
-      assert_equal(tag1.message, ' test message')
-      
+      assert_equal(tag1.message, 'test message')
+
       tag2 = r2.tag('fifth')
       assert_false(tag2.annotated?)
       assert_equal(tag2.tagger, nil)
       assert_equal(tag2.message, nil)
+    end
+  end
+
+  def test_tag_message_not_prefixed_with_space
+    in_temp_dir do |path|
+      repo = Git.clone(@wbare, 'repo1')
+      repo.add_tag('donkey', :annotated => true, :message => 'hello')
+      tag = repo.tag('donkey')
+      assert_equal(tag.message, 'hello')
     end
   end
 end
