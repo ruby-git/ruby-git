@@ -3,6 +3,12 @@ require 'git/base/factory'
 module Git
   
   class Base
+    # Adding a mutex to the class because each repo should be sharing the same mutex 
+    # in case we need to Dir.chdir and we don't have fork() support to isolate that
+    class << self
+      attr_accessor :chdir_semaphore
+    end
+    Git::Base.chdir_semaphore = Mutex.new
 
     include Git::Base::Factory
 
@@ -92,8 +98,11 @@ module Git
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
     end
     
-    # changes current working directory for a block
-    # to the git working directory
+    # changes current working directory for a block to the git working directory.
+    #
+    # Note: If we can fork() or spawn(), Dir.chdir will happen in a new process
+    # otherwise, we will use a mutex to prevent threading errors
+    # See https://github.com/ruby-git/ruby-git/issues/355 for more info
     #
     # example
     #  @git.chdir do 
@@ -101,9 +110,25 @@ module Git
     #    @git.add
     #    @git.commit('message')
     #  end
-    def chdir # :yields: the Git::Path
-      Dir.chdir(dir.path) do
-        yield dir.path
+    def chdir(&block) # :yields: the Git::Path
+      chdir_block = Proc.new do
+        Dir.chdir(dir.path) do
+          block.call(dir.path)
+        end
+      end
+
+      if Process.respond_to?(:fork)
+        # Forking this process so that we can be threadsafe
+        pid = Process.fork do
+          chdir_block.call
+        end
+        Process.wait(pid)
+      else
+        # Windows and NetBSD 4 don't support fork()
+        # let's use a mutex to prevent race conditions with threads
+        Git::Base.chdir_semaphore.synchronize do
+          chdir_block.call
+        end
       end
     end
     
@@ -144,9 +169,7 @@ module Git
     
     # returns the repository size in bytes
     def repo_size
-      Dir.chdir(repo.path) do
-        return `du -s`.chomp.split.first.to_i
-      end
+      return `du -s #{repo.path}`.chomp.split.first.to_i
     end
     
     def set_index(index_file, check = true)
