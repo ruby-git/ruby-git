@@ -445,7 +445,7 @@ module Git
       if @git_dir
         Dir.chdir(@git_dir, &do_get)
       else
-        build_list.call
+        do_get.call
       end
     end
 
