@@ -144,9 +144,7 @@ module Git
     
     # returns the repository size in bytes
     def repo_size
-      Dir.chdir(repo.path) do
-        return `du -s`.chomp.split.first.to_i
-      end
+      return `du -s #{repo.path}`.chomp.split.first.to_i
     end
     
     def set_index(index_file, check = true)
