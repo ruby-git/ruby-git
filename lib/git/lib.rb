@@ -445,7 +445,7 @@ module Git
       if @git_dir
         Dir.chdir(@git_dir, &do_get)
       else
-        build_list.call
+        do_get.call
       end
     end
 
@@ -738,6 +738,7 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = [remote]
+      arr_opts << opts[:ref] if opts[:ref]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
 
