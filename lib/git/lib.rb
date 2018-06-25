@@ -8,6 +8,7 @@ module Git
   class Lib
 
     @@semaphore = Mutex.new
+    @@config_semaphore = Mutex.new
 
     def initialize(base = nil, logger = nil)
       @git_dir = nil
@@ -438,11 +439,17 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do |path|
-        command('config', ['--get', name])
-      end
+      @@config_semaphore.synchronize do
+        do_get = lambda do |path|
+          command('config', ['--get', name])
+        end
 
-      do_get.call(@git_dir)
+        if @git_dir
+          Dir.chdir(@git_dir, &do_get)
+        else
+          do_get.call
+        end
+      end
     end
 
     def global_config_get(name)
@@ -450,11 +457,17 @@ module Git
     end
 
     def config_list
-      build_list = lambda do |path|
-        parse_config_list command_lines('config', ['--list'])
-      end
+      @@config_semaphore.synchronize do
+        build_list = lambda do |path|
+          parse_config_list command_lines('config', ['--list'])
+        end
 
-      build_list.call(@git_dir)
+        if @git_dir
+          Dir.chdir(@git_dir, &build_list)
+        else
+          build_list.call
+        end
+      end
     end
 
     def global_config_list
