@@ -23,7 +23,9 @@ Gem::Specification.new do |s|
   s.rdoc_options = ['--charset=UTF-8']
 
   s.files = [
-    'CHANGELOG',
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+    'MAINTAINERS.md',
     'LICENSE',
     'README.md',
     'VERSION',
