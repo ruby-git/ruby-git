@@ -318,6 +318,9 @@ module Git
       branches_all.select { |b| b[1] }.first[0] rescue nil
     end
 
+    def branch_contains(commit, branch_name="")
+      command("branch",  [branch_name, "--contains", commit])
+    end
 
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]

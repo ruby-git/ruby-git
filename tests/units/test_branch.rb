@@ -44,6 +44,14 @@ class TestBranch < Test::Unit::TestCase
     end
   end
   
+  def test_true_branch_contains?
+    assert(@git.branch('git_grep').contains?('master'))
+  end
+
+  def test_false_branch_contains?
+    assert(!@git.branch('master').contains?('git_grep'))
+  end
+
   def test_branch_commit
     assert_equal(270, @git.branches[:test_branches].gcommit.size)
   end

@@ -60,6 +60,10 @@ module Git
       determine_current
     end
     
+    def contains?(commit)
+      !@base.lib.branch_contains(commit, self.name).empty?
+    end
+    
     def merge(branch = nil, message = nil)
       if branch
         in_branch do 
