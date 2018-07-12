@@ -556,6 +556,7 @@ module Git
       arr_opts << '--all' if opts[:add_all] || opts[:all]
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
+      arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
 
       command('commit', arr_opts)
     end
