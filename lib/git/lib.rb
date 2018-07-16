@@ -646,6 +646,7 @@ module Git
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << '--force' if opts[:force] || opts[:f]
       arr_opts << branch
+      arr_opts << '--'
 
       command('checkout', arr_opts)
     end
