@@ -319,6 +319,9 @@ module Git
       branches_all.select { |b| b[1] }.first[0] rescue nil
     end
 
+    def branch_contains(commit, branch_name="")
+      command("branch",  [branch_name, "--contains", commit])
+    end
 
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]
@@ -558,6 +561,7 @@ module Git
       arr_opts << '--all' if opts[:add_all] || opts[:all]
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
+      arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
 
       command('commit', arr_opts)
     end

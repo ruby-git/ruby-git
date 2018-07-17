@@ -21,7 +21,20 @@ class TestLib < Test::Unit::TestCase
     assert_equal("test\n", data['message'])
     assert_equal(["546bec6f8872efa41d5d97a369f669165ecda0de"], data['parent'])
   end
-  
+
+  def test_commit_with_date
+    create_file("#{@wdir}/test_file_1", 'content tets_file_1')
+    @lib.add('test_file_1')
+
+    author_date = Time.new(2016, 8, 3, 17, 37, 0, "-03:00")
+
+    @lib.commit('commit with date', date: author_date.strftime('%Y-%m-%dT%H:%M:%S %z'))
+
+    data = @lib.commit_data('HEAD')
+
+    assert_equal("Scott Chacon <schacon@gmail.com> #{author_date.strftime("%s %z")}", data['author'])
+  end
+
   def test_checkout
     assert(@lib.checkout('test_checkout_b',{:new_branch=>true}))
     assert(@lib.checkout('master'))
