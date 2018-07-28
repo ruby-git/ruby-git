@@ -755,6 +755,7 @@ module Git
 
       arr_opts = []
       arr_opts << '--mirror'  if opts[:mirror]
+      arr_opts << '--delete'  if opts[:delete]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
