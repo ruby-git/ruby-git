@@ -1,13 +1,15 @@
-== 1.3.0
+# Change Log
+
+## 1.3.0
 
  * Dropping Ruby 1.8.x support
 
-== 1.2.10
+## 1.2.10
 
  * Adding Git::Diff.name_status
  * Checking and fixing encoding on commands output to prevent encoding errors afterwards
 
-== 1.2.9
+## 1.2.9
 
 * Adding Git.configure (to configure the git env)
 * Adding Git.ls_remote [Git.ls_remote(repo_path_or_url='.')]
@@ -27,13 +29,13 @@
 * Git.fetch - supporting --prune
 * Git.tag - supporting
 
-== 1.2.8
+## 1.2.8
 
 * Keeping the old escape format for windows users
 * revparse: Supporting ref names containing SHA like substrings (40-hex strings)
 * Fix warnings on Ruby 2.1.2
 
-== 1.2.7
+## 1.2.7
 
 * Fixing mesages encoding
 * Fixing -f flag in git push
@@ -45,7 +47,7 @@
 * Git.add_tag options - supporting -a, -m and -s
 * Added Git.delete_tag
 
-== 1.2.6
+## 1.2.6
 
 * Ruby 1.9.X/2.0 fully supported
 * JRuby 1.8/1.9 support
@@ -61,12 +63,12 @@
 * Travis configuration
 * Licence included with the gem
 
-== 1.0.4
+## 1.0.4
 
 * added camping/gitweb.rb frontend
 * added a number of speed-ups
 
-== 1.0.3
+## 1.0.3
 
 * Sped up most of the operations
 * Added some predicate functions (commit?, tree?, etc)
@@ -74,11 +76,11 @@
 * Fixed a bug with using bare repositories
 * Updated a good amount of the documentation
 
-== 1.0.2
+## 1.0.2
 
 * Added methods to the git objects that might be helpful
 
-== 1.0.1
+## 1.0.1
 
 * Initial version
 

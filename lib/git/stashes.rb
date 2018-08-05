@@ -13,6 +13,17 @@ module Git
         @stashes.unshift(Git::Stash.new(@base, message, true))
       end
     end
+
+    #
+    # Returns an multi-dimensional Array of elements that have been stash saved.
+    # Array is based on position and name. See Example
+    #
+    # @example Returns Array of items that have been stashed
+    #     .all - [0, "testing-stash-all"]]
+    # @return [Array]
+    def all
+      @base.lib.stashes_all
+    end
     
     def save(message)
       s = Git::Stash.new(@base, message)

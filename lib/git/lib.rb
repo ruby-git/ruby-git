@@ -67,6 +67,7 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
+      arr_opts << "--mirror" if opts[:mirror]
 
       arr_opts << '--'
 
@@ -75,7 +76,7 @@ module Git
 
       command('clone', arr_opts)
 
-      opts[:bare] ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
     end
 
 
@@ -317,6 +318,9 @@ module Git
       branches_all.select { |b| b[1] }.first[0] rescue nil
     end
 
+    def branch_contains(commit, branch_name="")
+      command("branch",  [branch_name, "--contains", commit])
+    end
 
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]
@@ -444,7 +448,7 @@ module Git
       if @git_dir
         Dir.chdir(@git_dir, &do_get)
       else
-        build_list.call
+        do_get.call
       end
     end
 
@@ -552,6 +556,7 @@ module Git
       arr_opts << '--all' if opts[:add_all] || opts[:all]
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
+      arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
 
       command('commit', arr_opts)
     end
@@ -599,10 +604,12 @@ module Git
       arr = []
       filename = File.join(@git_dir, 'logs/refs/stash')
       if File.exist?(filename)
-        File.open(filename).each_with_index { |line, i|
-          m = line.match(/:(.*)$/)
-          arr << [i, m[1].strip]
-        }
+        File.open(filename) do |f|
+          f.each_with_index do |line, i|
+            m = line.match(/:(.*)$/)
+            arr << [i, m[1].strip]
+          end
+        end
       end
       arr
     end
@@ -689,6 +696,14 @@ module Git
       command('remote', arr_opts)
     end
 
+    def remote_set_url(name, url)
+      arr_opts = ['set-url']
+      arr_opts << name
+      arr_opts << url
+
+      command('remote', arr_opts)
+    end
+
     def remote_remove(name)
       command('remote', ['rm', name])
     end
@@ -718,7 +733,10 @@ module Git
       arr_opts << '-d' if opts[:d] || opts[:delete]
       arr_opts << name
       arr_opts << target if target
-      arr_opts << "-m #{opts[:m] || opts[:message]}" if opts[:m] || opts[:message]
+
+      if opts[:m] || opts[:message]
+        arr_opts << '-m' << (opts[:m] || opts[:message])
+      end
 
       command('tag', arr_opts)
     end
@@ -726,6 +744,7 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = [remote]
+      arr_opts << opts[:ref] if opts[:ref]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
 
@@ -737,11 +756,17 @@ module Git
       opts = {:tags => opts} if [true, false].include?(opts)
 
       arr_opts = []
+      arr_opts << '--mirror'  if opts[:mirror]
+      arr_opts << '--delete'  if opts[:delete]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
-      command('push', arr_opts + [branch])
-      command('push', ['--tags'] + arr_opts) if opts[:tags]
+      if opts[:mirror]
+          command('push', arr_opts)
+      else
+          command('push', arr_opts + [branch])
+          command('push', ['--tags'] + arr_opts) if opts[:tags]
+      end
     end
 
     def pull(remote='origin', branch='master')
@@ -860,10 +885,14 @@ module Git
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
-      op = cmd_op.encode("UTF-8", "binary", {
-	  	:invalid => :replace,
-		:undef => :replace
-	  })
+      if cmd_op.encoding.name != "UTF-8"
+        op = cmd_op.encode("UTF-8", "binary", {
+          :invalid => :replace,
+          :undef => :replace
+        })
+      else
+        op = cmd_op
+      end
       op.split("\n")
     end
 
