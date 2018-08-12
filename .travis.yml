@@ -5,13 +5,9 @@ rvm:
   - 2.5
   - 2.6
   - ruby-head
+  - jruby
 
 matrix:
-  include:
-    - rvm: jruby
-      env: JRUBY_OPTS="--server -Dcext.enabled=true -Xcompile.invokedynamic=false"
-      before_install:
-        - gem install bundler
   allow_failures:
   - rvm: jruby
   - rvm: ruby-head
