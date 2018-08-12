@@ -4,14 +4,12 @@ rvm:
   - 2.4
   - 2.5
   - ruby-head
-  - jruby
 
 matrix:
+  include:
+    - rvm: jruby
+      env: JRUBY_OPTS="--server -Dcext.enabled=true -Xcompile.invokedynamic=false"
   allow_failures:
   - rvm: jruby
   - rvm: ruby-head
   fast_finish: true
-
-env:
-  jruby:
-    JRUBY_OPTS="--server -Dcext.enabled=true -Xcompile.invokedynamic=false"
