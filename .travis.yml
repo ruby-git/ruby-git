@@ -5,7 +5,7 @@ rvm:
   - 2.5
   - ruby-head
   - jruby
-    env: JRUBY_OPTS=''
+    env: JRUBY_OPTS=""
 
 matrix:
   allow_failures:
