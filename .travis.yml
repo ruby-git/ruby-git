@@ -5,10 +5,13 @@ rvm:
   - 2.5
   - ruby-head
   - jruby
-    env: JRUBY_OPTS=""
 
 matrix:
   allow_failures:
   - rvm: jruby
   - rvm: ruby-head
   fast_finish: true
+
+env:
+  jruby:
+    JRUBY_OPTS="--server -Dcext.enabled=true -Xcompile.invokedynamic=false"
