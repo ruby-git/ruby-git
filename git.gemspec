@@ -28,7 +28,6 @@ Gem::Specification.new do |s|
     'MAINTAINERS.md',
     'LICENSE',
     'README.md',
-    'VERSION',
     'lib/git.rb',
     'lib/git/author.rb',
     'lib/git/base.rb',

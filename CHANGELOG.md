@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.5.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.5.0
+
+## 1.4.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.4.0
+
 ## 1.3.0
 
  * Dropping Ruby 1.8.x support

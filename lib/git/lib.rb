@@ -609,10 +609,12 @@ module Git
       arr = []
       filename = File.join(@git_dir, 'logs/refs/stash')
       if File.exist?(filename)
-        File.open(filename).each_with_index { |line, i|
-          m = line.match(/:(.*)$/)
-          arr << [i, m[1].strip]
-        }
+        File.open(filename) do |f|
+          f.each_with_index do |line, i|
+            m = line.match(/:(.*)$/)
+            arr << [i, m[1].strip]
+          end
+        end
       end
       arr
     end
@@ -760,6 +762,7 @@ module Git
 
       arr_opts = []
       arr_opts << '--mirror'  if opts[:mirror]
+      arr_opts << '--delete'  if opts[:delete]
       arr_opts << '--force'  if opts[:force] || opts[:f]
       arr_opts << remote
 
