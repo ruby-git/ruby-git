@@ -108,7 +108,7 @@ module Git
     options.delete(:remote)
     repo = clone(repository, name, {:depth => 1}.merge(options))
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
-    Dir.chdir(repo.dir.to_s) { FileUtils.rm_r '.git' }
+    FileUtils.rm_r(File.join(repo.dir.to_s, '.git'))
   end
   
   # Same as g.config, but forces it to be at the global level
