@@ -83,4 +83,21 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.untracked?('test_file_2'))
     end
   end
+
+  def test_submodule_untracked_boolean
+    in_temp_dir do |path|
+      git = Git.clone(@wdir, 'test_dot_files_status')
+      git_sub = Git.clone(@wdir, 'test_dot_files_status/sub')
+
+      create_file('test_dot_files_status/.gitignore', 'sub')
+
+      create_file('test_dot_files_status/sub/test_file_1', 'content tets_file_1')
+      create_file('test_dot_files_status/sub/test_file_2', 'content tets_file_2')      
+      git_sub.add('test_file_2')
+
+      assert(!git.status.untracked?('sub/test_file_1'))
+      assert(git_sub.status.untracked?('test_file_1'))
+      assert(!git_sub.status.untracked?('test_file_2'))
+    end
+  end    
 end
