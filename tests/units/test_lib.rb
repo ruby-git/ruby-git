@@ -13,7 +13,16 @@ class TestLib < Test::Unit::TestCase
     set_file_paths
     @lib = Git.open(@wdir).lib
   end
-  
+
+  def test_fetch_unshallow
+    in_temp_dir do |dir|
+      git = Git.clone("file://#{@wdir}", "shallow", path: dir, depth: 1).lib
+      assert_equal(1,  git.log_commits.length)
+      git.fetch("file://#{@wdir}", unshallow: true)
+      assert_equal(71,  git.log_commits.length)
+    end
+  end
+
   def test_commit_data
     data = @lib.commit_data('1cc8667014381')
     assert_equal('scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800', data['author'])
