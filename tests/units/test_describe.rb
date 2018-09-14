@@ -29,4 +29,24 @@ class TestDescribe < Test::Unit::TestCase
 
   end
 
+  def test_describe_first_parent
+
+    # Set-up a merged branch with a newer tag on it
+    main_branch = @git.current_branch
+    @git.branch('first_parent').checkout
+    @git.commit 'change', allow_empty: true
+    @git.add_tag 'v2.8.1'
+    @git.branches[main_branch].checkout
+    @git.commit 'change', allow_empty: true
+    @git.merge 'first_parent'
+    @git.commit 'change', allow_empty: true
+
+    assert_equal 'v2.8.1', @git.describe(main_branch, tags: true, abbrev: 0),
+        'git-describe should return the newer tag when first_parent not used.'
+
+    assert_equal 'v2.8', @git.describe(main_branch, tags: true, abbrev: 0, first_parent: true),
+        'git-describe should return the older tag when first_parent is used.'
+
+  end
+
 end
