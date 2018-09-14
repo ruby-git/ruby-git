@@ -97,6 +97,7 @@ module Git
     #  :long
     #  :always
     #  :match
+    #  :first_parent
     #
     #  @param [String|NilClass] committish target commit sha or object name
     #  @param [{Symbol=>Object}] opts the given options
@@ -119,6 +120,7 @@ module Git
       arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
       arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
       arr_opts << "--match=#{opts[:match]}" if opts[:match]
+      arr_opts << '--first-parent' if opts[:first_parent]
 
       arr_opts << committish if committish
 
