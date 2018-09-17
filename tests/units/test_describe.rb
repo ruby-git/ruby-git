@@ -33,13 +33,13 @@ class TestDescribe < Test::Unit::TestCase
 
     # Set-up a merged branch with a newer tag on it
     main_branch = @git.current_branch
-    @git.branch('first_parent').checkout
-    @git.commit 'change', allow_empty: true
-    @git.add_tag 'v2.8.1'
-    @git.branches[main_branch].checkout
-    @git.commit 'change', allow_empty: true
-    @git.merge 'first_parent'
-    @git.commit 'change', allow_empty: true
+    @git.branch('first_parent').checkout;    sleep(0.2)
+    @git.commit 'change', allow_empty: true; sleep(0.2)
+    @git.add_tag 'v2.8.1';                   sleep(0.2)
+    @git.branches[main_branch].checkout;     sleep(0.2)
+    @git.commit 'change', allow_empty: true; sleep(0.2)
+    @git.merge 'first_parent';               sleep(0.2)
+    @git.commit 'change', allow_empty: true; sleep(0.2)
 
     # Display current state of test structure on console
     @git.chdir { puts `git --no-pager log --oneline --graph --decorate --all -n 10` }
