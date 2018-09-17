@@ -41,6 +41,9 @@ class TestDescribe < Test::Unit::TestCase
     @git.merge 'first_parent'
     @git.commit 'change', allow_empty: true
 
+    # Display current state of test structure on console
+    @git.chdir { puts `git --no-pager log --oneline --graph --decorate --all -n 10` }
+
     assert_equal 'v2.8.1', @git.describe(main_branch, tags: true, abbrev: 0),
         'git-describe should return the newer tag when first_parent not used.'
 
