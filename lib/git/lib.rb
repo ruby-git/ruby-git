@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'open3'
 
 module Git
 
@@ -6,8 +7,6 @@ module Git
   end
 
   class Lib
-
-    @@semaphore = Mutex.new
 
     def initialize(base = nil, logger = nil)
       @git_dir = nil
@@ -899,73 +898,32 @@ module Git
       op.split("\n")
     end
 
-    # Takes the current git's system ENV variables and store them.
-    def store_git_system_env_variables
-      @git_system_env_variables = {}
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
-        @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
-      end
-    end
+    def command(cmd, opts = [], chdir = true, redirect = nil, &block)
 
-    # Takes the previously stored git's ENV variables and set them again on ENV.
-    def restore_git_system_env_variables
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
-        ENV[env_variable_name] = @git_system_env_variables[env_variable_name]
-      end
-    end
+      cmd_arg =  [ Git::Base.config.binary_path, cmd ]
+      cmd_arg += [ opts ].flatten
+      cmd_arg << redirect if redirect
 
-    # Sets git's ENV variables to the custom values for the current instance.
-    def set_custom_git_env_variables
-      ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_WORK_TREE'] = @git_work_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
-      ENV['GIT_SSH'] = Git::Base.config.git_ssh
-    end
+      cmd_env = {
+        'GIT_DIR'        => @git_dir,
+        'GIT_WORK_TREE'  => @git_work_dir,
+        'GIT_INDEX_FILE' => @git_index_file,
+        'GIT_SSH'        => Git::Base.config.git_ssh,
+      }
 
-    # Runs a block inside an environment with customized ENV variables.
-    # It restores the ENV after execution.
-    #
-    # @param [Proc] block block to be executed within the customized environment
-    def with_custom_env_variables(&block)
-      @@semaphore.synchronize do
-        store_git_system_env_variables()
-        set_custom_git_env_variables()
-        return block.call()
-      end
-    ensure
-      restore_git_system_env_variables()
-    end
-
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
-      global_opts = []
-      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
-      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
-
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
-
-      global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
-
-      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
-
-      output = nil
-
-      exitstatus = nil
-
-      with_custom_env_variables do
-          output = run_command(git_cmd, &block)
-          exitstatus = $?.exitstatus
-      end
+      exitstatus, output = run_command cmd_env, cmd_arg, chdir, &block
 
       if @logger
-        @logger.info(git_cmd)
+        @logger.info(cmd_arg.join(' ') + ' 2>&1')
         @logger.debug(output)
       end
 
       if exitstatus > 1 || (exitstatus == 1 && output != '')
-        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
+        raise Git::GitExecuteError.new(cmd_arg.join(' ') + ':' + output.to_s)
       end
 
       return output
+
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -1021,10 +979,31 @@ module Git
       arr_opts
     end
 
-    def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+    # @param  [Hash]    cmd_env Environment variables for the process.
+    # @param  [Array]   cmd_arg Command and arguments to execute.
+    # @param  [Boolean] chdir   Whether or not to switch to the git dir prior to running the command.
+    # @param  [Proc]    block   An optional block to run against stdout.
+    # @return [Integer]         The exit status of the command execution.
+    # @return [String]          The contents of the command stdout&stderr.
+    def run_command(cmd_env, cmd_arg, chdir, &block)
 
-      `#{git_cmd}`.chomp
+      Dir.chdir(@git_dir) { return run_command cmd_env, cmd_arg, false, &block } \
+          if chdir
+
+      Open3.popen2e(cmd_env, *cmd_arg) do |_, stdout, thread|
+
+        # Makes sure the process exits.
+        thread.join
+
+        # Delegate to the provided block if provided
+        output = ( block_given? ? yield(stdout) : nil ) || stdout.read.chomp
+        status = thread.value.exitstatus
+
+        # Return the resulting output
+        return status, output
+
+      end
+
     end
 
     def escape(s)
