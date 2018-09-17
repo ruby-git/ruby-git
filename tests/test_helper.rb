@@ -2,6 +2,7 @@ require 'date'
 require 'fileutils'
 require 'logger'
 require 'test/unit'
+require 'tmpdir'
 
 require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
 
@@ -33,7 +34,7 @@ class Test::Unit::TestCase
 
   def create_temp_repo(clone_path)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-    @tmp_path = File.join("/tmp/", filename)
+    @tmp_path = File.join(Dir.tmpdir, filename)
     FileUtils.mkdir_p(@tmp_path)
     FileUtils.cp_r(clone_path, @tmp_path)
     tmp_path = File.join(@tmp_path, 'working')
@@ -47,7 +48,7 @@ class Test::Unit::TestCase
     tmp_path = nil
     while tmp_path.nil? || File.directory?(tmp_path)
       filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-      tmp_path = File.join("/tmp/", filename)
+      tmp_path = File.join(Dir.tmpdir, filename)
     end
     FileUtils.mkdir(tmp_path)
     Dir.chdir tmp_path do

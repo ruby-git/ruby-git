@@ -26,7 +26,7 @@ class TestArchive < Test::Unit::TestCase
     f = @git.object('v2.6').archive(nil, :format => 'tar') # returns path to temp file
     assert(File.exist?(f))
 
-    lines = `cd /tmp; tar xvpf #{f} 2>&1`.split("\n")
+    lines = `cd #{Dir.tmpdir}; tar xvpf #{f} 2>&1`.split("\n")
     assert_match(%r{ex_dir/}, lines[0])
     assert_match(/example.txt/, lines[2])
 
@@ -39,7 +39,7 @@ class TestArchive < Test::Unit::TestCase
     f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
     assert(File.exist?(f))
 
-    lines = `cd /tmp; tar xvpf #{f} 2>&1`.split("\n")
+    lines = `cd #{Dir.tmpdir}; tar xvpf #{f} 2>&1`.split("\n")
     assert_match(%r{test/}, lines[0])
     assert_match(%r{test/ex_dir/ex\.txt}, lines[2])
 
