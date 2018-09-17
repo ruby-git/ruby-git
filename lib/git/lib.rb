@@ -949,16 +949,11 @@ module Git
 
       output = nil
 
-      command_thread = nil;
-
       exitstatus = nil
 
       with_custom_env_variables do
-        command_thread = Thread.new do
           output = run_command(git_cmd, &block)
           exitstatus = $?.exitstatus
-        end
-        command_thread.join
       end
 
       if @logger
