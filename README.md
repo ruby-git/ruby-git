@@ -173,16 +173,16 @@ And here are the operations that will need to write to your git repository.
      g.config('user.name', 'Scott Chacon')
      g.config('user.email', 'email@email.com')
 
-     g.add                                   # git add -- "."
-     g.add(:all=>true)                       # git add --all -- "."
-     g.add('file_path')                      # git add -- "file_path"
-     g.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
+     g.add                                    # git add -- "."
+     g.add(:all=>true)                        # git add --all -- "."
+     g.add('file_path')                       # git add -- "file_path"
+     g.add(['file_path_1', 'file_path_2'])    # git add -- "file_path_1" "file_path_2"
 
-     g.remove()									# git rm -f -- "."
-     g.remove('file.txt')						# git rm -f -- "file.txt"
-     g.remove(['file.txt', 'file2.txt'])		# git rm -f -- "file.txt" "file2.txt"
-     g.remove('file.txt', :recursive => true) 	# git rm -f -r -- "file.txt"
-     g.remove('file.txt', :cached => true)		# git rm -f --cached -- "file.txt"
+     g.remove()                               # git rm -f -- "."
+     g.remove('file.txt')                     # git rm -f -- "file.txt"
+     g.remove(['file.txt', 'file2.txt'])      # git rm -f -- "file.txt" "file2.txt"
+     g.remove('file.txt', :recursive => true) # git rm -f -r -- "file.txt"
+     g.remove('file.txt', :cached => true)    # git rm -f --cached -- "file.txt"
 
      g.commit('message')
      g.commit_all('message')

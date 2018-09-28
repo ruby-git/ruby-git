@@ -348,7 +348,7 @@ module Git
     #  @git.pull('upstream', 'develope')  # pulls from upstream/develop
     #
     def pull(remote='origin', branch='master')
-			self.lib.pull(remote, branch)
+      self.lib.pull(remote, branch)
     end
 
     # returns an array of Git:Remote objects
