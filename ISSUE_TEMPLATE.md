@@ -6,7 +6,7 @@ Describe your issue here.
 * version of ruby
 
 ### Steps to reproduce
-Tell us how to reproduce this issue. 
+Tell us how to reproduce this issue.
 
 ### Expected behaviour
 What did you expect to happen?

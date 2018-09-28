@@ -6,7 +6,7 @@ class TestTags < Test::Unit::TestCase
   def setup
     set_file_paths
   end
-  
+
   def test_tags
     in_temp_dir do |path|
       r1 = Git.clone(@wbare, 'repo1')
@@ -15,34 +15,34 @@ class TestTags < Test::Unit::TestCase
       r1.config('user.email', 'test@email.com')
       r2.config('user.name', 'Test User')
       r2.config('user.email', 'test@email.com')
-        
+
       assert_raise Git::GitTagNameDoesNotExist do
         r1.tag('first')
       end
-      
+
       r1.add_tag('first')
-      r1.chdir do 
+      r1.chdir do
         new_file('new_file', 'new content')
       end
       r1.add
       r1.commit('my commit')
       r1.add_tag('second')
-      
+
       assert(r1.tags.any?{|t| t.name == 'first'})
-      
+
       r2.add_tag('third')
-      
+
       assert(r2.tags.any?{|t| t.name == 'third'})
       assert(r2.tags.none?{|t| t.name == 'second'})
-      
+
       assert_raise RuntimeError do
         r2.add_tag('fourth', {:a => true})
       end
-        
+
       r2.add_tag('fourth', {:a => true, :m => 'test message'})
 
       assert(r2.tags.any?{|t| t.name == 'fourth'})
-      
+
       r2.add_tag('fifth', r2.tags.detect{|t| t.name == 'third'}.objectish)
 
       assert(r2.tags.detect{|t| t.name == 'third'}.objectish == r2.tags.detect{|t| t.name == 'fifth'}.objectish)
@@ -52,9 +52,9 @@ class TestTags < Test::Unit::TestCase
       end
 
       r2.add_tag('third', {:f => true})
-      
+
       r2.delete_tag('third')
-      
+
       assert_raise Git::GitTagNameDoesNotExist do
         r2.tag('third')
       end

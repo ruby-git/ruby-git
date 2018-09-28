@@ -6,7 +6,7 @@ require 'test/unit'
 require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
 
 class Test::Unit::TestCase
-  
+
   def set_file_paths
     cwd = `pwd`.chomp
     if File.directory?(File.join(cwd, 'files'))
@@ -16,21 +16,21 @@ class Test::Unit::TestCase
     elsif File.directory?(File.join(cwd, 'tests', 'files'))
       @test_dir = File.join(cwd, 'tests', 'files')
     end
-    
+
     @wdir_dot = File.expand_path(File.join(@test_dir, 'working'))
     @wbare = File.expand_path(File.join(@test_dir, 'working.git'))
     @index = File.expand_path(File.join(@test_dir, 'index'))
-    
+
     @wdir = create_temp_repo(@wdir_dot)
   end
-  
+
   teardown
   def git_teardown
     if @tmp_path
       FileUtils.rm_r(@tmp_path)
     end
   end
-  
+
   def create_temp_repo(clone_path)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
     @tmp_path = File.join("/tmp/", filename)
@@ -42,7 +42,7 @@ class Test::Unit::TestCase
     end
     tmp_path
   end
-  
+
   def in_temp_dir(remove_after = true) # :yields: the temporary dir's path
     tmp_path = nil
     while tmp_path.nil? || File.directory?(tmp_path)
@@ -55,7 +55,7 @@ class Test::Unit::TestCase
     end
     FileUtils.rm_r(tmp_path) if remove_after
   end
-  
+
   def create_file(path, content)
     File.open(path,'w') do |file|
       file.puts(content)
@@ -69,7 +69,7 @@ class Test::Unit::TestCase
   def delete_file(path)
     File.delete(path)
   end
-  
+
   def new_file(name, contents)
     create_file(name,contents)
   end
@@ -79,5 +79,5 @@ class Test::Unit::TestCase
       f.puts contents
     end
   end
-  
+
 end

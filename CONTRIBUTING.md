@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to this project.
 
-These are mostly guidelines, not rules. 
+These are mostly guidelines, not rules.
 Use your best judgment, and feel free to propose changes to this document in a pull request.
 
 #### Table Of Contents
@@ -43,7 +43,7 @@ In order to ensure high quality, we require that all pull requests to this proje
 
 Code review takes place in GitHub pull requests. See [this article](https://help.github.com/articles/about-pull-requests/) if you're not familiar with GitHub Pull Requests.
 
-Once you open a pull request, project maintainers will review your code and respond to your pull request with any feedback they might have. 
+Once you open a pull request, project maintainers will review your code and respond to your pull request with any feedback they might have.
 
 The process at this point is as follows:
 
@@ -60,7 +60,7 @@ Detail about the LICENSE can be found [here](https://choosealicense.com/licenses
 
 To make a good faith effort to ensure these criteria are met, ruby-git requires the Developer Certificate of Origin (DCO) process to be followed.
 
-The DCO is an attestation attached to every contribution made by every developer. 
+The DCO is an attestation attached to every contribution made by every developer.
 
 In the commit message of the contribution, the developer simply adds a Signed-off-by statement and thereby agrees to the DCO, which you can find below or at <http://developercertificate.org/>.
 
@@ -75,7 +75,7 @@ By making a contribution to this project, I certify that:
 
 (b) The contribution is based upon previous work that, to the
     best of my knowledge, is covered under an appropriate open
-    source license and I have the right under that license to   
+    source license and I have the right under that license to
     submit that work with modifications, whether created in whole
     or in part by me, under the same open source license (unless
     I am permitted to submit under a different license), as
