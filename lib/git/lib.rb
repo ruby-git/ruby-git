@@ -666,6 +666,21 @@ module Git
       command('merge', arr_opts)
     end
 
+    def merge_base(*args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+
+      arg_opts = []
+
+      arg_opts << '--octopus' if opts[:octopus]
+      arg_opts << '--independent' if opts[:independent]
+      arg_opts << '--fork-point' if opts[:fork_point]
+      arg_opts << '--all' if opts[:all]
+
+      arg_opts += args
+
+      command('merge-base', arg_opts).lines.map(&:strip)
+    end
+
     def unmerged
       unmerged = []
       command_lines('diff', ["--cached"]).each do |line|

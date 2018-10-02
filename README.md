@@ -216,6 +216,8 @@ And here are the operations that will need to write to your git repository.
      g.merge(g.branch('master'))
      g.merge([branch1, branch2])
 
+     g.merge_base('branch1', 'branch2')
+
      r = g.add_remote(name, uri)  # Git::Remote
      r = g.add_remote(name, Git::Base)  # Git::Remote
 
