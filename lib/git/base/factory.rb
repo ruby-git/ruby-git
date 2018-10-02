@@ -68,6 +68,14 @@ module Git
         Git::Object.new(self, tag_name, 'tag', true)
       end
 
+      # Find as good common ancestors as possible for a merge
+      # example: g.merge_base('master', 'some_branch', 'some_sha', octopus: true)
+      # returns Array<Git::Object::Commit>
+      def merge_base(*args)
+        shas = self.lib.merge_base(*args)
+        shas.map { |sha| gcommit(sha) }
+      end
+
     end
 
   end
