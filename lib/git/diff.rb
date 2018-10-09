@@ -130,7 +130,7 @@ module Git
         if @full_diff.encoding.name != "UTF-8"
           full_diff_utf8_encoded = @full_diff.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
         else
-          full_diff_utf8_encoded = @full_diff.encode("UTF-8", "UTF-8", { :invalid => :replace, :undef => :replace }))
+          full_diff_utf8_encoded = @full_diff.encode("UTF-8", "UTF-8", { :invalid => :replace, :undef => :replace })
         end
         full_diff_utf8_encoded.split("\n").each do |line|
           if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
