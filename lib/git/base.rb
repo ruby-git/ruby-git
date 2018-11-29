@@ -77,8 +77,22 @@ module Git
     
     def initialize(options = {})
       if working_dir = options[:working_directory]
-        options[:repository] ||= File.join(working_dir, '.git')
-        options[:index] ||= File.join(working_dir, '.git', 'index')
+        repository = File.join(working_dir, ".git")
+        index = File.join(working_dir, '.git', 'index')
+        # if git is a submodule the .git is in the '.git' of host repo, and .git is file
+        if File.file? repository
+          configurations =  File.open(repository).lines.map { |line|
+            line.split(":").map { |x|
+              x.strip
+            }
+          }.to_h
+          unless configurations['gitdir'].nil?
+            repository = configurations['gitdir']
+            index = File.join(repository,'index')
+          end
+        end
+        options[:repository] ||= repository
+        options[:index] ||= index
       end
       if options[:log]
         @logger = options[:log]
