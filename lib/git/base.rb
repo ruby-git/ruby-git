@@ -87,7 +87,7 @@ module Git
             }
           }.to_h
           unless configurations['gitdir'].nil?
-            repository = configurations['gitdir']
+            repository = File.join(working_dir,configurations['gitdir'])
             index = File.join(repository,'index')
           end
         end
