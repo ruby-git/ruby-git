@@ -2,13 +2,10 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-class TestConfigModule < Test::Unit::TestCase
+class TestGitConfig < Test::Unit::TestCase
   def setup
     set_file_paths
-    git_class = Class.new do
-      include Git
-    end
-    @git = git_class.new
+    @git = Git::GitConfig
     @old_dir = Dir.pwd
     Dir.chdir(@wdir)
   end

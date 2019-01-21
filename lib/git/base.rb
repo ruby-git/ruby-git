@@ -1,10 +1,12 @@
 require 'git/base/factory'
+require 'git/git_config'
 
 module Git
   
   class Base
 
     include Git::Base::Factory
+    include Git::GitConfig
 
     # opens a bare Git Repository - no working directory options
     def self.bare(git_dir, opts = {})
@@ -106,24 +108,7 @@ module Git
         yield dir.path
       end
     end
-    
-    #g.config('user.name', 'Scott Chacon') # sets value
-    #g.config('user.email', 'email@email.com')  # sets value
-    #g.config('user.name')  # returns 'Scott Chacon'
-    #g.config # returns whole config hash
-    def config(name = nil, value = nil)
-      if(name && value)
-        # set value
-        lib.config_set(name, value)
-      elsif (name)
-        # return value
-        lib.config_get(name)
-      else
-        # return hash
-        lib.config_list
-      end
-    end
-  
+
     # returns a reference to the working directory
     #  @git.dir.path
     #  @git.dir.writeable?

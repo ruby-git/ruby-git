@@ -9,6 +9,7 @@ require 'git/branch'
 require 'git/branches'
 require 'git/config'
 require 'git/diff'
+require 'git/git_config'
 require 'git/index'
 require 'git/lib'
 require 'git/log'
@@ -42,24 +43,6 @@ end
 # Author::    Scott Chacon (mailto:schacon@gmail.com)
 # License::   MIT License
 module Git
-  
-  #g.config('user.name', 'Scott Chacon') # sets value
-  #g.config('user.email', 'email@email.com')  # sets value
-  #g.config('user.name')  # returns 'Scott Chacon'
-  #g.config # returns whole config hash
-  def config(name = nil, value = nil)
-    lib = Git::Lib.new
-    if(name && value)
-      # set value
-      lib.config_set(name, value)
-    elsif (name)
-      # return value
-      lib.config_get(name)
-    else
-      # return hash
-      lib.config_list
-    end
-  end
 
   def self.configure
     yield Base.config
@@ -67,10 +50,6 @@ module Git
 
   def self.config
     return Base.config
-  end
-
-  def global_config(name = nil, value = nil)
-    self.class.global_config(name, value)
   end
 
   # open a bare repository

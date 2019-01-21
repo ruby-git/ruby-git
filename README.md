@@ -295,6 +295,20 @@ Some examples of more low-level index and tree operations
      end
 ```
 
+Managing git configuration
+
+```ruby
+    # current git project config
+    Git::GitConfig.config # returns whole config hash
+    Git::GitConfig.config('user.name')  # returns 'Scott Chacon'
+    Git::GitConfig.config('user.name', 'Scott Chacon')  # sets new user.name
+
+    # global config
+    Git::GitConfig.global_config # returns whole global config hash
+    Git::GitConfig.global_config('user.name')  # returns 'Scott Chacon'
+    Git::GitConfig.global_config('user.name', 'Scott Chacon')  # sets new user.name
+```
+
 ## License
 
 licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further details.
