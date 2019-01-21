@@ -502,10 +502,14 @@ module Git
 
     def config_set(name, value)
       command('config', [name, value])
+    rescue Git::GitExecuteError
+      command('config', ['--add', name, value])
     end
 
     def global_config_set(name, value)
       command('config', ['--global', name, value], false)
+    rescue Git::GitExecuteError
+      command('config', ['--global', '--add', name, value], false)
     end
 
     # updates the repository index using the working directory content
