@@ -441,7 +441,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do |path|
+      do_get = Proc.new do |path|
         command('config', ['--get', name])
       end
 
@@ -457,7 +457,7 @@ module Git
     end
 
     def config_list
-      build_list = lambda do |path|
+      build_list = Proc.new do |path|
         parse_config_list command_lines('config', ['--list'])
       end
 
