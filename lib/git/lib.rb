@@ -310,7 +310,7 @@ module Git
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
       files = []
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
+      files = Dir.glob(File.join(dir, '**/*')).select { |f| File.file?(f) } rescue nil
       files
     end
 
@@ -441,14 +441,16 @@ module Git
     end
 
     def config_get(name)
-      do_get = lambda do |path|
-        command('config', ['--get', name])
-      end
+      @@config_semaphore.synchronize do
+        do_get = lambda do |path|
+          command('config', ['--get', name])
+        end
 
-      if @git_dir
-        Dir.chdir(@git_dir, &do_get)
-      else
-        do_get.call
+        if @git_dir
+          Dir.chdir(@git_dir, &do_get)
+        else
+          do_get.call
+        end
       end
     end
 
@@ -457,14 +459,16 @@ module Git
     end
 
     def config_list
-      build_list = lambda do |path|
-        parse_config_list command_lines('config', ['--list'])
-      end
+      @@config_semaphore.synchronize do
+        build_list = lambda do |path|
+          parse_config_list command_lines('config', ['--list'])
+        end
 
-      if @git_dir
-        Dir.chdir(@git_dir, &build_list)
-      else
-        build_list.call
+        if @git_dir
+          Dir.chdir(@git_dir, &build_list)
+        else
+          build_list.call
+        end
       end
     end
 
