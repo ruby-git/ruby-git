@@ -8,7 +8,8 @@ module Git
   class Lib
 
     @@semaphore = Mutex.new
-
+    @@config_semaphore = Mutex.new
+    
     def initialize(base = nil, logger = nil)
       @git_dir = nil
       @git_index_file = nil
