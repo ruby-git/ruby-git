@@ -79,5 +79,19 @@ class Test::Unit::TestCase
       f.puts contents
     end
   end
-  
+
+  # Runs a block inside an environment with customized ENV variables.
+  # It restores the ENV after execution.
+  #
+  # @param [Proc] block block to be executed within the customized environment
+  #
+  def with_custom_env_variables(&block)
+    saved_env = {}
+    begin
+      Git::Lib::ENV_VARIABLE_NAMES.each { |k| saved_env[k] = ENV[k] }
+      return block.call
+    ensure
+      Git::Lib::ENV_VARIABLE_NAMES.each { |k| ENV[k] = saved_env[k] }
+    end
+  end
 end
