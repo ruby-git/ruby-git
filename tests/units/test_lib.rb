@@ -75,40 +75,44 @@ class TestLib < Test::Unit::TestCase
     a = @lib.full_log_commits :count => 20
     assert_equal(20, a.size)
   end
-  
+
   def test_environment_reset
-    ENV['GIT_DIR'] = '/my/git/dir'
-    ENV['GIT_WORK_TREE'] = '/my/work/tree'
-    ENV['GIT_INDEX_FILE'] = 'my_index'
+    with_custom_env_variables do
+      ENV['GIT_DIR'] = '/my/git/dir'
+      ENV['GIT_WORK_TREE'] = '/my/work/tree'
+      ENV['GIT_INDEX_FILE'] = 'my_index'
 
-    @lib.log_commits :count => 10
+      @lib.log_commits :count => 10
 
-    assert_equal(ENV['GIT_DIR'], '/my/git/dir')
-    assert_equal(ENV['GIT_WORK_TREE'], '/my/work/tree')
-    assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
+      assert_equal(ENV['GIT_DIR'], '/my/git/dir')
+      assert_equal(ENV['GIT_WORK_TREE'], '/my/work/tree')
+      assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
+    end
   end
 
   def test_git_ssh_from_environment_is_passed_to_binary
-    ENV['GIT_SSH'] = 'my/git-ssh-wrapper'
+    with_custom_env_variables do
+      begin
+        ENV['GIT_SSH'] = 'my/git-ssh-wrapper'
 
-    Dir.mktmpdir do |dir|
-      output_path = File.join(dir, 'git_ssh_value')
-      binary_path = File.join(dir, 'git')
-      Git::Base.config.binary_path = binary_path
-      File.open(binary_path, 'w') { |f|
-        f << "echo $GIT_SSH > #{output_path}"
-      }
-      FileUtils.chmod(0700, binary_path)
-      @lib.checkout('something')
-      assert_equal("my/git-ssh-wrapper\n", File.read(output_path))
+        Dir.mktmpdir do |dir|
+          output_path = File.join(dir, 'git_ssh_value')
+          binary_path = File.join(dir, 'git')
+          Git::Base.config.binary_path = binary_path
+          File.open(binary_path, 'w') { |f|
+            f << "echo $GIT_SSH > #{output_path}"
+          }
+          FileUtils.chmod(0700, binary_path)
+          @lib.checkout('something')
+          assert_equal("my/git-ssh-wrapper\n", File.read(output_path))
+        end
+      ensure
+        Git.configure do |config|
+          config.binary_path = nil
+          config.git_ssh = nil
+        end
+      end
     end
-  ensure
-    Git.configure do |config|
-      config.binary_path = nil
-      config.git_ssh = nil
-    end
-
-    ENV['GIT_SSH'] = nil
   end
 
   def test_revparse
