@@ -15,7 +15,7 @@ module Git
     attr_reader :from, :to
 
     def name_status
-      cache_name_status
+      @name_status ||= @base.lib.diff_name_status(@from, @to, path: @path)
     end
 
     def path(path)
@@ -95,10 +95,6 @@ module Git
         return if @full_diff_files
         patch
         @full_diff_files = process_full_diff
-      end
-
-      def cache_name_status
-        @name_status ||= @base.lib.diff_name_status(@from, @to, {:path => @path})
       end
 
       # break up @diff_full
