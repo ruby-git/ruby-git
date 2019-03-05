@@ -10,7 +10,6 @@ module Git
       @to = to && to.to_s
 
       @path = nil
-      @full_diff_files = nil
     end
     attr_reader :from, :to
 
@@ -52,13 +51,11 @@ module Git
     # enumerable methods
 
     def [](key)
-      process_full
-      @full_diff_files.assoc(key)[1]
+      full_diff_files[key]
     end
 
-    def each(&block) # :yields: each Git::DiffFile in turn
-      process_full
-      @full_diff_files.map { |file| file[1] }.each(&block)
+    def each
+      full_diff_files.each_value { |diff_file| yield diff_file }
     end
 
     class DiffFile
@@ -91,14 +88,9 @@ module Git
 
     private
 
-      def process_full
-        return if @full_diff_files
-        patch
-        @full_diff_files = process_full_diff
-      end
-
       # break up @diff_full
-      def process_full_diff
+    def full_diff_files
+      @full_diff_files ||= begin
         defaults = {
           :mode => '',
           :src => '',
@@ -132,8 +124,8 @@ module Git
             final[current_file][:patch] << "\n" + line
           end
         end
-        final.map { |e| [e[0], DiffFile.new(@base, e[1])] }
+        final.map { |k, h| [k, DiffFile.new(@base, h)] }.to_h
       end
-
+    end
   end
 end
