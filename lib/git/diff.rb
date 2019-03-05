@@ -12,7 +12,6 @@ module Git
       @path = nil
       @full_diff = nil
       @full_diff_files = nil
-      @stats = nil
     end
     attr_reader :from, :to
 
@@ -26,28 +25,23 @@ module Git
     end
 
     def size
-      cache_stats
-      @stats[:total][:files]
+      stats[:total][:files]
     end
 
     def lines
-      cache_stats
-      @stats[:total][:lines]
+      stats[:total][:lines]
     end
 
     def deletions
-      cache_stats
-      @stats[:total][:deletions]
+      stats[:total][:deletions]
     end
 
     def insertions
-      cache_stats
-      @stats[:total][:insertions]
+      stats[:total][:insertions]
     end
 
     def stats
-      cache_stats
-      @stats
+      @stats ||= @base.lib.diff_stats(@from, @to, path_limiter: @path)
     end
 
     # if file is provided and is writable, it will write the patch into the file
@@ -107,10 +101,6 @@ module Git
         return if @full_diff_files
         cache_full
         @full_diff_files = process_full_diff
-      end
-
-      def cache_stats
-        @stats ||=  @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
       end
 
       def cache_name_status
