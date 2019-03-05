@@ -10,7 +10,6 @@ module Git
       @to = to && to.to_s
 
       @path = nil
-      @full_diff = nil
       @full_diff_files = nil
     end
     attr_reader :from, :to
@@ -45,9 +44,8 @@ module Git
     end
 
     # if file is provided and is writable, it will write the patch into the file
-    def patch(file = nil)
-      cache_full
-      @full_diff
+    def patch
+      @patch ||= @base.lib.diff_full(@from, @to, path_limiter: @path)
     end
     alias_method :to_s, :patch
 
@@ -93,13 +91,9 @@ module Git
 
     private
 
-      def cache_full
-        @full_diff ||= @base.lib.diff_full(@from, @to, {:path_limiter => @path})
-      end
-
       def process_full
         return if @full_diff_files
-        cache_full
+        patch
         @full_diff_files = process_full_diff
       end
 
@@ -117,10 +111,10 @@ module Git
         }
         final = {}
         current_file = nil
-        if @full_diff.encoding.name != "UTF-8"
-          full_diff_utf8_encoded = @full_diff.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
+        if patch.encoding.name != "UTF-8"
+          full_diff_utf8_encoded = patch.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
         else
-          full_diff_utf8_encoded = @full_diff
+          full_diff_utf8_encoded = patch
         end
         full_diff_utf8_encoded.split("\n").each do |line|
           if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
