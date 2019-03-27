@@ -902,14 +902,24 @@ module Git
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
       if cmd_op.encoding.name != "UTF-8"
-        op = cmd_op.encode("UTF-8", "binary", {
-          :invalid => :replace,
-          :undef => :replace
-        })
+        op = command_line_convert(cmd_op)
       else
         op = cmd_op
       end
-      op.split("\n")
+
+      begin
+        op.split("\n")
+      rescue ArgumentError
+        op = command_line_convert(cmd_op)
+        retry
+      end
+    end
+
+    def command_line_convert(cmd_op)
+      cmd_op.encode("UTF-8", "binary", {
+        :invalid => :replace,
+        :undef => :replace
+      })
     end
 
     # Takes the current git's system ENV variables and store them.
