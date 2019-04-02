@@ -100,18 +100,18 @@ module Git
         final = {}
         current_file = nil
         patch.each_line do |line|
-          if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
-            current_file = m[1]
+          if m = /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/.match(line)
+            current_file = m[:path_before]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
-            if m = /^index (.......)\.\.(.......)( ......)*/.match(line)
-              final[current_file][:src] = m[1]
-              final[current_file][:dst] = m[2]
-              final[current_file][:mode] = m[3].strip if m[3]
+            if m = /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/.match(line)
+              final[current_file][:src] = m[:src]
+              final[current_file][:dst] = m[:dst]
+              final[current_file][:mode] = m[:mode] if m[:mode]
             end
-            if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
-              final[current_file][:type] = m[1]
-              final[current_file][:mode] = m[2]
+            if m = /^(?<type>new|deleted) file mode (?<mode>\d{6})/.match(line)
+              final[current_file][:type] = m[:type]
+              final[current_file][:mode] = m[:mode]
             end
             if m = /^Binary files /.match(line)
               final[current_file][:binary] = true
