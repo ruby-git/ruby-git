@@ -72,39 +72,47 @@ module Git
             binary?: /^Binary files /,
           }
         end
+
+        def each_slice(lines_enum, at:, drop: 0)
+          return enum_for(:each_slice, lines_enum, at: at, drop: drop) unless block_given?
+
+          lines_enum.slice_when { |_, next_line| at.match(next_line) }.each do |slice|
+            if drop.positive?
+              drop -= 1
+              next
+            end
+            yield slice
+          end
+        end
       end
       extend Parsing
 
       def self.parse_each(diff_lines_enum, base:)
-        defaults = {
-          :mode => '',
-          :src => '',
-          :dst => '',
-          :type => 'modified'
-        }
-        current_file = nil
-        final = {}
-        diff_lines_enum.each do |line|
-          if m = headers[:git_diff].match(line)
-            current_file = m[:path_before]
-            final[current_file] = defaults.merge({:patch => line, :path => current_file})
-          else
-            if m = headers[:sha_mode].match(line)
-              final[current_file][:src] = m[:src]
-              final[current_file][:dst] = m[:dst]
-              final[current_file][:mode] = m[:mode] if m[:mode]
+        diff_file_lines = each_slice(diff_lines_enum, at: headers[:git_diff])
+        diff_file_lines.each do |lines|
+          hash = { :mode => '', :src => '', :dst => '', :type => 'modified' }
+          lines.each do |line|
+            if m = headers[:git_diff].match(line)
+              hash[:patch] = line
+              hash[:path] = m[:path_before]
+            else
+              if m = headers[:sha_mode].match(line)
+                hash[:src] = m[:src]
+                hash[:dst] = m[:dst]
+                hash[:mode] = m[:mode] if m[:mode]
+              end
+              if m = headers[:type_mode].match(line)
+                hash[:type] = m[:type]
+                hash[:mode] = m[:mode]
+              end
+              if m = headers[:binary?].match(line)
+                hash[:binary] = true
+              end
+              hash[:patch] << line
             end
-            if m = headers[:type_mode].match(line)
-              final[current_file][:type] = m[:type]
-              final[current_file][:mode] = m[:mode]
-            end
-            if m = headers[:binary?].match(line)
-              final[current_file][:binary] = true
-            end
-            final[current_file][:patch] << line
           end
+          yield DiffFile.new(base, hash)
         end
-        final.each_value { |h| yield DiffFile.new(base, h) }
       end
 
       attr_accessor :patch, :path, :mode, :src, :dst, :type
