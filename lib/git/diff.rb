@@ -86,40 +86,41 @@ module Git
         end
       end
       extend Parsing
+      include Parsing
 
       def self.parse_each(diff_lines_enum, base:)
         diff_file_lines = each_slice(diff_lines_enum, at: headers[:git_diff])
-        diff_file_lines.each do |lines|
-          hash = { :mode => '', :src => '', :dst => '', :type => 'modified' }
-          lines.each do |line|
-            if m = headers[:git_diff].match(line)
-              hash[:patch] = line
-              hash[:path] = m[:path_before]
-            else
-              if m = headers[:sha_mode].match(line)
-                hash[:src] = m[:src]
-                hash[:dst] = m[:dst]
-                hash[:mode] = m[:mode] if m[:mode]
-              end
-              if m = headers[:type_mode].match(line)
-                hash[:type] = m[:type]
-                hash[:mode] = m[:mode]
-              end
-              if m = headers[:binary?].match(line)
-                hash[:binary] = true
-              end
-              hash[:patch] << line
-            end
-          end
-          yield DiffFile.new(base, hash)
-        end
+        diff_file_lines.each { |lines| yield self.new(base, lines) }
       end
 
       attr_accessor :patch, :path, :mode, :src, :dst, :type
       @base = nil
 
-      def initialize(base, hash)
+      def initialize(base, file_diff_lines)
         @base = base
+
+        hash = { :mode => '', :src => '', :dst => '', :type => 'modified' }
+        file_diff_lines.each do |line|
+          if m = headers[:git_diff].match(line)
+            hash[:patch] = line
+            hash[:path] = m[:path_before]
+          else
+            if m = headers[:sha_mode].match(line)
+              hash[:src] = m[:src]
+              hash[:dst] = m[:dst]
+              hash[:mode] = m[:mode] if m[:mode]
+            end
+            if m = headers[:type_mode].match(line)
+              hash[:type] = m[:type]
+              hash[:mode] = m[:mode]
+            end
+            if m = headers[:binary?].match(line)
+              hash[:binary] = true
+            end
+            hash[:patch] << line
+          end
+        end
+
         @patch = hash[:patch]
         @path = hash[:path]
         @mode = hash[:mode]
