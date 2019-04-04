@@ -50,12 +50,14 @@ module Git
 
     # enumerable methods
 
-    def [](key)
-      full_diff_files[key]
+    def [](path)
+      @diff_files ||= each.map { |df| [df.path, df] }.to_h
+      @diff_files[path]
     end
 
     def each
-      full_diff_files.each_value { |diff_file| yield diff_file }
+      return to_enum unless block_given?
+      DiffFile.parse_each(patch.each_line, base: @base) { |diff_file| yield diff_file }
     end
 
     class DiffFile
@@ -88,7 +90,7 @@ module Git
             final[current_file][:patch] << line
           end
         end
-        final.map { |k, h| [k, DiffFile.new(base, h)] }.to_h
+        final.each_value { |h| yield DiffFile.new(base, h) }
       end
 
       attr_accessor :patch, :path, :mode, :src, :dst, :type
@@ -116,13 +118,6 @@ module Git
           @base.object(@dst) if @dst != '0000000'
         end
       end
-    end
-
-    private
-
-      # break up @diff_full
-    def full_diff_files
-      @full_diff_files ||= DiffFile.parse_each(patch.each_line, base: @base)
     end
   end
 end
