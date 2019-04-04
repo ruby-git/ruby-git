@@ -59,6 +59,38 @@ module Git
     end
 
     class DiffFile
+      def self.parse_each(diff_lines_enum, base:)
+        defaults = {
+          :mode => '',
+          :src => '',
+          :dst => '',
+          :type => 'modified'
+        }
+        current_file = nil
+        final = {}
+        diff_lines_enum.each do |line|
+          if m = /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/.match(line)
+            current_file = m[:path_before]
+            final[current_file] = defaults.merge({:patch => line, :path => current_file})
+          else
+            if m = /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/.match(line)
+              final[current_file][:src] = m[:src]
+              final[current_file][:dst] = m[:dst]
+              final[current_file][:mode] = m[:mode] if m[:mode]
+            end
+            if m = /^(?<type>new|deleted) file mode (?<mode>\d{6})/.match(line)
+              final[current_file][:type] = m[:type]
+              final[current_file][:mode] = m[:mode]
+            end
+            if m = /^Binary files /.match(line)
+              final[current_file][:binary] = true
+            end
+            final[current_file][:patch] << line
+          end
+        end
+        final.map { |k, h| [k, DiffFile.new(base, h)] }.to_h
+      end
+
       attr_accessor :patch, :path, :mode, :src, :dst, :type
       @base = nil
 
@@ -90,37 +122,7 @@ module Git
 
       # break up @diff_full
     def full_diff_files
-      @full_diff_files ||= begin
-        defaults = {
-          :mode => '',
-          :src => '',
-          :dst => '',
-          :type => 'modified'
-        }
-        final = {}
-        current_file = nil
-        patch.each_line do |line|
-          if m = /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/.match(line)
-            current_file = m[:path_before]
-            final[current_file] = defaults.merge({:patch => line, :path => current_file})
-          else
-            if m = /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/.match(line)
-              final[current_file][:src] = m[:src]
-              final[current_file][:dst] = m[:dst]
-              final[current_file][:mode] = m[:mode] if m[:mode]
-            end
-            if m = /^(?<type>new|deleted) file mode (?<mode>\d{6})/.match(line)
-              final[current_file][:type] = m[:type]
-              final[current_file][:mode] = m[:mode]
-            end
-            if m = /^Binary files /.match(line)
-              final[current_file][:binary] = true
-            end
-            final[current_file][:patch] << line
-          end
-        end
-        final.map { |k, h| [k, DiffFile.new(@base, h)] }.to_h
-      end
+      @full_diff_files ||= DiffFile.parse_each(patch.each_line, base: @base)
     end
   end
 end
