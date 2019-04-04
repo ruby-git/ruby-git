@@ -115,6 +115,9 @@ module Git
       def mode;    header_data[:mode];        end
       def binary?; !!header_data[:binary?];   end
 
+      def added_lines;   changed_lines('+'); end
+      def deleted_lines; changed_lines('-'); end
+
       private
 
       def header_data
@@ -135,6 +138,28 @@ module Git
           end.inject(:merge)
         end
       end
+
+      def changed_lines(prefix)
+        omit_prefix, range_match = { '+' => ['-', :after], '-' => ['+', :before] }.fetch(prefix)
+
+        change_hunks = each_slice(@lines_raw, at: range_info, drop: 1)
+        change_hunks.flat_map do |change_lines|
+          hunk_header, *diff_lines = change_lines
+
+          match = range_info.match(hunk_header)
+          startline = match["start_#{range_match}"].to_i
+          num_lines = match["num_#{range_match}"]&.to_i || 1
+          line_range = startline...(startline + num_lines)
+
+          changed_lines = diff_lines.reject { |diff_line| diff_line.start_with?(omit_prefix) }
+          numbered_lines = line_range.zip(changed_lines)
+          numbered_lines.map do |n, diff_line|
+            DiffLine.new(n, diff_line[1..-1]).freeze if diff_line[0] == prefix
+          end.compact
+        end
+      end
     end
+
+    DiffLine = Struct.new(:line_num, :line)
   end
 end

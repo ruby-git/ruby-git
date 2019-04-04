@@ -123,4 +123,23 @@ class TestDiff < Test::Unit::TestCase
       diff_files_enum.next # file_2
     end
   end
+
+  def test_diff_file_added_lines_deleted_lines
+    diff = @git.diff('gitsearch1~', 'gitsearch1')
+
+    newfile_diff = diff['scott/newfile']
+    newfile_additions = [Git::Diff::DiffLine.new(1, "you can't search me!\n")]
+    assert_equal newfile_additions, newfile_diff.added_lines
+    assert_empty newfile_diff.deleted_lines
+
+    text_diff = diff['scott/text.txt']
+    text_additions = [
+      Git::Diff::DiffLine.new(6, "to search one\n"),
+      Git::Diff::DiffLine.new(7, "to search two\n"),
+      Git::Diff::DiffLine.new(8, "nothing!\n"),
+    ]
+    text_deletions = [Git::Diff::DiffLine.new(6, "to searc\n")]
+    assert_equal text_additions, text_diff.added_lines
+    assert_equal text_deletions, text_diff.deleted_lines
+  end
 end
