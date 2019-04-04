@@ -73,6 +73,10 @@ module Git
           }
         end
 
+        def range_info
+          /^@@ -(?<start_before>\d+)(,(?<num_before>\d+))? \+(?<start_after>\d+)(,(?<num_after>\d+))? @@/
+        end
+
         def each_slice(lines_enum, at:, drop: 0)
           return enum_for(:each_slice, lines_enum, at: at, drop: drop) unless block_given?
 
@@ -93,52 +97,42 @@ module Git
         diff_file_lines.each { |lines| yield self.new(base, lines) }
       end
 
-      attr_accessor :patch, :path, :mode, :src, :dst, :type
-      @base = nil
-
       def initialize(base, file_diff_lines)
         @base = base
-
-        hash = { :mode => '', :src => '', :dst => '', :type => 'modified' }
-        file_diff_lines.each do |line|
-          if m = headers[:git_diff].match(line)
-            hash[:patch] = line
-            hash[:path] = m[:path_before]
-          else
-            if m = headers[:sha_mode].match(line)
-              hash[:src] = m[:src]
-              hash[:dst] = m[:dst]
-              hash[:mode] = m[:mode] if m[:mode]
-            end
-            if m = headers[:type_mode].match(line)
-              hash[:type] = m[:type]
-              hash[:mode] = m[:mode]
-            end
-            if m = headers[:binary?].match(line)
-              hash[:binary] = true
-            end
-            hash[:patch] << line
-          end
-        end
-
-        @patch = hash[:patch]
-        @path = hash[:path]
-        @mode = hash[:mode]
-        @src = hash[:src]
-        @dst = hash[:dst]
-        @type = hash[:type]
-        @binary = hash[:binary]
-      end
-
-      def binary?
-        !!@binary
+        @lines_raw = file_diff_lines
       end
 
       def blob(type = :dst)
-        if type == :src
-          @base.object(@src) if @src != '0000000'
-        else
-          @base.object(@dst) if @dst != '0000000'
+        sha = type == :src ? src : dst
+        @base.object(sha) if sha != '0000000'
+      end
+
+      def patch;   @lines_raw.join;           end
+      def path;    header_data[:path_before]; end
+      def src;     header_data[:src];         end
+      def dst;     header_data[:dst];         end
+      def type;    header_data[:type];        end
+      def mode;    header_data[:mode];        end
+      def binary?; !!header_data[:binary?];   end
+
+      private
+
+      def header_data
+        @header_data ||= begin
+          header_lines = each_slice(@lines_raw, at: range_info).first
+
+          header_matches = headers.map do |name, h_rgx|
+            match = header_lines.lazy.map { |line| h_rgx.match(line) }.detect(&:itself)
+            [name, match] if match # Ruby 2.4+: Hash#transform_values
+          end.compact
+
+          header_matches.map do |name, m|
+            if m.names.empty?
+              { name => true }
+            else
+              m.names.map { |n| m[n] && [n.to_sym, m[n]] }.compact.to_h # Ruby 2.4+: MatchData#named_captures
+            end
+          end.inject(:merge)
         end
       end
     end
