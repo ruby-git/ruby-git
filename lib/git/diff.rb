@@ -61,6 +61,20 @@ module Git
     end
 
     class DiffFile
+      module Parsing
+        private
+
+        def headers
+          {
+            git_diff: /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/,
+            sha_mode: /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/,
+            type_mode: /^(?<type>new|deleted) file mode (?<mode>\d{6})/,
+            binary?: /^Binary files /,
+          }
+        end
+      end
+      extend Parsing
+
       def self.parse_each(diff_lines_enum, base:)
         defaults = {
           :mode => '',
@@ -71,20 +85,20 @@ module Git
         current_file = nil
         final = {}
         diff_lines_enum.each do |line|
-          if m = /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/.match(line)
+          if m = headers[:git_diff].match(line)
             current_file = m[:path_before]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
-            if m = /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/.match(line)
+            if m = headers[:sha_mode].match(line)
               final[current_file][:src] = m[:src]
               final[current_file][:dst] = m[:dst]
               final[current_file][:mode] = m[:mode] if m[:mode]
             end
-            if m = /^(?<type>new|deleted) file mode (?<mode>\d{6})/.match(line)
+            if m = headers[:type_mode].match(line)
               final[current_file][:type] = m[:type]
               final[current_file][:mode] = m[:mode]
             end
-            if m = /^Binary files /.match(line)
+            if m = headers[:binary?].match(line)
               final[current_file][:binary] = true
             end
             final[current_file][:patch] << line
