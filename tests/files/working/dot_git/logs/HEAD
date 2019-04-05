@@ -73,3 +73,7 @@ b98f4909807c8c84a1dc1b62b4a339ae1777f369 87c56502c73149f006631129f85dff697e00035
 a3db7143944dcfa006fefe7fb49c48793cb29ade 34a566d193dc4702f03149969a2aad1443231560 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194632975 -0800	commit: modified to not show up
 34a566d193dc4702f03149969a2aad1443231560 935badc874edd62a8629aaf103418092c73f0a56 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194633382 -0800	commit: more search help
 935badc874edd62a8629aaf103418092c73f0a56 5e53019b3238362144c2766f02a2c00d91fcc023 scott Chacon <schacon@agadorsparticus.(none)> 1194720731 -0800	commit: diff test
+5e53019b3238362144c2766f02a2c00d91fcc023 5e53019b3238362144c2766f02a2c00d91fcc023 Kevin Cheng <Kache.hit@gmail.com> 1554453295 -0700	checkout: moving from git_grep to multi-change-hunks
+5e53019b3238362144c2766f02a2c00d91fcc023 6ca51462f902a86288d9c01e328461c893d5c889 Kevin Cheng <Kache.hit@gmail.com> 1554453320 -0700	commit: Add lorem.txt
+6ca51462f902a86288d9c01e328461c893d5c889 94e88cb516e8a117db3bacf6ed2e72a0dc469721 Kevin Cheng <Kache.hit@gmail.com> 1554453621 -0700	commit: Make a multiple change hunk diff
+94e88cb516e8a117db3bacf6ed2e72a0dc469721 5e53019b3238362144c2766f02a2c00d91fcc023 Kevin Cheng <Kache.hit@gmail.com> 1554453709 -0700	checkout: moving from multi-change-hunks to git_grep

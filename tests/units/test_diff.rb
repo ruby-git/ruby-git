@@ -142,4 +142,21 @@ class TestDiff < Test::Unit::TestCase
     assert_equal text_additions, text_diff.added_lines
     assert_equal text_deletions, text_diff.deleted_lines
   end
+
+  def test_diff_file_multiple_change_hunks
+    diff_file = @git.diff('multi-change-hunks~', 'multi-change-hunks').first
+
+    additions = [
+      Git::Diff::DiffLine.new(4,  "first change\n"),
+      Git::Diff::DiffLine.new(21, "second change\n"),
+    ]
+    deletions = [
+      Git::Diff::DiffLine.new(4,  "adipiscing\n"),
+      Git::Diff::DiffLine.new(5,  "elit, sed do\n"),
+      Git::Diff::DiffLine.new(22, "in voluptate\n"),
+    ]
+
+    assert_equal additions, diff_file.added_lines
+    assert_equal deletions, diff_file.deleted_lines
+  end
 end

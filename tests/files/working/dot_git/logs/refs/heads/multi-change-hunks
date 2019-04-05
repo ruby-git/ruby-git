@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 5e53019b3238362144c2766f02a2c00d91fcc023 Kevin Cheng <Kache.hit@gmail.com> 1554453290 -0700	branch: Created from git_grep
+5e53019b3238362144c2766f02a2c00d91fcc023 6ca51462f902a86288d9c01e328461c893d5c889 Kevin Cheng <Kache.hit@gmail.com> 1554453320 -0700	commit: Add lorem.txt
+6ca51462f902a86288d9c01e328461c893d5c889 94e88cb516e8a117db3bacf6ed2e72a0dc469721 Kevin Cheng <Kache.hit@gmail.com> 1554453621 -0700	commit: Make a multiple change hunk diff
