@@ -84,7 +84,7 @@ class TestDiff < Test::Unit::TestCase
   
   def test_patch
     p = @git.diff('v2.8^', 'v2.8').patch
-    diff = "diff --git a/example.txt b/example.txt\nindex 1f09f2e..8dc79ae 100644\n--- a/example.txt\n+++ b/example.txt\n@@ -1 +1 @@\n-replace with new text\n+replace with new text - diff test"
+    diff = "diff --git a/example.txt b/example.txt\nindex 1f09f2e..8dc79ae 100644\n--- a/example.txt\n+++ b/example.txt\n@@ -1 +1 @@\n-replace with new text\n+replace with new text - diff test\n"
     assert_equal(diff, p)
   end
   
@@ -97,7 +97,7 @@ class TestDiff < Test::Unit::TestCase
     assert(files['example.txt'])
     assert_equal('100644', files['scott/newfile'].mode)
     assert_equal('deleted', files['scott/newfile'].type)
-    assert_equal(160, files['scott/newfile'].patch.size)
+    assert_equal(161, files['scott/newfile'].patch.size)
   end
   
   

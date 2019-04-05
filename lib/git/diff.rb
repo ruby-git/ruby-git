@@ -99,12 +99,7 @@ module Git
         }
         final = {}
         current_file = nil
-        if patch.encoding.name != "UTF-8"
-          full_diff_utf8_encoded = patch.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
-        else
-          full_diff_utf8_encoded = patch
-        end
-        full_diff_utf8_encoded.split("\n").each do |line|
+        patch.each_line do |line|
           if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
             current_file = m[1]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
@@ -121,7 +116,7 @@ module Git
             if m = /^Binary files /.match(line)
               final[current_file][:binary] = true
             end
-            final[current_file][:patch] << "\n" + line
+            final[current_file][:patch] << line
           end
         end
         final.map { |k, h| [k, DiffFile.new(@base, h)] }.to_h
