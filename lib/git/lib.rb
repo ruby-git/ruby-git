@@ -352,7 +352,9 @@ module Git
       diff_opts << obj2 if obj2.is_a?(String)
       diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
-      command('diff', diff_opts)
+      diff_full = command('diff', diff_opts, chomp: false)
+      diff_full.encode!('UTF-8', 'binary', invalid: :replace, undef: :replace) if diff_full.encoding != Encoding::UTF_8
+      diff_full
     end
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
@@ -949,7 +951,7 @@ module Git
       restore_git_system_env_variables()
     end
 
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+    def command(cmd, opts = [], chdir = true, redirect = '', chomp: true, &block)
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
@@ -983,7 +985,7 @@ module Git
         raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
       end
 
-      return output
+      chomp ? output&.chomp : output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -1042,7 +1044,7 @@ module Git
     def run_command(git_cmd, &block)
       return IO.popen(git_cmd, &block) if block_given?
 
-      `#{git_cmd}`.chomp
+      `#{git_cmd}`
     end
 
     def escape(s)

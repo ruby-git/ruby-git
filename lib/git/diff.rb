@@ -10,14 +10,11 @@ module Git
       @to = to && to.to_s
 
       @path = nil
-      @full_diff = nil
-      @full_diff_files = nil
-      @stats = nil
     end
     attr_reader :from, :to
 
     def name_status
-      cache_name_status
+      @name_status ||= @base.lib.diff_name_status(@from, @to, path: @path)
     end
 
     def path(path)
@@ -26,134 +23,118 @@ module Git
     end
 
     def size
-      cache_stats
-      @stats[:total][:files]
+      stats[:total][:files]
     end
 
     def lines
-      cache_stats
-      @stats[:total][:lines]
+      stats[:total][:lines]
     end
 
     def deletions
-      cache_stats
-      @stats[:total][:deletions]
+      stats[:total][:deletions]
     end
 
     def insertions
-      cache_stats
-      @stats[:total][:insertions]
+      stats[:total][:insertions]
     end
 
     def stats
-      cache_stats
-      @stats
+      @stats ||= @base.lib.diff_stats(@from, @to, path_limiter: @path)
     end
 
     # if file is provided and is writable, it will write the patch into the file
-    def patch(file = nil)
-      cache_full
-      @full_diff
+    def patch
+      @patch ||= @base.lib.diff_full(@from, @to, path_limiter: @path)
     end
     alias_method :to_s, :patch
 
     # enumerable methods
 
-    def [](key)
-      process_full
-      @full_diff_files.assoc(key)[1]
+    def [](path)
+      @diff_files ||= each.map { |df| [df.path, df] }.to_h
+      @diff_files[path]
     end
 
-    def each(&block) # :yields: each Git::DiffFile in turn
-      process_full
-      @full_diff_files.map { |file| file[1] }.each(&block)
+    def each
+      return to_enum unless block_given?
+      DiffFile.parse_each(patch.each_line, base: @base) { |diff_file| yield diff_file }
     end
 
     class DiffFile
-      attr_accessor :patch, :path, :mode, :src, :dst, :type
-      @base = nil
+      module Parsing
+        private
 
-      def initialize(base, hash)
-        @base = base
-        @patch = hash[:patch]
-        @path = hash[:path]
-        @mode = hash[:mode]
-        @src = hash[:src]
-        @dst = hash[:dst]
-        @type = hash[:type]
-        @binary = hash[:binary]
+        def headers
+          {
+            git_diff: /^diff --git a\/(?<path_before>.*) b\/(?<path_after>.*)/,
+            sha_mode: /^index (?<src>[[:xdigit:]]+)\.\.(?<dst>[[:xdigit:]]+)( (?<mode>\d{6}))?/,
+            type_mode: /^(?<type>new|deleted) file mode (?<mode>\d{6})/,
+            binary?: /^Binary files /,
+          }
+        end
+
+        def range_info
+          /^@@ -(?<start_before>\d+)(,(?<num_before>\d+))? \+(?<start_after>\d+)(,(?<num_after>\d+))? @@/
+        end
+
+        def each_slice(lines_enum, at:, drop: 0)
+          return enum_for(:each_slice, lines_enum, at: at, drop: drop) unless block_given?
+
+          lines_enum.slice_when { |_, next_line| at.match(next_line) }.each do |slice|
+            if drop.positive?
+              drop -= 1
+              next
+            end
+            yield slice
+          end
+        end
+      end
+      extend Parsing
+      include Parsing
+
+      def self.parse_each(diff_lines_enum, base:)
+        diff_file_lines = each_slice(diff_lines_enum, at: headers[:git_diff])
+        diff_file_lines.each { |lines| yield self.new(base, lines) }
       end
 
-      def binary?
-        !!@binary
+      def initialize(base, file_diff_lines)
+        @base = base
+        @lines_raw = file_diff_lines
       end
 
       def blob(type = :dst)
-        if type == :src
-          @base.object(@src) if @src != '0000000'
-        else
-          @base.object(@dst) if @dst != '0000000'
+        sha = type == :src ? src : dst
+        @base.object(sha) if sha != '0000000'
+      end
+
+      def patch;   @lines_raw.join;           end
+      def path;    header_data[:path_before]; end
+      def src;     header_data[:src];         end
+      def dst;     header_data[:dst];         end
+      def type;    header_data[:type];        end
+      def mode;    header_data[:mode];        end
+      def binary?; !!header_data[:binary?];   end
+
+      private
+
+      def header_data
+        @header_data ||= begin
+          header_lines = each_slice(@lines_raw, at: range_info).first
+
+          header_matches = headers.map do |name, h_rgx|
+            match = header_lines.lazy.map { |line| h_rgx.match(line) }.detect(&:itself)
+            [name, match] if match # Ruby 2.4+: Hash#transform_values
+          end.compact
+
+          header_matches.map do |name, m|
+            if m.names.empty?
+              { name => true }
+            else
+              m.names.map { |n| m[n] && [n.to_sym, m[n]] }.compact.to_h # Ruby 2.4+: MatchData#named_captures
+            end
+          end.inject(:merge)
         end
       end
     end
-
-    private
-
-      def cache_full
-        @full_diff ||= @base.lib.diff_full(@from, @to, {:path_limiter => @path})
-      end
-
-      def process_full
-        return if @full_diff_files
-        cache_full
-        @full_diff_files = process_full_diff
-      end
-
-      def cache_stats
-        @stats ||=  @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
-      end
-
-      def cache_name_status
-        @name_status ||= @base.lib.diff_name_status(@from, @to, {:path => @path})
-      end
-
-      # break up @diff_full
-      def process_full_diff
-        defaults = {
-          :mode => '',
-          :src => '',
-          :dst => '',
-          :type => 'modified'
-        }
-        final = {}
-        current_file = nil
-        if @full_diff.encoding.name != "UTF-8"
-          full_diff_utf8_encoded = @full_diff.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
-        else
-          full_diff_utf8_encoded = @full_diff
-        end
-        full_diff_utf8_encoded.split("\n").each do |line|
-          if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
-            current_file = m[1]
-            final[current_file] = defaults.merge({:patch => line, :path => current_file})
-          else
-            if m = /^index (.......)\.\.(.......)( ......)*/.match(line)
-              final[current_file][:src] = m[1]
-              final[current_file][:dst] = m[2]
-              final[current_file][:mode] = m[3].strip if m[3]
-            end
-            if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
-              final[current_file][:type] = m[1]
-              final[current_file][:mode] = m[2]
-            end
-            if m = /^Binary files /.match(line)
-              final[current_file][:binary] = true
-            end
-            final[current_file][:patch] << "\n" + line
-          end
-        end
-        final.map { |e| [e[0], DiffFile.new(@base, e[1])] }
-      end
-
   end
 end
