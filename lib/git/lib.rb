@@ -186,7 +186,11 @@ module Git
       }
 
       loop do
-        key, *value = data.shift.split
+        datum = data.shift
+
+        break if datum.nil?
+
+        key, *value = datum.split
 
         break if key.nil?
 
