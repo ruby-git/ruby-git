@@ -23,6 +23,9 @@ Style/Documentation:
   Enabled: false
 
 # TODO
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
 # Offense count: 1
 Security/Eval:
   Exclude:

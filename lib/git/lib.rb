@@ -63,7 +63,7 @@ module Git
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
-      arr_opts << '--depth' << opts[:depth].to_i unless opts[:depth]&.to_i.nil? or opts[:depth]&.to_i.negative?
+      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth]&.to_i&.positive?
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
@@ -1038,11 +1038,11 @@ module Git
       `#{git_cmd}`.chomp
     end
 
-    def escape(s)
-      return "'#{s&.to_s&.gsub('\'', '\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+    def escape(path)
+      return "'#{path&.to_s&.gsub('\'', '\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
 
       # Keeping the old escape format for windows users
-      escaped = s.to_s.gsub('\'', '\'\\\'\'')
+      escaped = path.to_s.gsub('\'', '\'\\\'\'')
       %("#{escaped}")
     end
   end
