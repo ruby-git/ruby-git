@@ -3,7 +3,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class TestBare < Test::Unit::TestCase
-
   def setup
     set_file_paths
     @git = Git.bare(@wbare)
@@ -18,11 +17,11 @@ class TestBare < Test::Unit::TestCase
     assert_equal(1, o.parents.size)
     assert_equal('scott Chacon', o.author.name)
     assert_equal('schacon@agadorsparticus.corp.reactrix.com', o.author.email)
-    assert_equal('11-08-07', o.author.date.getutc.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.author_date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.author.date.getutc.strftime('%m-%d-%y'))
+    assert_equal('11-08-07', o.author_date.getutc.strftime('%m-%d-%y'))
     assert_equal('scott Chacon', o.committer.name)
-    assert_equal('11-08-07', o.committer_date.getutc.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.committer_date.getutc.strftime('%m-%d-%y'))
+    assert_equal('11-08-07', o.date.getutc.strftime('%m-%d-%y'))
     assert_equal('test', o.message)
 
     assert_equal('tags/v2.5', o.parent.name)
@@ -37,5 +36,4 @@ class TestBare < Test::Unit::TestCase
     assert(o.is_a?(Git::Object::Commit))
     assert(o.commit?)
   end
-
 end

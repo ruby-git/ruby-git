@@ -1,12 +1,10 @@
 require 'tempfile'
 
 module Git
-
   class GitExecuteError < StandardError
   end
 
   class Lib
-
     @@semaphore = Mutex.new
 
     def initialize(base = nil, logger = nil)
@@ -33,7 +31,7 @@ module Git
     #   :bare
     #   :working_directory
     #
-    def init(opts={})
+    def init(opts = {})
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
 
@@ -67,7 +65,7 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
-      arr_opts << "--mirror" if opts[:mirror]
+      arr_opts << '--mirror' if opts[:mirror]
 
       arr_opts << '--'
 
@@ -76,9 +74,8 @@ module Git
 
       command('clone', arr_opts)
 
-      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      (opts[:bare] || opts[:mirror]) ? { repository: clone_dir } : { working_directory: clone_dir }
     end
-
 
     ## READ COMMANDS ##
 
@@ -102,7 +99,7 @@ module Git
     #  @param [{Symbol=>Object}] opts the given options
     #  @return [String] the tag name
     #
-    def describe(committish=nil, opts={})
+    def describe(committish = nil, opts = {})
       arr_opts = []
 
       arr_opts << '--all' if opts[:all]
@@ -122,10 +119,10 @@ module Git
 
       arr_opts << committish if committish
 
-      return command('describe', arr_opts)
+      command('describe', arr_opts)
     end
 
-    def log_commits(opts={})
+    def log_commits(opts = {})
       arr_opts = log_common_options(opts)
 
       arr_opts << '--pretty=oneline'
@@ -135,7 +132,7 @@ module Git
       command_lines('log', arr_opts, true).map { |l| l.split.first }
     end
 
-    def full_log_commits(opts={})
+    def full_log_commits(opts = {})
       arr_opts = log_common_options(opts)
 
       arr_opts << '--pretty=raw'
@@ -149,8 +146,8 @@ module Git
     end
 
     def revparse(string)
-      return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
-      rev = ['head', 'remotes', 'tags'].map do |d|
+      return string if string =~ /^[A-Fa-f0-9]{40}$/ # passing in a sha - just no-op it
+      rev = %w(head remotes tags).map do |d|
         File.join(@git_dir, 'refs', d, string)
       end.find do |path|
         File.file?(path)
@@ -197,18 +194,17 @@ module Git
         end
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.collect { |line| line[indent..-1] }.join("\n") + "\n"
 
-      return hsh
+      hsh
     end
 
     def tag_data(name)
-      sha = sha.to_s
       tdata = command_lines('cat-file', ['tag', name])
       process_tag_data(tdata, name, 0)
     end
 
-    def process_tag_data(data, name, indent=4)
+    def process_tag_data(data, name, indent = 4)
       hsh = {
         'name'    => name,
         'message' => ''
@@ -222,9 +218,9 @@ module Git
         hsh[key] = value.join(' ')
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.collect { |line| line[indent..-1] }.join("\n") + "\n"
 
-      return hsh
+      hsh
     end
 
     def process_commit_log_data(data)
@@ -251,19 +247,19 @@ module Git
         value = value.join(' ')
 
         case key
-          when 'commit'
-            hsh_array << hsh if hsh
-            hsh = {'sha' => value, 'message' => '', 'parent' => []}
-          when 'parent'
-            hsh['parent'] << value
-          else
-            hsh[key] = value
+        when 'commit'
+          hsh_array << hsh if hsh
+          hsh = { 'sha' => value, 'message' => '', 'parent' => [] }
+        when 'parent'
+          hsh['parent'] << value
+        else
+          hsh[key] = value
         end
       end
 
       hsh_array << hsh if hsh
 
-      return hsh_array
+      hsh_array
     end
 
     def object_contents(sha, &block)
@@ -271,12 +267,12 @@ module Git
     end
 
     def ls_tree(sha)
-      data = {'blob' => {}, 'tree' => {}}
+      data = { 'blob' => {}, 'tree' => {} }
 
       command_lines('ls-tree', sha).each do |line|
         (info, filenm) = line.split("\t")
         (mode, type, sha) = info.split
-        data[type][filenm] = {:mode => mode, :sha => sha}
+        data[type][filenm] = { mode: mode, sha: sha }
       end
 
       data
@@ -310,16 +306,22 @@ module Git
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
       files = []
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
+      begin
+        Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } }
+      rescue
+        nil
+      end
       files
     end
 
     def branch_current
-      branches_all.select { |b| b[1] }.first[0] rescue nil
+      branches_all.select { |b| b[1] }.first[0]
+    rescue
+      nil
     end
 
-    def branch_contains(commit, branch_name="")
-      command("branch",  [branch_name, "--contains", commit])
+    def branch_contains(commit, branch_name = '')
+      command('branch', [branch_name, '--contains', commit])
     end
 
     # returns hash
@@ -338,7 +340,7 @@ module Git
 
       hsh = {}
       command_lines('grep', grep_opts).each do |line|
-        if m = /(.*)\:(\d+)\:(.*)/.match(line)
+        if (m = /(.*)\:(\d+)\:(.*)/.match(line))
           hsh[m[1]] ||= []
           hsh[m[1]] << [m[2].to_i, m[3]]
         end
@@ -361,7 +363,7 @@ module Git
       diff_opts << obj2 if obj2.is_a?(String)
       diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
-      hsh = {:total => {:insertions => 0, :deletions => 0, :lines => 0, :files => 0}, :files => {}}
+      hsh = { total: { insertions: 0, deletions: 0, lines: 0, files: 0 }, files: {} }
 
       command_lines('diff', diff_opts).each do |file|
         (insertions, deletions, filename) = file.split("\t")
@@ -369,7 +371,7 @@ module Git
         hsh[:total][:deletions] += deletions.to_i
         hsh[:total][:lines] = (hsh[:total][:deletions] + hsh[:total][:insertions])
         hsh[:total][:files] += 1
-        hsh[:files][filename] = {:insertions => insertions.to_i, :deletions => deletions.to_i}
+        hsh[:files][filename] = { insertions: insertions.to_i, deletions: deletions.to_i }
       end
 
       hsh
@@ -382,7 +384,7 @@ module Git
 
       opts_arr << '--' << opts[:path] if opts[:path]
 
-      command_lines('diff', opts_arr).inject({}) do |memo, line|
+      command_lines('diff', opts_arr).each_with_object({}) do |line, memo|
         status, path = line.split("\t")
         memo[path] = status
         memo
@@ -399,28 +401,28 @@ module Git
       diff_as_hash('diff-index', treeish)
     end
 
-    def ls_files(location=nil)
+    def ls_files(location = nil)
       location ||= '.'
       hsh = {}
       command_lines('ls-files', ['--stage', location]).each do |line|
         (info, file) = line.split("\t")
         (mode, sha, stage) = info.split
         file = eval(file) if file =~ /^\".*\"$/ # This takes care of quoted strings returned from git
-        hsh[file] = {:path => file, :mode_index => mode, :sha_index => sha, :stage => stage}
+        hsh[file] = { path: file, mode_index: mode, sha_index: sha, stage: stage }
       end
       hsh
     end
 
-    def ls_remote(location=nil)
+    def ls_remote(location = nil)
       location ||= '.'
-      Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
+      Hash.new { |h, k| h[k] = {} }.tap do |hsh|
         command_lines('ls-remote', [location], false).each do |line|
           (sha, info) = line.split("\t")
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
           type = 'branches' if type == 'heads'
-          value = {:ref => ref, :sha => sha}
-          hsh[type].update( name.nil? ? value : { name => value })
+          value = { ref: ref, sha: sha }
+          hsh[type].update(name.nil? ? value : { name => value })
         end
       end
     end
@@ -429,19 +431,16 @@ module Git
       command_lines('ls-files', ['--others', '-i', '--exclude-standard'])
     end
 
-
     def config_remote(name)
       hsh = {}
       config_list.each do |key, value|
-        if /remote.#{name}/.match(key)
-          hsh[key.gsub("remote.#{name}.", '')] = value
-        end
+        hsh[key.gsub("remote.#{name}.", '')] = value if /remote.#{name}/ =~ key
       end
       hsh
     end
 
     def config_get(name)
-      do_get = lambda do |path|
+      do_get = lambda do |_path|
         command('config', ['--get', name])
       end
 
@@ -457,7 +456,7 @@ module Git
     end
 
     def config_list
-      build_list = lambda do |path|
+      build_list = lambda do |_path|
         parse_config_list command_lines('config', ['--list'])
       end
 
@@ -490,7 +489,7 @@ module Git
     # @param [String|NilClass] objectish the target object reference (nil == HEAD)
     # @param [String|NilClass] path the path of the file to be shown
     # @return [String] the object information
-    def show(objectish=nil, path=nil)
+    def show(objectish = nil, path = nil)
       arr_opts = []
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
@@ -520,7 +519,7 @@ module Git
     #
     # @param [String,Array] paths files paths to be added to the repository
     # @param [Hash] options
-    def add(paths='.',options={})
+    def add(paths = '.', options = {})
       arr_opts = []
 
       arr_opts << '--all' if options[:all]
@@ -536,7 +535,7 @@ module Git
     end
 
     def remove(path = '.', opts = {})
-      arr_opts = ['-f']  # overrides the up-to-date check by default
+      arr_opts = ['-f'] # overrides the up-to-date check by default
       arr_opts << ['-r'] if opts[:recursive]
       arr_opts << ['--cached'] if opts[:cached]
       arr_opts << '--'
@@ -579,7 +578,7 @@ module Git
 
     def revert(commitish, opts = {})
       # Forcing --no-edit as default since it's not an interactive session.
-      opts = {:no_edit => true}.merge(opts)
+      opts = { no_edit: true }.merge(opts)
 
       arr_opts = []
       arr_opts << '--no-edit' if opts[:no_edit]
@@ -683,14 +682,14 @@ module Git
 
     def unmerged
       unmerged = []
-      command_lines('diff', ["--cached"]).each do |line|
-        unmerged << $1 if line =~ /^\* Unmerged path (.*)/
+      command_lines('diff', ['--cached']).each do |line|
+        unmerged << Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
       end
       unmerged
     end
 
     def conflicts # :yields: file, your, their
-      self.unmerged.each do |f|
+      unmerged.each do |f|
         your = Tempfile.new("YOUR-#{File.basename(f)}").path
         command('show', ":2:#{f}", true, "> #{escape your}")
 
@@ -737,7 +736,7 @@ module Git
       opts = opts.last.instance_of?(Hash) ? opts.last : {}
 
       if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
-        raise  "Can not create an [:a|:annotate] tag without the precense of [:m|:message]."
+        raise 'Can not create an [:a|:annotate] tag without the precense of [:m|:message].'
       end
 
       arr_opts = []
@@ -756,7 +755,6 @@ module Git
       command('tag', arr_opts)
     end
 
-
     def fetch(remote, opts)
       arr_opts = [remote]
       arr_opts << opts[:ref] if opts[:ref]
@@ -769,23 +767,23 @@ module Git
 
     def push(remote, branch = 'master', opts = {})
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
-      opts = {:tags => opts} if [true, false].include?(opts)
+      opts = { tags: opts } if [true, false].include?(opts)
 
       arr_opts = []
       arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--delete'  if opts[:delete]
-      arr_opts << '--force'  if opts[:force] || opts[:f]
+      arr_opts << '--force' if opts[:force] || opts[:f]
       arr_opts << remote
 
       if opts[:mirror]
-          command('push', arr_opts)
+        command('push', arr_opts)
       else
-          command('push', arr_opts + [branch])
-          command('push', ['--tags'] + arr_opts) if opts[:tags]
+        command('push', arr_opts + [branch])
+        command('push', ['--tags'] + arr_opts) if opts[:tags]
       end
     end
 
-    def pull(remote='origin', branch='master')
+    def pull(remote = 'origin', branch = 'master')
       command('pull', [remote, branch])
     end
 
@@ -793,7 +791,7 @@ module Git
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
       return File.read(head).chomp if File.exist?(head)
 
-      command('show-ref',  ['--tags', '-s', tag_name])
+      command('show-ref', ['--tags', '-s', tag_name])
     end
 
     def repack
@@ -836,8 +834,8 @@ module Git
     def checkout_index(opts = {})
       arr_opts = []
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
-      arr_opts << "--force" if opts[:force]
-      arr_opts << "--all" if opts[:all]
+      arr_opts << '--force' if opts[:force]
+      arr_opts << '--all' if opts[:all]
       arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       command('checkout-index', arr_opts)
@@ -858,7 +856,7 @@ module Git
         opts[:add_gzip] = true
       end
 
-      if !file
+      unless file
         tempfile = Tempfile.new('archive')
         file = tempfile.path
         # delete it now, before we write to it, so that Ruby doesn't delete it
@@ -873,14 +871,14 @@ module Git
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
       command('archive', arr_opts, true, (opts[:add_gzip] ? '| gzip' : '') + " > #{escape file}")
-      return file
+      file
     end
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
       output = command('version', [], false)
       version = output[/\d+\.\d+(\.\d+)+/]
-      version.split('.').collect {|i| i.to_i}
+      version.split('.').collect(&:to_i)
     end
 
     def required_command_version
@@ -888,27 +886,24 @@ module Git
     end
 
     def meets_required_version?
-      (self.current_command_version <=>  self.required_command_version) >= 0
+      (current_command_version <=> required_command_version) >= 0
     end
-
 
     private
 
     # Systen ENV variables involved in the git commands.
     #
     # @return [<String>] the names of the EVN variables involved in the git commands
-    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
+    ENV_VARIABLE_NAMES = %w(GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_SSH).freeze
 
-    def command_lines(cmd, opts = [], chdir = true, redirect = '')
+    def command_lines(cmd, opts = [], chdir = true, _redirect = '')
       cmd_op = command(cmd, opts, chdir)
-      if cmd_op.encoding.name != "UTF-8"
-        op = cmd_op.encode("UTF-8", "binary", {
-          :invalid => :replace,
-          :undef => :replace
-        })
-      else
-        op = cmd_op
-      end
+      op = if cmd_op.encoding.name != 'UTF-8'
+             cmd_op.encode('UTF-8', 'binary', invalid: :replace,
+                                              undef: :replace)
+           else
+             cmd_op
+           end
       op.split("\n")
     end
 
@@ -939,37 +934,37 @@ module Git
     # It restores the ENV after execution.
     #
     # @param [Proc] block block to be executed within the customized environment
-    def with_custom_env_variables(&block)
+    def with_custom_env_variables
       @@semaphore.synchronize do
-        store_git_system_env_variables()
-        set_custom_git_env_variables()
-        return block.call()
+        store_git_system_env_variables
+        set_custom_git_env_variables
+        return yield
       end
     ensure
-      restore_git_system_env_variables()
+      restore_git_system_env_variables
     end
 
-    def command(cmd, opts = [], chdir = true, redirect = '', &block)
+    def command(cmd, opts = [], _chdir = true, redirect = '', &block)
       global_opts = []
-      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
-      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << "--git-dir=#{@git_dir}" unless @git_dir.nil?
+      global_opts << "--work-tree=#{@git_work_dir}" unless @git_work_dir.nil?
 
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
+      opts = [opts].flatten.map { |s| escape(s) }.join(' ')
 
-      global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
+      global_opts = global_opts.flatten.map { |s| escape(s) }.join(' ')
 
       git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
 
       output = nil
 
-      command_thread = nil;
+      command_thread = nil
 
       exitstatus = nil
 
       with_custom_env_variables do
         command_thread = Thread.new do
           output = run_command(git_cmd, &block)
-          exitstatus = $?.exitstatus
+          exitstatus = $CHILD_STATUS.exitstatus
         end
         command_thread.join
       end
@@ -980,10 +975,10 @@ module Git
       end
 
       if exitstatus > 1 || (exitstatus == 1 && output != '')
-        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
+        raise Git::GitExecuteError, git_cmd + ':' + output.to_s
       end
 
-      return output
+      output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -991,18 +986,18 @@ module Git
     # @param [String] diff_command the diff commadn to be used
     # @param [Array] opts the diff options to be used
     # @return [Hash] the diff as Hash
-    def diff_as_hash(diff_command, opts=[])
-      command_lines(diff_command, opts).inject({}) do |memo, line|
+    def diff_as_hash(diff_command, opts = [])
+      command_lines(diff_command, opts).each_with_object({}) do |line, memo|
         info, file = line.split("\t")
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 
         memo[file] = {
-          :mode_index => mode_dest,
-          :mode_repo => mode_src.to_s[1, 7],
-          :path => file,
-          :sha_repo => sha_src,
-          :sha_index => sha_dest,
-          :type => type
+          mode_index: mode_dest,
+          mode_repo: mode_src.to_s[1, 7],
+          path: file,
+          sha_repo: sha_src,
+          sha_index: sha_dest,
+          type: type
         }
 
         memo
@@ -1017,12 +1012,12 @@ module Git
       arr_opts = []
 
       arr_opts << "-#{opts[:count]}" if opts[:count]
-      arr_opts << "--no-color"
+      arr_opts << '--no-color'
       arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
       arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
       arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
       arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
-      arr_opts << "#{opts[:between][0].to_s}..#{opts[:between][1].to_s}" if (opts[:between] && opts[:between].size == 2)
+      arr_opts << "#{opts[:between][0]}..#{opts[:between][1]}" if opts[:between] && opts[:between].size == 2
 
       arr_opts
     end
@@ -1046,12 +1041,11 @@ module Git
     end
 
     def escape(s)
-      return "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      return "'#{s && s.to_s.gsub('\'', '\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
 
       # Keeping the old escape format for windows users
       escaped = s.to_s.gsub('\'', '\'\\\'\'')
-      return %Q{"#{escaped}"}
+      %("#{escaped}")
     end
-
   end
 end

@@ -1,16 +1,15 @@
 
-#!/usr/bin/env ruby
+# !/usr/bin/env ruby
 
 require File.dirname(__FILE__) + '/../test_helper'
 
 class TestStatus < Test::Unit::TestCase
-
   def setup
     set_file_paths
   end
 
   def test_dot_files_status
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
@@ -25,7 +24,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_added_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
@@ -39,7 +38,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_changed_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
@@ -56,7 +55,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_deleted_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
@@ -72,7 +71,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_untracked_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')

@@ -3,10 +3,12 @@ require 'rubygems'
 
 require "#{File.expand_path(File.dirname(__FILE__))}/lib/git/version"
 
-task :default => :test
+require 'rubocop/rake_task'
+
+task default: %w(test rubocop)
 
 desc 'Run Unit Tests'
-task :test do |t|
+task :test do |_t|
   sh 'git config --global user.email "git@example.com"' if `git config user.email`.empty?
   sh 'git config --global user.name "GitExample"' if `git config user.name`.empty?
 
@@ -14,3 +16,5 @@ task :test do |t|
 
   require File.dirname(__FILE__) + '/tests/all_tests.rb'
 end
+
+RuboCop::RakeTask.new

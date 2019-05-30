@@ -30,11 +30,11 @@ class TestObject < Test::Unit::TestCase
     assert_equal(1, o.parents.size)
     assert_equal('scott Chacon', o.author.name)
     assert_equal('schacon@agadorsparticus.corp.reactrix.com', o.author.email)
-    assert_equal('11-08-07', o.author.date.getutc.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.author_date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.author.date.getutc.strftime('%m-%d-%y'))
+    assert_equal('11-08-07', o.author_date.getutc.strftime('%m-%d-%y'))
     assert_equal('scott Chacon', o.committer.name)
-    assert_equal('11-08-07', o.committer_date.getutc.strftime("%m-%d-%y"))
-    assert_equal('11-08-07', o.date.getutc.strftime("%m-%d-%y"))
+    assert_equal('11-08-07', o.committer_date.getutc.strftime('%m-%d-%y'))
+    assert_equal('11-08-07', o.date.getutc.strftime('%m-%d-%y'))
     assert_equal('test', o.message)
 
     assert_equal('tags/v2.5', o.parent.name)
@@ -108,7 +108,7 @@ class TestObject < Test::Unit::TestCase
   def test_blob_contents
     o = @git.gblob('v2.6:example.txt')
     assert_equal('replace with new text', o.contents)
-    assert_equal('replace with new text', o.contents)  # this should be cached
+    assert_equal('replace with new text', o.contents) # this should be cached
 
     # make sure the block is called
     block_called = false
@@ -130,7 +130,7 @@ class TestObject < Test::Unit::TestCase
     assert_equal(3, g.to_a.flatten.size)
     assert_equal(1, g.size)
 
-    assert_equal({}, @git.gtree('a3db7143944dcfa0').grep('34a566d193'))  # not there
+    assert_equal({}, @git.gtree('a3db7143944dcfa0').grep('34a566d193')) # not there
 
     g = @git.gcommit('gitsearch1').grep('search') # there
     assert_equal(8, g.to_a.flatten.size)

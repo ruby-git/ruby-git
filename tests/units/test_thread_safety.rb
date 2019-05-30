@@ -17,7 +17,7 @@ class TestThreadSafety < Test::Unit::TestCase
 
     dirs.each do |dir|
       threads << Thread.new do
-        Git.init(dir, :bare => true)
+        Git.init(dir, bare: true)
       end
     end
 

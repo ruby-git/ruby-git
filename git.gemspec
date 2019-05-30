@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rdoc'
+  s.add_development_dependency 'rubocop', '0.41.2'
   s.add_development_dependency 'test-unit', '>=2', '< 4'
 
   s.extra_rdoc_files = ['README.md']

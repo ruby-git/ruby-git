@@ -1,7 +1,5 @@
 module Git
-
   class Config
-
     attr_writer :binary_path, :git_ssh
 
     def initialize
@@ -16,7 +14,5 @@ module Git
     def git_ssh
       @git_ssh || ENV['GIT_SSH']
     end
-
   end
-
 end

@@ -6,9 +6,9 @@ class TestStashes < Test::Unit::TestCase
   def setup
     set_file_paths
   end
-  
+
   def test_stash_unstash
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       g = Git.clone(@wbare, 'stash_test')
       Dir.chdir('stash_test') do
         assert_equal(0, g.branch.stashes.size)
@@ -19,9 +19,9 @@ class TestStashes < Test::Unit::TestCase
         g.add
 
         assert(g.status.added.assoc('test-file1'))
-      
+
         g.branch.stashes.save('testing')
-      
+
         g.reset
         assert_nil(g.status.untracked.assoc('test-file1'))
         assert_nil(g.status.added.assoc('test-file1'))
@@ -34,7 +34,7 @@ class TestStashes < Test::Unit::TestCase
   end
 
   def test_stashes_all
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       g = Git.clone(@wbare, 'stash_test')
       Dir.chdir('stash_test') do
         assert_equal(0, g.branch.stashes.size)
@@ -54,5 +54,4 @@ class TestStashes < Test::Unit::TestCase
       end
     end
   end
-  
 end

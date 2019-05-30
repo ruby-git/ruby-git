@@ -1,0 +1,78 @@
+AllCops:
+  TargetRubyVersion: 1.9
+
+Metrics/LineLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+# TODO
+# Offense count: 1
+Lint/Eval:
+  Exclude:
+    - 'lib/git/lib.rb'
+
+# Offense count: 1
+Lint/HandleExceptions:
+  Exclude:
+    - 'tests/units/test_each_conflict.rb'
+
+# Offense count: 1
+Lint/RescueException:
+  Exclude:
+    - 'tests/units/test_tree_ops.rb'
+
+# Offense count: 1
+Style/AccessorMethodName:
+  Exclude:
+    - 'lib/git/object.rb'
+
+# Offense count: 1
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: nested, compact
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'tests/test_helper.rb'
+
+# Offense count: 2
+Style/ClassVars:
+  Exclude:
+    - 'lib/git/base.rb'
+    - 'lib/git/lib.rb'
+
+# Offense count: 1
+# Configuration parameters: MinBodyLength.
+Style/GuardClause:
+  Exclude:
+    - 'lib/git/log.rb'
+
+# Offense count: 1
+Style/MultilineBlockChain:
+  Exclude:
+    - 'lib/git/lib.rb'
+
+# Offense count: 3
+# Configuration parameters: NamePrefix, NamePrefixBlacklist, NameWhitelist.
+# NamePrefix: is_, has_, have_
+# NamePrefixBlacklist: is_, has_, have_
+# NameWhitelist: is_a?
+Style/PredicateName:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/git/base.rb'
