@@ -7,16 +7,20 @@ require "#{__dir__}/lib/git/version"
 
 require 'rubocop/rake_task'
 
+require 'rake/testtask'
+
 task default: %w[test rubocop]
 
 desc 'Run Unit Tests'
-task :test do |_t|
+Rake::TestTask.new do |t|
   sh 'git config --global user.email "git@example.com"' if `git config user.email`.empty?
   sh 'git config --global user.name "GitExample"' if `git config user.name`.empty?
 
-  $VERBOSE = true
+  t.libs << 'tests'
 
-  require File.dirname(__FILE__) + '/tests/all_tests.rb'
+  t.test_files = FileList['tests/units/test*.rb']
+
+  t.verbose = true
 end
 
 RuboCop::RakeTask.new

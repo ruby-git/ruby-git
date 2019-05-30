@@ -6,9 +6,6 @@ rvm:
   - 2.6
   - ruby-head
   - jruby
-script:
-  - bundle exec rake test
-  - bundle exec rake rubocop
 matrix:
   allow_failures:
   - rvm: jruby
