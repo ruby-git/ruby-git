@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require File.dirname(__FILE__) + '/../test_helper'
 
@@ -33,7 +34,7 @@ class TestBranch < Test::Unit::TestCase
     branch = @git.branches[:test_object]
     assert_equal('test_object', branch.name)
 
-    %w(working/master remotes/working/master).each do |branch_name|
+    %w[working/master remotes/working/master].each do |branch_name|
       branch = @git.branches[branch_name]
 
       assert_equal('master', branch.name)

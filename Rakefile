@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 require 'bundler/gem_tasks'
 require 'rubygems'
 
-require "#{File.expand_path(File.dirname(__FILE__))}/lib/git/version"
+require "#{__dir__}/lib/git/version"
 
 require 'rubocop/rake_task'
 
-task default: %w(test rubocop)
+task default: %w[test rubocop]
 
 desc 'Run Unit Tests'
 task :test do |_t|

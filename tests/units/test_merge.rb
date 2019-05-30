@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require File.dirname(__FILE__) + '/../test_helper'
 
@@ -88,7 +89,7 @@ class TestMerge < Test::Unit::TestCase
         assert(!g.status['new_file_1'])  # still in master branch
         assert(!g.status['new_file_3'])  # still in master branch
 
-        g.merge(%w(new_branch new_branch2))
+        g.merge(%w[new_branch new_branch2])
 
         assert(g.status['new_file_1'])  # file has been merged in
         assert(g.status['new_file_3'])  # file has been merged in

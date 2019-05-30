@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   #
   # A class for git status
@@ -148,7 +150,7 @@ module Git
         else
           begin
             @base.object(@sha_index)
-          rescue
+          rescue StandardError
             @base.object(@sha_repo)
           end
         end

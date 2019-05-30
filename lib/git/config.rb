@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   class Config
     attr_writer :binary_path, :git_ssh

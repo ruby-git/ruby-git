@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   # object that holds the last X commits on given branch
   class Diff
@@ -5,8 +7,8 @@ module Git
 
     def initialize(base, from = nil, to = nil)
       @base = base
-      @from = from && from.to_s
-      @to = to && to.to_s
+      @from = from&.to_s
+      @to = to&.to_s
 
       @path = nil
       @full_diff = nil
@@ -101,6 +103,7 @@ module Git
 
     def process_full
       return if @full_diff_files
+
       cache_full
       @full_diff_files = process_full_diff
     end

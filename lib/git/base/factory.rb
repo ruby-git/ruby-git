@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   class Base
     module Factory

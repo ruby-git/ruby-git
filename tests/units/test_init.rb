@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require File.dirname(__FILE__) + '/../test_helper'
 
@@ -28,8 +29,8 @@ class TestInit < Test::Unit::TestCase
   # g = Git.init
   #  Git.init('project')
   #  Git.init('/home/schacon/proj',
-  #		{ :git_dir => '/opt/git/proj.git',
-  #		  :index_file => '/tmp/index'} )
+  #    { :git_dir => '/opt/git/proj.git',
+  #      :index_file => '/tmp/index'} )
   def test_git_init
     in_temp_dir do |path|
       repo = Git.init(path)

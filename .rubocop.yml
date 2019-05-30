@@ -1,6 +1,3 @@
-AllCops:
-  TargetRubyVersion: 1.9
-
 Metrics/LineLength:
   Enabled: false
 
@@ -8,6 +5,9 @@ Metrics/MethodLength:
   Enabled: false
 
 Metrics/ClassLength:
+  Enabled: false
+
+Metrics/BlockLength:
   Enabled: false
 
 Metrics/PerceivedComplexity:
@@ -24,7 +24,7 @@ Style/Documentation:
 
 # TODO
 # Offense count: 1
-Lint/Eval:
+Security/Eval:
   Exclude:
     - 'lib/git/lib.rb'
 
@@ -39,7 +39,7 @@ Lint/RescueException:
     - 'tests/units/test_tree_ops.rb'
 
 # Offense count: 1
-Style/AccessorMethodName:
+Naming/AccessorMethodName:
   Exclude:
     - 'lib/git/object.rb'
 
@@ -72,7 +72,7 @@ Style/MultilineBlockChain:
 # NamePrefix: is_, has_, have_
 # NamePrefixBlacklist: is_, has_, have_
 # NameWhitelist: is_a?
-Style/PredicateName:
+Naming/PredicateName:
   Exclude:
     - 'spec/**/*'
     - 'lib/git/base.rb'

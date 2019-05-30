@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'git/path'
 
 module Git
@@ -91,7 +93,7 @@ module Git
 
     def check_if_create
       @base.lib.branch_new(@name)
-    rescue
+    rescue StandardError
       nil
     end
 
@@ -114,9 +116,7 @@ module Git
     # param [String] name branch full name.
     # return [<Git::Remote,NilClass,String>] an Array containing the remote and branch names.
     def parse_name(name)
-      if name =~ %r{^(?:remotes)?\/([^\/]+)\/(.+)}
-        return [Git::Remote.new(@base, Regexp.last_match(1)), Regexp.last_match(2)]
-      end
+      return [Git::Remote.new(@base, Regexp.last_match(1)), Regexp.last_match(2)] if name =~ %r{^(?:remotes)?\/([^\/]+)\/(.+)}
 
       [nil, name]
     end

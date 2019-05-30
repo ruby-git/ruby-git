@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'date'
 require 'fileutils'
 require 'logger'
 require 'test/unit'
 
-require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
+require "#{__dir__}/../lib/git"
 
 class Test::Unit::TestCase
   def set_file_paths

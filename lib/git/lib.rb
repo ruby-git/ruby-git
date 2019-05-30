@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'tempfile'
 
 module Git
@@ -61,7 +63,7 @@ module Git
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
-      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--depth' << opts[:depth].to_i unless opts[:depth]&.to_i.nil? or opts[:depth]&.to_i.negative?
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
@@ -74,7 +76,7 @@ module Git
 
       command('clone', arr_opts)
 
-      (opts[:bare] || opts[:mirror]) ? { repository: clone_dir } : { working_directory: clone_dir }
+      opts[:bare] || opts[:mirror] ? { repository: clone_dir } : { working_directory: clone_dir }
     end
 
     ## READ COMMANDS ##
@@ -147,12 +149,14 @@ module Git
 
     def revparse(string)
       return string if string =~ /^[A-Fa-f0-9]{40}$/ # passing in a sha - just no-op it
-      rev = %w(head remotes tags).map do |d|
+
+      rev = %w[head remotes tags].map do |d|
         File.join(@git_dir, 'refs', d, string)
       end.find do |path|
         File.file?(path)
       end
       return File.read(rev).chomp if rev
+
       command('rev-parse', string)
     end
 
@@ -177,9 +181,9 @@ module Git
 
     def process_commit_data(data, sha = nil, indent = 4)
       hsh = {
-        'sha'     => sha,
+        'sha' => sha,
         'message' => '',
-        'parent'  => []
+        'parent' => []
       }
 
       loop do
@@ -206,7 +210,7 @@ module Git
 
     def process_tag_data(data, name, indent = 4)
       hsh = {
-        'name'    => name,
+        'name' => name,
         'message' => ''
       }
 
@@ -239,7 +243,7 @@ module Git
         end
 
         if in_message
-          hsh['message'] << "#{line[4..-1]}\n"
+          hsh['message'] = "#{line[4..-1]}\n"
           next
         end
 
@@ -308,7 +312,7 @@ module Git
       files = []
       begin
         Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } }
-      rescue
+      rescue StandardError
         nil
       end
       files
@@ -316,7 +320,7 @@ module Git
 
     def branch_current
       branches_all.select { |b| b[1] }.first[0]
-    rescue
+    rescue StandardError
       nil
     end
 
@@ -735,9 +739,7 @@ module Git
 
       opts = opts.last.instance_of?(Hash) ? opts.last : {}
 
-      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
-        raise 'Can not create an [:a|:annotate] tag without the precense of [:m|:message].'
-      end
+      raise 'Can not create an [:a|:annotate] tag without the precense of [:m|:message].' if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
 
       arr_opts = []
 
@@ -748,9 +750,7 @@ module Git
       arr_opts << name
       arr_opts << target if target
 
-      if opts[:m] || opts[:message]
-        arr_opts << '-m' << (opts[:m] || opts[:message])
-      end
+      arr_opts << '-m' << (opts[:m] || opts[:message]) if opts[:m] || opts[:message]
 
       command('tag', arr_opts)
     end
@@ -894,7 +894,7 @@ module Git
     # Systen ENV variables involved in the git commands.
     #
     # @return [<String>] the names of the EVN variables involved in the git commands
-    ENV_VARIABLE_NAMES = %w(GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_SSH).freeze
+    ENV_VARIABLE_NAMES = %w[GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_SSH].freeze
 
     def command_lines(cmd, opts = [], chdir = true, _redirect = '')
       cmd_op = command(cmd, opts, chdir)
@@ -974,9 +974,7 @@ module Git
         @logger.debug(output)
       end
 
-      if exitstatus > 1 || (exitstatus == 1 && output != '')
-        raise Git::GitExecuteError, git_cmd + ':' + output.to_s
-      end
+      raise Git::GitExecuteError, git_cmd + ':' + output.to_s if exitstatus > 1 || (exitstatus == 1 && output != '')
 
       output
     end
@@ -1041,7 +1039,7 @@ module Git
     end
 
     def escape(s)
-      return "'#{s && s.to_s.gsub('\'', '\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      return "'#{s&.to_s&.gsub('\'', '\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
 
       # Keeping the old escape format for windows users
       escaped = s.to_s.gsub('\'', '\'\\\'\'')

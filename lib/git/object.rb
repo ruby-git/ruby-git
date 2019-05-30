@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   class GitTagNameDoesNotExist < StandardError
   end
@@ -288,6 +290,7 @@ module Git
       if is_tag
         sha = base.lib.tag_sha(objectish)
         raise Git::GitTagNameDoesNotExist, objectish if sha == ''
+
         return Git::Object::Tag.new(base, sha, objectish)
       end
 

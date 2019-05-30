@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   class Remote < Path
     attr_accessor :name, :url, :fetch_opts

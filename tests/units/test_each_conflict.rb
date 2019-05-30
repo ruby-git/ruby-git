@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require File.dirname(__FILE__) + '/../test_helper'
 
@@ -28,7 +29,7 @@ class TestEachConflict < Test::Unit::TestCase
         g.merge('new_branch')
         begin
           g.merge('new_branch2')
-        rescue
+        rescue StandardError
         end
 
         g.each_conflict do |file, your, their|

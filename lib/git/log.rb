@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   # object that holds the last X commits on given branch
   class Log
@@ -77,7 +79,7 @@ module Git
       check_log
       begin
         @commits.size
-      rescue
+      rescue StandardError
         nil
       end
     end
@@ -91,7 +93,7 @@ module Git
       check_log
       begin
         @commits.first
-      rescue
+      rescue StandardError
         nil
       end
     end
@@ -100,7 +102,7 @@ module Git
       check_log
       begin
         @commits.last
-      rescue
+      rescue StandardError
         nil
       end
     end
@@ -109,7 +111,7 @@ module Git
       check_log
       begin
         @commits[index]
-      rescue
+      rescue StandardError
         nil
       end
     end
