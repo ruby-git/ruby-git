@@ -1035,7 +1035,7 @@ module Git
       arr_opts = []
 
       arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter]
+      arr_opts << ('--' << opts[:path_limiter]) if opts[:path_limiter]
       arr_opts
     end
 
