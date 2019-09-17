@@ -65,6 +65,9 @@ Git env config
 
     # If you need to use a custom SSH script
     config.git_ssh = '/path/to/ssh/script'
+
+    # If you need to ignore SSL verification
+    config.git_ssl_no_verify = true
   end
 
 ```
