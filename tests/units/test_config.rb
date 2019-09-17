@@ -39,9 +39,11 @@ class TestConfig < Test::Unit::TestCase
         Git.configure do |config|
           config.binary_path = '/usr/bin/git'
           config.git_ssh = '/path/to/ssh/script'
+          config.git_ssl_no_verify = true
         end
 
         assert_equal(Git::Base.config.git_ssh, '/path/to/ssh/script')
+        assert_equal(Git::Base.config.git_ssl_no_verify, 'true')
 
         @git.log
       ensure
@@ -50,6 +52,7 @@ class TestConfig < Test::Unit::TestCase
         Git.configure do |config|
           config.binary_path = nil
           config.git_ssh = nil
+          config.git_ssl_no_verify = nil
         end
       end
     end

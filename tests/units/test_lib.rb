@@ -81,12 +81,14 @@ class TestLib < Test::Unit::TestCase
       ENV['GIT_DIR'] = '/my/git/dir'
       ENV['GIT_WORK_TREE'] = '/my/work/tree'
       ENV['GIT_INDEX_FILE'] = 'my_index'
+      ENV['GIT_SSL_NO_VERIFY'] = 'true'
 
       @lib.log_commits :count => 10
 
       assert_equal(ENV['GIT_DIR'], '/my/git/dir')
       assert_equal(ENV['GIT_WORK_TREE'], '/my/work/tree')
       assert_equal(ENV['GIT_INDEX_FILE'],'my_index')
+      assert_equal(ENV['GIT_SSL_NO_VERIFY'], 'true')
     end
   end
 
@@ -110,6 +112,22 @@ class TestLib < Test::Unit::TestCase
         Git.configure do |config|
           config.binary_path = nil
           config.git_ssh = nil
+        end
+      end
+    end
+  end
+
+  def test_git_ssl_no_verify
+    with_custom_env_variables do
+      begin
+        ENV['GIT_SSL_NO_VERIFY'] = 'false'
+        assert_equal(Git::Base.config.git_ssl_no_verify, 'false')
+
+        Git::Base.config.git_ssl_no_verify = true
+        assert_equal(Git::Base.config.git_ssl_no_verify, 'true')
+      ensure
+        Git.configure do |config|
+          config.git_ssl_no_verify = nil
         end
       end
     end

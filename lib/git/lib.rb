@@ -897,7 +897,7 @@ module Git
     # Systen ENV variables involved in the git commands.
     #
     # @return [<String>] the names of the EVN variables involved in the git commands
-    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
+    ENV_VARIABLE_NAMES = %w(GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_SSH GIT_SSL_NO_VERIFY)
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
       cmd_op = command(cmd, opts, chdir)
@@ -933,6 +933,7 @@ module Git
       ENV['GIT_WORK_TREE'] = @git_work_dir
       ENV['GIT_INDEX_FILE'] = @git_index_file
       ENV['GIT_SSH'] = Git::Base.config.git_ssh
+      ENV['GIT_SSL_NO_VERIFY'] = Git::Base.config.git_ssl_no_verify
     end
 
     # Runs a block inside an environment with customized ENV variables.
