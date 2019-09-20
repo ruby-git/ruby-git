@@ -66,9 +66,9 @@ Git env config
     # If you need to use a custom SSH script
     config.git_ssh = '/path/to/ssh/script'
   end
-
 ```
 
+_NOTE: Another way to specify where is the `git` binary is through the environment variable `GIT_PATH`_
 
 Here are the operations that need read permission only.
 
