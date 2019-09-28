@@ -10,7 +10,7 @@ module Git
     end
 
     def binary_path
-      @binary_path || 'git'
+      @binary_path || ENV['GIT_PATH'] && File.join(ENV['GIT_PATH'], 'git') || 'git'
     end
 
     def git_ssh
