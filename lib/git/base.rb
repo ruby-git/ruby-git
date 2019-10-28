@@ -77,8 +77,17 @@ module Git
     
     def initialize(options = {})
       if working_dir = options[:working_directory]
-        options[:repository] ||= File.join(working_dir, '.git')
-        options[:index] ||= File.join(working_dir, '.git', 'index')
+        # Submodules have a .git *file* not a .git folder.
+        # This file's contents point to the location of
+        # where the git refs are held (In the parent repo)
+        working_dir_git_file = File.join(working_dir, '.git')
+        if File.file?(working_dir_git_file)
+          git_file = File.open(working_dir_git_file).read[8..-1].strip
+          options[:repository] ||= git_file
+        else
+          options[:repository] ||= working_dir_git_file
+        end
+        options[:index] ||= File.join(options[:repository], 'index')
       end
       if options[:log]
         @logger = options[:log]
