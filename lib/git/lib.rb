@@ -557,6 +557,7 @@ module Git
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
+      arr_opts << '--no-verify' if opts[:no_verify]
 
       command('commit', arr_opts)
     end
