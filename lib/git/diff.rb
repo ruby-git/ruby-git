@@ -127,12 +127,7 @@ module Git
         }
         final = {}
         current_file = nil
-        if @full_diff.encoding.name != "UTF-8"
-          full_diff_utf8_encoded = @full_diff.encode("UTF-8", "binary", { :invalid => :replace, :undef => :replace })
-        else
-          full_diff_utf8_encoded = @full_diff
-        end
-        full_diff_utf8_encoded.split("\n").each do |line|
+        @full_diff.split("\n").each do |line|
           if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
             current_file = m[1]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
