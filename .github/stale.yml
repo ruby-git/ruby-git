@@ -1,8 +1,13 @@
+# Probot: Stale
+# https://github.com/probot/stale
+
 # Number of days of inactivity before an issue becomes stale
 daysUntilStale: 60
 
 # Number of days of inactivity before a stale issue is closed
-daysUntilClose: 7
+# Set to false to disable. If disabled, issues still need to be closed
+# manually, but will remain marked as stale.
+daysUntilClose: false
 
 # Issues with these labels will never be considered stale
 exemptLabels:
@@ -10,13 +15,11 @@ exemptLabels:
   - security
 
 # Label to use when marking an issue as stale
-staleLabel: wontfix
+staleLabel: stale
 
 # Comment to post when marking an issue as stale. Set to `false` to disable
 markComment: >
-  This issue has been automatically marked as stale because it has not had
-  recent activity. It will be closed if no further activity occurs. Thank you
-  for your contributions.
+  A friendly reminder that this issue had no activity for 60 days.
 
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false
