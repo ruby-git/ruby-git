@@ -37,7 +37,7 @@ module Git
     #   # do other stuff
     #   return true # auto commits and switches back
     # end
-    def in_branch (message = 'in branch work')
+    def in_branch(message = 'in branch work')
       old_current = @base.lib.branch_current
       checkout
       if yield
