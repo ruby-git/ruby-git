@@ -128,8 +128,8 @@ module Git
         final = {}
         current_file = nil
         @full_diff.split("\n").each do |line|
-          if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
-            current_file = m[1]
+          if m = %r{\Adiff --git ("?)a/(.+?)\1 \1b/(.+?)\1\z}.match(line)
+            current_file = m[2]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
             if m = /^index (.......)\.\.(.......)( ......)*/.match(line)

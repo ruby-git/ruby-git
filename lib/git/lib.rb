@@ -945,6 +945,7 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << %w[-c core.quotePath=false]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
