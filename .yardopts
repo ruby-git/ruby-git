@@ -1,0 +1,9 @@
+--default-return=::Object
+--markup-provider=redcarpet
+--markup=markdown
+-
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+RELEASING.md
+MAINTAINERS.md

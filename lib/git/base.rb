@@ -1,32 +1,28 @@
 require 'git/base/factory'
 
 module Git
-  
+
+  # Git::Base is the main public interface for interacting with Git commands.
+  #
+  # Instead of creating a Git::Base directly, obtain a Git::Base instance by
+  # calling Git.open, Git.init, Git.clone, or Git.bare.
+  #
   class Base
 
     include Git::Base::Factory
 
-    # opens a bare Git Repository - no working directory options
-    def self.bare(git_dir, opts = {})
-      self.new({:repository => git_dir}.merge(opts))
+    # (see Git.bare)
+    #
+    def self.bare(git_dir, options = {})
+      # TODO: move this to Git.bare?
+      self.new({:repository => git_dir}.merge(options))
     end
-    
-    # clones a git repository locally
+
+    # (see Git.clone)
     #
-    #  repository - http://repo.or.cz/w/sinatra.git
-    #  name - sinatra
-    #
-    # options:
-    #   :repository
-    #
-    #    :bare
-    #   or 
-    #    :working_directory
-    #    :index_file
-    #
-    def self.clone(repository, name, opts = {})
-      # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+    def self.clone(repository, name, options = {})
+      # TODO: move this to Git.clone?
+      self.new(Git::Lib.new.clone(repository, name, options))
     end
     
     # Returns (and initialize if needed) a Git::Config instance
@@ -36,45 +32,106 @@ module Git
       return @@config ||= Config.new
     end
 
-    # initializes a git repository
+    #def init(options = {})
+    #  lib.init(options)
+    #end
     #
-    # options:
-    #  :bare
-    #  :index
-    #  :repository
+    #def self.init(directory, options = {})
+    #  TODO: move this to Git.init?
+    #  init_options = { }
+    #  if options[:bare]
+    #    options[:repository] = directory
+    #    init_options[:bare] = options.delete(:bare)
+    #  else
+    #    options[:working_directory] = directory
+    #    options[:repository] ||= File.join(options[:working_directory], '.git')
+    #  end
+    #  self.new(options).init(init_options)
+    #end
+
+    # (see Git.init)
     #
-    def self.init(working_dir, opts = {})
-      opts[:working_directory] ||= working_dir 
-      opts[:repository] ||= File.join(opts[:working_directory], '.git')
-      
-      FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
+    def self.init(working_dir, options = {})
+      options[:working_directory] ||= working_dir
+      options[:repository] ||= File.join(options[:working_directory], '.git')
+
+      # TODO: is creating the working directory necessary?  git init seems to
+      #   create the working directory or the bare repository directory even if
+      #   it is nested non-existant directories.
+      #
+      # TODO: what if the :repository is separate from the working copy?  Wouldn't you
+      #   want to skip creating the working copy directory?
+      #
+      # TODO: what if working copy is not given?  Is that valid (like when creating a
+      #   bare repository)?
+      FileUtils.mkdir_p(options[:working_directory]) if options[:working_directory] && !File.directory?(options[:working_directory])
       
       init_opts = {
-        :bare => opts[:bare]
+        :bare => options[:bare]
       }
 
-      opts.delete(:working_directory) if opts[:bare]
-      
+      options.delete(:working_directory) if options[:bare]
+
+      # TODO: seems strange that this is working relative to the current
+      #   directory instead of the supplied working directory.  And what if
+      #   --bare was given?
+      #
+      # TODO: Maybe git rev-parse --show-toplevel should be used to get the
+      #   root working directory in this case?
+      #
       # Submodules have a .git *file* not a .git folder.
       # This file's contents point to the location of
       # where the git refs are held (In the parent repo)
       if File.file?('.git')
         git_file = File.open('.git').read[8..-1].strip
-        opts[:repository] = git_file
-        opts[:index] = git_file + '/index'
+        options[:repository] = git_file
+        options[:index] = git_file + '/index'
       end
 
-      Git::Lib.new(opts).init(init_opts)
+      # TODO: this dance seems awkward: this creates a Git::Lib so we can call
+      #   init so we can create a new Git::Base which in turn (ultimately)
+      #   creates another/different Git::Lib.
+      #
+      # TODO: maybe refactor so this Git::Bare.init does this:
+      #   self.new(opts).init(init_opts) and move all/some of this code into
+      #   Git::Bare#init. This way the init method can be called on any
+      #   repository you have a Git::Base instance for.  This would not
+      #   change the existing interface (other than adding to it).
+      #
+      Git::Lib.new(options).init(init_opts)
        
-      self.new(opts)
+      self.new(options)
     end
-    
-    # opens a new Git Project from a working directory
-    # you can specify non-standard git_dir and index file in the options
-    def self.open(working_dir, opts={})
-      self.new({:working_directory => working_dir}.merge(opts))
+
+    # (see Git.open)
+    #
+    def self.open(working_dir, options={})
+      # TODO: move this to Git.open?
+      self.new({:working_directory => working_dir}.merge(options))
     end
-    
+
+    # Create an object that executes Git commands in the context of a working
+    # copy or a bare repository.
+    #
+    # @param [Hash] options The options for this command (see list of valid
+    #   options below)
+    #
+    # @option options [Pathname] :working_dir the path to the root of the working
+    #   directory.  Should be `nil` if executing commands on a bare repository.
+    #
+    # @option options [Pathname] :repository used to specify a non-standard path to
+    #   the repository directory.  The default is `"#{working_dir}/.git"`.
+    #
+    # @option options [Pathname] :index used to specify a non-standard path to an
+    #   index file.  The default is `"#{working_dir}/.git/index"`
+    #
+    # @option options [Logger] :log A logger to use for Git operations.  Git
+    #   commands are logged at the `:info` level.  Additional logging is done
+    #   at the `:debug` level.
+    #
+    # @return [Git::Base] an object that can execute git commands in the context
+    #   of the opened working copy or bare repository
+    #
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')

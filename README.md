@@ -1,12 +1,35 @@
-# Git Library for Ruby
+<!--
+# @markup markdown
+# @title README
+-->
 
-Library for using Git in Ruby.
+# Git Gem
+
+The Git Gem provides an API that can be used to create, read, and manipulate
+Git repositories by wrapping system calls to the `git` binary. The API can be
+used for working with Git in complex interactions including branching and
+merging, object inspection and manipulation, history, patch generation and
+more.
 
 ## Homepage
 
-Git public hosting of the project source code is at:
+The project source code is at:
 
 http://github.com/ruby-git/ruby-git
+
+## Documentation
+
+Detailed documentation can be found at:
+
+https://rubydoc.info/gems/git/Git.html
+
+Get started by obtaining a repository object by:
+
+* opening an existing working copy with `Git.open` 
+* initializing a new repository with `Git.init`
+* cloning a repository with `Git.clone`
+
+Methods that can be called on a repository object are documented in `Git::Base`
 
 ## Install
 

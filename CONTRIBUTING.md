@@ -1,3 +1,8 @@
+<!--
+# @markup markdown
+# @title Contributing
+-->
+
 # Contributing to ruby-git
 
 Thank you for your interest in contributing to the ruby-git project.
@@ -8,7 +13,7 @@ judgement.
 
 Propose changes to these guidelines with a pull request.
 
-## How to contribute to ruby-git
+## How to contribute
 
 You can contribute in two ways:
 

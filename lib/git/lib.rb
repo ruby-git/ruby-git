@@ -6,10 +6,48 @@ module Git
   class GitExecuteError < StandardError
   end
 
+
   class Lib
 
     @@semaphore = Mutex.new
 
+    # The path to the Git working copy.  The default is '"./.git"'.
+    #
+    # @return [Pathname] the path to the Git working copy.
+    #
+    # @see [Git working tree](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefworkingtreeaworkingtree)
+    #
+    attr_reader :git_work_dir
+
+    # The path to the Git repository directory.  The default is
+    # `"#{git_work_dir}/.git"`.
+    #
+    # @return [Pathname] the Git repository directory.
+    #
+    # @see [Git repository](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefrepositoryarepository)
+    #
+    attr_reader :git_dir
+
+    # The Git index file used to stage changes (using `git add`) before they
+    # are committed.
+    #
+    # @return [Pathname] the Git index file
+    #
+    # @see [Git index file](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefindexaindex)
+    #
+    attr_reader :git_index_file
+
+    # Create a new Git::Lib object
+    #
+    # @param [Git::Base, Hash] base An object that passes in values for
+    #   @git_work_dir, @git_dir, and @git_index_file
+    #
+    # @param [Logger] logger
+    #
+    # @option base [Pathname] :working_directory
+    # @option base [Pathname] :repository
+    # @option base [Pathname] :index
+    #
     def initialize(base = nil, logger = nil)
       @git_dir = nil
       @git_index_file = nil
