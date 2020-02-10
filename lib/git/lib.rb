@@ -945,6 +945,7 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << ["-c", "color.ui=false"]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
@@ -1051,9 +1052,9 @@ module Git
     def normalize_encoding(str)
       return str if str.valid_encoding? && str.encoding == default_encoding
 
-      return str.encode(default_encoding, str.encoding, encoding_options) if str.valid_encoding?
+      return str.encode(default_encoding, str.encoding, **encoding_options) if str.valid_encoding?
 
-      str.encode(default_encoding, detected_encoding(str), encoding_options)
+      str.encode(default_encoding, detected_encoding(str), **encoding_options)
     end
 
     def run_command(git_cmd, &block)
