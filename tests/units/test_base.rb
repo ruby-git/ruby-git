@@ -91,9 +91,11 @@ class TestBase < Test::Unit::TestCase
 
       base_commit_id = git.log[0].objectish
 
-      git.commit("Test Commit")
+      o = git.commit("Test Commit")
+      assert(o.is_a?(Git::Object::Commit))
 
       original_commit_id = git.log[0].objectish
+      assert(o.sha == original_commit_id)
 
       create_file('test_commit/test_file_3', 'content test_file_3')
       

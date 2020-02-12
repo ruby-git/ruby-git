@@ -291,6 +291,8 @@ module Git
     #
     def commit(message, opts = {})
       self.lib.commit(message, opts)
+
+      gcommit('HEAD')
     end
         
     # commits all pending changes in the index file to the git repository,
@@ -299,6 +301,8 @@ module Git
     def commit_all(message, opts = {})
       opts = {:add_all => true}.merge(opts)
       self.lib.commit(message, opts)
+
+      gcommit('HEAD')
     end
 
     # checks out a branch as the new git working directory
