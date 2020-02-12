@@ -114,12 +114,12 @@ module Git
       arr_opts << '--always' if opts[:always]
       arr_opts << '--exact-match' if opts[:exact_match] || opts[:"exact-match"]
 
-      arr_opts << '--dirty' if opts['dirty'] == true
-      arr_opts << "--dirty=#{opts['dirty']}" if opts['dirty'].is_a?(String)
+      arr_opts << '--dirty' if opts[:dirty] == true
+      arr_opts << "--dirty=#{opts[:dirty]}" if opts[:dirty].is_a?(String)
 
-      arr_opts << "--abbrev=#{opts['abbrev']}" if opts[:abbrev]
-      arr_opts << "--candidates=#{opts['candidates']}" if opts[:candidates]
-      arr_opts << "--match=#{opts['match']}" if opts[:match]
+      arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
+      arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
+      arr_opts << "--match=#{opts[:match]}" if opts[:match]
 
       arr_opts << committish if committish
 
@@ -946,6 +946,7 @@ module Git
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
       global_opts << %w[-c core.quotePath=false]
+      global_opts << %w[-c color.ui=false]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 

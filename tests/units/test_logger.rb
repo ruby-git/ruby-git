@@ -27,6 +27,7 @@ class TestLogger < Test::Unit::TestCase
     @git.branches.size
     
     logc = File.read(log.path)
+    assert(/DEBUG -- :   diff_over_patches/.match(logc))
 
     expected_log_entry = /INFO -- : git (?<global_options>.*?) branch '-a'/
     assert_match(expected_log_entry, logc, missing_log_entry)
