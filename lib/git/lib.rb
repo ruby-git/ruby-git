@@ -550,6 +550,18 @@ module Git
       command('rm', arr_opts)
     end
 
+    # Takes the commit message with the options and executes the commit command
+    #
+    # accepts options:
+    #  :amend
+    #  :all
+    #  :allow_empty
+    #  :author
+    #  :date
+    #  :no_verify
+    #
+    # @param [String] message the commit message to be used
+    # @param [Array] opts the commit options to be used
     def commit(message, opts = {})
       arr_opts = []
       arr_opts << "--message=#{message}" if message
