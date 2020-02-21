@@ -15,6 +15,8 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to?(:required_rubygems_version=)
   s.requirements = ['git 1.6.0.0, or greater']
 
+  s.add_runtime_dependency 'rchardet', '~> 1.8'
+
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rdoc'
   s.add_development_dependency 'test-unit', '>=2', '< 4'

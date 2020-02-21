@@ -1,3 +1,4 @@
+require 'rchardet'
 require 'tempfile'
 
 module Git
@@ -113,12 +114,12 @@ module Git
       arr_opts << '--always' if opts[:always]
       arr_opts << '--exact-match' if opts[:exact_match] || opts[:"exact-match"]
 
-      arr_opts << '--dirty' if opts['dirty'] == true
-      arr_opts << "--dirty=#{opts['dirty']}" if opts['dirty'].is_a?(String)
+      arr_opts << '--dirty' if opts[:dirty] == true
+      arr_opts << "--dirty=#{opts[:dirty]}" if opts[:dirty].is_a?(String)
 
-      arr_opts << "--abbrev=#{opts['abbrev']}" if opts[:abbrev]
-      arr_opts << "--candidates=#{opts['candidates']}" if opts[:candidates]
-      arr_opts << "--match=#{opts['match']}" if opts[:match]
+      arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
+      arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
+      arr_opts << "--match=#{opts[:match]}" if opts[:match]
 
       arr_opts << committish if committish
 
@@ -900,16 +901,7 @@ module Git
     ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
 
     def command_lines(cmd, opts = [], chdir = true, redirect = '')
-      cmd_op = command(cmd, opts, chdir)
-      if cmd_op.encoding.name != "UTF-8"
-        op = cmd_op.encode("UTF-8", "binary", {
-          :invalid => :replace,
-          :undef => :replace
-        })
-      else
-        op = cmd_op
-      end
-      op.split("\n")
+      command(cmd, opts, chdir).lines.map(&:chomp)
     end
 
     # Takes the current git's system ENV variables and store them.
@@ -953,6 +945,7 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << ["-c", "color.ui=false"]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
@@ -1039,10 +1032,35 @@ module Git
       arr_opts
     end
 
+    def default_encoding
+      __ENCODING__.name
+    end
+
+    def best_guess_encoding
+      # Encoding::ASCII_8BIT.name
+      Encoding::UTF_8.name
+    end
+
+    def detected_encoding(str)
+      CharDet.detect(str)['encoding'] || best_guess_encoding
+    end
+
+    def encoding_options
+      { invalid: :replace, undef: :replace }
+    end
+
+    def normalize_encoding(str)
+      return str if str.valid_encoding? && str.encoding == default_encoding
+
+      return str.encode(default_encoding, str.encoding, encoding_options) if str.valid_encoding?
+
+      str.encode(default_encoding, detected_encoding(str), encoding_options)
+    end
+
     def run_command(git_cmd, &block)
       return IO.popen(git_cmd, &block) if block_given?
 
-      `#{git_cmd}`.chomp
+      `#{git_cmd}`.chomp.lines.map { |l| normalize_encoding(l) }.join
     end
 
     def escape(s)
