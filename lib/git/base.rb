@@ -109,13 +109,14 @@ module Git
     
     #g.config('user.name', 'Scott Chacon') # sets value
     #g.config('user.email', 'email@email.com')  # sets value
+    #g.config('user.email', 'email@email.com', file: 'path/to/custom/config)  # sets value in file
     #g.config('user.name')  # returns 'Scott Chacon'
     #g.config # returns whole config hash
-    def config(name = nil, value = nil)
-      if(name && value)
+    def config(name = nil, value = nil, options = {})
+      if name && value
         # set value
-        lib.config_set(name, value)
-      elsif (name)
+        lib.config_set(name, value, options)
+      elsif name
         # return value
         lib.config_get(name)
       else

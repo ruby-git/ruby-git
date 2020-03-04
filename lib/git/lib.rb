@@ -501,8 +501,12 @@ module Git
 
     ## WRITE COMMANDS ##
 
-    def config_set(name, value)
-      command('config', [name, value])
+    def config_set(name, value, options = {})
+      if options[:file].to_s.empty?
+        command('config', [name, value])
+      else
+        command('config', ['--file', options[:file], name, value])
+      end
     end
 
     def global_config_set(name, value)
