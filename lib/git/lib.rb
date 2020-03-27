@@ -1050,7 +1050,7 @@ module Git
     end
 
     def normalize_encoding(str)
-      return str if str.valid_encoding? && str.encoding == default_encoding
+      return str if str.valid_encoding? && str.encoding.name == default_encoding
 
       return str.encode(default_encoding, str.encoding, encoding_options) if str.valid_encoding?
 
