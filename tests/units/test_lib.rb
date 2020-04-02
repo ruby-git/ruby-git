@@ -189,6 +189,17 @@ class TestLib < Test::Unit::TestCase
     assert(branches.select { |b| /master/.match(b[0]) }.size > 0)  # has a master branch
   end
 
+  def test_branch_rename
+    branch_names = @lib.branches_all.map { |b| b[0] }
+    assert(branch_names.include? 'test')
+
+    @lib.branch_rename('test', 'test_renamed')
+
+    branch_names = @lib.branches_all.map { |b| b[0] }
+    refute(branch_names.include? 'test')
+    assert(branch_names.include? 'test_renamed')
+  end
+
   def test_config_remote
     config = @lib.config_remote('working')
     assert_equal('../working.git', config['url'])

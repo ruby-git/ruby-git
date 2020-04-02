@@ -202,6 +202,7 @@ And here are the operations that will need to write to your git repository.
      g.branch('new_branch').checkout
      g.branch('new_branch').delete
      g.branch('existing_branch').checkout
+     g.branch('existing_branch').rename('new_name')
      g.branch('master').contains?('existing_branch')
 
      g.checkout('new_branch')

@@ -644,6 +644,14 @@ module Git
       command('branch', ['-D', branch])
     end
 
+    # Renames specified branch
+    #
+    # param [String] branch name of branch to be renamed
+    # param [String] new new name of branch
+    def branch_rename(branch, new_name)
+      command('branch', ['-m', branch, new_name])
+    end
+
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '-b' if opts[:new_branch] || opts[:b]

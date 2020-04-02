@@ -76,6 +76,20 @@ module Git
         @base.merge(@name)
       end
     end
+
+    # Renames the current branch
+    #
+    # Example:
+    #   branch.name # => 'branch'
+    #   branch.rename('new_name') # => 'new_name'
+    #   branch.name # => 'new_name'
+    #
+    # param [String] name name of new branch
+    # return [String] name of new branch
+    def rename(new_name)
+      @base.lib.branch_rename(name, new_name)
+      @name = new_name
+    end
     
     def update_ref(commit)
       @base.lib.update_ref(@full, commit)

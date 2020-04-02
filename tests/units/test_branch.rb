@@ -14,6 +14,14 @@ class TestBranch < Test::Unit::TestCase
     @branches = @git.branches
   end
   
+  def test_branch_rename
+    branch = @branches[:test]
+    new_name = 'test_renamed'
+
+    assert_equal(branch.rename(new_name), new_name)
+    assert(@git.branches.map(&:name).include? new_name)
+  end
+
   def test_branches_all
     assert(@git.branches[:master].is_a?(Git::Branch))
     assert(@git.branches.size > 5)
