@@ -550,6 +550,18 @@ module Git
       command('rm', arr_opts)
     end
 
+    # Takes the commit message with the options and executes the commit command
+    #
+    # accepts options:
+    #  :amend
+    #  :all
+    #  :allow_empty
+    #  :author
+    #  :date
+    #  :no_verify
+    #
+    # @param [String] message the commit message to be used
+    # @param [Array] opts the commit options to be used
     def commit(message, opts = {})
       arr_opts = []
       arr_opts << "--message=#{message}" if message
@@ -558,6 +570,7 @@ module Git
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
+      arr_opts << '--no-verify' if opts[:no_verify]
 
       command('commit', arr_opts)
     end

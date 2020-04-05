@@ -69,6 +69,10 @@ class Test::Unit::TestCase
   def delete_file(path)
     File.delete(path)
   end
+
+  def move_file(source_path, target_path)
+    File.rename source_path, target_path
+  end
   
   def new_file(name, contents)
     create_file(name,contents)
