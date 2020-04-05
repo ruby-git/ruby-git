@@ -616,7 +616,7 @@ module Git
     end
 
     def stash_save(message)
-      output = command('stash save', ['--', message])
+      output = command('stash save', [message])
       output =~ /HEAD is now at/
     end
 
@@ -1050,11 +1050,11 @@ module Git
     end
 
     def normalize_encoding(str)
-      return str if str.valid_encoding? && str.encoding == default_encoding
+      return str if str.valid_encoding? && str.encoding.name == default_encoding
 
-      return str.encode(default_encoding, str.encoding, encoding_options) if str.valid_encoding?
+      return str.encode(default_encoding, str.encoding, **encoding_options) if str.valid_encoding?
 
-      str.encode(default_encoding, detected_encoding(str), encoding_options)
+      str.encode(default_encoding, detected_encoding(str), **encoding_options)
     end
 
     def run_command(git_cmd, &block)
