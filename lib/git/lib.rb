@@ -616,7 +616,7 @@ module Git
     end
 
     def stash_save(message)
-      output = command('stash save', ['--', message])
+      output = command('stash save', [message])
       output =~ /HEAD is now at/
     end
 

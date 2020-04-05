@@ -3,7 +3,7 @@ require 'fileutils'
 require 'logger'
 require 'test/unit'
 
-require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
+require "git"
 
 class Test::Unit::TestCase
   
