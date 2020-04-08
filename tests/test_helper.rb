@@ -3,7 +3,7 @@ require 'fileutils'
 require 'logger'
 require 'test/unit'
 
-require "#{File.expand_path(File.dirname(__FILE__))}/../lib/git"
+require "git"
 
 class Test::Unit::TestCase
   
@@ -68,6 +68,10 @@ class Test::Unit::TestCase
 
   def delete_file(path)
     File.delete(path)
+  end
+
+  def move_file(source_path, target_path)
+    File.rename source_path, target_path
   end
   
   def new_file(name, contents)
