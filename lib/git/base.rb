@@ -322,6 +322,15 @@ module Git
     #
     #  @git.config('remote.remote-name.push', 'refs/heads/master:refs/heads/master')
     #
+    # options:
+    #  :mirror
+    #  :delete
+    #  :force
+    #  :tags
+    #  :push_options
+    #
+    # all options are evaluated as boolean except :push_options, is forced into an Array.
+    #
     def push(remote = 'origin', branch = 'master', opts = {})
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
       opts = {:tags => opts} if [true, false].include?(opts)
