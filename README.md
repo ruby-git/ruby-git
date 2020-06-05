@@ -169,7 +169,9 @@ And here are the operations that will need to write to your git repository.
         { :repository => '/opt/git/proj.git',
            :index => '/tmp/index'} )
 
-     g = Git.clone(URI, NAME, :path => '/tmp/checkout')
+     g = Git.clone(URI, NAME, :path => '/tmp/checkout', :config => [
+       'core.sshCommand=ssh -i /home/user/.ssh/id_rsa',
+       'submodule.recurse=true'])
      g.config('user.name', 'Scott Chacon')
      g.config('user.email', 'email@email.com')
 

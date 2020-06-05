@@ -90,10 +90,21 @@ class TestInit < Test::Unit::TestCase
     end
   end
 
-  def test_git_clone_config
+  def test_git_clone_config_single
     in_temp_dir do |path|
       g = Git.clone(@wbare, 'config.git', :config => "receive.denyCurrentBranch=ignore")
       assert_equal('ignore', g.config['receive.denycurrentbranch'])
+      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert(g.dir)
+    end
+  end
+
+  def test_git_clone_config_multi
+    conf = ["receive.denyCurrentBranch=ignore", "submodule.recurse=true"]
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'config.git', :config => conf)
+      assert_equal('ignore', g.config['receive.denycurrentbranch'])
+      assert_equal('true', g.config['submodule.recurse'])
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
     end

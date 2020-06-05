@@ -65,7 +65,8 @@ module Git
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
-      arr_opts << '--config' << opts[:config] if opts[:config]
+      arr_opts << '--config' << opts[:config] if opts[:config] && opts[:config].is_a?(String)
+      opts[:config].each { |c| arr_opts << '--config' << c } if opts[:config].is_a?(Array)
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
       arr_opts << "--mirror" if opts[:mirror]
