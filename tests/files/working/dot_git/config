@@ -1,6 +1,8 @@
 [user]
-        name = Scott Chacon
-        email = schacon@gmail.com
+	name = Scott Chacon
+	email = schacon@gmail.com
+[commit]
+	gpgsign = false
 [core]
 	repositoryformatversion = 0
 	filemode = true
