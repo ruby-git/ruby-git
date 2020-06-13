@@ -101,4 +101,33 @@ class TestMerge < Test::Unit::TestCase
     end
   end
   
+  def test_no_ff_merge
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'branch_merge_test')
+      Dir.chdir('branch_merge_test') do
+
+        g.branch('new_branch').in_branch('first commit message') do
+          new_file('new_file_1', 'hello')
+          g.add
+          true
+        end
+
+        g.branch('new_branch2').checkout
+        g.merge('new_branch', 'merge commit message') # ff merge
+        assert(g.status['new_file_1']) # file has been merged in
+        assert_equal('first commit message', g.log.first.message) # merge commit message was ignored
+
+        g.branch('new_branch').in_branch('second commit message') do
+          new_file('new_file_2', 'hello')
+          g.add
+          true
+        end
+
+        assert_equal('new_branch2', g.current_branch) # still in new_branch2 branch
+        g.merge('new_branch', 'merge commit message', no_ff: true) # no-ff merge
+        assert(g.status['new_file_2']) # file has been merged in
+        assert_equal('merge commit message', g.log.first.message)
+      end
+    end
+  end
 end
