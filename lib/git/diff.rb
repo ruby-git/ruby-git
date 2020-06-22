@@ -72,6 +72,7 @@ module Git
     class DiffFile
       attr_accessor :patch, :path, :mode, :src, :dst, :type
       @base = nil
+      NIL_BLOB_REGEXP = /0{7,40}/.freeze
 
       def initialize(base, hash)
         @base = base
@@ -89,9 +90,9 @@ module Git
       end
 
       def blob(type = :dst)
-        if type == :src && !/0{7,40}/.match(@src)
+        if type == :src && !NIL_BLOB_REGEXP.match(@src)
           @base.object(@src)
-        elsif !/0{7,40}/.match(@dst)
+        elsif !NIL_BLOB_REGEXP.match(@dst)
           @base.object(@dst)
         end
       end
