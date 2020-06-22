@@ -81,6 +81,16 @@ class TestDiff < Test::Unit::TestCase
     assert_nil(@diff["scott/newfile"].blob(:dst))
     assert(@diff["scott/newfile"].blob(:src).is_a?(Git::Object::Blob))
   end
+
+  def test_diff_hashkey_abbrev
+    set_file_paths
+    git = Git.open(@wdir)
+    git.config('core.abbrev', 40)
+    diff = git.diff('gitsearch1', 'v2.5')
+    assert_equal('5d4606820736043f9eed2a6336661d6892c820a5', diff["scott/newfile"].src)
+    assert_nil(diff["scott/newfile"].blob(:dst))
+    assert(diff["scott/newfile"].blob(:src).is_a?(Git::Object::Blob))
+  end
   
   def test_patch
     p = @git.diff('v2.8^', 'v2.8').patch

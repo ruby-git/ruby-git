@@ -89,10 +89,10 @@ module Git
       end
 
       def blob(type = :dst)
-        if type == :src
-          @base.object(@src) if @src != '0000000'
-        else
-          @base.object(@dst) if @dst != '0000000'
+        if type == :src && !/0{7,40}/.match?(@src)
+          @base.object(@src)
+        elsif !/0{7,40}/.match?(@dst)
+          @base.object(@dst)
         end
       end
     end
@@ -132,7 +132,7 @@ module Git
             current_file = m[1]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
-            if m = /^index (.......)\.\.(.......)( ......)*/.match(line)
+            if m = /^index ([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})( ......)*/.match(line)
               final[current_file][:src] = m[1]
               final[current_file][:dst] = m[2]
               final[current_file][:mode] = m[3].strip if m[3]
