@@ -89,9 +89,9 @@ module Git
       end
 
       def blob(type = :dst)
-        if type == :src && !/0{7,40}/.match?(@src)
+        if type == :src && !/0{7,40}/.match(@src)
           @base.object(@src)
-        elsif !/0{7,40}/.match?(@dst)
+        elsif !/0{7,40}/.match(@dst)
           @base.object(@dst)
         end
       end
