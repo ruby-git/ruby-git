@@ -25,10 +25,11 @@ module Git
     #    :index_file
     #
     def self.clone(repository, name, opts = {})
-      # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      # run git-clone
+      log = opts[:log]
+      new(Git::Lib.new(nil, log).clone(repository, name, opts).merge(log: log))
     end
-    
+
     # Returns (and initialize if needed) a Git::Config instance
     #
     # @return [Git::Config] the current config instance.

@@ -1,11 +1,25 @@
 #!/usr/bin/env ruby
 
+require 'stringio'
+
 require File.dirname(__FILE__) + '/../test_helper'
 
 class TestBase < Test::Unit::TestCase
 
   def setup
     set_file_paths
+  end
+
+  def test_clone
+    in_temp_dir do |_path|
+      # Tests that the given logger object is used during the cloning phase as
+      # well as passed to the Base class's initialize method.
+
+      buffer = StringIO.new
+      Git.clone(@wdir, 'test_add', log: Logger.new(buffer))
+      assert_match(/Cloning into 'test_add'/, buffer.string) # Comes from the Cloning Process
+      assert_match(/Starting Git/, buffer.string) # Comes from the Base's initialize method
+    end
   end
 
   def test_add
