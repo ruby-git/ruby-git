@@ -72,7 +72,7 @@ module Git
     class DiffFile
       attr_accessor :patch, :path, :mode, :src, :dst, :type
       @base = nil
-      NIL_BLOB_REGEXP = /0{7,40}/.freeze
+      NIL_BLOB_REGEXP = /\A0{7,40}\z/.freeze
 
       def initialize(base, hash)
         @base = base
