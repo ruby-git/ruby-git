@@ -72,7 +72,7 @@ module Git
     class DiffFile
       attr_accessor :patch, :path, :mode, :src, :dst, :type
       @base = nil
-      NIL_BLOB_REGEXP = /\A0{7,40}\z/.freeze
+      NIL_BLOB_REGEXP = /\A0{4,40}\z/.freeze
 
       def initialize(base, hash)
         @base = base
@@ -133,7 +133,7 @@ module Git
             current_file = m[1]
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
-            if m = /^index ([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})( ......)*/.match(line)
+            if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)
               final[current_file][:src] = m[1]
               final[current_file][:dst] = m[2]
               final[current_file][:mode] = m[3].strip if m[3]
