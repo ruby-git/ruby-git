@@ -10,7 +10,7 @@ class TestDescribe < Test::Unit::TestCase
   end
 
   def test_describe
-    assert_equal(@git.describe(nil, {:tags => true}), 'v2.8')
+    assert_equal(@git.describe(nil, {:tags => true}), 'v2.9')
   end
 
 end

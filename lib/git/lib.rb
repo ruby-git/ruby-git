@@ -277,6 +277,8 @@ module Git
       command_lines('ls-tree', sha).each do |line|
         (info, filenm) = line.split("\t")
         (mode, type, sha) = info.split
+        next unless data.include? type
+
         data[type][filenm] = {:mode => mode, :sha => sha}
       end
 

@@ -1,0 +1,3 @@
+[submodule "submodule_dir"]
+	path = submodule_dir
+	url = https://github.com/ruby-git/ruby-git.git

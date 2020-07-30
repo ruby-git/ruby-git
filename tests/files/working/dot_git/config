@@ -13,3 +13,6 @@
 [remote "working"]
 	url = ../working.git
 	fetch = +refs/heads/*:refs/remotes/working/*
+[submodule "submodule_dir"]
+	url = https://github.com/ruby-git/ruby-git.git
+	active = true

@@ -38,6 +38,7 @@ class Test::Unit::TestCase
     FileUtils.cp_r(clone_path, @tmp_path)
     tmp_path = File.join(@tmp_path, 'working')
     Dir.chdir(tmp_path) do
+      FileUtils.mv('dot_gitmodules', '.gitmodules')
       FileUtils.mv('dot_git', '.git')
     end
     tmp_path

@@ -19,7 +19,7 @@ class TestLib < Test::Unit::TestCase
       git = Git.clone("file://#{@wdir}", "shallow", path: dir, depth: 1).lib
       assert_equal(1,  git.log_commits.length)
       git.fetch("file://#{@wdir}", unshallow: true)
-      assert_equal(71,  git.log_commits.length)
+      assert_equal(72,  git.log_commits.length)
     end
   end
 
@@ -227,10 +227,22 @@ class TestLib < Test::Unit::TestCase
   end
   
   
-  def test_ls_tree
-    tree = @lib.ls_tree('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7')
-    assert_equal("3aac4b445017a8fc07502670ec2dbf744213dd48", tree['blob']['example.txt'][:sha])
+  def test_ls_tree_sha
+    tree = @lib.ls_tree('5e53019b3238362144c2766f02a2c00d91fcc023')
+    assert_equal("8dc79ae7616abf1e2d4d5d97d566f2b2f6cee043", tree['blob']['example.txt'][:sha])
     assert_equal("100644", tree['blob']['example.txt'][:mode])
+    assert_not_include(tree['blob'], ".gitmodules")
+    assert(tree['tree'])
+  end
+
+  def test_ls_tree_head
+    tree = @lib.ls_tree('HEAD')
+    assert_equal("8dc79ae7616abf1e2d4d5d97d566f2b2f6cee043", tree['blob']['example.txt'][:sha])
+    assert_equal("100644", tree['blob']['example.txt'][:mode])
+    assert_equal("693af11b325dfb788712f8cd84f05b3f96f926d6", tree['blob']['.gitmodules'][:sha])
+    assert_equal("100644", tree['blob']['.gitmodules'][:mode])
+    assert_not_include(tree['blob'], "submodule_dir")
+    assert_not_include(tree['blob'], "submodule_dir")
     assert(tree['tree'])
   end
 
@@ -280,7 +292,7 @@ class TestLib < Test::Unit::TestCase
   end
   
   def test_show
-    assert(/^commit 5e53019b3238362144c2766f02a2c00d91fcc023.+\+replace with new text - diff test$/m.match(@lib.show))
+    assert(/^commit 9641f3383a015620ffd40591a4d7ec9ef07697d6.+\+Subproject commit 4bef5abbba073c77b4d0ccc1ffcd0ed7d48be5d4$/m.match(@lib.show))
     assert(/^commit 935badc874edd62a8629aaf103418092c73f0a56.+\+nothing!$/m.match(@lib.show('gitsearch1')))
     assert(/^hello.+nothing!$/m.match(@lib.show('gitsearch1', 'scott/text.txt')))
   end

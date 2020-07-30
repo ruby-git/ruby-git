@@ -1,8 +1,11 @@
 *.gem
 *.kpf
 *.sw?
+.bundle
+.ruby-version
 .DS_Store
 coverage
 pkg
 rdoc
+vendor
 Gemfile.lock
