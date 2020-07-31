@@ -308,6 +308,39 @@ module Git
       arr
     end
 
+    def worktrees_all
+      arr = []
+      directory = ''
+      # Output example for `worktree list --porcelain`:
+      # worktree /code/public/ruby-git
+      # HEAD 4bef5abbba073c77b4d0ccc1ffcd0ed7d48be5d4
+      # branch refs/heads/master
+      # 
+      # worktree /tmp/worktree-1
+      # HEAD b8c63206f8d10f57892060375a86ae911fad356e
+      # detached
+      #
+      command_lines('worktree',['list', '--porcelain']).each do |w|
+        s = w.split("\s")
+        directory = s[1] if s[0] == 'worktree'
+        arr << [directory, s[1]] if s[0] == 'HEAD'
+      end
+      arr
+    end
+
+    def worktree_add(dir, commitish = nil)
+      return command('worktree', ['add', dir, commitish]) if !commitish.nil?
+      command('worktree', ['add', dir])
+    end
+
+    def worktree_remove(dir)
+      command('worktree', ['remove', dir])
+    end
+
+    def worktree_prune
+      command('worktree', ['prune'])
+    end
+
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
       files = []

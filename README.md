@@ -41,6 +41,8 @@ like:
 
  `@git.log(20).object("some_file").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] }`
 
+ **Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
+
 ## Examples
 
 Here are a bunch of examples of how to use the Ruby/Git package.
@@ -143,6 +145,14 @@ Here are the operations that need read permission only.
        puts file_diff.path
        puts file_diff.patch
        puts file_diff.blob(:src).contents
+    end
+
+    g.worktrees # returns Git::Worktree objects
+    g.worktrees.count
+    g.worktrees.each do |worktree|
+      worktree.dir
+      worktree.gcommit
+      worktree.to_s
     end
 
     g.config('user.name')  # returns 'Scott Chacon'
@@ -252,6 +262,11 @@ And here are the operations that will need to write to your git repository.
 
      g.push
      g.push(g.remote('name'))
+
+     g.worktree('/tmp/new_worktree').add
+     g.worktree('/tmp/new_worktree', 'branch1').add
+     g.worktree('/tmp/new_worktree').remove
+     g.worktrees.prune
 ```
 
 Some examples of more low-level index and tree operations
