@@ -1,5 +1,6 @@
 require 'rchardet'
 require 'tempfile'
+require 'zlib'
 
 module Git
 
@@ -742,10 +743,14 @@ module Git
 
     def conflicts # :yields: file, your, their
       self.unmerged.each do |f|
-        your = Tempfile.new("YOUR-#{File.basename(f)}").path
+        your_tempfile = Tempfile.new("YOUR-#{File.basename(f)}")
+        your = your_tempfile.path
+        your_tempfile.close # free up file for git command process
         command('show', ":2:#{f}", true, "> #{escape your}")
 
-        their = Tempfile.new("THEIR-#{File.basename(f)}").path
+        their_tempfile = Tempfile.new("THEIR-#{File.basename(f)}")
+        their = their_tempfile.path
+        their_tempfile.close # free up file for git command process
         command('show', ":3:#{f}", true, "> #{escape their}")
         yield(f, your, their)
       end
@@ -923,7 +928,13 @@ module Git
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
-      command('archive', arr_opts, true, (opts[:add_gzip] ? '| gzip' : '') + " > #{escape file}")
+      command('archive', arr_opts, true, " > #{escape file}")
+      if opts[:add_gzip]
+        file_content = File.read(file)
+        Zlib::GzipWriter.open(file) do |gz|
+          gz.write(file_content)
+        end
+      end
       return file
     end
 
@@ -1114,11 +1125,22 @@ module Git
     end
 
     def escape(s)
-      return "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      windows_platform? ? escape_for_windows(s) : escape_for_sh(s)
+    end
 
-      # Keeping the old escape format for windows users
-      escaped = s.to_s.gsub('\'', '\'\\\'\'')
-      return %Q{"#{escaped}"}
+    def escape_for_sh(s)
+      "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'"
+    end
+
+    def escape_for_windows(s)
+      # Windows does not need single quote escaping inside double quotes
+      %Q{"#{s}"}
+    end
+
+    def windows_platform?
+      # Check if on Windows via RUBY_PLATFORM (CRuby) and RUBY_DESCRIPTION (JRuby)
+      win_platform_regex = /mingw|mswin/
+      RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
     end
 
   end

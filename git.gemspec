@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rdoc'
+  s.add_development_dependency 'minitar', '0.9'
   s.add_development_dependency 'test-unit', '>=2', '< 4'
 
   s.extra_rdoc_files = ['README.md']
