@@ -789,6 +789,9 @@ module Git
       arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--delete'  if opts[:delete]
       arr_opts << '--force'  if opts[:force] || opts[:f]
+      if opts[:push_options]
+       arr_opts.concat(opts[:push_options].map { |push_option| ['--push-option', push_option] }.flatten)
+      end
       arr_opts << remote
 
       if opts[:mirror]
