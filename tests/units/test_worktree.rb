@@ -55,19 +55,26 @@ class TestWorktree < Test::Unit::TestCase
   def test_worktree_add_and_remove
     assert_equal(@git.worktrees.size, 2)
 
-    @git.worktree('/tmp/pp1').add
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+    tmp_path = File.join("/tmp/", filename)
+
+    tmp_path_cur = File.join(tmp_path, '1')
+    @git.worktree(tmp_path_cur).add
     assert_equal(@git.worktrees.size, 3)
-    @git.worktree('/tmp/pp1').remove
+    @git.worktree(tmp_path_cur).remove
     assert_equal(@git.worktrees.size, 2)
 
-    @git.worktree('/tmp/pp2', 'gitsearch1').add
-    @git.worktree('/tmp/pp2').remove
+    tmp_path_cur = File.join(tmp_path, '2')
+    @git.worktree(tmp_path_cur, 'gitsearch1').add
+    @git.worktree(tmp_path_cur).remove
 
-    @git.worktree('/tmp/pp3', '34a566d193dc4702f03149969a2aad1443231560').add
-    @git.worktree('/tmp/pp3').remove
+    tmp_path_cur = File.join(tmp_path, '3')
+    @git.worktree(tmp_path_cur, '34a566d193dc4702f03149969a2aad1443231560').add
+    @git.worktree(tmp_path_cur).remove
 
-    @git.worktree('/tmp/pp4', 'test_object').add
-    @git.worktree('/tmp/pp4').remove
+    tmp_path_cur = File.join(tmp_path, '4')
+    @git.worktree(tmp_path_cur, 'test_object').add
+    @git.worktree(tmp_path_cur).remove
 
     assert_equal(@git.worktrees.size, 2)
   end
@@ -75,11 +82,14 @@ class TestWorktree < Test::Unit::TestCase
   def test_worktree_prune
     assert_equal(2, @git.worktrees.size)
 
-    @git.worktree('/tmp/pp1').add
-    assert_equal(3, @git.worktrees.size)
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+    tmp_path = File.join("/tmp/", filename)
+
     @git.worktrees.prune
+    assert_equal(1, @git.worktrees.size)
+    @git.worktree(tmp_path).add
     assert_equal(2, @git.worktrees.size)
-    FileUtils.rm_rf('/tmp/pp1')
+    FileUtils.rm_rf(tmp_path)
     @git.worktrees.prune
     assert_equal(1, @git.worktrees.size)
   end
