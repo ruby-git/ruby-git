@@ -243,6 +243,8 @@ module Git
           next
         end
 
+        in_message = false if in_message && line[0..3] != "    "
+
         if in_message
           hsh['message'] << "#{line[4..-1]}\n"
           next
@@ -559,9 +561,10 @@ module Git
     #  :author
     #  :date
     #  :no_verify
+    #  :allow_empty_message
     #
     # @param [String] message the commit message to be used
-    # @param [Array] opts the commit options to be used
+    # @param [Hash] opts the commit options to be used
     def commit(message, opts = {})
       arr_opts = []
       arr_opts << "--message=#{message}" if message
@@ -571,6 +574,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
       arr_opts << '--no-verify' if opts[:no_verify]
+      arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
 
       command('commit', arr_opts)
     end
