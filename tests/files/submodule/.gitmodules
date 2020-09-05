@@ -1,0 +1,3 @@
+[submodule "unlicense_only"]
+	path = unlicense_only
+	url = git@github.com:hatkyinc2/unlicense_only.git
