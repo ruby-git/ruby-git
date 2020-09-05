@@ -3,7 +3,7 @@ module Git
   class Base
 
     module Factory
-      
+
       # returns a Git::Branch object for branch_name
       def branch(branch_name = 'master')
         Git::Branch.new(self, branch_name)
@@ -14,7 +14,18 @@ module Git
       def branches
         Git::Branches.new(self)
       end
-      
+
+      # returns a Git::Worktree object for dir, commitish
+      def worktree(dir, commitish = nil)
+        Git::Worktree.new(self, dir, commitish)
+      end
+
+      # returns a Git::worktrees object of all the Git::Worktrees
+      # objects for this repo
+      def worktrees
+        Git::Worktrees.new(self)
+      end
+
       def commit_tree(tree = nil, opts = {})
         Git::Object::Commit.new(self, self.lib.commit_tree(tree, opts))
       end
