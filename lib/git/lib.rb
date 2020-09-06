@@ -243,6 +243,8 @@ module Git
           next
         end
 
+        in_message = false if in_message && line[0..3] != "    "
+
         if in_message
           hsh['message'] << "#{line[4..-1]}\n"
           next
@@ -306,6 +308,39 @@ module Git
         arr << [b.gsub('* ', '').strip, current]
       end
       arr
+    end
+
+    def worktrees_all
+      arr = []
+      directory = ''
+      # Output example for `worktree list --porcelain`:
+      # worktree /code/public/ruby-git
+      # HEAD 4bef5abbba073c77b4d0ccc1ffcd0ed7d48be5d4
+      # branch refs/heads/master
+      # 
+      # worktree /tmp/worktree-1
+      # HEAD b8c63206f8d10f57892060375a86ae911fad356e
+      # detached
+      #
+      command_lines('worktree',['list', '--porcelain']).each do |w|
+        s = w.split("\s")
+        directory = s[1] if s[0] == 'worktree'
+        arr << [directory, s[1]] if s[0] == 'HEAD'
+      end
+      arr
+    end
+
+    def worktree_add(dir, commitish = nil)
+      return command('worktree', ['add', dir, commitish]) if !commitish.nil?
+      command('worktree', ['add', dir])
+    end
+
+    def worktree_remove(dir)
+      command('worktree', ['remove', dir])
+    end
+
+    def worktree_prune
+      command('worktree', ['prune'])
     end
 
     def list_files(ref_dir)
@@ -559,9 +594,10 @@ module Git
     #  :author
     #  :date
     #  :no_verify
+    #  :allow_empty_message
     #
     # @param [String] message the commit message to be used
-    # @param [Array] opts the commit options to be used
+    # @param [Hash] opts the commit options to be used
     def commit(message, opts = {})
       arr_opts = []
       arr_opts << "--message=#{message}" if message
@@ -571,6 +607,7 @@ module Git
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
       arr_opts << '--no-verify' if opts[:no_verify]
+      arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
 
       command('commit', arr_opts)
     end
