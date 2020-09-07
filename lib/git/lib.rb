@@ -993,8 +993,7 @@ module Git
 
     def command(cmd, opts = [], chdir = true, redirect = '', &block)
       global_opts = []
-      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
-      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << ["-C", "#{@git_work_dir}"] if !@git_work_dir.nil?
       global_opts << ["-c", "color.ui=false"]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
