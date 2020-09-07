@@ -83,4 +83,15 @@ class TestWorktree < Test::Unit::TestCase
     @git.worktrees.prune
     assert_equal(1, @git.worktrees.size)
   end
+
+  def test_worktree_bracnh_checkout_test
+    filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
+    tmp_path = File.join("/tmp/", filename)
+
+    @git.worktree(tmp_path).add
+
+    g = Git.open(tmp_path)
+    g.branch('new_branch').checkout
+    @git.worktree(tmp_path).remove
+  end
 end
