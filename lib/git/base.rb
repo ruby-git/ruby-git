@@ -58,7 +58,7 @@ module Git
       # Submodules have a .git *file* not a .git folder.
       # This file's contents point to the location of
       # where the git refs are held (In the parent repo)
-      if File.file?('.git')
+      if opts[:working_directory] && File.file?(File.join(opts[:working_directory], '.git'))
         git_file = File.open('.git').read[8..-1].strip
         opts[:repository] = git_file
         opts[:index] = git_file + '/index'
@@ -72,13 +72,24 @@ module Git
     # opens a new Git Project from a working directory
     # you can specify non-standard git_dir and index file in the options
     def self.open(working_dir, opts={})
-      self.new({:working_directory => working_dir}.merge(opts))
+      opts[:working_directory] ||= working_dir
+      opts[:repository] ||= File.join(opts[:working_directory], '.git')
+
+      # Submodules have a .git *file* not a .git folder.
+      # This file's contents point to the location of
+      # where the git refs are held (In the parent repo)
+      if opts[:working_directory] && File.file?(File.join(opts[:working_directory], '.git'))
+        git_file = File.open('.git').read[8..-1].strip
+        opts[:repository] = git_file
+        opts[:index] = git_file + '/index'
+      end
+      self.new(opts)
     end
     
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')
-        options[:index] ||= File.join(working_dir, '.git', 'index')
+        options[:index] ||= File.join(options[:repository], 'index')
       end
       if options[:log]
         @logger = options[:log]

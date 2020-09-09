@@ -26,7 +26,7 @@ class Test::Unit::TestCase
   
   teardown
   def git_teardown
-    if @tmp_path
+    if instance_variable_defined?(:@tmp_path)
       FileUtils.rm_r(@tmp_path)
     end
   end
