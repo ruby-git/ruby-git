@@ -22,7 +22,9 @@ class TestGitPath < Test::Unit::TestCase
   
   def test_initialize_with_bad_path_and_no_check
     path = Git::Path.new('/this path does not exist', false)
-    assert_equal '/this path does not exist', path.to_s
+    assert path.to_s.end_with?('/this path does not exist')
+
+    assert(path.to_s.match(/^C?:?\/this path does not exist$/))
   end
 
   def test_readables

@@ -6,7 +6,7 @@ SAMPLE_LAST_COMMIT = '5e53019b3238362144c2766f02a2c00d91fcc023'
 
 class TestWorktree < Test::Unit::TestCase
   def git_working_dir
-    cwd = `pwd`.chomp
+    cwd = FileUtils.pwd
     if File.directory?(File.join(cwd, 'files'))
       test_dir = File.join(cwd, 'files')
     elsif File.directory?(File.join(cwd, '..', 'files'))
