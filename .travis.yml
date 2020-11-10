@@ -1,14 +1,36 @@
 language: ruby
-rvm:
-  - 2.3
-  - 2.4
-  - 2.5
-  - 2.6
-  - ruby-head
-  - jruby
-
-matrix:
+jobs:
+  include:
+  - rvm: 2.3
+  - rvm: 2.4
+  - rvm: 2.5
+  - rvm: 2.6
+  - rvm: 2.7
+  - rvm: ruby-head
+  - rvm: jruby
+  - name: "Ruby Windows"
+    os: windows
+    language: shell
+    script:
+    - bundle
+    - bundle exec rake
+  - name: "JRuby Windows"
+    os: windows
+    language: shell
+    script:
+    - export JAVA_HOME=${JAVA_HOME:-/c/jdk}
+    - export PATH=${JAVA_HOME}/bin:${PATH}
+    - choco install jdk8 -params 'installdir=c:\\jdk' -y
+    - curl -L -o jruby-dist-9.2.13.0-bin.zip https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.2.13.0/jruby-dist-9.2.13.0-bin.zip
+    - unzip jruby-dist-9.2.13.0-bin.zip
+    - export PATH="$(pwd)/jruby-9.2.13.0/bin:$PATH"
+    - jruby --version
+    - jruby -S gem install bundler --no-document
+    - jruby -S bundle
+    - powershell rake
   allow_failures:
   - rvm: jruby
   - rvm: ruby-head
+  - name: "Ruby Windows"
+  - name: "JRuby Windows"
   fast_finish: true

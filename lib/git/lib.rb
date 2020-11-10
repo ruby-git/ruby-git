@@ -1,5 +1,6 @@
 require 'rchardet'
 require 'tempfile'
+require 'zlib'
 
 module Git
 
@@ -243,6 +244,8 @@ module Git
           next
         end
 
+        in_message = false if in_message && line[0..3] != "    "
+
         if in_message
           hsh['message'] << "#{line[4..-1]}\n"
           next
@@ -306,6 +309,39 @@ module Git
         arr << [b.gsub('* ', '').strip, current]
       end
       arr
+    end
+
+    def worktrees_all
+      arr = []
+      directory = ''
+      # Output example for `worktree list --porcelain`:
+      # worktree /code/public/ruby-git
+      # HEAD 4bef5abbba073c77b4d0ccc1ffcd0ed7d48be5d4
+      # branch refs/heads/master
+      # 
+      # worktree /tmp/worktree-1
+      # HEAD b8c63206f8d10f57892060375a86ae911fad356e
+      # detached
+      #
+      command_lines('worktree',['list', '--porcelain']).each do |w|
+        s = w.split("\s")
+        directory = s[1] if s[0] == 'worktree'
+        arr << [directory, s[1]] if s[0] == 'HEAD'
+      end
+      arr
+    end
+
+    def worktree_add(dir, commitish = nil)
+      return command('worktree', ['add', dir, commitish]) if !commitish.nil?
+      command('worktree', ['add', dir])
+    end
+
+    def worktree_remove(dir)
+      command('worktree', ['remove', dir])
+    end
+
+    def worktree_prune
+      command('worktree', ['prune'])
     end
 
     def list_files(ref_dir)
@@ -554,6 +590,19 @@ module Git
       command('rm', arr_opts)
     end
 
+    # Takes the commit message with the options and executes the commit command
+    #
+    # accepts options:
+    #  :amend
+    #  :all
+    #  :allow_empty
+    #  :author
+    #  :date
+    #  :no_verify
+    #  :allow_empty_message
+    #
+    # @param [String] message the commit message to be used
+    # @param [Hash] opts the commit options to be used
     def commit(message, opts = {})
       arr_opts = []
       arr_opts << "--message=#{message}" if message
@@ -562,6 +611,8 @@ module Git
       arr_opts << '--allow-empty' if opts[:allow_empty]
       arr_opts << "--author=#{opts[:author]}" if opts[:author]
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
+      arr_opts << '--no-verify' if opts[:no_verify]
+      arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
 
       command('commit', arr_opts)
     end
@@ -620,7 +671,7 @@ module Git
     end
 
     def stash_save(message)
-      output = command('stash save', ['--', message])
+      output = command('stash save', [message])
       output =~ /HEAD is now at/
     end
 
@@ -696,10 +747,14 @@ module Git
 
     def conflicts # :yields: file, your, their
       self.unmerged.each do |f|
-        your = Tempfile.new("YOUR-#{File.basename(f)}").path
+        your_tempfile = Tempfile.new("YOUR-#{File.basename(f)}")
+        your = your_tempfile.path
+        your_tempfile.close # free up file for git command process
         command('show', ":2:#{f}", true, "> #{escape your}")
 
-        their = Tempfile.new("THEIR-#{File.basename(f)}").path
+        their_tempfile = Tempfile.new("THEIR-#{File.basename(f)}")
+        their = their_tempfile.path
+        their_tempfile.close # free up file for git command process
         command('show', ":3:#{f}", true, "> #{escape their}")
         yield(f, your, their)
       end
@@ -877,7 +932,13 @@ module Git
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
-      command('archive', arr_opts, true, (opts[:add_gzip] ? '| gzip' : '') + " > #{escape file}")
+      command('archive', arr_opts, true, " > #{escape file}")
+      if opts[:add_gzip]
+        file_content = File.read(file)
+        Zlib::GzipWriter.open(file) do |gz|
+          gz.write(file_content)
+        end
+      end
       return file
     end
 
@@ -1054,11 +1115,11 @@ module Git
     end
 
     def normalize_encoding(str)
-      return str if str.valid_encoding? && str.encoding == default_encoding
+      return str if str.valid_encoding? && str.encoding.name == default_encoding
 
-      return str.encode(default_encoding, str.encoding, encoding_options) if str.valid_encoding?
+      return str.encode(default_encoding, str.encoding, **encoding_options) if str.valid_encoding?
 
-      str.encode(default_encoding, detected_encoding(str), encoding_options)
+      str.encode(default_encoding, detected_encoding(str), **encoding_options)
     end
 
     def run_command(git_cmd, &block)
@@ -1068,11 +1129,22 @@ module Git
     end
 
     def escape(s)
-      return "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'" if RUBY_PLATFORM !~ /mingw|mswin/
+      windows_platform? ? escape_for_windows(s) : escape_for_sh(s)
+    end
 
-      # Keeping the old escape format for windows users
-      escaped = s.to_s.gsub('\'', '\'\\\'\'')
-      return %Q{"#{escaped}"}
+    def escape_for_sh(s)
+      "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'"
+    end
+
+    def escape_for_windows(s)
+      # Windows does not need single quote escaping inside double quotes
+      %Q{"#{s}"}
+    end
+
+    def windows_platform?
+      # Check if on Windows via RUBY_PLATFORM (CRuby) and RUBY_DESCRIPTION (JRuby)
+      win_platform_regex = /mingw|mswin/
+      RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
     end
 
   end

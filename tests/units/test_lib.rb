@@ -44,8 +44,40 @@ class TestLib < Test::Unit::TestCase
     assert_equal("Scott Chacon <schacon@gmail.com> #{author_date.strftime("%s %z")}", data['author'])
   end
 
+  def test_commit_with_no_verify
+    # Backup current pre-commit hook
+    pre_commit_path = "#{@wdir}/.git/hooks/pre-commit"
+    pre_commit_path_bak = "#{pre_commit_path}-bak"
+    move_file(pre_commit_path, pre_commit_path_bak)
+
+    # Adds a pre-commit file that should throw an error
+    create_file(pre_commit_path, 'echo Pre-commit file. Shoud not execute; exit 1') # Error when executed
+    File.chmod(0111, pre_commit_path)
+
+    create_file("#{@wdir}/test_file_2", 'content test_file_2')
+    @lib.add('test_file_2')
+
+    # Error raised because of pre-commit hook and no use of no_verify option
+    assert_raise Git::GitExecuteError do
+      @lib.commit('commit without no verify and pre-commit file')
+    end
+
+    # Error is not raised when no_verify is passed
+    assert_nothing_raised do
+      @lib.commit('commit with no verify and pre-commit file', no_verify: true )
+    end
+
+    # Restore pre-commit hook
+    move_file(pre_commit_path_bak, pre_commit_path)
+
+    # Verify the commit was created
+    data = @lib.commit_data('HEAD')
+    assert_equal("commit with no verify and pre-commit file\n", data['message'])
+  end
+
   def test_checkout
     assert(@lib.checkout('test_checkout_b',{:new_branch=>true}))
+    assert(@lib.checkout('.'))
     assert(@lib.checkout('master'))
   end
 
@@ -93,18 +125,16 @@ class TestLib < Test::Unit::TestCase
   def test_git_ssh_from_environment_is_passed_to_binary
     with_custom_env_variables do
       begin
-        ENV['GIT_SSH'] = 'my/git-ssh-wrapper'
-
         Dir.mktmpdir do |dir|
           output_path = File.join(dir, 'git_ssh_value')
-          binary_path = File.join(dir, 'git')
+          binary_path = File.join(dir, 'git.bat') # .bat so it works in Windows too
           Git::Base.config.binary_path = binary_path
           File.open(binary_path, 'w') { |f|
-            f << "echo $GIT_SSH > #{output_path}"
+            f << "echo \"my/git-ssh-wrapper\" > #{output_path}"
           }
           FileUtils.chmod(0700, binary_path)
           @lib.checkout('something')
-          assert_equal("my/git-ssh-wrapper\n", File.read(output_path))
+          assert(File.read(output_path).include?("my/git-ssh-wrapper"))
         end
       ensure
         Git.configure do |config|
