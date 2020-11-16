@@ -8,6 +8,7 @@ jobs:
   - rvm: 2.7
   - rvm: ruby-head
   - rvm: jruby
+  - rvm: truffleruby-head
   - name: "Ruby Windows"
     os: windows
     language: shell
@@ -33,4 +34,5 @@ jobs:
   - rvm: ruby-head
   - name: "Ruby Windows"
   - name: "JRuby Windows"
+  - rmv: truffleruby-head
   fast_finish: true
