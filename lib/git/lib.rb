@@ -318,7 +318,7 @@ module Git
       # worktree /code/public/ruby-git
       # HEAD 4bef5abbba073c77b4d0ccc1ffcd0ed7d48be5d4
       # branch refs/heads/master
-      # 
+      #
       # worktree /tmp/worktree-1
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
@@ -964,10 +964,7 @@ module Git
     def command_lines(cmd, *opts)
       cmd_op = command(cmd, *opts)
       if cmd_op.encoding.name != "UTF-8"
-        op = cmd_op.encode("UTF-8", "binary", {
-          :invalid => :replace,
-          :undef => :replace
-        })
+        op = cmd_op.encode("UTF-8", "binary", :invalid => :replace, :undef => :replace)
       else
         op = cmd_op
       end
