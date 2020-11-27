@@ -448,10 +448,13 @@ module Git
       hsh
     end
 
-    def ls_remote(location=nil)
-      location ||= '.'
+    def ls_remote(location=nil, opts={})
+      arr_opts = []
+      arr_opts << ['--refs'] if opts[:refs]
+      arr_opts << (location || '.')
+
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
-        command_lines('ls-remote', location).each do |line|
+        command_lines('ls-remote', arr_opts).each do |line|
           (sha, info) = line.split("\t")
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
