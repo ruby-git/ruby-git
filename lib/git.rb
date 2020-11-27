@@ -146,10 +146,13 @@ module Git
   # returns a Hash containing information about the references
   # of the target repository
   #
+  # options
+  #   :refs
+  #
   # @param [String|NilClass] location the target repository location or nil for '.'
   # @return [{String=>Hash}] the available references of the target repo.
-  def self.ls_remote(location=nil)
-    Git::Lib.new.ls_remote(location)
+  def self.ls_remote(location = nil, options = {})
+    Git::Lib.new.ls_remote(location, options)
   end
 
   # open an existing git working directory
