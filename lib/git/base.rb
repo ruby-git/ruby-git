@@ -17,16 +17,17 @@ module Git
     #  name - sinatra
     #
     # options:
-    #   :repository
+    #   :log
     #
-    #    :bare
+    #   :repository
+    #   :bare
     #   or 
-    #    :working_directory
-    #    :index_file
+    #   :working_directory
+    #   :index_file
     #
     def self.clone(repository, name, opts = {})
       # run git-clone 
-      self.new(Git::Lib.new.clone(repository, name, opts))
+      self.new(Git::Lib.new(nil, opts[:log]).clone(repository, name, opts).merge(log: opts[:log]))
     end
     
     # Returns (and initialize if needed) a Git::Config instance
