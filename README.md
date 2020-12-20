@@ -18,7 +18,7 @@ sudo gem install git
 
 ## Code Status
 
-* [![Build Status](https://travis-ci.org/ruby-git/ruby-git.svg?branch=master)](https://travis-ci.org/ruby-git/ruby-git)
+* [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 * [![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
 * [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
 
