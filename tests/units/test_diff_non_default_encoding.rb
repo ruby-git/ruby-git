@@ -4,7 +4,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class TestDiffWithNonDefaultEncoding < Test::Unit::TestCase
   def git_working_dir
-    cwd = `pwd`.chomp
+    cwd = FileUtils.pwd
     if File.directory?(File.join(cwd, 'files'))
       test_dir = File.join(cwd, 'files')
     elsif File.directory?(File.join(cwd, '..', 'files'))
@@ -35,6 +35,7 @@ class TestDiffWithNonDefaultEncoding < Test::Unit::TestCase
   def test_diff_with_greek_encoding
     d = @git.diff
     patch = d.patch
+    return unless Encoding.default_external == (Encoding::UTF_8 rescue Encoding::UTF8) # skip test on Windows / check UTF8 in JRuby instead
     assert(patch.include?("-Φθγητ οπορτερε ιν ιδεριντ\n"))
     assert(patch.include?("+Φεθγιατ θρβανιτασ ρεπριμιqθε\n"))
   end
@@ -42,6 +43,7 @@ class TestDiffWithNonDefaultEncoding < Test::Unit::TestCase
   def test_diff_with_japanese_and_korean_encoding
     d = @git.diff.path('test2.txt')
     patch = d.patch
+    return unless Encoding.default_external == (Encoding::UTF_8 rescue Encoding::UTF8) # skip test on Windows / check UTF8 in JRuby instead
     expected_patch = <<~PATCH.chomp
       diff --git a/test2.txt b/test2.txt
       index 87d9aa8..210763e 100644
