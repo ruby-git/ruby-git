@@ -1050,15 +1050,12 @@ module Git
         @logger.debug(output)
       end
 
-      if exitstatus > 1 || (exitstatus == 1 && output != '')
-        raise Git::GitExecuteError.new(git_cmd + ':' + output.to_s)
-      end
+      raise Git::GitExecuteError, "#{git_cmd}:#{output}" if
+        exitstatus > 1 || (exitstatus == 1 && output != '')
 
-      if command_opts[:chomp]
-        output.chomp! if output
-      end
+      output.chomp! if output && command_opts[:chomp] && !block_given?
 
-      return output
+      output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
