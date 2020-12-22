@@ -78,9 +78,16 @@ module Git
 
       command('clone', arr_opts)
 
-      (opts[:bare] or opts[:mirror]) ? {:repository => clone_dir} : {:working_directory => clone_dir}
+      return_base_opts_from_clone(clone_dir, opts)
     end
 
+    def return_base_opts_from_clone(clone_dir, opts)
+      base_opts = {}
+      base_opts[:repository] = clone_dir if (opts[:bare] || opts[:mirror])
+      base_opts[:working_directory] = clone_dir unless (opts[:bare] || opts[:mirror])
+      base_opts[:log] = opts[:log] if opts[:log]
+      base_opts
+    end
 
     ## READ COMMANDS ##
 
