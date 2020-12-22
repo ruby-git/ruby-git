@@ -19,7 +19,7 @@ class TestLogger < Test::Unit::TestCase
     @git.branches.size
     
     logc = File.read(log.path)
-    assert(/INFO -- : git '--git-dir=[^']+' '--work-tree=[^']+' branch '-a'/.match(logc))
+    assert(/INFO -- : git ['"]--git-dir=[^'"]+['"] ['"]--work-tree=[^'"]+['"] ['"]-c['"] ['"]color.ui=false['"] branch ['"]-a['"]/.match(logc))
     assert(/DEBUG -- :   diff_over_patches/.match(logc))
 
     log = Tempfile.new('logfile')
@@ -31,7 +31,7 @@ class TestLogger < Test::Unit::TestCase
     @git.branches.size
     
     logc = File.read(log.path)
-    assert(/INFO -- : git '--git-dir=[^']+' '--work-tree=[^']+' branch '-a'/.match(logc))
+    assert(/INFO -- : git ['"]--git-dir=[^'"]+['"] ['"]--work-tree=[^'"]+['"] ['"]-c['"] ['"]color.ui=false['"] branch ['"]-a['"]/.match(logc))
     assert(!/DEBUG -- :   diff_over_patches/.match(logc))
   end
   

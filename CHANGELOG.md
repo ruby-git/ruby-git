@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.7.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.7.0
+
+## 1.6.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.6.0
+
+## 1.6.0.pre1
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.6.0.pre1
+
 ## 1.5.0
 
 See https://github.com/ruby-git/ruby-git/releases/tag/v1.5.0

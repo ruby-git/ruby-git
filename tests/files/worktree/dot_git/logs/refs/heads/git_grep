@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 3a9f195756f5bd26b67c5e1fffd92d68d61be14e scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194632890 -0800	branch: Created from HEAD
+3a9f195756f5bd26b67c5e1fffd92d68d61be14e a3db7143944dcfa006fefe7fb49c48793cb29ade scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194632954 -0800	commit: added search file
+a3db7143944dcfa006fefe7fb49c48793cb29ade 34a566d193dc4702f03149969a2aad1443231560 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194632975 -0800	commit: modified to not show up
+34a566d193dc4702f03149969a2aad1443231560 935badc874edd62a8629aaf103418092c73f0a56 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194633382 -0800	commit: more search help
+935badc874edd62a8629aaf103418092c73f0a56 5e53019b3238362144c2766f02a2c00d91fcc023 scott Chacon <schacon@agadorsparticus.(none)> 1194720731 -0800	commit: diff test
