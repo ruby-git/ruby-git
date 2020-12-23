@@ -104,7 +104,7 @@ module Git
     end
 
     def pretty_file(file)
-      <<-FILE.strip_heredoc
+      <<~FILE
         #{file.path}
         \tsha(r) #{file.sha_repo} #{file.mode_repo}
         \tsha(i) #{file.sha_index} #{file.mode_index}
