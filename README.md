@@ -184,6 +184,10 @@ g = Git.clone(URI, NAME, :path => '/tmp/checkout')
 g.config('user.name', 'Scott Chacon')
 g.config('user.email', 'email@email.com')
 
+# Clone can take an optional logger
+logger = Logger.new
+g = Git.clone(URI, NAME, :log => logger)
+
 g.add                                   # git add -- "."
 g.add(:all=>true)                       # git add --all -- "."
 g.add('file_path')                      # git add -- "file_path"
