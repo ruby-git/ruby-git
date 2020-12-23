@@ -91,4 +91,10 @@ class TestLog < Test::Unit::TestCase
       assert_equal(expected_message, log[1].message)
     end
   end
+
+  def test_log_cherry
+    l = @git.log.between( 'master', 'cherry').cherry
+    assert_equal( 1, l.size )
+  end
+  
 end
