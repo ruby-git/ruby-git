@@ -721,8 +721,9 @@ module Git
       command('checkout', arr_opts)
     end
 
-    def merge(branch, message = nil)
+    def merge(branch, message = nil, opts = {})
       arr_opts = []
+      arr_opts << '--no-ff' if opts[:no_ff]
       arr_opts << '-m' << message if message
       arr_opts += [branch]
       command('merge', arr_opts)
@@ -1071,6 +1072,8 @@ module Git
     # @param [Array] opts the diff options to be used
     # @return [Hash] the diff as Hash
     def diff_as_hash(diff_command, opts=[])
+      # update index before diffing to avoid spurious diffs
+      command('status')
       command_lines(diff_command, opts).inject({}) do |memo, line|
         info, file = line.split("\t")
         mode_src, mode_dest, sha_src, sha_dest, type = info.split

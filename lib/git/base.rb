@@ -346,8 +346,8 @@ module Git
     # merges one or more branches into the current working branch
     #
     # you can specify more than one branch to merge by passing an array of branches
-    def merge(branch, message = 'merge')
-      self.lib.merge(branch, message)
+    def merge(branch, message = 'merge', opts = {})
+      self.lib.merge(branch, message, opts)
     end
 
     # iterates over the files which are unmerged
