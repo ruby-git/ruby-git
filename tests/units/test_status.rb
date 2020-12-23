@@ -97,4 +97,20 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.untracked?('test_file_2'))
     end
   end
+
+  def test_changed_cache
+    in_temp_dir do |path|
+      git = Git.clone(@wdir, 'test_dot_files_status')
+
+      create_file('test_dot_files_status/test_file_1', 'hello')
+
+      git.add('test_file_1')
+      git.commit('message')
+
+      delete_file('test_dot_files_status/test_file_1')
+      create_file('test_dot_files_status/test_file_1', 'hello')
+
+      assert(!git.status.changed?('test_file_1'))
+    end
+  end
 end

@@ -1065,6 +1065,8 @@ module Git
     # @param [Array] opts the diff options to be used
     # @return [Hash] the diff as Hash
     def diff_as_hash(diff_command, opts=[])
+      # update index before diffing to avoid spurious diffs
+      command('status')
       command_lines(diff_command, opts).inject({}) do |memo, line|
         info, file = line.split("\t")
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
