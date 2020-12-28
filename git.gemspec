@@ -7,8 +7,19 @@ Gem::Specification.new do |s|
   s.homepage = 'http://github.com/ruby-git/ruby-git'
   s.license = 'MIT'
   s.name = 'git'
-  s.summary = 'Ruby/Git is a Ruby library that can be used to create, read and manipulate Git repositories by wrapping system calls to the git binary.'
+  s.summary = 'An API to create, read, and manipulate Git repositories'
+  s.description = <<~DESCRIPTION
+    The Git Gem provides an API that can be used to create, read, and manipulate
+    Git repositories by wrapping system calls to the `git` binary. The API can be
+    used for working with Git in complex interactions including branching and
+    merging, object inspection and manipulation, history, patch generation and
+    more.
+  DESCRIPTION
   s.version = Git::VERSION
+
+  s.metadata['homepage_uri'] = s.homepage
+  s.metadata['source_code_uri'] = s.homepage
+  s.metadata['changelog_uri'] = 'http://rubydoc.info/gems/git/file.CHANGELOG.html'
 
   s.require_paths = ['lib']
   s.required_ruby_version = '>= 2.3'
@@ -17,13 +28,15 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
-  s.add_development_dependency 'rake'
-  s.add_development_dependency 'rdoc'
-  s.add_development_dependency 'minitar', '0.9'
-  s.add_development_dependency 'test-unit', '>=2', '< 4'
+  s.add_development_dependency 'minitar', '~> 0.9'
+  s.add_development_dependency 'rake', '~> 13.0'
+  s.add_development_dependency 'test-unit', '~> 3.3'
 
-  s.extra_rdoc_files = ['README.md']
-  s.rdoc_options = ['--charset=UTF-8']
+  unless RUBY_PLATFORM == 'java'
+    s.add_development_dependency 'redcarpet', '~> 3.5'
+    s.add_development_dependency 'yard', '~> 0.9'
+    s.add_development_dependency 'yardstick', '~> 0.9'
+  end
 
   s.files = [
     'CHANGELOG.md',
