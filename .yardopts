@@ -1,0 +1,11 @@
+--default-return=''
+--hide-void-return
+--markup-provider=redcarpet
+--markup=markdown
+--fail-on-warning
+-
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+RELEASING.md
+MAINTAINERS.md

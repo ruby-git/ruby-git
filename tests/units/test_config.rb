@@ -31,9 +31,13 @@ class TestConfig < Test::Unit::TestCase
   def test_env_config
     with_custom_env_variables do
       begin
+        assert_equal(Git::Base.config.binary_path, 'git')
         assert_equal(Git::Base.config.git_ssh, nil)
+
+        ENV['GIT_PATH'] = '/env/bin'
         ENV['GIT_SSH'] = '/env/git/ssh'
 
+        assert_equal(Git::Base.config.binary_path, '/env/bin/git')
         assert_equal(Git::Base.config.git_ssh, '/env/git/ssh')
 
         Git.configure do |config|
@@ -41,11 +45,13 @@ class TestConfig < Test::Unit::TestCase
           config.git_ssh = '/path/to/ssh/script'
         end
 
+        assert_equal(Git::Base.config.binary_path, '/usr/bin/git')
         assert_equal(Git::Base.config.git_ssh, '/path/to/ssh/script')
 
         @git.log
       ensure
         ENV['GIT_SSH'] = nil
+        ENV['GIT_PATH'] = nil
 
         Git.configure do |config|
           config.binary_path = nil
