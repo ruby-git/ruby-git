@@ -1,31 +1,23 @@
 require 'git/base/factory'
 
 module Git
-
+  # Git::Base is the main public interface for interacting with Git commands.
+  #
+  # Instead of creating a Git::Base directly, obtain a Git::Base instance by
+  # calling one of the follow {Git} class methods: {Git.open}, {Git.init},
+  # {Git.clone}, or {Git.bare}.
+  #
   class Base
-
     include Git::Base::Factory
 
-    # opens a bare Git Repository - no working directory options
-    def self.bare(git_dir, opts = {})
-      self.new({:repository => git_dir}.merge(opts))
+    # (see Git.bare)
+    def self.bare(git_dir, options = {})
+      self.new({:repository => git_dir}.merge(options))
     end
 
-    # clones a git repository locally
-    #
-    #  repository - http://repo.or.cz/w/sinatra.git
-    #  name - sinatra
-    #
-    # options:
-    #   :repository
-    #
-    #    :bare
-    #   or
-    #    :working_directory
-    #    :index_file
-    #
-    def self.clone(repository, name, opts = {})
-      self.new(Git::Lib.new(nil, opts[:log]).clone(repository, name, opts))
+    # (see Git.clone)
+    def self.clone(repository, name, options = {})
+      self.new(Git::Lib.new(nil, options[:log]).clone(repository, name, options))
     end
 
     # Returns (and initialize if needed) a Git::Config instance
@@ -35,56 +27,82 @@ module Git
       return @@config ||= Config.new
     end
 
-    # initializes a git repository
-    #
-    # options:
-    #  :bare
-    #  :index
-    #  :repository
-    #
-    def self.init(working_dir, opts = {})
-      opts[:working_directory] ||= working_dir
-      opts[:repository] ||= File.join(opts[:working_directory], '.git')
+    # (see Git.init)
+    def self.init(directory, options = {})
+      options[:working_directory] ||= directory
+      options[:repository] ||= File.join(options[:working_directory], '.git')
 
-      FileUtils.mkdir_p(opts[:working_directory]) if opts[:working_directory] && !File.directory?(opts[:working_directory])
+      FileUtils.mkdir_p(options[:working_directory]) if options[:working_directory] && !File.directory?(options[:working_directory])
 
-      init_opts = {
-        :bare => opts[:bare]
-      }
+      init_options = { :bare => options[:bare] }
 
-      opts.delete(:working_directory) if opts[:bare]
+      options.delete(:working_directory) if options[:bare]
 
       # Submodules have a .git *file* not a .git folder.
       # This file's contents point to the location of
       # where the git refs are held (In the parent repo)
-      if opts[:working_directory] && File.file?(File.join(opts[:working_directory], '.git'))
+      if options[:working_directory] && File.file?(File.join(options[:working_directory], '.git'))
         git_file = File.open('.git').read[8..-1].strip
-        opts[:repository] = git_file
-        opts[:index] = git_file + '/index'
+        options[:repository] = git_file
+        options[:index] = git_file + '/index'
       end
 
-      Git::Lib.new(opts).init(init_opts)
+      # TODO: this dance seems awkward: this creates a Git::Lib so we can call
+      #   init so we can create a new Git::Base which in turn (ultimately)
+      #   creates another/different Git::Lib.
+      #
+      # TODO: maybe refactor so this Git::Bare.init does this:
+      #   self.new(opts).init(init_opts) and move all/some of this code into
+      #   Git::Bare#init. This way the init method can be called on any
+      #   repository you have a Git::Base instance for.  This would not
+      #   change the existing interface (other than adding to it).
+      #
+      Git::Lib.new(options).init(init_options)
 
-      self.new(opts)
+      self.new(options)
     end
 
-    # opens a new Git Project from a working directory
-    # you can specify non-standard git_dir and index file in the options
-    def self.open(working_dir, opts={})
-      opts[:working_directory] ||= working_dir
-      opts[:repository] ||= File.join(opts[:working_directory], '.git')
+    # (see Git.open)
+    def self.open(working_dir, options={})
+       # TODO: move this to Git.open?
+
+      options[:working_directory] ||= working_dir
+      options[:repository] ||= File.join(options[:working_directory], '.git')
 
        # Submodules have a .git *file* not a .git folder.
       # This file's contents point to the location of
       # where the git refs are held (In the parent repo)
-      if opts[:working_directory] && File.file?(File.join(opts[:working_directory], '.git'))
+      if options[:working_directory] && File.file?(File.join(options[:working_directory], '.git'))
         git_file = File.open('.git').read[8..-1].strip
-        opts[:repository] = git_file
-        opts[:index] = git_file + '/index'
+        options[:repository] = git_file
+        options[:index] = git_file + '/index'
       end
-      self.new(opts)
+
+      self.new(options)
     end
 
+    # Create an object that executes Git commands in the context of a working
+    # copy or a bare repository.
+    #
+    # @param [Hash] options The options for this command (see list of valid
+    #   options below)
+    #
+    # @option options [Pathname] :working_dir the path to the root of the working
+    #   directory.  Should be `nil` if executing commands on a bare repository.
+    #
+    # @option options [Pathname] :repository used to specify a non-standard path to
+    #   the repository directory.  The default is `"#{working_dir}/.git"`.
+    #
+    # @option options [Pathname] :index used to specify a non-standard path to an
+    #   index file.  The default is `"#{working_dir}/.git/index"`
+    #
+    # @option options [Logger] :log A logger to use for Git operations.  Git
+    #   commands are logged at the `:info` level.  Additional logging is done
+    #   at the `:debug` level.
+    #
+    # @return [Git::Base] an object that can execute git commands in the context
+    #   of the opened working copy or bare repository
+    #
     def initialize(options = {})
       if working_dir = options[:working_directory]
         options[:repository] ||= File.join(working_dir, '.git')
@@ -198,46 +216,53 @@ module Git
       @lib ||= Git::Lib.new(self, @logger)
     end
 
-    # will run a grep for 'string' on the HEAD of the git repository
+    # Run a grep for 'string' on the HEAD of the git repository
     #
-    # to be more surgical in your grep, you can call grep() off a specific
-    # git object.  for example:
+    # @example Limit grep's scope by calling grep() from a specific object:
+    #   git.object("v2.3").grep('TODO')
     #
-    #  @git.object("v2.3").grep('TODO')
-    #
-    # in any case, it returns a hash of arrays of the type:
-    #  hsh[tree-ish] = [[line_no, match], [line_no, match2]]
-    #  hsh[tree-ish] = [[line_no, match], [line_no, match2]]
-    #
-    # so you might use it like this:
-    #
-    #   @git.grep("TODO").each do |sha, arr|
+    # @example Using grep results:
+    #   git.grep("TODO").each do |sha, arr|
     #     puts "in blob #{sha}:"
-    #     arr.each do |match|
-    #       puts "\t line #{match[0]}: '#{match[1]}'"
+    #     arr.each do |line_no, match_string|
+    #       puts "\t line #{line_no}: '#{match_string}'"
     #     end
     #   end
+    #
+    # @return [Hash<String, Array>] a hash of arrays
+    #   ```Ruby
+    #   {
+    #      'tree-ish1' => [[line_no1, match_string1], ...],
+    #      'tree-ish2' => [[line_no1, match_string1], ...],
+    #      ...
+    #   }
+    #   ```
+    #
     def grep(string, path_limiter = nil, opts = {})
       self.object('HEAD').grep(string, path_limiter, opts)
     end
 
     # updates the repository index using the working directory content
     #
-    #    @git.add('path/to/file')
-    #    @git.add(['path/to/file1','path/to/file2'])
-    #    @git.add(:all => true)
+    # @example
+    #   git.add
+    #   git.add('path/to/file')
+    #   git.add(['path/to/file1','path/to/file2'])
+    #   git.add(:all => true)
     #
     # options:
     #   :all => true
     #
     # @param [String,Array] paths files paths to be added (optional, default='.')
     # @param [Hash] options
-    def add(*args)
-      if args[0].instance_of?(String) || args[0].instance_of?(Array)
-        self.lib.add(args[0],args[1]||{})
-      else
-        self.lib.add('.', args[0]||{})
-      end
+    # @option options [boolean] :all
+    #   Update the index not only where the working tree has a file matching
+    #   <pathspec> but also where the index already has an entry.
+    #   See [the --all option to git-add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--A)
+    #   for more details.
+    #
+    def add(paths = '.', **options)
+      self.lib.add(paths, options)
     end
 
     # removes file(s) from the git repository
@@ -410,20 +435,25 @@ module Git
     end
 
     # Creates a new git tag (Git::Tag)
-    # Usage:
-    #     repo.add_tag('tag_name', object_reference)
-    #     repo.add_tag('tag_name', object_reference, {:options => 'here'})
-    #     repo.add_tag('tag_name', {:options => 'here'})
     #
-    # Options:
-    #   :a | :annotate -> true
-    #   :d             -> true
-    #   :f             -> true
-    #   :m | :message  -> String
-    #   :s             -> true
+    # @example
+    #   repo.add_tag('tag_name', object_reference)
+    #   repo.add_tag('tag_name', object_reference, {:options => 'here'})
+    #   repo.add_tag('tag_name', {:options => 'here'})
     #
-    def add_tag(name, *opts)
-      self.lib.tag(name, *opts)
+    # @param [String] name The name of the tag to add
+    # @param [Hash] options Opstions to pass to `git tag`.
+    #   See [git-tag](https://git-scm.com/docs/git-tag) for more details.
+    # @option options [boolean] :annotate Make an unsigned, annotated tag object
+    # @option options [boolean] :a An alias for the `:annotate` option
+    # @option options [boolean] :d Delete existing tag with the given names.
+    # @option options [boolean] :f Replace an existing tag with the given name (instead of failing)
+    # @option options [String] :message Use the given tag message
+    # @option options [String] :m An alias for the `:message` option
+    # @option options [boolean] :s Make a GPG-signed tag.
+    #
+    def add_tag(name, *options)
+      self.lib.tag(name, *options)
       self.tag(name)
     end
 
@@ -539,9 +569,10 @@ module Git
 
     # runs git rev-parse to convert the objectish to a full sha
     #
-    #   @git.revparse("HEAD^^")
-    #   @git.revparse('v2.4^{tree}')
-    #   @git.revparse('v2.4:/doc/index.html')
+    # @example
+    #   git.revparse("HEAD^^")
+    #   git.revparse('v2.4^{tree}')
+    #   git.revparse('v2.4:/doc/index.html')
     #
     def revparse(objectish)
       self.lib.revparse(objectish)
