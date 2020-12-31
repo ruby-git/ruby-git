@@ -38,31 +38,9 @@ Gem::Specification.new do |s|
     s.add_development_dependency 'yardstick', '~> 0.9'
   end
 
-  s.files = [
-    'CHANGELOG.md',
-    'CONTRIBUTING.md',
-    'MAINTAINERS.md',
-    'LICENSE',
-    'README.md',
-    'lib/git.rb',
-    'lib/git/author.rb',
-    'lib/git/base.rb',
-    'lib/git/base/factory.rb',
-    'lib/git/branch.rb',
-    'lib/git/branches.rb',
-    'lib/git/config.rb',
-    'lib/git/diff.rb',
-    'lib/git/index.rb',
-    'lib/git/lib.rb',
-    'lib/git/log.rb',
-    'lib/git/object.rb',
-    'lib/git/path.rb',
-    'lib/git/remote.rb',
-    'lib/git/repository.rb',
-    'lib/git/stash.rb',
-    'lib/git/stashes.rb',
-    'lib/git/status.rb',
-    'lib/git/version.rb',
-    'lib/git/working_directory.rb'
-  ]
+  # Specify which files should be added to the gem when it is released.
+  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
+  s.files = Dir.chdir(File.expand_path(__dir__)) do
+    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(tests|spec|features)/}) }
+  end
 end
