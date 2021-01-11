@@ -40,3 +40,6 @@ jobs:
 
       - name: Run Build
         run: bundle exec rake default
+
+      - name: Test Gem
+        run: bundle exec rake test:gem
