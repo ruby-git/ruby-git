@@ -10,75 +10,45 @@ module Git
   class Base
     include Git::Base::Factory
 
-    # (see Git.bare)
-    def self.bare(git_dir, options = {})
-      self.new({:repository => git_dir}.merge(options))
+    # (see Git.init)
+    def self.init(directory = '.', options = {})
+      normalize_paths(options, default_working_directory: directory, default_repository: directory, bare: options[:bare])
+
+      if options[:bare]
+        FileUtils.mkdir_p(options[:repository]) unless File.exist?(options[:repository])
+        Git::Lib.new(options).init(bare: true)
+      else
+        FileUtils.mkdir_p(options[:working_directory]) unless File.exist?(options[:working_directory])
+        Git::Lib.new(options).init(bare: false)
+      end
+
+      new(options)
     end
 
     # (see Git.clone)
     def self.clone(repository, name, options = {})
-      self.new(Git::Lib.new(nil, options[:log]).clone(repository, name, options))
+      new_options = Git::Lib.new(nil, options[:log]).clone(repository, name, options)
+      normalize_paths(new_options, bare: options[:bare] || options[:mirror])
+      new(new_options)
+    end
+
+    # (see Git.open)
+    def self.open(working_dir, options = {})
+      normalize_paths(options, default_working_directory: working_dir)
+      new(options)
+    end
+
+    # (see Git.bare)
+    def self.bare(git_dir, options = {})
+      normalize_paths(options, default_repository: git_dir, bare: true)
+      new(options)
     end
 
     # Returns (and initialize if needed) a Git::Config instance
     #
     # @return [Git::Config] the current config instance.
     def self.config
-      return @@config ||= Config.new
-    end
-
-    # (see Git.init)
-    def self.init(directory, options = {})
-      options[:working_directory] ||= directory
-      options[:repository] ||= File.join(options[:working_directory], '.git')
-
-      FileUtils.mkdir_p(options[:working_directory]) if options[:working_directory] && !File.directory?(options[:working_directory])
-
-      init_options = { :bare => options[:bare] }
-
-      options.delete(:working_directory) if options[:bare]
-
-      # Submodules have a .git *file* not a .git folder.
-      # This file's contents point to the location of
-      # where the git refs are held (In the parent repo)
-      if options[:working_directory] && File.file?(File.join(options[:working_directory], '.git'))
-        git_file = File.open('.git').read[8..-1].strip
-        options[:repository] = git_file
-        options[:index] = git_file + '/index'
-      end
-
-      # TODO: this dance seems awkward: this creates a Git::Lib so we can call
-      #   init so we can create a new Git::Base which in turn (ultimately)
-      #   creates another/different Git::Lib.
-      #
-      # TODO: maybe refactor so this Git::Bare.init does this:
-      #   self.new(opts).init(init_opts) and move all/some of this code into
-      #   Git::Bare#init. This way the init method can be called on any
-      #   repository you have a Git::Base instance for.  This would not
-      #   change the existing interface (other than adding to it).
-      #
-      Git::Lib.new(options).init(init_options)
-
-      self.new(options)
-    end
-
-    # (see Git.open)
-    def self.open(working_dir, options={})
-       # TODO: move this to Git.open?
-
-      options[:working_directory] ||= working_dir
-      options[:repository] ||= File.join(options[:working_directory], '.git')
-
-       # Submodules have a .git *file* not a .git folder.
-      # This file's contents point to the location of
-      # where the git refs are held (In the parent repo)
-      if options[:working_directory] && File.file?(File.join(options[:working_directory], '.git'))
-        git_file = File.open('.git').read[8..-1].strip
-        options[:repository] = git_file
-        options[:index] = git_file + '/index'
-      end
-
-      self.new(options)
+      @@config ||= Config.new
     end
 
     # Create an object that executes Git commands in the context of a working
@@ -566,7 +536,6 @@ module Git
       with_working(temp_dir, &blk)
     end
 
-
     # runs git rev-parse to convert the objectish to a full sha
     #
     # @example
@@ -591,6 +560,93 @@ module Git
       self.lib.branch_current
     end
 
-  end
+    private
 
+    # Normalize options before they are sent to Git::Base.new
+    #
+    # Updates the options parameter by setting appropriate values for the following keys:
+    #   * options[:working_directory]
+    #   * options[:repository]
+    #   * options[:index]
+    #
+    # All three values will be set to absolute paths. An exception is that
+    # :working_directory will be set to nil if bare is true.
+    #
+    private_class_method def self.normalize_paths(
+      options, default_working_directory: nil, default_repository: nil, bare: false
+    )
+      normalize_working_directory(options, default: default_working_directory, bare: bare)
+      normalize_repository(options, default: default_repository, bare: bare)
+      normalize_index(options)
+    end
+
+    # Normalize options[:working_directory]
+    #
+    # If working with a bare repository, set to `nil`.
+    # Otherwise, set to the first non-nil value of:
+    #   1. `options[:working_directory]`,
+    #   2. the `default` parameter, or
+    #   3. the current working directory
+    #
+    # Finally, if options[:working_directory] is a relative path, convert it to an absoluite
+    # path relative to the current directory.
+    #
+    private_class_method def self.normalize_working_directory(options, default:, bare: false)
+      working_directory =
+        if bare
+          nil
+        else
+          File.expand_path(options[:working_directory] || default || Dir.pwd)
+        end
+
+      options[:working_directory] = working_directory
+    end
+
+    # Normalize options[:repository]
+    #
+    # If working with a bare repository, set to the first non-nil value out of:
+    #   1. `options[:repository]`
+    #   2. the `default` parameter
+    #   3. the current working directory
+    #
+    # Otherwise, set to the first non-nil value of:
+    #   1. `options[:repository]`
+    #   2. `.git`
+    #
+    # Next, if options[:repository] refers to a *file* and not a *directory*, set
+    # options[:repository] to the contents of that file.  This is the case when
+    # working with a submodule or a secondary working tree (created with git worktree
+    # add). In these cases the repository is actually contained/nested within the
+    # parent's repository directory.
+    #
+    # Finally, if options[:repository] is a relative path, convert it to an absolute
+    # path relative to:
+    #   1. the current directory if working with a bare repository or
+    #   2. the working directory if NOT working with a bare repository
+    #
+    private_class_method def self.normalize_repository(options, default:, bare: false)
+      repository =
+        if bare
+          File.expand_path(options[:repository] || default || Dir.pwd)
+        else
+          File.expand_path(options[:repository] || '.git', options[:working_directory])
+        end
+
+      if File.file?(repository)
+        repository = File.expand_path(File.open(repository).read[8..-1].strip, options[:working_directory])
+      end
+
+      options[:repository] = repository
+    end
+
+    # Normalize options[:index]
+    #
+    # If options[:index] is a relative directory, convert it to an absolute
+    # directory relative to the repository directory
+    #
+    private_class_method def self.normalize_index(options)
+      index = File.expand_path(options[:index] || 'index', options[:repository])
+      options[:index] = index
+    end
+  end
 end
