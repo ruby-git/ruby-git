@@ -743,7 +743,7 @@ module Git
 
     def checkout(branch, opts = {})
       arr_opts = []
-      arr_opts << '-b' if opts[:new_branch] || opts[:b]
+      arr_opts << "-b #{opts[:new_branch] || opts[:b]}" if opts[:new_branch] || opts[:b]
       arr_opts << '--force' if opts[:force] || opts[:f]
       arr_opts << branch
 
