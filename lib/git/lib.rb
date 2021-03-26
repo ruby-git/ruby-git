@@ -656,7 +656,7 @@ module Git
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
       arr_opts << '--no-verify' if opts[:no_verify]
       arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
-      arr_opts << "--gpg-sign=#{opts[:sign]}" if opts[:sign] || "--gpg-sign" if opts[:sign]=''
+      arr_opts << '--gpg-sign' if opts[:sign]
 
       command('commit', arr_opts)
     end
