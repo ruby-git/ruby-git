@@ -1,3 +1,8 @@
+<!--
+# @markup markdown
+# @title Releasing
+-->
+
 # How to release a new git.gem
 
 Releasing a new version of the `git` gem requires these steps:
