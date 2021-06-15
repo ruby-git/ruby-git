@@ -888,8 +888,12 @@ module Git
       end
     end
 
-    def pull(remote='origin', branch='master')
-      command('pull', remote, branch)
+    def pull(remote='origin', branch='master', opts = {})
+      
+      arr_opts = []
+      arr_opts << '--allow-unrelated-histories'  if opts[:allow_unrelated_histories]
+      
+      command('pull', remote, branch, arr_opts)
     end
 
     def tag_sha(tag_name)
