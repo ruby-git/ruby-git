@@ -891,6 +891,7 @@ module Git
     def pull(remote='origin', branch='master', opts = {})
       
       arr_opts = []
+      arr_opts << '--rebase'  if opts[:rebase]
       arr_opts << '--allow-unrelated-histories'  if opts[:allow_unrelated_histories]
       
       command('pull', remote, branch, arr_opts)
