@@ -146,6 +146,7 @@ g.revparse('v2.5:Makefile')
 
 g.branches # returns Git::Branch objects
 g.branches.local
+g.current_branch
 g.branches.remote
 g.branches[:master].gcommit
 g.branches['origin/master'].gcommit
