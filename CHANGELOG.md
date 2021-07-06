@@ -5,6 +5,10 @@
 
 # Change Log
 
+## 1.9.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.9.0
+
 ## 1.8.1
 
 See https://github.com/ruby-git/ruby-git/releases/tag/v1.8.1
