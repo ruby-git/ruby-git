@@ -226,6 +226,14 @@ g.remove('file.txt', :cached => true)		# git rm -f --cached -- "file.txt"
 g.commit('message')
 g.commit_all('message')
 
+# Sign a commit using the gpg key configured in the user.signingkey config setting
+g.config('user.signingkey', '0A46826A')
+g.commit('message', gpg_sign: true)
+
+# Sign a commit using a specified gpg key
+key_id = '0A46826A'
+g.commit('message', gpg_sign: key_id)
+
 g = Git.clone(repo, 'myrepo')
 g.chdir do
 new_file('test-file', 'blahblahblah')
