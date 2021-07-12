@@ -682,6 +682,7 @@ module Git
     def clean(opts = {})
       arr_opts = []
       arr_opts << '--force' if opts[:force]
+      arr_opts << '-ff' if opts[:ff]
       arr_opts << '-d' if opts[:d]
       arr_opts << '-x' if opts[:x]
 

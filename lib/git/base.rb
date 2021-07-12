@@ -287,6 +287,7 @@ module Git
     # options:
     #  :force
     #  :d
+    #  :ff
     #
     def clean(opts = {})
       self.lib.clean(opts)

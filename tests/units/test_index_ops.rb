@@ -49,6 +49,11 @@ class TestIndexOps < Test::Unit::TestCase
         g.add
         g.commit("first commit")
 
+        FileUtils.mkdir_p("nested")
+        Dir.chdir('nested') do
+          Git.init
+        end
+
         new_file('file-to-clean', 'blablahbla')
         FileUtils.mkdir_p("dir_to_clean")
 
@@ -76,6 +81,11 @@ class TestIndexOps < Test::Unit::TestCase
 
         g.clean(:force => true, :x => true)
         assert(!File.exist?('ignored_file'))
+
+        assert(File.exist?('nested'))
+
+        g.clean(:ff => true, :d => true)
+        assert(!File.exist?('nested'))
       end
     end
   end
