@@ -308,4 +308,12 @@ module Git
   def self.open(working_dir, options = {})
     Base.open(working_dir, options)
   end
+
+  # returns a String containing information about the default remote branch
+  # of the target repository
+  #
+  # @param [String|NilClass] location the target repository location or nil for '.'
+  def self.remote_default_branch(location = '.')
+    Base.open(location).remote.default_branch
+  end
 end

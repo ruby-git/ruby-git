@@ -291,4 +291,9 @@ class TestLib < Test::Unit::TestCase
     assert(@lib.show('gitsearch1', 'scott/text.txt') == "hello\nthis is\na file\nthat is\nput here\nto search one\nto search two\nnothing!\n")
   end
 
+  def test_branch_default
+    assert_equal(@lib.branch_default, "git_grep")
+    @lib.change_head_branch("master")
+    assert_equal(@lib.branch_default, "master")
+  end
 end

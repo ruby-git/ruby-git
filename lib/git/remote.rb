@@ -27,6 +27,11 @@ module Git
     def remove
       @base.lib.remote_remove(@name)     
     end
+
+    # @return [String] name of default branch
+    def default_branch
+      @base.lib.branch_default
+    end
     
     def to_s
       @name

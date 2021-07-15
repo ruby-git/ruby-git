@@ -399,6 +399,20 @@ module Git
       branches_all.select { |b| b[1] }.first[0] rescue nil
     end
 
+    def branch_default
+      begin
+        full_name = command("symbolic-ref", "refs/remotes/origin/HEAD")
+        return full_name.gsub(%r{^refs/remotes/origin/}, "")
+      rescue Git::GitExecuteError
+        begin
+          full_name = command("symbolic-ref", "refs/origin/HEAD")
+          return full_name.gsub(%r{^refs/origin/}, "")
+        rescue Git::GitExecuteError
+          return command("symbolic-ref", "--short", "HEAD")
+        end
+      end
+    end
+
     def branch_contains(commit, branch_name="")
       command("branch",  [branch_name, "--contains", commit])
     end

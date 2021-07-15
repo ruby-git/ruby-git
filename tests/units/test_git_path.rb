@@ -44,4 +44,7 @@ class TestGitPath < Test::Unit::TestCase
     end
   end
 
+  def test_default_branch
+    assert_equal(@git.remote.default_branch, "git_grep")
+  end
 end
