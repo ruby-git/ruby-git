@@ -879,6 +879,7 @@ module Git
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
       arr_opts << '--unshallow' if opts[:unshallow]
+      arr_opts << '--depth' << opts[:depth] if opts[:depth]
 
       command('fetch', arr_opts)
     end
