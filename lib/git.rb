@@ -212,6 +212,9 @@ module Git
   #   `"#{directory}/.git"`, create a bare repository at `"#{directory}"`.
   #   See [what is a bare repository?](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbarerepositoryabarerepository).
   #
+  # @option options [String] :initial_branch Use the specified name for the
+  #   initial branch in the newly created repository.
+  #
   # @option options [Pathname] :repository the path to put the newly initialized
   #   Git repository. The default for non-bare repository is `"#{directory}/.git"`.
   #
