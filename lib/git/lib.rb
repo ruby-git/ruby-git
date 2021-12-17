@@ -71,10 +71,12 @@ module Git
     # options:
     #   :bare
     #   :working_directory
+    #   :initial_branch
     #
     def init(opts={})
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
+      arr_opts << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
 
       command('init', arr_opts)
     end
@@ -772,6 +774,7 @@ module Git
 
     def merge(branch, message = nil, opts = {})
       arr_opts = []
+      arr_opts << '--no-commit' if opts[:no_commit]
       arr_opts << '--no-ff' if opts[:no_ff]
       arr_opts << '-m' << message if message
       arr_opts += [branch]
