@@ -38,6 +38,7 @@ class TestInit < Test::Unit::TestCase
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exist?(File.join(path, '.git', 'config')))
       assert_equal('false', repo.config('core.bare'))
+      assert_equal("ref: refs/heads/master\n", File.read("#{path}/.git/HEAD"))
     end
   end
 
@@ -58,6 +59,16 @@ class TestInit < Test::Unit::TestCase
         Git.init(path, :repository => dir)
         assert(File.exist?(File.join(dir, 'config')))
       end
+    end
+  end
+
+  def test_git_init_initial_branch
+    in_temp_dir do |path|
+      repo = Git.init(path, initial_branch: 'main')
+      assert(File.directory?(File.join(path, '.git')))
+      assert(File.exist?(File.join(path, '.git', 'config')))
+      assert_equal('false', repo.config('core.bare'))
+      assert_equal("ref: refs/heads/main\n", File.read("#{path}/.git/HEAD"))
     end
   end
 
