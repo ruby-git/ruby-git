@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'fileutils'
+require 'pathname'
 require File.dirname(__FILE__) + '/../test_helper'
 
 SAMPLE_LAST_COMMIT = '5e53019b3238362144c2766f02a2c00d91fcc023'
