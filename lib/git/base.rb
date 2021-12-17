@@ -34,7 +34,10 @@ module Git
 
       FileUtils.mkdir_p(options[:working_directory]) if options[:working_directory] && !File.directory?(options[:working_directory])
 
-      init_options = { :bare => options[:bare] }
+      init_options = {
+        :bare => options[:bare],
+        :initial_branch => options[:initial_branch],
+      }
 
       options.delete(:working_directory) if options[:bare]
 

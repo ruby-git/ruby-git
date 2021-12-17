@@ -71,10 +71,12 @@ module Git
     # options:
     #   :bare
     #   :working_directory
+    #   :initial_branch
     #
     def init(opts={})
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
+      arr_opts << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
 
       command('init', arr_opts)
     end
