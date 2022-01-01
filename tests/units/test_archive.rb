@@ -45,7 +45,7 @@ class TestArchive < Test::Unit::TestCase
 
     f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
     assert(File.exist?(f))
- 
+
     lines = Minitar::Input.open(f).each.to_a.map(&:full_name)
     assert_match(%r{test/}, lines[1])
     assert_match(%r{test/ex_dir/ex\.txt}, lines[3])

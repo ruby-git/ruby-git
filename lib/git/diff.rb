@@ -129,8 +129,8 @@ module Git
         final = {}
         current_file = nil
         @full_diff.split("\n").each do |line|
-          if m = /^diff --git a\/(.*?) b\/(.*?)/.match(line)
-            current_file = m[1]
+          if m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line)
+            current_file = Git::EscapedPath.new(m[2]).unescape
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
             if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)

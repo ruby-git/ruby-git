@@ -1,4 +1,3 @@
-require 'rchardet'
 require 'tempfile'
 require 'zlib'
 
@@ -1085,7 +1084,8 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
-      global_opts << ["-c", "color.ui=false"]
+      global_opts << %w[-c core.quotePath=true]
+      global_opts << %w[-c color.ui=false]
 
       opts = [opts].flatten.map {|s| escape(s) }.join(' ')
 
@@ -1176,35 +1176,10 @@ module Git
       arr_opts
     end
 
-    def default_encoding
-      __ENCODING__.name
-    end
-
-    def best_guess_encoding
-      # Encoding::ASCII_8BIT.name
-      Encoding::UTF_8.name
-    end
-
-    def detected_encoding(str)
-      CharDet.detect(str)['encoding'] || best_guess_encoding
-    end
-
-    def encoding_options
-      { invalid: :replace, undef: :replace }
-    end
-
-    def normalize_encoding(str)
-      return str if str.valid_encoding? && str.encoding.name == default_encoding
-
-      return str.encode(default_encoding, str.encoding, **encoding_options) if str.valid_encoding?
-
-      str.encode(default_encoding, detected_encoding(str), **encoding_options)
-    end
-
     def run_command(git_cmd, &block)
       return IO.popen(git_cmd, &block) if block_given?
 
-      `#{git_cmd}`.lines.map { |l| normalize_encoding(l) }.join
+      `#{git_cmd}`.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join
     end
 
     def escape(s)
@@ -1225,6 +1200,5 @@ module Git
       win_platform_regex = /mingw|mswin/
       RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
     end
-
   end
 end

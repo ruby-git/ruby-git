@@ -36,7 +36,7 @@ module Git
 
       init_options = {
         :bare => options[:bare],
-        :initial_branch => options[:initial_branch],
+        :initial_branch => options[:initial_branch]
       }
 
       directory = options[:bare] ? options[:repository] : options[:working_directory]
