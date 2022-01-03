@@ -1191,8 +1191,9 @@ module Git
     end
 
     def escape_for_windows(s)
-      # Windows does not need single quote escaping inside double quotes
-      %Q{"#{s}"}
+      # Escape existing double quotes in s and then wrap the result with double quotes
+      escaped_string = s.to_s.gsub('"','\\"')
+      %Q{"#{escaped_string}"}
     end
 
     def windows_platform?
