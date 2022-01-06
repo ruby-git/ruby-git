@@ -28,6 +28,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
+  s.add_development_dependency 'bump', '~> 0.10'
   s.add_development_dependency 'minitar', '~> 0.9'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'test-unit', '~> 3.3'
@@ -41,6 +42,6 @@ Gem::Specification.new do |s|
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   s.files = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(tests|spec|features)/}) }
+    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(tests|spec|features|bin)/}) }
   end
 end
