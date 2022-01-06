@@ -7,10 +7,16 @@ class TestArchive < Test::Unit::TestCase
   def setup
     set_file_paths
     @git = Git.open(@wdir)
+    @tempfiles = []
+  end
+
+  def teardown
+    @tempfiles.clear
   end
 
   def tempfile
     tempfile_object = Tempfile.new('archive-test')
+    @tempfiles << tempfile_object # prevent deletion until teardown
     tempfile_object.close # close to avoid locking from git processes
     tempfile_object.path
   end
