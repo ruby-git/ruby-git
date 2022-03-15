@@ -419,7 +419,7 @@ module Git
 
       hsh = {}
       command_lines('grep', grep_opts).each do |line|
-        if m = /(.*)\:(\d+)\:(.*)/.match(line)
+        if m = /(.*?)\:(\d+)\:(.*)/.match(line)
           hsh[m[1]] ||= []
           hsh[m[1]] << [m[2].to_i, m[3]]
         end
