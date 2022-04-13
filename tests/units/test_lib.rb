@@ -289,7 +289,6 @@ class TestLib < Test::Unit::TestCase
   end
 
   def test_show
-    puts @lib.show
     assert_match(/^commit 46abbf07e3c564c723c7c039a43ab3a39e5d02dd.+\+Grep regex doesn't like this:4342: because it is bad\n$/m, @lib.show)
     assert(/^commit 935badc874edd62a8629aaf103418092c73f0a56.+\+nothing!$/m.match(@lib.show('gitsearch1')))
     assert(/^hello.+nothing!$/m.match(@lib.show('gitsearch1', 'scott/text.txt')))
