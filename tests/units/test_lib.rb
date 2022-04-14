@@ -19,7 +19,7 @@ class TestLib < Test::Unit::TestCase
       git = Git.clone("file://#{@wdir}", "shallow", path: dir, depth: 1).lib
       assert_equal(1,  git.log_commits.length)
       git.fetch("file://#{@wdir}", unshallow: true)
-      assert_equal(71,  git.log_commits.length)
+      assert_equal(72,  git.log_commits.length)
     end
   end
 
@@ -282,10 +282,14 @@ class TestLib < Test::Unit::TestCase
     match = @lib.grep('search', :object => 'gitsearch1', :invert_match => true)
     assert_equal(6, match['gitsearch1:scott/text.txt'].size)
     assert_equal(2, match.size)
+
+    match = @lib.grep('Grep', :object => 'grep_colon_numbers')
+    assert_equal("Grep regex doesn't like this:4342: because it is bad", match['grep_colon_numbers:colon_numbers.txt'].first[1])
+    assert_equal(1, match.size)
   end
 
   def test_show
-    assert(/^commit 5e53019b3238362144c2766f02a2c00d91fcc023.+\+replace with new text - diff test$/m.match(@lib.show))
+    assert_match(/^commit 46abbf07e3c564c723c7c039a43ab3a39e5d02dd.+\+Grep regex doesn't like this:4342: because it is bad\n$/m, @lib.show)
     assert(/^commit 935badc874edd62a8629aaf103418092c73f0a56.+\+nothing!$/m.match(@lib.show('gitsearch1')))
     assert(/^hello.+nothing!$/m.match(@lib.show('gitsearch1', 'scott/text.txt')))
     assert(@lib.show('gitsearch1', 'scott/text.txt') == "hello\nthis is\na file\nthat is\nput here\nto search one\nto search two\nnothing!\n")

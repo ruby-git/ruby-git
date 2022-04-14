@@ -84,7 +84,7 @@ class TestGitDir < Test::Unit::TestCase
       Dir.chdir(work_tree) do
         `git init`
         `git commit --allow-empty -m 'init'`
-        `git worktree add child`
+        `git worktree add --quiet child`
         Dir.chdir('child') do
           result = Git.open('.').diff.to_a
           assert_equal([], result)

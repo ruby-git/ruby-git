@@ -433,7 +433,7 @@ module Git
 
       hsh = {}
       command_lines('grep', grep_opts).each do |line|
-        if m = /(.*)\:(\d+)\:(.*)/.match(line)
+        if m = /(.*?)\:(\d+)\:(.*)/.match(line)
           hsh[m[1]] ||= []
           hsh[m[1]] << [m[2].to_i, m[3]]
         end
@@ -889,14 +889,17 @@ module Git
       command('tag', arr_opts)
     end
 
-
     def fetch(remote, opts)
-      arr_opts = [remote]
-      arr_opts << opts[:ref] if opts[:ref]
+      arr_opts = []
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
+      arr_opts << '--prune-tags' if opts[:P] || opts[:'prune-tags']
+      arr_opts << '--force' if opts[:f] || opts[:force]
       arr_opts << '--unshallow' if opts[:unshallow]
       arr_opts << '--depth' << opts[:depth] if opts[:depth]
+      arr_opts << '--'
+      arr_opts << remote
+      arr_opts << opts[:ref] if opts[:ref]
 
       command('fetch', arr_opts)
     end

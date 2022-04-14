@@ -79,3 +79,4 @@ a3db7143944dcfa006fefe7fb49c48793cb29ade 34a566d193dc4702f03149969a2aad144323156
 6f09de178a27f7702c37907fd614c3c122d33c30 faf8d899a0f123c3c5def10857920be1c930e8ed Scott Chacon <schacon@gmail.com> 1378910110 -0400	commit (merge): Merge commit '4ce44a75510cbfe200b131fdbcc56a86f1b2dc08' into cherry
 faf8d899a0f123c3c5def10857920be1c930e8ed 5e392652a881999392c2757cf9b783c5d47b67f7 Scott Chacon <schacon@gmail.com> 1378910135 -0400	checkout: moving from cherry to master
 5e392652a881999392c2757cf9b783c5d47b67f7 5e53019b3238362144c2766f02a2c00d91fcc023 Scott Chacon <schacon@gmail.com> 1378910138 -0400	checkout: moving from master to git_grep
+5e53019b3238362144c2766f02a2c00d91fcc023 46abbf07e3c564c723c7c039a43ab3a39e5d02dd Scott Chacon <schacon@gmail.com> 1647231179 +1300	commit: add example for grep with colon and numbers

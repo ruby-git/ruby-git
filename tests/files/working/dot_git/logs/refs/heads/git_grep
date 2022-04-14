@@ -3,3 +3,4 @@
 a3db7143944dcfa006fefe7fb49c48793cb29ade 34a566d193dc4702f03149969a2aad1443231560 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194632975 -0800	commit: modified to not show up
 34a566d193dc4702f03149969a2aad1443231560 935badc874edd62a8629aaf103418092c73f0a56 scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194633382 -0800	commit: more search help
 935badc874edd62a8629aaf103418092c73f0a56 5e53019b3238362144c2766f02a2c00d91fcc023 scott Chacon <schacon@agadorsparticus.(none)> 1194720731 -0800	commit: diff test
+5e53019b3238362144c2766f02a2c00d91fcc023 46abbf07e3c564c723c7c039a43ab3a39e5d02dd Scott Chacon <schacon@gmail.com> 1647231179 +1300	commit: add example for grep with colon and numbers
