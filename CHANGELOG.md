@@ -5,6 +5,17 @@
 
 # Change Log
 
+## v1.11.0
+
+* 292087e Supress unneeded test output (#570)
+* 19dfe5e Add support for fetch options "--force/-f" and "--prune-tags/-P". (#563)
+* 018d919 Fix bug when grepping lines that contain numbers surrounded by colons (#566)
+* c04d16e remove from maintainer (#567)
+* 291ca09 Address command line injection in Git::Lib#fetch
+* 521b8e7 Release v1.10.2 (#561)
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.11.0
+
 ## v1.10.2
 
 See https://github.com/ruby-git/ruby-git/releases/tag/v1.10.2
