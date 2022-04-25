@@ -52,7 +52,7 @@ module Git
       end
     end
 
-    # The name `git clone` would use for the repository directory for the given URL
+    # The directory `git clone` would use for the repository directory for the given URL
     #
     # @example
     #   Git::URL.clone_to('https://github.com/ruby-git/ruby-git.git') #=> 'ruby-git'
@@ -61,12 +61,17 @@ module Git
     #
     # @return [String] the name of the repository directory
     #
-    def self.clone_to(url)
+    def self.clone_to(url, bare: false, mirror: false)
       uri = parse(url)
       path_parts = uri.path.split('/')
       path_parts.pop if path_parts.last == '.git'
-
-      path_parts.last.sub(/\.git$/, '')
+      directory = path_parts.last
+      if bare || mirror
+        directory += '.git' unless directory.end_with?('.git')
+      elsif directory.end_with?('.git')
+        directory = directory[0..-5]
+      end
+      directory
     end
   end
 
