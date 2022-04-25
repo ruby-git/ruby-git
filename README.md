@@ -204,13 +204,23 @@ g = Git.init
   { :repository => '/opt/git/proj.git',
       :index => '/tmp/index'} )
 
-g = Git.clone(URI, NAME, :path => '/tmp/checkout')
+# Clone from a git url
+git_url = 'https://github.com/ruby-git/ruby-git.git'
+# Clone into the ruby-git directory
+g = Git.clone(git_url)
+
+# Clone into /tmp/clone/ruby-git-clean
+name = 'ruby-git-clean'
+path = '/tmp/clone'
+g = Git.clone(git_url, name, :path => path)
+g.dir #=> /tmp/clone/ruby-git-clean
+
 g.config('user.name', 'Scott Chacon')
 g.config('user.email', 'email@email.com')
 
 # Clone can take an optional logger
 logger = Logger.new
-g = Git.clone(URI, NAME, :log => logger)
+g = Git.clone(git_url, NAME, :log => logger)
 
 g.add                                   # git add -- "."
 g.add(:all=>true)                       # git add --all -- "."

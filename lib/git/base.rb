@@ -17,10 +17,10 @@ module Git
     end
 
     # (see Git.clone)
-    def self.clone(repository, name, options = {})
-      new_options = Git::Lib.new(nil, options[:log]).clone(repository, name, options)
+    def self.clone(repository_url, directory, options = {})
+      new_options = Git::Lib.new(nil, options[:log]).clone(repository_url, directory, options)
       normalize_paths(new_options, bare: options[:bare] || options[:mirror])
-      self.new(new_options)
+      new(new_options)
     end
 
     # Returns (and initialize if needed) a Git::Config instance

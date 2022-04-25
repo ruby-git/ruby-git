@@ -107,11 +107,23 @@ module Git
   # @see https://git-scm.com/docs/git-clone git clone
   # @see https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a GIT URLs
   #
-  # @param [URI, Pathname] repository The (possibly remote) repository to clone
+  # @param repository_url [URI, Pathname] The (possibly remote) repository url to clone
   #   from. See [GIT URLS](https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a)
   #   for more information.
   #
-  # @param [Pathname] name The directory to clone into.
+  # @param directory [Pathname, nil] The directory to clone into
+  #
+  #   If `directory` is a relative directory it is relative to the `path` option if
+  #   given. If `path` is not given, `directory` is relative to the current working
+  #   directory.
+  #
+  #   If `nil`, `directory` will be set to the basename of the last component of
+  #   the path from the `repository_url`. For example, for the URL:
+  #   `https://github.com/org/repo.git`, `directory` will be set to `repo`.
+  #
+  #   If the last component of the path is `.git`, the next-to-last component of
+  #   the path is used. For example, for the URL `/Users/me/foo/.git`, `directory`
+  #   will be set to `foo`.
   #
   # @param [Hash] options The options for this command (see list of valid
   #   options below)
@@ -158,8 +170,10 @@ module Git
   # @return [Git::Base] an object that can execute git commands in the context
   #   of the cloned local working copy or cloned repository.
   #
-  def self.clone(repository, name, options = {})
-    Base.clone(repository, name, options)
+  def self.clone(repository_url, directory = nil, options = {})
+    clone_to_options = options.select { |key, _value| %i[bare mirror].include?(key) }
+    directory ||= Git::URL.clone_to(repository_url, **clone_to_options)
+    Base.clone(repository_url, directory, options)
   end
 
   # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
