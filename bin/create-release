@@ -1,0 +1,506 @@
+#!/usr/bin/env ruby
+
+# Run this script while in the root directory of the project with the default
+# branch checked out.
+
+require 'bump'
+require 'English'
+require 'fileutils'
+require 'optparse'
+require 'tempfile'
+
+# TODO: Right now the default branch and the remote name are hard coded
+
+class Options
+  attr_accessor :current_version, :next_version, :tag, :current_tag, :next_tag, :branch, :quiet
+
+  def initialize
+    yield self if block_given?
+  end
+
+  def release_type
+    raise "release_type not set" if @release_type.nil?
+    @release_type
+  end
+
+  VALID_RELEASE_TYPES = %w(major minor patch)
+
+  def release_type=(release_type)
+    raise 'release_type must be one of: ' + VALID_RELEASE_TYPES.join(', ') unless VALID_RELEASE_TYPES.include?(release_type)
+    @release_type = release_type
+  end
+
+  def quiet
+    @quiet = false unless instance_variable_defined?(:@quiet)
+    @quiet
+  end
+
+  def current_version
+    @current_version ||= Bump::Bump.current
+  end
+
+  def next_version
+    current_version # Save the current version before bumping
+    @next_version ||= Bump::Bump.next_version(release_type)
+  end
+
+  def tag
+    @tag ||= "v#{next_version}"
+  end
+
+  def current_tag
+    @current_tag ||= "v#{current_version}"
+  end
+
+  def next_tag
+    tag
+  end
+
+  def branch
+    @branch ||= "release-#{tag}"
+  end
+
+  def default_branch
+    @default_branch ||= `git remote show '#{remote}'`.match(/HEAD branch: (.*?)$/)[1]
+  end
+
+  def remote
+    @remote ||= 'origin'
+  end
+
+  def to_s
+    <<~OUTPUT
+      release_type='#{release_type}'
+      current_version='#{current_version}'
+      next_version='#{next_version}'
+      tag='#{tag}'
+      branch='#{branch}'
+      quiet=#{quiet}
+    OUTPUT
+  end
+end
+
+class CommandLineParser
+  attr_reader :options
+
+  def initialize
+    @option_parser = OptionParser.new
+    define_options
+    @options = Options.new
+  end
+
+  def parse(args)
+    option_parser.parse!(remaining_args = args.dup)
+    parse_remaining_args(remaining_args)
+    # puts options unless options.quiet
+    options
+  end
+
+  private
+
+  attr_reader :option_parser
+
+  def parse_remaining_args(remaining_args)
+    error_with_usage('No release type specified') if remaining_args.empty?
+    @options.release_type = remaining_args.shift || nil
+    error_with_usage('Too many args') unless remaining_args.empty?
+  end
+
+  def error_with_usage(message)
+    warn <<~MESSAGE
+      ERROR: #{message}
+      #{option_parser}
+    MESSAGE
+    exit 1
+  end
+
+  def define_options
+    option_parser.banner = 'Usage: create_release --help | release-type'
+    option_parser.separator ''
+    option_parser.separator 'Options:'
+
+    define_quiet_option
+    define_help_option
+  end
+
+  def define_quiet_option
+    option_parser.on('-q', '--[no-]quiet', 'Do not show output') do |quiet|
+      options.quiet = quiet
+    end
+  end
+
+  def define_help_option
+    option_parser.on_tail('-h', '--help', 'Show this message') do
+      puts option_parser
+      exit 0
+    end
+  end
+end
+
+class ReleaseAssertions
+  attr_reader :options
+
+  def initialize(options)
+    @options = options
+  end
+
+  def make_assertions
+    bundle_is_up_to_date
+    in_git_repo
+    in_repo_toplevel_directory
+    on_default_branch
+    no_uncommitted_changes
+    local_and_remote_on_same_commit
+    tag_does_not_exist
+    branch_does_not_exist
+    docker_is_running
+    changelog_docker_container_exists
+    gh_command_exists
+  end
+
+  private
+
+  def gh_command_exists
+    print "Checking that the gh command exists..."
+    `which gh > /dev/null 2>&1`
+    if $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "The gh command was not found"
+    end
+  end
+
+  def docker_is_running
+    print "Checking that docker is installed and running..."
+    `docker info > /dev/null 2>&1`
+    if $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "Docker is not installed or not running"
+    end
+  end
+
+
+  def changelog_docker_container_exists
+    print "Checking that the changelog docker container exists (might take time to build)..."
+    `docker build --file Dockerfile.changelog-rs --tag changelog-rs . 1>/dev/null`
+    if $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "Failed to build the changelog-rs docker container"
+    end
+  end
+
+  def bundle_is_up_to_date
+    print "Checking that the bundle is up to date..."
+    if File.exist?('Gemfile.lock')
+      print "Running bundle update..."
+      `bundle update --quiet`
+      if $CHILD_STATUS.success?
+        puts "OK"
+      else
+        error "bundle update failed"
+      end
+    else
+      print "Running bundle install..."
+      `bundle install --quiet`
+      if $CHILD_STATUS.success?
+        puts "OK"
+      else
+        error "bundle install failed"
+      end
+    end
+  end
+
+  def in_git_repo
+    print "Checking that you are in a git repo..."
+    `git rev-parse --is-inside-work-tree --quiet > /dev/null 2>&1`
+    if $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "You are not in a git repo"
+    end
+  end
+
+  def in_repo_toplevel_directory
+    print "Checking that you are in the repo's toplevel directory..."
+    toplevel_directory = `git rev-parse --show-toplevel`.chomp
+    if toplevel_directory == FileUtils.pwd
+      puts "OK"
+    else
+      error "You are not in the repo's toplevel directory"
+    end
+  end
+
+  def on_default_branch
+    print "Checking that you are on the default branch..."
+    current_branch = `git branch --show-current`.chomp
+    if current_branch == options.default_branch
+      puts "OK"
+    else
+      error "You are not on the default branch '#{default_branch}'"
+    end
+  end
+
+  def no_uncommitted_changes
+    print "Checking that there are no uncommitted changes..."
+    if `git status --porcelain | wc -l`.to_i == 0
+      puts "OK"
+    else
+      error "There are uncommitted changes"
+    end
+  end
+
+  def no_staged_changes
+    print "Checking that there are no staged changes..."
+    if `git diff --staged --name-only | wc -l`.to_i == 0
+      puts "OK"
+    else
+      error "There are staged changes"
+    end
+  end
+
+  def local_and_remote_on_same_commit
+    print "Checking that local and remote are on the same commit..."
+    local_commit = `git rev-parse HEAD`.chomp
+    remote_commit = `git ls-remote '#{options.remote}' '#{options.default_branch}' | cut -f 1`.chomp
+    if local_commit == remote_commit
+      puts "OK"
+    else
+      error "Local and remote are not on the same commit"
+    end
+  end
+
+  def local_tag_does_not_exist
+    print "Checking that local tag '#{options.tag}' does not exist..."
+
+    tags = `git tag --list "#{options.tag}"`.chomp
+    error 'Could not list tags' unless $CHILD_STATUS.success?
+
+    if tags.split.empty?
+      puts 'OK'
+    else
+      error "'#{options.tag}' already exists"
+    end
+  end
+
+  def remote_tag_does_not_exist
+    print "Checking that the remote tag '#{options.tag}' does not exist..."
+    `git ls-remote --tags --exit-code '#{options.remote}' #{options.tag} >/dev/null 2>&1`
+    unless $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "'#{options.tag}' already exists"
+    end
+  end
+
+  def tag_does_not_exist
+    local_tag_does_not_exist
+    remote_tag_does_not_exist
+  end
+
+  def local_branch_does_not_exist
+    print "Checking that local branch '#{options.branch}' does not exist..."
+
+    if `git branch --list "#{options.branch}" | wc -l`.to_i.zero?
+      puts "OK"
+    else
+      error "'#{options.branch}' already exists."
+    end
+  end
+
+  def remote_branch_does_not_exist
+    print "Checking that the remote branch '#{options.branch}' does not exist..."
+    `git ls-remote --heads --exit-code '#{options.remote}' '#{options.branch}' >/dev/null 2>&1`
+    unless $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "'#{options.branch}' already exists"
+    end
+  end
+
+  def branch_does_not_exist
+    local_branch_does_not_exist
+    remote_branch_does_not_exist
+  end
+
+  private
+
+  def print(*args)
+    super unless options.quiet
+  end
+
+  def puts(*args)
+    super unless options.quiet
+  end
+
+  def error(message)
+    warn "ERROR: #{message}"
+    exit 1
+  end
+end
+
+class ReleaseCreator
+  attr_reader :options
+
+  def initialize(options)
+    @options = options
+  end
+
+  def create_release
+    create_branch
+    update_changelog
+    update_version
+    make_release_commit
+    create_tag
+    push_release_commit_and_tag
+    create_github_release
+    create_release_pull_request
+  end
+
+  private
+
+  def create_branch
+    print "Creating branch '#{options.branch}'..."
+    `git checkout -b "#{options.branch}" > /dev/null 2>&1`
+    if $CHILD_STATUS.success?
+      puts "OK"
+    else
+      error "Could not create branch '#{options.branch}'" unless $CHILD_STATUS.success?
+    end
+  end
+
+  def update_changelog
+    print 'Updating CHANGELOG.md...'
+    changelog_lines = File.readlines('CHANGELOG.md')
+    first_entry = changelog_lines.index { |e| e =~ /^## / }
+    error "Could not find changelog insertion point" unless first_entry
+    FileUtils.rm('CHANGELOG.md')
+    File.write('CHANGELOG.md', <<~CHANGELOG.chomp)
+      #{changelog_lines[0..first_entry - 1].join}## #{options.tag}
+
+      See https://github.com/ruby-git/ruby-git/releases/tag/#{options.tag}
+
+      #{changelog_lines[first_entry..].join}
+    CHANGELOG
+    `git add CHANGELOG.md`
+    if $CHILD_STATUS.success?
+      puts 'OK'
+    else
+      error 'Could not stage changes to CHANGELOG.md'
+    end
+  end
+
+  def update_version
+    print 'Updating version...'
+    message, status = Bump::Bump.run(options.release_type, commit: false)
+    error 'Could not bump version' unless status == 0
+    `git add lib/git/version.rb`
+    if $CHILD_STATUS.success?
+      puts 'OK'
+    else
+      error 'Could not stage changes to lib/git/version.rb'
+    end
+  end
+
+  def make_release_commit
+    print 'Making release commit...'
+    `git commit -s -m 'Release #{options.tag}'`
+    error 'Could not make release commit' unless $CHILD_STATUS.success?
+  end
+
+  def create_tag
+    print "Creating tag '#{options.tag}'..."
+    `git tag '#{options.tag}'`
+    if $CHILD_STATUS.success?
+      puts 'OK'
+    else
+      error "Could not create tag '#{options.tag}'"
+    end
+  end
+
+  def push_release_commit_and_tag
+    print "Pushing branch '#{options.branch}' to remote..."
+    `git push --tags --set-upstream '#{options.remote}' '#{options.branch}' > /dev/null 2>&1`
+    if $CHILD_STATUS.success?
+      puts 'OK'
+    else
+      error 'Could not push release commit'
+    end
+  end
+
+  def changelog
+    @changelog ||= begin
+      print "Generating changelog..."
+      pwd = FileUtils.pwd
+      from = options.current_tag
+      to = options.next_tag
+      command = "docker run --rm --volume '#{pwd}:/worktree' changelog-rs '#{from}' '#{to}'"
+      changelog = `#{command}`
+      if $CHILD_STATUS.success?
+        puts 'OK'
+        changelog.rstrip.lines[1..].join
+      else
+        error 'Could not generate the changelog'
+      end
+    end
+  end
+
+  def create_github_release
+    Tempfile.create do |f|
+      f.write changelog
+      f.close
+
+      print "Creating GitHub release '#{options.tag}'..."
+      tag = options.tag
+      `gh release create #{tag} --title 'Release #{tag}' --notes-file '#{f.path}' --target #{options.default_branch}`
+      if $CHILD_STATUS.success?
+        puts 'OK'
+      else
+        error 'Could not create release'
+      end
+    end
+  end
+
+  def create_release_pull_request
+    Tempfile.create do |f|
+      f.write <<~PR
+        ### Your checklist for this pull request
+        🚨Please review the [guidelines for contributing](https://github.com/ruby-git/ruby-git/blob/#{options.default_branch}/CONTRIBUTING.md) to this repository.
+
+        - [X] Ensure all commits include DCO sign-off.
+        - [X] Ensure that your contributions pass unit testing.
+        - [X] Ensure that your contributions contain documentation if applicable.
+
+        ### Description
+        #{changelog}
+      PR
+      f.close
+
+      print "Creating GitHub pull request..."
+      `gh pr create --title 'Release #{options.tag}' --body-file '#{f.path}' --base '#{options.default_branch}'`
+      if $CHILD_STATUS.success?
+        puts 'OK'
+      else
+        error 'Could not create release pull request'
+      end
+    end
+  end
+
+  def error(message)
+    warn "ERROR: #{message}"
+    exit 1
+  end
+
+  def print(*args)
+    super unless options.quiet
+  end
+
+  def puts(*args)
+    super unless options.quiet
+  end
+end
+
+options = CommandLineParser.new.parse(ARGV)
+ReleaseAssertions.new(options).make_assertions
+ReleaseCreator.new(options).create_release

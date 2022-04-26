@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
 require File.dirname(__FILE__) + '/../test_helper'
+require 'stringio'
+require 'logger'
 
 class TestInit < Test::Unit::TestCase
   def setup
@@ -9,9 +11,9 @@ class TestInit < Test::Unit::TestCase
 
   def test_open_simple
     g = Git.open(@wdir)
-    assert_equal(g.dir.path, @wdir)
-    assert_equal(g.repo.path, File.join(@wdir, '.git'))
-    assert_equal(g.index.path, File.join(@wdir, '.git', 'index'))
+    assert_match(/^C?:?#{@wdir}$/, g.dir.path)
+    assert_match(/^C?:?#{File.join(@wdir, '.git')}$/, g.repo.path)
+    assert_match(/^C?:?#{File.join(@wdir, '.git', 'index')}$/, g.index.path)
   end
 
   def test_open_opts
@@ -36,14 +38,14 @@ class TestInit < Test::Unit::TestCase
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exist?(File.join(path, '.git', 'config')))
       assert_equal('false', repo.config('core.bare'))
+      assert_equal("ref: refs/heads/master\n", File.read("#{path}/.git/HEAD"))
     end
   end
 
   def test_git_init_bare
     in_temp_dir do |path|
       repo = Git.init(path, :bare => true)
-      assert(File.directory?(File.join(path, '.git')))
-      assert(File.exist?(File.join(path, '.git', 'config')))
+      assert(File.exist?(File.join(path, 'config')))
       assert_equal('true', repo.config('core.bare'))
     end
   end
@@ -56,6 +58,16 @@ class TestInit < Test::Unit::TestCase
         Git.init(path, :repository => dir)
         assert(File.exist?(File.join(dir, 'config')))
       end
+    end
+  end
+
+  def test_git_init_initial_branch
+    in_temp_dir do |path|
+      repo = Git.init(path, initial_branch: 'main')
+      assert(File.directory?(File.join(path, '.git')))
+      assert(File.exist?(File.join(path, '.git', 'config')))
+      assert_equal('false', repo.config('core.bare'))
+      assert_equal("ref: refs/heads/main\n", File.read("#{path}/.git/HEAD"))
     end
   end
 
@@ -96,6 +108,36 @@ class TestInit < Test::Unit::TestCase
       assert_equal('ignore', g.config['receive.denycurrentbranch'])
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
+    end
+  end
+
+  # If the :log option is not passed to Git.clone, the result should not
+  # have a logger
+  #
+  def test_git_clone_without_log
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'bare-co')
+      actual_logger = g.instance_variable_get(:@logger)
+      assert_equal(nil, actual_logger)
+    end
+  end
+
+  # If the :log option is passed to Git.clone, the result should have
+  # a logger set to the value of :log
+  #
+  def test_git_clone_log
+    log_io = StringIO.new
+    expected_logger = Logger.new(log_io)
+
+    in_temp_dir do |path|
+      g = Git.clone(@wbare, 'bare-co', { log: expected_logger })
+      actual_logger = g.instance_variable_get(:@logger)
+      assert_equal(expected_logger.object_id, actual_logger.object_id)
+
+      # Ensure that both the clone and Git::Base creation are logged to the logger
+      #
+      assert_includes(log_io.string, "Cloning into 'bare-co'...")
+      assert_includes(log_io.string, 'Starting Git')
     end
   end
 

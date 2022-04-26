@@ -1,3 +1,8 @@
+<!--
+# @markup markdown
+# @title How To Contribute
+-->
+
 # Contributing to ruby-git
 
 Thank you for your interest in contributing to the ruby-git project.
@@ -8,7 +13,7 @@ judgement.
 
 Propose changes to these guidelines with a pull request.
 
-## How to contribute to ruby-git
+## How to contribute
 
 You can contribute in two ways:
 
@@ -73,12 +78,14 @@ In order to ensure high quality, all pull requests must meet these requirements:
 
 ### Unit tests
   * All changes must be accompanied by new or modified unit tests
-  * The entire test suite must pass when `bundle exec rake test` is run from the
-    project's local working copy
+  * The entire test suite must pass when `bundle exec rake default` is run from the
+    project's local working copy.
 
-### Continuous Integration
-  * All tests must pass in the project's [Travis CI](https://travis-ci.org/ruby-git/ruby-git)
-    build before the pull request will be merged
+### Continuous integration
+  * All tests must pass in the project's [GitHub Continuous Integration build](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
+    before the pull request will be merged.
+  * The [Continuous Integration workflow](https://github.com/ruby-git/ruby-git/blob/master/.github/workflows/continuous_integration.yml)
+    runs both `bundle exec rake default` and `bundle exec rake test:gem` from the project's [Rakefile](https://github.com/ruby-git/ruby-git/blob/master/Rakefile).
 
 ### Documentation
   * New and updated public methods must have [YARD](https://yardoc.org/)

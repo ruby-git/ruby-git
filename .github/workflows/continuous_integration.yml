@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  continuous_integration_build:
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: [2.3, 2.7, 3.0]
+        operating-system: [ubuntu-latest]
+        include:
+          - ruby: head
+            operating-system: ubuntu-latest
+          - ruby: truffleruby-head
+            operating-system: ubuntu-latest
+          - ruby: 2.7
+            operating-system: windows-latest
+          - ruby: jruby-head
+            operating-system: windows-latest
+
+    name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
+
+    runs-on: ${{ matrix.operating-system }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Run Build
+        run: bundle exec rake default
+
+      - name: Test Gem
+        run: bundle exec rake test:gem

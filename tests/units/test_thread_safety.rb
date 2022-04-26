@@ -24,7 +24,7 @@ class TestThreadSafety < Test::Unit::TestCase
     threads.each(&:join)
 
     dirs.each do |dir|
-      Git.bare("#{dir}/.git").ls_files
+      Git.bare(dir).ls_files
     end
   end
 end
