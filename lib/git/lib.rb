@@ -95,9 +95,9 @@ module Git
     #
     # @return [Hash] the options to pass to {Git::Base.new}
     #
-    def clone(repository, name, opts = {})
+    def clone(repository_url, directory, opts = {})
       @path = opts[:path] || '.'
-      clone_dir = opts[:path] ? File.join(@path, name) : name
+      clone_dir = opts[:path] ? File.join(@path, directory) : directory
 
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
@@ -106,11 +106,11 @@ module Git
       arr_opts << '--config' << opts[:config] if opts[:config]
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
-      arr_opts << "--mirror" if opts[:mirror]
+      arr_opts << '--mirror' if opts[:mirror]
 
       arr_opts << '--'
 
-      arr_opts << repository
+      arr_opts << repository_url
       arr_opts << clone_dir
 
       command('clone', arr_opts)
