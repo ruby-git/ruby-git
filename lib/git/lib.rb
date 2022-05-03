@@ -877,15 +877,16 @@ module Git
 
     def fetch(remote, opts)
       arr_opts = []
+      arr_opts << '--all' if opts[:all]
       arr_opts << '--tags' if opts[:t] || opts[:tags]
       arr_opts << '--prune' if opts[:p] || opts[:prune]
       arr_opts << '--prune-tags' if opts[:P] || opts[:'prune-tags']
       arr_opts << '--force' if opts[:f] || opts[:force]
       arr_opts << '--unshallow' if opts[:unshallow]
       arr_opts << '--depth' << opts[:depth] if opts[:depth]
-      arr_opts << '--'
-      arr_opts << remote
-      arr_opts << opts[:ref] if opts[:ref]
+      arr_opts << '--' unless opts[:all]
+      arr_opts << remote unless opts[:all]
+      arr_opts << opts[:ref] if opts[:ref] unless opts[:all]
 
       command('fetch', arr_opts)
     end
