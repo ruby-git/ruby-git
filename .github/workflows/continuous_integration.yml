@@ -20,8 +20,12 @@ jobs:
           - ruby: truffleruby-head
             operating-system: ubuntu-latest
           - ruby: 2.7
+            env:
+              JAVA_OPTS: -Djdk.io.File.enableADS=true
             operating-system: windows-latest
           - ruby: jruby-head
+            env:
+              JAVA_OPTS: -Djdk.io.File.enableADS=true
             operating-system: windows-latest
 
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
