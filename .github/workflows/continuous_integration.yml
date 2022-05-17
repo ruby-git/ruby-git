@@ -28,6 +28,9 @@ jobs:
 
     runs-on: ${{ matrix.operating-system }}
 
+    env:
+      JAVA_OPTS: -Djdk.io.File.enableADS=true
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
