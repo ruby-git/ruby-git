@@ -108,7 +108,7 @@ g.index.writable?
 g.repo
 g.dir
 
-g.log   # returns array of Git::Commit objects
+g.log   # returns a Git::Log object, which is an Enumerator of Git::Commit objects
 g.log.since('2 weeks ago')
 g.log.between('v2.5', 'v2.6')
 g.log.each {|l| puts l.sha }
