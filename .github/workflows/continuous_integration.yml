@@ -28,14 +28,15 @@ jobs:
 
     runs-on: ${{ matrix.operating-system }}
 
+    env:
+      JAVA_OPTS: -Djdk.io.File.enableADS=true
+      
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
-        env:
-          JAVA_OPTS: -Djdk.io.File.enableADS=true
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
