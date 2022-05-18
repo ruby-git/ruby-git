@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require_relative '../test_helper'
 
 class TestRemotes < Test::Unit::TestCase
   def setup
@@ -123,6 +123,34 @@ class TestRemotes < Test::Unit::TestCase
     end
   end
 
+  def test_fetch_cmd_with_no_args
+    expected_command_line = ['fetch', '--', 'origin']
+    git_cmd = :fetch
+    git_cmd_args = []
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
+  def test_fetch_cmd_with_origin_and_branch
+    expected_command_line = ['fetch', '--depth', '2', '--', 'origin', 'master']
+    git_cmd = :fetch
+    git_cmd_args = ['origin', ref: 'master', depth: '2']
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
+  def test_fetch_cmd_with_all
+    expected_command_line = ['fetch', '--all']
+    git_cmd = :fetch
+    git_cmd_args = [all: true]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
+  def test_fetch_cmd_with_all_with_other_args
+    expected_command_line = ['fetch', '--all', '--force', '--depth', '2']
+    git_cmd = :fetch
+    git_cmd_args = [all: true, force: true, depth: '2']
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
   def test_fetch_command_injection
     test_file = 'VULNERABILITY_EXISTS'
     vulnerability_exists = false
@@ -208,6 +236,4 @@ class TestRemotes < Test::Unit::TestCase
       assert(rem.tag('test-tag'))
     end
   end
-
-
 end
