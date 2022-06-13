@@ -120,5 +120,11 @@ class TestDiff < Test::Unit::TestCase
     assert_equal(160, files['scott/newfile'].patch.size)
   end
   
-  
+  def test_diff_process_full_with_warnings
+    @diff.send(:cache_full) # prime the cache
+    warning = "Warning: Permanently added the ECDSA host key for IP address '000.00.000.0' to the list of known hosts.\n"
+    @diff.instance_variable_set(:@full_diff, warning + @diff.instance_variable_get(:@full_diff))
+
+    assert_equal('5d46068', @diff["scott/newfile"].src)
+  end
 end

@@ -133,6 +133,7 @@ module Git
             current_file = Git::EscapedPath.new(m[2]).unescape
             final[current_file] = defaults.merge({:patch => line, :path => current_file})
           else
+            next unless current_file # Protects against warnings or other garbage output preceeding the diff
             if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)
               final[current_file][:src] = m[1]
               final[current_file][:dst] = m[2]
