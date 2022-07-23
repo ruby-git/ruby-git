@@ -38,7 +38,10 @@ class TestInit < Test::Unit::TestCase
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exist?(File.join(path, '.git', 'config')))
       assert_equal('false', repo.config('core.bare'))
-      assert_equal("ref: refs/heads/master\n", File.read("#{path}/.git/HEAD"))
+
+      branch = `git config --get init.defaultBranch`.strip
+      branch = 'master' if branch.empty?
+      assert_equal("ref: refs/heads/#{branch}\n", File.read("#{path}/.git/HEAD"))
     end
   end
 
