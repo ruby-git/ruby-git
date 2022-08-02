@@ -244,6 +244,9 @@ g.commit('message', gpg_sign: true)
 key_id = '0A46826A'
 g.commit('message', gpg_sign: key_id)
 
+# Skip signing a commit (overriding any global gpgsign setting)
+g.commit('message', gpg_sign: false)
+
 g = Git.clone(repo, 'myrepo')
 g.chdir do
 new_file('test-file', 'blahblahblah')

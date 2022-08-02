@@ -34,4 +34,18 @@ class TestCommitWithGPG < Test::Unit::TestCase
       assert_match(/commit.*--gpg-sign=keykeykey['"]/, actual_cmd)
     end
   end
+
+  def test_disabling_gpg_sign
+    Dir.mktmpdir do |dir|
+      git = Git.init(dir)
+      actual_cmd = nil
+      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
+        actual_cmd = git_cmd
+        `true`
+      end
+      message = 'My commit message'
+      git.commit(message, gpg_sign: false)
+      assert_match(/commit.*--no-gpg-sign['"]/, actual_cmd)
+    end
+  end
 end

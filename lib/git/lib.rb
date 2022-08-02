@@ -647,7 +647,7 @@ module Git
     #  :date
     #  :no_verify
     #  :allow_empty_message
-    #  :gpg_sign
+    #  :gpg_sign (accepts true, false, or a gpg key ID as a String)
     #
     # @param [String] message the commit message to be used
     # @param [Hash] opts the commit options to be used
@@ -661,10 +661,12 @@ module Git
       arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
       arr_opts << '--no-verify' if opts[:no_verify]
       arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
-      if opts[:gpg_sign]
+      if opts.has_key?(:gpg_sign)
         arr_opts <<
           if opts[:gpg_sign] == true
             '--gpg-sign'
+          elsif opts[:gpg_sign] == false
+            '--no-gpg-sign'
           else
             "--gpg-sign=#{opts[:gpg_sign]}"
           end
