@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require File.dirname(__FILE__) + '/../test_helper'
+require "fileutils"
 
 # tests all the low level git communication
 #
@@ -51,8 +52,13 @@ class TestLib < Test::Unit::TestCase
     move_file(pre_commit_path, pre_commit_path_bak)
 
     # Adds a pre-commit file that should throw an error
-    create_file(pre_commit_path, 'echo Pre-commit file. Shoud not execute; exit 1') # Error when executed
-    File.chmod(0111, pre_commit_path)
+    create_file(pre_commit_path, <<~PRE_COMMIT_SCRIPT)
+      #!/bin/sh
+      echo "pre-commit script exits with an error"
+      exit 1
+    PRE_COMMIT_SCRIPT
+
+    FileUtils.chmod("+x", pre_commit_path)
 
     create_file("#{@wdir}/test_file_2", 'content test_file_2')
     @lib.add('test_file_2')
