@@ -36,7 +36,7 @@ Gem::Specification.new do |s|
 
   unless RUBY_PLATFORM == 'java'
     s.add_development_dependency 'redcarpet', '~> 3.5'
-    s.add_development_dependency 'yard', '~> 0.9'
+    s.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28'
     s.add_development_dependency 'yardstick', '~> 0.9'
   end
 
