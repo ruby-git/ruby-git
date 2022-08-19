@@ -27,11 +27,6 @@ require 'git/working_directory'
 require 'git/worktree'
 require 'git/worktrees'
 
-lib = Git::Lib.new(nil, nil)
-unless lib.meets_required_version?
-  $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
-end
-
 # The Git module provides the basic functions to open a git
 # reference to work with. You can open a working directory,
 # open a bare repository, initialize a new repo or clone an

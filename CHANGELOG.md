@@ -5,6 +5,10 @@
 
 # Change Log
 
+## v1.12.0
+
+See https://github.com/ruby-git/ruby-git/releases/tag/v1.12.0
+
 ## v1.11.0
 
 * 292087e Supress unneeded test output (#570)
