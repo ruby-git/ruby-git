@@ -63,6 +63,8 @@ module Git
         @git_work_dir = base[:working_directory]
       end
       @logger = logger
+
+      Git::Lib.warn_if_old_command(self)
     end
 
     # creates or reinitializes the repository
@@ -1027,6 +1029,13 @@ module Git
       (self.current_command_version <=>  self.required_command_version) >= 0
     end
 
+    def self.warn_if_old_command(lib)
+      return true if @version_checked
+      unless lib.meets_required_version?
+        $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+      end
+      @version_checked = true
+    end
 
     private
 
