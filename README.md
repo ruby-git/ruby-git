@@ -265,6 +265,7 @@ g.branch('existing_branch').checkout
 g.branch('master').contains?('existing_branch')
 
 g.checkout('new_branch')
+g.checkout('new_branch', new_branch: true, start_point: 'master')
 g.checkout(g.branch('new_branch'))
 
 g.branch(name).merge(branch2)

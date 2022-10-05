@@ -764,11 +764,21 @@ module Git
       command('branch', '-D', branch)
     end
 
+    # Runs checkout command to checkout or create branch
+    #
+    # accepts options:
+    #  :new_branch
+    #  :force
+    #  :start_point
+    #
+    # @param [String] branch
+    # @param [Hash] opts
     def checkout(branch, opts = {})
       arr_opts = []
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << '--force' if opts[:force] || opts[:f]
       arr_opts << branch
+      arr_opts << opts[:start_point] if opts[:start_point] && arr_opts.include?('-b')
 
       command('checkout', arr_opts)
     end
