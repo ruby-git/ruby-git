@@ -974,8 +974,8 @@ module Git
       command('commit-tree', *arr_opts, redirect: "< #{escape t.path}")
     end
 
-    def update_ref(branch, commit)
-      command('update-ref', branch, commit)
+    def update_ref(ref, commit)
+      command('update-ref', ref, commit)
     end
 
     def checkout_index(opts = {})
