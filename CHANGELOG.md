@@ -5,6 +5,16 @@
 
 # Change Log
 
+## v1.13.0 (2022-12-10)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.12.0...v1.13.0)
+
+* 8349224 Update list of maintainers (#598)
+* 4fe8738 In ls-files do not unescape file paths with eval (#602)
+* 74b8e11 Add start_point option for checkout command (#597)
+* ff6dcf4 Do not assume the default branch is 'master' in tests
+* 8279298 Fix exception when Git is autoloaded (#594)
+
 ## v1.12.0
 
 See https://github.com/ruby-git/ruby-git/releases/tag/v1.12.0
@@ -151,4 +161,3 @@ See https://github.com/ruby-git/ruby-git/releases/tag/v1.4.0
 ## 1.0.1
 
 * Initial version
-
