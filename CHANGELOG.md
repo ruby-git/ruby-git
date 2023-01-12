@@ -5,6 +5,15 @@
 
 # Change Log
 
+## v1.13.1 (2023-01-12)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.0...v1.13.1)
+
+* 667b830 Update the GitHub Action step "actions/checkout" from v2 to v3 (#608)
+* 23a0ac4 Fix version parsing (#605)
+* 429f0bb Update release instructions (#606)
+* 68d76b8 Drop ruby 2.3 build and add 3.1 and 3.2 builds (#607)
+
 ## v1.13.0 (2022-12-10)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.12.0...v1.13.0)
