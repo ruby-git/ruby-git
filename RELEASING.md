@@ -48,7 +48,7 @@ Steps:
 - Check out the code with `git clone https://github.com/ruby-git/ruby-git ruby-git-v1.6.0 && cd ruby-git-v1.6.0`
 - Install development dependencies using bundle `bundle install`
 - Based upon the nature of the changes, decide on the type of release: `major`, `minor`, or `patch` (in this example we will use `minor`)
-- Run the release script `bundle exec create-github-realese minor`
+- Run the release script `bundle exec create-github-release minor`
 
 ## Review and Merge the Release
 
