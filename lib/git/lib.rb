@@ -63,8 +63,6 @@ module Git
         @git_work_dir = base[:working_directory]
       end
       @logger = logger
-
-      Git::Lib.warn_if_old_command(self)
     end
 
     # creates or reinitializes the repository
@@ -1029,8 +1027,9 @@ module Git
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
       output = command('version')
-      version = output[/\d+\.\d+(\.\d+)+/]
-      version.split('.').collect {|i| i.to_i}
+      version = output[/\d+(\.\d+)+/]
+      version_parts = version.split('.').collect { |i| i.to_i }
+      version_parts.fill(0, version_parts.length...3)
     end
 
     def required_command_version
@@ -1043,10 +1042,11 @@ module Git
 
     def self.warn_if_old_command(lib)
       return true if @version_checked
+      @version_checked = true
       unless lib.meets_required_version?
         $stderr.puts "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
       end
-      @version_checked = true
+      true
     end
 
     private
@@ -1104,6 +1104,8 @@ module Git
     end
 
     def command(cmd, *opts, &block)
+      Git::Lib.warn_if_old_command(self)
+
       command_opts = { chomp: true, redirect: '' }
       if opts.last.is_a?(Hash)
         command_opts.merge!(opts.pop)
