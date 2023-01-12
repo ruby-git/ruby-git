@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
   s.add_development_dependency 'bump', '~> 0.10'
+  s.add_development_dependency 'create_github_release', '~> 0.2'
   s.add_development_dependency 'minitar', '~> 0.9'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'test-unit', '~> 3.3'
