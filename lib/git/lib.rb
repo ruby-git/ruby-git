@@ -226,9 +226,8 @@ module Git
 
     def process_commit_data(data, sha = nil, indent = 4)
       hsh = {
-        'sha'     => sha,
-        'message' => '',
-        'parent'  => []
+        'sha'    => sha,
+        'parent' => []
       }
 
       each_cat_file_header(data) do |key, value|
@@ -266,10 +265,7 @@ module Git
     end
 
     def process_tag_data(data, name, indent=4)
-      hsh = {
-        'name'    => name,
-        'message' => ''
-      }
+      hsh = { 'name' => name }
 
       each_cat_file_header(data) do |key, value|
         hsh[key] = value
