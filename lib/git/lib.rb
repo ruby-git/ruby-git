@@ -224,7 +224,7 @@ module Git
       process_commit_data(cdata, sha)
     end
 
-    def process_commit_data(data, sha = nil)
+    def process_commit_data(data, sha)
       hsh = {
         'sha'    => sha,
         'parent' => []
