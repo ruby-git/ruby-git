@@ -231,27 +231,32 @@ module Git
         'parent'  => []
       }
 
-      loop do
-        key, *value = data.shift.split
-
-        break if key.nil?
-
+      each_cat_file_header(data) do |key, value|
         if key == 'parent'
-          hsh['parent'] << value.join(' ')
-        elsif key == 'gpgsig'
-          hsh['gpgsig'] = value.join(' ').lstrip
-
-          while data.first.start_with?(' ')
-            hsh['gpgsig'] += "\n" + data.shift.lstrip
-          end
+          hsh['parent'] << value
         else
-          hsh[key] = value.join(' ')
+          hsh[key] = value
         end
       end
 
       hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
 
       return hsh
+    end
+
+    CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
+
+    def each_cat_file_header(data)
+      while (match = CAT_FILE_HEADER_LINE.match(data.shift))
+        key = match[:key]
+        value_lines = [match[:value]]
+
+        while data.first.start_with?(' ')
+          value_lines << data.shift.lstrip
+        end
+
+        yield key, value_lines.join("\n")
+      end
     end
 
     def tag_data(name)
