@@ -261,17 +261,17 @@ module Git
     def tag_data(name)
       sha = sha.to_s
       tdata = command_lines('cat-file', 'tag', name)
-      process_tag_data(tdata, name, 0)
+      process_tag_data(tdata, name)
     end
 
-    def process_tag_data(data, name, indent=4)
+    def process_tag_data(data, name)
       hsh = { 'name' => name }
 
       each_cat_file_header(data) do |key, value|
         hsh[key] = value
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.join("\n") + "\n"
 
       return hsh
     end
