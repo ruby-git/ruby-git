@@ -221,10 +221,10 @@ module Git
     def commit_data(sha)
       sha = sha.to_s
       cdata = command_lines('cat-file', 'commit', sha)
-      process_commit_data(cdata, sha, 0)
+      process_commit_data(cdata, sha)
     end
 
-    def process_commit_data(data, sha = nil, indent = 4)
+    def process_commit_data(data, sha = nil)
       hsh = {
         'sha'    => sha,
         'parent' => []
@@ -238,7 +238,7 @@ module Git
         end
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.join("\n") + "\n"
 
       return hsh
     end
