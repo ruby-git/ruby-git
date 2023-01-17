@@ -271,12 +271,8 @@ module Git
         'message' => ''
       }
 
-      loop do
-        key, *value = data.shift.split
-
-        break if key.nil?
-
-        hsh[key] = value.join(' ')
+      each_cat_file_header(data) do |key, value|
+        hsh[key] = value
       end
 
       hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
