@@ -21,6 +21,12 @@ class TestEscapedPath < Test::Unit::TestCase
     assert_equal(expected_unescaped_path, Git::EscapedPath.new(path).unescape)
   end
 
+  def test_unicode_path2
+    path = 'test\320\2411991923'
+    expected_unescaped_path = 'testС1991923'
+    assert_equal(expected_unescaped_path, Git::EscapedPath.new(path).unescape)
+  end
+
   def test_single_char_escapes
     Git::EscapedPath::UNESCAPES.each_pair do |escape_char, expected_char|
       path = "\\#{escape_char}"
