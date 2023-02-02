@@ -42,7 +42,7 @@ module Git
     private
 
     def extract_octal(path, index)
-      [path[index + 1..index + 4].to_i(8), 4]
+      [path[index + 1..index + 3].to_i(8), 4]
     end
 
     def extract_escape(path, index)
