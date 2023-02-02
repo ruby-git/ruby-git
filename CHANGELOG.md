@@ -5,6 +5,15 @@
 
 # Change Log
 
+## v1.13.2 (2023-02-02)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.1..v1.13.2)
+
+Changes since v1.13.1:
+
+* b6e031d Fix `Git::Lib#commit_data` for GPG-signed commits (#610)
+* b12b820 Fix escaped path decoding (#612)
+
 ## v1.13.1 (2023-01-12)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.0...v1.13.1)
