@@ -221,54 +221,57 @@ module Git
     def commit_data(sha)
       sha = sha.to_s
       cdata = command_lines('cat-file', 'commit', sha)
-      process_commit_data(cdata, sha, 0)
+      process_commit_data(cdata, sha)
     end
 
-    def process_commit_data(data, sha = nil, indent = 4)
+    def process_commit_data(data, sha)
       hsh = {
-        'sha'     => sha,
-        'message' => '',
-        'parent'  => []
+        'sha'    => sha,
+        'parent' => []
       }
 
-      loop do
-        key, *value = data.shift.split
-
-        break if key.nil?
-
+      each_cat_file_header(data) do |key, value|
         if key == 'parent'
-          hsh['parent'] << value.join(' ')
+          hsh['parent'] << value
         else
-          hsh[key] = value.join(' ')
+          hsh[key] = value
         end
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.join("\n") + "\n"
 
       return hsh
+    end
+
+    CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
+
+    def each_cat_file_header(data)
+      while (match = CAT_FILE_HEADER_LINE.match(data.shift))
+        key = match[:key]
+        value_lines = [match[:value]]
+
+        while data.first.start_with?(' ')
+          value_lines << data.shift.lstrip
+        end
+
+        yield key, value_lines.join("\n")
+      end
     end
 
     def tag_data(name)
       sha = sha.to_s
       tdata = command_lines('cat-file', 'tag', name)
-      process_tag_data(tdata, name, 0)
+      process_tag_data(tdata, name)
     end
 
-    def process_tag_data(data, name, indent=4)
-      hsh = {
-        'name'    => name,
-        'message' => ''
-      }
+    def process_tag_data(data, name)
+      hsh = { 'name' => name }
 
-      loop do
-        key, *value = data.shift.split
-
-        break if key.nil?
-
-        hsh[key] = value.join(' ')
+      each_cat_file_header(data) do |key, value|
+        hsh[key] = value
       end
 
-      hsh['message'] = data.collect {|line| line[indent..-1]}.join("\n") + "\n"
+      hsh['message'] = data.join("\n") + "\n"
 
       return hsh
     end
