@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test/unit'
-require_relative '../test_helper'
+require 'test_helper'
 
 # Tests for Git.clone
 class TestGitClone < Test::Unit::TestCase

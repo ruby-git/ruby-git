@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestDescribe < Test::Unit::TestCase
 
   def setup
-    set_file_paths
+    clone_working_repo
     @git = Git.open(@wdir)
   end
 

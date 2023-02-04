@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestCommitWithEmptyMessage < Test::Unit::TestCase
   def setup
-    set_file_paths
+    clone_working_repo
   end
 
   def test_without_allow_empty_message_option

@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+
+`git config --global user.email "git@example.com"` if `git config user.email`.empty?
+`git config --global user.name "GitExample"` if `git config user.name`.empty?
+
+project_root = File.expand_path(File.join(__dir__, '..'))
+
+$LOAD_PATH.unshift(File.join(project_root, 'tests'))
+
+if ARGV.empty?
+  paths = Dir.glob(File.join(project_root, 'tests/**/test_*.rb'))
+else
+  paths = ARGV.map { |p| File.join(project_root, p) }
+end
+
+paths.each { |p| require p }

@@ -81,6 +81,18 @@ In order to ensure high quality, all pull requests must meet these requirements:
   * The entire test suite must pass when `bundle exec rake default` is run from the
     project's local working copy.
 
+While working on specific features you can run individual test files or
+a group of tests using `bin/test`:
+
+    # run a single file:
+    $ bin/test tests/units/test_object.rb
+
+    # run multiple files:
+    $ bin/test tests/units/test_object.rb tests/units/test_archive.rb
+
+    # run all unit tests:
+    $ bin/test
+
 ### Continuous integration
   * All tests must pass in the project's [GitHub Continuous Integration build](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
     before the pull request will be merged.

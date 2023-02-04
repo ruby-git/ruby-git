@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 require "fileutils"
 
 # tests all the low level git communication
@@ -11,7 +11,7 @@ require "fileutils"
 
 class TestLib < Test::Unit::TestCase
   def setup
-    set_file_paths
+    clone_working_repo
     @lib = Git.open(@wdir).lib
   end
 
@@ -255,7 +255,7 @@ class TestLib < Test::Unit::TestCase
   def test_ls_remote
     in_temp_dir do |path|
       lib = Git::Lib.new
-      ls = lib.ls_remote(@wbare)
+      ls = lib.ls_remote(BARE_REPO_PATH)
 
       assert_equal(%w( gitsearch1 v2.5 v2.6 v2.7 v2.8 ), ls['tags'].keys.sort)
       assert_equal("935badc874edd62a8629aaf103418092c73f0a56", ls['tags']['gitsearch1'][:sha])
@@ -267,7 +267,7 @@ class TestLib < Test::Unit::TestCase
       assert_equal("5e392652a881999392c2757cf9b783c5d47b67f7", ls['head'][:sha])
       assert_equal(nil, ls['head'][:name])
 
-      ls = lib.ls_remote(@wbare, :refs => true)
+      ls = lib.ls_remote(BARE_REPO_PATH, :refs => true)
 
       assert_equal({}, ls['head']) # head is not a ref
       assert_equal(%w( gitsearch1 v2.5 v2.6 v2.7 v2.8 ), ls['tags'].keys.sort)
