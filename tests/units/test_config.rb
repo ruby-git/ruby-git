@@ -1,42 +1,38 @@
 #!/usr/bin/env ruby
 
-require_relative '../test_helper'
+require 'test_helper'
 
 class TestConfig < Test::Unit::TestCase
   def setup
-    set_file_paths
+    clone_working_repo
     @git = Git.open(@wdir)
   end
-  
+
   def test_config
     c = @git.config
     assert_equal('Scott Chacon', c['user.name'])
     assert_equal('false', c['core.bare'])
   end
-  
+
   def test_read_config
     assert_equal('Scott Chacon', @git.config('user.name'))
     assert_equal('false', @git.config('core.bare'))
   end
-  
+
   def test_set_config
-    in_temp_dir do |path|
-      g = Git.clone(@wbare, 'bare')
-      assert_not_equal('bully', g.config('user.name'))
-      g.config('user.name', 'bully')
-      assert_equal('bully', g.config('user.name'))
-    end
+    assert_not_equal('bully', @git.config('user.name'))
+    @git.config('user.name', 'bully')
+    assert_equal('bully', @git.config('user.name'))
   end
 
   def test_set_config_with_custom_file
-    in_temp_dir do |_path|
-      custom_config_path = "#{Dir.pwd}/bare/.git/custom-config"
-      g = Git.clone(@wbare, 'bare')
-      assert_not_equal('bully', g.config('user.name'))
-      g.config('user.name', 'bully', file: custom_config_path)
-      assert_not_equal('bully', g.config('user.name'))
-      g.config('include.path', custom_config_path)
-      assert_equal('bully', g.config('user.name'))
+    Dir.chdir(@wdir) do
+      custom_config_path = "#{Dir.pwd}/.git/custom-config"
+      assert_not_equal('bully', @git.config('user.name'))
+      @git.config('user.name', 'bully', file: custom_config_path)
+      assert_not_equal('bully', @git.config('user.name'))
+      @git.config('include.path', custom_config_path)
+      assert_equal('bully', @git.config('user.name'))
       assert_equal("[user]\n\tname = bully\n", File.read(custom_config_path))
     end
   end

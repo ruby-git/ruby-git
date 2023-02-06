@@ -1,16 +1,12 @@
 #!/usr/bin/env ruby
 
-require_relative '../test_helper'
+require 'test_helper'
 
 class TestRemotes < Test::Unit::TestCase
-  def setup
-    set_file_paths
-  end
-
   def test_add_remote
     in_temp_dir do |path|
-      local = Git.clone(@wbare, 'local')
-      remote = Git.clone(@wbare, 'remote')
+      local = Git.clone(BARE_REPO_PATH, 'local')
+      remote = Git.clone(BARE_REPO_PATH, 'remote')
 
       local.add_remote('testremote', remote)
 
@@ -31,8 +27,8 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_remove_remote_remove
     in_temp_dir do |path|
-      local = Git.clone(@wbare, 'local')
-      remote = Git.clone(@wbare, 'remote')
+      local = Git.clone(BARE_REPO_PATH, 'local')
+      remote = Git.clone(BARE_REPO_PATH, 'remote')
 
       local.add_remote('testremote', remote)
       local.remove_remote('testremote')
@@ -48,9 +44,9 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_set_remote_url
     in_temp_dir do |path|
-      local = Git.clone(@wbare, 'local')
-      remote1 = Git.clone(@wbare, 'remote1')
-      remote2 = Git.clone(@wbare, 'remote2')
+      local = Git.clone(BARE_REPO_PATH, 'local')
+      remote1 = Git.clone(BARE_REPO_PATH, 'remote1')
+      remote2 = Git.clone(BARE_REPO_PATH, 'remote2')
 
       local.add_remote('testremote', remote1)
       local.set_remote_url('testremote', remote2)
@@ -63,8 +59,8 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_remote_fun
     in_temp_dir do |path|
-      loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote')
+      loc = Git.clone(BARE_REPO_PATH, 'local')
+      rem = Git.clone(BARE_REPO_PATH, 'remote')
 
       r = loc.add_remote('testrem', rem)
 
@@ -98,8 +94,8 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_fetch
     in_temp_dir do |path|
-      loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote')
+      loc = Git.clone(BARE_REPO_PATH, 'local')
+      rem = Git.clone(BARE_REPO_PATH, 'remote')
 
       r = loc.add_remote('testrem', rem)
 
@@ -172,8 +168,8 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_fetch_ref_adds_ref_option
     in_temp_dir do |path|
-      loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
+      loc = Git.clone(BARE_REPO_PATH, 'local')
+      rem = Git.clone(BARE_REPO_PATH, 'remote', :config => 'receive.denyCurrentBranch=ignore')
       loc.add_remote('testrem', rem)
 
       loc.chdir do
@@ -200,8 +196,8 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_push
     in_temp_dir do |path|
-      loc = Git.clone(@wbare, 'local')
-      rem = Git.clone(@wbare, 'remote', :config => 'receive.denyCurrentBranch=ignore')
+      loc = Git.clone(BARE_REPO_PATH, 'local')
+      rem = Git.clone(BARE_REPO_PATH, 'remote', :config => 'receive.denyCurrentBranch=ignore')
 
       loc.add_remote('testrem', rem)
 

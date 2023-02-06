@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "#{File.dirname(__FILE__)}/../test_helper"
+require 'test_helper'
 
 # Test diff when the file path has escapes according to core.quotePath
 # See https://git-scm.com/docs/git-config#Documentation/git-config.txt-corequotePath

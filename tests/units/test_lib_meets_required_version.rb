@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestLibMeetsRequiredVersion < Test::Unit::TestCase
   def test_with_supported_command_version

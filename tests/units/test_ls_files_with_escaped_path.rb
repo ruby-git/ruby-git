@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 # Test diff when the file path has to be quoted according to core.quotePath
 # See https://git-scm.com/docs/git-config#Documentation/git-config.txt-corequotePath

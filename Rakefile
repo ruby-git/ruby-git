@@ -1,16 +1,20 @@
 require 'bundler/gem_tasks'
 require 'English'
 
-require "#{File.expand_path(File.dirname(__FILE__))}/lib/git/version"
+require 'git/version'
 
 default_tasks = []
 
 desc 'Run Unit Tests'
 task :test do
-  sh 'git config --global user.email "git@example.com"' if `git config user.email`.empty?
-  sh 'git config --global user.name "GitExample"' if `git config user.name`.empty?
+  sh 'ruby bin/test'
 
-  require File.dirname(__FILE__) + '/tests/all_tests.rb'
+  # You can run individual test files (or multiple files) from the command
+  # line with:
+  #
+  # $ bin/test tests/units/test_archive.rb
+  #
+  # $ bin/test tests/units/test_archive.rb tests/units/test_object.rb
 end
 default_tasks << :test
 

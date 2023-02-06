@@ -8,21 +8,13 @@ require "git"
 
 class Test::Unit::TestCase
 
-  def set_file_paths
-    cwd = FileUtils.pwd
-    if File.directory?(File.join(cwd, 'files'))
-      @test_dir = File.join(cwd, 'files')
-    elsif File.directory?(File.join(cwd, '..', 'files'))
-      @test_dir = File.join(cwd, '..', 'files')
-    elsif File.directory?(File.join(cwd, 'tests', 'files'))
-      @test_dir = File.join(cwd, 'tests', 'files')
-    end
+  TEST_ROOT = File.expand_path(__dir__)
+  TEST_FIXTURES = File.join(TEST_ROOT, 'files')
 
-    @wdir_dot = File.expand_path(File.join(@test_dir, 'working'))
-    @wbare = File.expand_path(File.join(@test_dir, 'working.git'))
-    @index = File.expand_path(File.join(@test_dir, 'index'))
+  BARE_REPO_PATH = File.join(TEST_FIXTURES, 'working.git')
 
-    @wdir = create_temp_repo(@wdir_dot)
+  def clone_working_repo
+    @wdir = create_temp_repo('working')
   end
 
   teardown
@@ -30,19 +22,36 @@ class Test::Unit::TestCase
     FileUtils.rm_r(@tmp_path) if instance_variable_defined?(:@tmp_path)
   end
 
-  def create_temp_repo(clone_path)
+  def in_bare_repo_clone
+    in_temp_dir do |path|
+      git = Git.clone(BARE_REPO_PATH, 'bare')
+      Dir.chdir('bare') do
+        yield git
+      end
+    end
+  end
+
+  def in_temp_repo(clone_name)
+    clone_path = create_temp_repo(clone_name)
+    Dir.chdir(clone_path) do
+      yield
+    end
+  end
+
+  def create_temp_repo(clone_name)
+    clone_path = File.join(TEST_FIXTURES, clone_name)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
     @tmp_path = File.expand_path(File.join("/tmp/", filename))
     FileUtils.mkdir_p(@tmp_path)
     FileUtils.cp_r(clone_path, @tmp_path)
-    tmp_path = File.join(@tmp_path, 'working')
+    tmp_path = File.join(@tmp_path, File.basename(clone_path))
     FileUtils.cd tmp_path do
       FileUtils.mv('dot_git', '.git')
     end
     tmp_path
   end
 
-  def in_temp_dir(remove_after = true) # :yields: the temporary dir's path
+  def in_temp_dir # :yields: the temporary dir's path
     tmp_path = nil
     while tmp_path.nil? || File.directory?(tmp_path)
       filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
@@ -52,7 +61,7 @@ class Test::Unit::TestCase
     FileUtils.cd tmp_path do
       yield tmp_path
     end
-    FileUtils.rm_r(tmp_path) if remove_after
+    FileUtils.rm_r(tmp_path)
   end
 
   def create_file(path, content)

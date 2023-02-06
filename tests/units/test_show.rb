@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestShow < Test::Unit::TestCase
   def test_do_not_chomp_contents

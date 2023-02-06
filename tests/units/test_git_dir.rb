@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestGitDir < Test::Unit::TestCase
   def test_index_calculated_from_git_dir

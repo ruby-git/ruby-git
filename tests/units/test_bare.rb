@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestBare < Test::Unit::TestCase
 
   def setup
-    set_file_paths
-    @git = Git.bare(@wbare)
+    @git = Git.bare(BARE_REPO_PATH)
   end
 
   def test_commit

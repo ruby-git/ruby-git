@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class TestCommitWithGPG < Test::Unit::TestCase
   def setup
-    set_file_paths
+    clone_working_repo
   end
 
   def test_with_configured_gpg_keyid
