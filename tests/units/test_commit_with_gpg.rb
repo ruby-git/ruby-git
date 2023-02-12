@@ -10,42 +10,42 @@ class TestCommitWithGPG < Test::Unit::TestCase
   def test_with_configured_gpg_keyid
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
-      actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
-        actual_cmd = git_cmd
-        `true`
+      actual_opts = nil
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_opts = opts.flatten
+        ''
       end
       message = 'My commit message'
       git.commit(message, gpg_sign: true)
-      assert_match(/commit.*--gpg-sign['"]/, actual_cmd)
+      assert(actual_opts.include?('--gpg-sign'))
     end
   end
 
   def test_with_specific_gpg_keyid
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
-      actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
-        actual_cmd = git_cmd
-        `true`
+      actual_opts = nil
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_opts = opts.flatten
+        ''
       end
       message = 'My commit message'
       git.commit(message, gpg_sign: 'keykeykey')
-      assert_match(/commit.*--gpg-sign=keykeykey['"]/, actual_cmd)
+      assert(actual_opts.include?('--gpg-sign=keykeykey'))
     end
   end
 
   def test_disabling_gpg_sign
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
-      actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
-        actual_cmd = git_cmd
-        `true`
+      actual_opts = nil
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_opts = opts.flatten
+        ''
       end
       message = 'My commit message'
       git.commit(message, no_gpg_sign: true)
-      assert_match(/commit.*--no-gpg-sign['"]/, actual_cmd)
+      assert(actual_opts.include?('--no-gpg-sign'))
     end
   end
 

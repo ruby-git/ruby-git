@@ -6,6 +6,9 @@ require 'test/unit'
 
 require "git"
 
+$stdout.sync = true
+$stderr.sync = true
+
 class Test::Unit::TestCase
 
   TEST_ROOT = File.expand_path(__dir__)
@@ -92,21 +95,6 @@ class Test::Unit::TestCase
     end
   end
 
-  # Runs a block inside an environment with customized ENV variables.
-  # It restores the ENV after execution.
-  #
-  # @param [Proc] block block to be executed within the customized environment
-  #
-  def with_custom_env_variables(&block)
-    saved_env = {}
-    begin
-      Git::Lib::ENV_VARIABLE_NAMES.each { |k| saved_env[k] = ENV[k] }
-      return block.call
-    ensure
-      Git::Lib::ENV_VARIABLE_NAMES.each { |k| ENV[k] = saved_env[k] }
-    end
-  end
-
   # Assert that the expected command line args are generated for a given Git::Lib method
   #
   # This assertion generates an empty git repository and then runs calls
@@ -149,7 +137,7 @@ class Test::Unit::TestCase
   #
   # @return [void]
   #
-  def assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  def assert_command_line(expected_command_line, git_cmd, git_cmd_args, method: :command)
     actual_command_line = nil
 
     in_temp_dir do |path|
@@ -159,7 +147,7 @@ class Test::Unit::TestCase
         yield(git) if block_given?
 
         # Mock the Git::Lib#command method to capture the actual command line args
-        git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        git.lib.define_singleton_method(method) do |cmd, *opts, &block|
           actual_command_line = [cmd, *opts.flatten]
         end
 
