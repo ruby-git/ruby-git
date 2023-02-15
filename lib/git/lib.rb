@@ -1106,16 +1106,8 @@ module Git
       restore_git_system_env_variables()
     end
 
-    def command(cmd, *opts, &block)
+    def command(cmd, *opts, redirect: '', chomp: true, &block)
       Git::Lib.warn_if_old_command(self)
-
-      command_opts = { chomp: true, redirect: '' }
-      if opts.last.is_a?(Hash)
-        command_opts.merge!(opts.pop)
-      end
-      command_opts.keys.each do |k|
-        raise ArgumentError.new("Unsupported option: #{k}") unless [:chomp, :redirect].include?(k)
-      end
 
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
@@ -1127,7 +1119,7 @@ module Git
 
       global_opts = global_opts.map { |s| escape(s) }.join(' ')
 
-      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{command_opts[:redirect]} 2>&1"
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
 
       output = nil
 
@@ -1151,7 +1143,7 @@ module Git
       raise Git::GitExecuteError, "#{git_cmd}:#{output}" if
         exitstatus > 1 || (exitstatus == 1 && output != '')
 
-      output.chomp! if output && command_opts[:chomp] && !block_given?
+      output.chomp! if output && chomp && !block_given?
 
       output
     end
