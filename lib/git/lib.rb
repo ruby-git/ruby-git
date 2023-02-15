@@ -1120,12 +1120,12 @@ module Git
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
-      global_opts << %w[-c core.quotePath=true]
-      global_opts << %w[-c color.ui=false]
+      global_opts << '-c' << 'core.quotePath=true'
+      global_opts << '-c' << 'color.ui=false'
 
-      opts = [opts].flatten.map {|s| escape(s) }.join(' ')
+      opts = [opts].flatten.map { |s| escape(s) }.join(' ')
 
-      global_opts = global_opts.flatten.map {|s| escape(s) }.join(' ')
+      global_opts = global_opts.map { |s| escape(s) }.join(' ')
 
       git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{command_opts[:redirect]} 2>&1"
 
