@@ -77,7 +77,7 @@ module Git
       arr_opts << '--bare' if opts[:bare]
       arr_opts << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
 
-      command('init', arr_opts)
+      command('init', *arr_opts)
     end
 
     # tries to clone the given repo
@@ -113,7 +113,7 @@ module Git
       arr_opts << repository_url
       arr_opts << clone_dir
 
-      command('clone', arr_opts)
+      command('clone', *arr_opts)
 
       return_base_opts_from_clone(clone_dir, opts)
     end
@@ -168,7 +168,7 @@ module Git
 
       arr_opts << committish if committish
 
-      return command('describe', arr_opts)
+      return command('describe', *arr_opts)
     end
 
     def log_commits(opts={})
@@ -178,7 +178,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command_lines('log', arr_opts).map { |l| l.split.first }
+      command_lines('log', *arr_opts).map { |l| l.split.first }
     end
 
     def full_log_commits(opts={})
@@ -189,7 +189,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      full_log = command_lines('log', arr_opts)
+      full_log = command_lines('log', *arr_opts)
 
       process_commit_log_data(full_log)
     end
@@ -370,7 +370,7 @@ module Git
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
       #
-      command_lines('worktree',['list', '--porcelain']).each do |w|
+      command_lines('worktree', 'list', '--porcelain').each do |w|
         s = w.split("\s")
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
@@ -379,16 +379,16 @@ module Git
     end
 
     def worktree_add(dir, commitish = nil)
-      return command('worktree', ['add', dir, commitish]) if !commitish.nil?
-      command('worktree', ['add', dir])
+      return command('worktree', 'add', dir, commitish) if !commitish.nil?
+      command('worktree', 'add', dir)
     end
 
     def worktree_remove(dir)
-      command('worktree', ['remove', dir])
+      command('worktree', 'remove', dir)
     end
 
     def worktree_prune
-      command('worktree', ['prune'])
+      command('worktree', 'prune')
     end
 
     def list_files(ref_dir)
@@ -403,7 +403,7 @@ module Git
     end
 
     def branch_contains(commit, branch_name="")
-      command("branch",  [branch_name, "--contains", commit])
+      command("branch",  branch_name, "--contains", commit)
     end
 
     # returns hash
@@ -421,7 +421,7 @@ module Git
       grep_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
       hsh = {}
-      command_lines('grep', grep_opts).each do |line|
+      command_lines('grep', *grep_opts).each do |line|
         if m = /(.*?)\:(\d+)\:(.*)/.match(line)
           hsh[m[1]] ||= []
           hsh[m[1]] << [m[2].to_i, m[3]]
@@ -436,7 +436,7 @@ module Git
       diff_opts << obj2 if obj2.is_a?(String)
       diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
-      command('diff', diff_opts)
+      command('diff', *diff_opts)
     end
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
@@ -447,7 +447,7 @@ module Git
 
       hsh = {:total => {:insertions => 0, :deletions => 0, :lines => 0, :files => 0}, :files => {}}
 
-      command_lines('diff', diff_opts).each do |file|
+      command_lines('diff', *diff_opts).each do |file|
         (insertions, deletions, filename) = file.split("\t")
         hsh[:total][:insertions] += insertions.to_i
         hsh[:total][:deletions] += deletions.to_i
@@ -466,7 +466,7 @@ module Git
 
       opts_arr << '--' << opts[:path] if opts[:path]
 
-      command_lines('diff', opts_arr).inject({}) do |memo, line|
+      command_lines('diff', *opts_arr).inject({}) do |memo, line|
         status, path = line.split("\t")
         memo[path] = status
         memo
@@ -499,11 +499,11 @@ module Git
 
     def ls_remote(location=nil, opts={})
       arr_opts = []
-      arr_opts << ['--refs'] if opts[:refs]
+      arr_opts << '--refs' if opts[:refs]
       arr_opts << (location || '.')
 
       Hash.new{ |h,k| h[k] = {} }.tap do |hsh|
-        command_lines('ls-remote', arr_opts).each do |line|
+        command_lines('ls-remote', *arr_opts).each do |line|
           (sha, info) = line.split("\t")
           (ref, type, name) = info.split('/', 3)
           type ||= 'head'
@@ -584,7 +584,7 @@ module Git
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
 
-      command('show', arr_opts.compact, chomp: false)
+      command('show', *arr_opts.compact, chomp: false)
     end
 
     ## WRITE COMMANDS ##
@@ -625,7 +625,7 @@ module Git
 
       arr_opts.flatten!
 
-      command('add', arr_opts)
+      command('add', *arr_opts)
     end
 
     def remove(path = '.', opts = {})
@@ -639,7 +639,7 @@ module Git
         arr_opts << path
       end
 
-      command('rm', arr_opts)
+      command('rm', *arr_opts)
     end
 
     # Takes the commit message with the options and executes the commit command
@@ -681,14 +681,14 @@ module Git
         arr_opts << '--no-gpg-sign'
       end
 
-      command('commit', arr_opts)
+      command('commit', *arr_opts)
     end
 
     def reset(commit, opts = {})
       arr_opts = []
       arr_opts << '--hard' if opts[:hard]
       arr_opts << commit if commit
-      command('reset', arr_opts)
+      command('reset', *arr_opts)
     end
 
     def clean(opts = {})
@@ -698,7 +698,7 @@ module Git
       arr_opts << '-d' if opts[:d]
       arr_opts << '-x' if opts[:x]
 
-      command('clean', arr_opts)
+      command('clean', *arr_opts)
     end
 
     def revert(commitish, opts = {})
@@ -709,19 +709,19 @@ module Git
       arr_opts << '--no-edit' if opts[:no_edit]
       arr_opts << commitish
 
-      command('revert', arr_opts)
+      command('revert', *arr_opts)
     end
 
     def apply(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command('apply', arr_opts)
+      command('apply', *arr_opts)
     end
 
     def apply_mail(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command('am', arr_opts)
+      command('am', *arr_opts)
     end
 
     def stashes_all
@@ -783,14 +783,14 @@ module Git
       arr_opts << branch
       arr_opts << opts[:start_point] if opts[:start_point] && arr_opts.include?('-b')
 
-      command('checkout', arr_opts)
+      command('checkout', *arr_opts)
     end
 
     def checkout_file(version, file)
       arr_opts = []
       arr_opts << version
       arr_opts << file
-      command('checkout', arr_opts)
+      command('checkout', *arr_opts)
     end
 
     def merge(branch, message = nil, opts = {})
@@ -798,8 +798,8 @@ module Git
       arr_opts << '--no-commit' if opts[:no_commit]
       arr_opts << '--no-ff' if opts[:no_ff]
       arr_opts << '-m' << message if message
-      arr_opts += [branch]
-      command('merge', arr_opts)
+      arr_opts += Array(branch)
+      command('merge', *arr_opts)
     end
 
     def merge_base(*args)
@@ -814,7 +814,7 @@ module Git
 
       arg_opts += args
 
-      command('merge-base', arg_opts).lines.map(&:strip)
+      command('merge-base', *arg_opts).lines.map(&:strip)
     end
 
     def unmerged
@@ -848,7 +848,7 @@ module Git
       arr_opts << name
       arr_opts << url
 
-      command('remote', arr_opts)
+      command('remote', *arr_opts)
     end
 
     def remote_set_url(name, url)
@@ -856,7 +856,7 @@ module Git
       arr_opts << name
       arr_opts << url
 
-      command('remote', arr_opts)
+      command('remote', *arr_opts)
     end
 
     def remote_remove(name)
@@ -893,7 +893,7 @@ module Git
         arr_opts << '-m' << (opts[:m] || opts[:message])
       end
 
-      command('tag', arr_opts)
+      command('tag', *arr_opts)
     end
 
     def fetch(remote, opts)
@@ -909,7 +909,7 @@ module Git
       arr_opts << remote if remote
       arr_opts << opts[:ref] if opts[:ref]
 
-      command('fetch', arr_opts)
+      command('fetch', *arr_opts)
     end
 
     def push(remote, branch = 'master', opts = {})
@@ -923,10 +923,10 @@ module Git
       arr_opts << remote
 
       if opts[:mirror]
-          command('push', arr_opts)
+          command('push', *arr_opts)
       else
-          command('push', arr_opts + [branch])
-          command('push', ['--tags'] + arr_opts) if opts[:tags]
+          command('push', *arr_opts, branch)
+          command('push', '--tags', *arr_opts) if opts[:tags]
       end
     end
 
@@ -954,7 +954,7 @@ module Git
       arr_opts = []
       arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
       arr_opts += [treeish]
-      command('read-tree', arr_opts)
+      command('read-tree', *arr_opts)
     end
 
     def write_tree
@@ -971,7 +971,7 @@ module Git
       arr_opts << tree
       arr_opts << '-p' << opts[:parent] if opts[:parent]
       arr_opts += [opts[:parents]].map { |p| ['-p', p] }.flatten if opts[:parents]
-      command('commit-tree', arr_opts, redirect: "< #{escape t.path}")
+      command('commit-tree', *arr_opts, redirect: "< #{escape t.path}")
     end
 
     def update_ref(branch, commit)
@@ -985,7 +985,7 @@ module Git
       arr_opts << "--all" if opts[:all]
       arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
 
-      command('checkout-index', arr_opts)
+      command('checkout-index', *arr_opts)
     end
 
     # creates an archive file
@@ -1017,7 +1017,7 @@ module Git
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
-      command('archive', arr_opts, redirect: " > #{escape file}")
+      command('archive', *arr_opts, redirect: " > #{escape file}")
       if opts[:add_gzip]
         file_content = File.read(file)
         Zlib::GzipWriter.open(file) do |gz|
@@ -1109,6 +1109,8 @@ module Git
     def command(cmd, *opts, redirect: '', chomp: true, &block)
       Git::Lib.warn_if_old_command(self)
 
+      raise 'opts can not include an array' if opts.any? { |o| o.is_a? Array }
+
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
       global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
@@ -1156,7 +1158,7 @@ module Git
     def diff_as_hash(diff_command, opts=[])
       # update index before diffing to avoid spurious diffs
       command('status')
-      command_lines(diff_command, opts).inject({}) do |memo, line|
+      command_lines(diff_command, *opts).inject({}) do |memo, line|
         info, file = line.split("\t")
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 
@@ -1200,7 +1202,10 @@ module Git
       arr_opts = []
 
       arr_opts << opts[:object] if opts[:object].is_a? String
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter]
+      if opts[:path_limiter]
+        arr_opts << '--'
+        arr_opts += Array(opts[:path_limiter])
+      end
       arr_opts
     end
 
