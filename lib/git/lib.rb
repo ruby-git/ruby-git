@@ -739,24 +739,24 @@ module Git
     end
 
     def stash_save(message)
-      output = command('stash save', message)
+      output = command('stash', 'save', message)
       output =~ /HEAD is now at/
     end
 
     def stash_apply(id = nil)
       if id
-        command('stash apply', id)
+        command('stash', 'apply', id)
       else
-        command('stash apply')
+        command('stash', 'apply')
       end
     end
 
     def stash_clear
-      command('stash clear')
+      command('stash', 'clear')
     end
 
     def stash_list
-      command('stash list')
+      command('stash', 'list')
     end
 
     def branch_new(branch)
@@ -1106,10 +1106,10 @@ module Git
       restore_git_system_env_variables()
     end
 
-    def command(cmd, *opts, redirect: '', chomp: true, &block)
+    def command(*cmd, redirect: '', chomp: true, &block)
       Git::Lib.warn_if_old_command(self)
 
-      raise 'opts can not include an array' if opts.any? { |o| o.is_a? Array }
+      raise 'cmd can not include a nested array' if cmd.any? { |o| o.is_a? Array }
 
       global_opts = []
       global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
@@ -1117,11 +1117,11 @@ module Git
       global_opts << '-c' << 'core.quotePath=true'
       global_opts << '-c' << 'color.ui=false'
 
-      opts = [opts].flatten.map { |s| escape(s) }.join(' ')
+      escaped_cmd = cmd.map { |part| escape(part) }.join(' ')
 
       global_opts = global_opts.map { |s| escape(s) }.join(' ')
 
-      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{cmd} #{opts} #{redirect} 2>&1"
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{escaped_cmd} #{redirect} 2>&1"
 
       output = nil
 
