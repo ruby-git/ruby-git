@@ -97,7 +97,7 @@ class TestLib < Test::Unit::TestCase
     end
 
     assert(@lib.checkout('test_checkout_b2', {new_branch: true, start_point: 'master'}))
-    assert_match(%r/checkout ['"]-b['"] ['"]test_checkout_b2['"] ['"]master['"]/, actual_cmd)
+    assert_match(%r/['"]checkout['"] ['"]-b['"] ['"]test_checkout_b2['"] ['"]master['"]/, actual_cmd)
   end
 
   # takes parameters, returns array of appropriate commit objects
