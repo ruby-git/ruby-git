@@ -1,6 +1,5 @@
 require 'date'
 require 'fileutils'
-require 'logger'
 require 'minitar'
 require 'test/unit'
 

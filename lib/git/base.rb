@@ -1,4 +1,5 @@
 require 'git/base/factory'
+require 'logger'
 
 module Git
   # Git::Base is the main public interface for interacting with Git commands.
@@ -90,12 +91,8 @@ module Git
         options[:repository] ||= File.join(working_dir, '.git')
         options[:index] ||= File.join(options[:repository], 'index')
       end
-      if options[:log]
-        @logger = options[:log]
-        @logger.info("Starting Git")
-      else
-        @logger = nil
-      end
+      @logger = (options[:log] || Logger.new(nil))
+      @logger.info("Starting Git")
 
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
       @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil

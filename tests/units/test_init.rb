@@ -113,14 +113,13 @@ class TestInit < Test::Unit::TestCase
     end
   end
 
-  # If the :log option is not passed to Git.clone, the result should not
-  # have a logger
+  # If the :log option is not passed to Git.clone, a Logger will be created
   #
   def test_git_clone_without_log
     in_temp_dir do |path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co')
       actual_logger = g.instance_variable_get(:@logger)
-      assert_equal(nil, actual_logger)
+      assert_equal(Logger, actual_logger.class)
     end
   end
 

@@ -1,3 +1,4 @@
+require 'logger'
 require 'tempfile'
 require 'zlib'
 
@@ -52,6 +53,7 @@ module Git
       @git_index_file = nil
       @git_work_dir = nil
       @path = nil
+      @logger = logger || Logger.new(nil)
 
       if base.is_a?(Git::Base)
         @git_dir = base.repo.path
@@ -62,7 +64,6 @@ module Git
         @git_index_file = base[:index]
         @git_work_dir = base[:working_directory]
       end
-      @logger = logger
     end
 
     # creates or reinitializes the repository
@@ -1137,10 +1138,8 @@ module Git
         command_thread.join
       end
 
-      if @logger
-        @logger.info(git_cmd)
-        @logger.debug(output)
-      end
+      @logger.info(git_cmd)
+      @logger.debug(output)
 
       raise Git::GitExecuteError, "#{git_cmd}:#{output}" if
         exitstatus > 1 || (exitstatus == 1 && output != '')
