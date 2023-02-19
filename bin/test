@@ -5,6 +5,7 @@ require 'bundler/setup'
 
 `git config --global user.email "git@example.com"` if `git config user.email`.empty?
 `git config --global user.name "GitExample"` if `git config user.name`.empty?
+`git config --global init.defaultBranch master` if `git config init.defaultBranch`.empty?
 
 project_root = File.expand_path(File.join(__dir__, '..'))
 
