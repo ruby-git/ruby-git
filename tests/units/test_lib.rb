@@ -64,7 +64,7 @@ class TestLib < Test::Unit::TestCase
     @lib.add('test_file_2')
 
     # Error raised because of pre-commit hook and no use of no_verify option
-    assert_raise Git::GitExecuteError do
+    assert_raise Git::FailedError do
       @lib.commit('commit without no verify and pre-commit file')
     end
 

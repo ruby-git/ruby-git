@@ -9,7 +9,7 @@ class TestCommitWithEmptyMessage < Test::Unit::TestCase
   def test_without_allow_empty_message_option
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
-      assert_raises Git::GitExecuteError do
+      assert_raises Git::FailedError do
         git.commit('', { allow_empty: true })
       end
     end
