@@ -155,10 +155,10 @@ class TestRemotes < Test::Unit::TestCase
       origin = "--upload-pack=touch #{test_file};"
       begin
         git.fetch(origin, { ref: 'some/ref/head' })
-      rescue Git::GitExecuteError
+      rescue Git::FailedError
         # This is expected
       else
-        raise 'Expected Git::GitExecuteError to be raised'
+        raise 'Expected Git::Failed to be raised'
       end
 
       vulnerability_exists = File.exist?(test_file)

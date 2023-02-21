@@ -43,7 +43,7 @@ class TestTags < Test::Unit::TestCase
 
       assert(r2.tags.detect{|t| t.name == 'third'}.objectish == r2.tags.detect{|t| t.name == 'fifth'}.objectish)
 
-      assert_raise Git::GitExecuteError do
+      assert_raise Git::FailedError do
         r2.add_tag('third')
       end
 

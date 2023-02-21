@@ -60,8 +60,8 @@ class TestTreeOps < Test::Unit::TestCase
             g.add
           rescue Exception => e
             # Adding nothig is now validd on Git 1.7.x
-            # If an error ocurres (Git 1.6.x) it MUST rise Git::GitExecuteError
-            assert_equal(e.class, Git::GitExecuteError)
+            # If an error ocurres (Git 1.6.x) it MUST raise Git::FailedError
+            assert_equal(e.class, Git::FailedError)
           end
           g.read_tree('testbranch1', :prefix => 'b1/')
           g.read_tree('testbranch3', :prefix => 'b1/b3/')

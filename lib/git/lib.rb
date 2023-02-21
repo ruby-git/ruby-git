@@ -1,12 +1,9 @@
+require 'git/failed_error'
 require 'logger'
 require 'tempfile'
 require 'zlib'
 
 module Git
-
-  class GitExecuteError < StandardError
-  end
-
   class Lib
 
     @@semaphore = Mutex.new
@@ -1128,12 +1125,12 @@ module Git
 
       command_thread = nil;
 
-      exitstatus = nil
+      status = nil
 
       with_custom_env_variables do
         command_thread = Thread.new do
           output = run_command(git_cmd, &block)
-          exitstatus = $?.exitstatus
+          status = $?
         end
         command_thread.join
       end
@@ -1141,8 +1138,10 @@ module Git
       @logger.info(git_cmd)
       @logger.debug(output)
 
-      raise Git::GitExecuteError, "#{git_cmd}:#{output}" if
-        exitstatus > 1 || (exitstatus == 1 && output != '')
+      if status.exitstatus > 1 || (status.exitstatus == 1 && output != '')
+        result = Git::CommandLineResult.new(git_cmd, status, output, '')
+        raise Git::FailedError.new(result)
+      end
 
       output.chomp! if output && chomp && !block_given?
 

@@ -74,7 +74,7 @@ class TestLog < Test::Unit::TestCase
   end
 
   def test_log_file_noexist
-    assert_raise Git::GitExecuteError do
+    assert_raise Git::FailedError do
       @git.log.object('no-exist.txt').size
     end
   end
