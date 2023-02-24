@@ -413,10 +413,12 @@ module Git
       grep_opts = ['-n']
       grep_opts << '-i' if opts[:ignore_case]
       grep_opts << '-v' if opts[:invert_match]
+      grep_opts << '-E' if opts[:extended_regexp]
       grep_opts << '-e'
       grep_opts << string
       grep_opts << opts[:object] if opts[:object].is_a?(String)
-      grep_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      grep_opts.push('--', opts[:path_limiter]) if opts[:path_limiter].is_a?(String)
+      grep_opts.push('--', *opts[:path_limiter]) if opts[:path_limiter].is_a?(Array)
 
       hsh = {}
       command_lines('grep', *grep_opts).each do |line|

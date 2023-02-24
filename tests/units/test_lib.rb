@@ -291,6 +291,12 @@ class TestLib < Test::Unit::TestCase
     assert_equal("you can't search me!", match["gitsearch1:scott/newfile"].first[1])
     assert_equal(1, match.size)
 
+    match = @lib.grep('search', :object => 'gitsearch1', :path_limiter => ['scott/new*', 'scott/text.*'])
+    assert_equal("you can't search me!", match["gitsearch1:scott/newfile"].first[1])
+    assert_equal('to search one', match['gitsearch1:scott/text.txt'].assoc(6)[1])
+    assert_equal(2, match['gitsearch1:scott/text.txt'].size)
+    assert_equal(2, match.size)
+
     match = @lib.grep('SEARCH', :object => 'gitsearch1')
     assert_equal(0, match.size)
 
@@ -300,6 +306,11 @@ class TestLib < Test::Unit::TestCase
 
     match = @lib.grep('search', :object => 'gitsearch1', :invert_match => true)
     assert_equal(6, match['gitsearch1:scott/text.txt'].size)
+    assert_equal(2, match.size)
+
+    match = @lib.grep("you can't search me!|nothing!", :object => 'gitsearch1', :extended_regexp => true)
+    assert_equal("you can't search me!", match["gitsearch1:scott/newfile"].first[1])
+    assert_equal("nothing!", match["gitsearch1:scott/text.txt"].first[1])
     assert_equal(2, match.size)
 
     match = @lib.grep('Grep', :object => 'grep_colon_numbers')

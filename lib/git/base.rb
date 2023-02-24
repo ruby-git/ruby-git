@@ -209,6 +209,15 @@ module Git
     #     end
     #   end
     #
+    # @param string [String] the string to search for
+    # @param path_limiter [String, Array] a path or array of paths to limit the search to or nil for no limit
+    # @param opts [Hash] options to pass to the underlying `git grep` command
+    #
+    # @option opts [Boolean] :ignore_case (false) ignore case when matching
+    # @option opts [Boolean] :invert_match (false) select non-matching lines
+    # @option opts [Boolean] :extended_regexp (false) use extended regular expressions
+    # @option opts [String] :object (HEAD) the object to search from
+    #
     # @return [Hash<String, Array>] a hash of arrays
     #   ```Ruby
     #   {
