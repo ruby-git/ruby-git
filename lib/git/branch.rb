@@ -78,7 +78,11 @@ module Git
     end
     
     def update_ref(commit)
-      @base.lib.update_ref(@full, commit)
+      if @remote
+        @base.lib.update_ref("refs/remotes/#{@remote.name}/#{@name}", commit)
+      else
+        @base.lib.update_ref("refs/heads/#{@name}", commit)
+      end
     end
     
     def to_a
@@ -114,7 +118,7 @@ module Git
       # param [String] name branch full name.
       # return [<Git::Remote,NilClass,String>] an Array containing the remote and branch names. 
       def parse_name(name)
-        if name.match(/^(?:remotes)?\/([^\/]+)\/(.+)/)
+        if name.match(/^(?:remotes\/)?([^\/]+)\/(.+)/)
           return [Git::Remote.new(@base, $1), $2]
         end
 

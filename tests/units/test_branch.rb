@@ -98,4 +98,22 @@ class TestBranch < Test::Unit::TestCase
       assert(git.branch('other_branch').current)
     end
   end
+
+  def test_branch_update_ref
+    in_temp_dir do |path|
+      git = Git.init
+      File.write('foo','rev 1')
+      git.add('foo')
+      git.commit('rev 1')
+      git.branch('testing').create
+      File.write('foo','rev 2')
+      git.add('foo')
+      git.commit('rev 2')
+      git.branch('testing').update_ref(git.revparse('HEAD'))
+
+      # Expect the call to Branch#update_ref to pass the full ref name for the
+      # of the testing branch to Lib#update_ref
+      assert_equal(git.revparse('HEAD'), git.revparse('refs/heads/testing'))
+    end
+  end
 end
