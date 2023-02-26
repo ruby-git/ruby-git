@@ -5,6 +5,21 @@
 
 # Change Log
 
+## v1.14.0 (2023-02-25)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.2..v1.14.0)
+
+Changes since v1.13.2:
+
+* 0f7c4a5 Allow the use of an array of path_limiters and add extended_regexp option to grep (#624)
+* 8992701 Refactor error thrown when a git command fails (#622)
+* cf74b91 Simplify how temp files are used when testing Git::Base#archive (#621)
+* a8bfb9d Set init.defaultBranch when running tests if it is not already set (#620)
+* 9ee7ca9 Create a null logger if a logger is not provided (#619)
+* 872de4c Internal refactor of Git::Lib command (#618)
+* 29e157d Simplify test running and fixture repo cloning (#615)
+* 08d04ef Use dynamically-created repo for signed commits test (#614)
+
 ## v1.13.2 (2023-02-02)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.1..v1.13.2)
