@@ -8,9 +8,18 @@ class TestInit < Test::Unit::TestCase
   def test_open_simple
     clone_working_repo
     g = Git.open(@wdir)
-    assert_match(/^C?:?#{@wdir}$/, g.dir.path)
-    assert_match(/^C?:?#{File.join(@wdir, '.git')}$/, g.repo.path)
-    assert_match(/^C?:?#{File.join(@wdir, '.git', 'index')}$/, g.index.path)
+
+    expected_working_dir = File.realpath(@wdir)
+    actual_working_dir = File.realpath(g.dir.path)
+    assert_equal(expected_working_dir, actual_working_dir)
+
+    expected_repo_path = File.join(expected_working_dir, '.git')
+    actual_repo_path = File.realpath(g.repo.path)
+    assert_equal(expected_repo_path, actual_repo_path)
+
+    expected_index_path = File.join(expected_repo_path, 'index')
+    actual_index_path = File.realpath(g.index.path)
+    assert_equal(expected_index_path, actual_index_path)
   end
 
   def test_open_opts
