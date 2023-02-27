@@ -22,6 +22,19 @@ class TestInit < Test::Unit::TestCase
     assert_equal(expected_index_path, actual_index_path)
   end
 
+  def test_open_from_child_dir
+    in_temp_dir do |path|
+      git = Git.init
+      Dir.mkdir('child')
+      File.write('child/foo.txt','rev 1')
+      git.add('child/foo.txt')
+      git.commit('rev 1')
+      Dir.chdir('child') do
+        assert_nothing_raised { Git.open(Dir.pwd) }
+      end
+    end
+  end
+
   def test_open_opts
     clone_working_repo
     index = File.join(TEST_FIXTURES, 'index')
