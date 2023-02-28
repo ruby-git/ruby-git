@@ -1,8 +1,0 @@
-hello
-this is
-a file
-that is
-put here
-to search one
-to search two
-nothing!
