@@ -58,9 +58,26 @@ module Git
       self.new(options)
     end
 
+    def self.root_of_worktree(working_dir)
+      result = working_dir
+      status = nil
+      Dir.chdir(working_dir) do
+        git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
+        result = `#{git_cmd}`.chomp
+        status = $?
+      end
+      raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
+      result
+    end
+
     # (see Git.open)
     def self.open(working_dir, options = {})
+      raise ArgumentError, "'#{working_dir}' is not a directory" unless Dir.exist?(working_dir)
+
+      working_dir = root_of_worktree(working_dir) unless options[:repository]
+
       normalize_paths(options, default_working_directory: working_dir)
+
       self.new(options)
     end
 

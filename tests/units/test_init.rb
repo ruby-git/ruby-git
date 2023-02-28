@@ -13,6 +13,20 @@ class TestInit < Test::Unit::TestCase
     assert_match(/^C?:?#{File.join(@wdir, '.git', 'index')}$/, g.index.path)
   end
 
+  def test_open_from_non_root_dir
+    in_temp_dir do |path|
+      `git init`
+      File.write('file.txt', 'test')
+      `git add file.txt`
+      `git commit -m "initial commit "`
+      Dir.mkdir('subdir')
+      Dir.chdir('subdir') do
+        g = Git.open('.')
+        assert_equal(path, g.dir.to_s)
+      end
+    end
+  end
+
   def test_open_opts
     clone_working_repo
     index = File.join(TEST_FIXTURES, 'index')
