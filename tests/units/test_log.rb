@@ -9,7 +9,16 @@ class TestLog < Test::Unit::TestCase
     @git = Git.open(@wdir)
   end
 
-  def test_get_fisrt_and_last_entries
+  def test_log_all
+    assert_equal(72, @git.log(100).size)
+    assert_equal(76, @git.log(100).all.size)
+  end
+
+  def test_log_non_integer_count
+    assert_raises(ArgumentError) { @git.log('foo').size }
+  end
+
+  def test_get_first_and_last_entries
     log = @git.log
     assert(log.first.is_a?(Git::Object::Commit))
     assert_equal('46abbf07e3c564c723c7c039a43ab3a39e5d02dd', log.first.objectish)
@@ -96,5 +105,4 @@ class TestLog < Test::Unit::TestCase
     l = @git.log.between( 'master', 'cherry').cherry
     assert_equal( 1, l.size )
   end
-
 end

@@ -66,6 +66,10 @@ like:
 
  `@git.log(20).object("some_file").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] }`
 
+Pass the `--all` option to `git log` as follows:
+
+ `@git.log.all.each { |commit| [block] }`
+
  **Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
 
 ## Examples
