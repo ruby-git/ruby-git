@@ -1182,7 +1182,12 @@ module Git
     def log_common_options(opts)
       arr_opts = []
 
-      arr_opts << "-#{opts[:count]}" if opts[:count]
+      if opts[:count] && !opts[:count].is_a?(Integer)
+        raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
+      end
+
+      arr_opts << "--max-count=#{opts[:count]}" if opts[:count]
+      arr_opts << "--all" if opts[:all]
       arr_opts << "--no-color"
       arr_opts << "--cherry" if opts[:cherry]
       arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
