@@ -926,8 +926,13 @@ module Git
       end
     end
 
-    def pull(remote='origin', branch='master')
-      command('pull', remote, branch)
+    def pull(remote = nil, branch = nil)
+      raise ArgumentError, "You must specify a remote if a branch is specified" if remote.nil? && !branch.nil?
+
+      arr_opts = []
+      arr_opts << remote if remote
+      arr_opts << branch if branch
+      command('pull', *arr_opts)
     end
 
     def tag_sha(tag_name)
