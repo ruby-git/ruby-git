@@ -5,6 +5,19 @@
 
 # Change Log
 
+## v1.15.0 (2023-03-01)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.14.0..v1.15.0)
+
+Changes since v1.14.0:
+
+* b40d #pull with no options should do the same thing as `git pull` with no options (#633)
+* 9c5e Fix error when calling `Git::Lib#remove` with `recursive` or `cached` options (#632)
+* 806e Add Git::Log#all option (#630)
+* d905 Allow a repo to be opened giving a non-root repo directory (#629)
+* 1ccd Rewrite worktree tests (#628)
+* 4409 Fix Git::Branch#update_ref (#626)
+
 ## v1.14.0 (2023-02-25)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.13.2..v1.14.0)
