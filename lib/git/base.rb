@@ -399,7 +399,7 @@ module Git
     #  @git.pull('upstream')              # pulls from upstream/master
     #  @git.pull('upstream', 'develope')  # pulls from upstream/develop
     #
-    def pull(remote='origin', branch='master')
+    def pull(remote = nil, branch = nil)
       self.lib.pull(remote, branch)
     end
 
