@@ -61,6 +61,23 @@ class TestRm < Test::Unit::TestCase
     end
   end
 
+  test '#rm should be aliased to #remove' do
+    in_temp_dir do
+      git = Git.init
+      File.write('README.txt', 'hello world')
+      git.add('README.txt')
+      git.commit('Initial commit')
+
+      assert(File.exist?('README.txt'))
+
+      assert_nothing_raised do
+        git.remove('README.txt')
+      end
+
+      assert(!File.exist?('README.txt'))
+    end
+  end
+
   test 'when rm fails a Git::FailedError error should be raised' do
     in_temp_dir do
       git = Git.init
