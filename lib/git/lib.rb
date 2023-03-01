@@ -628,16 +628,12 @@ module Git
       command('add', *arr_opts)
     end
 
-    def remove(path = '.', opts = {})
+    def rm(path = '.', opts = {})
       arr_opts = ['-f']  # overrides the up-to-date check by default
-      arr_opts << ['-r'] if opts[:recursive]
-      arr_opts << ['--cached'] if opts[:cached]
+      arr_opts << '-r' if opts[:recursive]
+      arr_opts << '--cached' if opts[:cached]
       arr_opts << '--'
-      if path.is_a?(Array)
-        arr_opts += path
-      else
-        arr_opts << path
-      end
+      arr_opts += Array(path)
 
       command('rm', *arr_opts)
     end

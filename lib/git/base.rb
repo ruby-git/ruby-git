@@ -272,9 +272,11 @@ module Git
     end
 
     # removes file(s) from the git repository
-    def remove(path = '.', opts = {})
-      self.lib.remove(path, opts)
+    def rm(path = '.', opts = {})
+      self.lib.rm(path, opts)
     end
+
+    alias remove rm
 
     # resets the working directory to the provided commitish
     def reset(commitish = nil, opts = {})
