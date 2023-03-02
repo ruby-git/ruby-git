@@ -908,20 +908,36 @@ module Git
       command('fetch', *arr_opts)
     end
 
-    def push(remote, branch = 'master', opts = {})
+    def push(remote = nil, branch = nil, opts = nil)
+      if opts.nil? && branch.instance_of?(Hash)
+        opts = branch
+        branch = nil
+      end
+
+      if opts.nil? && remote.instance_of?(Hash)
+        opts = remote
+        remote = nil
+      end
+
+      opts ||= {}
+
       # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
       opts = {:tags => opts} if [true, false].include?(opts)
+
+      raise ArgumentError, "You must specify a remote if a branch is specified" if remote.nil? && !branch.nil?
 
       arr_opts = []
       arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--delete'  if opts[:delete]
       arr_opts << '--force'  if opts[:force] || opts[:f]
-      arr_opts << remote
+      arr_opts << remote if remote
+      arr_opts_with_branch = arr_opts.dup
+      arr_opts_with_branch << branch if branch
 
       if opts[:mirror]
-          command('push', *arr_opts)
+          command('push', *arr_opts_with_branch)
       else
-          command('push', *arr_opts, branch)
+          command('push', *arr_opts_with_branch)
           command('push', '--tags', *arr_opts) if opts[:tags]
       end
     end
