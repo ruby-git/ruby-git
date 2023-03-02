@@ -3,9 +3,8 @@ module Git
   class Base
 
     module Factory
-
       # @return [Git::Branch] an object for branch_name
-      def branch(branch_name = 'master')
+      def branch(branch_name = self.current_branch)
         Git::Branch.new(self, branch_name)
       end
 
@@ -93,7 +92,6 @@ module Git
         shas = self.lib.merge_base(*args)
         shas.map { |sha| gcommit(sha) }
       end
-
     end
 
   end

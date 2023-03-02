@@ -14,6 +14,18 @@ class TestBranch < Test::Unit::TestCase
     @branches = @git.branches
   end
 
+  test 'Git::Lib#branch with no args should return current branch' do
+    in_temp_dir do
+      git = Git.init('.', initial_branch: 'my_branch')
+      File.write('file.txt', 'hello world')
+      git.add('file.txt')
+      git.commit('Initial commit')
+
+      b = git.branch
+      assert_equal('my_branch', b.name)
+    end
+  end
+
   def test_branches_all
     assert(@git.branches[:master].is_a?(Git::Branch))
     assert(@git.branches.size > 5)
