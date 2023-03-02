@@ -84,11 +84,11 @@ In order to ensure high quality, all pull requests must meet these requirements:
 While working on specific features you can run individual test files or
 a group of tests using `bin/test`:
 
-    # run a single file:
-    $ bin/test tests/units/test_object.rb
+    # run a single file (from tests/units):
+    $ bin/test test_object
 
     # run multiple files:
-    $ bin/test tests/units/test_object.rb tests/units/test_archive.rb
+    $ bin/test test_object test_archive
 
     # run all unit tests:
     $ bin/test

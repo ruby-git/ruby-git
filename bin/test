@@ -11,10 +11,11 @@ project_root = File.expand_path(File.join(__dir__, '..'))
 
 $LOAD_PATH.unshift(File.join(project_root, 'tests'))
 
-if ARGV.empty?
-  paths = Dir.glob(File.join(project_root, 'tests/**/test_*.rb'))
-else
-  paths = ARGV.map { |p| File.join(project_root, p) }
-end
+paths =
+  if ARGV.empty?
+    Dir.glob('tests/units/test_*.rb').map { |p| File.basename(p) }
+  else
+    ARGV
+  end.map { |p| File.join(project_root, 'tests/units', p) }
 
 paths.each { |p| require p }
