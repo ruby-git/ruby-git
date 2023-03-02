@@ -772,11 +772,16 @@ module Git
     #
     # @param [String] branch
     # @param [Hash] opts
-    def checkout(branch, opts = {})
+    def checkout(branch = nil, opts = {})
+      if branch.is_a?(Hash) && opts == {}
+        opts = branch
+        branch = nil
+      end
+
       arr_opts = []
       arr_opts << '-b' if opts[:new_branch] || opts[:b]
       arr_opts << '--force' if opts[:force] || opts[:f]
-      arr_opts << branch
+      arr_opts << branch if branch
       arr_opts << opts[:start_point] if opts[:start_point] && arr_opts.include?('-b')
 
       command('checkout', *arr_opts)

@@ -350,8 +350,8 @@ module Git
     end
 
     # checks out a branch as the new git working directory
-    def checkout(branch = 'master', opts = {})
-      self.lib.checkout(branch, opts)
+    def checkout(*args, **options)
+      self.lib.checkout(*args, **options)
     end
 
     # checks out an old version of a file
