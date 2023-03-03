@@ -26,9 +26,28 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  def test_branches_all
-    assert(@git.branches[:master].is_a?(Git::Branch))
-    assert(@git.branches.size > 5)
+  test 'Git::Base#branches' do
+    in_temp_dir do
+      remote_git = Git.init('remote_git', initial_branch: 'master')
+      File.write('remote_git/file.txt', 'hello world')
+      remote_git.add('file.txt')
+      remote_git.commit('Initial commit')
+      remote_branches = remote_git.branches
+      assert_equal(1, remote_branches.size)
+      assert(remote_branches.first.current)
+      assert_equal('master', remote_branches.first.name)
+
+      # Test that remote tracking branches are handled correctly
+      #
+      local_git = Git.clone('remote_git/.git', 'local_git')
+      local_branches = assert_nothing_raised { local_git.branches }
+      assert_equal(3, local_branches.size)
+      assert(remote_branches.first.current)
+      local_branch_refs = local_branches.map(&:full)
+      assert_include(local_branch_refs, 'master')
+      assert_include(local_branch_refs, 'remotes/origin/master')
+      assert_include(local_branch_refs, 'remotes/origin/HEAD')
+    end
   end
 
   def test_branches_local

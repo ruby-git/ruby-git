@@ -347,13 +347,37 @@ module Git
       command('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
     end
 
+    BRANCH_LINE_REGEXP = /
+      ^
+        # Prefix indicates if this branch is checked out. The prefix is one of:
+        (?:
+          (?<current>\*[[:blank:]]) |  # Current branch (checked out in the current worktree)
+          (?<worktree>\+[[:blank:]]) | # Branch checked out in a different worktree
+          [[:blank:]]{2}               # Branch not checked out
+        )
+
+        # The branch's full refname
+        (?<refname>[^[[:blank:]]]+)
+
+        # Optional symref
+        # If this ref is a symbolic reference, this is the ref referenced
+        (?:
+          [[:blank:]]->[[:blank:]](?<symref>.*)
+        )?
+      $
+    /x
+
     def branches_all
-      arr = []
-      command_lines('branch', '-a').each do |b|
-        current = (b[0, 2] == '* ')
-        arr << [b.gsub('* ', '').strip, current]
+      command_lines('branch', '-a').map do |line|
+        match_data = line.match(BRANCH_LINE_REGEXP)
+        raise GitExecuteError, 'Unexpected branch line format' unless match_data
+        [
+          match_data[:refname],
+          !match_data[:current].nil?,
+          !match_data[:worktree].nil?,
+          match_data[:symref]
+        ]
       end
-      arr
     end
 
     def worktrees_all
