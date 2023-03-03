@@ -232,4 +232,53 @@ class TestRemotes < Test::Unit::TestCase
       assert(rem.tag('test-tag'))
     end
   end
+
+  test 'Remote#branch with no args' do
+    in_temp_dir do
+      Dir.mkdir 'git'
+      Git.init('git', initial_branch: 'first', bare: true)
+      r1 = Git.clone('git', 'r1')
+      File.write('r1/file1.txt', 'hello world')
+      r1.add('file1.txt')
+      r1.commit('first commit')
+      r1.push
+
+      r2 = Git.clone('git', 'r2')
+
+      File.write('r1/file2.txt', 'hello world')
+      r1.add('file2.txt')
+      r1.commit('second commit')
+      r1.push
+
+      branch = r2.remote('origin').branch
+
+      assert_equal('origin/first', branch.full)
+    end
+  end
+
+  test 'Remote#merge with no args' do
+    in_temp_dir do
+      Dir.mkdir 'git'
+      Git.init('git', initial_branch: 'first', bare: true)
+      r1 = Git.clone('git', 'r1')
+      File.write('r1/file1.txt', 'hello world')
+      r1.add('file1.txt')
+      r1.commit('first commit')
+      r1.push
+
+      r2 = Git.clone('git', 'r2')
+
+      File.write('r1/file2.txt', 'hello world')
+      r1.add('file2.txt')
+      r1.commit('second commit')
+      r1.push
+
+      remote = r2.remote('origin')
+
+      remote.fetch
+      remote.merge
+
+      assert(File.exist?('r2/file2.txt'))
+    end
+  end
 end
