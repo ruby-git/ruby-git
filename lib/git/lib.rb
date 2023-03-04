@@ -124,6 +124,24 @@ module Git
       base_opts
     end
 
+    # Returns the name of the default branch of the given repository
+    #
+    # @param repository [URI, Pathname, String] The (possibly remote) repository to clone from
+    #
+    # @return [String] the name of the default branch
+    #
+    def repository_default_branch(repository)
+      output = command('ls-remote', '--symref', '--', repository, 'HEAD')
+
+      match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
+      return match_data[:default_branch] if match_data
+
+      match_data = output.match(%r{^ref: refs/heads/(?<default_branch>[^\t]+)\tHEAD$})
+      return match_data[:default_branch] if match_data
+
+      raise 'Unable to determine the default branch'
+    end
+
     ## READ COMMANDS ##
 
     #

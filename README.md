@@ -197,6 +197,8 @@ g.show('v2.8', 'README.md')
 Git.ls_remote('https://github.com/ruby-git/ruby-git.git') # returns a hash containing the available references of the repo.
 Git.ls_remote('/path/to/local/repo')
 Git.ls_remote() # same as Git.ls_remote('.')
+
+Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'master'
 ```
 
 And here are the operations that will need to write to your git repository.
