@@ -357,7 +357,11 @@ module Git
         )
 
         # The branch's full refname
-        (?<refname>[^[[:blank:]]]+)
+        (?:
+          (?<not_a_branch>\(not[[:blank:]]a[[:blank:]]branch\)) |
+          (?:\(HEAD[[:blank:]]detached[[:blank:]]at[[:blank:]](?<detached_ref>[^\)]+)\)) |
+          (?<refname>[^[[:blank:]]]+)
+        )
 
         # Optional symref
         # If this ref is a symbolic reference, this is the ref referenced
@@ -371,13 +375,14 @@ module Git
       command_lines('branch', '-a').map do |line|
         match_data = line.match(BRANCH_LINE_REGEXP)
         raise GitExecuteError, 'Unexpected branch line format' unless match_data
+        next nil if match_data[:not_a_branch] || match_data[:detached_ref]
         [
           match_data[:refname],
           !match_data[:current].nil?,
           !match_data[:worktree].nil?,
           match_data[:symref]
         ]
-      end
+      end.compact
     end
 
     def worktrees_all
