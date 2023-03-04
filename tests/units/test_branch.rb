@@ -50,6 +50,26 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
+  test 'Git::Base#branchs with detached head' do
+    in_temp_dir do
+      git = Git.init('.', initial_branch: 'master')
+      File.write('file1.txt', 'hello world')
+      git.add('file1.txt')
+      git.commit('Initial commit')
+      git.add_tag('v1.0.0')
+      File.write('file2.txt', 'hello world')
+      git.add('file2.txt')
+      git.commit('Second commit')
+
+      # This will put us in a detached head state
+      git.checkout('v1.0.0')
+
+      branches = assert_nothing_raised { git.branches }
+      assert_equal(1, branches.size)
+      assert_equal('master', branches.first.name)
+    end
+  end
+
   def test_branches_local
     bs = @git.branches.local
     assert(bs.size > 4)
