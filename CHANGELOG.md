@@ -5,6 +5,20 @@
 
 # Change Log
 
+## v1.16.0 (2023-03-03)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.15.0..v1.16.0)
+
+Changes since v1.15.0:
+
+* 536d Fix parsing when in detached HEAD state in Git::Lib#branches_all (#641)
+* 5c68 Fix parsing of symbolic refs in `Git::Lib#branches_all` (#640)
+* 7d88 Remote#branch and #merge should default to current branch instead of "master" (#639)
+* 3dda0 `#branch` name should default to current branch instead of `master` (#638)
+* d33d #checkout without args should do same as `git checkout` with no args (#637)
+* 0c90 #push without args should do same as `git push` with no args (#636)
+* 2b19 Make it easier to run test files from the command line (#635)
+
 ## v1.15.0 (2023-03-01)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.14.0..v1.15.0)
