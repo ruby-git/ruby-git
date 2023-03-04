@@ -22,6 +22,20 @@ class TestPush < Test::Unit::TestCase
     assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
+  test 'push with a single push option' do
+    expected_command_line = ['push', '--push-option', 'foo']
+    git_cmd = :push
+    git_cmd_args = [push_option: 'foo']
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
+  test 'push with an array of push options' do
+    expected_command_line = ['push', '--push-option', 'foo', '--push-option', 'bar', '--push-option', 'baz']
+    git_cmd = :push
+    git_cmd_args = [push_option: ['foo', 'bar', 'baz']]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
   test 'push with only a remote name and options' do
     expected_command_line = ['push', '--force', 'origin']
     git_cmd = :push
