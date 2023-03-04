@@ -175,6 +175,46 @@ module Git
     Base.clone(repository_url, directory, options)
   end
 
+  # Returns the name of the default branch of the given repository
+  #
+  # @example with a URI string
+  #   Git.default_branch('https://github.com/ruby-git/ruby-git') # => 'master'
+  #   Git.default_branch('https://github.com/rspec/rspec-core') # => 'main'
+  #
+  # @example with a URI object
+  #   repository_uri = URI('https://github.com/ruby-git/ruby-git')
+  #   Git.default_branch(repository_uri) # => 'master'
+  #
+  # @example with a local repository
+  #   Git.default_branch('.') # => 'master'
+  #
+  # @example with a local repository Pathname
+  #   repository_path = Pathname('.')
+  #   Git.default_branch(repository_path) # => 'master'
+  #
+  # @example with the logging option
+  #   logger = Logger.new(STDOUT, level: Logger::INFO)
+  #   Git.default_branch('.', log: logger) # => 'master'
+  #   I, [2022-04-13T16:01:33.221596 #18415]  INFO -- : git '-c' 'core.quotePath=true' '-c' 'color.ui=false' ls-remote '--symref' '--' '.' 'HEAD'  2>&1
+  #
+  # @param repository [URI, Pathname, String] The (possibly remote) repository to get the default branch name for
+  #
+  #   See [GIT URLS](https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a)
+  #   for more information.
+  #
+  # @param [Hash] options The options for this command (see list of valid
+  #   options below)
+  #
+  # @option options [Logger] :log A logger to use for Git operations.  Git
+  #   commands are logged at the `:info` level.  Additional logging is done
+  #   at the `:debug` level.
+  #
+  # @return [String] the name of the default branch
+  #
+  def self.default_branch(repository, options = {})
+    Base.repository_default_branch(repository, options)
+  end
+
   # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
   # is specified) into the +name+ directory, then remove all traces of git from the
   # directory.

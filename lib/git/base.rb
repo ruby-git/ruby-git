@@ -24,6 +24,11 @@ module Git
       new(new_options)
     end
 
+    # (see Git.default_branch)
+    def self.repository_default_branch(repository, options = {})
+      Git::Lib.new(nil, options[:log]).repository_default_branch(repository)
+    end
+
     # Returns (and initialize if needed) a Git::Config instance
     #
     # @return [Git::Config] the current config instance.
