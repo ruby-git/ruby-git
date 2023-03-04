@@ -374,10 +374,23 @@ module Git
       self.lib.fetch(remote, opts)
     end
 
-    # pushes changes to a remote repository - easiest if this is a cloned repository,
-    # otherwise you may have to run something like this first to setup the push parameters:
+    # Push changes to a remote repository
     #
-    #  @git.config('remote.remote-name.push', 'refs/heads/master:refs/heads/master')
+    # @overload push(remote = nil, branch = nil, options = {})
+    #   @param remote [String] the remote repository to push to
+    #   @param branch [String] the branch to push
+    #   @param options [Hash] options to pass to the push command
+    #
+    #   @option opts [Boolean] :mirror (false) Push all refs under refs/heads/, refs/tags/ and refs/remotes/
+    #   @option opts [Boolean] :delete (false) Delete refs that don't exist on the remote
+    #   @option opts [Boolean] :force (false) Force updates
+    #   @option opts [Boolean] :tags (false) Push all refs under refs/tags/
+    #   @option opts [Array, String] :push_options (nil) Push options to transmit
+    #
+    #   @return [Void]
+    #
+    #   @raise [Git::FailedError] if the push fails
+    #   @raise [ArgumentError] if a branch is given without a remote
     #
     def push(*args, **options)
       self.lib.push(*args, **options)
