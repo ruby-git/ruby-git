@@ -170,4 +170,9 @@ class Test::Unit::TestCase
 
     assert_equal(expected_command_line, actual_command_line)
   end
+
+  def assert_child_process_success(&block)
+    yield
+    assert_equal 0, $CHILD_STATUS.exitstatus, "Child process failed with exitstatus #{$CHILD_STATUS.exitstatus}"
+  end
 end

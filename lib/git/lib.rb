@@ -338,7 +338,7 @@ module Git
     end
 
     def ls_tree(sha)
-      data = {'blob' => {}, 'tree' => {}}
+      data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
 
       command_lines('ls-tree', sha).each do |line|
         (info, filenm) = line.split("\t")
