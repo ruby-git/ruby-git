@@ -5,6 +5,17 @@
 
 # Change Log
 
+## v1.17.0 (2023-03-05)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.16.0..v1.17.0)
+
+Changes since v1.16.0:
+
+* 1311 Add deprecation mechanism (introduces runtime dependency on ActiveSupport) (#645)
+* 50b8 Add the push_option option for Git::Lib#push (#644)
+* a799 Make Git::Base#ls_tree handle commit objects (#643)
+* 6db3 Implememt Git.default_branch (#571)
+
 ## v1.16.0 (2023-03-03)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.15.0..v1.16.0)
