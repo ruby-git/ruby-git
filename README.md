@@ -3,73 +3,47 @@
 # @title README
 -->
 
-# The `git` Gem
+# The Git Gem
 
-[![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
-[![Change Log](https://img.shields.io/badge/change%20log-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
-[![Build Status](https://github.com/ruby-git/ruby-git/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/ruby-git/ruby-git/actions/workflows/continuous_integration.yml)
-[![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
-[![Source Code](https://img.shields.io/badge/source-GitHub-green)](https://github.com/ruby-git/ruby-git)
-[![Documentation](https://img.shields.io/badge/documentation-Latest-green)](https://rubydoc.info/gems/git)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/ruby-git/ruby-git/blob/master/LICENSE)
-
-The git Gem provides an API that can be used to create, read, and manipulate
+The Git Gem provides an API that can be used to create, read, and manipulate
 Git repositories by wrapping system calls to the `git` binary. The API can be
 used for working with Git in complex interactions including branching and
 merging, object inspection and manipulation, history, patch generation and
 more.
 
-## Basic Usage
+## Homepage
+
+The project source code is at:
+
+http://github.com/ruby-git/ruby-git
+
+## Documentation
+
+Detailed documentation can be found at:
+
+https://rubydoc.info/gems/git/Git.html
 
 Get started by obtaining a repository object by:
 
-* Opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
-* Initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
-* Cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
+* opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
+* initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
+* cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
 
 ## Install
 
-You can install the `git` gem with the following command:
+You can install Ruby/Git like this:
 
-```shell
-gem install git
+```
+sudo gem install git
 ```
 
-## Deprecation Warnings
+## Code Status
 
-Deprecation warnings are managed with the `Git.deprecation` attribute.
-
-Use this object to define deprecations in the source code:
-
-```ruby
-Git.deprecation.deprecate_methods(Git::Branch, stashes: 'use Git::Base#stash_list instead')
-```
-
-The default action when using deprecated items (methods, classes, etc.) is to output
-a **DEPRECATION WARNING** to `$stderr` like the following:
-
-```text
-DEPRECATION WARNING: stashes is deprecated and will be removed from git 2.0.0 (use Git::Base.stash_list instead)
-```
-
-The action taken when a deprecated item is used is defined by setting the behavior
-on the deprecation object:
-
-```ruby
-# Log all deprecation warnings to $stderr (the default)
-Git.deprecation = :stderr
-
-# Raise an ActiveSupport::DeprecationException
-Git.deprecation = :raise
-
-# Do nothing
-Git.deprecation = :silence
-```
-
-See [ActiveSupport::Deprecation](https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.html)
-for more details on how to use deprecations.
+* [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
+* [![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
+* [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
 
 ## Major Objects
 

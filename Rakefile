@@ -18,7 +18,7 @@ task :test do
 end
 default_tasks << :test
 
-unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
+unless RUBY_PLATFORM == 'java'
   #
   # YARD documentation for this project can NOT be built with JRuby.
   # This project uses the redcarpet gem which can not be installed on JRuby.

@@ -1,32 +1,7 @@
-require 'active_support/deprecation'
-
-module Git
-  # An object used to manage deprecations
-  #
-  # A ActiveSupport::Deprecation object used to manage the deprecations scheduled
-  # to be removed in the next major release of the `git`` gem.
-  #
-  # @example Deprecate a method
-  #   Git.deprecation.deprecate_methods(Git::Branch, stashes: 'use Git::Base#stash_list instead')
-  #
-  # @example Set the deprecation behavior
-  #   # Log all deprecation warnings to $stderr (the default)
-  #   Git.deprecation.behavior = :stderr
-  #
-  #   # Raise an ActiveSupport::DeprecationException
-  #   Git.deprecation.behavior = :raise
-  #
-  #   # Do nothing
-  #   Git.deprecation.behavior = :raise
-  #
-  # @see https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.html ActiveSupport::Deprecation
-  #
-  # @return [ActiveSupport::Deprecation]
-  #
-  def self.deprecation
-    @deprecation ||= ActiveSupport::Deprecation.new('2.0.0', 'git')
-  end
-end
+# Add the directory containing this file to the start of the load path if it
+# isn't there already.
+$:.unshift(File.dirname(__FILE__)) unless
+  $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
 
 require 'git/author'
 require 'git/base'
