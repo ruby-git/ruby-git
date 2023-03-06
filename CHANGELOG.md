@@ -5,6 +5,14 @@
 
 # Change Log
 
+## v1.17.1 (2023-03-06)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.0..v1.17.1)
+
+Changes since v1.17.0:
+
+* 774e Revert introduction of ActiveSupport dependency (#649)
+
 ## v1.17.0 (2023-03-05)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.16.0..v1.17.0)
