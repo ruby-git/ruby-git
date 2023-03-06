@@ -5,6 +5,8 @@ require 'test/unit'
 
 require "git"
 
+Git.deprecation.behavior = :silence
+
 class Test::Unit::TestCase
 
   TEST_ROOT = File.expand_path(__dir__)
