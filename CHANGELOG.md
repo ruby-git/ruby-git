@@ -5,6 +5,14 @@
 
 # Change Log
 
+## v1.17.2 (2023-03-07)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.1..v1.17.2)
+
+Changes since v1.17.1:
+
+* f43d6 Fix branch name parsing to handle names that include slashes (#651)
+
 ## v1.17.1 (2023-03-06)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.0..v1.17.1)
