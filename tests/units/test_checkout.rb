@@ -79,4 +79,18 @@ class TestCheckout < Test::Unit::TestCase
       assert_raises(Git::FailedError) { git.checkout('master') }
     end
   end
+
+  test 'checking out to a branch whose name contains slashes' do
+    in_temp_dir do
+      git = Git.init('.', initial_branch: 'master')
+
+      File.write('file1.txt', 'file1')
+      git.add('file1.txt')
+      git.commit('commit1')
+
+      assert_nothing_raised { git.branch('foo/a_new_branch').checkout }
+
+      assert_equal('foo/a_new_branch', git.current_branch)
+    end
+  end
 end
