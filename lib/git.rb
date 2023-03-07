@@ -133,6 +133,9 @@ module Git
   # @option options [String] :branch The name of a branch or tag to checkout
   #   instead of the default branch.
   #
+  # @option options [Array, String] :config A list of configuration options to
+  #  set on the newly created repository.
+  #
   # @option options [Integer] :depth Create a shallow clone with a history
   #   truncated to the specified number of commits.
   #
@@ -165,6 +168,18 @@ module Git
   #
   # @example Create a bare repository in the directory `ruby-git.git`
   #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', bare: true)
+  #
+  # @example Clone a repository and set a single config option
+  #   git = Git.clone(
+  #     'https://github.com/ruby-git/ruby-git.git',
+  #     config: 'submodule.recurse=true'
+  #   )
+  #
+  # @example Clone a repository and set multiple config options
+  #   git = Git.clone(
+  #     'https://github.com/ruby-git/ruby-git.git',
+  #     config: ['user.name=John Doe', 'user.email=john@doe.com']
+  #   )
   #
   # @return [Git::Base] an object that can execute git commands in the context
   #   of the cloned local working copy or cloned repository.

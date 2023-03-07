@@ -188,6 +188,18 @@ end
 g.config('user.name')  # returns 'Scott Chacon'
 g.config # returns whole config hash
 
+# Configuration can be set when cloning using the :config option.
+# This option can be an single configuration String or an Array
+# if multiple config items need to be set.
+#
+g = Git.clone(
+  git_uri, destination_path,
+  :config => [
+    'core.sshCommand=ssh -i /home/user/.ssh/id_rsa',
+    'submodule.recurse=true'
+  ]
+)
+
 g.tags # returns array of Git::Tag objects
 
 g.show()

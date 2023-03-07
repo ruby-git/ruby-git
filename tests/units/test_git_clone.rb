@@ -33,4 +33,54 @@ class TestGitClone < Test::Unit::TestCase
       assert_equal(expected_dir, git.dir.to_s)
     end
   end
+
+  test 'clone with single config option' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |path|
+      git = Git.init('.')
+
+      # Mock the Git::Lib#command method to capture the actual command line args
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, { config: 'user.name=John Doe' })
+    end
+
+    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
+  test 'clone with multiple config options' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |path|
+      git = Git.init('.')
+
+      # Mock the Git::Lib#command method to capture the actual command line args
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, { config: ['user.name=John Doe', 'user.email=john@doe.com'] })
+    end
+
+    expected_command_line = [
+      'clone',
+      '--config', 'user.name=John Doe',
+      '--config', 'user.email=john@doe.com',
+      '--', repository_url, destination
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
 end
