@@ -67,7 +67,7 @@ module Git
       result = working_dir
       status = nil
       Dir.chdir(working_dir) do
-        git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
+        git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel"
         result = `#{git_cmd}`.chomp
         status = $?
       end
