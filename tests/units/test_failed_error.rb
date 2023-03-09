@@ -3,7 +3,7 @@ require 'test_helper'
 class TestFailedError < Test::Unit::TestCase
   def test_initializer
     status = Struct.new(:to_s).new('pid 89784 exit 1')
-    result = Git::CommandLineResult.new(%w[git status], status, '', "failed")
+    result = Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
 
     error = Git::FailedError.new(result)
 
@@ -13,11 +13,11 @@ class TestFailedError < Test::Unit::TestCase
 
   def test_message
     status = Struct.new(:to_s).new('pid 89784 exit 1')
-    result = Git::CommandLineResult.new(%w[git status], status, '', "failed")
+    result = Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
 
     error = Git::FailedError.new(result)
 
-    expected_message = "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\nstderr: \"failed\""
+    expected_message = "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\noutput: \"stdout\""
     assert_equal(expected_message, error.message)
   end
 end
