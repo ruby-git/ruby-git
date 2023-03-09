@@ -2,6 +2,7 @@ require 'date'
 require 'fileutils'
 require 'minitar'
 require 'test/unit'
+require 'tmpdir'
 
 require "git"
 
@@ -51,18 +52,24 @@ class Test::Unit::TestCase
     tmp_path
   end
 
-  def in_temp_dir # :yields: the temporary dir's path
-    tmp_path = nil
-    while tmp_path.nil? || File.directory?(tmp_path)
-      filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-      tmp_path = File.join(Dir.tmpdir, filename)
+  # Creates a temp directory and yields that path to the passed block
+  #
+  # On Windows, using Dir.mktmpdir with a block sometimes raises an error:
+  # `Errno::ENOTEMPTY: Directory not empty @ dir_s_rmdir`. I think this might
+  # be a configuration issue with the Windows CI environment.
+  #
+  # This was worked around by using the non-block form of Dir.mktmpdir and
+  # then removing the directory manually in an ensure block.
+  #
+  def in_temp_dir
+    tmpdir = Dir.mktmpdir
+    tmpdir_realpath = File.realpath(tmpdir)
+    Dir.chdir(tmpdir_realpath) do
+      yield tmpdir_realpath
     end
-    FileUtils.mkdir(tmp_path)
-    tmp_path = File.realpath(tmp_path)
-    FileUtils.cd tmp_path do
-      yield tmp_path
-    end
-    FileUtils.rm_r(tmp_path)
+  ensure
+    FileUtils.rm_rf(tmpdir_realpath) if tmpdir_realpath
+    # raise "Temp dir #{tmpdir} not removed. Remaining files : #{Dir["#{tmpdir}/**/*"]}" if File.exist?(tmpdir)
   end
 
   def create_file(path, content)
