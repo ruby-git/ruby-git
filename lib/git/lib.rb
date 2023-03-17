@@ -951,6 +951,7 @@ module Git
       arr_opts << '--prune' if opts[:p] || opts[:prune]
       arr_opts << '--prune-tags' if opts[:P] || opts[:'prune-tags']
       arr_opts << '--force' if opts[:f] || opts[:force]
+      arr_opts << '--update-head-ok' if opts[:u] || opts[:'update-head-ok']
       arr_opts << '--unshallow' if opts[:unshallow]
       arr_opts << '--depth' << opts[:depth] if opts[:depth]
       arr_opts << '--' if remote || opts[:ref]
