@@ -5,6 +5,18 @@
 
 # Change Log
 
+## v1.18.0 (2023-03-19)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.2..v1.18.0)
+
+Changes since v1.17.2:
+
+* 3c70 Add support for `--update-head-ok` to `fetch` (#660)
+* b53d Do not generate yard documentation when building in TruffleRuby (#659)
+* 5af1 Correctly report command output when there is an error (#658)
+* b27a Add test to ensure that `Git.open` works to open a submodule (#655)
+* 5b0e Update Git.clone to set multiple config variables (#653)
+
 ## v1.17.2 (2023-03-07)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.1..v1.17.2)
