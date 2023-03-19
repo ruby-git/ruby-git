@@ -147,6 +147,13 @@ class TestRemotes < Test::Unit::TestCase
     assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
+  def test_fetch_cmd_with_update_head_ok
+    expected_command_line = ['fetch', '--update-head-ok']
+    git_cmd = :fetch
+    git_cmd_args = [:'update-head-ok' => true]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
   def test_fetch_command_injection
     test_file = 'VULNERABILITY_EXISTS'
     vulnerability_exists = false

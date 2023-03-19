@@ -311,6 +311,7 @@ g.fetch
 g.fetch(g.remotes.first)
 g.fetch('origin', {:ref => 'some/ref/head'} )
 g.fetch(all: true, force: true, depth: 2)
+g.fetch('origin', {:'update-head-ok' => true})
 
 g.pull
 g.pull(Git::Repo, Git::Branch) # fetch and a merge
