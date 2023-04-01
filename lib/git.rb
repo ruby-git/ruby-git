@@ -139,6 +139,9 @@ module Git
   # @option options [Integer] :depth Create a shallow clone with a history
   #   truncated to the specified number of commits.
   #
+  # @option options [String] :filter Request that the server send a partial
+  #   clone according to the given filter
+  #
   # @option options [Logger] :log A logger to use for Git operations.  Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
