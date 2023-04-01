@@ -83,4 +83,29 @@ class TestGitClone < Test::Unit::TestCase
     assert_equal(expected_command_line, actual_command_line)
   end
 
+  test 'clone with a filter' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |path|
+      git = Git.init('.')
+
+      # Mock the Git::Lib#command method to capture the actual command line args
+      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, filter: 'tree:0')
+    end
+
+    expected_command_line = [
+      'clone',
+      '--filter', 'tree:0',
+      '--', repository_url, destination
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
 end

@@ -236,6 +236,9 @@ g.dir #=> /tmp/clone/ruby-git-clean
 g.config('user.name', 'Scott Chacon')
 g.config('user.email', 'email@email.com')
 
+# Clone can take a filter to tell the serve to send a partial clone
+g = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
+
 # Clone can take an optional logger
 logger = Logger.new
 g = Git.clone(git_url, NAME, :log => logger)
