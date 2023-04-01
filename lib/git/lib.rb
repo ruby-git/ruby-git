@@ -84,6 +84,7 @@ module Git
     #  :bare::      no working directory
     #  :branch::    name of branch to track (rather than 'master')
     #  :depth::     the number of commits back to pull
+    #  :filter::    specify partial clone
     #  :origin::    name of remote (same as remote)
     #  :path::      directory where the repo will be cloned
     #  :remote::    name of remote (rather than 'origin')
@@ -101,6 +102,7 @@ module Git
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
       arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << "--filter=#{opts[:filter]}" if opts[:filter]
       Array(opts[:config]).each { |c| arr_opts << '--config' << c }
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]
       arr_opts << '--recursive' if opts[:recursive]
