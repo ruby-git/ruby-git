@@ -325,4 +325,15 @@ class TestLib < Test::Unit::TestCase
     assert(@lib.show('gitsearch1', 'scott/text.txt') == "hello\nthis is\na file\nthat is\nput here\nto search one\nto search two\nnothing!\n")
   end
 
+  def test_compare_version_to
+    lib = Git::Lib.new(nil, nil)
+    current_version = [2, 42, 0]
+    lib.define_singleton_method(:current_command_version) { current_version }
+    assert lib.compare_version_to(0, 43, 9) == 1
+    assert lib.compare_version_to(2, 41, 0) == 1
+    assert lib.compare_version_to(2, 42, 0) == 0
+    assert lib.compare_version_to(2, 42, 1) == -1
+    assert lib.compare_version_to(2, 43, 0) == -1
+    assert lib.compare_version_to(3, 0, 0) == -1
+  end
 end
