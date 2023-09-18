@@ -31,6 +31,8 @@ class TestWorktree < Test::Unit::TestCase
   end
 
   test 'adding a worktree when there are no commits should fail' do
+    omit('Omitted since git version is >= 2.42.0') if Git::Lib.new(nil, nil).compare_version_to(2, 42, 0) >= 0
+
     in_temp_dir do |path|
       Dir.mkdir('main_worktree')
       Dir.chdir('main_worktree') do
@@ -43,6 +45,33 @@ class TestWorktree < Test::Unit::TestCase
 
       assert_raises(Git::FailedError) do
         git.worktree('feature1').add
+      end
+    end
+  end
+
+  test 'adding a worktree when there are no commits should succeed' do
+    omit('Omitted since git version is < 2.42.0') if Git::Lib.new(nil, nil).compare_version_to(2, 42, 0) < 0
+
+    in_temp_dir do |path|
+      Dir.mkdir('main_worktree')
+      Dir.chdir('main_worktree') do
+        `git init`
+        # `git commit --allow-empty -m "first commit"`
+      end
+
+      git = Git.open('main_worktree')
+
+      assert_nothing_raised do
+        git.worktree('feature1').add
+      end
+
+      assert_equal(2, git.worktrees.size)
+
+      expected_worktree_dirs = [
+        File.join(path, 'main_worktree'),
+        File.join(path, 'feature1')
+      ].each_with_index do |expected_worktree_dir, i|
+        assert_equal(expected_worktree_dir, git.worktrees.to_a[i].dir)
       end
     end
   end
