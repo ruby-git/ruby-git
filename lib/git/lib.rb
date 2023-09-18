@@ -1108,6 +1108,22 @@ module Git
       version_parts.fill(0, version_parts.length...3)
     end
 
+    # Returns current_command_version <=> other_version
+    #
+    # @example
+    #   lib.current_command_version #=> [2, 42, 0]
+    #
+    #   lib.compare_version_to(2, 41, 0) #=> 1 
+    #   lib.compare_version_to(2, 42, 0) #=> 0
+    #   lib.compare_version_to(2, 43, 0) #=> -1
+    #
+    # @param other_version [Array<Object>] the other version to compare to
+    # @return [Integer] -1 if this version is less than other_version, 0 if equal, or 1 if greater than
+    #
+    def compare_version_to(*other_version)
+      current_command_version <=> other_version
+    end
+
     def required_command_version
       [1, 6]
     end
