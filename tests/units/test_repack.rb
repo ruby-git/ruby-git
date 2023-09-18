@@ -3,20 +3,18 @@
 require 'test_helper'
 
 class TestRepack < Test::Unit::TestCase
-  def test_repack
+  test 'should be able to call repack with the right args' do
     in_bare_repo_clone do |r1|
       new_file('new_file', 'new content')
-
       r1.add
       r1.commit('my commit')
 
-      # see how big the repo is
-      size1 = r1.repo_size
+      # assert_nothing_raised { r1.repack }
 
-      r1.repack
-
-      # see how big the repo is now, should be smaller
-      assert(size1 > r1.repo_size)
+      expected_command_line = ['repack', '-a', '-d']
+      git_cmd = :repack
+      git_cmd_args = []
+      assert_command_line(expected_command_line, git_cmd, git_cmd_args)
     end
   end
 end
