@@ -286,6 +286,9 @@ g.branch('new_branch').delete
 g.branch('existing_branch').checkout
 g.branch('master').contains?('existing_branch')
 
+# delete remote branch
+g.push('origin', 'remote_branch_name', force: true, delete: true)
+
 g.checkout('new_branch')
 g.checkout('new_branch', new_branch: true, start_point: 'master')
 g.checkout(g.branch('new_branch'))
@@ -338,6 +341,9 @@ g.repack
 
 g.push
 g.push(g.remote('name'))
+
+# delete remote branch
+g.push('origin', 'remote_branch_name', force: true, delete: true)
 
 g.worktree('/tmp/new_worktree').add
 g.worktree('/tmp/new_worktree', 'branch1').add
