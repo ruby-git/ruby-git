@@ -79,6 +79,14 @@ class TestTreeOps < Test::Unit::TestCase
       assert(c.commit?)
       assert_equal('b40f7a9072cdec637725700668f8fdebe39e6d38', c.gtree.sha)
 
+      c = g.commit_tree(tr, :parent => 'HEAD')
+      assert(c.commit?)
+      assert_equal('b40f7a9072cdec637725700668f8fdebe39e6d38', c.gtree.sha)
+
+      c = g.commit_tree(tr, :parents => ['HEAD', 'testbranch1'])
+      assert(c.commit?)
+      assert_equal('b40f7a9072cdec637725700668f8fdebe39e6d38', c.gtree.sha)
+
       tmp = Tempfile.new('tesxt')
       tmppath = tmp.path
       tmp.close

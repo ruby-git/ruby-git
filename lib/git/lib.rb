@@ -1040,10 +1040,19 @@ module Git
       t.write(opts[:message])
       t.close
 
+      # Adapted from activesupport Array.wrap
+      parents = if opts[:parents].nil?
+        []
+      elsif opts[:parents].respond_to?(:to_ary)
+        opts[:parents].to_ary || [opts[:parents]]
+      else
+        [opts[:parents]]
+      end
+      parents << opts[:parent] if opts[:parent]
+
       arr_opts = []
       arr_opts << tree
-      arr_opts << '-p' << opts[:parent] if opts[:parent]
-      arr_opts += [opts[:parents]].map { |p| ['-p', p] }.flatten if opts[:parents]
+      arr_opts += parents.map { |p| ['-p', p] }.flatten
       command('commit-tree', *arr_opts, redirect: "< #{escape t.path}")
     end
 
