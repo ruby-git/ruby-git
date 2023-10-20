@@ -1,5 +1,6 @@
 require 'git/base/factory'
 require 'logger'
+require 'open3'
 
 module Git
   # Git::Base is the main public interface for interacting with Git commands.
@@ -66,11 +67,11 @@ module Git
     def self.root_of_worktree(working_dir)
       result = working_dir
       status = nil
-      Dir.chdir(working_dir) do
-        git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
-        result = `#{git_cmd}`.chomp
-        status = $?
-      end
+
+      git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
+      result, status = Open3.capture2(git_cmd, chdir: File.expand_path(working_dir))
+      result = result.chomp
+
       raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
       result
     end

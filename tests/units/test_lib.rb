@@ -91,7 +91,7 @@ class TestLib < Test::Unit::TestCase
     assert(@lib.reset(nil, hard: true)) # to get around worktree status on windows
 
     actual_cmd = nil
-    @lib.define_singleton_method(:run_command) do |git_cmd, &block|
+    @lib.define_singleton_method(:run_command) do |git_cmd, chdir, &block|
       actual_cmd = git_cmd
       super(git_cmd, &block)
     end

@@ -11,9 +11,9 @@ class TestCommitWithGPG < Test::Unit::TestCase
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
       actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
+      git.lib.define_singleton_method(:run_command) do |git_cmd, chdir, &block|
         actual_cmd = git_cmd
-        `true`
+        [`true`, $?]
       end
       message = 'My commit message'
       git.commit(message, gpg_sign: true)
@@ -25,9 +25,9 @@ class TestCommitWithGPG < Test::Unit::TestCase
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
       actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
+      git.lib.define_singleton_method(:run_command) do |git_cmd, chdir, &block|
         actual_cmd = git_cmd
-        `true`
+        [`true`, $?]
       end
       message = 'My commit message'
       git.commit(message, gpg_sign: 'keykeykey')
@@ -39,9 +39,9 @@ class TestCommitWithGPG < Test::Unit::TestCase
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
       actual_cmd = nil
-      git.lib.define_singleton_method(:run_command) do |git_cmd, &block|
+      git.lib.define_singleton_method(:run_command) do |git_cmd, chdir, &block|
         actual_cmd = git_cmd
-        `true`
+        [`true`, $?]
       end
       message = 'My commit message'
       git.commit(message, no_gpg_sign: true)
