@@ -223,7 +223,7 @@ class TestRemotes < Test::Unit::TestCase
       assert(!rem.status['test-file1'])
       assert(!rem.status['test-file3'])
 
-      loc.push('testrem')
+      loc.push('testrem', 'master')
 
       assert(rem.status['test-file1'])
       assert(!rem.status['test-file3'])
