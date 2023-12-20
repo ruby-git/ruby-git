@@ -96,6 +96,13 @@ class TestPush < Test::Unit::TestCase
     assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
+  test 'push with all: true' do
+    expected_command_line = ['push', '--all', 'origin']
+    git_cmd = :push
+    git_cmd_args = ['origin', all: true]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  end
+
   test 'when push succeeds an error should not be raised' do
     in_temp_dir do
       Git.init('remote.git', initial_branch: 'master', bare: true)
