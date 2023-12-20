@@ -345,6 +345,9 @@ g.push(g.remote('name'))
 # delete remote branch
 g.push('origin', 'remote_branch_name', force: true, delete: true)
 
+# push all branches to remote at one time
+g.push('origin', all: true)
+
 g.worktree('/tmp/new_worktree').add
 g.worktree('/tmp/new_worktree', 'branch1').add
 g.worktree('/tmp/new_worktree').remove
