@@ -2,6 +2,7 @@ require 'date'
 require 'fileutils'
 require 'minitar'
 require 'test/unit'
+require 'mocha/test_unit'
 require 'tmpdir'
 
 require "git"
@@ -148,6 +149,7 @@ class Test::Unit::TestCase
   # @param expected_command_line [Array<String>] The expected arguments to be sent to Git::Lib#command
   # @param git_cmd [Symbol] the method to be called on the Git::Base object
   # @param git_cmd_args [Array<Object>] The arguments to be sent to the git_cmd method
+  # @param git_output [String] The output to be returned by the Git::Lib#command method
   #
   # @yield [git] An initialization block
   #   The initialization block is called after a test project is created with Git.init.
@@ -157,8 +159,10 @@ class Test::Unit::TestCase
   #
   # @return [void]
   #
-  def assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  def assert_command_line(expected_command_line, git_cmd, git_cmd_args, git_output = nil)
     actual_command_line = nil
+
+    command_output = ''
 
     in_temp_dir do |path|
       git = Git.init('test_project')
@@ -169,17 +173,26 @@ class Test::Unit::TestCase
         # Mock the Git::Lib#command method to capture the actual command line args
         git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
           actual_command_line = [cmd, *opts.flatten]
+          git_output
         end
 
-        git.send(git_cmd, *git_cmd_args)
+        command_output = git.send(git_cmd, *git_cmd_args)
       end
     end
 
     assert_equal(expected_command_line, actual_command_line)
+
+    command_output
   end
 
   def assert_child_process_success(&block)
     yield
     assert_equal 0, $CHILD_STATUS.exitstatus, "Child process failed with exitstatus #{$CHILD_STATUS.exitstatus}"
+  end
+
+  def windows_platform?
+    # Check if on Windows via RUBY_PLATFORM (CRuby) and RUBY_DESCRIPTION (JRuby)
+    win_platform_regex = /mingw|mswin/
+    RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
   end
 end
