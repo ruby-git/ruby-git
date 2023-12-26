@@ -1043,7 +1043,7 @@ module Git
       arr_opts = []
       arr_opts << tree
       arr_opts << '-p' << opts[:parent] if opts[:parent]
-      arr_opts += [opts[:parents]].map { |p| ['-p', p] }.flatten if opts[:parents]
+      arr_opts += Array(opts[:parents]).map { |p| ['-p', p] }.flatten if opts[:parents]
       command('commit-tree', *arr_opts, redirect: "< #{escape t.path}")
     end
 
@@ -1113,7 +1113,7 @@ module Git
     # @example
     #   lib.current_command_version #=> [2, 42, 0]
     #
-    #   lib.compare_version_to(2, 41, 0) #=> 1 
+    #   lib.compare_version_to(2, 41, 0) #=> 1
     #   lib.compare_version_to(2, 42, 0) #=> 0
     #   lib.compare_version_to(2, 43, 0) #=> -1
     #
