@@ -2,6 +2,7 @@ require 'git/failed_error'
 require 'logger'
 require 'tempfile'
 require 'zlib'
+require 'open3'
 
 module Git
   class Lib
@@ -441,7 +442,10 @@ module Git
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
       files = []
-      Dir.chdir(dir) { files = Dir.glob('**/*').select { |f| File.file?(f) } } rescue nil
+      begin
+        files = Dir.glob('**/*', base: dir).select { |f| File.file?(File.join(dir, f)) }
+      rescue
+      end
       files
     end
 
@@ -579,15 +583,7 @@ module Git
     end
 
     def config_get(name)
-      do_get = Proc.new do |path|
-        command('config', '--get', name)
-      end
-
-      if @git_dir
-        Dir.chdir(@git_dir, &do_get)
-      else
-        do_get.call
-      end
+      command('config', '--get', name, chdir: @git_dir)
     end
 
     def global_config_get(name)
@@ -595,15 +591,7 @@ module Git
     end
 
     def config_list
-      build_list = Proc.new do |path|
-        parse_config_list command_lines('config', '--list')
-      end
-
-      if @git_dir
-        Dir.chdir(@git_dir, &build_list)
-      else
-        build_list.call
-      end
+      parse_config_list command_lines('config', '--list', chdir: @git_dir)
     end
 
     def global_config_list
@@ -1148,8 +1136,8 @@ module Git
     # @return [<String>] the names of the EVN variables involved in the git commands
     ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
 
-    def command_lines(cmd, *opts)
-      cmd_op = command(cmd, *opts)
+    def command_lines(cmd, *opts, chdir: nil)
+      cmd_op = command(cmd, *opts, chdir: chdir)
       if cmd_op.encoding.name != "UTF-8"
         op = cmd_op.encode("UTF-8", "binary", :invalid => :replace, :undef => :replace)
       else
@@ -1195,7 +1183,7 @@ module Git
       restore_git_system_env_variables()
     end
 
-    def command(*cmd, redirect: '', chomp: true, &block)
+    def command(*cmd, redirect: '', chomp: true, chdir: nil, &block)
       Git::Lib.warn_if_old_command(self)
 
       raise 'cmd can not include a nested array' if cmd.any? { |o| o.is_a? Array }
@@ -1220,8 +1208,7 @@ module Git
 
       with_custom_env_variables do
         command_thread = Thread.new do
-          output = run_command(git_cmd, &block)
-          status = $?
+          output, status = run_command(git_cmd, chdir, &block)
         end
         command_thread.join
       end
@@ -1303,10 +1290,17 @@ module Git
       arr_opts
     end
 
-    def run_command(git_cmd, &block)
-      return IO.popen(git_cmd, &block) if block_given?
+    def run_command(git_cmd, chdir=nil, &block)
+      block ||= Proc.new do |io|
+        io.readlines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join
+      end
 
-      `#{git_cmd}`.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join
+      opts = {}
+      opts[:chdir] = File.expand_path(chdir) if chdir
+
+      Open3.popen2(git_cmd, opts) do |stdin, stdout, wait_thr|
+        [block.call(stdout), wait_thr.value]
+      end
     end
 
     def escape(s)
