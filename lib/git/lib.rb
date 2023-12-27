@@ -1255,7 +1255,20 @@ module Git
       opts = {}
       opts[:chdir] = File.expand_path(chdir) if chdir
 
-      [IO.popen(custom_git_env_variables, git_cmd, opts, &block), $?]
+      # Option 1 using IO.popen
+      #
+      # [IO.popen(custom_git_env_variables, git_cmd, opts, &block), $?]
+
+      # Option 2 using Open3.popen2
+      #
+      Open3.popen2(custom_git_env_variables, git_cmd, opts) do |stdin, stdout, wait_thr|
+        [block.call(stdout), wait_thr.value]
+      end
+
+      # Option 3 using Open3.capture3
+      #
+      # stdout_s, stderr_s, status = Open3.capture3(custom_git_env_variables, git_cmd, opts)
+      # [block.call(StringIO.new(stdout_s)), status]
     end
 
     def escape(s)

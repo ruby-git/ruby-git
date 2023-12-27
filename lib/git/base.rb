@@ -69,10 +69,25 @@ module Git
       status = nil
 
       git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
-      IO.popen(git_cmd, :chdir => working_dir) do |io|
-        status = Process.wait2(io.pid).last
-        result = io.read.chomp
+
+      # Option 1 using IO.popen
+      #
+      # IO.popen(git_cmd, :chdir => working_dir) do |io|
+      #   status = Process.wait2(io.pid).last
+      #   result = io.read.chomp
+      # end
+
+      # Option 2 using Open3.popen2
+      #
+      Open3.popen2(git_cmd, chdir: working_dir) do |stdin, stdout, wait_thr|
+        status = wait_thr.value
+        result = stdout.chomp
       end
+
+      # Option 3 using Open3.capture3
+      #
+      # stdout_s, stderr_s, status = Open3.capture3(custom_git_env_variables, git_cmd, opts)
+      # result = status_s
 
       raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
       result
