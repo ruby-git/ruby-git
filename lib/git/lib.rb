@@ -7,8 +7,6 @@ require 'open3'
 module Git
   class Lib
 
-    @@semaphore = Mutex.new
-
     # The path to the Git working copy.  The default is '"./.git"'.
     #
     # @return [Pathname] the path to the Git working copy.
@@ -442,10 +440,7 @@ module Git
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
       files = []
-      begin
-        files = Dir.glob('**/*', base: dir).select { |f| File.file?(File.join(dir, f)) }
-      rescue
-      end
+      files = Dir.glob(File.join(dir, '**/*')).select { |f| File.file?(f) } rescue nil
       files
     end
 
@@ -1146,41 +1141,14 @@ module Git
       op.split("\n")
     end
 
-    # Takes the current git's system ENV variables and store them.
-    def store_git_system_env_variables
-      @git_system_env_variables = {}
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
-        @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
-      end
-    end
-
-    # Takes the previously stored git's ENV variables and set them again on ENV.
-    def restore_git_system_env_variables
-      ENV_VARIABLE_NAMES.each do |env_variable_name|
-        ENV[env_variable_name] = @git_system_env_variables[env_variable_name]
-      end
-    end
-
-    # Sets git's ENV variables to the custom values for the current instance.
-    def set_custom_git_env_variables
-      ENV['GIT_DIR'] = @git_dir
-      ENV['GIT_WORK_TREE'] = @git_work_dir
-      ENV['GIT_INDEX_FILE'] = @git_index_file
-      ENV['GIT_SSH'] = Git::Base.config.git_ssh
-    end
-
-    # Runs a block inside an environment with customized ENV variables.
-    # It restores the ENV after execution.
-    #
-    # @param [Proc] block block to be executed within the customized environment
-    def with_custom_env_variables(&block)
-      @@semaphore.synchronize do
-        store_git_system_env_variables()
-        set_custom_git_env_variables()
-        return block.call()
-      end
-    ensure
-      restore_git_system_env_variables()
+    # git's ENV variables for the current instance.
+    def custom_git_env_variables
+      {
+        'GIT_DIR' => @git_dir,
+        'GIT_WORK_TREE' => @git_work_dir,
+        'GIT_INDEX_FILE' => @git_index_file,
+        'GIT_SSH' => Git::Base.config.git_ssh,
+      }
     end
 
     def command(*cmd, redirect: '', chomp: true, chdir: nil, &block)
@@ -1200,18 +1168,7 @@ module Git
 
       git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{escaped_cmd} #{redirect} 2>&1"
 
-      output = nil
-
-      command_thread = nil;
-
-      status = nil
-
-      with_custom_env_variables do
-        command_thread = Thread.new do
-          output, status = run_command(git_cmd, chdir, &block)
-        end
-        command_thread.join
-      end
+      output, status = run_command(git_cmd, chdir, &block)
 
       @logger.info(git_cmd)
       @logger.debug(output)
@@ -1298,9 +1255,7 @@ module Git
       opts = {}
       opts[:chdir] = File.expand_path(chdir) if chdir
 
-      Open3.popen2(git_cmd, opts) do |stdin, stdout, wait_thr|
-        [block.call(stdout), wait_thr.value]
-      end
+      [IO.popen(custom_git_env_variables, git_cmd, opts, &block), $?]
     end
 
     def escape(s)
