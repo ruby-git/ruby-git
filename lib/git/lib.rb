@@ -3,6 +3,7 @@ require 'logger'
 require 'tempfile'
 require 'zlib'
 require 'open3'
+require 'stringio'
 
 module Git
   class Lib
@@ -1261,14 +1262,14 @@ module Git
 
       # Option 2 using Open3.popen2
       #
-      Open3.popen2(custom_git_env_variables, git_cmd, opts) do |stdin, stdout, wait_thr|
-        [block.call(stdout), wait_thr.value]
-      end
+      # Open3.popen2(custom_git_env_variables, git_cmd, opts) do |stdin, stdout, wait_thr|
+      #   [block.call(stdout), wait_thr.value]
+      # end
 
       # Option 3 using Open3.capture3
       #
-      # stdout_s, stderr_s, status = Open3.capture3(custom_git_env_variables, git_cmd, opts)
-      # [block.call(StringIO.new(stdout_s)), status]
+      stdout_s, stderr_s, status = Open3.capture3(custom_git_env_variables, git_cmd, opts)
+      [block.call(StringIO.new(stdout_s)), status]
     end
 
     def escape(s)
