@@ -972,7 +972,9 @@ module Git
       arr_opts = []
       arr_opts << '--mirror'  if opts[:mirror]
       arr_opts << '--delete'  if opts[:delete]
-      arr_opts << '--force'  if opts[:force] || opts[:f]
+      arr_opts << '--force'   if opts[:force] || opts[:f]
+      arr_opts << '--all'     if opts[:all] && remote
+
       Array(opts[:push_option]).each { |o| arr_opts << '--push-option' << o } if opts[:push_option]
       arr_opts << remote if remote
       arr_opts_with_branch = arr_opts.dup
