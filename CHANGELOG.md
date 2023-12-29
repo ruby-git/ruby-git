@@ -5,6 +5,21 @@
 
 # Change Log
 
+## v1.19.0 (2023-12-28)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.18.0..v1.19.0)
+
+Changes since v1.18.0:
+
+* 3bdb280 Add option to push all branches to a remote repo at one time (#678)
+* b0d89ac Remove calls to Dir.chdir (#673)
+* e64c2f6 Refactor tests for read_tree, write_tree, and commit_tree (#679)
+* 0bb965d Explicitly name remote tracking branch in test (#676)
+* 8481f8c Document how to delete a remote branch (#672)
+* dce6816 show .log example with count in README, fixes #667 (#668)
+* b1799f6 Update test of 'git worktree add' with no commits (#670)
+* dd5a24d Add --filter to Git.clone for partial clones (#663)
+
 ## v1.18.0 (2023-03-19)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.17.2..v1.18.0)
