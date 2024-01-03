@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.requirements = ['git 1.6.0.0, or greater']
 
   s.add_runtime_dependency 'addressable', '~> 2.8'
+  s.add_runtime_dependency 'process_executer', '~> 0.7'
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
   s.add_development_dependency 'bump', '~> 0.10'
