@@ -14,20 +14,18 @@ module Git
   class FailedError < Git::GitExecuteError
     # Create a FailedError object
     #
-    # Since this gem redirects stderr to stdout, the stdout of the process is used.
-    #
     # @example
     #   `exit 1` # set $? appropriately for this example
     #   result = Git::CommandLineResult.new(%w[git status], $?, 'stdout', 'stderr')
     #   error = Git::FailedError.new(result)
     #   error.message #=>
-    #     "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\noutput: \"stdout\""
+    #     "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\nstderr: \"stderr\""
     #
     # @param result [Git::CommandLineResult] the result of the git command including
     #   the git command, status, stdout, and stderr
     #
     def initialize(result)
-      super("#{result.git_cmd}\nstatus: #{result.status}\noutput: #{result.stdout.inspect}")
+      super("#{result.git_cmd}\nstatus: #{result.status}\nstderr: #{result.stderr.inspect}")
       @result = result
     end
 

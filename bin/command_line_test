@@ -1,0 +1,180 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+
+# A script used to test calling a command line program from Ruby
+#
+# This script is used to test the `Git::CommandLine` class. It is called
+# from the `test_command_line` unit test.
+#
+# --stdout: string to output to stdout
+# --stderr: string to output to stderr
+# --exitstatus: exit status to return (default is zero)
+# --signal: uncaught signal to raise (default is not to signal)
+#
+# Both --stdout and --stderr can be given.
+#
+# If --signal is given, --exitstatus is ignored.
+#
+# Examples:
+# Output "Hello, world!" to stdout and exit with status 0
+#    $ bin/command_line_test --stdout="Hello, world!" --exitstatus=0
+#
+# Output "ERROR: timeout" to stderr and exit with status 1
+#   $ bin/command_line_test --stderr="ERROR: timeout" --exitstatus=1
+#
+# Output "Fatal: killed by parent" to stderr and signal 9
+#   $ bin/command_line_test --stderr="Fatal: killed by parent" --signal=9
+#
+# Output to both stdout and stderr return default exitstatus 0
+#   $ bin/command_line_test --stdout="Hello, world!" --stderr="ERROR: timeout"
+#
+
+
+class CommandLineParser
+  def initialize
+    @option_parser = OptionParser.new
+    define_options
+  end
+
+  attr_reader :stdout, :stderr, :exitstatus, :signal
+
+  # Parse the command line arguements returning the options
+  #
+  # @example
+  #   parser = CommandLineParser.new
+  #   options = parser.parse(['major'])
+  #
+  # @param args [Array<String>] the command line arguments
+  #
+  # @return [CreateGithubRelease::Options] the options
+  #
+  def parse(*args)
+    begin
+      option_parser.parse!(remaining_args = args.dup)
+    rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+      report_errors(e.message)
+    end
+    parse_remaining_args(remaining_args)
+    # puts options unless options.quiet
+    # report_errors(*options.errors) unless options.valid?
+    self
+  end
+
+  private
+
+  # @!attribute [rw] option_parser
+  #
+  # The option parser
+  #
+  # @return [OptionParser] the option parser
+  #
+  # @api private
+  #
+  attr_reader :option_parser
+
+  def define_options
+    option_parser.banner = "Usage:\n#{command_template}"
+    option_parser.separator ''
+    option_parser.separator "Both --stdout and --stderr can be given."
+    option_parser.separator 'If --signal is given, --exitstatus is ignored.'
+    option_parser.separator 'If nothing is given, the script will exit with exitstatus 0.'
+    option_parser.separator ''
+    option_parser.separator 'Options:'
+    %i[
+      define_help_option define_stdout_option define_stderr_option
+      define_exitstatus_option define_signal_option
+    ].each { |m| send(m) }
+  end
+
+  # The command line template as a string
+  # @return [String]
+  # @api private
+  def command_template
+    <<~COMMAND
+      #{File.basename($PROGRAM_NAME)} \
+        --help | \
+        [--stdout="string to stdout"] [--stderr="string to stderr"] [--exitstatus=1] [--signal=9]
+    COMMAND
+  end
+
+  # Define the stdout option
+  # @return [void]
+  # @api private
+  def define_stdout_option
+    option_parser.on('--stdout="string to stdout"', 'A string to send to stdout') do |string|
+      @stdout = string
+    end
+  end
+
+  # Define the stderr option
+  # @return [void]
+  # @api private
+  def define_stderr_option
+    option_parser.on('--stderr="string to stderr"', 'A string to send to stderr') do |string|
+      @stderr = string
+    end
+  end
+
+  # Define the exitstatus option
+  # @return [void]
+  # @api private
+  def define_exitstatus_option
+    option_parser.on('--exitstatus=1', 'The exitstatus to return') do |exitstatus|
+      @exitstatus = Integer(exitstatus)
+    end
+  end
+
+  # Define the signal option
+  # @return [void]
+  # @api private
+  def define_signal_option
+    option_parser.on('--signal=9', 'The signal to raise') do |signal|
+      @signal = Integer(signal)
+    end
+  end
+
+  # Define the help option
+  # @return [void]
+  # @api private
+  def define_help_option
+    option_parser.on_tail('-h', '--help', 'Show this message') do
+      puts option_parser
+      exit 0
+    end
+  end
+
+  # An error message constructed from the given errors array
+  # @return [String]
+  # @api private
+  def error_message(errors)
+    <<~MESSAGE
+      #{errors.map { |e| "ERROR: #{e}" }.join("\n")}
+
+      Use --help for usage
+    MESSAGE
+  end
+
+  # Output an error message and useage to stderr and exit
+  # @return [void]
+  # @api private
+  def report_errors(*errors)
+    warn error_message(errors)
+    exit 1
+  end
+
+  # Parse non-option arguments (there are none for this parser)
+  # @return [void]
+  # @api private
+  def parse_remaining_args(remaining_args)
+    report_errors('Too many args') unless remaining_args.empty?
+  end
+end
+
+options = CommandLineParser.new.parse(*ARGV)
+
+STDOUT.puts options.stdout if options.stdout
+STDERR.puts options.stderr if options.stderr
+Process.kill(options.signal, Process.pid) if options.signal
+exit(options.exitstatus) if options.exitstatus
