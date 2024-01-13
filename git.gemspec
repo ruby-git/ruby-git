@@ -9,17 +9,19 @@ Gem::Specification.new do |s|
   s.name = 'git'
   s.summary = 'An API to create, read, and manipulate Git repositories'
   s.description = <<~DESCRIPTION
-    The Git Gem provides an API that can be used to create, read, and manipulate
-    Git repositories by wrapping system calls to the `git` binary. The API can be
-    used for working with Git in complex interactions including branching and
-    merging, object inspection and manipulation, history, patch generation and
-    more.
+    The git gem provides an API that can be used to
+    create, read, and manipulate Git repositories by wrapping system calls to the git
+    command line. The API can be used for working with Git in complex interactions
+    including branching and merging, object inspection and manipulation, history, patch
+    generation and more.
   DESCRIPTION
   s.version = Git::VERSION
 
+
   s.metadata['homepage_uri'] = s.homepage
   s.metadata['source_code_uri'] = s.homepage
-  s.metadata['changelog_uri'] = 'http://rubydoc.info/gems/git/file.CHANGELOG.html'
+  s.metadata['changelog_uri'] = "https://rubydoc.info/gems/#{s.name}/#{s.version}/file/CHANGELOG.md"
+  s.metadata['documentation_uri'] = "https://rubydoc.info/gems/#{s.name}/#{s.version}"
 
   s.require_paths = ['lib']
   s.required_ruby_version = '>= 2.3'

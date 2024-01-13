@@ -5,11 +5,41 @@
 
 # The Git Gem
 
-The Git Gem provides an API that can be used to create, read, and manipulate
-Git repositories by wrapping system calls to the `git` binary. The API can be
-used for working with Git in complex interactions including branching and
-merging, object inspection and manipulation, history, patch generation and
-more.
+[![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
+[![Documentation](https://img.shields.io/badge/Documentation-Latest-green)](https://rubydoc.info/gems/git/)
+[![Change Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
+[![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
+[![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
+
+The [git gem](https://rubygems.org/gems/git) provides an API that can be used to
+create, read, and manipulate Git repositories by wrapping system calls to the `git`
+command line. The API can be used for working with Git in complex interactions
+including branching and merging, object inspection and manipulation, history, patch
+generation and more.
+
+## v2.0.0 pre-release
+
+git 2.0.0 is available as a pre-release version for testing! Please give it a try.
+
+**JRuby on Windows is not yet supported by the 2.x release line. Users running JRuby
+on Windows should continue to use the 1.x release line.**
+
+The changes coming in this major release include:
+
+* Create a policy of supported Ruby versions to support only non-EOL Ruby versions
+* Create a policy of supported Git CLI versions (released 2020-12-25)
+* Update the required Ruby version to at least 3.0 (released 2020-07-27)
+* Update the required Git command line version to at least 2.28
+* Update how CLI commands are called to use the [process_executer](https://github.com/main-branch/process_executer)
+  gem which is built on top of [Kernel.spawn](https://ruby-doc.org/3.3.0/Kernel.html#method-i-spawn).
+  See [PR #617](https://github.com/ruby-git/ruby-git/pull/617) for more details
+  on the motivation for this implementation.
+
+The tentative plan is to release `2.0.0` near the end of March 2024 depending on
+the feedback received during the pre-release period.
+
+The `master` branch will be used for `2.x` development. If needed, fixes for `1.x`
+version will be done on the `v1` branch.
 
 ## Homepage
 
@@ -41,9 +71,6 @@ sudo gem install git
 
 ## Code Status
 
-* [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
-* [![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
-* [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
 
 ## Major Objects
 
