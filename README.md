@@ -21,6 +21,9 @@ generation and more.
 
 git 2.0.0 is available as a pre-release version for testing! Please give it a try.
 
+**JRuby on Windows is not yet supported by the 2.x release line. Users running JRuby
+on Windows should continue to use the 1.x release line.**
+
 The changes coming in this major release include:
 
 * Create a policy of supported Ruby versions to support only non-EOL Ruby versions
