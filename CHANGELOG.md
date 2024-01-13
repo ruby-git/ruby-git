@@ -5,6 +5,14 @@
 
 # Change Log
 
+## v1.19.1 (2024-01-13)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.19.0..v1.19.1)
+
+Changes since v1.19.0:
+
+* f97c57c Announce the 2.0.0 pre-release (#682)
+
 ## v1.19.0 (2023-12-28)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.18.0..v1.19.0)
