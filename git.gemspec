@@ -24,22 +24,19 @@ Gem::Specification.new do |s|
   s.metadata['documentation_uri'] = "https://rubydoc.info/gems/#{s.name}/#{s.version}"
 
   s.require_paths = ['lib']
-  s.required_ruby_version = '>= 2.3'
-  s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to?(:required_rubygems_version=)
-  s.requirements = ['git 1.6.0.0, or greater']
+  s.required_ruby_version = '>= 3.0.0'
+  s.requirements = ['git 2.28.0 or greater']
 
   s.add_runtime_dependency 'addressable', '~> 2.8'
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
-  s.add_development_dependency 'bump', '~> 0.10'
-  s.add_development_dependency 'create_github_release', '~> 0.2'
   s.add_development_dependency 'minitar', '~> 0.9'
   s.add_development_dependency 'mocha', '~> 2.1'
-  s.add_development_dependency 'rake', '~> 13.0'
-  s.add_development_dependency 'test-unit', '~> 3.3'
+  s.add_development_dependency 'rake', '~> 13.1'
+  s.add_development_dependency 'test-unit', '~> 3.6'
 
   unless RUBY_PLATFORM == 'java'
-    s.add_development_dependency 'redcarpet', '~> 3.5'
+    s.add_development_dependency 'redcarpet', '~> 3.6'
     s.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28'
     s.add_development_dependency 'yardstick', '~> 0.9'
   end

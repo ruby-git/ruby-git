@@ -1115,7 +1115,7 @@ module Git
     end
 
     def required_command_version
-      [1, 6]
+      [2, 28]
     end
 
     def meets_required_version?
