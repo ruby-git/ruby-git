@@ -18,11 +18,11 @@ jobs:
         include:
           - ruby: head
             operating-system: ubuntu-latest
-          - ruby: truffleruby-latest
+          - ruby: truffleruby-23.1.1
             operating-system: ubuntu-latest
           - ruby: 3.0
             operating-system: windows-latest
-          - ruby: jruby-latest
+          - ruby: jruby-9.4.5.0
             operating-system: windows-latest
 
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
