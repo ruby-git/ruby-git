@@ -17,6 +17,14 @@ command line. The API can be used for working with Git in complex interactions
 including branching and merging, object inspection and manipulation, history, patch
 generation and more.
 
+Get started by obtaining a repository object by:
+
+* opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
+* initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
+* cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
+
+Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
+
 ## v2.0.0 pre-release
 
 git 2.0.0 is available as a pre-release version for testing! Please give it a try.
@@ -41,36 +49,19 @@ the feedback received during the pre-release period.
 The `master` branch will be used for `2.x` development. If needed, fixes for `1.x`
 version will be done on the `v1` branch.
 
-## Homepage
-
-The project source code is at:
-
-http://github.com/ruby-git/ruby-git
-
-## Documentation
-
-Detailed documentation can be found at:
-
-https://rubydoc.info/gems/git/Git.html
-
-Get started by obtaining a repository object by:
-
-* opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
-* initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
-* cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
-
-Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
-
 ## Install
 
-You can install Ruby/Git like this:
+Install the gem and add to the application's Gemfile by executing:
 
+```shell
+bundle add git
 ```
-sudo gem install git
+
+If bundler is not being used to manage dependencies, install the gem by executing:
+
+```shell
+gem install git
 ```
-
-## Code Status
-
 
 ## Major Objects
 
@@ -102,12 +93,6 @@ Pass the `--all` option to `git log` as follows:
 ## Examples
 
 Here are a bunch of examples of how to use the Ruby/Git package.
-
-Ruby < 1.9 will require rubygems to be loaded.
-
-```ruby
-require 'rubygems'
-```
 
 Require the 'git' gem.
 ```ruby
@@ -421,6 +406,14 @@ g.with_temp_working(dir) do
   g.commit # commits to index
 end
 ```
+
+## Ruby version support policy
+
+This gem will be expected to function correctly on:
+
+* All non-EOL versions of the MRI Ruby on Mac, Linux, and Windows
+* The latest version of JRuby on Linux and Windows
+* The latest version of Truffle Ruby on Linus
 
 ## License
 
