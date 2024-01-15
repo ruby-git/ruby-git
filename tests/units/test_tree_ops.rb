@@ -6,67 +6,45 @@ class TestTreeOps < Test::Unit::TestCase
 
   def test_read_tree
     treeish = 'testbranch1'
-    expected_command_line = ['read-tree', treeish]
-    git_cmd = :read_tree
-    git_cmd_args = [treeish]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['read-tree', treeish, {}]
+    assert_command_line_eq(expected_command_line) { |git| git.read_tree(treeish) }
   end
 
   def test_read_tree_with_prefix
     treeish = 'testbranch1'
     prefix = 'foo'
-    expected_command_line = ['read-tree', "--prefix=#{prefix}", treeish]
-    git_cmd = :read_tree
-    git_cmd_args = [treeish, prefix: prefix]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['read-tree', "--prefix=#{prefix}", treeish, {}]
+    assert_command_line_eq(expected_command_line) { |git| git.read_tree(treeish, prefix: prefix) }
   end
 
   def test_write_tree
-    expected_command_line = ['write-tree']
-    git_cmd = :write_tree
-    git_cmd_args = []
-    git_output = 'aa7349e'
-    result = assert_command_line(expected_command_line, git_cmd, git_cmd_args, git_output)
+    expected_output = 'aa7349e'
+    actual_output = nil
+    expected_command_line = ['write-tree', {}]
+    assert_command_line_eq(expected_command_line, mocked_output: expected_output) do |git|
+      actual_output = git.write_tree
+    end
+
     # the git output should be returned from Git::Base#write_tree
-    assert_equal(git_output, result)
+    assert_equal(expected_output, actual_output)
   end
 
   def test_commit_tree_with_default_message
     tree = 'tree-ref'
+    message = 'commit tree tree-ref'
 
-    expected_message = 'commit tree tree-ref'
-    tempfile_path = 'foo'
-    mock_tempfile = mock('tempfile')
-    Tempfile.stubs(:new).returns(mock_tempfile)
-    mock_tempfile.stubs(:path).returns(tempfile_path)
-    mock_tempfile.expects(:write).with(expected_message)
-    mock_tempfile.expects(:close)
+    expected_command_line = ['commit-tree', tree, '-m', message, {}]
 
-    redirect_value = windows_platform? ? "< \"#{tempfile_path}\"" : "< '#{tempfile_path}'"
-
-    expected_command_line = ['commit-tree', tree, redirect: redirect_value]
-    git_cmd = :commit_tree
-    git_cmd_args = [tree]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree) }
   end
 
   def test_commit_tree_with_message
     tree = 'tree-ref'
     message = 'this is my message'
 
-    tempfile_path = 'foo'
-    mock_tempfile = mock('tempfile')
-    Tempfile.stubs(:new).returns(mock_tempfile)
-    mock_tempfile.stubs(:path).returns(tempfile_path)
-    mock_tempfile.expects(:write).with(message)
-    mock_tempfile.expects(:close)
+    expected_command_line = ['commit-tree', tree, '-m', message, {}]
 
-    redirect_value = windows_platform? ? "< \"#{tempfile_path}\"" : "< '#{tempfile_path}'"
-
-    expected_command_line = ['commit-tree', tree, redirect: redirect_value]
-    git_cmd = :commit_tree
-    git_cmd_args = [tree, message: message]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, message: message) }
   end
 
   def test_commit_tree_with_parent
@@ -74,20 +52,9 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parent = 'parent-commit'
 
-    tempfile_path = 'foo'
-    mock_tempfile = mock('tempfile')
-    Tempfile.stubs(:new).returns(mock_tempfile)
-    mock_tempfile.stubs(:path).returns(tempfile_path)
-    mock_tempfile.expects(:write).with(message)
-    mock_tempfile.expects(:close)
+    expected_command_line = ['commit-tree', tree, "-p", parent, '-m', message, {}]
 
-    redirect_value = windows_platform? ? "< \"#{tempfile_path}\"" : "< '#{tempfile_path}'"
-
-    expected_command_line = ['commit-tree', tree, "-p", parent, redirect: redirect_value]
-    git_cmd = :commit_tree
-    git_cmd_args = [tree, parent: parent, message: message]
-
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parent: parent, message: message) }
   end
 
   def test_commit_tree_with_parents
@@ -95,20 +62,9 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parents = 'commit1'
 
-    tempfile_path = 'foo'
-    mock_tempfile = mock('tempfile')
-    Tempfile.stubs(:new).returns(mock_tempfile)
-    mock_tempfile.stubs(:path).returns(tempfile_path)
-    mock_tempfile.expects(:write).with(message)
-    mock_tempfile.expects(:close)
+    expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-m', message, {}]
 
-    redirect_value = windows_platform? ? "< \"#{tempfile_path}\"" : "< '#{tempfile_path}'"
-
-    expected_command_line = ['commit-tree', tree, '-p', 'commit1', redirect: redirect_value]
-    git_cmd = :commit_tree
-    git_cmd_args = [tree, parents: parents, message: message]
-
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parents: parents, message: message) }
   end
 
   def test_commit_tree_with_multiple_parents
@@ -116,20 +72,9 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parents = ['commit1', 'commit2']
 
-    tempfile_path = 'foo'
-    mock_tempfile = mock('tempfile')
-    Tempfile.stubs(:new).returns(mock_tempfile)
-    mock_tempfile.stubs(:path).returns(tempfile_path)
-    mock_tempfile.expects(:write).with(message)
-    mock_tempfile.expects(:close)
+    expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-p', 'commit2', '-m', message, {}]
 
-    redirect_value = windows_platform? ? "< \"#{tempfile_path}\"" : "< '#{tempfile_path}'"
-
-    expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-p', 'commit2', redirect: redirect_value]
-    git_cmd = :commit_tree
-    git_cmd_args = [tree, parents: parents, message: message]
-
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parents: parents, message: message) }
   end
 
   # Examples of how to use Git::Base#commit_tree, write_tree, and commit_tree
