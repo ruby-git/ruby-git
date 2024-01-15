@@ -5,6 +5,16 @@
 
 # Change Log
 
+## v2.0.0-pre.1 (2024-01-15)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.19.1..v2.0.0-pre.1)
+
+Changes since v1.19.1:
+
+* 7585c39 Change how the git CLI subprocess is executed (#684)
+* f93e042 Update instructions for releasing a new version of the git gem (#686)
+* f48930d Update minimum required version of Ruby and Git (#685)
+
 ## v1.19.1 (2024-01-13)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.19.0..v1.19.1)
