@@ -9,39 +9,31 @@ require 'test_helper'
 # because right now it forks for every call
 
 class TestRm < Test::Unit::TestCase
-  test 'rm with no options should specific "." for the pathspec' do
-    expected_command_line = ['rm', '-f', '--', '.']
-    git_cmd = :rm
-    git_cmd_args = []
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+  test 'rm with no options should specify "." for the pathspec' do
+    expected_command_line = ['rm', '-f', '--', '.', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.rm }
   end
 
   test 'rm with one pathspec' do
-    expected_command_line = ['rm', '-f', '--', 'pathspec']
-    git_cmd = :rm
-    git_cmd_args = ['pathspec']
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['rm', '-f', '--', 'pathspec', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec') }
   end
 
   test 'rm with multiple pathspecs' do
-    expected_command_line = ['rm', '-f', '--', 'pathspec1', 'pathspec2']
-    git_cmd = :rm
-    git_cmd_args = [['pathspec1', 'pathspec2']]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['rm', '-f', '--', 'pathspec1', 'pathspec2', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.rm(['pathspec1', 'pathspec2']) }
   end
 
   test 'rm with the recursive option' do
-    expected_command_line = ['rm', '-f', '-r', '--', 'pathspec']
-    git_cmd = :rm
-    git_cmd_args = ['pathspec', recursive: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['rm', '-f', '-r', '--', 'pathspec', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', recursive: true) }
   end
 
   test 'rm with the cached option' do
-    expected_command_line = ['rm', '-f', '--cached', '--', 'pathspec']
+    expected_command_line = ['rm', '-f', '--cached', '--', 'pathspec', {}]
     git_cmd = :rm
     git_cmd_args = ['pathspec', cached: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', cached: true) }
   end
 
   test 'when rm succeeds an error should not be raised' do

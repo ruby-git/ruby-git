@@ -1,66 +1,40 @@
 require 'test_helper'
 
-    # Runs checkout command to checkout or create branch
-    #
-    # accepts options:
-    #  :new_branch
-    #  :force
-    #  :start_point
-    #
-    # @param [String] branch
-    # @param [Hash] opts
-    # def checkout(branch, opts = {})
-
 class TestCheckout < Test::Unit::TestCase
   test 'checkout with no args' do
-    expected_command_line = ['checkout']
-    git_cmd = :checkout
-    git_cmd_args = []
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout }
   end
 
   test 'checkout with no args and options' do
-    expected_command_line = ['checkout', '--force']
-    git_cmd = :checkout
-    git_cmd_args = [force: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', '--force', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout(force: true) }
   end
 
   test 'checkout with branch' do
-    expected_command_line = ['checkout', 'feature1']
-    git_cmd = :checkout
-    git_cmd_args = ['feature1']
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', 'feature1', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1') }
   end
 
   test 'checkout with branch and options' do
-    expected_command_line = ['checkout', '--force', 'feature1']
-    git_cmd = :checkout
-    git_cmd_args = ['feature1', force: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', '--force', 'feature1', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1', force: true) }
   end
 
   test 'checkout with branch name and new_branch: true' do
-    expected_command_line = ['checkout', '-b', 'feature1']
-    git_cmd = :checkout
-    git_cmd_args = ['feature1', new_branch: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', '-b', 'feature1', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1', new_branch: true) }
   end
 
   test 'checkout with force: true' do
-    expected_command_line = ['checkout', '--force', 'feature1']
-    git_cmd = :checkout
-    git_cmd_args = ['feature1', force: true]
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', '--force', 'feature1', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1', force: true) }
   end
 
   test 'checkout with branch name and new_branch: true and start_point: "sha"' do
-    expected_command_line = ['checkout', '-b', 'feature1', 'sha']
-    git_cmd = :checkout
-    git_cmd_args = ['feature1', new_branch: true, start_point: 'sha']
-    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
+    expected_command_line = ['checkout', '-b', 'feature1', 'sha', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1', new_branch: true, start_point: 'sha') }
   end
-
 
   test 'when checkout succeeds an error should not be raised' do
     in_temp_dir do
