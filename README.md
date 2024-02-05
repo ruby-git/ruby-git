@@ -90,11 +90,65 @@ Pass the `--all` option to `git log` as follows:
 
  **Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
 
+## Errors Raised By This Gem
+
+This gem raises custom errors that derive from `Git::Error`. These errors are
+arranged in the following class heirarchy:
+
+Error heirarchy:
+
+```text
+Error
+└── CommandLineError
+    ├── FailedError
+    └── SignaledError
+        └── TimeoutError
+```
+
+Other standard errors may also be raised like `ArgumentError`. Each method should
+document the errors it may raise.
+
+Description of each Error class:
+
+* `Error`: This catch-all error serves as the base class for other custom errors in this
+  gem. Errors of this class are raised when no more approriate specific error to
+  raise.
+* `CommandLineError`: This error is raised when there's a problem executing the git
+  command line. This gem will raise a more specific error depending on how the
+  command line failed.
+* `FailedError`: This error is raised when the git command line exits with a non-zero
+  status code that is not expected by the git gem.
+* `SignaledError`: This error is raised when the git command line is terminated as a
+  result of receiving a signal. This could happen if the process is forcibly
+  terminated or if there is a serious system error.
+* `TimeoutError`: This is a specific type of `SignaledError` that is raised when the
+  git command line operation times out and is killed via the SIGKILL signal. This
+  happens if the operation takes longer than the timeout duration configured in
+  `Git.config.timeout` or via the `:timeout` parameter given in git methods that
+  support this parameter.
+
+`Git::GitExecuteError` remains as an alias for `Git::Error`. It is considered
+deprecated as of git-2.0.0.
+
+Here is an example of catching errors when using the git gem:
+
+```ruby
+begin
+  timeout_duration = 0.001 # seconds
+  repo = Git.clone('https://github.com/ruby-git/ruby-git', 'ruby-git-temp', timeout: timeout_duration)
+rescue Git::TimeoutError => e # Catch the more specific error first!
+  puts "Git clone took too long and timed out #{e}"
+rescue Git::Error => e
+  puts "Received the following error: #{e}"
+end
+```
+
 ## Examples
 
 Here are a bunch of examples of how to use the Ruby/Git package.
 
 Require the 'git' gem.
+
 ```ruby
 require 'git'
 ```
@@ -261,11 +315,11 @@ g.add(:all=>true)                       # git add --all -- "."
 g.add('file_path')                      # git add -- "file_path"
 g.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
 
-g.remove()									# git rm -f -- "."
-g.remove('file.txt')						# git rm -f -- "file.txt"
-g.remove(['file.txt', 'file2.txt'])		# git rm -f -- "file.txt" "file2.txt"
-g.remove('file.txt', :recursive => true) 	# git rm -f -r -- "file.txt"
-g.remove('file.txt', :cached => true)		# git rm -f --cached -- "file.txt"
+g.remove()                                # git rm -f -- "."
+g.remove('file.txt')                      # git rm -f -- "file.txt"
+g.remove(['file.txt', 'file2.txt'])       # git rm -f -- "file.txt" "file2.txt"
+g.remove('file.txt', :recursive => true)  # git rm -f -r -- "file.txt"
+g.remove('file.txt', :cached => true)     # git rm -f --cached -- "file.txt"
 
 g.commit('message')
 g.commit_all('message')
