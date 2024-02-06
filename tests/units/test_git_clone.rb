@@ -5,6 +5,57 @@ require 'test_helper'
 
 # Tests for Git.clone
 class TestGitClone < Test::Unit::TestCase
+  sub_test_case 'Git.clone with timeouts' do
+    test 'global timmeout' do
+      begin
+        saved_timeout = Git.config.timeout
+
+        in_temp_dir do |path|
+          setup_repo
+          Git.config.timeout = 0.00001
+
+          error = assert_raise Git::TimeoutError do
+            Git.clone('repository.git', 'temp2', timeout: nil)
+          end
+
+          assert_equal(true, error.result.status.timeout?)
+        end
+      ensure
+        Git.config.timeout = saved_timeout
+      end
+    end
+
+    test 'override global timeout' do
+      in_temp_dir do |path|
+        saved_timeout = Git.config.timeout
+
+        in_temp_dir do |path|
+          setup_repo
+          Git.config.timeout = 0.00001
+
+          assert_nothing_raised do
+            Git.clone('repository.git', 'temp2', timeout: 10)
+          end
+        end
+      ensure
+        Git.config.timeout = saved_timeout
+      end
+    end
+
+    test 'per command timeout' do
+      in_temp_dir do |path|
+        setup_repo
+
+        error = assert_raise Git::TimeoutError do
+          Git.clone('repository.git', 'temp2', timeout: 0.00001)
+        end
+
+        assert_equal(true, error.result.status.timeout?)
+      end
+    end
+
+  end
+
   def setup_repo
     Git.init('repository.git', bare: true)
     git = Git.clone('repository.git', 'temp')
@@ -51,7 +102,7 @@ class TestGitClone < Test::Unit::TestCase
       git.lib.clone(repository_url, destination, { config: 'user.name=John Doe' })
     end
 
-    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination]
+    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination, {timeout: nil}]
 
     assert_equal(expected_command_line, actual_command_line)
   end
@@ -77,7 +128,7 @@ class TestGitClone < Test::Unit::TestCase
       'clone',
       '--config', 'user.name=John Doe',
       '--config', 'user.email=john@doe.com',
-      '--', repository_url, destination
+      '--', repository_url, destination, {timeout: nil}
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -103,7 +154,7 @@ class TestGitClone < Test::Unit::TestCase
     expected_command_line = [
       'clone',
       '--filter', 'tree:0',
-      '--', repository_url, destination
+      '--', repository_url, destination, {timeout: nil}
     ]
 
     assert_equal(expected_command_line, actual_command_line)

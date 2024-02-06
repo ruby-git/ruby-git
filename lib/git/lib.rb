@@ -115,7 +115,7 @@ module Git
       arr_opts << repository_url
       arr_opts << clone_dir
 
-      command('clone', *arr_opts)
+      command('clone', *arr_opts, timeout: opts[:timeout])
 
       return_base_opts_from_clone(clone_dir, opts)
     end
@@ -1191,8 +1191,48 @@ module Git
         Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
     end
 
-    def command(*args, out: nil, err: nil, normalize: true, chomp: true, merge: false, chdir: nil)
-      result = command_line.run(*args, out: out, err: err, normalize: normalize, chomp: chomp, merge: merge, chdir: chdir)
+    # Runs a git command and returns the output
+    #
+    # @param args [Array] the git command to run and its arguments
+    #
+    #   This should exclude the 'git' command itself and global options.
+    #
+    #   For example, to run `git log --pretty=oneline`, you would pass `['log',
+    #   '--pretty=oneline']`
+    #
+    # @param out [String, nil] the path to a file or an IO to write the command's
+    #   stdout to
+    #
+    # @param err [String, nil] the path to a file or an IO to write the command's
+    #   stdout to
+    #
+    # @param normalize [Boolean] true to normalize the output encoding
+    #
+    # @param chomp [Boolean] true to remove trailing newlines from the output
+    #
+    # @param merge [Boolean] true to merge stdout and stderr
+    #
+    # @param chdir [String, nil] the directory to run the command in
+    #
+    # @param timeout [Numeric, nil] the maximum time to wait for the command to
+    # complete
+    #
+    # @see Git::CommandLine#run
+    #
+    # @return [String] the command's stdout (or merged stdout and stderr if `merge`
+    # is true)
+    #
+    # @raise [Git::GitExecuteError] if the command fails
+    #
+    #   The exception's `result` attribute is a {Git::CommandLineResult} which will
+    #   contain the result of the command including the exit status, stdout, and
+    #   stderr.
+    #
+    # @api private
+    #
+    def command(*args, out: nil, err: nil, normalize: true, chomp: true, merge: false, chdir: nil, timeout: nil)
+      timeout = timeout || Git.config.timeout
+      result = command_line.run(*args, out: out, err: err, normalize: normalize, chomp: chomp, merge: merge, chdir: chdir, timeout: timeout)
       result.stdout
     end
 

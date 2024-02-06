@@ -166,6 +166,13 @@ module Git
     # @param merge [Boolean] whether to merge stdout and stderr in the string returned
     # @param chdir [String] the directory to run the command in
     #
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is zero or nil, the command will not time out. If the command
+    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
+    #
     # @return [Git::CommandLineResult] the output of the command
     #
     #   This result of running the command.
@@ -173,14 +180,16 @@ module Git
     # @raise [ArgumentError] if `args` is not an array of strings
     # @raise [Git::SignaledError] if the command was terminated because of an uncaught signal
     # @raise [Git::FailedError] if the command returned a non-zero exitstatus
+    # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::TimeoutError] if the command times out
     #
-    def run(*args, out:, err:, normalize:, chomp:, merge:, chdir: nil)
+    def run(*args, out:, err:, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
       git_cmd = build_git_cmd(args)
       out ||= StringIO.new
       err ||= (merge ? out : StringIO.new)
-      status = execute(git_cmd, out, err, chdir: (chdir || :not_set))
+      status = execute(git_cmd, out, err, chdir: (chdir || :not_set), timeout: timeout)
 
-      process_result(git_cmd, status, out, err, normalize, chomp)
+      process_result(git_cmd, status, out, err, normalize, chomp, timeout)
     end
 
     private
@@ -258,17 +267,24 @@ module Git
     #
     # @param cmd [Array<String>] the git command to execute
     # @param chdir [String] the directory to run the command in
+    # @param timeout [Float, Integer, nil] the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is zero of nil, the command will not time out. If the command
+    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
     #
     # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::TimeoutError] if the command times out
     #
-    # @return [Process::Status] the status of the completed subprocess
+    # @return [ProcessExecuter::Status] the status of the completed subprocess
     #
     # @api private
     #
-    def spawn(cmd, out_writers, err_writers, chdir:)
+    def spawn(cmd, out_writers, err_writers, chdir:, timeout:)
       out_pipe = ProcessExecuter::MonitoredPipe.new(*out_writers, chunk_size: 10_000)
       err_pipe = ProcessExecuter::MonitoredPipe.new(*err_writers, chunk_size: 10_000)
-      ProcessExecuter.spawn(env, *cmd, out: out_pipe, err: err_pipe, chdir: chdir)
+      ProcessExecuter.spawn(env, *cmd, out: out_pipe, err: err_pipe, chdir: chdir, timeout: timeout)
     ensure
       out_pipe.close
       err_pipe.close
@@ -313,11 +329,12 @@ module Git
     #
     # @api private
     #
-    def process_result(git_cmd, status, out, err, normalize, chomp)
+    def process_result(git_cmd, status, out, err, normalize, chomp, timeout)
       out_str, err_str = post_process_all([out, err], normalize, chomp)
       logger.info { "#{git_cmd} exited with status #{status}" }
       logger.debug { "stdout:\n#{out_str.inspect}\nstderr:\n#{err_str.inspect}" }
       Git::CommandLineResult.new(git_cmd, status, out_str, err_str).tap do |result|
+        raise Git::TimeoutError.new(result, timeout) if status.timeout?
         raise Git::SignaledError.new(result) if status.signaled?
         raise Git::FailedError.new(result) unless status.success?
       end
@@ -329,14 +346,23 @@ module Git
     # @param out [#write] the object to write stdout to
     # @param err [#write] the object to write stderr to
     # @param chdir [String] the directory to run the command in
+    # @param timeout [Float, Integer, nil] the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is zero of nil, the command will not time out. If the command
+    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
+    #
+    # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::TimeoutError] if the command times out
     #
     # @return [Git::CommandLineResult] the result of the command to return to the caller
     #
     # @api private
     #
-    def execute(git_cmd, out, err, chdir:)
+    def execute(git_cmd, out, err, chdir:, timeout:)
       out_writers, err_writers = writers(out, err)
-      spawn(git_cmd, out_writers, err_writers, chdir: chdir)
+      spawn(git_cmd, out_writers, err_writers, chdir: chdir, timeout: timeout)
     end
   end
 end
