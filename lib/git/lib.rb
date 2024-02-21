@@ -559,9 +559,7 @@ module Git
       command_lines('ls-files', '--stage', location).each do |line|
         (info, file) = line.split("\t")
         (mode, sha, stage) = info.split
-        if file.start_with?('"') && file.end_with?('"')
-          file = Git::EscapedPath.new(file[1..-2]).unescape
-        end
+        file = unescape_if_quoted(file)
         hsh[file] = {:path => file, :mode_index => mode, :sha_index => sha, :stage => stage}
       end
       hsh
@@ -586,6 +584,15 @@ module Git
 
     def ignored_files
       command_lines('ls-files', '--others', '-i', '--exclude-standard')
+        .map { |f| unescape_if_quoted(f) }
+    end
+
+    def unescape_if_quoted(file)
+      if file.start_with?('"') && file.end_with?('"')
+        Git::EscapedPath.new(file[1..-2]).unescape
+      else
+        file
+      end
     end
 
 
