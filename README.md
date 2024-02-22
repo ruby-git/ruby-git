@@ -11,6 +11,18 @@
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
 
+* [Summary](#summary)
+* [v2.0.0 pre-release](#v200-pre-release)
+* [Install](#install)
+* [Major Objects](#major-objects)
+* [Errors Raised By This Gem](#errors-raised-by-this-gem)
+* [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
+* [Examples](#examples)
+* [Ruby version support policy](#ruby-version-support-policy)
+* [License](#license)
+
+## Summary
+
 The [git gem](https://rubygems.org/gems/git) provides an API that can be used to
 create, read, and manipulate Git repositories by wrapping system calls to the `git`
 command line. The API can be used for working with Git in complex interactions
@@ -140,6 +152,60 @@ rescue Git::TimeoutError => e # Catch the more specific error first!
   puts "Git clone took too long and timed out #{e}"
 rescue Git::Error => e
   puts "Received the following error: #{e}"
+```
+
+## Specifying And Handling Timeouts
+
+The timeout feature was added in git gem version `2.0.0`.
+
+A timeout for git operations can be set either globally or for specific method calls
+that accept a `:timeout` parameter.
+
+The timeout value must be a real, non-negative `Numeric` value that specifies a
+number of seconds a `git` command will be given to complete before being sent a KILL
+signal. This library may hang if the `git` command does not terminate after receiving
+the KILL signal.
+
+When a command times out, a `Git::TimeoutError` is raised.
+
+If the timeout value is `0` or `nil`, no timeout will be enforced.
+
+If a method accepts a `:timeout` parameter and a receives a non-nil value, it will
+override the global timeout value. In this context, a value of `nil` (which is
+usually the default) will use the global timeout value and a value of `0` will turn
+off timeout enforcement for that method call no matter what the global value is.
+
+To set a global timeout, use the `Git.config` object:
+
+```ruby
+Git.config.timeout = nil # a value of nil or 0 means no timeout is enforced
+Git.config.timeout = 1.5 # can be any real, non-negative Numeric interpreted as number of seconds
+```
+
+The global timeout can be overridden for a specific method if the method accepts a
+`:timeout` parameter:
+
+```ruby
+repo_url = 'https://github.com/ruby-git/ruby-git.git'
+Git.clone(repo_url) # Use the global timeout value
+Git.clone(repo_url, timeout: nil) # Also uses the global timeout value
+Git.clone(repo_url, timeout: 0) # Do not enforce a timeout
+Git.clone(repo_url, timeout: 10.5)  # Timeout after 10.5 seconds raising Git::SignaledError
+```
+
+If the command takes too long, a `Git::SignaledError` will be raised:
+
+```ruby
+begin
+  Git.clone(repo_url, timeout: 10)
+rescue Git::TimeoutError => e
+  result = e.result
+  result.class #=> Git::CommandLineResult
+  result.status #=> #<Process::Status: pid 62173 SIGKILL (signal 9)>
+  result.status.timeout? #=> true
+  result.git_cmd # The git command ran as an array of strings
+  result.stdout # The command's output to stdout until it was terminated
+  result.stderr # The command's output to stderr until it was terminated
 end
 ```
 
