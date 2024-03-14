@@ -1006,10 +1006,11 @@ module Git
       end
     end
 
-    def pull(remote = nil, branch = nil)
+    def pull(remote = nil, branch = nil, opts = {})
       raise ArgumentError, "You must specify a remote if a branch is specified" if remote.nil? && !branch.nil?
 
       arr_opts = []
+      arr_opts << '--allow-unrelated-histories' if opts[:allow_unrelated_histories]
       arr_opts << remote if remote
       arr_opts << branch if branch
       command('pull', *arr_opts)
