@@ -409,14 +409,27 @@ module Git
       self.lib.conflicts(&block)
     end
 
-    # pulls the given branch from the given remote into the current branch
+    # Pulls the given branch from the given remote into the current branch
     #
-    #  @git.pull                          # pulls from origin/master
-    #  @git.pull('upstream')              # pulls from upstream/master
-    #  @git.pull('upstream', 'develope')  # pulls from upstream/develop
+    # @param remote [String] the remote repository to pull from
+    # @param branch [String] the branch to pull from
+    # @param opts [Hash] options to pass to the pull command
     #
-    def pull(remote = nil, branch = nil)
-      self.lib.pull(remote, branch)
+    # @option opts [Boolean] :allow_unrelated_histories (false) Merges histories of two projects that started their
+    #   lives independently
+    # @example pulls from origin/master
+    #   @git.pull
+    # @example pulls from upstream/master
+    #   @git.pull('upstream')
+    # @example pulls from upstream/develop
+    #   @git.pull('upstream', 'develop')
+    #
+    # @return [Void]
+    #
+    # @raise [Git::FailedError] if the pull fails
+    # @raise [ArgumentError] if a branch is given without a remote
+    def pull(remote = nil, branch = nil, opts = {})
+      self.lib.pull(remote, branch, opts)
     end
 
     # returns an array of Git:Remote objects
