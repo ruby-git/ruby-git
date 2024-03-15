@@ -5,6 +5,14 @@
 
 # Change Log
 
+## v2.0.0.pre3 (2024-03-15)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre2..v2.0.0.pre3)
+
+Changes since v2.0.0.pre2:
+
+* 5d4b34e Allow allow_unrelated_histories option for Base#pull
+
 ## v2.0.0.pre2 (2024-02-24)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre1..v2.0.0.pre2)
