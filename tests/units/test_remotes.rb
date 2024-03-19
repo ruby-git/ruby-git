@@ -120,28 +120,38 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_fetch_cmd_with_no_args
-    expected_command_line = ['fetch', '--', 'origin', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch }
+    expected_command_line = ['fetch', '--', 'origin']
+    git_cmd = :fetch
+    git_cmd_args = []
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
   def test_fetch_cmd_with_origin_and_branch
-    expected_command_line = ['fetch', '--depth', '2', '--', 'origin', 'master', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch('origin', { ref: 'master', depth: '2' }) }
+    expected_command_line = ['fetch', '--depth', '2', '--', 'origin', 'master']
+    git_cmd = :fetch
+    git_cmd_args = ['origin', ref: 'master', depth: '2']
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
   def test_fetch_cmd_with_all
-    expected_command_line = ['fetch', '--all', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch({ all: true }) }
+    expected_command_line = ['fetch', '--all']
+    git_cmd = :fetch
+    git_cmd_args = [all: true]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
   def test_fetch_cmd_with_all_with_other_args
-    expected_command_line = ['fetch', '--all', '--force', '--depth', '2', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch({all: true, force: true, depth: '2'}) }
+    expected_command_line = ['fetch', '--all', '--force', '--depth', '2']
+    git_cmd = :fetch
+    git_cmd_args = [all: true, force: true, depth: '2']
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
   def test_fetch_cmd_with_update_head_ok
-    expected_command_line = ['fetch', '--update-head-ok', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch({:'update-head-ok' => true}) }
+    expected_command_line = ['fetch', '--update-head-ok']
+    git_cmd = :fetch
+    git_cmd_args = [:'update-head-ok' => true]
+    assert_command_line(expected_command_line, git_cmd, git_cmd_args)
   end
 
   def test_fetch_command_injection
@@ -152,10 +162,10 @@ class TestRemotes < Test::Unit::TestCase
       origin = "--upload-pack=touch #{test_file};"
       begin
         git.fetch(origin, { ref: 'some/ref/head' })
-      rescue Git::GitExecuteError
+      rescue Git::FailedError
         # This is expected
       else
-        raise 'Expected Git::FailedError to be raised'
+        raise 'Expected Git::Failed to be raised'
       end
 
       vulnerability_exists = File.exist?(test_file)
@@ -169,28 +179,24 @@ class TestRemotes < Test::Unit::TestCase
       rem = Git.clone(BARE_REPO_PATH, 'remote', :config => 'receive.denyCurrentBranch=ignore')
       loc.add_remote('testrem', rem)
 
-      first_commit_sha = second_commit_sha = nil
-
-      rem.chdir do
+      loc.chdir do
         new_file('test-file1', 'gonnaCommitYou')
-        rem.add
-        rem.commit('master commit 1')
-        first_commit_sha = rem.log.first.sha
+        loc.add
+        loc.commit('master commit 1')
+        first_commit_sha = loc.log.first.sha
 
         new_file('test-file2', 'gonnaCommitYouToo')
-        rem.add
-        rem.commit('master commit 2')
-        second_commit_sha = rem.log.first.sha
-      end
+        loc.add
+        loc.commit('master commit 2')
+        second_commit_sha = loc.log.first.sha
 
-      loc.chdir do
         # Make sure fetch message only has the first commit when we fetch the first commit
-        assert(loc.fetch('testrem', {:ref => first_commit_sha}).include?(first_commit_sha))
-        assert(!loc.fetch('testrem', {:ref => first_commit_sha}).include?(second_commit_sha))
+        assert(loc.fetch('origin', {:ref => first_commit_sha}).include?(first_commit_sha))
+        assert(!loc.fetch('origin', {:ref => first_commit_sha}).include?(second_commit_sha))
 
         # Make sure fetch message only has the second commit when we fetch the second commit
-        assert(loc.fetch('testrem', {:ref => second_commit_sha}).include?(second_commit_sha))
-        assert(!loc.fetch('testrem', {:ref => second_commit_sha}).include?(first_commit_sha))
+        assert(loc.fetch('origin', {:ref => second_commit_sha}).include?(second_commit_sha))
+        assert(!loc.fetch('origin', {:ref => second_commit_sha}).include?(first_commit_sha))
       end
     end
   end

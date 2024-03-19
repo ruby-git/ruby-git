@@ -1,15 +1,14 @@
 require 'git/failed_error'
-require 'git/command_line'
 require 'logger'
-require 'pp'
-require 'process_executer'
-require 'stringio'
 require 'tempfile'
 require 'zlib'
 require 'open3'
 
 module Git
   class Lib
+
+    @@semaphore = Mutex.new
+
     # The path to the Git working copy.  The default is '"./.git"'.
     #
     # @return [Pathname] the path to the Git working copy.
@@ -338,19 +337,7 @@ module Git
     end
 
     def object_contents(sha, &block)
-      if block_given?
-        Tempfile.create do |file|
-          # If a block is given, write the output from the process to a temporary
-          # file and then yield the file to the block
-          #
-          command('cat-file', "-p", sha, out: file, err: file)
-          file.rewind
-          yield file
-        end
-      else
-        # If a block is not given, return stdout
-        command('cat-file', '-p', sha)
-      end
+      command('cat-file', '-p', sha, &block)
     end
 
     def ls_tree(sha)
@@ -487,15 +474,11 @@ module Git
       grep_opts.push('--', *opts[:path_limiter]) if opts[:path_limiter].is_a?(Array)
 
       hsh = {}
-      begin
-        command_lines('grep', *grep_opts).each do |line|
-          if m = /(.*?)\:(\d+)\:(.*)/.match(line)
-            hsh[m[1]] ||= []
-            hsh[m[1]] << [m[2].to_i, m[3]]
-          end
+      command_lines('grep', *grep_opts).each do |line|
+        if m = /(.*?)\:(\d+)\:(.*)/.match(line)
+          hsh[m[1]] ||= []
+          hsh[m[1]] << [m[2].to_i, m[3]]
         end
-      rescue Git::FailedError => e
-        raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
       end
       hsh
     end
@@ -882,17 +865,16 @@ module Git
 
     def conflicts # :yields: file, your, their
       self.unmerged.each do |f|
-        Tempfile.create("YOUR-#{File.basename(f)}") do |your|
-          command('show', ":2:#{f}", out: your)
-          your.close
+        your_tempfile = Tempfile.new("YOUR-#{File.basename(f)}")
+        your = your_tempfile.path
+        your_tempfile.close # free up file for git command process
+        command('show', ":2:#{f}", redirect: "> #{escape your}")
 
-          Tempfile.create("THEIR-#{File.basename(f)}") do |their|
-            command('show', ":3:#{f}", out: their)
-            their.close
-
-            yield(f, your.path, their.path)
-          end
-        end
+        their_tempfile = Tempfile.new("THEIR-#{File.basename(f)}")
+        their = their_tempfile.path
+        their_tempfile.close # free up file for git command process
+        command('show', ":3:#{f}", redirect: "> #{escape their}")
+        yield(f, your, their)
       end
     end
 
@@ -966,7 +948,7 @@ module Git
       arr_opts << remote if remote
       arr_opts << opts[:ref] if opts[:ref]
 
-      command('fetch', *arr_opts, merge: true)
+      command('fetch', *arr_opts)
     end
 
     def push(remote = nil, branch = nil, opts = nil)
@@ -1019,13 +1001,7 @@ module Git
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
       return File.read(head).chomp if File.exist?(head)
 
-      begin
-        command('show-ref',  '--tags', '-s', tag_name)
-      rescue Git::FailedError => e
-        raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
-
-        ''
-      end
+      command('show-ref',  '--tags', '-s', tag_name)
     end
 
     def repack
@@ -1050,12 +1026,15 @@ module Git
 
     def commit_tree(tree, opts = {})
       opts[:message] ||= "commit tree #{tree}"
+      t = Tempfile.new('commit-message')
+      t.write(opts[:message])
+      t.close
+
       arr_opts = []
       arr_opts << tree
       arr_opts << '-p' << opts[:parent] if opts[:parent]
-      Array(opts[:parents]).each { |p| arr_opts << '-p' << p } if opts[:parents]
-      arr_opts << '-m' << opts[:message]
-      command('commit-tree', *arr_opts)
+      arr_opts += Array(opts[:parents]).map { |p| ['-p', p] }.flatten if opts[:parents]
+      command('commit-tree', *arr_opts, redirect: "< #{escape t.path}")
     end
 
     def update_ref(ref, commit)
@@ -1101,11 +1080,7 @@ module Git
       arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
       arr_opts << sha
       arr_opts << '--' << opts[:path] if opts[:path]
-
-      f = File.open(file, 'wb')
-      command('archive', *arr_opts, out: f)
-      f.close
-
+      command('archive', *arr_opts, redirect: " > #{escape file}")
       if opts[:add_gzip]
         file_content = File.read(file)
         Zlib::GzipWriter.open(file) do |gz|
@@ -1158,6 +1133,11 @@ module Git
 
     private
 
+    # Systen ENV variables involved in the git commands.
+    #
+    # @return [<String>] the names of the EVN variables involved in the git commands
+    ENV_VARIABLE_NAMES = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_SSH']
+
     def command_lines(cmd, *opts, chdir: nil)
       cmd_op = command(cmd, *opts, chdir: chdir)
       if cmd_op.encoding.name != "UTF-8"
@@ -1168,32 +1148,84 @@ module Git
       op.split("\n")
     end
 
-    def env_overrides
-      {
-        'GIT_DIR' => @git_dir,
-        'GIT_WORK_TREE' => @git_work_dir,
-        'GIT_INDEX_FILE' => @git_index_file,
-        'GIT_SSH' => Git::Base.config.git_ssh
-      }
-    end
-
-    def global_opts
-      Array.new.tap do |global_opts|
-        global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
-        global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
-        global_opts << '-c' << 'core.quotePath=true'
-        global_opts << '-c' << 'color.ui=false'
+    # Takes the current git's system ENV variables and store them.
+    def store_git_system_env_variables
+      @git_system_env_variables = {}
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        @git_system_env_variables[env_variable_name] = ENV[env_variable_name]
       end
     end
 
-    def command_line
-      @command_line ||=
-        Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+    # Takes the previously stored git's ENV variables and set them again on ENV.
+    def restore_git_system_env_variables
+      ENV_VARIABLE_NAMES.each do |env_variable_name|
+        ENV[env_variable_name] = @git_system_env_variables[env_variable_name]
+      end
     end
 
-    def command(*args, out: nil, err: nil, normalize: true, chomp: true, merge: false, chdir: nil)
-      result = command_line.run(*args, out: out, err: err, normalize: normalize, chomp: chomp, merge: merge, chdir: chdir)
-      result.stdout
+    # Sets git's ENV variables to the custom values for the current instance.
+    def set_custom_git_env_variables
+      ENV['GIT_DIR'] = @git_dir
+      ENV['GIT_WORK_TREE'] = @git_work_dir
+      ENV['GIT_INDEX_FILE'] = @git_index_file
+      ENV['GIT_SSH'] = Git::Base.config.git_ssh
+    end
+
+    # Runs a block inside an environment with customized ENV variables.
+    # It restores the ENV after execution.
+    #
+    # @param [Proc] block block to be executed within the customized environment
+    def with_custom_env_variables(&block)
+      @@semaphore.synchronize do
+        store_git_system_env_variables()
+        set_custom_git_env_variables()
+        return block.call()
+      end
+    ensure
+      restore_git_system_env_variables()
+    end
+
+    def command(*cmd, redirect: '', chomp: true, chdir: nil, &block)
+      Git::Lib.warn_if_old_command(self)
+
+      raise 'cmd can not include a nested array' if cmd.any? { |o| o.is_a? Array }
+
+      global_opts = []
+      global_opts << "--git-dir=#{@git_dir}" if !@git_dir.nil?
+      global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
+      global_opts << '-c' << 'core.quotePath=true'
+      global_opts << '-c' << 'color.ui=false'
+
+      escaped_cmd = cmd.map { |part| escape(part) }.join(' ')
+
+      global_opts = global_opts.map { |s| escape(s) }.join(' ')
+
+      git_cmd = "#{Git::Base.config.binary_path} #{global_opts} #{escaped_cmd} #{redirect} 2>&1"
+
+      output = nil
+
+      command_thread = nil;
+
+      status = nil
+
+      with_custom_env_variables do
+        command_thread = Thread.new do
+          output, status = run_command(git_cmd, chdir, &block)
+        end
+        command_thread.join
+      end
+
+      @logger.info(git_cmd)
+      @logger.debug(output)
+
+      if status.exitstatus > 1 || (status.exitstatus == 1 && output != '')
+        result = Git::CommandLineResult.new(git_cmd, status, output, '')
+        raise Git::FailedError.new(result)
+      end
+
+      output.chomp! if output && chomp && !block_given?
+
+      output
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
@@ -1258,6 +1290,39 @@ module Git
         arr_opts += Array(opts[:path_limiter])
       end
       arr_opts
+    end
+
+    def run_command(git_cmd, chdir=nil, &block)
+      block ||= Proc.new do |io|
+        io.readlines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join
+      end
+
+      opts = {}
+      opts[:chdir] = File.expand_path(chdir) if chdir
+
+      Open3.popen2(git_cmd, opts) do |stdin, stdout, wait_thr|
+        [block.call(stdout), wait_thr.value]
+      end
+    end
+
+    def escape(s)
+      windows_platform? ? escape_for_windows(s) : escape_for_sh(s)
+    end
+
+    def escape_for_sh(s)
+      "'#{s && s.to_s.gsub('\'','\'"\'"\'')}'"
+    end
+
+    def escape_for_windows(s)
+      # Escape existing double quotes in s and then wrap the result with double quotes
+      escaped_string = s.to_s.gsub('"','\\"')
+      %Q{"#{escaped_string}"}
+    end
+
+    def windows_platform?
+      # Check if on Windows via RUBY_PLATFORM (CRuby) and RUBY_DESCRIPTION (JRuby)
+      win_platform_regex = /mingw|mswin/
+      RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
     end
   end
 end

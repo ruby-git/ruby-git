@@ -17,7 +17,7 @@ class TestFailedError < Test::Unit::TestCase
 
     error = Git::FailedError.new(result)
 
-    expected_message = "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\nstderr: \"stderr\""
+    expected_message = "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\noutput: \"stdout\""
     assert_equal(expected_message, error.message)
   end
 end

@@ -40,7 +40,7 @@ The changes coming in this major release include:
 * Update the required Git command line version to at least 2.28
 * Update how CLI commands are called to use the [process_executer](https://github.com/main-branch/process_executer)
   gem which is built on top of [Kernel.spawn](https://ruby-doc.org/3.3.0/Kernel.html#method-i-spawn).
-  See [PR #684](https://github.com/ruby-git/ruby-git/pull/684) for more details
+  See [PR #617](https://github.com/ruby-git/ruby-git/pull/617) for more details
   on the motivation for this implementation.
 
 The tentative plan is to release `2.0.0` near the end of March 2024 depending on

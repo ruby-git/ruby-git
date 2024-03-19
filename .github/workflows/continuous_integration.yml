@@ -2,39 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [master,v1]
+    branches: [master]
   pull_request:
-    branches: [master,v1]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
-    runs-on: ${{ matrix.operating-system }}
-    continue-on-error: ${{ matrix.experimental == 'Yes' }}
-    env: { JAVA_OPTS: -Djdk.io.File.enableADS=true }
-
+  continuous_integration_build:
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
-        # Only the latest versions of JRuby and TruffleRuby are tested
-        ruby: ["3.0", "3.1", "3.2", "3.3", "truffleruby-23.1.1", "jruby-9.4.5.0"]
+        ruby: [3.0, 3.1, 3.2, 3.3]
         operating-system: [ubuntu-latest]
-        experimental: [No]
         include:
-          - # Building against head version of Ruby is considered experimental
-            ruby: head
+          - ruby: head
             operating-system: ubuntu-latest
-            experimental: Yes
-
-          - # Only test with minimal Ruby version on Windows
-            ruby: 3.0
+          - ruby: truffleruby-23.1.1
+            operating-system: ubuntu-latest
+          - ruby: 3.0
+            operating-system: windows-latest
+          - ruby: jruby-9.4.5.0
             operating-system: windows-latest
 
-          - # Since JRuby on Windows is known to not work, consider this experimental
-            ruby: jruby-9.4.5.0
-            operating-system: windows-latest
-            experimental: Yes
+    name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
+
+    runs-on: ${{ matrix.operating-system }}
+
+    env:
+      JAVA_OPTS: -Djdk.io.File.enableADS=true
 
     steps:
       - name: Checkout Code
