@@ -7,16 +7,17 @@ class TestFailedError < Test::Unit::TestCase
 
     error = Git::FailedError.new(result)
 
-    assert(error.is_a?(Git::CommandLineError))
+    assert(error.is_a?(Git::GitExecuteError))
+    assert_equal(result, error.result)
   end
 
-  def test_to_s
+  def test_message
     status = Struct.new(:to_s).new('pid 89784 exit 1')
     result = Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
 
     error = Git::FailedError.new(result)
 
-    expected_message = '["git", "status"], status: pid 89784 exit 1, stderr: "stderr"'
-    assert_equal(expected_message, error.to_s)
+    expected_message = "[\"git\", \"status\"]\nstatus: pid 89784 exit 1\nstderr: \"stderr\""
+    assert_equal(expected_message, error.message)
   end
 end
