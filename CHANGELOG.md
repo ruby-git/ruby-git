@@ -5,15 +5,6 @@
 
 # Change Log
 
-## v2.0.0.pre2 (2024-02-24)
-
-[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre1..v2.0.0.pre2)
-
-Changes since v2.0.0.pre1:
-
-* 023017b Add a timeout for git commands (#692)
-* 8286ceb Refactor the Error heriarchy (#693)
-
 ## v2.0.0.pre1 (2024-01-15)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v1.19.1..v2.0.0.pre1)
