@@ -7,79 +7,64 @@
 
 Releasing a new version of the `git` gem requires these steps:
 
-* [Install Prerequisites](#install-prerequisites)
-* [Determine the SemVer release type](#determine-the-semver-release-type)
-* [Create the release](#create-the-release)
-* [Review the CHANGELOG and release PR](#review-the-changelog-and-release-pr)
-* [Manually merge the release PR](#manually-merge-the-release-pr)
-* [Publish the git gem to RubyGems.org](#publish-the-git-gem-to-rubygemsorg)
+- [How to release a new git.gem](#how-to-release-a-new-gitgem)
+  - [Install Prerequisites](#install-prerequisites)
+  - [Prepare the Release](#prepare-the-release)
+  - [Review and Merge the Release](#review-and-merge-the-release)
+  - [Build and Release the Gem](#build-and-release-the-gem)
+
+These instructions use an example where:
+
+- The default branch is `master`
+- The current release version is `1.5.0`
+- You want to create a new *minor* release, `1.6.0`
 
 ## Install Prerequisites
 
 The following tools need to be installed in order to create the release:
 
-* [create_githhub_release](https://github.com/main-branch/create_github_release) is used to create the release
-* [git](https://git-scm.com) is used by `create-github-release` to interact with the local and remote repositories
-* [gh](https://cli.github.com) is used by `create-github-release` to create the release and PR in GitHub
+- [git](https://git-scm.com) is used to interact with the local and remote repositories
+- [gh](https://cli.github.com) is used to create the release and PR in GitHub
+- [Docker](https://www.docker.com) is used to run the script to create the release notes
 
-On a Mac, these tools can be installed using [gem](https://guides.rubygems.org/rubygems-basics/) and [brew](https://brew.sh):
+On a Mac, these tools can be installed using [brew](https://brew.sh):
 
 ```shell
-$ gem install create_github_release
-...
 $ brew install git
 ...
 $ brew install gh
 ...
+$ brew install --cask docker
+...
 $
 ```
 
-## Determine the SemVer release type
+## Prepare the Release
 
-Determine the SemVer version increment that should be applied for the new release:
+Bump the version, create release notes, tag the release and create a GitHub release and PR which can be used to review the release.
 
-* `major`: when the release includes incompatible API or functional changes.
-* `minor`: when the release adds functionality in a backward-compatible manner
-* `patch`: when the release includes small user-facing changes that are
-  backward-compatible and do not introduce new functionality.
+Steps:
 
-## Create the release
+- Check out the code with `git clone https://github.com/ruby-git/ruby-git ruby-git-v1.6.0 && cd ruby-git-v1.6.0`
+- Install development dependencies using bundle `bundle install`
+- Based upon the nature of the changes, decide on the type of release: `major`, `minor`, or `patch` (in this example we will use `minor`)
+- Run the release script `bundle exec create-github-release minor`
 
-Create the release using the `create-github-release` command. If the release type
-is `major`, the command is:
+## Review and Merge the Release
 
-```shell
-create-github-release major
-```
+Have the release PR approved and merge the changes into the `master` branch.
 
-Follow the directions given by the `create-github-release` command to finish the
-release. Where the instructions given by the command differ than the instructions
-below, follow the instructions given by the command.
+**IMPORTANT** DO NOT merge to the `master` branch using the GitHub UI. Instead use the instructions below.
 
-## Review the CHANGELOG and release PR
+Steps:
 
-The `create-github-release` command will output a link to the CHANGELOG and the PR
-it created for the release. Review the CHANGELOG and have someone review and approve
-the release PR.
+- Get the release PR reviewed and approved in GitHub
+- Merge the changes with the command `git checkout master && git merge --ff-only v1.6.0 && git push`
 
-## Manually merge the release PR
+## Build and Release the Gem
 
-It is important to manually merge the PR so a separate merge commit can be avoided.
-Use the commands output by the `create-github-release` which will looks like this
-if you are creating a 2.0.0 release:
+Build the gem and publish it to [rubygems.org](https://rubygems.org/gems/git)
 
-```shell
-git checkout master
-git merge --ff-only release-v2.0.0
-git push
-```
+Steps:
 
-This will automatically close the release PR.
-
-## Publish the git gem to RubyGems.org
-
-Finally, publish the git gem to RubyGems.org using the following command:
-
-```shell
-rake release:rubygem_push
-```
+- Build and release the gem using rake `bundle exec rake release`
