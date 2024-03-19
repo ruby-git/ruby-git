@@ -54,39 +54,6 @@ class TestCommamndLine < Test::Unit::TestCase
 
   # END DEFAULT VALUES
 
-  sub_test_case "when a timeout is given" do
-    test 'it should raise an ArgumentError if the timeout is not an Integer, Float, or nil' do
-      command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
-      args = []
-      error = assert_raise ArgumentError do
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 'not a number')
-      end
-    end
-
-    test 'it should raise a Git::TimeoutError if the command takes too long' do
-      command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
-      args = ['--duration=5']
-
-      error = assert_raise Git::TimeoutError do
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 0.01)
-      end
-    end
-
-    test 'the error raised should indicate the command timed out' do
-      command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
-      args = ['--duration=5']
-
-      # Git::TimeoutError (alone with Git::FailedError and Git::SignaledError) is a
-      # subclass of Git::GitExecuteError
-
-      begin
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 0.01)
-      rescue Git::GitExecuteError => e
-        assert_equal(true, e.result.status.timeout?)
-      end
-    end
-  end
-
   test "run should return a result that includes the command ran, its output, and resulting status" do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output', '--stderr=stderr output']
@@ -95,7 +62,7 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal(['ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'], result.git_cmd)
     assert_equal('stdout output', result.stdout.chomp)
     assert_equal('stderr output', result.stderr.chomp)
-    assert(result.status.is_a? ProcessExecuter::Status)
+    assert(result.status.is_a? Process::Status)
     assert_equal(0, result.status.exitstatus)
   end
 
@@ -149,10 +116,10 @@ class TestCommamndLine < Test::Unit::TestCase
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
 
-    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
+    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil)
       out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
       `true`
-      ProcessExecuter::Status.new($?, false) # return status
+      $? # return status
     end
 
     normalize = true
@@ -172,10 +139,10 @@ class TestCommamndLine < Test::Unit::TestCase
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
 
-    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
+    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil)
       out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
       `true`
-      ProcessExecuter::Status.new($?, false) # return status
+      $? # return status
     end
 
     normalize = false

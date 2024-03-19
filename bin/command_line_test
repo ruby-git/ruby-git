@@ -35,11 +35,10 @@ require 'optparse'
 class CommandLineParser
   def initialize
     @option_parser = OptionParser.new
-    @duration = 0
     define_options
   end
 
-  attr_reader :duration, :stdout, :stderr, :exitstatus, :signal
+  attr_reader :stdout, :stderr, :exitstatus, :signal
 
   # Parse the command line arguements returning the options
   #
@@ -85,7 +84,7 @@ class CommandLineParser
     option_parser.separator 'Options:'
     %i[
       define_help_option define_stdout_option define_stderr_option
-      define_exitstatus_option define_signal_option define_duration_option
+      define_exitstatus_option define_signal_option
     ].each { |m| send(m) }
   end
 
@@ -136,15 +135,6 @@ class CommandLineParser
     end
   end
 
-  # Define the duration option
-  # @return [void]
-  # @api private
-  def define_duration_option
-    option_parser.on('--duration=0', 'The number of seconds the command should take') do |duration|
-      @duration = Integer(duration)
-    end
-  end
-
   # Define the help option
   # @return [void]
   # @api private
@@ -186,6 +176,5 @@ options = CommandLineParser.new.parse(*ARGV)
 
 STDOUT.puts options.stdout if options.stdout
 STDERR.puts options.stderr if options.stderr
-sleep options.duration unless options.duration.zero?
 Process.kill(options.signal, Process.pid) if options.signal
 exit(options.exitstatus) if options.exitstatus

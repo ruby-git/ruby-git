@@ -2,12 +2,11 @@ module Git
 
   class Config
 
-    attr_writer :binary_path, :git_ssh, :timeout
+    attr_writer :binary_path, :git_ssh
 
     def initialize
       @binary_path = nil
       @git_ssh = nil
-      @timeout = nil
     end
 
     def binary_path
@@ -18,9 +17,6 @@ module Git
       @git_ssh || ENV['GIT_SSH']
     end
 
-    def timeout
-      @timeout || (ENV['GIT_TIMEOUT'] && ENV['GIT_TIMEOUT'].to_i)
-    end
   end
 
 end
