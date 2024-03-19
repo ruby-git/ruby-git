@@ -244,9 +244,12 @@ g.index.writable?
 g.repo
 g.dir
 
-g.log   # returns a Git::Log object, which is an Enumerator of Git::Commit objects
-g.log(200)
-g.log.since('2 weeks ago')
+# log - returns a Git::Log object, which is an Enumerator of Git::Commit objects
+# default configuration returns a max of 30 commits
+g.log
+g.log(200) # 200 most recent commits
+g.log.since('2 weeks ago') # default count of commits since 2 weeks ago.
+g.log(200).since('2 weeks ago') # commits since 2 weeks ago, limited to 200.
 g.log.between('v2.5', 'v2.6')
 g.log.each {|l| puts l.sha }
 g.gblob('v2.5:Makefile').log.since('2 weeks ago')
