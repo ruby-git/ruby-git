@@ -13,16 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: [3.0, 3.1, 3.2, 3.3]
+        ruby: [2.7, 3.0, 3.1, 3.2]
         operating-system: [ubuntu-latest]
         include:
           - ruby: head
             operating-system: ubuntu-latest
-          - ruby: truffleruby-23.1.1
+          - ruby: truffleruby-head
             operating-system: ubuntu-latest
-          - ruby: 3.0
+          - ruby: 2.7
             operating-system: windows-latest
-          - ruby: jruby-9.4.5.0
+          - ruby: jruby-head
             operating-system: windows-latest
 
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
