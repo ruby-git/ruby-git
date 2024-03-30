@@ -32,7 +32,7 @@ jobs:
             operating-system: windows-latest
 
           - # Since JRuby on Windows is known to not work, consider this experimental
-            ruby: jruby-9.4.5.0
+            ruby: jruby-head
             operating-system: windows-latest
             experimental: Yes
 
