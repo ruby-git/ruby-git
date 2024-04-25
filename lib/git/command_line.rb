@@ -114,7 +114,6 @@ module Git
     # the normalize option will be ignored.
     #
     # @example Run a command and return the output
-    #
     #   cli.run('version') #=> "git version 2.39.1\n"
     #
     # @example The args array should be splatted into the parameter list
@@ -162,14 +161,18 @@ module Git
     #   `stderr_writer.string` will be merged into the output returned by this method.
     #
     # @param normalize [Boolean] whether to normalize the output to a valid encoding
+    #
     # @param chomp [Boolean] whether to chomp the output
+    #
     # @param merge [Boolean] whether to merge stdout and stderr in the string returned
+    #
     # @param chdir [String] the directory to run the command in
     #
     # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
     #
-    #   If timeout is zero or nil, the command will not time out. If the command
-    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and `Git::TimeoutError` is raised.
     #
     #   If the command does not respond to SIGKILL, it will hang this method.
     #
@@ -178,9 +181,13 @@ module Git
     #   This result of running the command.
     #
     # @raise [ArgumentError] if `args` is not an array of strings
+    #
     # @raise [Git::SignaledError] if the command was terminated because of an uncaught signal
+    #
     # @raise [Git::FailedError] if the command returned a non-zero exitstatus
+    #
     # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    #
     # @raise [Git::TimeoutError] if the command times out
     #
     def run(*args, out:, err:, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
@@ -267,7 +274,7 @@ module Git
     #
     # @param cmd [Array<String>] the git command to execute
     # @param chdir [String] the directory to run the command in
-    # @param timeout [Float, Integer, nil] the maximum seconds to wait for the command to complete
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
     #
     #   If timeout is zero of nil, the command will not time out. If the command
     #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
@@ -321,6 +328,7 @@ module Git
     # @param err [#write] the object that stderr was written to
     # @param normalize [Boolean] whether to normalize the output of each writer
     # @param chomp [Boolean] whether to chomp the output of each writer
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
     #
     # @return [Git::CommandLineResult] the result of the command to return to the caller
     #
@@ -346,7 +354,7 @@ module Git
     # @param out [#write] the object to write stdout to
     # @param err [#write] the object to write stderr to
     # @param chdir [String] the directory to run the command in
-    # @param timeout [Float, Integer, nil] the maximum seconds to wait for the command to complete
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
     #
     #   If timeout is zero of nil, the command will not time out. If the command
     #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
