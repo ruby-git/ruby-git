@@ -80,21 +80,33 @@ module Git
       command('init', *arr_opts)
     end
 
-    # tries to clone the given repo
+    # Clones a repository into a newly created directory
     #
-    # accepts options:
-    #  :bare::      no working directory
-    #  :branch::    name of branch to track (rather than 'master')
-    #  :depth::     the number of commits back to pull
-    #  :filter::    specify partial clone
-    #  :origin::    name of remote (same as remote)
-    #  :path::      directory where the repo will be cloned
-    #  :remote::    name of remote (rather than 'origin')
-    #  :recursive:: after the clone is created, initialize all submodules within, using their default settings.
+    # @param [String] repository_url the URL of the repository to clone
+    # @param [String, nil] directory the directory to clone into
     #
-    # TODO - make this work with SSH password or auth_key
+    #   If nil, the repository is cloned into a directory with the same name as
+    #   the repository.
+    #
+    # @param [Hash] opts the options for this command
+    #
+    # @option opts [Boolean] :bare (false) if true, clone as a bare repository
+    # @option opts [String] :branch the branch to checkout
+    # @option opts [String, Array] :config one or more configuration options to set
+    # @option opts [Integer] :depth the number of commits back to pull
+    # @option opts [String] :filter specify partial clone
+    # @option opts [String] :mirror set up a mirror of the source repository
+    # @option opts [String] :origin the name of the remote
+    # @option opts [String] :path an optional prefix for the directory parameter
+    # @option opts [String] :remote the name of the remote
+    # @option opts [Boolean] :recursive after the clone is created, initialize all submodules within, using their default settings
+    # @option opts [Numeric, nil] :timeout the number of seconds to wait for the command to complete
+    #
+    #   See {Git::Lib#command} for more information about :timeout
     #
     # @return [Hash] the options to pass to {Git::Base.new}
+    #
+    # @todo make this work with SSH password or auth_key
     #
     def clone(repository_url, directory, opts = {})
       @path = opts[:path] || '.'
@@ -1215,8 +1227,15 @@ module Git
     #
     # @param chdir [String, nil] the directory to run the command in
     #
-    # @param timeout [Numeric, nil] the maximum time to wait for the command to
-    # complete
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is nil, the global timeout from {Git::Config} is used.
+    #
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
     #
     # @see Git::CommandLine#run
     #

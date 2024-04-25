@@ -158,22 +158,25 @@ rescue Git::Error => e
 
 The timeout feature was added in git gem version `2.0.0`.
 
-A timeout for git operations can be set either globally or for specific method calls
-that accept a `:timeout` parameter.
+A timeout for git command line operations can be set either globally or for specific
+method calls that accept a `:timeout` parameter.
 
 The timeout value must be a real, non-negative `Numeric` value that specifies a
 number of seconds a `git` command will be given to complete before being sent a KILL
 signal. This library may hang if the `git` command does not terminate after receiving
 the KILL signal.
 
-When a command times out, a `Git::TimeoutError` is raised.
+When a command times out, it is killed by sending it the `SIGKILL` signal and a
+`Git::TimeoutError` is raised. This error derives from the `Git::SignaledError` and
+`Git::Error`.
 
 If the timeout value is `0` or `nil`, no timeout will be enforced.
 
-If a method accepts a `:timeout` parameter and a receives a non-nil value, it will
-override the global timeout value. In this context, a value of `nil` (which is
-usually the default) will use the global timeout value and a value of `0` will turn
-off timeout enforcement for that method call no matter what the global value is.
+If a method accepts a `:timeout` parameter and a receives a non-nil value, the value
+of this parameter will override the global timeout value. In this context, a value of
+`nil` (which is usually the default) will use the global timeout value and a value of
+`0` will turn off timeout enforcement for that method call no matter what the global
+value is.
 
 To set a global timeout, use the `Git.config` object:
 
@@ -193,19 +196,20 @@ Git.clone(repo_url, timeout: 0) # Do not enforce a timeout
 Git.clone(repo_url, timeout: 10.5)  # Timeout after 10.5 seconds raising Git::SignaledError
 ```
 
-If the command takes too long, a `Git::SignaledError` will be raised:
+If the command takes too long, a `Git::TimeoutError` will be raised:
 
 ```ruby
 begin
   Git.clone(repo_url, timeout: 10)
 rescue Git::TimeoutError => e
-  result = e.result
-  result.class #=> Git::CommandLineResult
-  result.status #=> #<Process::Status: pid 62173 SIGKILL (signal 9)>
-  result.status.timeout? #=> true
-  result.git_cmd # The git command ran as an array of strings
-  result.stdout # The command's output to stdout until it was terminated
-  result.stderr # The command's output to stderr until it was terminated
+  e.result.tap do |r|
+    r.class #=> Git::CommandLineResult
+    r.status #=> #<Process::Status: pid 62173 SIGKILL (signal 9)>
+    r.status.timeout? #=> true
+    r.git_cmd # The git command ran as an array of strings
+    r.stdout # The command's output to stdout until it was terminated
+    r.stderr # The command's output to stderr until it was terminated
+  end
 end
 ```
 
