@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 3.0.0'
   s.requirements = ['git 2.28.0 or greater']
 
+  s.add_runtime_dependency 'activesupport', '>= 5.0'
   s.add_runtime_dependency 'addressable', '~> 2.8'
   s.add_runtime_dependency 'process_executer', '~> 1.1'
   s.add_runtime_dependency 'rchardet', '~> 1.8'

@@ -77,11 +77,11 @@ class TestCommamndLine < Test::Unit::TestCase
       args = ['--duration=5']
 
       # Git::TimeoutError (alone with Git::FailedError and Git::SignaledError) is a
-      # subclass of Git::GitExecuteError
+      # subclass of Git::Error
 
       begin
         command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 0.01)
-      rescue Git::GitExecuteError => e
+      rescue Git::Error => e
         assert_equal(true, e.result.status.timeout?)
       end
     end
@@ -228,7 +228,7 @@ class TestCommamndLine < Test::Unit::TestCase
     end
   end
 
-  test "run should raise a GitExecuteError if there was an error raised writing stdout" do
+  test "run should raise a Git::ProcessIOError if there was an error raised writing stdout" do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
     out_writer = Class.new do
@@ -237,11 +237,11 @@ class TestCommamndLine < Test::Unit::TestCase
       end
     end.new
 
-    error = assert_raise Git::GitExecuteError do
+    error = assert_raise Git::ProcessIOError do
       command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
     end
 
-    assert_kind_of(Git::GitExecuteError, error)
+    assert_kind_of(Git::ProcessIOError, error)
     assert_kind_of(IOError, error.cause)
     assert_equal('error writing to file', error.cause.message)
   end
@@ -257,7 +257,7 @@ class TestCommamndLine < Test::Unit::TestCase
     end
   end
 
-  test "run should raise a GitExecuteError if there was an error raised writing stderr" do
+  test "run should raise a Git::ProcessIOError if there was an error raised writing stderr" do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stderr=ERROR: fatal error']
     err_writer = Class.new do
@@ -266,11 +266,11 @@ class TestCommamndLine < Test::Unit::TestCase
       end
     end.new
 
-    error = assert_raise Git::GitExecuteError do
+    error = assert_raise Git::ProcessIOError do
       command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
     end
 
-    assert_kind_of(Git::GitExecuteError, error)
+    assert_kind_of(Git::ProcessIOError, error)
     assert_kind_of(IOError, error.cause)
     assert_equal('error writing to stderr file', error.cause.message)
   end

@@ -1,22 +1,21 @@
-# Add the directory containing this file to the start of the load path if it
-# isn't there already.
-$:.unshift(File.dirname(__FILE__)) unless
-  $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
+require 'active_support'
+require 'active_support/deprecation'
+
+module Git
+  Deprecation = ActiveSupport::Deprecation.new('3.0', 'Git')
+end
 
 require 'git/author'
 require 'git/base'
 require 'git/branch'
 require 'git/branches'
-require 'git/command_line_error'
 require 'git/command_line_result'
 require 'git/command_line'
 require 'git/config'
 require 'git/diff'
 require 'git/encoding_utils'
-require 'git/error'
+require 'git/errors'
 require 'git/escaped_path'
-require 'git/failed_error'
-require 'git/git_execute_error'
 require 'git/index'
 require 'git/lib'
 require 'git/log'
@@ -24,11 +23,9 @@ require 'git/object'
 require 'git/path'
 require 'git/remote'
 require 'git/repository'
-require 'git/signaled_error'
 require 'git/status'
 require 'git/stash'
 require 'git/stashes'
-require 'git/timeout_error'
 require 'git/url'
 require 'git/version'
 require 'git/working_directory'

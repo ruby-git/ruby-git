@@ -12,9 +12,10 @@ class TestTags < Test::Unit::TestCase
       r2.config('user.name', 'Test User')
       r2.config('user.email', 'test@email.com')
 
-      assert_raise Git::GitTagNameDoesNotExist do
+      error = assert_raise Git::UnexpectedResultError do
         r1.tag('first')
       end
+      assert_equal error.message, "Tag 'first' does not exist."
 
       r1.add_tag('first')
       r1.chdir do
@@ -31,9 +32,11 @@ class TestTags < Test::Unit::TestCase
       assert(r2.tags.any?{|t| t.name == 'third'})
       assert(r2.tags.none?{|t| t.name == 'second'})
 
-      assert_raise RuntimeError do
+      error = assert_raises ArgumentError do
         r2.add_tag('fourth', {:a => true})
       end
+
+      assert_equal(error.message, 'Cannot create an annotated tag without a message.')
 
       r2.add_tag('fourth', {:a => true, :m => 'test message'})
 
@@ -51,9 +54,10 @@ class TestTags < Test::Unit::TestCase
 
       r2.delete_tag('third')
 
-      assert_raise Git::GitTagNameDoesNotExist do
+      error = assert_raise Git::UnexpectedResultError do
         r2.tag('third')
       end
+      assert_equal error.message, "Tag 'third' does not exist."
 
       tag1 = r2.tag('fourth')
       assert_true(tag1.annotated?)

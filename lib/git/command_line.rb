@@ -2,8 +2,7 @@
 
 require 'git/base'
 require 'git/command_line_result'
-require 'git/failed_error'
-require 'git/signaled_error'
+require 'git/errors'
 require 'stringio'
 
 module Git
@@ -186,7 +185,7 @@ module Git
     #
     # @raise [Git::FailedError] if the command returned a non-zero exitstatus
     #
-    # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
     # @raise [Git::TimeoutError] if the command times out
     #
@@ -260,14 +259,14 @@ module Git
     # @param pipe_name [Symbol] the name of the pipe that raised the exception
     # @param pipe [ProcessExecuter::MonitoredPipe] the pipe that raised the exception
     #
-    # @raise [Git::GitExecuteError]
+    # @raise [Git::ProcessIOError]
     #
     # @return [void] this method always raises an error
     #
     # @api private
     #
     def raise_pipe_error(git_cmd, pipe_name, pipe)
-      raise Git::GitExecuteError.new("Pipe Exception for #{git_cmd}: #{pipe_name}"), cause: pipe.exception
+      raise Git::ProcessIOError.new("Pipe Exception for #{git_cmd}: #{pipe_name}"), cause: pipe.exception
     end
 
     # Execute the git command and collect the output
@@ -281,7 +280,7 @@ module Git
     #
     #   If the command does not respond to SIGKILL, it will hang this method.
     #
-    # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     # @raise [Git::TimeoutError] if the command times out
     #
     # @return [ProcessExecuter::Status] the status of the completed subprocess
@@ -334,6 +333,8 @@ module Git
     #
     # @raise [Git::FailedError] if the command failed
     # @raise [Git::SignaledError] if the command was signaled
+    # @raise [Git::TimeoutError] if the command times out
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
     # @api private
     #
@@ -361,7 +362,7 @@ module Git
     #
     #   If the command does not respond to SIGKILL, it will hang this method.
     #
-    # @raise [Git::GitExecuteError] if an exception was raised while collecting subprocess output
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     # @raise [Git::TimeoutError] if the command times out
     #
     # @return [Git::CommandLineResult] the result of the command to return to the caller
