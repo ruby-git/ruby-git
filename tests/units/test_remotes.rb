@@ -152,7 +152,7 @@ class TestRemotes < Test::Unit::TestCase
       origin = "--upload-pack=touch #{test_file};"
       begin
         git.fetch(origin, { ref: 'some/ref/head' })
-      rescue Git::GitExecuteError
+      rescue Git::Error
         # This is expected
       else
         raise 'Expected Git::FailedError to be raised'
@@ -221,9 +221,11 @@ class TestRemotes < Test::Unit::TestCase
 
       assert(rem.status['test-file1'])
       assert(!rem.status['test-file3'])
-      assert_raise Git::GitTagNameDoesNotExist do
+      error = assert_raise Git::UnexpectedResultError do
         rem.tag('test-tag')
       end
+
+      assert_equal error.message, "Tag 'test-tag' does not exist."
 
       loc.push('testrem', 'testbranch', true)
 

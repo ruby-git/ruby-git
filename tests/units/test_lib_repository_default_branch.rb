@@ -71,7 +71,7 @@ class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
     # Local or remote, the result is the same
     repository = '.'
     mock_command(@lib, repository, '')
-    assert_raise_with_message(RuntimeError, 'Unable to determine the default branch') do
+    assert_raise_with_message(Git::UnexpectedResultError, 'Unable to determine the default branch') do
       @lib.repository_default_branch(repository)
     end
   end

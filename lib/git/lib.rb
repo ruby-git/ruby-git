@@ -1,5 +1,5 @@
-require 'git/failed_error'
 require 'git/command_line'
+require 'git/errors'
 require 'logger'
 require 'pp'
 require 'process_executer'
@@ -155,7 +155,7 @@ module Git
       match_data = output.match(%r{^ref: refs/heads/(?<default_branch>[^\t]+)\tHEAD$})
       return match_data[:default_branch] if match_data
 
-      raise 'Unable to determine the default branch'
+      raise Git::UnexpectedResultError, 'Unable to determine the default branch'
     end
 
     ## READ COMMANDS ##
@@ -420,7 +420,7 @@ module Git
     def branches_all
       command_lines('branch', '-a').map do |line|
         match_data = line.match(BRANCH_LINE_REGEXP)
-        raise GitExecuteError, 'Unexpected branch line format' unless match_data
+        raise Git::UnexpectedResultError, 'Unexpected branch line format' unless match_data
         next nil if match_data[:not_a_branch] || match_data[:detached_ref]
         [
           match_data[:refname],
@@ -945,7 +945,7 @@ module Git
       opts = opts.last.instance_of?(Hash) ? opts.last : {}
 
       if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
-        raise  "Can not create an [:a|:annotate] tag without the precense of [:m|:message]."
+        raise  ArgumentError, 'Cannot create an annotated tag without a message.'
       end
 
       arr_opts = []
@@ -1242,7 +1242,10 @@ module Git
     # @return [String] the command's stdout (or merged stdout and stderr if `merge`
     # is true)
     #
-    # @raise [Git::GitExecuteError] if the command fails
+    # @raise [Git::FailedError] if the command failed
+    # @raise [Git::SignaledError] if the command was signaled
+    # @raise [Git::TimeoutError] if the command times out
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
     #   The exception's `result` attribute is a {Git::CommandLineResult} which will
     #   contain the result of the command including the exit status, stdout, and

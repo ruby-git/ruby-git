@@ -104,55 +104,21 @@ Pass the `--all` option to `git log` as follows:
 
 ## Errors Raised By This Gem
 
-This gem raises custom errors that derive from `Git::Error`. These errors are
-arranged in the following class heirarchy:
+The git gem will only raise an `ArgumentError` or an error that is a subclass of
+`Git::Error`. It does not explicitly raise any other types of errors.
 
-Error heirarchy:
-
-```text
-Error
-└── CommandLineError
-    ├── FailedError
-    └── SignaledError
-        └── TimeoutError
-```
-
-Other standard errors may also be raised like `ArgumentError`. Each method should
-document the errors it may raise.
-
-Description of each Error class:
-
-* `Error`: This catch-all error serves as the base class for other custom errors in this
-  gem. Errors of this class are raised when no more approriate specific error to
-  raise.
-* `CommandLineError`: This error is raised when there's a problem executing the git
-  command line. This gem will raise a more specific error depending on how the
-  command line failed.
-* `FailedError`: This error is raised when the git command line exits with a non-zero
-  status code that is not expected by the git gem.
-* `SignaledError`: This error is raised when the git command line is terminated as a
-  result of receiving a signal. This could happen if the process is forcibly
-  terminated or if there is a serious system error.
-* `TimeoutError`: This is a specific type of `SignaledError` that is raised when the
-  git command line operation times out and is killed via the SIGKILL signal. This
-  happens if the operation takes longer than the timeout duration configured in
-  `Git.config.timeout` or via the `:timeout` parameter given in git methods that
-  support this parameter.
-
-`Git::GitExecuteError` remains as an alias for `Git::Error`. It is considered
-deprecated as of git-2.0.0.
-
-Here is an example of catching errors when using the git gem:
+It is recommended to rescue `Git::Error` to catch any runtime error raised by
+this gem unless you need more specific error handling.
 
 ```ruby
 begin
-  timeout_duration = 0.001 # seconds
-  repo = Git.clone('https://github.com/ruby-git/ruby-git', 'ruby-git-temp', timeout: timeout_duration)
-rescue Git::TimeoutError => e # Catch the more specific error first!
-  puts "Git clone took too long and timed out #{e}"
+  # some git operation
 rescue Git::Error => e
-  puts "Received the following error: #{e}"
+  puts "An error occurred: #{e.message}"
+end
 ```
+
+See [`Git::Error`](https://rubydoc.info/gems/git/Git/Error) for more information.
 
 ## Specifying And Handling Timeouts
 
