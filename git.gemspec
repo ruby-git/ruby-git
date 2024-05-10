@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'process_executer', '~> 1.1'
   s.add_runtime_dependency 'rchardet', '~> 1.8'
 
-  s.add_development_dependency 'create_github_release', '~> 1.3'
+  s.add_development_dependency 'create_github_release', '~> 1.4'
   s.add_development_dependency 'minitar', '~> 0.9'
   s.add_development_dependency 'mocha', '~> 2.1'
   s.add_development_dependency 'rake', '~> 13.1'
