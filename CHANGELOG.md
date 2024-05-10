@@ -5,6 +5,22 @@
 
 # Change Log
 
+## v2.0.0.pre4 (2024-05-10)
+
+[Full Changelog](https://jcouball@github.com/ruby-git/ruby-git/compare/v2.0.0.pre3..v2.0.0.pre4)
+
+Changes since v2.0.0.pre3:
+
+* 56783e7 Update create_github_release dependency so pre-releases can be made
+* 8566929 Add dependency on create_github_release gem used for releasing the git gem
+* 7376d76 Refactor errors that are raised by this gem
+* 7e99b17 Update documentation for new timeout functionality
+* 705e983 Move experimental builds to a separate workflow that only runs when pushed to master
+* e056d64 Build with jruby-head on Windows until jruby/jruby#7515 is fixed
+* ec7c257 Remove unneeded scripts to create a new release
+* d9570ab Move issue and pull request templates to the .github directory
+* e4d6a77 Show log(x).since combination in README
+
 ## v2.0.0.pre3 (2024-03-15)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre2..v2.0.0.pre3)
