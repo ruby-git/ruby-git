@@ -1,9 +1,9 @@
-### Your checklist for this pull request
-🚨Please review the [guidelines for contributing](https://github.com/ruby-git/ruby-git/blob/master/CONTRIBUTING.md) to this repository.
+[Guidelines for contributing](https://github.com/ruby-git/ruby-git/blob/master/CONTRIBUTING.md) to this repository
 
-- [ ] Ensure all commits include DCO sign-off.
-- [ ] Ensure that your contributions pass unit testing.
-- [ ] Ensure that your contributions contain documentation if applicable.
+A good start is to:
 
-### Description
-Please describe your pull request.
+* Ensure that your changes pass CI tests by running `rake` before pushing
+* Ensure that your changes are documented in the README.md and in YARD documentation
+
+# Description
+
