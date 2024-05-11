@@ -12,7 +12,7 @@
 [![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
 
 * [Summary](#summary)
-* [v2.0.0 pre-release](#v200-pre-release)
+* [v2.x Release](#v2x-release)
 * [Install](#install)
 * [Major Objects](#major-objects)
 * [Errors Raised By This Gem](#errors-raised-by-this-gem)
@@ -37,15 +37,20 @@ Get started by obtaining a repository object by:
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
 
-## v2.0.0 pre-release
+## v2.x Release
 
-git 2.0.0 is available as a pre-release version for testing! Please give it a try.
+git 2.0.0 has recently been released. Please give it a try.
+
+
+**If you have problems with the 2.x release, open an issue and use the 1.9.1 version
+instead.** We will do our best to fix your issues in a timely fashion.
 
 **JRuby on Windows is not yet supported by the 2.x release line. Users running JRuby
 on Windows should continue to use the 1.x release line.**
 
-The changes coming in this major release include:
+The changes in this major release include:
 
+* Added a dependency on the activesupport gem to use the deprecation functionality
 * Create a policy of supported Ruby versions to support only non-EOL Ruby versions
 * Create a policy of supported Git CLI versions (released 2020-12-25)
 * Update the required Ruby version to at least 3.0 (released 2020-07-27)
@@ -54,9 +59,6 @@ The changes coming in this major release include:
   gem which is built on top of [Kernel.spawn](https://ruby-doc.org/3.3.0/Kernel.html#method-i-spawn).
   See [PR #684](https://github.com/ruby-git/ruby-git/pull/684) for more details
   on the motivation for this implementation.
-
-The tentative plan is to release `2.0.0` near the end of March 2024 depending on
-the feedback received during the pre-release period.
 
 The `master` branch will be used for `2.x` development. If needed, fixes for `1.x`
 version will be done on the `v1` branch.
@@ -69,10 +71,22 @@ Install the gem and add to the application's Gemfile by executing:
 bundle add git
 ```
 
+to install version 1.x:
+
+```shell
+bundle add git --version "~> 1.19"
+```
+
 If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```shell
 gem install git
+```
+
+to install version 1.x:
+
+```shell
+gem install git --version "~> 1.19"
 ```
 
 ## Major Objects
@@ -505,9 +519,15 @@ end
 This gem will be expected to function correctly on:
 
 * All non-EOL versions of the MRI Ruby on Mac, Linux, and Windows
-* The latest version of JRuby on Linux and Windows
+* The latest version of JRuby on Linux
 * The latest version of Truffle Ruby on Linus
+
+It is this project's intent to support the latest version of JRuby on Windows
+once the following JRuby bug is fixed:
+
+jruby/jruby#7515
 
 ## License
 
-licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further details.
+Licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further
+details.
