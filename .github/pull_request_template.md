@@ -1,9 +1,8 @@
-[Guidelines for contributing](https://github.com/ruby-git/ruby-git/blob/master/CONTRIBUTING.md) to this repository
+Review our [guidelines for contributing](https://github.com/ruby-git/ruby-git/blob/master/CONTRIBUTING.md) to this repository. A good start is to:
 
-A good start is to:
-
-* Ensure that your changes pass CI tests by running `rake` before pushing
-* Ensure that your changes are documented in the README.md and in YARD documentation
+* Write tests for your changes
+* Run `rake` before pushing
+* Include / update docs in the README.md and in YARD documentation
 
 # Description
 
