@@ -5,6 +5,17 @@
 
 # Change Log
 
+## v2.0.0 (2024-05-10)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre4..v2.0.0)
+
+Changes since v2.0.0.pre4:
+
+* 1afc4c6 Update 2.x release line description
+* ed52420 Make the pull request template more concise
+* 299ae6b Remove stale bot integration
+* efb724b Remove the DCO requirement for commits
+
 ## v2.0.0.pre4 (2024-05-10)
 
 [Full Changelog](https://jcouball@github.com/ruby-git/ruby-git/compare/v2.0.0.pre3..v2.0.0.pre4)
