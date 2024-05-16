@@ -600,6 +600,9 @@ module Git
       command_lines('ls-files', '--others', '-i', '--exclude-standard')
     end
 
+    def untracked_files
+      command_lines('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir)
+    end
 
     def config_remote(name)
       hsh = {}

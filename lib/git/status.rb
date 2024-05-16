@@ -170,13 +170,7 @@ module Git
     end
 
     def fetch_untracked
-      ignore = @base.lib.ignored_files
-
-      root_dir = @base.dir.path
-      Dir.glob('**/*', File::FNM_DOTMATCH, base: root_dir) do |file|
-        next if @files[file] || File.directory?(File.join(root_dir, file)) ||
-                ignore.include?(file) || file =~ %r{^.git\/.+}
-
+      @base.lib.untracked_files.each do |file|
         @files[file] = { path: file, untracked: true }
       end
     end
