@@ -25,6 +25,16 @@ class TestStatus < Test::Unit::TestCase
     end
   end
 
+  def test_on_empty_repo
+    in_temp_dir do |path|
+      `git init`
+      git = Git.open('.')
+      assert_nothing_raised do
+        git.status
+      end
+    end
+  end
+
   def test_dot_files_status
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_dot_files_status')

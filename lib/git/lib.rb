@@ -707,6 +707,19 @@ module Git
       command('rm', *arr_opts)
     end
 
+    # Returns true if the repository is empty (meaning it has no commits)
+    #
+    # @return [Boolean]
+    #
+    def empty?
+      command('rev-parse', '--verify', 'HEAD')
+      false
+    rescue Git::FailedError => e
+      raise unless e.result.status.exitstatus == 128 &&
+        e.result.stderr == 'fatal: Needed a single revision'
+      true
+    end
+
     # Takes the commit message with the options and executes the commit command
     #
     # accepts options:
