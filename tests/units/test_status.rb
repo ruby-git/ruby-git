@@ -87,6 +87,56 @@ class TestStatus < Test::Unit::TestCase
     end
   end
 
+  def test_untracked
+    in_temp_dir do |path|
+      `git init`
+      File.write('file1', 'contents1')
+      File.write('file2', 'contents2')
+      Dir.mkdir('subdir')
+      File.write('subdir/file3', 'contents3')
+      File.write('subdir/file4', 'contents4')
+      `git add file1 subdir/file3`
+      `git commit -m "my message"`
+
+      git = Git.open('.')
+      assert_equal(2, git.status.untracked.size)
+      assert_equal(['file2', 'subdir/file4'], git.status.untracked.keys)
+    end
+  end
+
+  def test_untracked_no_untracked_files
+    in_temp_dir do |path|
+      `git init`
+      File.write('file1', 'contents1')
+      Dir.mkdir('subdir')
+      File.write('subdir/file3', 'contents3')
+      `git add file1 subdir/file3`
+      `git commit -m "my message"`
+
+      git = Git.open('.')
+      assert_equal(0, git.status.untracked.size)
+    end
+  end
+
+  def test_untracked_from_subdir
+    in_temp_dir do |path|
+      `git init`
+      File.write('file1', 'contents1')
+      File.write('file2', 'contents2')
+      Dir.mkdir('subdir')
+      File.write('subdir/file3', 'contents3')
+      File.write('subdir/file4', 'contents4')
+      `git add file1 subdir/file3`
+      `git commit -m "my message"`
+
+      Dir.chdir('subdir') do
+        git = Git.open('..')
+        assert_equal(2, git.status.untracked.size)
+        assert_equal(['file2', 'subdir/file4'], git.status.untracked.keys)
+      end
+    end
+  end
+
   def test_untracked_boolean
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_dot_files_status')
