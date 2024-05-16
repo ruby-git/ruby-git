@@ -318,4 +318,25 @@ class TestLib < Test::Unit::TestCase
     assert lib.compare_version_to(2, 43, 0) == -1
     assert lib.compare_version_to(3, 0, 0) == -1
   end
+
+  def test_empty_when_not_empty
+    in_temp_dir do |path|
+      `git init`
+      `touch file1`
+      `git add file1`
+      `git commit -m "my commit message"`
+
+      git = Git.open('.')
+      assert_false(git.lib.empty?)
+    end
+  end
+
+  def test_empty_when_empty
+    in_temp_dir do |path|
+      `git init`
+
+      git = Git.open('.')
+      assert_true(git.lib.empty?)
+    end
+  end
 end

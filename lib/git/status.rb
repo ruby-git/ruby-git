@@ -183,9 +183,11 @@ module Git
     end
 
     def fetch_added
-      # find added but not committed - new files
-      @base.lib.diff_index('HEAD').each do |path, data|
-        @files[path] ? @files[path].merge!(data) : @files[path] = data
+      unless @base.lib.empty?
+        # find added but not committed - new files
+        @base.lib.diff_index('HEAD').each do |path, data|
+          @files[path] ? @files[path].merge!(data) : @files[path] = data
+        end
       end
     end
   end
