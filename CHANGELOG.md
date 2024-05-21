@@ -5,6 +5,17 @@
 
 # Change Log
 
+## v2.0.1 (2024-05-21)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0..v2.0.1)
+
+Changes since v2.0.0:
+
+* da435b1 Document and add tests for Git::Status
+* c8a77db Fix Git::Base#status on an empty repo
+* 712fdad Fix Git::Status#untracked when run from worktree subdir
+* 6a59bc8 Remove the Git::Base::Factory module
+
 ## v2.0.0 (2024-05-10)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0.pre4..v2.0.0)
