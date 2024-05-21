@@ -1,6 +1,12 @@
 module Git
+  # The status class gets the status of a git repository
   #
-  # A class for git status
+  # This identifies which files have been modified, added, or deleted from the
+  # worktree. Untracked files are also identified.
+  #
+  # The Status object is an Enumerable that contains StatusFile objects.
+  #
+  # @api public
   #
   class Status
     include Enumerable
@@ -31,7 +37,6 @@ module Git
       changed.member?(file)
     end
 
-    #
     # Returns an Enumerable containing files that have been added.
     # File path starts at git base directory
     #
@@ -40,8 +45,8 @@ module Git
       @files.select { |_k, f| f.type == 'A' }
     end
 
-    #
     # Determines whether the given file has been added to the repository
+    #
     # File path starts at git base directory
     #
     # @param file [String] The name of the file.
@@ -126,9 +131,63 @@ module Git
 
     # subclass that does heavy lifting
     class StatusFile
-      attr_accessor :path, :type, :stage, :untracked
-      attr_accessor :mode_index, :mode_repo
-      attr_accessor :sha_index, :sha_repo
+      # @!attribute [r] path
+      #   The path of the file relative to the project root directory
+      #   @return [String]
+      attr_accessor :path
+
+      # @!attribute [r] type
+      #   The type of change
+      #
+      #   * 'M': modified
+      #   * 'A': added
+      #   * 'D': deleted
+      #   * nil: ???
+      #
+      #   @return [String]
+      attr_accessor :type
+
+      # @!attribute [r] mode_index
+      #   The mode of the file in the index
+      #   @return [String]
+      #   @example 100644
+      #
+      attr_accessor :mode_index
+
+      # @!attribute [r] mode_repo
+      #   The mode of the file in the repo
+      #   @return [String]
+      #   @example 100644
+      #
+      attr_accessor :mode_repo
+
+      # @!attribute [r] sha_index
+      #   The sha of the file in the index
+      #   @return [String]
+      #   @example 123456
+      #
+      attr_accessor :sha_index
+
+      # @!attribute [r] sha_repo
+      #   The sha of the file in the repo
+      #   @return [String]
+      #   @example 123456
+      attr_accessor :sha_repo
+
+      # @!attribute [r] untracked
+      #   Whether the file is untracked
+      #   @return [Boolean]
+      attr_accessor :untracked
+
+      # @!attribute [r] stage
+      #   The stage of the file
+      #
+      #   * '0': the unmerged state
+      #   * '1': the common ancestor (or original) version
+      #   * '2': "our version" from the current branch head
+      #   * '3': "their version" from the other branch head
+      #   @return [String]
+      attr_accessor :stage
 
       def initialize(base, hash)
         @base = base
@@ -158,10 +217,19 @@ module Git
     private
 
     def construct_status
+      # Lists all files in the index and the worktree
+      # git ls-files --stage
+      # { file => { path: file, mode_index: '100644', sha_index: 'dd4fc23', stage: '0' } }
       @files = @base.lib.ls_files
 
+      # Lists files in the worktree that are not in the index
+      # Add untracked files to @files
       fetch_untracked
+
+      # Lists files that are different between the index vs. the worktree
       fetch_modified
+
+      # Lists files that are different between the repo HEAD vs. the worktree
       fetch_added
 
       @files.each do |k, file_hash|
@@ -170,13 +238,17 @@ module Git
     end
 
     def fetch_untracked
+      # git ls-files --others --exclude-standard, chdir: @git_work_dir)
+      # { file => { path: file, untracked: true } }
       @base.lib.untracked_files.each do |file|
         @files[file] = { path: file, untracked: true }
       end
     end
 
     def fetch_modified
-      # find modified in tree
+      # Files changed between the index vs. the worktree
+      # git diff-files
+      # { file => { path: file, type: 'M', mode_index: '100644', mode_repo: '100644', sha_index: '0000000', :sha_repo: '52c6c4e' } }
       @base.lib.diff_files.each do |path, data|
         @files[path] ? @files[path].merge!(data) : @files[path] = data
       end
@@ -184,8 +256,10 @@ module Git
 
     def fetch_added
       unless @base.lib.empty?
-        # find added but not committed - new files
-        @base.lib.diff_index('HEAD').each do |path, data|
+      # Files changed between the repo HEAD vs. the worktree
+      # git diff-index HEAD
+      # { file => { path: file, type: 'M', mode_index: '100644', mode_repo: '100644', sha_index: '0000000', :sha_repo: '52c6c4e' } }
+      @base.lib.diff_index('HEAD').each do |path, data|
           @files[path] ? @files[path].merge!(data) : @files[path] = data
         end
       end
