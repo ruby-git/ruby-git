@@ -23,11 +23,8 @@
 
 ## Summary
 
-The [git gem](https://rubygems.org/gems/git) provides an API that can be used to
-create, read, and manipulate Git repositories by wrapping system calls to the `git`
-command line. The API can be used for working with Git in complex interactions
-including branching and merging, object inspection and manipulation, history, patch
-generation and more.
+The [git gem](https://rubygems.org/gems/git) provides a Ruby interface to the `git`
+command line.
 
 Get started by obtaining a repository object by:
 
@@ -41,8 +38,7 @@ Methods that can be called on a repository object are documented in [Git::Base](
 
 git 2.0.0 has recently been released. Please give it a try.
 
-
-**If you have problems with the 2.x release, open an issue and use the 1.9.1 version
+**If you have problems with the 2.x release, open an issue and use the 1.x version
 instead.** We will do our best to fix your issues in a timely fashion.
 
 **JRuby on Windows is not yet supported by the 2.x release line. Users running JRuby

@@ -35,6 +35,45 @@ class TestStatus < Test::Unit::TestCase
     end
   end
 
+  def test_added
+    in_temp_dir do |path|
+      `git init`
+      File.write('file1', 'contents1')
+      File.write('file2', 'contents2')
+      `git add file1 file2`
+      `git commit -m "my message"`
+
+      File.write('file2', 'contents2B')
+      File.write('file3', 'contents3')
+
+      `git add file2 file3`
+
+      git = Git.open('.')
+      status = assert_nothing_raised do
+        git.status
+      end
+
+      assert_equal(1, status.added.size)
+      assert_equal(['file3'], status.added.keys)
+    end
+  end
+
+  def test_added_on_empty_repo
+    in_temp_dir do |path|
+      `git init`
+      File.write('file1', 'contents1')
+      File.write('file2', 'contents2')
+      `git add file1 file2`
+
+      git = Git.open('.')
+      status = assert_nothing_raised do
+        git.status
+      end
+
+      assert_equal(0, status.added.size)
+    end
+  end
+
   def test_dot_files_status
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_dot_files_status')
