@@ -675,9 +675,10 @@ module Git
       Git::Object::Commit.new(self, self.lib.commit_tree(tree, opts))
     end
 
+    # @param [Boolean] no_color Prevent git from colorizing diff output
     # @return [Git::Diff] a Git::Diff object
-    def diff(objectish = 'HEAD', obj2 = nil)
-      Git::Diff.new(self, objectish, obj2)
+    def diff(objectish = 'HEAD', obj2 = nil, no_color: false)
+      Git::Diff.new(self, objectish, obj2, no_color: no_color)
     end
 
     # @return [Git::Object] a Git object

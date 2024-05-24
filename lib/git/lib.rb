@@ -523,6 +523,7 @@ module Git
 
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
       diff_opts = ['-p']
+      diff_opts << "--no-color" if opts[:no_color]
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
       diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String

@@ -281,11 +281,12 @@ g.describe('HEAD', {:all => true, :tags => true})
 g.diff(commit1, commit2).size
 g.diff(commit1, commit2).stats
 g.diff(commit1, commit2).name_status
+g.diff(commit1, commit2, no_color: true).patch
 g.gtree('v2.5').diff('v2.6').insertions
 g.diff('gitsearch1', 'v2.5').path('lib/')
 g.diff('gitsearch1', @git.gtree('v2.5'))
 g.diff('gitsearch1', 'v2.5').path('docs/').patch
-g.gtree('v2.5').diff('v2.6').patch
+g.gtree('v2.5').diff('v2.6', no_color: true).patch
 
 g.gtree('v2.5').diff('v2.6').each do |file_diff|
   puts file_diff.path
