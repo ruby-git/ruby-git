@@ -2,11 +2,13 @@ require 'logger'
 require 'open3'
 
 module Git
-  # Git::Base is the main public interface for interacting with Git commands.
+  # The main public interface for interacting with Git commands
   #
   # Instead of creating a Git::Base directly, obtain a Git::Base instance by
   # calling one of the follow {Git} class methods: {Git.open}, {Git.init},
   # {Git.clone}, or {Git.bare}.
+  #
+  # @api public
   #
   class Base
     # (see Git.bare)
@@ -117,6 +119,62 @@ module Git
       @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
       @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil
       @index = options[:index] ? Git::Index.new(options[:index], false) : nil
+    end
+
+    # Update the index from the current worktree to prepare the for the next commit
+    #
+    # @example
+    #   lib.add('path/to/file')
+    #   lib.add(['path/to/file1','path/to/file2'])
+    #   lib.add(all: true)
+    #
+    # @param [String, Array<String>] paths a file or files to be added to the repository (relative to the worktree root)
+    # @param [Hash] options
+    #
+    # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
+    # @option options [Boolean] :force Allow adding otherwise ignored files
+    #
+    def add(paths = '.', **options)
+      self.lib.add(paths, options)
+    end
+
+    # adds a new remote to this repository
+    # url can be a git url or a Git::Base object if it's a local reference
+    #
+    #  @git.add_remote('scotts_git', 'git://repo.or.cz/rubygit.git')
+    #  @git.fetch('scotts_git')
+    #  @git.merge('scotts_git/master')
+    #
+    # Options:
+    #   :fetch => true
+    #   :track => <branch_name>
+    def add_remote(name, url, opts = {})
+      url = url.repo.path if url.is_a?(Git::Base)
+      self.lib.remote_add(name, url, opts)
+      Git::Remote.new(self, name)
+    end
+
+    # Create a new git tag
+    #
+    # @example
+    #   repo.add_tag('tag_name', object_reference)
+    #   repo.add_tag('tag_name', object_reference, {:options => 'here'})
+    #   repo.add_tag('tag_name', {:options => 'here'})
+    #
+    # @param [String] name The name of the tag to add
+    # @param [Hash] options Opstions to pass to `git tag`.
+    #   See [git-tag](https://git-scm.com/docs/git-tag) for more details.
+    # @option options [boolean] :annotate Make an unsigned, annotated tag object
+    # @option options [boolean] :a An alias for the `:annotate` option
+    # @option options [boolean] :d Delete existing tag with the given names.
+    # @option options [boolean] :f Replace an existing tag with the given name (instead of failing)
+    # @option options [String] :message Use the given tag message
+    # @option options [String] :m An alias for the `:message` option
+    # @option options [boolean] :s Make a GPG-signed tag.
+    #
+    def add_tag(name, *options)
+      self.lib.tag(name, *options)
+      self.tag(name)
     end
 
     # changes current working directory for a block
@@ -249,29 +307,6 @@ module Git
     #
     def grep(string, path_limiter = nil, opts = {})
       self.object('HEAD').grep(string, path_limiter, opts)
-    end
-
-    # updates the repository index using the working directory content
-    #
-    # @example
-    #   git.add
-    #   git.add('path/to/file')
-    #   git.add(['path/to/file1','path/to/file2'])
-    #   git.add(:all => true)
-    #
-    # options:
-    #   :all => true
-    #
-    # @param [String,Array] paths files paths to be added (optional, default='.')
-    # @param [Hash] options
-    # @option options [boolean] :all
-    #   Update the index not only where the working tree has a file matching
-    #   <pathspec> but also where the index already has an entry.
-    #   See [the --all option to git-add](https://git-scm.com/docs/git-add#Documentation/git-add.txt--A)
-    #   for more details.
-    #
-    def add(paths = '.', **options)
-      self.lib.add(paths, options)
     end
 
     # removes file(s) from the git repository
@@ -434,22 +469,6 @@ module Git
       self.lib.remotes.map { |r| Git::Remote.new(self, r) }
     end
 
-    # adds a new remote to this repository
-    # url can be a git url or a Git::Base object if it's a local reference
-    #
-    #  @git.add_remote('scotts_git', 'git://repo.or.cz/rubygit.git')
-    #  @git.fetch('scotts_git')
-    #  @git.merge('scotts_git/master')
-    #
-    # Options:
-    #   :fetch => true
-    #   :track => <branch_name>
-    def add_remote(name, url, opts = {})
-      url = url.repo.path if url.is_a?(Git::Base)
-      self.lib.remote_add(name, url, opts)
-      Git::Remote.new(self, name)
-    end
-
     # sets the url for a remote
     # url can be a git url or a Git::Base object if it's a local reference
     #
@@ -473,7 +492,7 @@ module Git
       self.lib.tags.map { |r| tag(r) }
     end
 
-    # Creates a new git tag (Git::Tag)
+    # Create a new git tag
     #
     # @example
     #   repo.add_tag('tag_name', object_reference)

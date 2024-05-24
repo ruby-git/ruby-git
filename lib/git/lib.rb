@@ -38,14 +38,23 @@ module Git
 
     # Create a new Git::Lib object
     #
-    # @param [Git::Base, Hash] base An object that passes in values for
-    #   @git_work_dir, @git_dir, and @git_index_file
+    # @overload initialize(base, logger)
     #
-    # @param [Logger] logger
+    #   @param base [Hash] the hash containing paths to the Git working copy,
+    #     the Git repository directory, and the Git index file.
     #
-    # @option base [Pathname] :working_directory
-    # @option base [Pathname] :repository
-    # @option base [Pathname] :index
+    #   @option base [Pathname] :working_directory
+    #   @option base [Pathname] :repository
+    #   @option base [Pathname] :index
+    #
+    #   @param [Logger] logger
+    #
+    # @overload initialize(base, logger)
+    #
+    #   @param base [#dir, #repo, #index] an object with methods to get the Git worktree (#dir),
+    #     the Git repository directory (#repo), and the Git index file (#index).
+    #
+    #   @param [Logger] logger
     #
     def initialize(base = nil, logger = nil)
       @git_dir = nil
@@ -670,18 +679,20 @@ module Git
       command('config', '--global', name, value)
     end
 
-    # updates the repository index using the working directory content
+
+    # Update the index from the current worktree to prepare the for the next commit
     #
-    #    lib.add('path/to/file')
-    #    lib.add(['path/to/file1','path/to/file2'])
-    #    lib.add(:all => true)
+    # @example
+    #   lib.add('path/to/file')
+    #   lib.add(['path/to/file1','path/to/file2'])
+    #   lib.add(:all => true)
     #
-    # options:
-    #   :all => true
-    #   :force => true
-    #
-    # @param [String,Array] paths files paths to be added to the repository
+    # @param [String, Array<String>] paths files to be added to the repository (relative to the worktree root)
     # @param [Hash] options
+    #
+    # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
+    # @option options [Boolean] :force Allow adding otherwise ignored files
+    #
     def add(paths='.',options={})
       arr_opts = []
 
