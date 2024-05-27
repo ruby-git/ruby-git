@@ -83,7 +83,11 @@ module Git
     #     deleted?('lib/git.rb')
     # @return [Boolean]
     def deleted?(file)
-      deleted.member?(file)
+      if ignore_case?
+        deleted.keys.map(&:downcase).include?(file.downcase)
+      else
+        deleted.member?(file)
+      end
     end
 
     #
