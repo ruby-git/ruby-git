@@ -34,7 +34,11 @@ module Git
     #     changed?('lib/git.rb')
     # @return [Boolean]
     def changed?(file)
-      changed.member?(file)
+      if ignore_case?
+        changed.keys.map(&:downcase).include?(file.downcase)
+      else
+        changed.member?(file)
+      end
     end
 
     # Returns an Enumerable containing files that have been added.
@@ -263,6 +267,16 @@ module Git
           @files[path] ? @files[path].merge!(data) : @files[path] = data
         end
       end
+    end
+
+    # It's worth noting that (like git itself) this gem will not behave well if
+    # ignoreCase is set inconsistently with the file-system itself. For details:
+    # https://git-scm.com/docs/git-config#Documentation/git-config.txt-coreignoreCase
+    def ignore_case?
+      return @_ignore_case if defined?(@_ignore_case)
+      @_ignore_case = @base.config('core.ignoreCase') == 'true'
+    rescue Git::FailedError
+      @_ignore_case = false
     end
   end
 end
