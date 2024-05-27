@@ -108,7 +108,11 @@ module Git
     #     untracked?('lib/git.rb')
     # @return [Boolean]
     def untracked?(file)
-      untracked.member?(file)
+      if ignore_case?
+        untracked.keys.map(&:downcase).include?(file.downcase)
+      else
+        untracked.member?(file)
+      end
     end
 
     def pretty

@@ -207,6 +207,7 @@ class TestStatus < Test::Unit::TestCase
   def test_untracked_boolean
     in_temp_dir do |path|
       git = Git.clone(@wdir, 'test_dot_files_status')
+      git.config('core.ignorecase', 'false')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
       create_file('test_dot_files_status/test_file_2', 'content tets_file_2')
@@ -214,6 +215,10 @@ class TestStatus < Test::Unit::TestCase
 
       assert(git.status.untracked?('test_file_1'))
       assert(!git.status.untracked?('test_file_2'))
+      assert(!git.status.untracked?('TEST_FILE_1'))
+
+      git.config('core.ignorecase', 'true')
+      assert(git.status.untracked?('TEST_FILE_1'))
     end
   end
 
