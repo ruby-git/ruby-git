@@ -58,7 +58,11 @@ module Git
     #     added?('lib/git.rb')
     # @return [Boolean]
     def added?(file)
-      added.member?(file)
+      if ignore_case?
+        added.keys.map(&:downcase).include?(file.downcase)
+      else
+        added.member?(file)
+      end
     end
 
     #
