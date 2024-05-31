@@ -9,6 +9,28 @@ class TestLog < Test::Unit::TestCase
     @git = Git.open(@wdir)
   end
 
+  def test_log_max_count_default
+    assert_equal(30, @git.log.size)
+  end
+
+  # In these tests, note that @git.log(n) is equivalent to @git.log.max_count(n)
+  def test_log_max_count_20
+    assert_equal(20, @git.log(20).size)
+    assert_equal(20, @git.log.max_count(20).size)
+  end
+
+  def test_log_max_count_nil
+    assert_equal(72, @git.log(nil).size)
+    assert_equal(72, @git.log.max_count(nil).size)
+  end
+
+  def test_log_max_count_all
+    assert_equal(72, @git.log(:all).size)
+    assert_equal(72, @git.log.max_count(:all).size)
+  end
+
+  # Note that @git.log.all does not control the number of commits returned. For that,
+  # use @git.log.max_count(n)
   def test_log_all
     assert_equal(72, @git.log(100).size)
     assert_equal(76, @git.log(100).all.size)
