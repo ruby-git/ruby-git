@@ -101,16 +101,28 @@ directory, in the index and in the repository.  Similar to running 'git status' 
 
 **Git::Remote**- A reference to a remote repository that is tracked by this repository.
 
-**Git::Log** - An Enumerable object that references all the `Git::Object::Commit` objects that encompass your log query, which can be constructed through methods on the `Git::Log object`,
-like:
+**Git::Log** - An Enumerable object that references all the `Git::Object::Commit`
+objects that encompass your log query, which can be constructed through methods on
+the `Git::Log object`, like:
 
- `@git.log(20).object("some_file").since("2 weeks ago").between('v2.6', 'v2.7').each { |commit| [block] }`
+```ruby
+git.log
+  .max_count(:all)
+  .object('README.md')
+  .since('10 years ago')
+  .between('v1.0.7', 'HEAD')
+  .map { |commit| commit.sha }
+```
 
-Pass the `--all` option to `git log` as follows:
+A maximum of 30 commits are returned if `max_count` is not called. To get all commits
+that match the log query, call `max_count(:all)`.
 
- `@git.log.all.each { |commit| [block] }`
+Note that `git.log.all` adds the `--all` option to the underlying `git log` command.
+This asks for the logs of all refs (basically all commits reachable by HEAD,
+branches, and tags). This does not control the maximum number of commits returned. To
+control how many commits are returned, you should call `max_count`.
 
- **Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
+**Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
 
 ## Errors Raised By This Gem
 
