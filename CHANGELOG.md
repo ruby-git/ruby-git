@@ -5,6 +5,15 @@
 
 # Change Log
 
+## v2.1.0 (2024-05-31)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.1..v2.1.0)
+
+Changes since v2.0.1:
+
+* 93c8210 Add Git::Log#max_count
+* d84097b Update YARDoc for a few a few method
+
 ## v2.0.1 (2024-05-21)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.0..v2.0.1)
