@@ -5,6 +5,20 @@
 
 # Change Log
 
+## v2.1.1 (2024-06-01)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.1.0..v2.1.1)
+
+Changes since v2.1.0:
+
+* 6ce3d4d Handle ignored files with quoted (non-ASCII) filenames
+* dd8e8d4 Supply all of the _specific_ color options too
+* 749a72d Memoize all of the significant calls in Git::Status
+* 2bacccc When core.ignoreCase, check for untracked files case-insensitively
+* 7758ee4 When core.ignoreCase, check for deleted files case-insensitively
+* 993eb78 When core.ignoreCase, check for added files case-insensitively
+* d943bf4 When core.ignoreCase, check for changed files case-insensitively
+
 ## v2.1.0 (2024-05-31)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.0.1..v2.1.0)
