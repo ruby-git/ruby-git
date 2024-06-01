@@ -1223,6 +1223,14 @@ module Git
         global_opts << "--work-tree=#{@git_work_dir}" if !@git_work_dir.nil?
         global_opts << '-c' << 'core.quotePath=true'
         global_opts << '-c' << 'color.ui=false'
+        global_opts << '-c' << 'color.advice=false'
+        global_opts << '-c' << 'color.diff=false'
+        global_opts << '-c' << 'color.grep=false'
+        global_opts << '-c' << 'color.push=false'
+        global_opts << '-c' << 'color.remote=false'
+        global_opts << '-c' << 'color.showBranch=false'
+        global_opts << '-c' << 'color.status=false'
+        global_opts << '-c' << 'color.transport=false'
       end
     end
 

@@ -13,3 +13,12 @@
 [remote "working"]
 	url = ../working.git
 	fetch = +refs/heads/*:refs/remotes/working/*
+[color]
+  diff = always
+  showBranch = always
+  grep = always
+  advice = always
+  push = always
+  remote = always
+  transport = always
+  status = always
