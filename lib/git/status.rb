@@ -22,7 +22,7 @@ module Git
     #
     # @return [Enumerable]
     def changed
-      @files.select { |_k, f| f.type == 'M' }
+      @_changed ||= @files.select { |_k, f| f.type == 'M' }
     end
 
     #
@@ -34,11 +34,7 @@ module Git
     #     changed?('lib/git.rb')
     # @return [Boolean]
     def changed?(file)
-      if ignore_case?
-        changed.keys.map(&:downcase).include?(file.downcase)
-      else
-        changed.member?(file)
-      end
+      case_aware_include?(:changed, :lc_changed, file)
     end
 
     # Returns an Enumerable containing files that have been added.
@@ -46,7 +42,7 @@ module Git
     #
     # @return [Enumerable]
     def added
-      @files.select { |_k, f| f.type == 'A' }
+      @_added ||= @files.select { |_k, f| f.type == 'A' }
     end
 
     # Determines whether the given file has been added to the repository
@@ -58,11 +54,7 @@ module Git
     #     added?('lib/git.rb')
     # @return [Boolean]
     def added?(file)
-      if ignore_case?
-        added.keys.map(&:downcase).include?(file.downcase)
-      else
-        added.member?(file)
-      end
+      case_aware_include?(:added, :lc_added, file)
     end
 
     #
@@ -71,7 +63,7 @@ module Git
     #
     # @return [Enumerable]
     def deleted
-      @files.select { |_k, f| f.type == 'D' }
+      @_deleted ||= @files.select { |_k, f| f.type == 'D' }
     end
 
     #
@@ -83,11 +75,7 @@ module Git
     #     deleted?('lib/git.rb')
     # @return [Boolean]
     def deleted?(file)
-      if ignore_case?
-        deleted.keys.map(&:downcase).include?(file.downcase)
-      else
-        deleted.member?(file)
-      end
+      case_aware_include?(:deleted, :lc_deleted, file)
     end
 
     #
@@ -96,7 +84,7 @@ module Git
     #
     # @return [Enumerable]
     def untracked
-      @files.select { |_k, f| f.untracked }
+      @_untracked ||= @files.select { |_k, f| f.untracked }
     end
 
     #
@@ -108,11 +96,7 @@ module Git
     #     untracked?('lib/git.rb')
     # @return [Boolean]
     def untracked?(file)
-      if ignore_case?
-        untracked.keys.map(&:downcase).include?(file.downcase)
-      else
-        untracked.member?(file)
-      end
+      case_aware_include?(:untracked, :lc_untracked, file)
     end
 
     def pretty
@@ -289,6 +273,34 @@ module Git
       @_ignore_case = @base.config('core.ignoreCase') == 'true'
     rescue Git::FailedError
       @_ignore_case = false
+    end
+
+    def downcase_keys(hash)
+      hash.map { |k, v| [k.downcase, v] }.to_h
+    end
+
+    def lc_changed
+      @_lc_changed ||= changed.transform_keys(&:downcase)
+    end
+
+    def lc_added
+      @_lc_added ||= added.transform_keys(&:downcase)
+    end
+
+    def lc_deleted
+      @_lc_deleted ||= deleted.transform_keys(&:downcase)
+    end
+
+    def lc_untracked
+      @_lc_untracked ||= untracked.transform_keys(&:downcase)
+    end
+
+    def case_aware_include?(cased_hash, downcased_hash, file)
+      if ignore_case?
+        send(downcased_hash).include?(file.downcase)
+      else
+        send(cased_hash).include?(file)
+      end
     end
   end
 end
