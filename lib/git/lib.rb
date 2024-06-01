@@ -574,18 +574,52 @@ module Git
       diff_as_hash('diff-index', treeish)
     end
 
+    # List all files that are in the index
+    #
+    # @param location [String] the location to list the files from
+    #
+    # @return [Hash<String, Hash>] a hash of files in the index
+    #   * key: file [String] the file path
+    #   * value: file_info [Hash] the file information containing the following keys:
+    #     * :path [String] the file path
+    #     * :mode_index [String] the file mode
+    #     * :sha_index [String] the file sha
+    #     * :stage [String] the file stage
+    #
     def ls_files(location=nil)
       location ||= '.'
-      hsh = {}
-      command_lines('ls-files', '--stage', location).each do |line|
-        (info, file) = line.split("\t")
-        (mode, sha, stage) = info.split
-        if file.start_with?('"') && file.end_with?('"')
-          file = Git::EscapedPath.new(file[1..-2]).unescape
+      {}.tap do |files|
+        command_lines('ls-files', '--stage', location).each do |line|
+          (info, file) = line.split("\t")
+          (mode, sha, stage) = info.split
+          files[unescape_quoted_path(file)] = {
+            :path => file, :mode_index => mode, :sha_index => sha, :stage => stage
+          }
         end
-        hsh[file] = {:path => file, :mode_index => mode, :sha_index => sha, :stage => stage}
       end
-      hsh
+    end
+
+    # Unescape a path if it is quoted
+    #
+    # Git commands that output paths (e.g. ls-files, diff), will escape unusual
+    # characters.
+    #
+    # @example
+    #   lib.unescape_if_quoted('"quoted_file_\\342\\230\\240"') # => 'quoted_file_☠'
+    #   lib.unescape_if_quoted('unquoted_file')   # => 'unquoted_file'
+    #
+    # @param path [String] the path to unescape if quoted
+    #
+    # @return [String] the unescaped path if quoted otherwise the original path
+    #
+    # @api private
+    #
+    def unescape_quoted_path(path)
+      if path.start_with?('"') && path.end_with?('"')
+        Git::EscapedPath.new(path[1..-2]).unescape
+      else
+        path
+      end
     end
 
     def ls_remote(location=nil, opts={})
@@ -606,7 +640,7 @@ module Git
     end
 
     def ignored_files
-      command_lines('ls-files', '--others', '-i', '--exclude-standard')
+      command_lines('ls-files', '--others', '-i', '--exclude-standard').map { |f| unescape_quoted_path(f) }
     end
 
     def untracked_files
