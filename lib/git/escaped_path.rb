@@ -3,7 +3,7 @@
 module Git
   # Represents an escaped Git path string
   #
-  # Git commands that output paths (e.g. ls-files, diff), will escape usual
+  # Git commands that output paths (e.g. ls-files, diff), will escape unusual
   # characters in the path with backslashes in the same way C escapes control
   # characters (e.g. \t for TAB, \n for LF, \\ for backslash) or bytes with values
   # larger than 0x80 (e.g. octal \302\265 for "micro" in UTF-8).

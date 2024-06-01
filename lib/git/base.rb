@@ -309,6 +309,13 @@ module Git
       self.object('HEAD').grep(string, path_limiter, opts)
     end
 
+    # List the files in the worktree that are ignored by git
+    # @return [Array<String>] the list of ignored files relative to teh root of the worktree
+    #
+    def ignored_files
+      self.lib.ignored_files
+    end
+
     # removes file(s) from the git repository
     def rm(path = '.', opts = {})
       self.lib.rm(path, opts)
