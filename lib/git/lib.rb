@@ -374,10 +374,15 @@ module Git
       end
     end
 
-    def ls_tree(sha)
+    def ls_tree(sha, opts = {})
       data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
 
-      command_lines('ls-tree', sha).each do |line|
+      ls_tree_opts = []
+      ls_tree_opts << '-r' if opts[:recursive]
+      # path must be last arg
+      ls_tree_opts << opts[:path] if opts[:path]
+
+      command_lines('ls-tree', sha, *ls_tree_opts).each do |line|
         (info, filenm) = line.split("\t")
         (mode, type, sha) = info.split
         data[type][filenm] = {:mode => mode, :sha => sha}
