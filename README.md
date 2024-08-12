@@ -236,6 +236,9 @@ g.index.writable?
 g.repo
 g.dir
 
+# ls-tree with recursion into subtrees (list files)
+g.ls_tree("head", recursive: true)
+
 # log - returns a Git::Log object, which is an Enumerator of Git::Commit objects
 # default configuration returns a max of 30 commits
 g.log

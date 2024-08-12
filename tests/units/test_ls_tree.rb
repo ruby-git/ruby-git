@@ -13,10 +13,25 @@ class TestLsTree < Test::Unit::TestCase
       repo.add('README.md')
       repo.commit('Add README.md')
 
+      Dir.mkdir("repo/subdir")
+      File.write('repo/subdir/file.md', 'Content in subdir')
+      repo.add('subdir/file.md')
+      repo.commit('Add subdir/file.md')
+
+      # ls_tree
+      default_tree = assert_nothing_raised { repo.ls_tree('HEAD') }
+      assert_equal(default_tree.dig("blob").keys.sort, ["README.md"])
+      assert_equal(default_tree.dig("tree").keys.sort, ["subdir"])
+      # ls_tree with recursion into sub-trees
+      recursive_tree = assert_nothing_raised { repo.ls_tree('HEAD', recursive: true) }
+      assert_equal(recursive_tree.dig("blob").keys.sort, ["README.md", "subdir/file.md"])
+      assert_equal(recursive_tree.dig("tree").keys.sort, [])
+
       Dir.chdir('repo') do
         assert_child_process_success { `git -c protocol.file.allow=always submodule add ../submodule submodule 2>&1` }
         assert_child_process_success { `git commit -am "Add submodule" 2>&1` }
       end
+
 
       expected_submodule_sha = submodule.object('HEAD').sha
 
