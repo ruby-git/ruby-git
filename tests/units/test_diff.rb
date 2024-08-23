@@ -118,5 +118,25 @@ class TestDiff < Test::Unit::TestCase
     assert_equal(160, files['scott/newfile'].patch.size)
   end
 
+  def test_diff_patch_with_bad_commit
+    assert_raise(ArgumentError) do
+      @git.diff('-s').patch
+    end
 
+    assert_raise(ArgumentError) do
+      @git.diff('gitsearch1', '-s').patch
+    end
+  end
+
+  def test_diff_name_status_with_bad_commit
+    assert_raise(ArgumentError) do
+      @git.diff('-s').name_status
+    end
+  end
+
+  def test_diff_stats_with_bad_commit
+    assert_raise(ArgumentError) do
+      @git.diff('-s').stats
+    end
+  end
 end
