@@ -526,7 +526,24 @@ module Git
       hsh
     end
 
+    # Validate that the given arguments cannot be mistaken for a command-line option
+    #
+    # @param arg_name [String] the name of the arguments to mention in the error message
+    # @param args [Array<String, nil>] the arguments to validate
+    #
+    # @raise [ArgumentError] if any of the parameters are a string starting with a hyphen
+    # @return [void]
+    #
+    def validate_no_options(arg_name, *args)
+      invalid_args = args.select { |arg| arg&.start_with?('-') }
+      if invalid_args.any?
+        raise ArgumentError, "Invalid #{arg_name}: '#{invalid_args.join("', '")}'"
+      end
+    end
+
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
+      validate_no_options('commit or commit range', obj1, obj2)
+
       diff_opts = ['-p']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
@@ -536,6 +553,8 @@ module Git
     end
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
+      validate_no_options('commit or commit range', obj1, obj2)
+
       diff_opts = ['--numstat']
       diff_opts << obj1
       diff_opts << obj2 if obj2.is_a?(String)
@@ -556,6 +575,8 @@ module Git
     end
 
     def diff_name_status(reference1 = nil, reference2 = nil, opts = {})
+      validate_no_options('commit or commit range', reference1, reference2)
+
       opts_arr = ['--name-status']
       opts_arr << reference1 if reference1
       opts_arr << reference2 if reference2
