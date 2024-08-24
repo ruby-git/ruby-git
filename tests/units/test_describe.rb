@@ -13,4 +13,9 @@ class TestDescribe < Test::Unit::TestCase
     assert_equal(@git.describe(nil, {:tags => true}), 'grep_colon_numbers')
   end
 
+  def test_describe_with_invalid_commitish
+    assert_raise ArgumentError do
+      @git.describe('--all')
+    end
+  end
 end
