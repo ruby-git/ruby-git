@@ -169,27 +169,33 @@ module Git
 
     ## READ COMMANDS ##
 
+    # Finds most recent tag that is reachable from a commit
     #
-    # Returns most recent tag that is reachable from a commit
+    # @see https://git-scm.com/docs/git-describe git-describe
     #
-    # accepts options:
-    #  :all
-    #  :tags
-    #  :contains
-    #  :debug
-    #  :exact_match
-    #  :dirty
-    #  :abbrev
-    #  :candidates
-    #  :long
-    #  :always
-    #  :math
+    # @param commit_ish [String, nil] target commit sha or object name
     #
-    #  @param [String|NilClass] committish target commit sha or object name
-    #  @param [{Symbol=>Object}] opts the given options
-    #  @return [String] the tag name
+    # @param opts [Hash] the given options
     #
-    def describe(committish=nil, opts={})
+    # @option opts :all [Boolean]
+    # @option opts :tags [Boolean]
+    # @option opts :contains [Boolean]
+    # @option opts :debug [Boolean]
+    # @option opts :long [Boolean]
+    # @option opts :always [Boolean]
+    # @option opts :exact_match [Boolean]
+    # @option opts :dirty [true, String]
+    # @option opts :abbrev [String]
+    # @option opts :candidates [String]
+    # @option opts :match [String]
+    #
+    # @return [String] the tag name
+    #
+    # @raise [ArgumentError] if the commit_ish is a string starting with a hyphen
+    # 
+    def describe(commit_ish = nil, opts = {})
+      assert_args_are_not_options('commit-ish object', commit_ish)
+
       arr_opts = []
 
       arr_opts << '--all' if opts[:all]
@@ -207,7 +213,7 @@ module Git
       arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
       arr_opts << "--match=#{opts[:match]}" if opts[:match]
 
-      arr_opts << committish if committish
+      arr_opts << commit_ish if commit_ish
 
       return command('describe', *arr_opts)
     end
@@ -534,7 +540,7 @@ module Git
     # @raise [ArgumentError] if any of the parameters are a string starting with a hyphen
     # @return [void]
     #
-    def validate_no_options(arg_name, *args)
+    def assert_args_are_not_options(arg_name, *args)
       invalid_args = args.select { |arg| arg&.start_with?('-') }
       if invalid_args.any?
         raise ArgumentError, "Invalid #{arg_name}: '#{invalid_args.join("', '")}'"
@@ -542,7 +548,7 @@ module Git
     end
 
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
-      validate_no_options('commit or commit range', obj1, obj2)
+      assert_args_are_not_options('commit or commit range', obj1, obj2)
 
       diff_opts = ['-p']
       diff_opts << obj1
@@ -553,7 +559,7 @@ module Git
     end
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
-      validate_no_options('commit or commit range', obj1, obj2)
+      assert_args_are_not_options('commit or commit range', obj1, obj2)
 
       diff_opts = ['--numstat']
       diff_opts << obj1
@@ -575,7 +581,7 @@ module Git
     end
 
     def diff_name_status(reference1 = nil, reference2 = nil, opts = {})
-      validate_no_options('commit or commit range', reference1, reference2)
+      assert_args_are_not_options('commit or commit range', reference1, reference2)
 
       opts_arr = ['--name-status']
       opts_arr << reference1 if reference1
