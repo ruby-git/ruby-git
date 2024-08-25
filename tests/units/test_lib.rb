@@ -123,6 +123,34 @@ class TestLib < Test::Unit::TestCase
     assert_equal(20, a.size)
   end
 
+  def test_log_commits_invalid_between
+    # between can not start with a hyphen
+    assert_raise ArgumentError do
+      @lib.log_commits :count => 20, :between => ['-v2.5', 'v2.6']
+    end
+  end
+
+  def test_log_commits_invalid_object
+    # :object can not start with a hyphen
+    assert_raise ArgumentError do
+      @lib.log_commits :count => 20, :object => '--all'
+    end
+  end
+
+  def test_full_log_commits_invalid_between
+    # between can not start with a hyphen
+    assert_raise ArgumentError do
+      @lib.full_log_commits :count => 20, :between => ['-v2.5', 'v2.6']
+    end
+  end
+
+  def test_full_log_commits_invalid_object
+    # :object can not start with a hyphen
+    assert_raise ArgumentError do
+      @lib.full_log_commits :count => 20, :object => '--all'
+    end
+  end
+
   def test_git_ssh_from_environment_is_passed_to_binary
     saved_binary_path = Git::Base.config.binary_path
     saved_git_ssh = Git::Base.config.git_ssh

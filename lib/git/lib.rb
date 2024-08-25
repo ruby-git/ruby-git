@@ -192,7 +192,7 @@ module Git
     # @return [String] the tag name
     #
     # @raise [ArgumentError] if the commit_ish is a string starting with a hyphen
-    # 
+    #
     def describe(commit_ish = nil, opts = {})
       assert_args_are_not_options('commit-ish object', commit_ish)
 
@@ -218,7 +218,37 @@ module Git
       return command('describe', *arr_opts)
     end
 
-    def log_commits(opts={})
+    # Return the commits that are within the given revision range
+    #
+    # @see https://git-scm.com/docs/git-log git-log
+    #
+    # @param opts [Hash] the given options
+    #
+    # @option opts :count [Integer] the maximum number of commits to return (maps to max-count)
+    # @option opts :all [Boolean]
+    # @option opts :cherry [Boolean]
+    # @option opts :since [String]
+    # @option opts :until [String]
+    # @option opts :grep [String]
+    # @option opts :author [String]
+    # @option opts :between [Array<String>] an array of two commit-ish strings to specify a revision range
+    #
+    #   Only :between or :object options can be used, not both.
+    #
+    # @option opts :object [String] the revision range for the git log command
+    #
+    #   Only :between or :object options can be used, not both.
+    #
+    # @option opts :path_limiter [Array<String>, String] only include commits that impact files from the specified paths
+    #
+    # @return [Array<String>] the log output
+    #
+    # @raise [ArgumentError] if the resulting revision range is a string starting with a hyphen
+    #
+    def log_commits(opts = {})
+      assert_args_are_not_options('between', opts[:between]&.first)
+      assert_args_are_not_options('object', opts[:object])
+
       arr_opts = log_common_options(opts)
 
       arr_opts << '--pretty=oneline'
@@ -228,7 +258,47 @@ module Git
       command_lines('log', *arr_opts).map { |l| l.split.first }
     end
 
-    def full_log_commits(opts={})
+    # Return the commits that are within the given revision range
+    #
+    # @see https://git-scm.com/docs/git-log git-log
+    #
+    # @param opts [Hash] the given options
+    #
+    # @option opts :count [Integer] the maximum number of commits to return (maps to max-count)
+    # @option opts :all [Boolean]
+    # @option opts :cherry [Boolean]
+    # @option opts :since [String]
+    # @option opts :until [String]
+    # @option opts :grep [String]
+    # @option opts :author [String]
+    # @option opts :between [Array<String>] an array of two commit-ish strings to specify a revision range
+    #
+    #   Only :between or :object options can be used, not both.
+    #
+    # @option opts :object [String] the revision range for the git log command
+    #
+    #   Only :between or :object options can be used, not both.
+    #
+    # @option opts :path_limiter [Array<String>, String] only include commits that impact files from the specified paths
+    # @option opts :skip [Integer]
+    #
+    # @return [Array<Hash>] the log output parsed into an array of hashs for each commit
+    #
+    #   Each hash contains the following keys:
+    #   * 'sha' [String] the commit sha
+    #   * 'author' [String] the author of the commit
+    #   * 'message' [String] the commit message
+    #   * 'parent' [Array<String>] the commit shas of the parent commits
+    #   * 'tree' [String] the tree sha
+    #   * 'author' [String] the author of the commit and timestamp of when the changes were created
+    #   * 'committer' [String] the committer of the commit and timestamp of when the commit was applied
+    #
+    # @raise [ArgumentError] if the revision range (specified with :between or :object) is a string starting with a hyphen
+    #
+    def full_log_commits(opts = {})
+      assert_args_are_not_options('between', opts[:between]&.first)
+      assert_args_are_not_options('object', opts[:object])
+
       arr_opts = log_common_options(opts)
 
       arr_opts << '--pretty=raw'
