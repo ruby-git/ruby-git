@@ -23,7 +23,7 @@ module Git
       end
 
       def sha
-        @sha ||= @base.lib.revparse(@objectish)
+        @sha ||= @base.lib.rev_parse(@objectish)
       end
 
       def size

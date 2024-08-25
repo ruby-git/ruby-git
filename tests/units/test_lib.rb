@@ -174,10 +174,28 @@ class TestLib < Test::Unit::TestCase
     Git::Base.config.git_ssh = saved_git_ssh
   end
 
-  def test_revparse
-    assert_equal('1cc8667014381e2788a94777532a788307f38d26', @lib.revparse('1cc8667014381')) # commit
-    assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @lib.revparse('1cc8667014381^{tree}')) #tree
-    assert_equal('ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @lib.revparse('v2.5:example.txt')) #blob
+  def test_rev_parse_commit
+    assert_equal('1cc8667014381e2788a94777532a788307f38d26', @lib.rev_parse('1cc8667014381')) # commit
+  end
+
+  def test_rev_parse_tree
+    assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', @lib.rev_parse('1cc8667014381^{tree}')) #tree
+  end
+
+  def test_rev_parse_blob
+    assert_equal('ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @lib.rev_parse('v2.5:example.txt')) #blob
+  end
+
+  def test_rev_parse_with_bad_revision
+    assert_raise(ArgumentError) do
+      @lib.rev_parse('--all')
+    end
+  end
+
+  def test_rev_parse_with_unknown_revision
+    assert_raise(Git::FailedError) do
+      @lib.rev_parse('NOTFOUND')
+    end
   end
 
   def test_object_type

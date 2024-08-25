@@ -277,7 +277,7 @@ tree.blobs
 tree.subtrees
 tree.children # blobs and subtrees
 
-g.revparse('v2.5:Makefile')
+g.rev_parse('v2.0.0:README.md')
 
 g.branches # returns Git::Branch objects
 g.branches.local

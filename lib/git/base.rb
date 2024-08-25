@@ -634,13 +634,16 @@ module Git
     # runs git rev-parse to convert the objectish to a full sha
     #
     # @example
-    #   git.revparse("HEAD^^")
-    #   git.revparse('v2.4^{tree}')
-    #   git.revparse('v2.4:/doc/index.html')
+    #   git.rev_parse("HEAD^^")
+    #   git.rev_parse('v2.4^{tree}')
+    #   git.rev_parse('v2.4:/doc/index.html')
     #
-    def revparse(objectish)
-      self.lib.revparse(objectish)
+    def rev_parse(objectish)
+      self.lib.rev_parse(objectish)
     end
+
+    # For backwards compatibility
+    alias revparse rev_parse
 
     def ls_tree(objectish, opts = {})
       self.lib.ls_tree(objectish, opts)
