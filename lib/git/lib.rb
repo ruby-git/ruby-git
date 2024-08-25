@@ -337,9 +337,21 @@ module Git
     # For backwards compatibility with the old method name
     alias :revparse :rev_parse
 
-    def namerev(string)
-      command('name-rev', string).split[1]
+    # Find the first symbolic name for given commit_ish
+    #
+    # @param commit_ish [String] the commit_ish to find the symbolic name of
+    #
+    # @return [String, nil] the first symbolic name or nil if the commit_ish isn't found
+    #
+    # @raise [ArgumentError] if the commit_ish is a string starting with a hyphen
+    #
+    def name_rev(commit_ish)
+      assert_args_are_not_options('commit_ish', commit_ish)
+
+      command('name-rev', commit_ish).split[1]
     end
+
+    alias :namerev :name_rev
 
     def object_type(sha)
       command('cat-file', '-t', sha)
