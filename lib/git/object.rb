@@ -175,7 +175,7 @@ module Git
       end
 
       def name
-        @base.lib.namerev(sha)
+        @base.lib.name_rev(sha)
       end
 
       def gtree

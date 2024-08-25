@@ -198,6 +198,16 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
+  def test_name_rev
+    assert_equal('tags/v2.5~5', @lib.name_rev('00ea60e'))
+  end
+
+  def test_name_rev_with_invalid_commit_ish
+    assert_raise(ArgumentError) do
+      @lib.name_rev('-1cc8667014381')
+    end
+  end
+
   def test_object_type
     assert_equal('commit', @lib.object_type('1cc8667014381')) # commit
     assert_equal('tree', @lib.object_type('1cc8667014381^{tree}')) #tree
