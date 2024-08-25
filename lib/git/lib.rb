@@ -311,16 +311,31 @@ module Git
       process_commit_log_data(full_log)
     end
 
-    def revparse(string)
-      return string if string =~ /^[A-Fa-f0-9]{40}$/  # passing in a sha - just no-op it
-      rev = ['head', 'remotes', 'tags'].map do |d|
-        File.join(@git_dir, 'refs', d, string)
-      end.find do |path|
-        File.file?(path)
-      end
-      return File.read(rev).chomp if rev
-      command('rev-parse', string)
+    # Verify and resolve a Git revision to its full SHA
+    #
+    # @see https://git-scm.com/docs/git-rev-parse git-rev-parse
+    # @see https://git-scm.com/docs/git-rev-parse#_specifying_revisions Valid ways to specify revisions
+    # @see https://git-scm.com/docs/git-rev-parse#Documentation/git-rev-parse.txt-emltrefnamegtemegemmasterememheadsmasterememrefsheadsmasterem Ref disambiguation rules
+    #
+    # @example
+    #   lib.rev_parse('HEAD') # => '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d'
+    #   lib.rev_parse('9b9b31e') # => '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d'
+    #
+    # @param revision [String] the revision to resolve
+    #
+    # @return [String] the full commit hash
+    #
+    # @raise [Git::FailedError] if the revision cannot be resolved
+    # @raise [ArgumentError] if the revision is a string starting with a hyphen
+    #
+    def rev_parse(revision)
+      assert_args_are_not_options('rev', revision)
+
+      command('rev-parse', revision)
     end
+
+    # For backwards compatibility with the old method name
+    alias :revparse :rev_parse
 
     def namerev(string)
       command('name-rev', string).split[1]

@@ -120,8 +120,8 @@ class TestObject < Test::Unit::TestCase
     assert(block_called)
   end
 
-  def test_revparse
-    sha = @git.revparse('v2.6:example.txt')
+  def test_rev_parse
+    sha = @git.rev_parse('v2.6:example.txt')
     assert_equal('1f09f2edb9c0d9275d15960771b363ca6940fbe3', sha)
   end
 

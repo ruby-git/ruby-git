@@ -160,11 +160,11 @@ class TestBranch < Test::Unit::TestCase
       File.write('foo','rev 2')
       git.add('foo')
       git.commit('rev 2')
-      git.branch('testing').update_ref(git.revparse('HEAD'))
+      git.branch('testing').update_ref(git.rev_parse('HEAD'))
 
       # Expect the call to Branch#update_ref to pass the full ref name for the
       # of the testing branch to Lib#update_ref
-      assert_equal(git.revparse('HEAD'), git.revparse('refs/heads/testing'))
+      assert_equal(git.rev_parse('HEAD'), git.rev_parse('refs/heads/testing'))
     end
   end
 end
