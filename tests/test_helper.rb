@@ -45,7 +45,7 @@ class Test::Unit::TestCase
   def create_temp_repo(clone_name)
     clone_path = File.join(TEST_FIXTURES, clone_name)
     filename = 'git_test' + Time.now.to_i.to_s + rand(300).to_s.rjust(3, '0')
-    path = File.expand_path(File.join("/tmp/", filename))
+    path = File.expand_path(File.join(Dir.tmpdir, filename))
     FileUtils.mkdir_p(path)
     @tmp_path = File.realpath(path)
     FileUtils.cp_r(clone_path, @tmp_path)

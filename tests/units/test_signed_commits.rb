@@ -13,15 +13,22 @@ class TestSignedCommits < Test::Unit::TestCase
   def in_repo_with_signing_config(&block)
     in_temp_dir do |path|
       `git init`
-      `ssh-keygen -t dsa -N "" -C "test key" -f .git/test-key`
+      ssh_key_file = File.expand_path(File.join('.git', 'test-key'))
+      `ssh-keygen -t dsa -N "" -C "test key" -f "#{ssh_key_file}"`
       `git config --local gpg.format ssh`
-      `git config --local user.signingkey .git/test-key`
+      `git config --local user.signingkey #{ssh_key_file}.pub`
+
+      raise "ERROR: No .git/test-key file" unless File.exist?("#{ssh_key_file}.pub")
 
       yield
     end
   end
 
   def test_commit_data
+    # Signed commits should work on windows, but this test is omitted until the setup
+    # on windows can be figured out
+    omit('Omit testing of signed commits on Windows') if windows_platform?
+
     in_repo_with_signing_config do
       create_file('README.md', '# My Project')
       `git add README.md`
