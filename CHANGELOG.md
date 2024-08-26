@@ -5,6 +5,22 @@
 
 # Change Log
 
+## v2.2.0 (2024-08-26)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.1.1..v2.2.0)
+
+Changes since v2.1.1:
+
+* 7292f2c Omit the test for signed commit data on Windows
+* 2d6157c Document this gem's (aspirational) design philosophy
+* d4f66ab Sanitize non-option arguments passed to `git name-rev`
+* 0296442 Refactor Git::Lib#rev_parse
+* 9b9b31e Verify that the revision-range passed to git log does not resemble a command-line option
+* dc46ede Verify that the commit-ish passed to git describe does not resemble a command-line option
+* 00c4939 Verify that the commit(s) passed to git diff do not resemble a command-line option
+* a08f89b Update README
+* 737c4bb ls-tree optional recursion into subtrees
+
 ## v2.1.1 (2024-06-01)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.1.0..v2.1.1)
