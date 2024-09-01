@@ -424,7 +424,7 @@ class TestLib < Test::Unit::TestCase
 
     in_temp_repo('working') do
       # Creeate an annotated tag:
-      `git tag -a annotated_tag -m 'Creating an annotated tag'`
+      `git tag -a annotated_tag -m "Creating an annotated tag"`
 
       git = Git.open('.')
       cat_file_tag = git.lib.cat_file_tag('annotated_tag')
