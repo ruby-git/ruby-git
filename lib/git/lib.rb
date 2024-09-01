@@ -357,12 +357,13 @@ module Git
     #
     # @see https://git-scm.com/docs/git-cat-file git-cat-file
     #
-    # @param object [String] the object whose contents to return
-    # @param opts [Hash] the options for this command
-    # @option opts [Boolean] :tag
-    # @option opts [Boolean] :size
-    # @option opts
+    # @example Get the contents of a file without a block
+    #   lib.cat_file_contents('README.md') # => "This is a README file\n"
     #
+    # @example Get the contents of a file with a block
+    #  lib.cat_file_contents('README.md') { |f| f.read } # => "This is a README file\n"
+    #  
+    # @param object [String] the object whose contents to return
     #
     # @return [String] the object contents
     #

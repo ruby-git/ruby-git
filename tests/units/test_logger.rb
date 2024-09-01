@@ -17,39 +17,40 @@ class TestLogger < Test::Unit::TestCase
   end
 
   def test_logger
-    log = Tempfile.new('logfile')
-    log.close
+    in_temp_dir do |path|
+      log_path = 'logfile.log'
 
-    logger = Logger.new(log.path)
-    logger.level = Logger::DEBUG
+      logger = Logger.new(log_path, level: Logger::DEBUG)
 
-    @git = Git.open(@wdir, :log => logger)
-    @git.branches.size
+      @git = Git.open(@wdir, :log => logger)
+      @git.branches.size
 
-    logc = File.read(log.path)
+      logc = File.read(log_path)
 
-    expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
-    assert_match(expected_log_entry, logc, missing_log_entry)
+      expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
+      assert_match(expected_log_entry, logc, missing_log_entry)
 
-    expected_log_entry = /DEBUG -- : stdout:\n"  cherry/
-    assert_match(expected_log_entry, logc, missing_log_entry)
+      expected_log_entry = /DEBUG -- : stdout:\n"  cherry/
+      assert_match(expected_log_entry, logc, missing_log_entry)
+    end
   end
 
   def test_logging_at_info_level_should_not_show_debug_messages
-    log = Tempfile.new('logfile')
-    log.close
-    logger = Logger.new(log.path)
-    logger.level = Logger::INFO
+    in_temp_dir do |path|
+      log_path = 'logfile.log'
 
-    @git = Git.open(@wdir, :log => logger)
-    @git.branches.size
+      logger = Logger.new(log_path, level: Logger::INFO)
 
-    logc = File.read(log.path)
+      @git = Git.open(@wdir, :log => logger)
+      @git.branches.size
 
-    expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
-    assert_match(expected_log_entry, logc, missing_log_entry)
+      logc = File.read(log_path)
 
-    expected_log_entry = /DEBUG -- : stdout:\n"  cherry/
-    assert_not_match(expected_log_entry, logc, unexpected_log_entry)
+      expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
+      assert_match(expected_log_entry, logc, missing_log_entry)
+
+      expected_log_entry = /DEBUG -- : stdout:\n"  cherry/
+      assert_not_match(expected_log_entry, logc, unexpected_log_entry)
+    end
   end
 end
