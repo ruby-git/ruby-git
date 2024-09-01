@@ -27,7 +27,7 @@ module Git
       end
 
       def size
-        @size ||= @base.lib.object_size(@objectish)
+        @size ||= @base.lib.cat_file_size(@objectish)
       end
 
       # Get the object's contents.
@@ -38,9 +38,9 @@ module Git
       # Use this for large files so that they are not held in memory.
       def contents(&block)
         if block_given?
-          @base.lib.object_contents(@objectish, &block)
+          @base.lib.cat_file_contents(@objectish, &block)
         else
-          @contents ||= @base.lib.object_contents(@objectish)
+          @contents ||= @base.lib.cat_file_contents(@objectish)
         end
       end
 
@@ -237,7 +237,7 @@ module Git
         def check_commit
           return if @tree
 
-          data = @base.lib.commit_data(@objectish)
+          data = @base.lib.cat_file_commit(@objectish)
           set_commit(data)
         end
 
@@ -254,7 +254,7 @@ module Git
       end
 
       def annotated?
-        @annotated ||= (@base.lib.object_type(self.name) == 'tag')
+        @annotated ||= (@base.lib.cat_file_type(self.name) == 'tag')
       end
 
       def message
@@ -279,7 +279,7 @@ module Git
         if !self.annotated?
           @message = @tagger = nil
         else
-          tdata = @base.lib.tag_data(@name)
+          tdata = @base.lib.cat_file_tag(@name)
           @message = tdata['message'].chomp
           @tagger = Git::Author.new(tdata['tagger'])
         end
@@ -300,7 +300,7 @@ module Git
         return Git::Object::Tag.new(base, sha, objectish)
       end
 
-      type ||= base.lib.object_type(objectish)
+      type ||= base.lib.cat_file_type(objectish)
       klass =
         case type
         when /blob/   then Blob

@@ -650,7 +650,7 @@ module Git
     end
 
     def cat_file(objectish)
-      self.lib.object_contents(objectish)
+      self.lib.cat_file(objectish)
     end
 
     # The name of the branch HEAD refers to or 'HEAD' if detached

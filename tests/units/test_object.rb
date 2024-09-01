@@ -62,7 +62,7 @@ class TestObject < Test::Unit::TestCase
     assert_equal('ba492c62b6227d7f3507b4dcc6e6d5f13790eabf', @blob.sha)
   end
 
-  def test_object_size
+  def test_cat_file_size
     assert_equal(265, @commit.size)
     assert_equal(72, @tree.size)
     assert_equal(128, @blob.size)

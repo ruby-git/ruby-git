@@ -24,7 +24,7 @@ class TestSignedCommits < Test::Unit::TestCase
     end
   end
 
-  def test_commit_data
+  def test_cat_file_commit
     # Signed commits should work on windows, but this test is omitted until the setup
     # on windows can be figured out
     omit('Omit testing of signed commits on Windows') if windows_platform?
@@ -34,7 +34,7 @@ class TestSignedCommits < Test::Unit::TestCase
       `git add README.md`
       `git commit -S -m "Signed, sealed, delivered"`
 
-      data = Git.open('.').lib.commit_data('HEAD')
+      data = Git.open('.').lib.cat_file_commit('HEAD')
 
       assert_match(SSH_SIGNATURE_REGEXP, data['gpgsig'])
       assert_equal("Signed, sealed, delivered\n", data['message'])
