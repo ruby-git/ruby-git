@@ -5,6 +5,16 @@
 
 # Change Log
 
+## v2.3.0 (2024-09-01)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.2.0..v2.3.0)
+
+Changes since v2.2.0:
+
+* f8bc987 Fix windows CI build error
+* 471f5a8 Sanatize object ref sent to cat-file command
+* 604a9a2 Make Git::Base#branch work when HEAD is detached
+
 ## v2.2.0 (2024-08-26)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.1.1..v2.2.0)
