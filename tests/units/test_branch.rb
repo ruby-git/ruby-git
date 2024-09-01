@@ -50,6 +50,116 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
+  # Git::Lib#current_branch_state
+
+  test 'Git::Lib#current_branch_state -- empty repository' do
+    in_temp_dir do
+      `git init --initial-branch=my_initial_branch`
+      git = Git.open('.')
+      expected_state = Git::Lib::HeadState.new(:unborn, 'my_initial_branch')
+      assert_equal(expected_state, git.lib.current_branch_state)
+    end
+  end
+
+  test 'Git::Lib#current_branch_state -- new orphan branch' do
+    in_temp_dir do
+      `git init --initial-branch=main`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      `git checkout --orphan orphan_branch 2> #{File::NULL}`
+      git = Git.open('.')
+      expected_state = Git::Lib::HeadState.new(:unborn, 'orphan_branch')
+      assert_equal(expected_state, git.lib.current_branch_state)
+    end
+  end
+
+  test 'Git::Lib#current_branch_state -- active branch' do
+    in_temp_dir do
+      `git init --initial-branch=my_branch`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      git = Git.open('.')
+      expected_state = Git::Lib::HeadState.new(:active, 'my_branch')
+      assert_equal(expected_state, git.lib.current_branch_state)
+    end
+  end
+
+  test 'Git::Lib#current_branch_state -- detached HEAD' do
+    in_temp_dir do
+      `git init --initial-branch=main`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      `echo "update" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "Second commit"`
+      `git checkout HEAD~1 2> #{File::NULL}`
+      git = Git.open('.')
+      expected_state = Git::Lib::HeadState.new(:detached, 'HEAD')
+      assert_equal(expected_state, git.lib.current_branch_state)
+    end
+  end
+
+  # Git::Lib#branch_current
+
+  test 'Git::Lib#branch_current -- active branch' do
+    in_temp_dir do
+      `git init --initial-branch=main`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      git = Git.open('.')
+      assert_equal('main', git.lib.branch_current)
+    end
+  end
+
+  test 'Git::Lib#branch_current -- unborn branch' do
+    in_temp_dir do
+      `git init --initial-branch=new_branch`
+      git = Git.open('.')
+      assert_equal('new_branch', git.lib.branch_current)
+    end
+  end
+
+  test 'Git::Lib#branch_current -- detached HEAD' do
+    in_temp_dir do
+      `git init --initial-branch=main`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      `echo "update" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "Second commit"`
+      `git checkout HEAD~1 2> #{File::NULL}`
+      git = Git.open('.')
+      assert_equal('HEAD', git.lib.branch_current)
+    end
+  end
+
+  # Git::Base#branch
+
+  test 'Git::Base#branch with detached head' do
+    in_temp_dir do
+      `git init`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "Initial commit"`
+      `echo "hello to another world" > file2.txt`
+      `git add file2.txt`
+      `git commit -m "Add another world"`
+      `git checkout HEAD~1 2> #{File::NULL}`
+
+      git = Git.open('.')
+      branch = git.branch
+
+      assert_equal('HEAD', branch.name)
+    end
+  end
+
+  # Git::Base#branchs
+
   test 'Git::Base#branchs with detached head' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
