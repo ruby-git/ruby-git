@@ -591,8 +591,54 @@ module Git
       files
     end
 
+    # The state and name of branch pointed to by `HEAD`
+    #
+    # HEAD can be in the following states:
+    #
+    # **:active**: `HEAD` points to a branch reference which in turn points to a
+    # commit representing the tip of that branch. This is the typical state when
+    # working on a branch.
+    #
+    # **:unborn**: `HEAD` points to a branch reference that does not yet exist
+    # because no commits have been made on that branch. This state occurs in two
+    # scenarios:
+    #
+    # * When a repository is newly initialized, and no commits have been made on the
+    #   initial branch.
+    # * When a new branch is created using `git checkout --orphan <branch>`, starting
+    #   a new branch with no history.
+    #
+    # **:detached**: `HEAD` points directly to a specific commit (identified by its
+    # SHA) rather than a branch reference. This state occurs when you check out a
+    # commit, a tag, or any state that is not directly associated with a branch. The
+    # branch name in this case is `HEAD`.
+    #
+    HeadState = Struct.new(:state, :name)
+
+    # The current branch state which is the state of `HEAD`
+    #
+    # @return [HeadState] the state and name of the current branch
+    #
+    def current_branch_state
+      branch_name = command('branch', '--show-current')
+      return HeadState.new(:detached, 'HEAD') if branch_name.empty?
+
+      state =
+        begin
+          command('rev-parse', '--verify', '--quiet', branch_name)
+          :active
+        rescue Git::FailedError => e
+          raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
+
+          :unborn
+        end
+
+      return HeadState.new(state, branch_name)
+    end
+
     def branch_current
-      branches_all.select { |b| b[1] }.first[0] rescue nil
+      branch_name = command('branch', '--show-current')
+      branch_name.empty? ? 'HEAD' : branch_name
     end
 
     def branch_contains(commit, branch_name="")

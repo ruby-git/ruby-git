@@ -653,7 +653,14 @@ module Git
       self.lib.object_contents(objectish)
     end
 
-    # returns the name of the branch the working directory is currently on
+    # The name of the branch HEAD refers to or 'HEAD' if detached
+    #
+    # Returns one of the following:
+    #   * The branch name that HEAD refers to (even if it is an unborn branch)
+    #   * 'HEAD' if in a detached HEAD state
+    #
+    # @return [String] the name of the branch HEAD refers to or 'HEAD' if detached
+    #
     def current_branch
       self.lib.branch_current
     end
