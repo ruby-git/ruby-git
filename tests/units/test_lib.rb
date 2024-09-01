@@ -24,12 +24,18 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
-  def test_commit_data
-    data = @lib.commit_data('1cc8667014381')
+  def test_cat_file_commit
+    data = @lib.cat_file_commit('1cc8667014381')
     assert_equal('scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800', data['author'])
     assert_equal('94c827875e2cadb8bc8d4cdd900f19aa9e8634c7', data['tree'])
     assert_equal("test\n", data['message'])
     assert_equal(["546bec6f8872efa41d5d97a369f669165ecda0de"], data['parent'])
+  end
+
+  def test_cat_file_commit_with_bad_object
+    assert_raise(ArgumentError) do
+      @lib.cat_file_commit('--all')
+    end
   end
 
   def test_commit_with_date
@@ -40,7 +46,7 @@ class TestLib < Test::Unit::TestCase
 
     @lib.commit('commit with date', date: author_date.strftime('%Y-%m-%dT%H:%M:%S %z'))
 
-    data = @lib.commit_data('HEAD')
+    data = @lib.cat_file_commit('HEAD')
 
     assert_equal("Scott Chacon <schacon@gmail.com> #{author_date.strftime("%s %z")}", data['author'])
   end
@@ -77,7 +83,7 @@ class TestLib < Test::Unit::TestCase
     move_file(pre_commit_path_bak, pre_commit_path)
 
     # Verify the commit was created
-    data = @lib.commit_data('HEAD')
+    data = @lib.cat_file_commit('HEAD')
     assert_equal("commit with no verify and pre-commit file\n", data['message'])
   end
 
@@ -208,45 +214,56 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
-  def test_object_type
-    assert_equal('commit', @lib.object_type('1cc8667014381')) # commit
-    assert_equal('tree', @lib.object_type('1cc8667014381^{tree}')) #tree
-    assert_equal('blob', @lib.object_type('v2.5:example.txt')) #blob
-    assert_equal('commit', @lib.object_type('v2.5'))
+  def test_cat_file_type
+    assert_equal('commit', @lib.cat_file_type('1cc8667014381')) # commit
+    assert_equal('tree', @lib.cat_file_type('1cc8667014381^{tree}')) #tree
+    assert_equal('blob', @lib.cat_file_type('v2.5:example.txt')) #blob
+    assert_equal('commit', @lib.cat_file_type('v2.5'))
   end
 
-  def test_object_size
-    assert_equal(265, @lib.object_size('1cc8667014381')) # commit
-    assert_equal(72, @lib.object_size('1cc8667014381^{tree}')) #tree
-    assert_equal(128, @lib.object_size('v2.5:example.txt')) #blob
-    assert_equal(265, @lib.object_size('v2.5'))
+  def test_cat_file_type_with_bad_object
+    assert_raise(ArgumentError) do
+      @lib.cat_file_type('--batch')
+    end
   end
 
-  def test_object_contents
+  def test_cat_file_size
+    assert_equal(265, @lib.cat_file_size('1cc8667014381')) # commit
+    assert_equal(72, @lib.cat_file_size('1cc8667014381^{tree}')) #tree
+    assert_equal(128, @lib.cat_file_size('v2.5:example.txt')) #blob
+    assert_equal(265, @lib.cat_file_size('v2.5'))
+  end
+
+  def test_cat_file_size_with_bad_object
+    assert_raise(ArgumentError) do
+      @lib.cat_file_size('--batch')
+    end
+  end
+
+  def test_cat_file_contents
     commit =  "tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7\n"
     commit << "parent 546bec6f8872efa41d5d97a369f669165ecda0de\n"
     commit << "author scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
     commit << "committer scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
     commit << "\ntest"
-    assert_equal(commit, @lib.object_contents('1cc8667014381')) # commit
+    assert_equal(commit, @lib.cat_file_contents('1cc8667014381')) # commit
 
     tree =  "040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed\tex_dir\n"
     tree << "100644 blob 3aac4b445017a8fc07502670ec2dbf744213dd48\texample.txt"
-    assert_equal(tree, @lib.object_contents('1cc8667014381^{tree}')) #tree
+    assert_equal(tree, @lib.cat_file_contents('1cc8667014381^{tree}')) #tree
 
     blob = "1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n2"
-    assert_equal(blob, @lib.object_contents('v2.5:example.txt')) #blob
-
+    assert_equal(blob, @lib.cat_file_contents('v2.5:example.txt')) #blob
   end
 
-  def test_object_contents_with_block
+  def test_cat_file_contents_with_block
     commit =  "tree 94c827875e2cadb8bc8d4cdd900f19aa9e8634c7\n"
     commit << "parent 546bec6f8872efa41d5d97a369f669165ecda0de\n"
     commit << "author scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
     commit << "committer scott Chacon <schacon@agadorsparticus.corp.reactrix.com> 1194561188 -0800\n"
     commit << "\ntest"
 
-    @lib.object_contents('1cc8667014381') do |f|
+    @lib.cat_file_contents('1cc8667014381') do |f|
       assert_equal(commit, f.read.chomp)
     end
 
@@ -255,14 +272,20 @@ class TestLib < Test::Unit::TestCase
     tree =  "040000 tree 6b790ddc5eab30f18cabdd0513e8f8dac0d2d3ed\tex_dir\n"
     tree << "100644 blob 3aac4b445017a8fc07502670ec2dbf744213dd48\texample.txt"
 
-    @lib.object_contents('1cc8667014381^{tree}') do |f|
+    @lib.cat_file_contents('1cc8667014381^{tree}') do |f|
       assert_equal(tree, f.read.chomp) #tree
     end
 
     blob = "1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n2"
 
-    @lib.object_contents('v2.5:example.txt') do |f|
+    @lib.cat_file_contents('v2.5:example.txt') do |f|
       assert_equal(blob, f.read.chomp) #blob
+    end
+  end
+
+  def test_cat_file_contents_with_bad_object
+    assert_raise(ArgumentError) do
+      @lib.cat_file_contents('--all')
     end
   end
 
@@ -393,6 +416,32 @@ class TestLib < Test::Unit::TestCase
 
       git = Git.open('.')
       assert_true(git.lib.empty?)
+    end
+  end
+
+  def test_cat_file_tag
+    expected_cat_file_tag_keys = %w[name object type tag tagger message].sort
+
+    in_temp_repo('working') do
+      # Creeate an annotated tag:
+      `git tag -a annotated_tag -m 'Creating an annotated tag'`
+
+      git = Git.open('.')
+      cat_file_tag = git.lib.cat_file_tag('annotated_tag')
+
+      assert_equal(expected_cat_file_tag_keys, cat_file_tag.keys.sort)
+      assert_equal('annotated_tag', cat_file_tag['name'])
+      assert_equal('46abbf07e3c564c723c7c039a43ab3a39e5d02dd', cat_file_tag['object'])
+      assert_equal('commit', cat_file_tag['type'])
+      assert_equal('annotated_tag', cat_file_tag['tag'])
+      assert_match(/^Scott Chacon <schacon@gmail.com> \d+ [+-]\d+$/, cat_file_tag['tagger'])
+      assert_equal("Creating an annotated tag\n", cat_file_tag['message'])
+    end
+  end
+
+  def test_cat_file_tag_with_bad_object
+    assert_raise(ArgumentError) do
+      @lib.cat_file_tag('--all')
     end
   end
 end

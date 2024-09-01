@@ -353,20 +353,103 @@ module Git
 
     alias :namerev :name_rev
 
-    def object_type(sha)
-      command('cat-file', '-t', sha)
+    # Output the contents or other properties of one or more objects.
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
+    # @param object [String] the object whose contents to return
+    # @param opts [Hash] the options for this command
+    # @option opts [Boolean] :tag
+    # @option opts [Boolean] :size
+    # @option opts
+    #
+    #
+    # @return [String] the object contents
+    #
+    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #
+    def cat_file_contents(object, &block)
+      assert_args_are_not_options('object', object)
+
+      if block_given?
+        Tempfile.create do |file|
+          # If a block is given, write the output from the process to a temporary
+          # file and then yield the file to the block
+          #
+          command('cat-file', "-p", object, out: file, err: file)
+          file.rewind
+          yield file
+        end
+      else
+        # If a block is not given, return the file contents as a string
+        command('cat-file', '-p', object)
+      end
     end
 
-    def object_size(sha)
-      command('cat-file', '-s', sha).to_i
+    alias :object_contents :cat_file_contents
+
+    # Get the type for the given object
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
+    # @param object [String] the object to get the type
+    #
+    # @return [String] the object type
+    #
+    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #
+    def cat_file_type(object)
+      assert_args_are_not_options('object', object)
+
+      command('cat-file', '-t', object)
     end
 
-    # returns useful array of raw commit object data
-    def commit_data(sha)
-      sha = sha.to_s
-      cdata = command_lines('cat-file', 'commit', sha)
-      process_commit_data(cdata, sha)
+    alias :object_type :cat_file_type
+
+    # Get the size for the given object
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
+    # @param object [String] the object to get the type
+    #
+    # @return [String] the object type
+    #
+    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #
+    def cat_file_size(object)
+      assert_args_are_not_options('object', object)
+
+      command('cat-file', '-s', object).to_i
     end
+
+    alias :object_size :cat_file_size
+
+    # Return a hash of commit data
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
+    # @param object [String] the object to get the type
+    #
+    # @return [Hash] commit data
+    #
+    # The returned commit data has the following keys:
+    #    * tree [String]
+    #    * parent [Array<String>]
+    #    * author [String] the author name, email, and commit timestamp
+    #    * committer [String] the committer name, email, and merge timestamp
+    #    * message [String] the commit message
+    #    * gpgsig [String] the public signing key of the commit (if signed)
+    #
+    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #
+    def cat_file_commit(object)
+      assert_args_are_not_options('object', object)
+
+      cdata = command_lines('cat-file', 'commit', object)
+      process_commit_data(cdata, object)
+    end
+
+    alias :commit_data :cat_file_commit
 
     def process_commit_data(data, sha)
       hsh = {
@@ -402,11 +485,49 @@ module Git
       end
     end
 
-    def tag_data(name)
-      sha = sha.to_s
-      tdata = command_lines('cat-file', 'tag', name)
-      process_tag_data(tdata, name)
+    # Return a hash of annotated tag data
+    #
+    # Does not work with lightweight tags. List all annotated tags in your repository with the following command:
+    #
+    # ```sh
+    # git for-each-ref --format='%(refname:strip=2)' refs/tags | while read tag; do git cat-file tag $tag >/dev/null 2>&1 && echo $tag; done
+    # ```
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
+    # @param object [String] the tag to retrieve
+    #
+    # @return [Hash] tag data
+    #
+    #   Example tag data returned:
+    #   ```ruby
+    #   {
+    #     "name" => "annotated_tag",
+    #     "object" => "46abbf07e3c564c723c7c039a43ab3a39e5d02dd",
+    #     "type" => "commit",
+    #     "tag" => "annotated_tag",
+    #     "tagger" => "Scott Chacon <schacon@gmail.com> 1724799270 -0700",
+    #     "message" => "Creating an annotated tag\n"
+    #   }
+    #   ```
+    #
+    # The returned commit data has the following keys:
+    #   * object [String] the sha of the tag object
+    #   * type [String]
+    #   * tag [String] tag name
+    #   * tagger [String] the name and email of the user who created the tag and the timestamp of when the tag was created
+    #   * message [String] the tag message
+    #
+    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #
+    def cat_file_tag(object)
+      assert_args_are_not_options('object', object)
+
+      tdata = command_lines('cat-file', 'tag', object)
+      process_tag_data(tdata, object)
     end
+
+    alias :tag_data :cat_file_tag
 
     def process_tag_data(data, name)
       hsh = { 'name' => name }
@@ -459,22 +580,6 @@ module Git
       hsh_array << hsh if hsh
 
       return hsh_array
-    end
-
-    def object_contents(sha, &block)
-      if block_given?
-        Tempfile.create do |file|
-          # If a block is given, write the output from the process to a temporary
-          # file and then yield the file to the block
-          #
-          command('cat-file', "-p", sha, out: file, err: file)
-          file.rewind
-          yield file
-        end
-      else
-        # If a block is not given, return stdout
-        command('cat-file', '-p', sha)
-      end
     end
 
     def ls_tree(sha, opts = {})
