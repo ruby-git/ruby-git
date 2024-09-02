@@ -36,6 +36,20 @@ module Git
       @@config ||= Config.new
     end
 
+    def self.binary_version(binary_path)
+      git_cmd = "#{binary_path} -c core.quotePath=true -c color.ui=false version 2>&1"
+      result, status = Open3.capture2(git_cmd)
+      result = result.chomp
+
+      if status.success?
+        version = result[/\d+(\.\d+)+/]
+        version_parts = version.split('.').collect { |i| i.to_i }
+        version_parts.fill(0, version_parts.length...3)
+      else
+        raise RuntimeError, "Failed to get git version: #{status}\n#{result}"
+      end
+    end
+
     # (see Git.init)
     def self.init(directory = '.', options = {})
       normalize_paths(options, default_working_directory: directory, default_repository: directory, bare: options[:bare])
