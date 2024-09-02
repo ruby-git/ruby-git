@@ -3,6 +3,9 @@
 # @title How To Contribute
 -->
 
+# Contributing to the git gem
+
+* [Summary](#summary)
 * [How to contribute](#how-to-contribute)
 * [How to report an issue or request a feature](#how-to-report-an-issue-or-request-a-feature)
 * [How to submit a code or documentation change](#how-to-submit-a-code-or-documentation-change)
@@ -19,9 +22,9 @@
   * [Continuous integration](#continuous-integration)
   * [Documentation](#documentation)
 * [Licensing](#licensing)
+* [Building a specific version of the git command-line](#building-a-specific-version-of-the-git-command-line)
 
-
-# Contributing to the git gem
+## Summary
 
 Thank you for your interest in contributing to the `ruby-git` project.
 
@@ -172,6 +175,9 @@ $ bin/test test_object test_archive
 
 # run all unit tests:
 $ bin/test
+
+# run unit tests with a different version of the git command line:
+$ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
 ```
 
 ### Continuous integration
@@ -191,3 +197,57 @@ New and updated public-facing features should be documented in the project's [RE
 `ruby-git` uses [the MIT license](https://choosealicense.com/licenses/mit/) as declared in the [LICENSE](LICENSE) file.
 
 Licensing is critical to open-source projects as it ensures the software remains available under the terms desired by the author.
+
+## Building a specific version of the git command-line
+
+For testing, it is helpful to be able to build and use a specific version of the git
+command-line with the git gem.
+
+Instructions to do this can be found on the page [How to install
+Git](https://www.atlassian.com/git/tutorials/install-git) from Atlassian.
+
+I have successfully used the instructions in the section "Build Git from source on OS
+X" on MacOS 15. I have copied the following instructions from the Atlassian page.
+
+1. From your terminal install XCode's Command Line Tools:
+
+   ```shell
+   xcode-select --install
+   ```
+
+2. Install [Homebrew](http://brew.sh/)
+
+3. Using Homebrew, install openssl:
+
+   ```shell
+   brew install openssl
+   ```
+
+4. Download the source tarball for the desired version from
+   [here](https://mirrors.edge.kernel.org/pub/software/scm/git/) and extract it
+
+5. Build Git run make with the following command:
+
+   ```shell
+   NO_GETTEXT=1 make CFLAGS="-I/usr/local/opt/openssl/include" LDFLAGS="-L/usr/local/opt/openssl/lib"
+   ```
+
+6. The newly built git command will be found at `bin-wrappers/git`
+
+7. Use the new git command-line version
+
+   Configure the git gem to use the newly built version:
+
+   ```ruby
+   require 'git'
+   # set the binary path
+   Git.configure { |config| config.binary_path = '/Users/james/Downloads/git-2.30.2/bin-wrappers/git' }
+   # validate the version
+   assert_equal([2, 30, 2], Git.binary_version)
+   ```
+
+   or run tests using the newly built version:
+
+   ```shell
+   GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
+   ```

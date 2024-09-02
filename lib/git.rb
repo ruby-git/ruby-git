@@ -381,4 +381,15 @@ module Git
   def self.open(working_dir, options = {})
     Base.open(working_dir, options)
   end
+
+  # Return the version of the git binary
+  #
+  # @example
+  #  Git.binary_version # => [2, 46, 0]
+  #
+  # @return [Array<Integer>] the version of the git binary
+  #
+  def self.binary_version(binary_path = Git::Base.config.binary_path)
+    Base.binary_version(binary_path)
+  end
 end
