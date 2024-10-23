@@ -5,6 +5,20 @@
 
 # Change Log
 
+## v2.3.1 (2024-10-23)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.0..v2.3.1)
+
+Changes since v2.3.0:
+
+* e236007 test: allow bin/test-in-docker to accept the test file(s) to run on command line
+* f4747e1 test: rename bin/tests to bin/test-in-docker
+* 51f781c test: remove duplicate test from test_stashes.rb
+* 2e79dbe Fixed "unbranched" stash message support:
+* da6fa6e Conatinerised the test suite with Docker:
+* 2e23d47 Update instructions for building a specific version of Git
+* 70565e3 Add Git.binary_version to return the version of the git command line
+
 ## v2.3.0 (2024-09-01)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.2.0..v2.3.0)
