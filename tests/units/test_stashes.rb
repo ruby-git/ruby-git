@@ -26,24 +26,6 @@ class TestStashes < Test::Unit::TestCase
     end
   end
 
-  def test_stashes_all
-    in_bare_repo_clone do |g|
-      assert_equal(0, g.branch.stashes.size)
-      new_file('test-file1', 'blahblahblah1')
-      new_file('test-file2', 'blahblahblah2')
-      assert(g.status.untracked.assoc('test-file1'))
-
-      g.add
-
-      assert(g.status.added.assoc('test-file1'))
-
-      g.branch.stashes.save('testing-stash-all')
-
-      stashes = g.branch.stashes.all
-
-      assert(stashes[0].include?('testing-stash-all'))
-    end
-  end
   test 'Git::Lib#stashes_all' do
     in_bare_repo_clone do |g|
       assert_equal(0, g.branch.stashes.size)
