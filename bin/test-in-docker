@@ -1,5 +1,11 @@
 #!/bin/bash -e
-test "$#" -ne 0 && echo "Unsupported args: $@" >&2 && exit 145
+
+# This script is used to run the tests for this project in a Docker container.
+#
+# bin/test-in-docker [test_file_name ...]
+#
+# If no test file names are provided, all tests in the `tests/units` directory will be run.
+
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
 export COMPOSE_FILE=tests/docker-compose.yml
@@ -8,4 +14,4 @@ export COMPOSE_PROJECT_NAME=ruby-git_dev
 docker-compose rm -svf
 docker-compose build --force-rm
 
-docker-compose run --rm tester && docker-compose rm -svf || ( docker-compose logs && exit 1 )
+docker-compose run --rm tester "$@" && docker-compose rm -svf || ( docker-compose logs && exit 1 )

@@ -9,5 +9,4 @@ RUN bundle install
 
 ADD . .
 
-ENTRYPOINT ["bundle", "exec"]
-CMD ["bin/test"]
+ENTRYPOINT ["bundle", "exec", "bin/test"]
