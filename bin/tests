@@ -1,0 +1,11 @@
+#!/bin/bash -e
+test "$#" -ne 0 && echo "Unsupported args: $@" >&2 && exit 145
+cd "$( dirname "${BASH_SOURCE[0]}" )"/..
+
+export COMPOSE_FILE=tests/docker-compose.yml
+export COMPOSE_PROJECT_NAME=ruby-git_dev
+
+docker-compose rm -svf
+docker-compose build --force-rm
+
+docker-compose run --rm tester && docker-compose rm -svf || ( docker-compose logs && exit 1 )
