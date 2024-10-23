@@ -1134,8 +1134,10 @@ module Git
       if File.exist?(filename)
         File.open(filename) do |f|
           f.each_with_index do |line, i|
-            m = line.match(/:(.*)$/)
-            arr << [i, m[1].strip]
+            _, msg = line.split("\t")
+            # NOTE this logic may be removed/changed in 3.x
+            m = msg.match(/^[^:]+:(.*)$/)
+            arr << [i, (m ? m[1] : msg).strip]
           end
         end
       end
