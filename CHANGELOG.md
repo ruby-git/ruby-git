@@ -5,6 +5,14 @@
 
 # Change Log
 
+## v2.3.2 (2024-11-19)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.1..v2.3.2)
+
+Changes since v2.3.1:
+
+* 7646e38 fix: improve error message for Git::Lib#branches_all
+
 ## v2.3.1 (2024-10-23)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.0..v2.3.1)
