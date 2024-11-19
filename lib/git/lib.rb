@@ -362,7 +362,7 @@ module Git
     #
     # @example Get the contents of a file with a block
     #  lib.cat_file_contents('README.md') { |f| f.read } # => "This is a README file\n"
-    #  
+    #
     # @param object [String] the object whose contents to return
     #
     # @return [String] the object contents
@@ -641,10 +641,13 @@ module Git
     /x
 
     def branches_all
-      command_lines('branch', '-a').map do |line|
+      lines = command_lines('branch', '-a')
+      lines.each_with_index.map do |line, line_index|
         match_data = line.match(BRANCH_LINE_REGEXP)
-        raise Git::UnexpectedResultError, 'Unexpected branch line format' unless match_data
+
+        raise Git::UnexpectedResultError, unexpected_branch_line_error(lines, line, line_index) unless match_data
         next nil if match_data[:not_a_branch] || match_data[:detached_ref]
+
         [
           match_data[:refname],
           !match_data[:current].nil?,
@@ -652,6 +655,18 @@ module Git
           match_data[:symref]
         ]
       end.compact
+    end
+
+    def unexpected_branch_line_error(lines, line, index)
+      <<~ERROR
+        Unexpected line in output from `git branch -a`, line #{index + 1}
+
+        Full output:
+          #{lines.join("\n  ")}
+
+        Line #{index + 1}:
+          "#{line}"
+      ERROR
     end
 
     def worktrees_all
