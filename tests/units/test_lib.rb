@@ -299,6 +299,39 @@ class TestLib < Test::Unit::TestCase
     assert(branches.select { |b| /master/.match(b[0]) }.size > 0)  # has a master branch
   end
 
+  test 'Git::Lib#branches_all with unexpected output from git branches -a' do
+    # Mock command lines to return unexpected branch data
+    def @lib.command_lines(*_command)
+      <<~COMMAND_LINES.split("\n")
+        * (HEAD detached at origin/master)
+          this line should result in a Git::UnexpectedResultError
+          master
+          remotes/origin/HEAD -> origin/master
+          remotes/origin/master
+      COMMAND_LINES
+    end
+
+    begin
+      branches = @lib.branches_all
+    rescue Git::UnexpectedResultError => e
+      assert_equal(<<~MESSAGE, e.message)
+        Unexpected line in output from `git branch -a`, line 2
+
+        Full output:
+          * (HEAD detached at origin/master)
+            this line should result in a Git::UnexpectedResultError
+            master
+            remotes/origin/HEAD -> origin/master
+            remotes/origin/master
+
+        Line 2:
+          "  this line should result in a Git::UnexpectedResultError"
+      MESSAGE
+    else
+      raise RuntimeError, 'Expected Git::UnexpectedResultError'
+    end
+  end
+
   def test_config_remote
     config = @lib.config_remote('working')
     assert_equal('../working.git', config['url'])
