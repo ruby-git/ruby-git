@@ -162,4 +162,59 @@ class Test::Unit::TestCase
     win_platform_regex = /mingw|mswin/
     RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
   end
+
+  require 'delegate'
+
+  # A wrapper around a ProcessExecuter::Status that also includes command output
+  # @api public
+  class CommandResult < SimpleDelegator
+    # Create a new CommandResult
+    # @example
+    #   status = ProcessExecuter.spawn(*command, timeout:, out:, err:)
+    #   CommandResult.new(status, out_buffer.string, err_buffer.string)
+    # @param status [ProcessExecuter::Status] The status of the process
+    # @param out [String] The standard output of the process
+    # @param err [String] The standard error of the process
+    def initialize(status, out, err)
+      super(status)
+      @out = out
+      @err = err
+    end
+
+    # @return [String] The stdout output of the process
+    attr_reader :out
+
+    # @return [String] The stderr output of the process
+    attr_reader :err
+  end
+
+  # Run a command and return the status including stdout and stderr output
+  #
+  # @example
+  #   command = %w[git status]
+  #   status = run(command)
+  #   status.success? # => true
+  #   status.exitstatus # => 0
+  #   status.out # => "On branch master\nnothing to commit, working tree clean\n"
+  #   status.err # => ""
+  #
+  # @param command [Array<String>] The command to run
+  # @param timeout [Numeric, nil] Seconds to allow command to run before killing it or nil for no timeout
+  # @param raise_errors [Boolean] Raise an exception if the command fails
+  # @param error_message [String] The message to use when raising an exception
+  #
+  # @return [CommandResult] The result of running
+  #
+  def run_command(*command, timeout: nil, raise_errors: true, error_message: "#{command[0]} failed")
+    out_buffer = StringIO.new
+    out = ProcessExecuter::MonitoredPipe.new(out_buffer)
+    err_buffer = StringIO.new
+    err = ProcessExecuter::MonitoredPipe.new(err_buffer)
+
+    status = ProcessExecuter.spawn(*command, timeout: timeout, out: out, err: err)
+
+    raise "#{error_message}: #{err_buffer.string}" if raise_errors && !status.success?
+
+    CommandResult.new(status, out_buffer.string, err_buffer.string)
+  end
 end

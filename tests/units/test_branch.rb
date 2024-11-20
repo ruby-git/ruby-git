@@ -50,6 +50,26 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
+  test 'Git::Base#branches when checked out branch is a remote branch' do
+    in_temp_dir do
+      Dir.mkdir('remote_git')
+      Dir.chdir('remote_git') do
+        run_command 'git', 'init', '--initial-branch=main'
+        File.write('file1.txt', 'This is file1')
+        run_command 'git', 'add', 'file1.txt'
+        run_command 'git', 'commit', '-m', 'Add file1.txt'
+      end
+
+      run_command 'git', 'clone', File.join('remote_git', '.git'), 'local_git'
+
+      Dir.chdir('local_git') do
+        run_command 'git', 'checkout', 'origin/main'
+        git = Git.open('.')
+        assert_nothing_raised { git.branches }
+      end
+    end
+  end
+
   # Git::Lib#current_branch_state
 
   test 'Git::Lib#current_branch_state -- empty repository' do
