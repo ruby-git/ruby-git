@@ -87,6 +87,8 @@ module Git
       result = working_dir
       status = nil
 
+      raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
+
       begin
         result, status = Open3.capture2e(Git::Base.config.binary_path, "-c", "core.quotePath=true", "-c", "color.ui=false", "rev-parse", "--show-toplevel", chdir: File.expand_path(working_dir))
         result = result.chomp

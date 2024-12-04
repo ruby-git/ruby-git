@@ -218,3 +218,56 @@ class Test::Unit::TestCase
     CommandResult.new(status, out_buffer.string, err_buffer.string)
   end
 end
+
+# Replace the default git binary with the given script
+#
+# This method creates a temporary directory and writes the given script to a file
+# named `git` in a subdirectory named `bin`. This subdirectory name can be changed by
+# passing a different value for the `subdir` parameter.
+#
+# On non-windows platforms, make sure the script starts with a hash bang. On windows,
+# make sure the script has a `.bat` extension.
+#
+# On non-windows platforms, the script is made executable.
+#
+# `Git::Base.config.binary_path` set to the path to the script.
+#
+# The block is called passing the path to the mocked git binary.
+#
+# `Git::Base.config.binary_path` is reset to its original value after the block
+# returns.
+#
+# @example mocked_git_script = <<~GIT_SCRIPT #!/bin/sh puts 'git version 1.2.3'
+#   GIT_SCRIPT
+#
+#   mock_git_binary(mocked_git_script) do
+#     # Run Git commands here -- they will call the mocked git script
+#   end
+#
+# @param script [String] The bash script to run instead of the real git binary
+#
+# @param subdir [String] The subdirectory to place the mocked git binary in
+#
+# @yield Call the block while the git binary is mocked
+#
+# @yieldparam git_binary_path [String] The path to the mocked git binary
+#
+# @yieldreturn [void] the return value of the block is ignored
+#
+# @return [void]
+#
+def mock_git_binary(script, subdir: 'bin')
+  Dir.mktmpdir do |binary_dir|
+    binary_name = windows_platform? ? 'git.bat' : 'git'
+    git_binary_path = File.join(binary_dir, subdir, binary_name)
+    FileUtils.mkdir_p(File.dirname(git_binary_path))
+    File.write(git_binary_path, script)
+    File.chmod(0755, git_binary_path) unless windows_platform?
+    saved_binary_path = Git::Base.config.binary_path
+    Git::Base.config.binary_path = git_binary_path
+
+    yield git_binary_path
+
+    Git::Base.config.binary_path = saved_binary_path
+  end
+end
