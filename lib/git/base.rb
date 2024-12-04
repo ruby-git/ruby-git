@@ -37,9 +37,15 @@ module Git
     end
 
     def self.binary_version(binary_path)
-      git_cmd = "#{binary_path} -c core.quotePath=true -c color.ui=false version 2>&1"
-      result, status = Open3.capture2(git_cmd)
-      result = result.chomp
+      result = nil
+      status = nil
+
+      begin
+        result, status = Open3.capture2e(binary_path, "-c", "core.quotePath=true", "-c", "color.ui=false", "version")
+        result = result.chomp
+      rescue Errno::ENOENT
+        raise RuntimeError, "Failed to get git version: #{binary_path} not found"
+      end
 
       if status.success?
         version = result[/\d+(\.\d+)+/]
@@ -81,9 +87,12 @@ module Git
       result = working_dir
       status = nil
 
-      git_cmd = "#{Git::Base.config.binary_path} -c core.quotePath=true -c color.ui=false rev-parse --show-toplevel 2>&1"
-      result, status = Open3.capture2(git_cmd, chdir: File.expand_path(working_dir))
-      result = result.chomp
+      begin
+        result, status = Open3.capture2e(Git::Base.config.binary_path, "-c", "core.quotePath=true", "-c", "color.ui=false", "rev-parse", "--show-toplevel", chdir: File.expand_path(working_dir))
+        result = result.chomp
+      rescue Errno::ENOENT
+        raise ArgumentError, "Failed to find the root of the worktree: git binary not found"
+      end
 
       raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
       result
