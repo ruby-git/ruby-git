@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
   # The status class gets the status of a git repository
   #
@@ -100,7 +102,7 @@ module Git
     end
 
     def pretty
-      out = ''
+      out = +''
       each do |file|
         out << pretty_file(file)
       end

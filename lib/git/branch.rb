@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'git/path'
 
 module Git

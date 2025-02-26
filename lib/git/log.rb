@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
 
   # Return the last n commits that match the specified criteria
