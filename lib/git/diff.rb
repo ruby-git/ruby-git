@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Git
 
   # object that holds the last X commits on given branch

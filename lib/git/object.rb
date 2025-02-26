@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'git/author'
 require 'git/diff'
 require 'git/errors'

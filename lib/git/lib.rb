@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'git/command_line'
 require 'git/errors'
 require 'logger'
@@ -570,7 +572,7 @@ module Git
         case key
           when 'commit'
             hsh_array << hsh if hsh
-            hsh = {'sha' => value, 'message' => '', 'parent' => []}
+            hsh = {'sha' => value, 'message' => +'', 'parent' => []}
           when 'parent'
             hsh['parent'] << value
           else
