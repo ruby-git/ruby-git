@@ -5,6 +5,18 @@
 
 # Change Log
 
+## v3.0.0 (2025-02-27)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.3..v3.0.0)
+
+Changes since v2.3.3:
+
+* 534fcf5 chore: use ProcessExecuter.run instead of the implementing it in this gem
+* 629f3b6 feat: update dependenices
+* 501d135 feat: add support for Ruby 3.4 and drop support for Ruby 3.0
+* 38c0eb5 build: update the CI build to use current versions to TruffleRuby and JRuby
+* d3f3a9d chore: add frozen_string_literal: true magic comment
+
 ## v2.3.3 (2024-12-04)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.2..v2.3.3)
