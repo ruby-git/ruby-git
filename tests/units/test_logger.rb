@@ -28,7 +28,7 @@ class TestLogger < Test::Unit::TestCase
 
       logc = File.read(log_path)
 
-      expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
+      expected_log_entry = /INFO -- : \[\{[^}]+}, "git", "(?<global_options>.*?)", "branch", "-a"/
       assert_match(expected_log_entry, logc, missing_log_entry)
 
       expected_log_entry = /DEBUG -- : stdout:\n"  cherry/
@@ -47,7 +47,7 @@ class TestLogger < Test::Unit::TestCase
 
       logc = File.read(log_path)
 
-      expected_log_entry = /INFO -- : \["git", "(?<global_options>.*?)", "branch", "-a"/
+      expected_log_entry = /INFO -- : \[\{[^}]+}, "git", "(?<global_options>.*?)", "branch", "-a"/
       assert_match(expected_log_entry, logc, missing_log_entry)
 
       expected_log_entry = /DEBUG -- : stdout:\n"  cherry/

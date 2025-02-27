@@ -94,10 +94,10 @@ class TestCommamndLine < Test::Unit::TestCase
     args = ['--stdout=stdout output', '--stderr=stderr output']
     result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
 
-    assert_equal(['ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'], result.git_cmd)
+    assert_equal([{}, 'ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'], result.git_cmd)
     assert_equal('stdout output', result.stdout.chomp)
     assert_equal('stderr output', result.stderr.chomp)
-    assert(result.status.is_a? ProcessExecuter::Status)
+    assert(result.status.is_a? ProcessExecuter::Command::Result)
     assert_equal(0, result.status.exitstatus)
   end
 
@@ -111,7 +111,7 @@ class TestCommamndLine < Test::Unit::TestCase
     # The error raised should include the result of the command
     result = error.result
 
-    assert_equal(['ruby', 'bin/command_line_test', '--exitstatus=1', '--stdout=O1', '--stderr=O2'], result.git_cmd)
+    assert_equal([{}, 'ruby', 'bin/command_line_test', '--exitstatus=1', '--stdout=O1', '--stderr=O2'], result.git_cmd)
     assert_equal('O1', result.stdout.chomp)
     assert_equal('O2', result.stderr.chomp)
     assert_equal(1, result.status.exitstatus)
@@ -130,7 +130,7 @@ class TestCommamndLine < Test::Unit::TestCase
       # The error raised should include the result of the command
       result = error.result
 
-      assert_equal(['ruby', 'bin/command_line_test', '--signal=9', '--stdout=O1', '--stderr=O2'], result.git_cmd)
+      assert_equal([{}, 'ruby', 'bin/command_line_test', '--signal=9', '--stdout=O1', '--stderr=O2'], result.git_cmd)
       # If stdout is buffered, it may not be flushed when the process is killed
       # assert_equal('O1', result.stdout.chomp)
       assert_equal('O2', result.stderr.chomp)
@@ -149,14 +149,7 @@ class TestCommamndLine < Test::Unit::TestCase
 
   test "run should normalize output if normalize is true" do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
-    args = ['--stdout=stdout output']
-
-    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
-      out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
-      `true`
-      ProcessExecuter::Status.new($?, false, nil) # return status
-    end
-
+    args = ['--stdout-file=tests/files/encoding/test1.txt']
     normalize = true
     result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
 
@@ -167,28 +160,22 @@ class TestCommamndLine < Test::Unit::TestCase
       Φεθγιατ θρβανιτασ ρεπριμιqθε
     OUTPUT
 
-    assert_equal(expected_output, result.stdout)
+    assert_equal(expected_output, result.stdout.delete("\r"))
   end
 
   test "run should NOT normalize output if normalize is false" do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
-    args = ['--stdout=stdout output']
-
-    def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
-      out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
-      `true`
-      ProcessExecuter::Status.new($?, false, nil) # return status
-    end
-
+    args = ['--stdout-file=tests/files/encoding/test1.txt']
     normalize = false
     result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
 
-    expected_output = <<~OUTPUT
-      \xCB\xEF\xF1\xE5\xEC \xE9\xF0\xF3\xE8\xEC \xE4\xEF\xEB\xEF\xF1 \xF3\xE9\xF4
-      \xC7\xE9\xF3 \xE5\xEE \xF4\xEF\xF4\xE1 \xF3\xE8\xE1v\xE9\xF4\xE1\xF4\xE5
-      \xCD\xEF \xE8\xF1\xE2\xE1\xED\xE9\xF4\xE1\xF3
-      \xD6\xE5\xE8\xE3\xE9\xE1\xF4 \xE8\xF1\xE2\xE1\xED\xE9\xF4\xE1\xF3 \xF1\xE5\xF0\xF1\xE9\xEC\xE9q\xE8\xE5
-    OUTPUT
+    eol = RUBY_PLATFORM =~ /mswin|mingw/ ? "\r\n" : "\n"
+
+    expected_output =
+      "\xCB\xEF\xF1\xE5\xEC \xE9\xF0\xF3\xE8\xEC \xE4\xEF\xEB\xEF\xF1 \xF3\xE9\xF4#{eol}" \
+      "\xC7\xE9\xF3 \xE5\xEE \xF4\xEF\xF4\xE1 \xF3\xE8\xE1v\xE9\xF4\xE1\xF4\xE5#{eol}" \
+      "\xCD\xEF \xE8\xF1\xE2\xE1\xED\xE9\xF4\xE1\xF3#{eol}" \
+      "\xD6\xE5\xE8\xE3\xE9\xE1\xF4 \xE8\xF1\xE2\xE1\xED\xE9\xF4\xE1\xF3 \xF1\xE5\xF0\xF1\xE9\xEC\xE9q\xE8\xE5#{eol}"
 
     assert_equal(expected_output, result.stdout)
   end

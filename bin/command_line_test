@@ -91,7 +91,8 @@ class CommandLineParser
     option_parser.separator ''
     option_parser.separator 'Options:'
     %i[
-      define_help_option define_stdout_option define_stderr_option
+      define_help_option define_stdout_option define_stdout_file_option
+      define_stderr_option define_stderr_file_option
       define_exitstatus_option define_signal_option define_duration_option
     ].each { |m| send(m) }
   end
@@ -116,12 +117,30 @@ class CommandLineParser
     end
   end
 
+  # Define the stdout-file option
+  # @return [void]
+  # @api private
+  def define_stdout_file_option
+    option_parser.on('--stdout-file="file"', 'Send contents of file to stdout') do |filename|
+      @stdout = File.read(filename)
+    end
+  end
+
   # Define the stderr option
   # @return [void]
   # @api private
   def define_stderr_option
     option_parser.on('--stderr="string to stderr"', 'A string to send to stderr') do |string|
       @stderr = string
+    end
+  end
+
+  # Define the stderr-file option
+  # @return [void]
+  # @api private
+  def define_stderr_file_option
+    option_parser.on('--stderr-file="file"', 'Send contents of file to stderr') do |filename|
+      @stderr = File.read(filename)
     end
   end
 

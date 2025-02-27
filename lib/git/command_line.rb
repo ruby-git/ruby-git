@@ -189,13 +189,14 @@ module Git
     #
     # @raise [Git::TimeoutError] if the command times out
     #
-    def run(*args, out:, err:, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
+    def run(*args, out: nil, err: nil, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
       git_cmd = build_git_cmd(args)
-      out ||= StringIO.new
-      err ||= (merge ? out : StringIO.new)
-      status = execute(git_cmd, out, err, chdir: (chdir || :not_set), timeout: timeout)
-
-      process_result(git_cmd, status, out, err, normalize, chomp, timeout)
+      begin
+        result = ProcessExecuter.run(env, *git_cmd, out: out, err: err, merge:, chdir: (chdir || :not_set), timeout: timeout, raise_errors: false)
+      rescue ProcessExecuter::Command::ProcessIOError => e
+        raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
+      end
+      process_result(result, normalize, chomp, timeout)
     end
 
     private
@@ -210,121 +211,12 @@ module Git
       [binary_path, *global_opts, *args].map { |e| e.to_s }
     end
 
-    # Determine the output to return in the `CommandLineResult`
-    #
-    # If the writer can return the output by calling `#string` (such as a StringIO),
-    # then return the result of normalizing the encoding and chomping the output
-    # as requested.
-    #
-    # If the writer does not support `#string`, then return nil. The output is
-    # assumed to be collected by the writer itself such as when the  writer
-    # is a file instead of a StringIO.
-    #
-    # @param writer [#string] the writer to post-process
-    #
-    # @return [String, nil]
-    #
-    # @api private
-    #
-    def post_process(writer, normalize, chomp)
-      if writer.respond_to?(:string)
-        output = writer.string.dup
-        output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
-        output.chomp! if chomp
-        output
-      else
-        nil
-      end
-    end
-
-    # Post-process all writers and return an array of the results
-    #
-    # @param writers [Array<#write>] the writers to post-process
-    # @param normalize [Boolean] whether to normalize the output of each writer
-    # @param chomp [Boolean] whether to chomp the output of each writer
-    #
-    # @return [Array<String, nil>] the output of each writer that supports `#string`
-    #
-    # @api private
-    #
-    def post_process_all(writers, normalize, chomp)
-      Array.new.tap do |result|
-        writers.each { |writer| result << post_process(writer, normalize, chomp) }
-      end
-    end
-
-    # Raise an error when there was exception while collecting the subprocess output
-    #
-    # @param git_cmd [Array<String>] the git command that was executed
-    # @param pipe_name [Symbol] the name of the pipe that raised the exception
-    # @param pipe [ProcessExecuter::MonitoredPipe] the pipe that raised the exception
-    #
-    # @raise [Git::ProcessIOError]
-    #
-    # @return [void] this method always raises an error
-    #
-    # @api private
-    #
-    def raise_pipe_error(git_cmd, pipe_name, pipe)
-      raise Git::ProcessIOError.new("Pipe Exception for #{git_cmd}: #{pipe_name}"), cause: pipe.exception
-    end
-
-    # Execute the git command and collect the output
-    #
-    # @param cmd [Array<String>] the git command to execute
-    # @param chdir [String] the directory to run the command in
-    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
-    #
-    #   If timeout is zero of nil, the command will not time out. If the command
-    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
-    #
-    #   If the command does not respond to SIGKILL, it will hang this method.
-    #
-    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
-    # @raise [Git::TimeoutError] if the command times out
-    #
-    # @return [ProcessExecuter::Status] the status of the completed subprocess
-    #
-    # @api private
-    #
-    def spawn(cmd, out_writers, err_writers, chdir:, timeout:)
-      out_pipe = ProcessExecuter::MonitoredPipe.new(*out_writers, chunk_size: 10_000)
-      err_pipe = ProcessExecuter::MonitoredPipe.new(*err_writers, chunk_size: 10_000)
-      ProcessExecuter.spawn(env, *cmd, out: out_pipe, err: err_pipe, chdir: chdir, timeout: timeout)
-    ensure
-      out_pipe.close
-      err_pipe.close
-      raise_pipe_error(cmd, :stdout, out_pipe) if out_pipe.exception
-      raise_pipe_error(cmd, :stderr, err_pipe) if err_pipe.exception
-    end
-
-    # The writers that will be used to collect stdout and stderr
-    #
-    # Additional writers could be added here if you wanted to tee output
-    # or send output to the terminal.
-    #
-    # @param out [#write] the object to write stdout to
-    # @param err [#write] the object to write stderr to
-    #
-    # @return [Array<Array<#write>, Array<#write>>] the writers for stdout and stderr
-    #
-    # @api private
-    #
-    def writers(out, err)
-      out_writers = [out]
-      err_writers = [err]
-      [out_writers, err_writers]
-    end
-
     # Process the result of the command and return a Git::CommandLineResult
     #
     # Post process output, log the command and result, and raise an error if the
     # command failed.
     #
-    # @param git_cmd [Array<String>] the git command that was executed
-    # @param status [Process::Status] the status of the completed subprocess
-    # @param out [#write] the object that stdout was written to
-    # @param err [#write] the object that stderr was written to
+    # @param result [ProcessExecuter::Command::Result] the result it is a Process::Status and include command, stdout, and stderr
     # @param normalize [Boolean] whether to normalize the output of each writer
     # @param chomp [Boolean] whether to chomp the output of each writer
     # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
@@ -338,40 +230,58 @@ module Git
     #
     # @api private
     #
-    def process_result(git_cmd, status, out, err, normalize, chomp, timeout)
-      out_str, err_str = post_process_all([out, err], normalize, chomp)
-      logger.info { "#{git_cmd} exited with status #{status}" }
-      logger.debug { "stdout:\n#{out_str.inspect}\nstderr:\n#{err_str.inspect}" }
-      Git::CommandLineResult.new(git_cmd, status, out_str, err_str).tap do |result|
-        raise Git::TimeoutError.new(result, timeout) if status.timeout?
-        raise Git::SignaledError.new(result) if status.signaled?
-        raise Git::FailedError.new(result) unless status.success?
+    def process_result(result, normalize, chomp, timeout)
+      command = result.command
+      processed_out, processed_err = post_process_all([result.stdout, result.stderr], normalize, chomp)
+      logger.info { "#{command} exited with status #{result}" }
+      logger.debug { "stdout:\n#{processed_out.inspect}\nstderr:\n#{processed_err.inspect}" }
+      Git::CommandLineResult.new(command, result, processed_out, processed_err).tap do |processed_result|
+        raise Git::TimeoutError.new(processed_result, timeout) if result.timeout?
+        raise Git::SignaledError.new(processed_result) if result.signaled?
+        raise Git::FailedError.new(processed_result) unless result.success?
       end
     end
 
-    # Execute the git command and write the command output to out and err
+    # Post-process command output and return an array of the results
     #
-    # @param git_cmd [Array<String>] the git command to execute
-    # @param out [#write] the object to write stdout to
-    # @param err [#write] the object to write stderr to
-    # @param chdir [String] the directory to run the command in
-    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    # @param raw_outputs [Array] the output to post-process
+    # @param normalize [Boolean] whether to normalize the output of each writer
+    # @param chomp [Boolean] whether to chomp the output of each writer
     #
-    #   If timeout is zero of nil, the command will not time out. If the command
-    #   times out, it is killed via a SIGKILL signal and `Git::TimeoutError` is raised.
-    #
-    #   If the command does not respond to SIGKILL, it will hang this method.
-    #
-    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
-    # @raise [Git::TimeoutError] if the command times out
-    #
-    # @return [Git::CommandLineResult] the result of the command to return to the caller
+    # @return [Array<String, nil>] the processed output of each command output object that supports `#string`
     #
     # @api private
     #
-    def execute(git_cmd, out, err, chdir:, timeout:)
-      out_writers, err_writers = writers(out, err)
-      spawn(git_cmd, out_writers, err_writers, chdir: chdir, timeout: timeout)
+    def post_process_all(raw_outputs, normalize, chomp)
+      Array.new.tap do |result|
+        raw_outputs.each { |raw_output| result << post_process(raw_output, normalize, chomp) }
+      end
+    end
+
+    # Determine the output to return in the `CommandLineResult`
+    #
+    # If the writer can return the output by calling `#string` (such as a StringIO),
+    # then return the result of normalizing the encoding and chomping the output
+    # as requested.
+    #
+    # If the writer does not support `#string`, then return nil. The output is
+    # assumed to be collected by the writer itself such as when the  writer
+    # is a file instead of a StringIO.
+    #
+    # @param raw_output [#string] the output to post-process
+    # @return [String, nil]
+    #
+    # @api private
+    #
+    def post_process(raw_output, normalize, chomp)
+      if raw_output.respond_to?(:string)
+        output = raw_output.string.dup
+        output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
+        output.chomp! if chomp
+        output
+      else
+        nil
+      end
     end
   end
 end
