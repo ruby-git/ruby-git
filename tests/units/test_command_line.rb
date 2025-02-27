@@ -154,7 +154,7 @@ class TestCommamndLine < Test::Unit::TestCase
     def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
       out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
       `true`
-      ProcessExecuter::Status.new($?, false) # return status
+      ProcessExecuter::Status.new($?, false, nil) # return status
     end
 
     normalize = true
@@ -177,7 +177,7 @@ class TestCommamndLine < Test::Unit::TestCase
     def command_line.spawn(cmd, out_writers, err_writers, chdir: nil, timeout: nil)
       out_writers.each { |w| w.write(File.read('tests/files/encoding/test1.txt')) }
       `true`
-      ProcessExecuter::Status.new($?, false) # return status
+      ProcessExecuter::Status.new($?, false, nil) # return status
     end
 
     normalize = false
