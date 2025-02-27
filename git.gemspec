@@ -29,13 +29,13 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'activesupport', '>= 5.0'
   s.add_runtime_dependency 'addressable', '~> 2.8'
-  s.add_runtime_dependency 'process_executer', '~> 1.1'
-  s.add_runtime_dependency 'rchardet', '~> 1.8'
+  s.add_runtime_dependency 'process_executer', '~> 1.3'
+  s.add_runtime_dependency 'rchardet', '~> 1.9'
 
-  s.add_development_dependency 'create_github_release', '~> 1.4'
-  s.add_development_dependency 'minitar', '~> 0.9'
-  s.add_development_dependency 'mocha', '~> 2.1'
-  s.add_development_dependency 'rake', '~> 13.1'
+  s.add_development_dependency 'create_github_release', '~> 2.1'
+  s.add_development_dependency 'minitar', '~> 0.12'
+  s.add_development_dependency 'mocha', '~> 2.7'
+  s.add_development_dependency 'rake', '~> 13.2'
   s.add_development_dependency 'test-unit', '~> 3.6'
 
   unless RUBY_PLATFORM == 'java'
