@@ -131,7 +131,7 @@ class Test::Unit::TestCase
   #
   # @return [void]
   #
-  def assert_command_line_eq(expected_command_line, method: :command, mocked_output: nil)
+  def assert_command_line_eq(expected_command_line, method: :command, mocked_output: nil, include_env: false)
     actual_command_line = nil
 
     command_output = ''
@@ -140,7 +140,11 @@ class Test::Unit::TestCase
       git = Git.init('test_project')
 
       git.lib.define_singleton_method(method) do |*cmd, **opts, &block|
-        actual_command_line = [*cmd, opts]
+        if include_env
+          actual_command_line = [env_overrides, *cmd, opts]
+        else
+          actual_command_line = [*cmd, opts]
+        end
         mocked_output
       end
 
@@ -148,6 +152,8 @@ class Test::Unit::TestCase
         yield(git) if block_given?
       end
     end
+
+    expected_command_line = expected_command_line.call if expected_command_line.is_a?(Proc)
 
     assert_equal(expected_command_line, actual_command_line)
 
