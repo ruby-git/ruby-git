@@ -1548,6 +1548,7 @@ module Git
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
         'GIT_SSH' => Git::Base.config.git_ssh,
+        'LC_ALL' => 'en_US.UTF-8'
       }
     end
 
