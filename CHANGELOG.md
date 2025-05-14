@@ -5,6 +5,18 @@
 
 # Change Log
 
+## v3.0.1 (2025-05-14)
+
+[Full Changelog](https://github.com/ruby-git/ruby-git/compare/v3.0.0..v3.0.1)
+
+Changes since v3.0.0:
+
+* b47eedc Improved error message of rev_parse
+* 9d44146 chore: update the development dependency on the minitar gem
+* f407b92 feat: set the locale to en_US.UTF-8 for git commands
+* b060e47 test: verify that command line envionment variables are set as expected
+* 1a5092a chore: release v3.0.0
+
 ## v3.0.0 (2025-02-27)
 
 [Full Changelog](https://github.com/ruby-git/ruby-git/compare/v2.3.3..v3.0.0)
