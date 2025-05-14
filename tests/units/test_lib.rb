@@ -199,7 +199,7 @@ class TestLib < Test::Unit::TestCase
   end
 
   def test_rev_parse_with_unknown_revision
-    assert_raise(Git::FailedError) do
+    assert_raise_with_message(Git::FailedError, /exit 128, stderr: "fatal: bad revision 'NOTFOUND'"/) do
       @lib.rev_parse('NOTFOUND')
     end
   end

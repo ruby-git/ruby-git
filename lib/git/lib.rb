@@ -333,7 +333,7 @@ module Git
     def rev_parse(revision)
       assert_args_are_not_options('rev', revision)
 
-      command('rev-parse', revision)
+      command('rev-parse', '--revs-only', '--end-of-options', revision, '--')
     end
 
     # For backwards compatibility with the old method name
