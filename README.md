@@ -9,17 +9,34 @@
 [![Documentation](https://img.shields.io/badge/Documentation-Latest-green)](https://rubydoc.info/gems/git/)
 [![Change Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
-[![Code Climate](https://codeclimate.com/github/ruby-git/ruby-git.png)](https://codeclimate.com/github/ruby-git/ruby-git)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-* [Summary](#summary)
-* [v2.x Release](#v2x-release)
-* [Install](#install)
-* [Major Objects](#major-objects)
-* [Errors Raised By This Gem](#errors-raised-by-this-gem)
-* [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
-* [Examples](#examples)
-* [Ruby version support policy](#ruby-version-support-policy)
-* [License](#license)
+- [📢 We've Switched to Conventional Commits 📢](#-weve-switched-to-conventional-commits-)
+- [Summary](#summary)
+- [Install](#install)
+- [Major Objects](#major-objects)
+- [Errors Raised By This Gem](#errors-raised-by-this-gem)
+- [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
+- [Examples](#examples)
+- [Ruby version support policy](#ruby-version-support-policy)
+- [License](#license)
+
+## 📢 We've Switched to Conventional Commits 📢
+
+To enhance our development workflow, enable automated changelog generation, and pave
+the way for Continuous Delivery, the `ruby-git` project has adopted the [Conventional
+Commits standard](https://www.conventionalcommits.org/en/v1.0.0/) for all commit
+messages.
+
+Going forward, all commits to this repository **MUST** adhere to the Conventional
+Commits standard. Commits not adhering to this standard will cause the CI build to
+fail. PRs will not be merged if they include non-conventional commits.
+
+A git pre-commit hook may be installed to validate your conventional commit messages
+before pushing them to GitHub by running `bin/setup` in the project root.
+
+Read more about this change in the [Commit Message Guidelines section of
+CONTRIBUTING.md](CONTRIBUTING.md#commit-message-guidelines)
 
 ## Summary
 
@@ -33,31 +50,6 @@ Get started by obtaining a repository object by:
 * cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
-
-## v2.x Release
-
-git 2.0.0 has recently been released. Please give it a try.
-
-**If you have problems with the 2.x release, open an issue and use the 1.x version
-instead.** We will do our best to fix your issues in a timely fashion.
-
-**JRuby on Windows is not yet supported by the 2.x release line. Users running JRuby
-on Windows should continue to use the 1.x release line.**
-
-The changes in this major release include:
-
-* Added a dependency on the activesupport gem to use the deprecation functionality
-* Create a policy of supported Ruby versions to support only non-EOL Ruby versions
-* Create a policy of supported Git CLI versions (released 2020-12-25)
-* Update the required Ruby version to at least 3.0 (released 2020-07-27)
-* Update the required Git command line version to at least 2.28
-* Update how CLI commands are called to use the [process_executer](https://github.com/main-branch/process_executer)
-  gem which is built on top of [Kernel.spawn](https://ruby-doc.org/3.3.0/Kernel.html#method-i-spawn).
-  See [PR #684](https://github.com/ruby-git/ruby-git/pull/684) for more details
-  on the motivation for this implementation.
-
-The `master` branch will be used for `2.x` development. If needed, fixes for `1.x`
-version will be done on the `v1` branch.
 
 ## Install
 

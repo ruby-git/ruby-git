@@ -18,6 +18,8 @@
   - [Output processing](#output-processing)
 - [Coding standards](#coding-standards)
   - [Commit message guidelines](#commit-message-guidelines)
+    - [What does this mean for contributors?](#what-does-this-mean-for-contributors)
+    - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
   - [Unit tests](#unit-tests)
   - [Continuous integration](#continuous-integration)
   - [Documentation](#documentation)
@@ -63,7 +65,8 @@ thoroughly as possible to describe the issue or feature request.
 There is a three-step process for submitting code or documentation changes:
 
 1. [Commit your changes to a fork of
-   `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
+   `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git) using [Conventional
+   Commits](#commit-message-guidelines)
 2. [Create a pull request](#create-a-pull-request)
 3. [Get your pull request reviewed](#get-your-pull-request-reviewed)
 
@@ -155,23 +158,81 @@ requirements:
 
 ### Commit message guidelines
 
-All commit messages must follow the [Conventional Commits
-standard](https://www.conventionalcommits.org/en/v1.0.0/). This helps us maintain a
-clear and structured commit history, automate versioning, and generate changelogs
-effectively.
+To enhance our development workflow, enable automated changelog generation, and pave
+the way for Continuous Delivery, the `ruby-git` project has adopted the [Conventional
+Commits standard](https://www.conventionalcommits.org/en/v1.0.0/) for all commit
+messages.
 
-To ensure compliance, this project includes:
+This structured approach to commit messages allows us to:
 
-- A git commit-msg hook that validates your commit messages before they are accepted.
+- **Automate versioning and releases:** Tools can now automatically determine the
+  semantic version bump (patch, minor, major) based on the types of commits merged.
+- **Generate accurate changelogs:** We can automatically create and update a
+  `CHANGELOG.md` file, providing a clear history of changes for users and
+  contributors.
+- **Improve commit history readability:** A standardized format makes it easier for
+  everyone to understand the nature of changes at a glance.
 
-  To activate the hook, you must have node installed and run `bin/setup` or
-  `npm install`.
+#### What does this mean for contributors?
 
-- A GitHub Actions workflow that will enforce the Conventional Commit standard as
-  part of the continuous integration pipeline.
+Going forward, all commits to this repository **MUST** adhere to the [Conventional
+Commits standard](https://www.conventionalcommits.org/en/v1.0.0/). Commits not
+adhering to this standard will cause the CI build to fail. PRs will not be merged if
+they include non-conventional commits.
 
-  Any commit message that does not conform to the Conventional Commits standard will
-  cause the workflow to fail and not allow the PR to be merged.
+A git pre-commit hook may be installed to validate your conventional commit messages
+before pushing them to GitHub by running `bin/setup` in the project root.
+
+#### What to know about Conventional Commits
+
+The simplist conventional commit is in the form `type: description` where `type`
+indicates the type of change and `description` is your usual commit message (with
+some limitations).
+
+- Types include: `feat`, `fix`, `docs`, `test`, `refactor`, and `chore`. See the full
+  list of types supported in [.commitlintrc.yml](.commitlintrc.yml).
+- The description must (1) not start with an upper case letter, (2) be no more than
+  100 characters, and (3) not end with punctuation.
+
+Examples of valid commits:
+
+- `feat: add the --merges option to Git::Lib.log`
+- `fix: exception thrown by Git::Lib.log when repo has no commits`
+- `docs: add conventional commit announcement to README.md`
+
+Commits that include breaking changes must include an exclaimation mark before the
+colon:
+
+- `feat!: removed Git::Base.commit_force`
+
+The commit messages will drive how the version is incremented for each release:
+
+- a release containing a **breaking change** will do a **major** version increment
+- a release containing a **new feature** will do a **minor** increment
+- a release containing **neither a breaking change nor a new feature** will do a
+  **patch** version increment
+
+The full conventional commit format is:
+
+```text
+<type>[optional scope][!]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- `optional body` may include multiple lines of descriptive text limited to 100 chars
+  each
+- `optional footers` only uses `BREAKING CHANGE: <description>` where description
+  should describe the nature of the backward incompatibility.
+
+Use of the `BREAKING CHANGE:` footer flags a backward incompatible change even if it
+is not flagged with an exclaimation mark after the `type`. Other footers are allowed
+by not acted upon.
+
+See [the Conventional Commits
+specification](https://www.conventionalcommits.org/en/v1.0.0/) for more details.
 
 ### Unit tests
 
