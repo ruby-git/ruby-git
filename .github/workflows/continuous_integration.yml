@@ -1,16 +1,15 @@
 name: CI
 
 on:
-  push:
-    branches: [master,v1]
   pull_request:
-    branches: [master,v1]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
 
+    # Skip this job if triggered by a release PR
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))

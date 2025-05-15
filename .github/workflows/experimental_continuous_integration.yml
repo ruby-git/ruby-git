@@ -2,12 +2,19 @@ name: CI Experimental
 
 on:
   push:
-    branches: [master,v1]
+    branches: [master]
+
   workflow_dispatch:
 
 jobs:
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
+
+    # Skip this job if triggered by pushing a release commit
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'chore: release '))
+
     runs-on: ${{ matrix.operating-system }}
     continue-on-error: true
     env: { JAVA_OPTS: -Djdk.io.File.enableADS=true }
