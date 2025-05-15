@@ -294,6 +294,7 @@ module Git
     #   * 'tree' [String] the tree sha
     #   * 'author' [String] the author of the commit and timestamp of when the changes were created
     #   * 'committer' [String] the committer of the commit and timestamp of when the commit was applied
+    #   * 'merges' [Boolean] if truthy, only include merge commits (aka commits with 2 or more parents)
     #
     # @raise [ArgumentError] if the revision range (specified with :between or :object) is a string starting with a hyphen
     #
@@ -305,6 +306,7 @@ module Git
 
       arr_opts << '--pretty=raw'
       arr_opts << "--skip=#{opts[:skip]}" if opts[:skip]
+      arr_opts << '--merges' if opts[:merges]
 
       arr_opts += log_path_options(opts)
 

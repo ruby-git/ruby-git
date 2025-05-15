@@ -131,7 +131,7 @@ class Test::Unit::TestCase
   #
   # @return [void]
   #
-  def assert_command_line_eq(expected_command_line, method: :command, mocked_output: nil, include_env: false)
+  def assert_command_line_eq(expected_command_line, method: :command, mocked_output: '', include_env: false)
     actual_command_line = nil
 
     command_output = ''
