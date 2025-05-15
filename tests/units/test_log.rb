@@ -128,4 +128,9 @@ class TestLog < Test::Unit::TestCase
     l = @git.log.between( 'master', 'cherry').cherry
     assert_equal( 1, l.size )
   end
+
+  def test_log_merges
+    expected_command_line = ['log', '--max-count=30', '--no-color', '--pretty=raw', '--merges', {:chdir=>nil}]
+    assert_command_line_eq(expected_command_line) { |git| git.log.merges.size }
+  end
 end

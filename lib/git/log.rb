@@ -133,10 +133,15 @@ module Git
       return self
     end
 
+    def merges
+      dirty_log
+      @merges = true
+      return self
+    end
+
     def to_s
       self.map { |c| c.to_s }.join("\n")
     end
-
 
     # forces git log to run
 
@@ -184,7 +189,7 @@ module Git
         log = @base.lib.full_log_commits(
           count: @max_count, all: @all, object: @object, path_limiter: @path, since: @since,
           author: @author, grep: @grep, skip: @skip, until: @until, between: @between,
-          cherry: @cherry
+          cherry: @cherry, merges: @merges
         )
         @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       end
