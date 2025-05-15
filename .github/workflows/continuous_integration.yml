@@ -10,6 +10,11 @@ on:
 jobs:
   build:
     name: Ruby ${{ matrix.ruby }} on ${{ matrix.operating-system }}
+
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
     runs-on: ${{ matrix.operating-system }}
     continue-on-error: ${{ matrix.experimental == 'Yes' }}
     env: { JAVA_OPTS: -Djdk.io.File.enableADS=true }
