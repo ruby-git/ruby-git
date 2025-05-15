@@ -1,0 +1,52 @@
+---
+name: Release Gem
+
+description: |
+  This workflow creates a new release on GitHub and publishes the gem to
+  RubyGems.org.
+
+  The workflow uses the `googleapis/release-please-action` to handle the
+  release creation process and the `rubygems/release-gem` action to publish
+  the gem to rubygems.org
+
+on:
+  push:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: RubyGems
+      url: https://rubygems.org/gems/git
+
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Create release
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.AUTO_RELEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          bundler-cache: true
+          ruby-version: ruby
+
+      - name: Push to RubyGems.org
+        uses: rubygems/release-gem@v1
+        if: ${{ steps.release.outputs.release_created }}

@@ -1,0 +1,36 @@
+{
+  "bootstrap-sha": "31374263eafea4e23352494ef4f6bea3ce62c1b5",
+  "packages": {
+    ".": {
+      "release-type": "ruby",
+      "package-name": "git",
+      "changelog-path": "CHANGELOG.md",
+      "version-file": "lib/git/version.rb",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "draft": false,
+      "prerelease": false,
+      "include-component-in-tag": false,
+      "pull-request-title-pattern": "chore: release v${version}",
+      "changelog-sections": [
+        { "type": "feat",     "section": "Features",      "hidden": false },
+        { "type": "fix",      "section": "Bug Fixes",     "hidden": false },
+        { "type": "build",    "section": "Other Changes", "hidden": false },
+        { "type": "chore",    "section": "Other Changes", "hidden": false },
+        { "type": "ci",       "section": "Other Changes", "hidden": false },
+        { "type": "docs",     "section": "Other Changes", "hidden": false },
+        { "type": "perf",     "section": "Other Changes", "hidden": false },
+        { "type": "refactor", "section": "Other Changes", "hidden": false },
+        { "type": "revert",   "section": "Other Changes", "hidden": false },
+        { "type": "style",    "section": "Other Changes", "hidden": false },
+        { "type": "test",     "section": "Other Changes", "hidden": false }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "type": "sentence-case"
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
