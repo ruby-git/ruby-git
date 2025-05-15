@@ -5,28 +5,28 @@
 
 # Contributing to the git gem
 
-* [Summary](#summary)
-* [How to contribute](#how-to-contribute)
-* [How to report an issue or request a feature](#how-to-report-an-issue-or-request-a-feature)
-* [How to submit a code or documentation change](#how-to-submit-a-code-or-documentation-change)
-  * [Commit your changes to a fork of `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
-  * [Create a pull request](#create-a-pull-request)
-  * [Get your pull request reviewed](#get-your-pull-request-reviewed)
-* [Design philosophy](#design-philosophy)
-  * [Direct mapping to git commands](#direct-mapping-to-git-commands)
-  * [Parameter naming](#parameter-naming)
-  * [Output processing](#output-processing)
-* [Coding standards](#coding-standards)
-  * [1 PR = 1 Commit](#1-pr--1-commit)
-  * [Unit tests](#unit-tests)
-  * [Continuous integration](#continuous-integration)
-  * [Documentation](#documentation)
-* [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
-  * [Install pre-requisites](#install-pre-requisites)
-  * [Obtain Git source code](#obtain-git-source-code)
-  * [Build git](#build-git)
-  * [Use the new Git version](#use-the-new-git-version)
-* [Licensing](#licensing)
+- [Summary](#summary)
+- [How to contribute](#how-to-contribute)
+- [How to report an issue or request a feature](#how-to-report-an-issue-or-request-a-feature)
+- [How to submit a code or documentation change](#how-to-submit-a-code-or-documentation-change)
+  - [Commit your changes to a fork of `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
+  - [Create a pull request](#create-a-pull-request)
+  - [Get your pull request reviewed](#get-your-pull-request-reviewed)
+- [Design philosophy](#design-philosophy)
+  - [Direct mapping to git commands](#direct-mapping-to-git-commands)
+  - [Parameter naming](#parameter-naming)
+  - [Output processing](#output-processing)
+- [Coding standards](#coding-standards)
+  - [Commit message guidelines](#commit-message-guidelines)
+  - [Unit tests](#unit-tests)
+  - [Continuous integration](#continuous-integration)
+  - [Documentation](#documentation)
+- [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
+  - [Install pre-requisites](#install-pre-requisites)
+  - [Obtain Git source code](#obtain-git-source-code)
+  - [Build git](#build-git)
+  - [Use the new Git version](#use-the-new-git-version)
+- [Licensing](#licensing)
 
 ## Summary
 
@@ -153,18 +153,30 @@ behavior.
 To ensure high-quality contributions, all pull requests must meet the following
 requirements:
 
-### 1 PR = 1 Commit
+### Commit message guidelines
 
-* All commits for a PR must be squashed into a single commit.
-* To avoid an extra merge commit, the PR must be able to be merged as [a fast-forward
-  merge](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging).
-* The easiest way to ensure a fast-forward merge is to rebase your local branch to
-  the `ruby-git` master branch.
+All commit messages must follow the [Conventional Commits
+standard](https://www.conventionalcommits.org/en/v1.0.0/). This helps us maintain a
+clear and structured commit history, automate versioning, and generate changelogs
+effectively.
+
+To ensure compliance, this project includes:
+
+- A git commit-msg hook that validates your commit messages before they are accepted.
+
+  To activate the hook, you must have node installed and run `bin/setup` or
+  `npm install`.
+
+- A GitHub Actions workflow that will enforce the Conventional Commit standard as
+  part of the continuous integration pipeline.
+
+  Any commit message that does not conform to the Conventional Commits standard will
+  cause the workflow to fail and not allow the PR to be merged.
 
 ### Unit tests
 
-* All changes must be accompanied by new or modified unit tests.
-* The entire test suite must pass when `bundle exec rake default` is run from the
+- All changes must be accompanied by new or modified unit tests.
+- The entire test suite must pass when `bundle exec rake default` is run from the
   project's local working copy.
 
 While working on specific features, you can run individual test files or a group of

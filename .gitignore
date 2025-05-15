@@ -8,3 +8,5 @@ doc
 pkg
 rdoc
 Gemfile.lock
+node_modules
+package-lock.json
