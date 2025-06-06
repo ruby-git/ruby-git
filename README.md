@@ -11,6 +11,7 @@
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
+- [📢 Default Branch Rename 📢](#-default-branch-rename-)
 - [📢 We've Switched to Conventional Commits 📢](#-weve-switched-to-conventional-commits-)
 - [Summary](#summary)
 - [Install](#install)
@@ -20,6 +21,14 @@
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [License](#license)
+
+## 📢 Default Branch Rename 📢
+
+On June 6th, 2025, the default branch was renamed from 'master' to 'main'.
+
+Instructions for renaming your local or forked branch to match can be found in the
+gist [Default Branch Name
+Change](https://gist.github.com/jcouball/580a10e395f7fdfaaa4297bbe816cc7d).
 
 ## 📢 We've Switched to Conventional Commits 📢
 
