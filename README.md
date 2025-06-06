@@ -8,7 +8,7 @@
 [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
 [![Documentation](https://img.shields.io/badge/Documentation-Latest-green)](https://rubydoc.info/gems/git/)
 [![Change Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
-[![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=master)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
+[![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 - [📢 We've Switched to Conventional Commits 📢](#-weve-switched-to-conventional-commits-)
@@ -275,8 +275,8 @@ g.branches # returns Git::Branch objects
 g.branches.local
 g.current_branch
 g.branches.remote
-g.branches[:master].gcommit
-g.branches['origin/master'].gcommit
+g.branches[:main].gcommit
+g.branches['origin/main'].gcommit
 
 g.grep('hello')  # implies HEAD
 g.blob('v2.5:Makefile').grep('hello')
@@ -333,7 +333,7 @@ Git.ls_remote('https://github.com/ruby-git/ruby-git.git') # returns a hash conta
 Git.ls_remote('/path/to/local/repo')
 Git.ls_remote() # same as Git.ls_remote('.')
 
-Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'master'
+Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'main'
 ```
 
 And here are the operations that will need to write to your git repository.
@@ -406,13 +406,13 @@ g.branch('new_branch') # creates new or fetches existing
 g.branch('new_branch').checkout
 g.branch('new_branch').delete
 g.branch('existing_branch').checkout
-g.branch('master').contains?('existing_branch')
+g.branch('main').contains?('existing_branch')
 
 # delete remote branch
 g.push('origin', 'remote_branch_name', force: true, delete: true)
 
 g.checkout('new_branch')
-g.checkout('new_branch', new_branch: true, start_point: 'master')
+g.checkout('new_branch', new_branch: true, start_point: 'main')
 g.checkout(g.branch('new_branch'))
 
 g.branch(name).merge(branch2)
@@ -422,7 +422,7 @@ g.branch(name).in_branch(message) { # add files }  # auto-commits
 g.merge('new_branch')
 g.merge('new_branch', 'merge commit message', no_ff: true)
 g.merge('origin/remote_branch')
-g.merge(g.branch('master'))
+g.merge(g.branch('main'))
 g.merge([branch1, branch2])
 
 g.merge_base('branch1', 'branch2')
