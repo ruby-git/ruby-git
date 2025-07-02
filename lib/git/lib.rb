@@ -217,7 +217,7 @@ module Git
 
       arr_opts << commit_ish if commit_ish
 
-      return command('describe', *arr_opts)
+      command('describe', *arr_opts)
     end
 
     # Return the commits that are within the given revision range
@@ -472,7 +472,7 @@ module Git
 
       hsh['message'] = data.join("\n") + "\n"
 
-      return hsh
+      hsh
     end
 
     CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
@@ -543,7 +543,7 @@ module Git
 
       hsh['message'] = data.join("\n") + "\n"
 
-      return hsh
+      hsh
     end
 
     def process_commit_log_data(data)
@@ -584,7 +584,7 @@ module Git
 
       hsh_array << hsh if hsh
 
-      return hsh_array
+      hsh_array
     end
 
     def ls_tree(sha, opts = {})
@@ -758,7 +758,7 @@ module Git
           :unborn
         end
 
-      return HeadState.new(state, branch_name)
+      HeadState.new(state, branch_name)
     end
 
     def branch_current
@@ -1488,7 +1488,7 @@ module Git
           gz.write(file_content)
         end
       end
-      return file
+      file
     end
 
     # returns the current version of git, as an Array of Fixnums.
