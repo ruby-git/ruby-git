@@ -24,7 +24,7 @@ module Git
 
     def path(path)
       @path = path
-      return self
+      self
     end
 
     def size

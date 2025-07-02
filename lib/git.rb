@@ -65,7 +65,7 @@ module Git
   end
 
   def self.config
-    return Base.config
+    Base.config
   end
 
   def global_config(name = nil, value = nil)

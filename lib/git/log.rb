@@ -82,61 +82,61 @@ module Git
     def object(objectish)
       dirty_log
       @object = objectish
-      return self
+      self
     end
 
     def author(regex)
       dirty_log
       @author = regex
-      return self
+      self
     end
 
     def grep(regex)
       dirty_log
       @grep = regex
-      return self
+      self
     end
 
     def path(path)
       dirty_log
       @path = path
-      return self
+      self
     end
 
     def skip(num)
       dirty_log
       @skip = num
-      return self
+      self
     end
 
     def since(date)
       dirty_log
       @since = date
-      return self
+      self
     end
 
     def until(date)
       dirty_log
       @until = date
-      return self
+      self
     end
 
     def between(sha1, sha2 = nil)
       dirty_log
       @between = [sha1, sha2]
-      return self
+      self
     end
 
     def cherry
       dirty_log
       @cherry = true
-      return self
+      self
     end
 
     def merges
       dirty_log
       @merges = true
-      return self
+      self
     end
 
     def to_s
