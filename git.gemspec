@@ -29,7 +29,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'activesupport', '>= 5.0'
   s.add_runtime_dependency 'addressable', '~> 2.8'
-  s.add_runtime_dependency 'process_executer', '~> 1.3'
+  s.add_runtime_dependency 'process_executer', '~> 4.0'
   s.add_runtime_dependency 'rchardet', '~> 1.9'
 
   s.add_development_dependency 'create_github_release', '~> 2.1'

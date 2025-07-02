@@ -171,31 +171,6 @@ class Test::Unit::TestCase
     RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
   end
 
-  require 'delegate'
-
-  # A wrapper around a ProcessExecuter::Status that also includes command output
-  # @api public
-  class CommandResult < SimpleDelegator
-    # Create a new CommandResult
-    # @example
-    #   status = ProcessExecuter.spawn(*command, timeout:, out:, err:)
-    #   CommandResult.new(status, out_buffer.string, err_buffer.string)
-    # @param status [ProcessExecuter::Status] The status of the process
-    # @param out [String] The standard output of the process
-    # @param err [String] The standard error of the process
-    def initialize(status, out, err)
-      super(status)
-      @out = out
-      @err = err
-    end
-
-    # @return [String] The stdout output of the process
-    attr_reader :out
-
-    # @return [String] The stderr output of the process
-    attr_reader :err
-  end
-
   # Run a command and return the status including stdout and stderr output
   #
   # @example
@@ -213,17 +188,12 @@ class Test::Unit::TestCase
   #
   # @return [CommandResult] The result of running
   #
-  def run_command(*command, timeout: nil, raise_errors: true, error_message: "#{command[0]} failed")
-    out_buffer = StringIO.new
-    out = ProcessExecuter::MonitoredPipe.new(out_buffer)
-    err_buffer = StringIO.new
-    err = ProcessExecuter::MonitoredPipe.new(err_buffer)
+  def run_command(*command, raise_errors: true, error_message: "#{command[0]} failed")
+    result = ProcessExecuter.run_with_capture(*command, raise_errors: false)
 
-    status = ProcessExecuter.spawn(*command, timeout: timeout, out: out, err: err)
+    raise "#{error_message}: #{result.stderr}" if raise_errors && !result.success?
 
-    raise "#{error_message}: #{err_buffer.string}" if raise_errors && !status.success?
-
-    CommandResult.new(status, out_buffer.string, err_buffer.string)
+    result
   end
 end
 

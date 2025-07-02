@@ -19,15 +19,20 @@ module Git
     #   result = Git::CommandLineResult.new(git_cmd, status, stdout, stderr)
     #
     # @param git_cmd [Array<String>] the git command that was executed
-    # @param status [Process::Status] the status of the process
-    # @param stdout [String] the output of the process
-    # @param stderr [String] the error output of the process
+    # @param status [ProcessExecuter::ResultWithCapture] the status of the process
+    # @param stdout [String] the processed stdout of the process
+    # @param stderr [String] the processed stderr of the process
     #
     def initialize(git_cmd, status, stdout, stderr)
       @git_cmd = git_cmd
       @status = status
       @stdout = stdout
       @stderr = stderr
+
+      # ProcessExecuter::ResultWithCapture changed the timeout? method to timed_out?
+      # in version 4.x. This is a compatibility layer to maintain the old method name
+      # for backward compatibility.
+      def status.timeout? = timed_out?
     end
 
     # @attribute [r] git_cmd
