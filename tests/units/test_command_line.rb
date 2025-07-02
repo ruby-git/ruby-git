@@ -61,7 +61,7 @@ class TestCommamndLine < Test::Unit::TestCase
       command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
       args = []
       error = assert_raise ArgumentError do
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 'not a number')
+        command_line.run(*args, normalize: normalize, chomp: chomp, timeout_after: 'not a number')
       end
     end
 
@@ -97,7 +97,6 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal([{}, 'ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'], result.git_cmd)
     assert_equal('stdout output', result.stdout.chomp)
     assert_equal('stderr output', result.stderr.chomp)
-    assert(result.status.is_a? ProcessExecuter::Command::Result)
     assert_equal(0, result.status.exitstatus)
   end
 
@@ -239,10 +238,8 @@ class TestCommamndLine < Test::Unit::TestCase
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stderr=ERROR: fatal error', '--stdout=STARTING PROCESS']
     Tempfile.create do |f|
-      err_writer = f
-      result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
-      f.rewind
-      assert_equal('ERROR: fatal error', f.read.chomp)
+      result = command_line.run(*args, normalize: normalize, chomp: chomp, merge: merge)
+      assert_equal('ERROR: fatal error', result.stderr.chomp)
     end
   end
 

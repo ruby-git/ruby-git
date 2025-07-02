@@ -192,8 +192,13 @@ module Git
     def run(*args, out: nil, err: nil, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
       git_cmd = build_git_cmd(args)
       begin
-        result = ProcessExecuter.run(env, *git_cmd, out: out, err: err, merge:, chdir: (chdir || :not_set), timeout: timeout, raise_errors: false)
-      rescue ProcessExecuter::Command::ProcessIOError => e
+        options = { chdir: (chdir || :not_set), timeout_after: timeout, raise_errors: false }
+        options[:out] = out unless out.nil?
+        options[:err] = err unless err.nil?
+        options[:merge_output] = merge unless merge.nil?
+
+        result = ProcessExecuter.run_with_capture(env, *git_cmd, **options)
+      rescue ProcessExecuter::ProcessIOError => e
         raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
       end
       process_result(result, normalize, chomp, timeout)
@@ -274,14 +279,10 @@ module Git
     # @api private
     #
     def post_process(raw_output, normalize, chomp)
-      if raw_output.respond_to?(:string)
-        output = raw_output.string.dup
-        output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
-        output.chomp! if chomp
-        output
-      else
-        nil
-      end
+      output = raw_output.dup
+      output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
+      output.chomp! if chomp
+      output
     end
   end
 end
