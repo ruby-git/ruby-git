@@ -12,6 +12,9 @@ require "git"
 $stdout.sync = true
 $stderr.sync = true
 
+# Silence deprecation warnings during tests
+Git::Deprecation.behavior = :silence
+
 class Test::Unit::TestCase
 
   TEST_ROOT = File.expand_path(__dir__)

@@ -18,6 +18,7 @@
 - [Major Objects](#major-objects)
 - [Errors Raised By This Gem](#errors-raised-by-this-gem)
 - [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
+- [Deprecations](#deprecations)
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [License](#license)
@@ -201,6 +202,24 @@ rescue Git::TimeoutError => e
   end
 end
 ```
+
+## Deprecations
+
+This gem uses ActiveSupport's deprecation mechanism to report deprecation warnings.
+
+You can silence deprecation warnings by adding this line to your source code:
+
+```ruby
+Git::Deprecation.behavior = :silence
+```
+
+See [the Active Support Deprecation
+documentation](https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.html)
+for more details.
+
+If deprecation warnings are silenced, you should reenable them before upgrading the
+git gem to the next major version. This will make it easier to identify changes
+needed for the upgrade.
 
 ## Examples
 
