@@ -126,7 +126,7 @@ module Git
       arr_opts = []
       arr_opts << '--bare' if opts[:bare]
       arr_opts << '--branch' << opts[:branch] if opts[:branch]
-      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth] && opts[:depth].to_i > 0
+      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth]
       arr_opts << '--filter' << opts[:filter] if opts[:filter]
       Array(opts[:config]).each { |c| arr_opts << '--config' << c }
       arr_opts << '--origin' << opts[:remote] || opts[:origin] if opts[:remote] || opts[:origin]

@@ -159,4 +159,49 @@ class TestGitClone < Test::Unit::TestCase
 
     assert_equal(expected_command_line, actual_command_line)
   end
+
+  test 'clone with negative depth' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |path|
+      # Give a bare repository with a single commit
+      repository_path = File.join(path, 'repository.git')
+      Git.init(repository_path, :bare => true)
+      worktree_path = File.join(path, 'repository')
+      worktree = Git.clone(repository_path, worktree_path)
+      File.write(File.join(worktree_path, 'test.txt'), 'test')
+      worktree.add('test.txt')
+      worktree.commit('Initial commit')
+      worktree.push
+      FileUtils.rm_rf(worktree_path)
+
+      # When I clone it with a negative depth with
+      error = assert_raises(Git::FailedError) do
+        Git.clone(repository_path, worktree, depth: -1)
+      end
+
+      assert_match(/depth/, error.result.stderr)
+    end
+
+    #   git = Git.init('.')
+
+    #   # Mock the Git::Lib#command method to capture the actual command line args
+    #   git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+    #     actual_command_line = [cmd, *opts.flatten]
+    #   end
+
+    #   git.lib.clone(repository_url, destination, depth: -1)
+    # end
+
+    # expected_command_line = [
+    #   'clone',
+    #   '--depth', '-1',
+    #   '--', repository_url, destination, {timeout: nil}
+    # ]
+
+    # assert_equal(expected_command_line, actual_command_line)
+  end
 end
