@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-module Git
+require_relative 'diff_path_status'
+require_relative 'diff_stats'
 
-  # object that holds the last X commits on given branch
+module Git
+  # object that holds the diff between two commits
   class Diff
     include Enumerable
 
@@ -12,63 +14,68 @@ module Git
       @to = to && to.to_s
 
       @path = nil
-      @full_diff = nil
       @full_diff_files = nil
-      @stats = nil
     end
     attr_reader :from, :to
-
-    def name_status
-      cache_name_status
-    end
 
     def path(path)
       @path = path
       self
     end
 
-    def size
-      cache_stats
-      @stats[:total][:files]
-    end
-
-    def lines
-      cache_stats
-      @stats[:total][:lines]
-    end
-
-    def deletions
-      cache_stats
-      @stats[:total][:deletions]
-    end
-
-    def insertions
-      cache_stats
-      @stats[:total][:insertions]
-    end
-
-    def stats
-      cache_stats
-      @stats
-    end
-
-    # if file is provided and is writable, it will write the patch into the file
-    def patch(file = nil)
-      cache_full
-      @full_diff
+    def patch
+      @base.lib.diff_full(@from, @to, { path_limiter: @path })
     end
     alias_method :to_s, :patch
-
-    # enumerable methods
 
     def [](key)
       process_full
       @full_diff_files.assoc(key)[1]
     end
 
-    def each(&block) # :yields: each Git::DiffFile in turn
+    def each(&block)
       process_full
       @full_diff_files.map { |file| file[1] }.each(&block)
+    end
+
+    #
+    # DEPRECATED METHODS
+    #
+
+    def name_status
+      Git::Deprecation.warn("Git::Diff#name_status is deprecated. Use Git::Base#diff_path_status instead.")
+      path_status_provider.to_h
+    end
+
+    def size
+      Git::Deprecation.warn("Git::Diff#size is deprecated. Use Git::Base#diff_stats(...).total[:files] instead.")
+      stats_provider.total[:files]
+    end
+
+
+
+    def lines
+      Git::Deprecation.warn("Git::Diff#lines is deprecated. Use Git::Base#diff_stats(...).lines instead.")
+      stats_provider.lines
+    end
+
+    def deletions
+      Git::Deprecation.warn("Git::Diff#deletions is deprecated. Use Git::Base#diff_stats(...).deletions instead.")
+      stats_provider.deletions
+    end
+
+    def insertions
+      Git::Deprecation.warn("Git::Diff#insertions is deprecated. Use Git::Base#diff_stats(...).insertions instead.")
+      stats_provider.insertions
+    end
+
+    def stats
+      Git::Deprecation.warn("Git::Diff#stats is deprecated. Use Git::Base#diff_stats instead.")
+      # CORRECTED: Re-create the original hash structure for backward compatibility
+      {
+        files: stats_provider.files,
+        total: stats_provider.total
+      }
     end
 
     class DiffFile
@@ -102,56 +109,48 @@ module Git
 
     private
 
-      def cache_full
-        @full_diff ||= @base.lib.diff_full(@from, @to, {:path_limiter => @path})
-      end
+    def process_full
+      return if @full_diff_files
+      @full_diff_files = process_full_diff
+    end
 
-      def process_full
-        return if @full_diff_files
-        cache_full
-        @full_diff_files = process_full_diff
-      end
+    # CORRECTED: Pass the @path variable to the new objects
+    def path_status_provider
+      @path_status_provider ||= Git::DiffPathStatus.new(@base, @from, @to, @path)
+    end
 
-      def cache_stats
-        @stats ||=  @base.lib.diff_stats(@from, @to, {:path_limiter => @path})
-      end
+    # CORRECTED: Pass the @path variable to the new objects
+    def stats_provider
+      @stats_provider ||= Git::DiffStats.new(@base, @from, @to, @path)
+    end
 
-      def cache_name_status
-        @name_status ||= @base.lib.diff_name_status(@from, @to, {:path => @path})
-      end
-
-      # break up @diff_full
-      def process_full_diff
-        defaults = {
-          :mode => '',
-          :src => '',
-          :dst => '',
-          :type => 'modified'
-        }
-        final = {}
-        current_file = nil
-        @full_diff.split("\n").each do |line|
-          if m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line)
-            current_file = Git::EscapedPath.new(m[2]).unescape
-            final[current_file] = defaults.merge({:patch => line, :path => current_file})
-          else
-            if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)
-              final[current_file][:src] = m[1]
-              final[current_file][:dst] = m[2]
-              final[current_file][:mode] = m[3].strip if m[3]
-            end
-            if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
-              final[current_file][:type] = m[1]
-              final[current_file][:mode] = m[2]
-            end
-            if m = /^Binary files /.match(line)
-              final[current_file][:binary] = true
-            end
-            final[current_file][:patch] << "\n" + line
+    def process_full_diff
+      defaults = {
+        mode: '', src: '', dst: '', type: 'modified'
+      }
+      final = {}
+      current_file = nil
+      patch.split("\n").each do |line|
+        if m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line)
+          current_file = Git::EscapedPath.new(m[2]).unescape
+          final[current_file] = defaults.merge({ patch: line, path: current_file })
+        else
+          if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)
+            final[current_file][:src] = m[1]
+            final[current_file][:dst] = m[2]
+            final[current_file][:mode] = m[3].strip if m[3]
           end
+          if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
+            final[current_file][:type] = m[1]
+            final[current_file][:mode] = m[2]
+          end
+          if m = /^Binary files /.match(line)
+            final[current_file][:binary] = true
+          end
+          final[current_file][:patch] << "\n" + line
         end
-        final.map { |e| [e[0], DiffFile.new(@base, e[1])] }
       end
-
+      final.map { |e| [e[0], DiffFile.new(@base, e[1])] }
+    end
   end
 end

@@ -848,7 +848,7 @@ module Git
       hsh
     end
 
-    def diff_name_status(reference1 = nil, reference2 = nil, opts = {})
+    def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
       assert_args_are_not_options('commit or commit range', reference1, reference2)
 
       opts_arr = ['--name-status']
