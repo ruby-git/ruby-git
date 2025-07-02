@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.metadata['documentation_uri'] = "https://rubydoc.info/gems/#{s.name}/#{s.version}"
 
   s.require_paths = ['lib']
-  s.required_ruby_version = '>= 3.0.0'
+  s.required_ruby_version = '>= 3.2.0'
   s.requirements = ['git 2.28.0 or greater']
 
   s.add_runtime_dependency 'activesupport', '>= 5.0'
