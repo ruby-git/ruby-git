@@ -27,15 +27,24 @@ jobs:
             ruby: head
             operating-system: ubuntu-latest
             experimental: Yes
+            java_version: ""
 
           - # Since JRuby on Windows is known to not work, consider this experimental
             ruby: jruby-head
             operating-system: windows-latest
             experimental: Yes
+            java_version: "21"
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        if: matrix.java_version != ''
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java_version }}
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
