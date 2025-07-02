@@ -782,6 +782,27 @@ module Git
       shas.map { |sha| gcommit(sha) }
     end
 
+# Returns a Git::Diff::Stats object for accessing diff statistics.
+    #
+    # @param objectish [String] The first commit or object to compare. Defaults to 'HEAD'.
+    # @param obj2 [String, nil] The second commit or object to compare.
+    # @return [Git::Diff::Stats]
+    def diff_stats(objectish = 'HEAD', obj2 = nil)
+      Git::DiffStats.new(self, objectish, obj2)
+    end
+
+    # Returns a Git::Diff::PathStatus object for accessing the name-status report.
+    #
+    # @param objectish [String] The first commit or object to compare. Defaults to 'HEAD'.
+    # @param obj2 [String, nil] The second commit or object to compare.
+    # @return [Git::Diff::PathStatus]
+    def diff_path_status(objectish = 'HEAD', obj2 = nil)
+      Git::DiffPathStatus.new(self, objectish, obj2)
+    end
+
+    # Provided for backwards compatibility
+    alias diff_name_status diff_path_status
+
     private
 
     # Normalize options before they are sent to Git::Base.new

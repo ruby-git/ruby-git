@@ -128,7 +128,7 @@ class TestDiff < Test::Unit::TestCase
     end
   end
 
-  def test_diff_name_status_with_bad_commit
+  def test_diff_path_status_with_bad_commit
     assert_raise(ArgumentError) do
       @git.diff('-s').name_status
     end
