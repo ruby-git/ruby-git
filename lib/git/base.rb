@@ -865,9 +865,7 @@ module Git
           File.expand_path(options[:repository] || '.git', options[:working_directory])
         end
 
-      if File.file?(repository)
-        repository = File.expand_path(File.read(repository)[8..].strip, options[:working_directory])
-      end
+      repository = File.expand_path(File.read(repository)[8..].strip, options[:working_directory]) if File.file?(repository)
 
       options[:repository] = repository
     end

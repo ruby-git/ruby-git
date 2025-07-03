@@ -1300,9 +1300,7 @@ module Git
 
       opts = opts.last.instance_of?(Hash) ? opts.last : {}
 
-      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
-        raise ArgumentError, 'Cannot create an annotated tag without a message.'
-      end
+      raise ArgumentError, 'Cannot create an annotated tag without a message.' if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
 
       arr_opts = []
 
@@ -1520,9 +1518,7 @@ module Git
       return true if @version_checked
 
       @version_checked = true
-      unless lib.meets_required_version?
-        warn "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
-      end
+      warn "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade." unless lib.meets_required_version?
       true
     end
 
@@ -1668,9 +1664,7 @@ module Git
     def log_common_options(opts)
       arr_opts = []
 
-      if opts[:count] && !opts[:count].is_a?(Integer)
-        raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
-      end
+      raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}" if opts[:count] && !opts[:count].is_a?(Integer)
 
       arr_opts << "--max-count=#{opts[:count]}" if opts[:count]
       arr_opts << '--all' if opts[:all]
