@@ -11,7 +11,7 @@ require 'test_helper'
 class TestRm < Test::Unit::TestCase
   test 'rm with no options should specify "." for the pathspec' do
     expected_command_line = ['rm', '-f', '--', '.', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.rm }
+    assert_command_line_eq(expected_command_line, &:rm)
   end
 
   test 'rm with one pathspec' do

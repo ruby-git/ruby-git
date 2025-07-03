@@ -52,7 +52,7 @@ module Git
       raise "Failed to get git version: #{status}\n#{result}" unless status.success?
 
       version = result[/\d+(\.\d+)+/]
-      version_parts = version.split('.').collect { |i| i.to_i }
+      version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
     end
 
@@ -67,7 +67,7 @@ module Git
       }
 
       directory = options[:bare] ? options[:repository] : options[:working_directory]
-      FileUtils.mkdir_p(directory) unless File.exist?(directory)
+      FileUtils.mkdir_p(directory)
 
       # TODO: this dance seems awkward: this creates a Git::Lib so we can call
       #   init so we can create a new Git::Base which in turn (ultimately)
@@ -137,7 +137,7 @@ module Git
     #   of the opened working copy or bare repository
     #
     def initialize(options = {})
-      if working_dir = options[:working_directory]
+      if (working_dir = options[:working_directory])
         options[:repository] ||= File.join(working_dir, '.git')
         options[:index] ||= File.join(options[:repository], 'index')
       end
@@ -277,19 +277,19 @@ module Git
 
     # returns +true+ if the branch exists locally
     def is_local_branch?(branch)
-      branch_names = branches.local.map { |b| b.name }
+      branch_names = branches.local.map(&:name)
       branch_names.include?(branch)
     end
 
     # returns +true+ if the branch exists remotely
     def is_remote_branch?(branch)
-      branch_names = branches.remote.map { |b| b.name }
+      branch_names = branches.remote.map(&:name)
       branch_names.include?(branch)
     end
 
     # returns +true+ if the branch exists
     def is_branch?(branch)
-      branch_names = branches.map { |b| b.name }
+      branch_names = branches.map(&:name)
       branch_names.include?(branch)
     end
 
@@ -874,7 +874,7 @@ module Git
         end
 
       if File.file?(repository)
-        repository = File.expand_path(File.read(repository)[8..-1].strip, options[:working_directory])
+        repository = File.expand_path(File.read(repository)[8..].strip, options[:working_directory])
       end
 
       options[:repository] = repository

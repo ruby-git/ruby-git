@@ -10,8 +10,8 @@ module Git
 
     def initialize(base, from = nil, to = nil)
       @base = base
-      @from = from && from.to_s
-      @to = to && to.to_s
+      @from = from&.to_s
+      @to = to&.to_s
 
       @path = nil
       @full_diff_files = nil
@@ -131,21 +131,21 @@ module Git
       final = {}
       current_file = nil
       patch.split("\n").each do |line|
-        if m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line)
+        if (m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line))
           current_file = Git::EscapedPath.new(m[2]).unescape
           final[current_file] = defaults.merge({ patch: line, path: current_file })
         else
-          if m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line)
+          if (m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line))
             final[current_file][:src] = m[1]
             final[current_file][:dst] = m[2]
             final[current_file][:mode] = m[3].strip if m[3]
           end
-          if m = /^([[:alpha:]]*?) file mode (......)/.match(line)
+          if (m = /^([[:alpha:]]*?) file mode (......)/.match(line))
             final[current_file][:type] = m[1]
             final[current_file][:mode] = m[2]
           end
           final[current_file][:binary] = true if /^Binary files /.match(line)
-          final[current_file][:patch] << ("\n" + line)
+          final[current_file][:patch] << "\n#{line}"
         end
       end
       final.map { |e| [e[0], DiffFile.new(@base, e[1])] }

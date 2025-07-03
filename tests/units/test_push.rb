@@ -5,7 +5,7 @@ require 'test_helper'
 class TestPush < Test::Unit::TestCase
   test 'push with no args' do
     expected_command_line = ['push', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.push }
+    assert_command_line_eq(expected_command_line, &:push)
   end
 
   test 'push with no args and options' do

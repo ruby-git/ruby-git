@@ -10,22 +10,20 @@ class TestRemotes < Test::Unit::TestCase
 
       local.add_remote('testremote', remote)
 
-      assert(!local.branches.map { |b| b.full }.include?('testremote/master'))
-      assert(local.remotes.map { |b| b.name }.include?('testremote'))
+      assert(!local.branches.map(&:full).include?('testremote/master'))
+      assert(local.remotes.map(&:name).include?('testremote'))
 
       local.add_remote('testremote2', remote, fetch: true)
 
-      assert(local.branches.map { |b| b.full }.include?('remotes/testremote2/master'))
-      assert(local.remotes.map { |b| b.name }.include?('testremote2'))
+      assert(local.branches.map(&:full).include?('remotes/testremote2/master'))
+      assert(local.remotes.map(&:name).include?('testremote2'))
 
       local.add_remote('testremote3', remote, track: 'master')
 
       assert( # We actually a new branch ('test_track') on the remote and track that one intead.
-        local.branches.map do |b|
-          b.full
-        end.include?('master')
+        local.branches.map(&:full).include?('master')
       )
-      assert(local.remotes.map { |b| b.name }.include?('testremote3'))
+      assert(local.remotes.map(&:name).include?('testremote3'))
     end
   end
 
@@ -37,12 +35,12 @@ class TestRemotes < Test::Unit::TestCase
       local.add_remote('testremote', remote)
       local.remove_remote('testremote')
 
-      assert(!local.remotes.map { |b| b.name }.include?('testremote'))
+      assert(!local.remotes.map(&:name).include?('testremote'))
 
       local.add_remote('testremote', remote)
       local.remote('testremote').remove
 
-      assert(!local.remotes.map { |b| b.name }.include?('testremote'))
+      assert(!local.remotes.map(&:name).include?('testremote'))
     end
   end
 
@@ -55,7 +53,7 @@ class TestRemotes < Test::Unit::TestCase
       local.add_remote('testremote', remote1)
       local.set_remote_url('testremote', remote2)
 
-      assert(local.remotes.map { |b| b.name }.include?('testremote'))
+      assert(local.remotes.map(&:name).include?('testremote'))
       assert(local.remote('testremote').url != remote1.repo.path)
       assert(local.remote('testremote').url == remote2.repo.path)
     end
@@ -125,7 +123,7 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_fetch_cmd_with_no_args
     expected_command_line = ['fetch', '--', 'origin', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch }
+    assert_command_line_eq(expected_command_line, &:fetch)
   end
 
   def test_fetch_cmd_with_origin_and_branch

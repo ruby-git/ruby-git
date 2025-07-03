@@ -8,7 +8,7 @@ module Git
 
     def initialize(base, dir, gcommit = nil)
       @full = dir
-      @full += ' ' + gcommit unless gcommit.nil?
+      @full += " #{gcommit}" unless gcommit.nil?
       @base = base
       @dir = dir
       @gcommit = gcommit

@@ -210,7 +210,7 @@ end
 
 options = CommandLineParser.new.parse(*ARGV)
 
-STDOUT.puts options.stdout if options.stdout
+$stdout.puts options.stdout if options.stdout
 warn options.stderr if options.stderr
 sleep options.duration unless options.duration.zero?
 Process.kill(options.signal, Process.pid) if options.signal

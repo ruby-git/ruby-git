@@ -34,7 +34,7 @@ module Git
 
     def to_s
       out = ''
-      @worktrees.each do |_k, b|
+      @worktrees.each_value do |b|
         out << b.to_s << "\n"
       end
       out

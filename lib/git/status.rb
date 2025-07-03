@@ -24,7 +24,7 @@ module Git
     #
     # @return [Enumerable]
     def changed
-      @_changed ||= @files.select { |_k, f| f.type == 'M' }
+      @changed ||= @files.select { |_k, f| f.type == 'M' }
     end
 
     #
@@ -44,7 +44,7 @@ module Git
     #
     # @return [Enumerable]
     def added
-      @_added ||= @files.select { |_k, f| f.type == 'A' }
+      @added ||= @files.select { |_k, f| f.type == 'A' }
     end
 
     # Determines whether the given file has been added to the repository
@@ -65,7 +65,7 @@ module Git
     #
     # @return [Enumerable]
     def deleted
-      @_deleted ||= @files.select { |_k, f| f.type == 'D' }
+      @deleted ||= @files.select { |_k, f| f.type == 'D' }
     end
 
     #
@@ -86,7 +86,7 @@ module Git
     #
     # @return [Enumerable]
     def untracked
-      @_untracked ||= @files.select { |_k, f| f.untracked }
+      @untracked ||= @files.select { |_k, f| f.untracked }
     end
 
     #
@@ -279,23 +279,23 @@ module Git
     end
 
     def downcase_keys(hash)
-      hash.map { |k, v| [k.downcase, v] }.to_h
+      hash.transform_keys(&:downcase)
     end
 
     def lc_changed
-      @_lc_changed ||= changed.transform_keys(&:downcase)
+      @lc_changed ||= changed.transform_keys(&:downcase)
     end
 
     def lc_added
-      @_lc_added ||= added.transform_keys(&:downcase)
+      @lc_added ||= added.transform_keys(&:downcase)
     end
 
     def lc_deleted
-      @_lc_deleted ||= deleted.transform_keys(&:downcase)
+      @lc_deleted ||= deleted.transform_keys(&:downcase)
     end
 
     def lc_untracked
-      @_lc_untracked ||= untracked.transform_keys(&:downcase)
+      @lc_untracked ||= untracked.transform_keys(&:downcase)
     end
 
     def case_aware_include?(cased_hash, downcased_hash, file)

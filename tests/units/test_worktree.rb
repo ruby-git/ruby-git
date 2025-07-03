@@ -50,7 +50,7 @@ class TestWorktree < Test::Unit::TestCase
   end
 
   test 'adding a worktree when there are no commits should succeed' do
-    omit('Omitted since git version is < 2.42.0') if Git::Lib.new(nil, nil).compare_version_to(2, 42, 0) < 0
+    omit('Omitted since git version is < 2.42.0') if Git::Lib.new(nil, nil).compare_version_to(2, 42, 0).negative?
 
     in_temp_dir do |path|
       Dir.mkdir('main_worktree')

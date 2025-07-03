@@ -71,7 +71,7 @@ module Git
 
       # @return [String] a string representation of the log
       def to_s
-        map { |c| c.to_s }.join("\n")
+        map(&:to_s).join("\n")
       end
     end
 
@@ -210,7 +210,7 @@ module Git
     def to_s
       deprecate_method(__method__)
       check_log
-      @commits.map { |c| c.to_s }.join("\n")
+      @commits.map(&:to_s).join("\n")
     end
 
     # forces git log to run

@@ -36,7 +36,7 @@ end
 class TestStatusObject < Test::Unit::TestCase
   def logger
     # Change log level to Logger::DEBUG to see the log entries
-    @logger ||= Logger.new(STDOUT, level: Logger::ERROR)
+    @logger ||= Logger.new($stdout, level: Logger::ERROR)
   end
 
   def test_no_changes

@@ -21,14 +21,12 @@ class TestThreadSafety < Test::Unit::TestCase
 
   def test_git_init_bare
     dirs = []
-    threads = []
-
     5.times do
       dirs << Dir.mktmpdir
     end
 
-    dirs.each do |dir|
-      threads << Thread.new do
+    threads = dirs.map do |dir|
+      Thread.new do
         Git.init(dir, bare: true)
       end
     end

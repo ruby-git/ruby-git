@@ -16,11 +16,11 @@ module Git
     end
 
     def local
-      self.select { |b| !b.remote }
+      reject(&:remote)
     end
 
     def remote
-      self.select { |b| b.remote }
+      self.select(&:remote)
     end
 
     # array like methods
@@ -58,7 +58,7 @@ module Git
 
     def to_s
       out = ''
-      @branches.each do |_k, b|
+      @branches.each_value do |b|
         out << (b.current ? '* ' : '  ') << b.to_s << "\n"
       end
       out

@@ -118,9 +118,9 @@ module Git
     #
     def to_s
       if user
-        "#{user}@#{host}:#{path[1..-1]}"
+        "#{user}@#{host}:#{path[1..]}"
       else
-        "#{host}:#{path[1..-1]}"
+        "#{host}:#{path[1..]}"
       end
     end
   end
