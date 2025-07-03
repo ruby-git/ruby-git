@@ -6,11 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 2
-Style/MultilineBlockChain:
-  Exclude:
-    - 'lib/git/base.rb'
-
 # Offense count: 5
 # Configuration parameters: AllowedMethods.
 # AllowedMethods: respond_to_missing?
