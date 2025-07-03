@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class TestTreeOps < Test::Unit::TestCase
-
   def test_read_tree
     treeish = 'testbranch1'
     expected_command_line = ['read-tree', treeish, {}]
@@ -52,7 +51,7 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parent = 'parent-commit'
 
-    expected_command_line = ['commit-tree', tree, "-p", parent, '-m', message, {}]
+    expected_command_line = ['commit-tree', tree, '-p', parent, '-m', message, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parent: parent, message: message) }
   end
@@ -70,7 +69,7 @@ class TestTreeOps < Test::Unit::TestCase
   def test_commit_tree_with_multiple_parents
     tree = 'tree-ref'
     message = 'this is my message'
-    parents = ['commit1', 'commit2']
+    parents = %w[commit1 commit2]
 
     expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-p', 'commit2', '-m', message, {}]
 

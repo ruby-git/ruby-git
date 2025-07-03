@@ -13,9 +13,7 @@ module Git
 
     alias count size
 
-    def files
-      @files
-    end
+    attr_reader :files
   end
 end
 
@@ -31,7 +29,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_no_changes
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -68,7 +65,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_delete_file1_from_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -110,7 +106,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_delete_file1_from_index
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -146,7 +141,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_delete_file1_from_index_and_recreate_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -189,7 +183,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_modify_file1_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -232,7 +225,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_modify_file1_in_worktree_and_add_to_index
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -277,7 +269,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_modify_file1_in_worktree_and_add_to_index_and_modify_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -324,7 +315,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_modify_file1_in_worktree_and_add_to_index_and_delete_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -372,7 +362,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_add_file3_to_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -420,7 +409,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_add_file3_to_worktree_and_index
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -469,7 +457,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_add_file3_to_worktree_and_index_and_modify_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -521,7 +508,6 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   def test_add_file3_to_worktree_and_index_and_delete_in_worktree
     in_temp_dir do |worktree_path|
-
       # Given
 
       setup_worktree(worktree_path)
@@ -572,7 +558,7 @@ class TestStatusObjectEmptyRepo < Test::Unit::TestCase
 
   private
 
-  def setup_worktree(worktree_path)
+  def setup_worktree(_worktree_path)
     `git init`
     File.open('file1', 'w', 0o644) { |f| f.write('contents1') }
     File.open('file2', 'w', 0o755) { |f| f.write('contents2') }

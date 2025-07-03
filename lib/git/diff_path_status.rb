@@ -21,8 +21,8 @@ module Git
     # Iterates over each file's status.
     #
     # @yield [path, status]
-    def each(&block)
-      fetch_path_status.each(&block)
+    def each(&)
+      fetch_path_status.each(&)
     end
 
     # Returns the name-status report as a Hash.

@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class TestGitPath < Test::Unit::TestCase
-
   def setup
     clone_working_repo
     @git = Git.open(@wdir)
@@ -43,5 +42,4 @@ class TestGitPath < Test::Unit::TestCase
       assert(g.repo.writable?)
     end
   end
-
 end

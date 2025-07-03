@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# encoding: utf-8
 
 require 'test_helper'
 
@@ -8,7 +7,7 @@ require 'test_helper'
 #
 class TestLsFilesWithEscapedPath < Test::Unit::TestCase
   def test_diff_with_non_ascii_filename
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       create_file('my_other_file_☠', "First Line\n")
       create_file('README.md', '# My Project')
       `git init`
@@ -16,7 +15,7 @@ class TestLsFilesWithEscapedPath < Test::Unit::TestCase
       `git config --local core.safecrlf false` if Gem.win_platform?
       `git commit -m "First Commit"`
       paths = Git.open('.').ls_files.keys.sort
-      assert_equal(["my_other_file_☠", 'README.md'].sort, paths)
+      assert_equal(['my_other_file_☠', 'README.md'].sort, paths)
     end
   end
 end

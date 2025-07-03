@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class TestPull < Test::Unit::TestCase
-
   test 'pull with branch only should raise an ArgumentError' do
     in_temp_dir do
       Dir.mkdir('remote')

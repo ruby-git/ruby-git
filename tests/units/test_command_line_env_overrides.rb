@@ -1,4 +1,3 @@
-
 # frozen_string_literal: true
 
 require 'test_helper'
@@ -6,7 +5,7 @@ require 'test_helper'
 class TestCommandLineEnvOverrides < Test::Unit::TestCase
   test 'it should set the expected environment variables' do
     expected_command_line = nil
-    expected_command_line_proc = ->{ expected_command_line }
+    expected_command_line_proc = -> { expected_command_line }
     assert_command_line_eq(expected_command_line_proc, include_env: true) do |git|
       expected_env = {
         'GIT_DIR' => git.lib.git_dir,
@@ -23,7 +22,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
 
   test 'it should set the GIT_SSH environment variable from Git::Base.config.git_ssh' do
     expected_command_line = nil
-    expected_command_line_proc = ->{ expected_command_line }
+    expected_command_line_proc = -> { expected_command_line }
 
     saved_git_ssh = Git::Base.config.git_ssh
     begin

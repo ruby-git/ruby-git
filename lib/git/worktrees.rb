@@ -3,7 +3,6 @@
 module Git
   # object that holds all the available worktrees
   class Worktrees
-
     include Enumerable
 
     def initialize(base)
@@ -23,20 +22,19 @@ module Git
       @worktrees.size
     end
 
-    def each(&block)
-      @worktrees.values.each(&block)
+    def each(&)
+      @worktrees.values.each(&)
     end
 
     def [](worktree_name)
-      @worktrees.values.inject(@worktrees) do |worktrees, worktree|
+      @worktrees.values.each_with_object(@worktrees) do |worktree, worktrees|
         worktrees[worktree.full] ||= worktree
-        worktrees
       end[worktree_name.to_s]
     end
 
     def to_s
       out = ''
-      @worktrees.each do |k, b|
+      @worktrees.each do |_k, b|
         out << b.to_s << "\n"
       end
       out

@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 module Git
-
   # object that holds all the available branches
   class Branches
-
     include Enumerable
 
     def initialize(base)
@@ -31,8 +29,8 @@ module Git
       @branches.size
     end
 
-    def each(&block)
-      @branches.values.each(&block)
+    def each(&)
+      @branches.values.each(&)
     end
 
     # Returns the target branch
@@ -49,24 +47,21 @@ module Git
     # @param [#to_s] branch_name the target branch name.
     # @return [Git::Branch] the target branch.
     def [](branch_name)
-      @branches.values.inject(@branches) do |branches, branch|
+      @branches.values.each_with_object(@branches) do |branch, branches|
         branches[branch.full] ||= branch
 
         # This is how Git (version 1.7.9.5) works.
         # Lets you ignore the 'remotes' if its at the beginning of the branch full name (even if is not a real remote branch).
-        branches[branch.full.sub('remotes/', '')] ||= branch if branch.full =~ /^remotes\/.+/
-
-        branches
+        branches[branch.full.sub('remotes/', '')] ||= branch if branch.full =~ %r{^remotes/.+}
       end[branch_name.to_s]
     end
 
     def to_s
       out = ''
-      @branches.each do |k, b|
+      @branches.each do |_k, b|
         out << (b.current ? '* ' : '  ') << b.to_s << "\n"
       end
       out
     end
   end
-
 end

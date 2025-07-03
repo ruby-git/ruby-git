@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class TestEachConflict < Test::Unit::TestCase
-
   def test_conflicts
     in_temp_repo('working') do
       g = Git.open('.')
@@ -20,11 +19,10 @@ class TestEachConflict < Test::Unit::TestCase
         true
       end
 
-
       g.merge('new_branch')
       begin
         g.merge('new_branch2')
-      rescue
+      rescue StandardError
       end
 
       g.each_conflict do |file, your, their|

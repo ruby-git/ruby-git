@@ -6,10 +6,8 @@ require 'git/errors'
 require 'git/log'
 
 module Git
-
   # represents a git object
   class Object
-
     class AbstractObject
       attr_accessor :objectish, :type, :mode
 
@@ -38,16 +36,16 @@ module Git
       # read a large file in chunks.
       #
       # Use this for large files so that they are not held in memory.
-      def contents(&block)
+      def contents(&)
         if block_given?
-          @base.lib.cat_file_contents(@objectish, &block)
+          @base.lib.cat_file_contents(@objectish, &)
         else
           @contents ||= @base.lib.cat_file_contents(@objectish)
         end
       end
 
       def contents_array
-        self.contents.split("\n")
+        contents.split("\n")
       end
 
       def to_s
@@ -55,7 +53,7 @@ module Git
       end
 
       def grep(string, path_limiter = nil, opts = {})
-        opts = {:object => sha, :path_limiter => path_limiter}.merge(opts)
+        opts = { object: sha, path_limiter: path_limiter }.merge(opts)
         @base.lib.grep(string, opts)
       end
 
@@ -72,19 +70,16 @@ module Git
         @base.lib.archive(@objectish, file, opts)
       end
 
-      def tree?; false; end
+      def tree? = false
 
-      def blob?; false; end
+      def blob? = false
 
-      def commit?; false; end
+      def commit? = false
 
-      def tag?; false; end
-
+      def tag? = false
     end
 
-
     class Blob < AbstractObject
-
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
@@ -93,11 +88,9 @@ module Git
       def blob?
         true
       end
-
     end
 
     class Tree < AbstractObject
-
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
@@ -112,13 +105,13 @@ module Git
       def blobs
         @blobs ||= check_tree[:blobs]
       end
-      alias_method :files, :blobs
+      alias files blobs
 
       def trees
         @trees ||= check_tree[:trees]
       end
-      alias_method :subtrees, :trees
-      alias_method :subdirectories, :trees
+      alias subtrees trees
+      alias subdirectories trees
 
       def full_tree
         @base.lib.full_tree(@objectish)
@@ -134,31 +127,29 @@ module Git
 
       private
 
-        # actually run the git command
-        def check_tree
-          @trees = {}
-          @blobs = {}
+      # actually run the git command
+      def check_tree
+        @trees = {}
+        @blobs = {}
 
-          data = @base.lib.ls_tree(@objectish)
+        data = @base.lib.ls_tree(@objectish)
 
-          data['tree'].each do |key, tree|
-            @trees[key] = Git::Object::Tree.new(@base, tree[:sha], tree[:mode])
-          end
-
-          data['blob'].each do |key, blob|
-            @blobs[key] = Git::Object::Blob.new(@base, blob[:sha], blob[:mode])
-          end
-
-          {
-            :trees => @trees,
-            :blobs => @blobs
-          }
+        data['tree'].each do |key, tree|
+          @trees[key] = Git::Object::Tree.new(@base, tree[:sha], tree[:mode])
         end
 
+        data['blob'].each do |key, blob|
+          @blobs[key] = Git::Object::Blob.new(@base, blob[:sha], blob[:mode])
+        end
+
+        {
+          trees: @trees,
+          blobs: @blobs
+        }
+      end
     end
 
     class Commit < AbstractObject
-
       def initialize(base, sha, init = nil)
         super(base, sha)
         @tree = nil
@@ -166,9 +157,9 @@ module Git
         @author = nil
         @committer = nil
         @message = nil
-        if init
-          set_commit(init)
-        end
+        return unless init
+
+        set_commit(init)
       end
 
       def message
@@ -214,7 +205,7 @@ module Git
       def committer_date
         committer.date
       end
-      alias_method :date, :committer_date
+      alias date committer_date
 
       def diff_parent
         diff(parent)
@@ -225,7 +216,7 @@ module Git
         @committer = Git::Author.new(data['committer'])
         @author = Git::Author.new(data['author'])
         @tree = Git::Object::Tree.new(@base, data['tree'])
-        @parents = data['parent'].map{ |sha| Git::Object::Commit.new(@base, sha) }
+        @parents = data['parent'].map { |sha| Git::Object::Commit.new(@base, sha) }
         @message = data['message'].chomp
       end
 
@@ -235,14 +226,13 @@ module Git
 
       private
 
-        # see if this object has been initialized and do so if not
-        def check_commit
-          return if @tree
+      # see if this object has been initialized and do so if not
+      def check_commit
+        return if @tree
 
-          data = @base.lib.cat_file_commit(@objectish)
-          set_commit(data)
-        end
-
+        data = @base.lib.cat_file_commit(@objectish)
+        set_commit(data)
+      end
     end
 
     class Tag < AbstractObject
@@ -256,12 +246,12 @@ module Git
       end
 
       def annotated?
-        @annotated ||= (@base.lib.cat_file_type(self.name) == 'tag')
+        @annotated ||= (@base.lib.cat_file_type(name) == 'tag')
       end
 
       def message
-        check_tag()
-        return @message
+        check_tag
+        @message
       end
 
       def tag?
@@ -269,8 +259,8 @@ module Git
       end
 
       def tagger
-        check_tag()
-        return @tagger
+        check_tag
+        @tagger
       end
 
       private
@@ -278,17 +268,16 @@ module Git
       def check_tag
         return if @loaded
 
-        if !self.annotated?
-          @message = @tagger = nil
-        else
+        if annotated?
           tdata = @base.lib.cat_file_tag(@name)
           @message = tdata['message'].chomp
           @tagger = Git::Author.new(tdata['tagger'])
+        else
+          @message = @tagger = nil
         end
 
         @loaded = true
       end
-
     end
 
     # if we're calling this, we don't know what type it is yet
@@ -296,9 +285,8 @@ module Git
     def self.new(base, objectish, type = nil, is_tag = false)
       if is_tag
         sha = base.lib.tag_sha(objectish)
-        if sha == ''
-          raise Git::UnexpectedResultError.new("Tag '#{objectish}' does not exist.")
-        end
+        raise Git::UnexpectedResultError.new("Tag '#{objectish}' does not exist.") if sha == ''
+
         return Git::Object::Tag.new(base, sha, objectish)
       end
 
@@ -311,6 +299,5 @@ module Git
         end
       klass.new(base, objectish)
     end
-
   end
 end

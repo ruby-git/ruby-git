@@ -16,7 +16,7 @@ class TestLibMeetsRequiredVersion < Test::Unit::TestCase
 
     # Set the major version to be returned by #current_command_version to be an
     # earlier version than required
-    major_version = major_version - 1
+    major_version -= 1
 
     lib.define_singleton_method(:current_command_version) { [major_version, minor_version] }
     assert !lib.meets_required_version?
@@ -28,13 +28,14 @@ class TestLibMeetsRequiredVersion < Test::Unit::TestCase
     versions_to_test = [
       { version_string: 'git version 2.1', expected_result: [2, 1, 0] },
       { version_string: 'git version 2.28.4', expected_result: [2, 28, 4] },
-      { version_string: 'git version 2.32.GIT', expected_result: [2, 32, 0] },
+      { version_string: 'git version 2.32.GIT', expected_result: [2, 32, 0] }
     ]
 
     lib.instance_variable_set(:@next_version_index, 0)
 
-    lib.define_singleton_method(:command) do |cmd, *opts, &block|
+    lib.define_singleton_method(:command) do |cmd, *_opts|
       raise ArgumentError unless cmd == 'version'
+
       versions_to_test[@next_version_index][:version_string].tap { @next_version_index += 1 }
     end
 

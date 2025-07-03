@@ -1,17 +1,13 @@
 # frozen_string_literal: true
 
 module Git
-
- class Path
-
+  class Path
     attr_accessor :path
 
-    def initialize(path, check_path=true)
+    def initialize(path, check_path = true)
       path = File.expand_path(path)
 
-      if check_path && !File.exist?(path)
-        raise ArgumentError, 'path does not exist', [path]
-      end
+      raise ArgumentError, 'path does not exist', [path] if check_path && !File.exist?(path)
 
       @path = path
     end
@@ -27,6 +23,5 @@ module Git
     def to_s
       @path
     end
- end
-
+  end
 end

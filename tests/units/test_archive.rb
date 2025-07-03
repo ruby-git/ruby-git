@@ -9,7 +9,7 @@ class TestArchive < Test::Unit::TestCase
   end
 
   def tempfile
-    Dir::Tmpname.create('test-archive') { }
+    Dir::Tmpname.create('test-archive') {}
   end
 
   def test_archive
@@ -19,7 +19,7 @@ class TestArchive < Test::Unit::TestCase
   end
 
   def test_archive_object
-    f = @git.object('v2.6').archive(tempfile)  # writes to given file
+    f = @git.object('v2.6').archive(tempfile) # writes to given file
     assert(File.exist?(f))
     File.delete(f)
   end
@@ -31,7 +31,7 @@ class TestArchive < Test::Unit::TestCase
   end
 
   def test_archive_to_tar
-    f = @git.object('v2.6').archive(nil, :format => 'tar') # returns path to temp file
+    f = @git.object('v2.6').archive(nil, format: 'tar') # returns path to temp file
     assert(File.exist?(f))
 
     lines = []
@@ -41,18 +41,18 @@ class TestArchive < Test::Unit::TestCase
     File.delete(f)
 
     assert_match(%r{ex_dir/}, lines[1])
-    assert_match(/ex_dir\/ex\.txt/, lines[2])
+    assert_match(%r{ex_dir/ex\.txt}, lines[2])
     assert_match(/example\.txt/, lines[3])
   end
 
   def test_archive_to_zip
-    f = @git.object('v2.6').archive(tempfile, :format => 'zip')
+    f = @git.object('v2.6').archive(tempfile, format: 'zip')
     assert(File.file?(f))
     File.delete(f)
   end
 
   def test_archive_to_tgz
-    f = @git.object('v2.6').archive(tempfile, :format => 'tgz', :prefix => 'test/')
+    f = @git.object('v2.6').archive(tempfile, format: 'tgz', prefix: 'test/')
     assert(File.exist?(f))
 
     lines = []
@@ -70,7 +70,7 @@ class TestArchive < Test::Unit::TestCase
   end
 
   def test_archive_with_prefix_and_path
-    f = @git.object('v2.6').archive(tempfile, :format => 'tar', :prefix => 'test/', :path => 'ex_dir/')
+    f = @git.object('v2.6').archive(tempfile, format: 'tar', prefix: 'test/', path: 'ex_dir/')
     assert(File.exist?(f))
 
     tar_file = Minitar::Input.open(f)
@@ -83,7 +83,7 @@ class TestArchive < Test::Unit::TestCase
   end
 
   def test_archive_branch
-    f = @git.remote('working').branch('master').archive(tempfile, :format => 'tgz')
+    f = @git.remote('working').branch('master').archive(tempfile, format: 'tgz')
     assert(File.exist?(f))
     File.delete(f)
   end

@@ -7,7 +7,7 @@ require 'test/unit'
 require 'mocha/test_unit'
 require 'tmpdir'
 
-require "git"
+require 'git'
 
 $stdout.sync = true
 $stderr.sync = true
@@ -16,7 +16,6 @@ $stderr.sync = true
 Git::Deprecation.behavior = :silence
 
 class Test::Unit::TestCase
-
   TEST_ROOT = File.expand_path(__dir__)
   TEST_FIXTURES = File.join(TEST_ROOT, 'files')
 
@@ -32,7 +31,7 @@ class Test::Unit::TestCase
   end
 
   def in_bare_repo_clone
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(BARE_REPO_PATH, 'bare')
       Dir.chdir('bare') do
         yield git
@@ -40,11 +39,9 @@ class Test::Unit::TestCase
     end
   end
 
-  def in_temp_repo(clone_name)
+  def in_temp_repo(clone_name, &)
     clone_path = create_temp_repo(clone_name)
-    Dir.chdir(clone_path) do
-      yield
-    end
+    Dir.chdir(clone_path, &)
   end
 
   def create_temp_repo(clone_name)
@@ -82,13 +79,13 @@ class Test::Unit::TestCase
   end
 
   def create_file(path, content)
-    File.open(path,'w') do |file|
+    File.open(path, 'w') do |file|
       file.puts(content)
     end
   end
 
   def update_file(path, content)
-    create_file(path,content)
+    create_file(path, content)
   end
 
   def delete_file(path)
@@ -100,7 +97,7 @@ class Test::Unit::TestCase
   end
 
   def new_file(name, contents)
-    create_file(name,contents)
+    create_file(name, contents)
   end
 
   def append_file(name, contents)
@@ -139,15 +136,15 @@ class Test::Unit::TestCase
 
     command_output = ''
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      git.lib.define_singleton_method(method) do |*cmd, **opts, &block|
-        if include_env
-          actual_command_line = [env_overrides, *cmd, opts]
-        else
-          actual_command_line = [*cmd, opts]
-        end
+      git.lib.define_singleton_method(method) do |*cmd, **opts|
+        actual_command_line = if include_env
+                                [env_overrides, *cmd, opts]
+                              else
+                                [*cmd, opts]
+                              end
         mocked_output
       end
 
@@ -163,7 +160,7 @@ class Test::Unit::TestCase
     command_output
   end
 
-  def assert_child_process_success(&block)
+  def assert_child_process_success
     yield
     assert_equal 0, $CHILD_STATUS.exitstatus, "Child process failed with exitstatus #{$CHILD_STATUS.exitstatus}"
   end
@@ -243,7 +240,7 @@ def mock_git_binary(script, subdir: 'bin')
     git_binary_path = File.join(binary_dir, subdir, binary_name)
     FileUtils.mkdir_p(File.dirname(git_binary_path))
     File.write(git_binary_path, script)
-    File.chmod(0755, git_binary_path) unless windows_platform?
+    File.chmod(0o755, git_binary_path) unless windows_platform?
     saved_binary_path = Git::Base.config.binary_path
     Git::Base.config.binary_path = git_binary_path
 

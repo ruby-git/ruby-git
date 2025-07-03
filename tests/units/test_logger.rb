@@ -4,7 +4,6 @@ require 'logger'
 require 'test_helper'
 
 class TestLogger < Test::Unit::TestCase
-
   def setup
     clone_working_repo
   end
@@ -18,12 +17,12 @@ class TestLogger < Test::Unit::TestCase
   end
 
   def test_logger
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       log_path = 'logfile.log'
 
       logger = Logger.new(log_path, level: Logger::DEBUG)
 
-      @git = Git.open(@wdir, :log => logger)
+      @git = Git.open(@wdir, log: logger)
       @git.branches.size
 
       logc = File.read(log_path)
@@ -37,12 +36,12 @@ class TestLogger < Test::Unit::TestCase
   end
 
   def test_logging_at_info_level_should_not_show_debug_messages
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       log_path = 'logfile.log'
 
       logger = Logger.new(log_path, level: Logger::INFO)
 
-      @git = Git.open(@wdir, :log => logger)
+      @git = Git.open(@wdir, log: logger)
       @git.branches.size
 
       logc = File.read(log_path)

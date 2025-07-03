@@ -23,7 +23,7 @@ module Git
       :(?!/)                 # : serparator is required, but must not be followed by /
       (?<path>.*?)           # path is required
       $
-    }x.freeze
+    }x
 
     # Parse a Git URL and return an Addressable::URI object
     #

@@ -25,7 +25,7 @@ class TestPush < Test::Unit::TestCase
 
   test 'push with an array of push options' do
     expected_command_line = ['push', '--push-option', 'foo', '--push-option', 'bar', '--push-option', 'baz', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.push(push_option: ['foo', 'bar', 'baz']) }
+    assert_command_line_eq(expected_command_line) { |git| git.push(push_option: %w[foo bar baz]) }
   end
 
   test 'push with only a remote name and options' do

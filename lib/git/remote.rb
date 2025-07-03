@@ -2,7 +2,6 @@
 
 module Git
   class Remote < Path
-
     attr_accessor :name, :url, :fetch_opts
 
     def initialize(base, name)
@@ -13,7 +12,7 @@ module Git
       @fetch_opts = config['fetch']
     end
 
-    def fetch(opts={})
+    def fetch(opts = {})
       @base.fetch(@name, opts)
     end
 
@@ -35,6 +34,5 @@ module Git
     def to_s
       @name
     end
-
   end
 end

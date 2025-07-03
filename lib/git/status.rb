@@ -127,8 +127,8 @@ module Git
       @files[file]
     end
 
-    def each(&block)
-      @files.values.each(&block)
+    def each(&)
+      @files.values.each(&)
     end
 
     # subclass that does heavy lifting
@@ -209,7 +209,7 @@ module Git
         else
           begin
             @base.object(@sha_index)
-          rescue
+          rescue StandardError
             @base.object(@sha_repo)
           end
         end
@@ -257,13 +257,13 @@ module Git
     end
 
     def fetch_added
-      unless @base.lib.empty?
+      return if @base.lib.empty?
+
       # Files changed between the repo HEAD vs. the worktree
       # git diff-index HEAD
       # { file => { path: file, type: 'M', mode_index: '100644', mode_repo: '100644', sha_index: '0000000', :sha_repo: '52c6c4e' } }
       @base.lib.diff_index('HEAD').each do |path, data|
-          @files[path] ? @files[path].merge!(data) : @files[path] = data
-        end
+        @files[path] ? @files[path].merge!(data) : @files[path] = data
       end
     end
 
@@ -272,6 +272,7 @@ module Git
     # https://git-scm.com/docs/git-config#Documentation/git-config.txt-coreignoreCase
     def ignore_case?
       return @_ignore_case if defined?(@_ignore_case)
+
       @_ignore_case = @base.config('core.ignoreCase') == 'true'
     rescue Git::FailedError
       @_ignore_case = false

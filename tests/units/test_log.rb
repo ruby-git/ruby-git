@@ -6,7 +6,7 @@ require 'test_helper'
 class TestLog < Test::Unit::TestCase
   def setup
     clone_working_repo
-    #@git = Git.open(@wdir, :log => Logger.new(STDOUT))
+    # @git = Git.open(@wdir, :log => Logger.new(STDOUT))
     @git = Git.open(@wdir)
   end
 
@@ -69,7 +69,7 @@ class TestLog < Test::Unit::TestCase
   end
 
   def test_get_log_since
-    l = @git.log.since("2 seconds ago")
+    l = @git.log.since('2 seconds ago')
     assert_equal(0, l.size)
 
     l = @git.log.since("#{Date.today.year - 2006} years ago")
@@ -77,14 +77,14 @@ class TestLog < Test::Unit::TestCase
   end
 
   def test_get_log_grep
-    l = @git.log.grep("search")
+    l = @git.log.grep('search')
     assert_equal(2, l.size)
   end
 
   def test_get_log_author
-    l = @git.log(5).author("chacon")
+    l = @git.log(5).author('chacon')
     assert_equal(5, l.size)
-    l = @git.log(5).author("lazySusan")
+    l = @git.log(5).author('lazySusan')
     assert_equal(0, l.size)
   end
 
@@ -101,7 +101,7 @@ class TestLog < Test::Unit::TestCase
     assert_equal(30, log.size)
     log = @git.log.path('example*')
     assert_equal(30, log.size)
-    log = @git.log.path(['example.txt','scott/text.txt'])
+    log = @git.log.path(['example.txt', 'scott/text.txt'])
     assert_equal(30, log.size)
   end
 
@@ -125,12 +125,12 @@ class TestLog < Test::Unit::TestCase
   end
 
   def test_log_cherry
-    l = @git.log.between( 'master', 'cherry').cherry
-    assert_equal( 1, l.size )
+    l = @git.log.between('master', 'cherry').cherry
+    assert_equal(1, l.size)
   end
 
   def test_log_merges
-    expected_command_line = ['log', '--max-count=30', '--no-color', '--pretty=raw', '--merges', {:chdir=>nil}]
+    expected_command_line = ['log', '--max-count=30', '--no-color', '--pretty=raw', '--merges', { chdir: nil }]
     assert_command_line_eq(expected_command_line) { |git| git.log.merges.size }
   end
 end
