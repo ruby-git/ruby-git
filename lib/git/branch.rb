@@ -3,7 +3,7 @@
 require 'git/path'
 
 module Git
-  class Branch < Path
+  class Branch
     attr_accessor :full, :remote, :name
 
     def initialize(base, name)

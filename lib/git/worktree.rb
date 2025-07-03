@@ -3,7 +3,7 @@
 require 'git/path'
 
 module Git
-  class Worktree < Path
+  class Worktree
     attr_accessor :full, :dir
 
     def initialize(base, dir, gcommit = nil)

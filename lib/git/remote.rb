@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Git
-  class Remote < Path
+  class Remote
     attr_accessor :name, :url, :fetch_opts
 
     def initialize(base, name)
