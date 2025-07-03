@@ -97,6 +97,10 @@ module Git
 
     # Execute a git command, wait for it to finish, and return the result
     #
+    # Non-option the command line arguements to pass to git. If you collect
+    # the command line arguments in an array, make sure you splat the array
+    # into the parameter list.
+    #
     # NORMALIZATION
     #
     # The command output is returned as a Unicde string containing the binary output
@@ -142,11 +146,9 @@ module Git
     #     stderr.string #=> "unknown revision or path not in the working tree.\n"
     #   end
     #
-    # @param args [Array<String>] the command line arguements to pass to git
+    # @param options_hash [Hash] the options to pass to the command
     #
-    #   This array should be splatted into the parameter list.
-    #
-    # @param out [#write, nil] the object to write stdout to or nil to ignore stdout
+    # @option options_hash [#write, nil] :out the object to write stdout to or nil to ignore stdout
     #
     #   If this is a 'StringIO' object, then `stdout_writer.string` will be returned.
     #
@@ -154,20 +156,20 @@ module Git
     #   stdout to a file or some other object that responds to `#write`. The default
     #   behavior will return the output of the command.
     #
-    # @param err [#write] the object to write stderr to or nil to ignore stderr
+    # @option options_hash [#write, nil] :err the object to write stderr to or nil to ignore stderr
     #
     #   If this is a 'StringIO' object and `merged_output` is `true`, then
     #   `stderr_writer.string` will be merged into the output returned by this method.
     #
-    # @param normalize [Boolean] whether to normalize the output to a valid encoding
+    # @option options_hash [Boolean] :normalize whether to normalize the output of stdout and stderr
     #
-    # @param chomp [Boolean] whether to chomp the output
+    # @option options_hash [Boolean] :chomp whether to chomp both stdout and stderr output
     #
-    # @param merge [Boolean] whether to merge stdout and stderr in the string returned
+    # @option options_hash [Boolean] :merge whether to merge stdout and stderr in the string returned
     #
-    # @param chdir [String] the directory to run the command in
+    # @option options_hash [String, nil] :chdir the directory to run the command in
     #
-    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
     #
     #   If timeout is zero, the timeout will not be enforced.
     #
@@ -189,20 +191,49 @@ module Git
     #
     # @raise [Git::TimeoutError] if the command times out
     #
-    def run(*args, normalize:, chomp:, merge:, out: nil, err: nil, chdir: nil, timeout: nil)
+    def run(*, **options_hash)
+      options_hash = RUN_ARGS.merge(options_hash)
+      extra_options = options_hash.keys - RUN_ARGS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      result = run_with_capture(*, **options_hash)
+      process_result(result, options_hash[:normalize], options_hash[:chomp], options_hash[:timeout])
+    end
+
+    # @return [Git::CommandLineResult] the result of running the command
+    #
+    # @api private
+    #
+    def run_with_capture(*args, **options_hash)
       git_cmd = build_git_cmd(args)
-      begin
-        options = { chdir: chdir || :not_set, timeout_after: timeout, raise_errors: false }
+      options = run_with_capture_options(**options_hash)
+      ProcessExecuter.run_with_capture(env, *git_cmd, **options)
+    rescue ProcessExecuter::ProcessIOError => e
+      raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
+    end
+
+    def run_with_capture_options(**options_hash)
+      chdir = options_hash[:chdir] || :not_set
+      timeout_after = options_hash[:timeout]
+      out = options_hash[:out]
+      err = options_hash[:err]
+      merge_output = options_hash[:merge] || false
+
+      { chdir:, timeout_after:, merge_output:, raise_errors: false }.tap do |options|
         options[:out] = out unless out.nil?
         options[:err] = err unless err.nil?
-        options[:merge_output] = merge unless merge.nil?
-
-        result = ProcessExecuter.run_with_capture(env, *git_cmd, **options)
-      rescue ProcessExecuter::ProcessIOError => e
-        raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
       end
-      process_result(result, normalize, chomp, timeout)
     end
+
+    RUN_ARGS = {
+      normalize: false,
+      chomp: false,
+      merge: false,
+      out: nil,
+      err: nil,
+      chdir: nil,
+      timeout: nil
+    }.freeze
 
     private
 
