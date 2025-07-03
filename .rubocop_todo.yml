@@ -6,13 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 1
-# Configuration parameters: ForbiddenDelimiters.
-# ForbiddenDelimiters: (?i-mx:(^|\s)(EO[A-Z]{1}|END)(\s|$))
-Naming/HeredocDelimiterNaming:
-  Exclude:
-    - 'tests/units/test_signed_commits.rb'
-
 # Offense count: 5
 # Configuration parameters: Mode, AllowedMethods, AllowedPatterns, AllowBangMethods.
 # AllowedMethods: call
