@@ -250,7 +250,12 @@ module Git
     def fetch_modified
       # Files changed between the index vs. the worktree
       # git diff-files
-      # { file => { path: file, type: 'M', mode_index: '100644', mode_repo: '100644', sha_index: '0000000', :sha_repo: '52c6c4e' } }
+      # {
+      #   file => {
+      #     path: file, type: 'M', mode_index: '100644', mode_repo: '100644',
+      #     sha_index: '0000000', :sha_repo: '52c6c4e'
+      #   }
+      # }
       @base.lib.diff_files.each do |path, data|
         @files[path] ? @files[path].merge!(data) : @files[path] = data
       end
@@ -261,7 +266,12 @@ module Git
 
       # Files changed between the repo HEAD vs. the worktree
       # git diff-index HEAD
-      # { file => { path: file, type: 'M', mode_index: '100644', mode_repo: '100644', sha_index: '0000000', :sha_repo: '52c6c4e' } }
+      # {
+      #   file => {
+      #     path: file, type: 'M', mode_index: '100644', mode_repo: '100644',
+      #     sha_index: '0000000', :sha_repo: '52c6c4e'
+      #   }
+      # }
       @base.lib.diff_index('HEAD').each do |path, data|
         @files[path] ? @files[path].merge!(data) : @files[path] = data
       end

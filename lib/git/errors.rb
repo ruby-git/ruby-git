@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Git
+  # rubocop:disable Layout/LineLength
+
   # Base class for all custom git module errors
   #
   # The git gem will only raise an `ArgumentError` or an error that is a subclass of
@@ -59,6 +61,8 @@ module Git
   # @api public
   #
   class Error < StandardError; end
+
+  # rubocop:enable Layout/LineLength
 
   # An alias for Git::Error
   #
@@ -155,7 +159,8 @@ module Git
     #   status = ProcessExecuter.spawn(*command, timeout: timeout_duration)
     #   result = Git::CommandLineResult.new(command, status, 'stdout', 'err output')
     #   error = Git::TimeoutError.new(result, timeout_duration)
-    #   error.error_message #=> '["sleep", "10"], status: pid 70144 SIGKILL (signal 9), stderr: "err output", timed out after 1s'
+    #   error.error_message
+    #   #=> '["sleep", "10"], status: pid 70144 SIGKILL (signal 9), stderr: "err output", timed out after 1s'
     #
     # @param result [Git::CommandLineResult] the result of the git command including
     #   the git command, status, stdout, and stderr
@@ -171,7 +176,8 @@ module Git
     # The human readable representation of this error
     #
     # @example
-    #   error.error_message #=> '["sleep", "10"], status: pid 88811 SIGKILL (signal 9), stderr: "err output", timed out after 1s'
+    #   error.error_message
+    #   #=> '["sleep", "10"], status: pid 88811 SIGKILL (signal 9), stderr: "err output", timed out after 1s'
     #
     # @return [String]
     #

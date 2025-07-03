@@ -3,6 +3,13 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
+# Allow test data to have long lines
+Layout/LineLength:
+  Exclude:
+    - "tests/test_helper.rb"
+    - "tests/units/**/*"
+    - "*.gemspec"
+
 # Testing and gemspec DSL results in large blocks
 Metrics/BlockLength:
   Exclude:

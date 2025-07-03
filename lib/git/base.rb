@@ -91,8 +91,10 @@ module Git
       raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
 
       begin
-        result, status = Open3.capture2e(Git::Base.config.binary_path, '-c', 'core.quotePath=true', '-c',
-                                         'color.ui=false', 'rev-parse', '--show-toplevel', chdir: File.expand_path(working_dir))
+        result, status = Open3.capture2e(
+          Git::Base.config.binary_path, '-c', 'core.quotePath=true', '-c',
+          'color.ui=false', 'rev-parse', '--show-toplevel', chdir: File.expand_path(working_dir)
+        )
         result = result.chomp
       rescue Errno::ENOENT
         raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
@@ -242,7 +244,12 @@ module Git
     end
 
     def set_index(index_file, check = nil, must_exist: nil)
-      Git::Deprecation.warn('The "check" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check.nil?
+      unless check.nil?
+        Git::Deprecation.warn(
+          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'Use "must_exist:" instead.'
+        )
+      end
 
       # default is true
       must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
@@ -252,7 +259,12 @@ module Git
     end
 
     def set_working(work_dir, check = nil, must_exist: nil)
-      Git::Deprecation.warn('The "check" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check.nil?
+      unless check.nil?
+        Git::Deprecation.warn(
+          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'Use "must_exist:" instead.'
+        )
+      end
 
       # default is true
       must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
@@ -874,7 +886,10 @@ module Git
           File.expand_path(options[:repository] || '.git', options[:working_directory])
         end
 
-      repository = File.expand_path(File.read(repository)[8..].strip, options[:working_directory]) if File.file?(repository)
+      if File.file?(repository)
+        repository = File.expand_path(File.read(repository)[8..].strip,
+                                      options[:working_directory])
+      end
 
       options[:repository] = repository
     end

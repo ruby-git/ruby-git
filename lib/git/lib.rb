@@ -96,6 +96,7 @@ module Git
     # Clones a repository into a newly created directory
     #
     # @param [String] repository_url the URL of the repository to clone
+    #
     # @param [String, nil] directory the directory to clone into
     #
     #   If nil, the repository is cloned into a directory with the same name as
@@ -104,16 +105,28 @@ module Git
     # @param [Hash] opts the options for this command
     #
     # @option opts [Boolean] :bare (false) if true, clone as a bare repository
+    #
     # @option opts [String] :branch the branch to checkout
+    #
     # @option opts [String, Array] :config one or more configuration options to set
+    #
     # @option opts [Integer] :depth the number of commits back to pull
+    #
     # @option opts [String] :filter specify partial clone
+    #
     # @option opts [String] :mirror set up a mirror of the source repository
+    #
     # @option opts [String] :origin the name of the remote
+    #
     # @option opts [String] :path an optional prefix for the directory parameter
+    #
     # @option opts [String] :remote the name of the remote
-    # @option opts [Boolean] :recursive after the clone is created, initialize all submodules within, using their default settings
-    # @option opts [Numeric, nil] :timeout the number of seconds to wait for the command to complete
+    #
+    # @option opts [Boolean] :recursive after the clone is created, initialize all
+    #    within, using their default settings
+    #
+    # @option opts [Numeric, nil] :timeout the number of seconds to wait for the
+    #   command to complete
     #
     #   See {Git::Lib#command} for more information about :timeout
     #
@@ -268,14 +281,23 @@ module Git
     #
     # @param opts [Hash] the given options
     #
-    # @option opts :count [Integer] the maximum number of commits to return (maps to max-count)
+    # @option opts :count [Integer] the maximum number of commits to return (maps to
+    #   max-count)
+    #
     # @option opts :all [Boolean]
+    #
     # @option opts :cherry [Boolean]
+    #
     # @option opts :since [String]
+    #
     # @option opts :until [String]
+    #
     # @option opts :grep [String]
+    #
     # @option opts :author [String]
-    # @option opts :between [Array<String>] an array of two commit-ish strings to specify a revision range
+    #
+    # @option opts :between [Array<String>] an array of two commit-ish strings to
+    #   specify a revision range
     #
     #   Only :between or :object options can be used, not both.
     #
@@ -283,22 +305,29 @@ module Git
     #
     #   Only :between or :object options can be used, not both.
     #
-    # @option opts :path_limiter [Array<String>, String] only include commits that impact files from the specified paths
+    # @option opts :path_limiter [Array<String>, String] only include commits that
+    #   impact files from the specified paths
+    #
     # @option opts :skip [Integer]
     #
     # @return [Array<Hash>] the log output parsed into an array of hashs for each commit
     #
     #   Each hash contains the following keys:
+    #
     #   * 'sha' [String] the commit sha
     #   * 'author' [String] the author of the commit
     #   * 'message' [String] the commit message
     #   * 'parent' [Array<String>] the commit shas of the parent commits
     #   * 'tree' [String] the tree sha
-    #   * 'author' [String] the author of the commit and timestamp of when the changes were created
-    #   * 'committer' [String] the committer of the commit and timestamp of when the commit was applied
-    #   * 'merges' [Boolean] if truthy, only include merge commits (aka commits with 2 or more parents)
+    #   * 'author' [String] the author of the commit and timestamp of when the
+    #     changes were created
+    #   * 'committer' [String] the committer of the commit and timestamp of when the
+    #     commit was applied
+    #   * 'merges' [Boolean] if truthy, only include merge commits (aka commits with
+    #     2 or more parents)
     #
-    # @raise [ArgumentError] if the revision range (specified with :between or :object) is a string starting with a hyphen
+    # @raise [ArgumentError] if the revision range (specified with :between or
+    #   :object) is a string starting with a hyphen
     #
     def full_log_commits(opts = {})
       assert_args_are_not_options('between', opts[:between]&.first)
@@ -321,7 +350,8 @@ module Git
     #
     # @see https://git-scm.com/docs/git-rev-parse git-rev-parse
     # @see https://git-scm.com/docs/git-rev-parse#_specifying_revisions Valid ways to specify revisions
-    # @see https://git-scm.com/docs/git-rev-parse#Documentation/git-rev-parse.txt-emltrefnamegtemegemmasterememheadsmasterememrefsheadsmasterem Ref disambiguation rules
+    # @see https://git-scm.com/docs/git-rev-parse#Documentation/git-rev-parse.txt-emltrefnamegtemegemmasterememheadsmasterememrefsheadsmasterem
+    #      Ref disambiguation rules
     #
     # @example
     #   lib.rev_parse('HEAD') # => '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d'
@@ -492,10 +522,12 @@ module Git
 
     # Return a hash of annotated tag data
     #
-    # Does not work with lightweight tags. List all annotated tags in your repository with the following command:
+    # Does not work with lightweight tags. List all annotated tags in your repository
+    # with the following command:
     #
     # ```sh
-    # git for-each-ref --format='%(refname:strip=2)' refs/tags | while read tag; do git cat-file tag $tag >/dev/null 2>&1 && echo $tag; done
+    # git for-each-ref --format='%(refname:strip=2)' refs/tags | \
+    #   while read tag; do git cat-file tag $tag >/dev/null 2>&1 && echo $tag; done
     # ```
     #
     # @see https://git-scm.com/docs/git-cat-file git-cat-file
@@ -520,7 +552,8 @@ module Git
     #   * object [String] the sha of the tag object
     #   * type [String]
     #   * tag [String] tag name
-    #   * tagger [String] the name and email of the user who created the tag and the timestamp of when the tag was created
+    #   * tagger [String] the name and email of the user who created the tag
+    #     and the timestamp of when the tag was created
     #   * message [String] the tag message
     #
     # @raise [ArgumentError] if object is a string starting with a hyphen
@@ -1300,7 +1333,10 @@ module Git
 
       opts = opts.last.instance_of?(Hash) ? opts.last : {}
 
-      raise ArgumentError, 'Cannot create an annotated tag without a message.' if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
+      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
+        raise ArgumentError,
+              'Cannot create an annotated tag without a message.'
+      end
 
       arr_opts = []
 
@@ -1518,7 +1554,10 @@ module Git
       return true if @version_checked
 
       @version_checked = true
-      warn "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, but only found #{lib.current_command_version.join('.')}. You should probably upgrade." unless lib.meets_required_version?
+      unless lib.meets_required_version?
+        warn "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, " \
+             "but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+      end
       true
     end
 
@@ -1664,7 +1703,10 @@ module Git
     def log_common_options(opts)
       arr_opts = []
 
-      raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}" if opts[:count] && !opts[:count].is_a?(Integer)
+      if opts[:count] && !opts[:count].is_a?(Integer)
+        raise ArgumentError,
+              "The log count option must be an Integer but was #{opts[:count].inspect}"
+      end
 
       arr_opts << "--max-count=#{opts[:count]}" if opts[:count]
       arr_opts << '--all' if opts[:all]

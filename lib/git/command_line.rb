@@ -252,17 +252,27 @@ module Git
     # Post process output, log the command and result, and raise an error if the
     # command failed.
     #
-    # @param result [ProcessExecuter::Command::Result] the result it is a Process::Status and include command, stdout, and stderr
-    # @param normalize [Boolean] whether to normalize the output of each writer
-    # @param chomp [Boolean] whether to chomp the output of each writer
-    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    # @param result [ProcessExecuter::Command::Result] the result it is a
+    #   Process::Status and include command, stdout, and stderr
     #
-    # @return [Git::CommandLineResult] the result of the command to return to the caller
+    # @param normalize [Boolean] whether to normalize the output of each writer
+    #
+    # @param chomp [Boolean] whether to chomp the output of each writer
+    #
+    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to
+    #   complete
+    #
+    # @return [Git::CommandLineResult] the result of the command to return to the
+    #   caller
     #
     # @raise [Git::FailedError] if the command failed
+    #
     # @raise [Git::SignaledError] if the command was signaled
+    #
     # @raise [Git::TimeoutError] if the command times out
-    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
+    #
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting
+    #   subprocess output
     #
     # @api private
     #

@@ -10,7 +10,12 @@ module Git
     attr_accessor :path
 
     def initialize(path, check_path = nil, must_exist: nil)
-      Git::Deprecation.warn('The "check_path" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check_path.nil?
+      unless check_path.nil?
+        Git::Deprecation.warn(
+          'The "check_path" argument is deprecated and ' \
+          'will be removed in a future version. Use "must_exist:" instead.'
+        )
+      end
 
       # default is true
       must_exist = must_exist.nil? && check_path.nil? ? true : must_exist || check_path
