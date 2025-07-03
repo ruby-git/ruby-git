@@ -3,11 +3,17 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
+# Testing and gemspec DSL results in large blocks
 Metrics/BlockLength:
   Exclude:
     - "tests/test_helper.rb"
     - "tests/units/**/*"
     - "*.gemspec"
+
+# Don't force every test class to be described
+Style/Documentation:
+  Exclude:
+    - "tests/units/**/*"
 
 AllCops:
   # Pin this project to Ruby 3.1 in case the shared config above is upgraded to 3.2

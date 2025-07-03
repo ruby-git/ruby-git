@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Git
+  # An author in a Git commit
   class Author
     attr_accessor :name, :email, :date
 

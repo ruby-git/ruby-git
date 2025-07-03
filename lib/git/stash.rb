@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Git
+  # A stash in a Git repository
   class Stash
     def initialize(base, message, existing = false)
       @base = base

@@ -76,6 +76,7 @@ module Git
       }
     end
 
+    # The changes for a single file within a diff
     class DiffFile
       attr_accessor :patch, :path, :mode, :src, :dst, :type
 

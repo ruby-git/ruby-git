@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 module Git
+  # A base class that represents and validates a filesystem path
+  #
+  # Use for tracking things relevant to a Git repository, such as the working
+  # directory or index file.
+  #
   class Path
     attr_accessor :path
 

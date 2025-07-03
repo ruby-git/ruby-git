@@ -3,6 +3,7 @@
 require 'git/path'
 
 module Git
+  # A worktree in a Git repository
   class Worktree
     attr_accessor :full, :dir
 

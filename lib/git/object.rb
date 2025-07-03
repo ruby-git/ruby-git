@@ -8,6 +8,7 @@ require 'git/log'
 module Git
   # represents a git object
   class Object
+    # A base class for all Git objects
     class AbstractObject
       attr_accessor :objectish, :type, :mode
 
@@ -79,6 +80,7 @@ module Git
       def tag? = false
     end
 
+    # A Git blob object
     class Blob < AbstractObject
       def initialize(base, sha, mode = nil)
         super(base, sha)
@@ -90,6 +92,7 @@ module Git
       end
     end
 
+    # A Git tree object
     class Tree < AbstractObject
       def initialize(base, sha, mode = nil)
         super(base, sha)
@@ -149,6 +152,7 @@ module Git
       end
     end
 
+    # A Git commit object
     class Commit < AbstractObject
       def initialize(base, sha, init = nil)
         super(base, sha)
@@ -240,6 +244,13 @@ module Git
       end
     end
 
+    # A Git tag object
+    #
+    # This class represents a tag in Git, which can be either annotated or lightweight.
+    #
+    # Annotated tags contain additional metadata such as the tagger's name, email, and
+    # the date when the tag was created, along with a message.
+    #
     class Tag < AbstractObject
       attr_accessor :name
 
