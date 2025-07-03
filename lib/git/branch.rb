@@ -93,18 +93,6 @@ module Git
       @full
     end
 
-    private
-
-    def check_if_create
-      @base.lib.branch_new(@name)
-    rescue StandardError
-      nil
-    end
-
-    def determine_current
-      @base.lib.branch_current == @name
-    end
-
     BRANCH_NAME_REGEXP = %r{
       ^
         # Optional 'refs/remotes/' at the beggining to specify a remote tracking branch
@@ -115,6 +103,8 @@ module Git
         (?<branch_name>.*)
       $
     }x
+
+    private
 
     # Given a full branch name return an Array containing the remote and branch names.
     #
@@ -142,6 +132,16 @@ module Git
       remote = match[:remote_name] ? Git::Remote.new(@base, match[:remote_name]) : nil
       branch_name = match[:branch_name]
       [remote, branch_name]
+    end
+
+    def check_if_create
+      @base.lib.branch_new(@name)
+    rescue StandardError
+      nil
+    end
+
+    def determine_current
+      @base.lib.branch_current == @name
     end
   end
 end
