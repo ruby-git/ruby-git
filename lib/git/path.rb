@@ -9,10 +9,15 @@ module Git
   class Path
     attr_accessor :path
 
-    def initialize(path, check_path = true)
+    def initialize(path, check_path = nil, must_exist: nil)
+      Git::Deprecation.warn('The "check_path" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check_path.nil?
+
+      # default is true
+      must_exist = must_exist.nil? && check_path.nil? ? true : must_exist || check_path
+
       path = File.expand_path(path)
 
-      raise ArgumentError, 'path does not exist', [path] if check_path && !File.exist?(path)
+      raise ArgumentError, 'path does not exist', [path] if must_exist && !File.exist?(path)
 
       @path = path
     end

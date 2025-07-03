@@ -241,14 +241,24 @@ module Git
                .sum { |file| File.stat(file).size.to_i }
     end
 
-    def set_index(index_file, check = true)
+    def set_index(index_file, check = nil, must_exist: nil)
+      Git::Deprecation.warn('The "check" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check.nil?
+
+      # default is true
+      must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
+
       @lib = nil
-      @index = Git::Index.new(index_file.to_s, check)
+      @index = Git::Index.new(index_file.to_s, must_exist:)
     end
 
-    def set_working(work_dir, check = true)
+    def set_working(work_dir, check = nil, must_exist: nil)
+      Git::Deprecation.warn('The "check" argument is deprecated and will be removed in a future version. Use "must_exist:" instead.') unless check.nil?
+
+      # default is true
+      must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
+
       @lib = nil
-      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, check)
+      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, must_exist:)
     end
 
     # returns +true+ if the branch exists locally
@@ -258,7 +268,7 @@ module Git
     end
 
     def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-      Git.deprecated('Git::Base#is_local_branch? is deprecated. Use Git::Base#local_branch? instead.')
+      Git.deprecation('Git::Base#is_local_branch? is deprecated. Use Git::Base#local_branch? instead.')
       local_branch?(branch)
     end
 
@@ -759,7 +769,7 @@ module Git
 
     # @return [Git::Object::Tag] a tag object
     def tag(tag_name)
-      Git::Object.new(self, tag_name, 'tag', true)
+      Git::Object::Tag.new(self, tag_name)
     end
 
     # Find as good common ancestors as possible for a merge
