@@ -251,18 +251,36 @@ module Git
     # Annotated tags contain additional metadata such as the tagger's name, email, and
     # the date when the tag was created, along with a message.
     #
+    # TODO: Annotated tags are not objects
+    #
     class Tag < AbstractObject
       attr_accessor :name
 
-      def initialize(base, sha, name)
+      # @overload initialize(base, name)
+      #   @param base [Git::Base] The Git base object
+      #   @param name [String] The name of the tag
+      #
+      # @overload initialize(base, sha, name)
+      #   @param base [Git::Base] The Git base object
+      #   @param sha [String] The SHA of the tag object
+      #   @param name [String] The name of the tag
+      #
+      def initialize(base, sha, name = nil)
+        if name.nil?
+          name = sha
+          sha = base.lib.tag_sha(name)
+          raise Git::UnexpectedResultError, "Tag '#{name}' does not exist." if sha == ''
+        end
+
         super(base, sha)
+
         @name = name
         @annotated = nil
         @loaded = false
       end
 
       def annotated?
-        @annotated ||= (@base.lib.cat_file_type(name) == 'tag')
+        @annotated = @annotated.nil? ? (@base.lib.cat_file_type(name) == 'tag') : @annotated
       end
 
       def message
@@ -298,12 +316,10 @@ module Git
 
     # if we're calling this, we don't know what type it is yet
     # so this is our little factory method
-    def self.new(base, objectish, type = nil, is_tag = false)
+    def self.new(base, objectish, type = nil, is_tag = false) # rubocop:disable Style/OptionalBooleanParameter
       if is_tag
-        sha = base.lib.tag_sha(objectish)
-        raise Git::UnexpectedResultError, "Tag '#{objectish}' does not exist." if sha == ''
-
-        return Git::Object::Tag.new(base, sha, objectish)
+        Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
+        return Git::Object::Tag.new(base, objectish)
       end
 
       type ||= base.lib.cat_file_type(objectish)

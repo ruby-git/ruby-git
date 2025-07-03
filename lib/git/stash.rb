@@ -3,10 +3,15 @@
 module Git
   # A stash in a Git repository
   class Stash
-    def initialize(base, message, existing = false)
+    def initialize(base, message, existing = nil, save: nil)
+      Git::Deprecation.warn('The "existing" argument is deprecated and will be removed in a future version. Use "save:" instead.') unless existing.nil?
+
+      # default is false
+      save = existing.nil? && save.nil? ? false : save | existing
+
       @base = base
       @message = message
-      save unless existing
+      self.save unless save
     end
 
     def save
