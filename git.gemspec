@@ -33,9 +33,12 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'rchardet', '~> 1.9'
 
   spec.add_development_dependency 'create_github_release', '~> 2.1'
+  spec.add_development_dependency 'main_branch_shared_rubocop_config', '~> 0.1'
   spec.add_development_dependency 'minitar', '~> 1.0'
   spec.add_development_dependency 'mocha', '~> 2.7'
   spec.add_development_dependency 'rake', '~> 13.2'
+  spec.add_development_dependency 'rubocop', '~> 1.77'
+
   spec.add_development_dependency 'test-unit', '~> 3.6'
 
   unless RUBY_PLATFORM == 'java'
