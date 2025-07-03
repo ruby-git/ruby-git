@@ -4,11 +4,11 @@ require 'test_helper'
 require 'fileutils'
 
 class TestSignedCommits < Test::Unit::TestCase
-  SSH_SIGNATURE_REGEXP = Regexp.new(<<~EOS.chomp, Regexp::MULTILINE)
+  SSH_SIGNATURE_REGEXP = Regexp.new(<<~REGEXP.chomp, Regexp::MULTILINE)
     -----BEGIN SSH SIGNATURE-----
     .*
     -----END SSH SIGNATURE-----
-  EOS
+  REGEXP
 
   def in_repo_with_signing_config
     in_temp_dir do |_path|
