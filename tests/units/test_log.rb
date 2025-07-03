@@ -15,7 +15,7 @@ class TestLog < Test::Unit::TestCase
   end
 
   # In these tests, note that @git.log(n) is equivalent to @git.log.max_count(n)
-  def test_log_max_count_20
+  def test_log_max_count_twenty
     assert_equal(20, @git.log(20).size)
     assert_equal(20, @git.log.max_count(20).size)
   end
