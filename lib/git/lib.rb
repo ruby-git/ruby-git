@@ -1512,7 +1512,9 @@ module Git
       (current_command_version <=> required_command_version) >= 0
     end
 
-    def self.warn_if_old_command(lib)
+    def self.warn_if_old_command(lib) # rubocop:disable Naming/PredicateMethod
+      Git::Deprecation.warn('Git::Lib#warn_if_old_command is deprecated. Use meets_required_version?.')
+
       return true if @version_checked
 
       @version_checked = true

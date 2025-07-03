@@ -42,15 +42,15 @@ class TestCommamndLine < Test::Unit::TestCase
     nil
   end
 
-  def normalize
+  def normalize # rubocop:disable Naming/PredicateMethod
     false
   end
 
-  def chomp
+  def chomp # rubocop:disable Naming/PredicateMethod
     false
   end
 
-  def merge
+  def merge # rubocop:disable Naming/PredicateMethod
     false
   end
 
