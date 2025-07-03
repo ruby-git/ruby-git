@@ -4,7 +4,7 @@ require 'test_helper'
 
 class TestFailedError < Test::Unit::TestCase
   def test_initializer
-    status = Struct.new(:to_s).new('pid 89784 exit 1')
+    status = Class.new { def to_s = 'pid 89784 exit 1' }.new
     result = Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
 
     error = Git::FailedError.new(result)
@@ -13,7 +13,7 @@ class TestFailedError < Test::Unit::TestCase
   end
 
   def test_to_s
-    status = Struct.new(:to_s).new('pid 89784 exit 1')
+    status = Class.new { def to_s = 'pid 89784 exit 1' }.new
     result = Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
 
     error = Git::FailedError.new(result)
