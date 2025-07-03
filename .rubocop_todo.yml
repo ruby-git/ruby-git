@@ -6,13 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 4
-# This cop supports safe autocorrection (--autocorrect).
-Style/IfUnlessModifier:
-  Exclude:
-    - 'lib/git/base.rb'
-    - 'lib/git/lib.rb'
-
 # Offense count: 2
 Style/MultilineBlockChain:
   Exclude:
