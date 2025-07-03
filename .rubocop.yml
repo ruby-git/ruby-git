@@ -3,6 +3,12 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
+Metrics/BlockLength:
+  Exclude:
+    - "tests/test_helper.rb"
+    - "tests/units/**/*"
+    - "*.gemspec"
+
 AllCops:
   # Pin this project to Ruby 3.1 in case the shared config above is upgraded to 3.2
   # or later.
