@@ -233,13 +233,12 @@ module Git
 
     # returns the repository size in bytes
     def repo_size
-      Dir.glob(File.join(repo.path, '**', '*'), File::FNM_DOTMATCH).reject do |f|
-        f.include?('..')
-      end.map do |f|
-        File.expand_path(f)
-      end.uniq.map do |f|
-        File.stat(f).size.to_i
-      end.reduce(:+)
+      all_files = Dir.glob(File.join(repo.path, '**', '*'), File::FNM_DOTMATCH)
+
+      all_files.reject { |file| file.include?('..') }
+               .map { |file| File.expand_path(file) }
+               .uniq
+               .sum { |file| File.stat(file).size.to_i }
     end
 
     def set_index(index_file, check = true)
