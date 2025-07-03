@@ -707,12 +707,7 @@ module Git
 
     def list_files(ref_dir)
       dir = File.join(@git_dir, 'refs', ref_dir)
-      files = []
-      begin
-        files = Dir.glob('**/*', base: dir).select { |f| File.file?(File.join(dir, f)) }
-      rescue StandardError
-      end
-      files
+      Dir.glob('**/*', base: dir).select { |f| File.file?(File.join(dir, f)) }
     end
 
     # The state and name of branch pointed to by `HEAD`
