@@ -35,7 +35,7 @@ module Git
     #
     # @return [Git::Config] the current config instance.
     def self.config
-      @@config ||= Config.new
+      @config ||= Config.new
     end
 
     def self.binary_version(binary_path)
