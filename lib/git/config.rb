@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Git
+  # The global configuration for this gem
   class Config
     attr_writer :binary_path, :git_ssh, :timeout
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Git
+  # The files and their status (e.g., added, modified, deleted) between two commits
   class DiffPathStatus
     include Enumerable
 

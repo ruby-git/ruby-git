@@ -17,6 +17,11 @@ Git::Deprecation.behavior = :silence
 
 module Test
   module Unit
+    # A base class for all test cases in this project
+    #
+    # This class provides utility methods for setting up and tearing down test
+    # environments, creating temporary repositories, and mocking the Git binary.
+    #
     class TestCase
       TEST_ROOT = File.expand_path(__dir__)
       TEST_FIXTURES = File.join(TEST_ROOT, 'files')

@@ -3,6 +3,7 @@
 require 'git/path'
 
 module Git
+  # Represents a Git branch
   class Branch
     attr_accessor :full, :remote, :name
 

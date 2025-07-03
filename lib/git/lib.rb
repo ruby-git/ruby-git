@@ -11,6 +11,8 @@ require 'zlib'
 require 'open3'
 
 module Git
+  # Internal git operations
+  # @api private
   class Lib
     # The path to the Git working copy.  The default is '"./.git"'.
     #

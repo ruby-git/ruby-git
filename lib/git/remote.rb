@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Git
+  # A remote in a Git repository
   class Remote
     attr_accessor :name, :url, :fetch_opts
 
