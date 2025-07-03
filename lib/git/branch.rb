@@ -56,8 +56,8 @@ module Git
       @base.lib.branch_delete(@name)
     end
 
-    def current
-      determine_current
+    def current # rubocop:disable Naming/PredicateMethod
+      @base.lib.branch_current == @name
     end
 
     def contains?(commit)
@@ -138,10 +138,6 @@ module Git
       @base.lib.branch_new(@name)
     rescue StandardError
       nil
-    end
-
-    def determine_current
-      @base.lib.branch_current == @name
     end
   end
 end
