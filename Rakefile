@@ -18,6 +18,16 @@ task :test do
 end
 default_tasks << :test
 
+# Rubocop
+
+require 'rubocop/rake_task'
+
+RuboCop::RakeTask.new
+
+default_tasks << :rubocop
+
+# YARD
+
 unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
   #
   # YARD documentation for this project can NOT be built with JRuby.
@@ -51,7 +61,7 @@ default_tasks << :build
 task default: default_tasks
 
 desc 'Build and install the git gem and run a sanity check'
-task :'test:gem' => :install do
+task 'test:gem': :install do
   output = `ruby -e "require 'git'; g = Git.open('.'); puts g.log.size"`.chomp
   raise 'Gem test failed' unless $CHILD_STATUS.success?
   raise 'Expected gem test to return an integer' unless output =~ /^\d+$/
