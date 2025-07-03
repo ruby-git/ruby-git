@@ -264,7 +264,10 @@ module Git
     private
 
     def deprecate_method(method_name)
-      Git::Deprecation.warn("Calling Git::Log##{method_name} is deprecated and will be removed in a future version. Call #execute and then ##{method_name} on the result object.")
+      Git::Deprecation.warn(
+        "Calling Git::Log##{method_name} is deprecated and will be removed in a future version. " \
+        "Call #execute and then ##{method_name} on the result object."
+      )
     end
 
     def dirty_log

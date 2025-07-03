@@ -51,7 +51,8 @@ module Git
         branches[branch.full] ||= branch
 
         # This is how Git (version 1.7.9.5) works.
-        # Lets you ignore the 'remotes' if its at the beginning of the branch full name (even if is not a real remote branch).
+        # Lets you ignore the 'remotes' if its at the beginning of the branch full
+        # name (even if is not a real remote branch).
         branches[branch.full.sub('remotes/', '')] ||= branch if branch.full =~ %r{^remotes/.+}
       end[branch_name.to_s]
     end
