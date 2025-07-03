@@ -253,21 +253,36 @@ module Git
     end
 
     # returns +true+ if the branch exists locally
-    def is_local_branch?(branch)
+    def local_branch?(branch)
       branch_names = branches.local.map(&:name)
       branch_names.include?(branch)
     end
 
+    def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+      Git.deprecated('Git::Base#is_local_branch? is deprecated. Use Git::Base#local_branch? instead.')
+      local_branch?(branch)
+    end
+
     # returns +true+ if the branch exists remotely
-    def is_remote_branch?(branch)
+    def remote_branch?(branch)
       branch_names = branches.remote.map(&:name)
       branch_names.include?(branch)
     end
 
+    def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+      Git.deprecated('Git::Base#is_remote_branch? is deprecated. Use Git::Base#remote_branch? instead.')
+      remote_branch?(branch)
+    end
+
     # returns +true+ if the branch exists
-    def is_branch?(branch)
+    def branch?(branch)
       branch_names = branches.map(&:name)
       branch_names.include?(branch)
+    end
+
+    def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+      Git.deprecated('Git::Base#is_branch? is deprecated. Use Git::Base#branch? instead.')
+      branch?(branch)
     end
 
     # this is a convenience method for accessing the class that wraps all the
