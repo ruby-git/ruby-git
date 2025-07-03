@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 module Git
-
   class Config
-
     attr_writer :binary_path, :git_ssh, :timeout
 
     def initialize
@@ -13,16 +11,15 @@ module Git
     end
 
     def binary_path
-      @binary_path || ENV['GIT_PATH'] && File.join(ENV['GIT_PATH'], 'git') || 'git'
+      @binary_path || (ENV.fetch('GIT_PATH', nil) && File.join(ENV.fetch('GIT_PATH', nil), 'git')) || 'git'
     end
 
     def git_ssh
-      @git_ssh || ENV['GIT_SSH']
+      @git_ssh || ENV.fetch('GIT_SSH', nil)
     end
 
     def timeout
-      @timeout || (ENV['GIT_TIMEOUT'] && ENV['GIT_TIMEOUT'].to_i)
+      @timeout || (ENV.fetch('GIT_TIMEOUT', nil) && ENV['GIT_TIMEOUT'].to_i)
     end
   end
-
 end

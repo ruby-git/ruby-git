@@ -26,16 +26,16 @@ module Git
     def patch
       @base.lib.diff_full(@from, @to, { path_limiter: @path })
     end
-    alias_method :to_s, :patch
+    alias to_s patch
 
     def [](key)
       process_full
       @full_diff_files.assoc(key)[1]
     end
 
-    def each(&block)
+    def each(&)
       process_full
-      @full_diff_files.map { |file| file[1] }.each(&block)
+      @full_diff_files.map { |file| file[1] }.each(&)
     end
 
     #
@@ -43,34 +43,32 @@ module Git
     #
 
     def name_status
-      Git::Deprecation.warn("Git::Diff#name_status is deprecated. Use Git::Base#diff_path_status instead.")
+      Git::Deprecation.warn('Git::Diff#name_status is deprecated. Use Git::Base#diff_path_status instead.')
       path_status_provider.to_h
     end
 
     def size
-      Git::Deprecation.warn("Git::Diff#size is deprecated. Use Git::Base#diff_stats(...).total[:files] instead.")
+      Git::Deprecation.warn('Git::Diff#size is deprecated. Use Git::Base#diff_stats(...).total[:files] instead.')
       stats_provider.total[:files]
     end
 
-
-
     def lines
-      Git::Deprecation.warn("Git::Diff#lines is deprecated. Use Git::Base#diff_stats(...).lines instead.")
+      Git::Deprecation.warn('Git::Diff#lines is deprecated. Use Git::Base#diff_stats(...).lines instead.')
       stats_provider.lines
     end
 
     def deletions
-      Git::Deprecation.warn("Git::Diff#deletions is deprecated. Use Git::Base#diff_stats(...).deletions instead.")
+      Git::Deprecation.warn('Git::Diff#deletions is deprecated. Use Git::Base#diff_stats(...).deletions instead.')
       stats_provider.deletions
     end
 
     def insertions
-      Git::Deprecation.warn("Git::Diff#insertions is deprecated. Use Git::Base#diff_stats(...).insertions instead.")
+      Git::Deprecation.warn('Git::Diff#insertions is deprecated. Use Git::Base#diff_stats(...).insertions instead.')
       stats_provider.insertions
     end
 
     def stats
-      Git::Deprecation.warn("Git::Diff#stats is deprecated. Use Git::Base#diff_stats instead.")
+      Git::Deprecation.warn('Git::Diff#stats is deprecated. Use Git::Base#diff_stats instead.')
       # CORRECTED: Re-create the original hash structure for backward compatibility
       {
         files: stats_provider.files,
@@ -80,8 +78,9 @@ module Git
 
     class DiffFile
       attr_accessor :patch, :path, :mode, :src, :dst, :type
+
       @base = nil
-      NIL_BLOB_REGEXP = /\A0{4,40}\z/.freeze
+      NIL_BLOB_REGEXP = /\A0{4,40}\z/
 
       def initialize(base, hash)
         @base = base
@@ -111,6 +110,7 @@ module Git
 
     def process_full
       return if @full_diff_files
+
       @full_diff_files = process_full_diff
     end
 
@@ -144,10 +144,8 @@ module Git
             final[current_file][:type] = m[1]
             final[current_file][:mode] = m[2]
           end
-          if m = /^Binary files /.match(line)
-            final[current_file][:binary] = true
-          end
-          final[current_file][:patch] << "\n" + line
+          final[current_file][:binary] = true if /^Binary files /.match(line)
+          final[current_file][:patch] << ("\n" + line)
         end
       end
       final.map { |e| [e[0], DiffFile.new(@base, e[1])] }

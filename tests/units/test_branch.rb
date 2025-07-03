@@ -214,7 +214,7 @@ class TestBranch < Test::Unit::TestCase
     branch = @git.branches[:test_object]
     assert_equal('test_object', branch.name)
 
-    %w{working/master remotes/working/master}.each do |branch_name|
+    %w[working/master remotes/working/master].each do |branch_name|
       branch = @git.branches[branch_name]
 
       assert_equal('master', branch.name)
@@ -253,7 +253,7 @@ class TestBranch < Test::Unit::TestCase
       assert(git.status.untracked.assoc('test-file1'))
       assert(git.status.untracked.assoc('.test-dot-file1'))
 
-      git.add(['test-file1', 'test-file2'])
+      git.add(%w[test-file1 test-file2])
       assert(!git.status.untracked.assoc('test-file1'))
 
       git.reset
@@ -281,13 +281,13 @@ class TestBranch < Test::Unit::TestCase
   end
 
   def test_branch_update_ref
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.init
-      File.write('foo','rev 1')
+      File.write('foo', 'rev 1')
       git.add('foo')
       git.commit('rev 1')
       git.branch('testing').create
-      File.write('foo','rev 2')
+      File.write('foo', 'rev 2')
       git.add('foo')
       git.commit('rev 2')
       git.branch('testing').update_ref(git.rev_parse('HEAD'))

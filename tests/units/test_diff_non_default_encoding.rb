@@ -14,7 +14,13 @@ class TestDiffWithNonDefaultEncoding < Test::Unit::TestCase
   def test_diff_with_greek_encoding
     d = @git.diff
     patch = d.patch
-    return unless Encoding.default_external == (Encoding::UTF_8 rescue Encoding::UTF8) # skip test on Windows / check UTF8 in JRuby instead
+    # skip test on Windows / check UTF8 in JRuby instead
+    return unless Encoding.default_external == begin
+      Encoding::UTF_8
+    rescue StandardError
+      Encoding::UTF8
+    end
+
     assert(patch.include?("-Φθγητ οπορτερε ιν ιδεριντ\n"))
     assert(patch.include?("+Φεθγιατ θρβανιτασ ρεπριμιqθε\n"))
   end
@@ -22,7 +28,13 @@ class TestDiffWithNonDefaultEncoding < Test::Unit::TestCase
   def test_diff_with_japanese_and_korean_encoding
     d = @git.diff.path('test2.txt')
     patch = d.patch
-    return unless Encoding.default_external == (Encoding::UTF_8 rescue Encoding::UTF8) # skip test on Windows / check UTF8 in JRuby instead
+    # skip test on Windows / check UTF8 in JRuby instead
+    return unless Encoding.default_external == begin
+      Encoding::UTF_8
+    rescue StandardError
+      Encoding::UTF8
+    end
+
     expected_patch = <<~PATCH.chomp
       diff --git a/test2.txt b/test2.txt
       index 87d9aa8..210763e 100644

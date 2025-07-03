@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# encoding: utf-8
 
 require 'test_helper'
 
@@ -8,7 +7,7 @@ require 'test_helper'
 #
 class TestDiffWithEscapedPath < Test::Unit::TestCase
   def test_diff_with_non_ascii_filename
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       create_file('my_other_file_☠', "First Line\n")
       `git init`
       `git add .`
@@ -16,7 +15,7 @@ class TestDiffWithEscapedPath < Test::Unit::TestCase
       `git commit -m "First Commit"`
       update_file('my_other_file_☠', "Second Line\n")
       diff_paths = Git.open('.').diff.map(&:path)
-      assert_equal(["my_other_file_☠"], diff_paths)
+      assert_equal(['my_other_file_☠'], diff_paths)
     end
   end
 end

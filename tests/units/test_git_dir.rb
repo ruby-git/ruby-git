@@ -54,7 +54,7 @@ class TestGitDir < Test::Unit::TestCase
         # Change a file and make sure it's status says it has been changed
         #
         file = 'example.txt'
-        File.open(File.join(work_tree, file), "a") { |f| f.write("A new line") }
+        File.open(File.join(work_tree, file), 'a') { |f| f.write('A new line') }
         assert_equal(true, git.status.changed?(file))
 
         # Add and commit the file and then check that:

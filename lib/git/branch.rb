@@ -61,7 +61,7 @@ module Git
     end
 
     def contains?(commit)
-      !@base.lib.branch_contains(commit, self.name).empty?
+      !@base.lib.branch_contains(commit, name).empty?
     end
 
     def merge(branch = nil, message = nil)
@@ -96,7 +96,9 @@ module Git
     private
 
     def check_if_create
-      @base.lib.branch_new(@name) rescue nil
+      @base.lib.branch_new(@name)
+    rescue StandardError
+      nil
     end
 
     def determine_current
@@ -139,7 +141,7 @@ module Git
       match = name.match(BRANCH_NAME_REGEXP)
       remote = match[:remote_name] ? Git::Remote.new(@base, match[:remote_name]) : nil
       branch_name = match[:branch_name]
-      [ remote, branch_name ]
+      [remote, branch_name]
     end
   end
 end

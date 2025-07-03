@@ -7,29 +7,27 @@ require 'test_helper'
 class TestGitClone < Test::Unit::TestCase
   sub_test_case 'Git.clone with timeouts' do
     test 'global timmeout' do
-      begin
-        saved_timeout = Git.config.timeout
+      saved_timeout = Git.config.timeout
 
-        in_temp_dir do |path|
-          setup_repo
-          Git.config.timeout = 0.00001
+      in_temp_dir do |_path|
+        setup_repo
+        Git.config.timeout = 0.00001
 
-          error = assert_raise Git::TimeoutError do
-            Git.clone('repository.git', 'temp2', timeout: nil)
-          end
-
-          assert_equal(true, error.result.status.timeout?)
+        error = assert_raise Git::TimeoutError do
+          Git.clone('repository.git', 'temp2', timeout: nil)
         end
-      ensure
-        Git.config.timeout = saved_timeout
+
+        assert_equal(true, error.result.status.timeout?)
       end
+    ensure
+      Git.config.timeout = saved_timeout
     end
 
     test 'override global timeout' do
-      in_temp_dir do |path|
+      in_temp_dir do |_path|
         saved_timeout = Git.config.timeout
 
-        in_temp_dir do |path|
+        in_temp_dir do |_path|
           setup_repo
           Git.config.timeout = 0.00001
 
@@ -43,7 +41,7 @@ class TestGitClone < Test::Unit::TestCase
     end
 
     test 'per command timeout' do
-      in_temp_dir do |path|
+      in_temp_dir do |_path|
         setup_repo
 
         error = assert_raise Git::TimeoutError do
@@ -53,7 +51,6 @@ class TestGitClone < Test::Unit::TestCase
         assert_equal(true, error.result.status.timeout?)
       end
     end
-
   end
 
   def setup_repo
@@ -65,7 +62,7 @@ class TestGitClone < Test::Unit::TestCase
   end
 
   def test_git_clone_with_name
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       setup_repo
       clone_dir = 'clone_to_this_dir'
       git = Git.clone('repository.git', clone_dir)
@@ -76,7 +73,7 @@ class TestGitClone < Test::Unit::TestCase
   end
 
   def test_git_clone_with_no_name
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       setup_repo
       git = Git.clone('repository.git')
       assert(Dir.exist?('repository'))
@@ -91,18 +88,19 @@ class TestGitClone < Test::Unit::TestCase
 
     actual_command_line = nil
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.init('.')
 
       # Mock the Git::Lib#command method to capture the actual command line args
-      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end
 
       git.lib.clone(repository_url, destination, { config: 'user.name=John Doe' })
     end
 
-    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination, {timeout: nil}]
+    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination,
+                             { timeout: nil }]
 
     assert_equal(expected_command_line, actual_command_line)
   end
@@ -113,11 +111,11 @@ class TestGitClone < Test::Unit::TestCase
 
     actual_command_line = nil
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.init('.')
 
       # Mock the Git::Lib#command method to capture the actual command line args
-      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end
 
@@ -128,7 +126,7 @@ class TestGitClone < Test::Unit::TestCase
       'clone',
       '--config', 'user.name=John Doe',
       '--config', 'user.email=john@doe.com',
-      '--', repository_url, destination, {timeout: nil}
+      '--', repository_url, destination, { timeout: nil }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -140,11 +138,11 @@ class TestGitClone < Test::Unit::TestCase
 
     actual_command_line = nil
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.init('.')
 
       # Mock the Git::Lib#command method to capture the actual command line args
-      git.lib.define_singleton_method(:command) do |cmd, *opts, &block|
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end
 
@@ -154,22 +152,17 @@ class TestGitClone < Test::Unit::TestCase
     expected_command_line = [
       'clone',
       '--filter', 'tree:0',
-      '--', repository_url, destination, {timeout: nil}
+      '--', repository_url, destination, { timeout: nil }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
   end
 
   test 'clone with negative depth' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-
-    actual_command_line = nil
-
     in_temp_dir do |path|
       # Give a bare repository with a single commit
       repository_path = File.join(path, 'repository.git')
-      Git.init(repository_path, :bare => true)
+      Git.init(repository_path, bare: true)
       worktree_path = File.join(path, 'repository')
       worktree = Git.clone(repository_path, worktree_path)
       File.write(File.join(worktree_path, 'test.txt'), 'test')

@@ -2,8 +2,7 @@
 
 module Git
   class Stash
-
-    def initialize(base, message, existing=false)
+    def initialize(base, message, existing = false)
       @base = base
       @message = message
       save unless existing
@@ -17,9 +16,7 @@ module Git
       @saved
     end
 
-    def message
-      @message
-    end
+    attr_reader :message
 
     def to_s
       message

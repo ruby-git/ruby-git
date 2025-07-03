@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# encoding: utf-8
 
 require 'test_helper'
 
@@ -9,7 +8,7 @@ require 'test_helper'
 class TestWindowsCmdEscaping < Test::Unit::TestCase
   def test_commit_with_double_quote_in_commit_message
     expected_commit_message = 'Commit message with "double quotes"'
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       create_file('README.md', "# README\n")
       git = Git.init('.')
       git.add

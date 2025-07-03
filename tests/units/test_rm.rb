@@ -21,7 +21,7 @@ class TestRm < Test::Unit::TestCase
 
   test 'rm with multiple pathspecs' do
     expected_command_line = ['rm', '-f', '--', 'pathspec1', 'pathspec2', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.rm(['pathspec1', 'pathspec2']) }
+    assert_command_line_eq(expected_command_line) { |git| git.rm(%w[pathspec1 pathspec2]) }
   end
 
   test 'rm with the recursive option' do
@@ -31,8 +31,6 @@ class TestRm < Test::Unit::TestCase
 
   test 'rm with the cached option' do
     expected_command_line = ['rm', '-f', '--cached', '--', 'pathspec', {}]
-    git_cmd = :rm
-    git_cmd_args = ['pathspec', cached: true]
     assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', cached: true) }
   end
 

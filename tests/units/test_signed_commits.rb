@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require "fileutils"
+require 'fileutils'
 
 class TestSignedCommits < Test::Unit::TestCase
   SSH_SIGNATURE_REGEXP = Regexp.new(<<~EOS.chomp, Regexp::MULTILINE)
@@ -10,15 +10,15 @@ class TestSignedCommits < Test::Unit::TestCase
     -----END SSH SIGNATURE-----
   EOS
 
-  def in_repo_with_signing_config(&block)
-    in_temp_dir do |path|
+  def in_repo_with_signing_config
+    in_temp_dir do |_path|
       `git init`
       ssh_key_file = File.expand_path(File.join('.git', 'test-key'))
       `ssh-keygen -t dsa -N "" -C "test key" -f "#{ssh_key_file}"`
       `git config --local gpg.format ssh`
       `git config --local user.signingkey #{ssh_key_file}.pub`
 
-      raise "ERROR: No .git/test-key file" unless File.exist?("#{ssh_key_file}.pub")
+      raise 'ERROR: No .git/test-key file' unless File.exist?("#{ssh_key_file}.pub")
 
       yield
     end

@@ -35,7 +35,9 @@ class TestCheckout < Test::Unit::TestCase
 
   test 'checkout with branch name and new_branch: true and start_point: "sha"' do
     expected_command_line = ['checkout', '-b', 'feature1', 'sha', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.checkout('feature1', new_branch: true, start_point: 'sha') }
+    assert_command_line_eq(expected_command_line) do |git|
+      git.checkout('feature1', new_branch: true, start_point: 'sha')
+    end
   end
 
   test 'when checkout succeeds an error should not be raised' do

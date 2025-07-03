@@ -19,9 +19,9 @@ class TestDiffStats < Test::Unit::TestCase
 
   def test_file_stats
     stats = @git.diff_stats('gitsearch1', 'v2.5')
-    assert_equal(1, stats.files["scott/newfile"][:deletions])
+    assert_equal(1, stats.files['scott/newfile'][:deletions])
     # CORRECTED: A deleted file should have 0 insertions.
-    assert_equal(0, stats.files["scott/newfile"][:insertions])
+    assert_equal(0, stats.files['scott/newfile'][:insertions])
   end
 
   def test_diff_stats_with_path

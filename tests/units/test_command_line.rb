@@ -4,8 +4,8 @@ require 'test_helper'
 require 'tempfile'
 
 class TestCommamndLine < Test::Unit::TestCase
-  test "initialize" do
-    global_opts = %q[--opt1=test --opt2]
+  test 'initialize' do
+    global_opts = '--opt1=test --opt2'
 
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
 
@@ -56,11 +56,11 @@ class TestCommamndLine < Test::Unit::TestCase
 
   # END DEFAULT VALUES
 
-  sub_test_case "when a timeout is given" do
+  sub_test_case 'when a timeout is given' do
     test 'it should raise an ArgumentError if the timeout is not an Integer, Float, or nil' do
       command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
       args = []
-      error = assert_raise ArgumentError do
+      assert_raise ArgumentError do
         command_line.run(*args, normalize: normalize, chomp: chomp, timeout_after: 'not a number')
       end
     end
@@ -69,8 +69,9 @@ class TestCommamndLine < Test::Unit::TestCase
       command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
       args = ['--duration=5']
 
-      error = assert_raise Git::TimeoutError do
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 0.01)
+      assert_raise Git::TimeoutError do
+        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge,
+                                timeout: 0.01)
       end
     end
 
@@ -82,25 +83,27 @@ class TestCommamndLine < Test::Unit::TestCase
       # subclass of Git::Error
 
       begin
-        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge, timeout: 0.01)
+        command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge,
+                                timeout: 0.01)
       rescue Git::Error => e
         assert_equal(true, e.result.status.timeout?)
       end
     end
   end
 
-  test "run should return a result that includes the command ran, its output, and resulting status" do
+  test 'run should return a result that includes the command ran, its output, and resulting status' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output', '--stderr=stderr output']
     result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
 
-    assert_equal([{}, 'ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'], result.git_cmd)
+    assert_equal([{}, 'ruby', 'bin/command_line_test', '--stdout=stdout output', '--stderr=stderr output'],
+                 result.git_cmd)
     assert_equal('stdout output', result.stdout.chomp)
     assert_equal('stderr output', result.stderr.chomp)
     assert_equal(0, result.status.exitstatus)
   end
 
-  test "run should raise FailedError if command fails" do
+  test 'run should raise FailedError if command fails' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--exitstatus=1', '--stdout=O1', '--stderr=O2']
     error = assert_raise Git::FailedError do
@@ -119,7 +122,7 @@ class TestCommamndLine < Test::Unit::TestCase
   unless Gem.win_platform?
     # Ruby on Windows doesn't support signals fully (at all?)
     # See https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
-    test "run should raise SignaledError if command exits because of an uncaught signal" do
+    test 'run should raise SignaledError if command exits because of an uncaught signal' do
       command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
       args = ['--signal=9', '--stdout=O1', '--stderr=O2']
       error = assert_raise Git::SignaledError do
@@ -137,7 +140,7 @@ class TestCommamndLine < Test::Unit::TestCase
     end
   end
 
-  test "run should chomp output if chomp is true" do
+  test 'run should chomp output if chomp is true' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
     chomp = true
@@ -146,7 +149,7 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal('stdout output', result.stdout)
   end
 
-  test "run should normalize output if normalize is true" do
+  test 'run should normalize output if normalize is true' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout-file=tests/files/encoding/test1.txt']
     normalize = true
@@ -162,7 +165,7 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal(expected_output, result.stdout.delete("\r"))
   end
 
-  test "run should NOT normalize output if normalize is false" do
+  test 'run should NOT normalize output if normalize is false' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout-file=tests/files/encoding/test1.txt']
     normalize = false
@@ -179,7 +182,7 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal(expected_output, result.stdout)
   end
 
-  test "run should redirect stderr to stdout if merge is true" do
+  test 'run should redirect stderr to stdout if merge is true' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output', '--stderr=stderr output']
     merge = true
@@ -191,12 +194,12 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_include(result.stdout, 'stderr output')
   end
 
-  test "run should log command and output if logger is given" do
+  test 'run should log command and output if logger is given' do
     log_output = StringIO.new
     logger = Logger.new(log_output, level: Logger::DEBUG)
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
-    result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
+    command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
 
     # The command and its exitstatus should be logged on INFO level
     assert_match(/^I, .*exited with status pid \d+ exit \d+$/, log_output.string)
@@ -205,22 +208,23 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_match(/^D, .*stdout:\n.*\nstderr:\n.*$/, log_output.string)
   end
 
-  test "run should be able to redirect stdout to a file" do
+  test 'run should be able to redirect stdout to a file' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
     Tempfile.create do |f|
       out_writer = f
-      result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
+      command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp,
+                              merge: merge)
       f.rewind
       assert_equal('stdout output', f.read.chomp)
     end
   end
 
-  test "run should raise a Git::ProcessIOError if there was an error raised writing stdout" do
+  test 'run should raise a Git::ProcessIOError if there was an error raised writing stdout' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stdout=stdout output']
     out_writer = Class.new do
-      def write(*args)
+      def write(*_args)
         raise IOError, 'error writing to file'
       end
     end.new
@@ -234,20 +238,20 @@ class TestCommamndLine < Test::Unit::TestCase
     assert_equal('error writing to file', error.cause.message)
   end
 
-  test "run should be able to redirect stderr to a file" do
+  test 'run should be able to redirect stderr to a file' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stderr=ERROR: fatal error', '--stdout=STARTING PROCESS']
-    Tempfile.create do |f|
+    Tempfile.create do |_f|
       result = command_line.run(*args, normalize: normalize, chomp: chomp, merge: merge)
       assert_equal('ERROR: fatal error', result.stderr.chomp)
     end
   end
 
-  test "run should raise a Git::ProcessIOError if there was an error raised writing stderr" do
+  test 'run should raise a Git::ProcessIOError if there was an error raised writing stderr' do
     command_line = Git::CommandLine.new(env, binary_path, global_opts, logger)
     args = ['--stderr=ERROR: fatal error']
     err_writer = Class.new do
-      def write(*args)
+      def write(*_args)
         raise IOError, 'error writing to stderr file'
       end
     end.new
@@ -267,7 +271,8 @@ class TestCommamndLine < Test::Unit::TestCase
     Tempfile.create do |f|
       out_writer = f
       merge = true
-      result = command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge)
+      command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp,
+                              merge: merge)
       f.rewind
       output = f.read
 

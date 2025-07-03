@@ -4,46 +4,50 @@ require 'test_helper'
 
 class TestRemotes < Test::Unit::TestCase
   def test_add_remote
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
 
       local.add_remote('testremote', remote)
 
-      assert(!local.branches.map{|b| b.full}.include?('testremote/master'))
-      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+      assert(!local.branches.map { |b| b.full }.include?('testremote/master'))
+      assert(local.remotes.map { |b| b.name }.include?('testremote'))
 
-      local.add_remote('testremote2', remote, :fetch => true)
+      local.add_remote('testremote2', remote, fetch: true)
 
-      assert(local.branches.map{|b| b.full}.include?('remotes/testremote2/master'))
-      assert(local.remotes.map{|b| b.name}.include?('testremote2'))
+      assert(local.branches.map { |b| b.full }.include?('remotes/testremote2/master'))
+      assert(local.remotes.map { |b| b.name }.include?('testremote2'))
 
-      local.add_remote('testremote3', remote, :track => 'master')
+      local.add_remote('testremote3', remote, track: 'master')
 
-      assert(local.branches.map{|b| b.full}.include?('master')) #We actually a new branch ('test_track') on the remote and track that one intead.
-      assert(local.remotes.map{|b| b.name}.include?('testremote3'))
+      assert( # We actually a new branch ('test_track') on the remote and track that one intead.
+        local.branches.map do |b|
+          b.full
+        end.include?('master')
+      )
+      assert(local.remotes.map { |b| b.name }.include?('testremote3'))
     end
   end
 
   def test_remove_remote_remove
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
 
       local.add_remote('testremote', remote)
       local.remove_remote('testremote')
 
-      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+      assert(!local.remotes.map { |b| b.name }.include?('testremote'))
 
       local.add_remote('testremote', remote)
       local.remote('testremote').remove
 
-      assert(!local.remotes.map{|b| b.name}.include?('testremote'))
+      assert(!local.remotes.map { |b| b.name }.include?('testremote'))
     end
   end
 
   def test_set_remote_url
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote1 = Git.clone(BARE_REPO_PATH, 'remote1')
       remote2 = Git.clone(BARE_REPO_PATH, 'remote2')
@@ -51,14 +55,14 @@ class TestRemotes < Test::Unit::TestCase
       local.add_remote('testremote', remote1)
       local.set_remote_url('testremote', remote2)
 
-      assert(local.remotes.map{|b| b.name}.include?('testremote'))
+      assert(local.remotes.map { |b| b.name }.include?('testremote'))
       assert(local.remote('testremote').url != remote1.repo.path)
       assert(local.remote('testremote').url == remote2.repo.path)
     end
   end
 
   def test_remote_fun
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote')
 
@@ -85,15 +89,15 @@ class TestRemotes < Test::Unit::TestCase
       loc.merge(loc.remote('testrem').branch('testbranch'))
       assert(loc.status['test-file3'])
 
-      #puts loc.remotes.map { |r| r.to_s }.inspect
+      # puts loc.remotes.map { |r| r.to_s }.inspect
 
-      #r.remove
-      #puts loc.remotes.inspect
+      # r.remove
+      # puts loc.remotes.inspect
     end
   end
 
   def test_fetch
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote')
 
@@ -114,7 +118,7 @@ class TestRemotes < Test::Unit::TestCase
 
       r.fetch
       assert(!loc.tags.map(&:name).include?('test-tag-in-deleted-branch'))
-      r.fetch :tags => true
+      r.fetch tags: true
       assert(loc.tags.map(&:name).include?('test-tag-in-deleted-branch'))
     end
   end
@@ -136,12 +140,12 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_fetch_cmd_with_all_with_other_args
     expected_command_line = ['fetch', '--all', '--force', '--depth', '2', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch({all: true, force: true, depth: '2'}) }
+    assert_command_line_eq(expected_command_line) { |git| git.fetch({ all: true, force: true, depth: '2' }) }
   end
 
   def test_fetch_cmd_with_update_head_ok
     expected_command_line = ['fetch', '--update-head-ok', { merge: true }]
-    assert_command_line_eq(expected_command_line) { |git| git.fetch({:'update-head-ok' => true}) }
+    assert_command_line_eq(expected_command_line) { |git| git.fetch({ 'update-head-ok': true }) }
   end
 
   def test_fetch_command_injection
@@ -164,9 +168,9 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_fetch_ref_adds_ref_option
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       loc = Git.clone(BARE_REPO_PATH, 'local')
-      rem = Git.clone(BARE_REPO_PATH, 'remote', :config => 'receive.denyCurrentBranch=ignore')
+      rem = Git.clone(BARE_REPO_PATH, 'remote', config: 'receive.denyCurrentBranch=ignore')
       loc.add_remote('testrem', rem)
 
       first_commit_sha = second_commit_sha = nil
@@ -185,20 +189,20 @@ class TestRemotes < Test::Unit::TestCase
 
       loc.chdir do
         # Make sure fetch message only has the first commit when we fetch the first commit
-        assert(loc.fetch('testrem', {:ref => first_commit_sha}).include?(first_commit_sha))
-        assert(!loc.fetch('testrem', {:ref => first_commit_sha}).include?(second_commit_sha))
+        assert(loc.fetch('testrem', { ref: first_commit_sha }).include?(first_commit_sha))
+        assert(!loc.fetch('testrem', { ref: first_commit_sha }).include?(second_commit_sha))
 
         # Make sure fetch message only has the second commit when we fetch the second commit
-        assert(loc.fetch('testrem', {:ref => second_commit_sha}).include?(second_commit_sha))
-        assert(!loc.fetch('testrem', {:ref => second_commit_sha}).include?(first_commit_sha))
+        assert(loc.fetch('testrem', { ref: second_commit_sha }).include?(second_commit_sha))
+        assert(!loc.fetch('testrem', { ref: second_commit_sha }).include?(first_commit_sha))
       end
     end
   end
 
   def test_push
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       loc = Git.clone(BARE_REPO_PATH, 'local')
-      rem = Git.clone(BARE_REPO_PATH, 'remote', :config => 'receive.denyCurrentBranch=ignore')
+      rem = Git.clone(BARE_REPO_PATH, 'remote', config: 'receive.denyCurrentBranch=ignore')
 
       loc.add_remote('testrem', rem)
 

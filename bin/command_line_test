@@ -85,7 +85,7 @@ class CommandLineParser
   def define_options
     option_parser.banner = "Usage:\n#{command_template}"
     option_parser.separator ''
-    option_parser.separator "Both --stdout and --stderr can be given."
+    option_parser.separator 'Both --stdout and --stderr can be given.'
     option_parser.separator 'If --signal is given, --exitstatus is ignored.'
     option_parser.separator 'If nothing is given, the script will exit with exitstatus 0.'
     option_parser.separator ''
@@ -211,7 +211,7 @@ end
 options = CommandLineParser.new.parse(*ARGV)
 
 STDOUT.puts options.stdout if options.stdout
-STDERR.puts options.stderr if options.stderr
+warn options.stderr if options.stderr
 sleep options.duration unless options.duration.zero?
 Process.kill(options.signal, Process.pid) if options.signal
 exit(options.exitstatus) if options.exitstatus

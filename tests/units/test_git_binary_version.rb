@@ -36,7 +36,7 @@ class TestGitBinaryVersion < Test::Unit::TestCase
   end
 
   def test_binary_version
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       mock_git_binary(mocked_git_script) do |git_binary_path|
         assert_equal([1, 2, 3], Git.binary_version(git_binary_path))
       end
@@ -44,7 +44,7 @@ class TestGitBinaryVersion < Test::Unit::TestCase
   end
 
   def test_binary_version_with_spaces
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       subdir = 'Git Bin Directory'
       mock_git_binary(mocked_git_script, subdir: subdir) do |git_binary_path|
         assert_equal([1, 2, 3], Git.binary_version(git_binary_path))

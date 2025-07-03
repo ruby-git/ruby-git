@@ -7,7 +7,7 @@ require 'test_helper'
 class TestLogExecute < Test::Unit::TestCase
   def setup
     clone_working_repo
-    #@git = Git.open(@wdir, :log => Logger.new(STDOUT))
+    # @git = Git.open(@wdir, :log => Logger.new(STDOUT))
     @git = Git.open(@wdir)
   end
 
@@ -71,7 +71,7 @@ class TestLogExecute < Test::Unit::TestCase
   end
 
   def test_get_log_since
-    l = @git.log.since("2 seconds ago").execute
+    l = @git.log.since('2 seconds ago').execute
     assert_equal(0, l.size)
 
     l = @git.log.since("#{Date.today.year - 2006} years ago").execute
@@ -79,14 +79,14 @@ class TestLogExecute < Test::Unit::TestCase
   end
 
   def test_get_log_grep
-    l = @git.log.grep("search").execute
+    l = @git.log.grep('search').execute
     assert_equal(2, l.size)
   end
 
   def test_get_log_author
-    l = @git.log(5).author("chacon").execute
+    l = @git.log(5).author('chacon').execute
     assert_equal(5, l.size)
-    l = @git.log(5).author("lazySusan").execute
+    l = @git.log(5).author('lazySusan').execute
     assert_equal(0, l.size)
   end
 
@@ -103,7 +103,7 @@ class TestLogExecute < Test::Unit::TestCase
     assert_equal(30, log.size)
     log = @git.log.path('example*').execute
     assert_equal(30, log.size)
-    log = @git.log.path(['example.txt','scott/text.txt']).execute
+    log = @git.log.path(['example.txt', 'scott/text.txt']).execute
     assert_equal(30, log.size)
   end
 
@@ -127,12 +127,12 @@ class TestLogExecute < Test::Unit::TestCase
   end
 
   def test_log_cherry
-    l = @git.log.between( 'master', 'cherry').cherry.execute
-    assert_equal( 1, l.size )
+    l = @git.log.between('master', 'cherry').cherry.execute
+    assert_equal(1, l.size)
   end
 
   def test_log_merges
-    expected_command_line = ['log', '--max-count=30', '--no-color', '--pretty=raw', '--merges', {chdir: nil}]
+    expected_command_line = ['log', '--max-count=30', '--no-color', '--pretty=raw', '--merges', { chdir: nil }]
     assert_command_line_eq(expected_command_line) { |git| git.log.merges.execute }
   end
 

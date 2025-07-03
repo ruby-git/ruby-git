@@ -189,10 +189,10 @@ module Git
     #
     # @raise [Git::TimeoutError] if the command times out
     #
-    def run(*args, out: nil, err: nil, normalize:, chomp:, merge:, chdir: nil, timeout: nil)
+    def run(*args, normalize:, chomp:, merge:, out: nil, err: nil, chdir: nil, timeout: nil)
       git_cmd = build_git_cmd(args)
       begin
-        options = { chdir: (chdir || :not_set), timeout_after: timeout, raise_errors: false }
+        options = { chdir: chdir || :not_set, timeout_after: timeout, raise_errors: false }
         options[:out] = out unless out.nil?
         options[:err] = err unless err.nil?
         options[:merge_output] = merge unless merge.nil?
@@ -258,7 +258,7 @@ module Git
     # @api private
     #
     def post_process_all(raw_outputs, normalize, chomp)
-      Array.new.tap do |result|
+      [].tap do |result|
         raw_outputs.each { |raw_output| result << post_process(raw_output, normalize, chomp) }
       end
     end

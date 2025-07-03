@@ -30,7 +30,7 @@ class TestInit < Test::Unit::TestCase
   def test_open_opts
     clone_working_repo
     index = File.join(TEST_FIXTURES, 'index')
-    g = Git.open @wdir, :repository => BARE_REPO_PATH, :index => index
+    g = Git.open @wdir, repository: BARE_REPO_PATH, index: index
     assert_equal(g.repo.path, BARE_REPO_PATH)
     assert_equal(g.index.path, index)
   end
@@ -40,7 +40,7 @@ class TestInit < Test::Unit::TestCase
     assert_equal(g.repo.path, BARE_REPO_PATH)
   end
 
-  #g = Git.init
+  # g = Git.init
   #  Git.init('project')
   #  Git.init('/home/schacon/proj',
   #		{ :git_dir => '/opt/git/proj.git',
@@ -60,7 +60,7 @@ class TestInit < Test::Unit::TestCase
 
   def test_git_init_bare
     in_temp_dir do |path|
-      repo = Git.init(path, :bare => true)
+      repo = Git.init(path, bare: true)
       assert(File.exist?(File.join(path, 'config')))
       assert_equal('true', repo.config('core.bare'))
     end
@@ -71,7 +71,7 @@ class TestInit < Test::Unit::TestCase
       assert(!File.exist?(File.join(dir, 'config')))
 
       in_temp_dir do |path|
-        Git.init(path, :repository => dir)
+        Git.init(path, repository: dir)
         assert(File.exist?(File.join(dir, 'config')))
       end
     end
@@ -88,7 +88,7 @@ class TestInit < Test::Unit::TestCase
   end
 
   def test_git_clone
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co')
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
@@ -96,31 +96,31 @@ class TestInit < Test::Unit::TestCase
   end
 
   def test_git_clone_with_branch
-    in_temp_dir do |path|
-      g = Git.clone(BARE_REPO_PATH, 'clone-branch', :branch => 'test')
+    in_temp_dir do |_path|
+      g = Git.clone(BARE_REPO_PATH, 'clone-branch', branch: 'test')
       assert_equal(g.current_branch, 'test')
     end
   end
 
   def test_git_clone_bare
-    in_temp_dir do |path|
-      g = Git.clone(BARE_REPO_PATH, 'bare.git', :bare => true)
+    in_temp_dir do |_path|
+      g = Git.clone(BARE_REPO_PATH, 'bare.git', bare: true)
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert_nil(g.dir)
     end
   end
 
   def test_git_clone_mirror
-    in_temp_dir do |path|
-      g = Git.clone(BARE_REPO_PATH, 'bare.git', :mirror => true)
+    in_temp_dir do |_path|
+      g = Git.clone(BARE_REPO_PATH, 'bare.git', mirror: true)
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert_nil(g.dir)
     end
   end
 
   def test_git_clone_config
-    in_temp_dir do |path|
-      g = Git.clone(BARE_REPO_PATH, 'config.git', :config => "receive.denyCurrentBranch=ignore")
+    in_temp_dir do |_path|
+      g = Git.clone(BARE_REPO_PATH, 'config.git', config: 'receive.denyCurrentBranch=ignore')
       assert_equal('ignore', g.config['receive.denycurrentbranch'])
       assert(File.exist?(File.join(g.repo.path, 'config')))
       assert(g.dir)
@@ -130,7 +130,7 @@ class TestInit < Test::Unit::TestCase
   # If the :log option is not passed to Git.clone, a Logger will be created
   #
   def test_git_clone_without_log
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co')
       actual_logger = g.instance_variable_get(:@logger)
       assert_equal(Logger, actual_logger.class)
@@ -144,7 +144,7 @@ class TestInit < Test::Unit::TestCase
     log_io = StringIO.new
     expected_logger = Logger.new(log_io)
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co', { log: expected_logger })
       actual_logger = g.instance_variable_get(:@logger)
       assert_equal(expected_logger.object_id, actual_logger.object_id)
@@ -162,5 +162,4 @@ class TestInit < Test::Unit::TestCase
       Git.open BARE_REPO_PATH
     end
   end
-
 end

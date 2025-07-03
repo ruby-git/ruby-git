@@ -4,7 +4,7 @@ require 'test_helper'
 
 class TestTags < Test::Unit::TestCase
   def test_tags
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       r1 = Git.clone(BARE_REPO_PATH, 'repo1')
       r2 = Git.clone(BARE_REPO_PATH, 'repo2')
       r1.config('user.name', 'Test User')
@@ -25,32 +25,32 @@ class TestTags < Test::Unit::TestCase
       r1.commit('my commit')
       r1.add_tag('second')
 
-      assert(r1.tags.any?{|t| t.name == 'first'})
+      assert(r1.tags.any? { |t| t.name == 'first' })
 
       r2.add_tag('third')
 
-      assert(r2.tags.any?{|t| t.name == 'third'})
-      assert(r2.tags.none?{|t| t.name == 'second'})
+      assert(r2.tags.any? { |t| t.name == 'third' })
+      assert(r2.tags.none? { |t| t.name == 'second' })
 
       error = assert_raises ArgumentError do
-        r2.add_tag('fourth', {:a => true})
+        r2.add_tag('fourth', { a: true })
       end
 
       assert_equal(error.message, 'Cannot create an annotated tag without a message.')
 
-      r2.add_tag('fourth', {:a => true, :m => 'test message'})
+      r2.add_tag('fourth', { a: true, m: 'test message' })
 
-      assert(r2.tags.any?{|t| t.name == 'fourth'})
+      assert(r2.tags.any? { |t| t.name == 'fourth' })
 
-      r2.add_tag('fifth', r2.tags.detect{|t| t.name == 'third'}.objectish)
+      r2.add_tag('fifth', r2.tags.detect { |t| t.name == 'third' }.objectish)
 
-      assert(r2.tags.detect{|t| t.name == 'third'}.objectish == r2.tags.detect{|t| t.name == 'fifth'}.objectish)
+      assert(r2.tags.detect { |t| t.name == 'third' }.objectish == r2.tags.detect { |t| t.name == 'fifth' }.objectish)
 
       assert_raise Git::FailedError do
         r2.add_tag('third')
       end
 
-      r2.add_tag('third', {:f => true})
+      r2.add_tag('third', { f: true })
 
       r2.delete_tag('third')
 
@@ -64,7 +64,7 @@ class TestTags < Test::Unit::TestCase
       assert_equal(tag1.tagger.class, Git::Author)
       assert_equal(tag1.tagger.name, 'Test User')
       assert_equal(tag1.tagger.email, 'test@email.com')
-      assert_true((Time.now - tag1.tagger.date) <  10)
+      assert_true((Time.now - tag1.tagger.date) < 10)
       assert_equal(tag1.message, 'test message')
 
       tag2 = r2.tag('fifth')
@@ -76,7 +76,7 @@ class TestTags < Test::Unit::TestCase
 
   def test_tag_message_not_prefixed_with_space
     in_bare_repo_clone do |repo|
-      repo.add_tag('donkey', :annotated => true, :message => 'hello')
+      repo.add_tag('donkey', annotated: true, message: 'hello')
       tag = repo.tag('donkey')
       assert_equal(tag.message, 'hello')
     end

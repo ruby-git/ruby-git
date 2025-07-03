@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module Git
-
   # Return the last n commits that match the specified criteria
   #
   # @example The last (default number) of commits
@@ -50,8 +49,8 @@ module Git
       # Iterates over each commit in the result set
       #
       # @yield [Git::Object::Commit]
-      def each(&block)
-        @commits.each(&block)
+      def each(&)
+        @commits.each(&)
       end
 
       # @return [Git::Object::Commit, nil] the first commit in the result set
@@ -126,7 +125,7 @@ module Git
     #
     def max_count(num_or_all)
       dirty_log
-      @max_count = (num_or_all == :all) ? nil : num_or_all
+      @max_count = num_or_all == :all ? nil : num_or_all
       self
     end
 
@@ -219,61 +218,74 @@ module Git
     def size
       deprecate_method(__method__)
       check_log
-      @commits.size rescue nil
+      begin
+        @commits.size
+      rescue StandardError
+        nil
+      end
     end
 
-    def each(&block)
+    def each(&)
       deprecate_method(__method__)
       check_log
-      @commits.each(&block)
+      @commits.each(&)
     end
 
     def first
       deprecate_method(__method__)
       check_log
-      @commits.first rescue nil
+      begin
+        @commits.first
+      rescue StandardError
+        nil
+      end
     end
 
     def last
       deprecate_method(__method__)
       check_log
-      @commits.last rescue nil
+      begin
+        @commits.last
+      rescue StandardError
+        nil
+      end
     end
 
     def [](index)
       deprecate_method(__method__)
       check_log
-      @commits[index] rescue nil
+      begin
+        @commits[index]
+      rescue StandardError
+        nil
+      end
     end
-
 
     private
 
-      def deprecate_method(method_name)
-        Git::Deprecation.warn("Calling Git::Log##{method_name} is deprecated and will be removed in a future version. Call #execute and then ##{method_name} on the result object.")
-      end
+    def deprecate_method(method_name)
+      Git::Deprecation.warn("Calling Git::Log##{method_name} is deprecated and will be removed in a future version. Call #execute and then ##{method_name} on the result object.")
+    end
 
-      def dirty_log
-        @dirty_flag = true
-      end
+    def dirty_log
+      @dirty_flag = true
+    end
 
-      def check_log
-        if @dirty_flag
-          run_log
-          @dirty_flag = false
-        end
-      end
+    def check_log
+      return unless @dirty_flag
 
-      # actually run the 'git log' command
-      def run_log
-        log = @base.lib.full_log_commits(
-          count: @max_count, all: @all, object: @object, path_limiter: @path, since: @since,
-          author: @author, grep: @grep, skip: @skip, until: @until, between: @between,
-          cherry: @cherry, merges: @merges
-        )
-        @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
-      end
+      run_log
+      @dirty_flag = false
+    end
 
+    # actually run the 'git log' command
+    def run_log
+      log = @base.lib.full_log_commits(
+        count: @max_count, all: @all, object: @object, path_limiter: @path, since: @since,
+        author: @author, grep: @grep, skip: @skip, until: @until, between: @between,
+        cherry: @cherry, merges: @merges
+      )
+      @commits = log.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
+    end
   end
-
 end

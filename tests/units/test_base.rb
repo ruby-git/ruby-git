@@ -3,13 +3,12 @@
 require 'test_helper'
 
 class TestBase < Test::Unit::TestCase
-
   def setup
     clone_working_repo
   end
 
   def test_add
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_add')
 
       create_file('test_add/test_file_1', 'content tets_file_1')
@@ -34,7 +33,7 @@ class TestBase < Test::Unit::TestCase
       assert(!git.status.added.assoc('test_file_4'))
 
       # Adding multiple files, using Array
-      git.add(['test_file_3','test_file_4', 'test file with \' quote'])
+      git.add(['test_file_3', 'test_file_4', 'test file with \' quote'])
 
       assert(git.status.added.assoc('test_file_3'))
       assert(git.status.added.assoc('test_file_4'))
@@ -49,7 +48,7 @@ class TestBase < Test::Unit::TestCase
       create_file('test_add/test_file_5', 'content test_file_5')
 
       # Adding all files (new, updated or deleted), using :all
-      git.add(:all => true)
+      git.add(all: true)
 
       assert(git.status.deleted.assoc('test_file_3'))
       assert(git.status.changed.assoc('test_file_4'))
@@ -80,7 +79,7 @@ class TestBase < Test::Unit::TestCase
   end
 
   def test_commit
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_commit')
 
       create_file('test_commit/test_file_1', 'content tets_file_1')
@@ -91,7 +90,7 @@ class TestBase < Test::Unit::TestCase
 
       base_commit_id = git.log[0].objectish
 
-      git.commit("Test Commit")
+      git.commit('Test Commit')
 
       original_commit_id = git.log[0].objectish
 
@@ -99,7 +98,7 @@ class TestBase < Test::Unit::TestCase
 
       git.add('test_file_3')
 
-      git.commit(nil, :amend => true)
+      git.commit(nil, amend: true)
 
       assert(git.log[0].objectish != original_commit_id)
       assert(git.log[1].objectish == base_commit_id)

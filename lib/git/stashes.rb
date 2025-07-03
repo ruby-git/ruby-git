@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module Git
-
   # object that holds all the available stashes
   class Stashes
     include Enumerable
@@ -11,7 +10,7 @@ module Git
 
       @base = base
 
-      @base.lib.stashes_all.each do |id, message|
+      @base.lib.stashes_all.each do |_id, message|
         @stashes.unshift(Git::Stash.new(@base, message, true))
       end
     end
@@ -32,7 +31,7 @@ module Git
       @stashes.unshift(s) if s.saved?
     end
 
-    def apply(index=nil)
+    def apply(index = nil)
       @base.lib.stash_apply(index)
     end
 
@@ -45,8 +44,8 @@ module Git
       @stashes.size
     end
 
-    def each(&block)
-      @stashes.each(&block)
+    def each(&)
+      @stashes.each(&)
     end
 
     def [](index)

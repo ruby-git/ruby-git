@@ -33,7 +33,7 @@ class TestWorktree < Test::Unit::TestCase
   test 'adding a worktree when there are no commits should fail' do
     omit('Omitted since git version is >= 2.42.0') if Git::Lib.new(nil, nil).compare_version_to(2, 42, 0) >= 0
 
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       Dir.mkdir('main_worktree')
       Dir.chdir('main_worktree') do
         `git init`
@@ -67,7 +67,7 @@ class TestWorktree < Test::Unit::TestCase
 
       assert_equal(2, git.worktrees.size)
 
-      expected_worktree_dirs = [
+      [
         File.join(path, 'main_worktree'),
         File.join(path, 'feature1')
       ].each_with_index do |expected_worktree_dir, i|
@@ -92,7 +92,7 @@ class TestWorktree < Test::Unit::TestCase
 
       assert_equal(2, git.worktrees.size)
 
-      expected_worktree_dirs = [
+      [
         File.join(path, 'main_worktree'),
         File.join(path, 'feature1')
       ].each_with_index do |expected_worktree_dir, i|

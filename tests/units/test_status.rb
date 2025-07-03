@@ -1,16 +1,14 @@
-
 # frozen_string_literal: true
 
 require 'test_helper'
 
 class TestStatus < Test::Unit::TestCase
-
   def setup
     clone_working_repo
   end
 
   def test_status_pretty
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
       string = "colon_numbers.txt\n\tsha(r)  \n\tsha(i) " \
                "e76778b73006b0dda0dd56e9257c5bf6b6dd3373 100644\n\ttype   \n\tstage  0\n\tuntrac \n" \
@@ -26,7 +24,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_on_empty_repo
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       git = Git.open('.')
       assert_nothing_raised do
@@ -36,7 +34,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_added
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       File.write('file1', 'contents1')
       File.write('file2', 'contents2')
@@ -59,7 +57,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_added_on_empty_repo
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       File.write('file1', 'contents1')
       File.write('file2', 'contents2')
@@ -75,7 +73,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_dot_files_status
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
@@ -90,7 +88,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_added_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
       git.config('core.ignorecase', 'false')
 
@@ -109,7 +107,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_changed_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
       git.config('core.ignorecase', 'false')
 
@@ -134,7 +132,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_deleted_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
       git.config('core.ignorecase', 'false')
 
@@ -155,7 +153,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_untracked
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       File.write('file1', 'contents1')
       File.write('file2', 'contents2')
@@ -172,7 +170,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_untracked_no_untracked_files
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       File.write('file1', 'contents1')
       Dir.mkdir('subdir')
@@ -186,7 +184,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_untracked_from_subdir
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       `git init`
       File.write('file1', 'contents1')
       File.write('file2', 'contents2')
@@ -205,7 +203,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_untracked_boolean
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
       git.config('core.ignorecase', 'false')
 
@@ -223,7 +221,7 @@ class TestStatus < Test::Unit::TestCase
   end
 
   def test_changed_cache
-    in_temp_dir do |path|
+    in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
 
       create_file('test_dot_files_status/test_file_1', 'hello')

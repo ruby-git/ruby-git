@@ -3,14 +3,12 @@
 require 'git/path'
 
 module Git
-
   class Worktree < Path
-
     attr_accessor :full, :dir, :gcommit
 
     def initialize(base, dir, gcommit = nil)
       @full = dir
-      @full += ' ' + gcommit if !gcommit.nil?
+      @full += ' ' + gcommit unless gcommit.nil?
       @base = base
       @dir = dir
       @gcommit = gcommit

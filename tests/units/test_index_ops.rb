@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class TestIndexOps < Test::Unit::TestCase
-
   def test_add
     in_bare_repo_clone do |g|
       assert_equal('100644', g.status['example.txt'].mode_index)
@@ -39,15 +38,15 @@ class TestIndexOps < Test::Unit::TestCase
       new_file('.gitignore', 'ignored_file')
 
       g.add
-      g.commit("first commit")
+      g.commit('first commit')
 
-      FileUtils.mkdir_p("nested")
+      FileUtils.mkdir_p('nested')
       Dir.chdir('nested') do
         Git.init
       end
 
       new_file('file-to-clean', 'blablahbla')
-      FileUtils.mkdir_p("dir_to_clean")
+      FileUtils.mkdir_p('dir_to_clean')
 
       Dir.chdir('dir_to_clean') do
         new_file('clean-me-too', 'blablahbla')
@@ -57,7 +56,7 @@ class TestIndexOps < Test::Unit::TestCase
       assert(File.exist?('dir_to_clean'))
       assert(File.exist?('ignored_file'))
 
-      g.clean(:force => true)
+      g.clean(force: true)
 
       assert(!File.exist?('file-to-clean'))
       assert(File.exist?('dir_to_clean'))
@@ -65,18 +64,18 @@ class TestIndexOps < Test::Unit::TestCase
 
       new_file('file-to-clean', 'blablahbla')
 
-      g.clean(:force => true, :d => true)
+      g.clean(force: true, d: true)
 
       assert(!File.exist?('file-to-clean'))
       assert(!File.exist?('dir_to_clean'))
       assert(File.exist?('ignored_file'))
 
-      g.clean(:force => true, :x => true)
+      g.clean(force: true, x: true)
       assert(!File.exist?('ignored_file'))
 
       assert(File.exist?('nested'))
 
-      g.clean(:ff => true, :d => true)
+      g.clean(ff: true, d: true)
       assert(!File.exist?('nested'))
     end
   end
@@ -87,17 +86,17 @@ class TestIndexOps < Test::Unit::TestCase
 
       new_file('test-file', 'blahblahbal')
       g.add
-      g.commit("first commit")
+      g.commit('first commit')
       first_commit = g.gcommit('HEAD')
 
       new_file('test-file2', 'blablahbla')
       g.add
-      g.commit("second-commit")
+      g.commit('second-commit')
       g.gcommit('HEAD')
 
-      commits = g.log(10000).count
+      commits = g.log(10_000).count
       g.revert(first_commit.sha)
-      assert_equal(commits + 1, g.log(10000).count)
+      assert_equal(commits + 1, g.log(10_000).count)
       assert(!File.exist?('test-file2'))
     end
   end
@@ -110,7 +109,7 @@ class TestIndexOps < Test::Unit::TestCase
       new_file('test-file2', 'blahblahblah2')
       assert(g.status.untracked.assoc('test-file1'))
 
-      g.add(['test-file1', 'test-file2'])
+      g.add(%w[test-file1 test-file2])
       assert(g.status.added.assoc('test-file1'))
       assert(g.status.added.assoc('test-file1'))
       assert(!g.status.untracked.assoc('test-file1'))
@@ -142,7 +141,7 @@ class TestIndexOps < Test::Unit::TestCase
       new_file('test-file2', 'blahblahblah2')
       assert(g.status.untracked.assoc('test-file1'))
 
-      g.add(['test-file1', 'test-file2'])
+      g.add(%w[test-file1 test-file2])
       assert(!g.status.untracked.assoc('test-file1'))
 
       g.reset
