@@ -182,29 +182,6 @@ module Git
       Git::Remote.new(self, name)
     end
 
-    # Create a new git tag
-    #
-    # @example
-    #   repo.add_tag('tag_name', object_reference)
-    #   repo.add_tag('tag_name', object_reference, {:options => 'here'})
-    #   repo.add_tag('tag_name', {:options => 'here'})
-    #
-    # @param [String] name The name of the tag to add
-    # @param [Hash] options Opstions to pass to `git tag`.
-    #   See [git-tag](https://git-scm.com/docs/git-tag) for more details.
-    # @option options [boolean] :annotate Make an unsigned, annotated tag object
-    # @option options [boolean] :a An alias for the `:annotate` option
-    # @option options [boolean] :d Delete existing tag with the given names.
-    # @option options [boolean] :f Replace an existing tag with the given name (instead of failing)
-    # @option options [String] :message Use the given tag message
-    # @option options [String] :m An alias for the `:message` option
-    # @option options [boolean] :s Make a GPG-signed tag.
-    #
-    def add_tag(name, *options)
-      lib.tag(name, *options)
-      tag(name)
-    end
-
     # changes current working directory for a block
     # to the git working directory
     #

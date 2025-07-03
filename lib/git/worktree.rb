@@ -4,7 +4,7 @@ require 'git/path'
 
 module Git
   class Worktree < Path
-    attr_accessor :full, :dir, :gcommit
+    attr_accessor :full, :dir
 
     def initialize(base, dir, gcommit = nil)
       @full = dir
