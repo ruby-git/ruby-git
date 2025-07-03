@@ -8,8 +8,16 @@ class TestArchive < Test::Unit::TestCase
     @git = Git.open(@wdir)
   end
 
+  require 'securerandom'
+  require 'tmpdir'
+
+  # Create a temporary file path without actually creating the file
+  #
+  # @return [String] the path to the temporary file
+  #
   def tempfile
-    Dir::Tmpname.create('test-archive') {}
+    random_string = SecureRandom.hex(8)
+    File.join(Dir.tmpdir, "test-archive-#{random_string}")
   end
 
   def test_archive
