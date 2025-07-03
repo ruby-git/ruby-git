@@ -285,7 +285,7 @@ module Git
     def self.new(base, objectish, type = nil, is_tag = false)
       if is_tag
         sha = base.lib.tag_sha(objectish)
-        raise Git::UnexpectedResultError.new("Tag '#{objectish}' does not exist.") if sha == ''
+        raise Git::UnexpectedResultError, "Tag '#{objectish}' does not exist." if sha == ''
 
         return Git::Object::Tag.new(base, sha, objectish)
       end

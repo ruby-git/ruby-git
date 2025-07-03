@@ -211,9 +211,9 @@ module Git
     # @api private
     #
     def build_git_cmd(args)
-      raise ArgumentError.new('The args array can not contain an array') if args.any? { |a| a.is_a?(Array) }
+      raise ArgumentError, 'The args array can not contain an array' if args.any? { |a| a.is_a?(Array) }
 
-      [binary_path, *global_opts, *args].map { |e| e.to_s }
+      [binary_path, *global_opts, *args].map(&:to_s)
     end
 
     # Process the result of the command and return a Git::CommandLineResult
@@ -242,8 +242,8 @@ module Git
       logger.debug { "stdout:\n#{processed_out.inspect}\nstderr:\n#{processed_err.inspect}" }
       Git::CommandLineResult.new(command, result, processed_out, processed_err).tap do |processed_result|
         raise Git::TimeoutError.new(processed_result, timeout) if result.timeout?
-        raise Git::SignaledError.new(processed_result) if result.signaled?
-        raise Git::FailedError.new(processed_result) unless result.success?
+        raise Git::SignaledError, processed_result if result.signaled?
+        raise Git::FailedError, processed_result unless result.success?
       end
     end
 
@@ -258,9 +258,7 @@ module Git
     # @api private
     #
     def post_process_all(raw_outputs, normalize, chomp)
-      [].tap do |result|
-        raw_outputs.each { |raw_output| result << post_process(raw_output, normalize, chomp) }
-      end
+      raw_outputs.map { |raw_output| post_process(raw_output, normalize, chomp) }
     end
 
     # Determine the output to return in the `CommandLineResult`

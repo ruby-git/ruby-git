@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require File.dirname(__FILE__) + '/../test_helper'
+require "#{File.dirname(__FILE__)}/../test_helper"
 
 # Tests for Git::Lib#repository_default_branch
 #

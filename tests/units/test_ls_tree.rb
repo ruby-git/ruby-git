@@ -22,12 +22,12 @@ class TestLsTree < Test::Unit::TestCase
 
       # ls_tree
       default_tree = assert_nothing_raised { repo.ls_tree('HEAD') }
-      assert_equal(default_tree.dig('blob').keys.sort, ['README.md'])
-      assert_equal(default_tree.dig('tree').keys.sort, ['subdir'])
+      assert_equal(default_tree['blob'].keys.sort, ['README.md'])
+      assert_equal(default_tree['tree'].keys.sort, ['subdir'])
       # ls_tree with recursion into sub-trees
       recursive_tree = assert_nothing_raised { repo.ls_tree('HEAD', recursive: true) }
-      assert_equal(recursive_tree.dig('blob').keys.sort, ['README.md', 'subdir/file.md'])
-      assert_equal(recursive_tree.dig('tree').keys.sort, [])
+      assert_equal(recursive_tree['blob'].keys.sort, ['README.md', 'subdir/file.md'])
+      assert_equal(recursive_tree['tree'].keys.sort, [])
 
       Dir.chdir('repo') do
         assert_child_process_success { `git -c protocol.file.allow=always submodule add ../submodule submodule 2>&1` }

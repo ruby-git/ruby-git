@@ -470,7 +470,7 @@ module Git
         end
       end
 
-      hsh['message'] = data.join("\n") + "\n"
+      hsh['message'] = "#{data.join("\n")}\n"
 
       hsh
     end
@@ -539,7 +539,7 @@ module Git
         hsh[key] = value
       end
 
-      hsh['message'] = data.join("\n") + "\n"
+      hsh['message'] = "#{data.join("\n")}\n"
 
       hsh
     end
@@ -562,7 +562,7 @@ module Git
         in_message = false if in_message && line[0..3] != '    '
 
         if in_message
-          hsh['message'] << "#{line[4..-1]}\n"
+          hsh['message'] << "#{line[4..]}\n"
           next
         end
 
@@ -684,7 +684,7 @@ module Git
       # detached
       #
       command_lines('worktree', 'list', '--porcelain').each do |w|
-        s = w.split("\s")
+        s = w.split
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
       end
@@ -788,7 +788,7 @@ module Git
       hsh = {}
       begin
         command_lines('grep', *grep_opts).each do |line|
-          if m = /(.*?):(\d+):(.*)/.match(line)
+          if (m = /(.*?):(\d+):(.*)/.match(line))
             hsh[m[1]] ||= []
             hsh[m[1]] << [m[2].to_i, m[3]]
           end
@@ -1489,7 +1489,7 @@ module Git
     def current_command_version
       output = command('version')
       version = output[/\d+(\.\d+)+/]
-      version_parts = version.split('.').collect { |i| i.to_i }
+      version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
     end
 

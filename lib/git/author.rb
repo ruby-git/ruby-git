@@ -5,7 +5,7 @@ module Git
     attr_accessor :name, :email, :date
 
     def initialize(author_string)
-      return unless m = /(.*?) <(.*?)> (\d+) (.*)/.match(author_string)
+      return unless (m = /(.*?) <(.*?)> (\d+) (.*)/.match(author_string))
 
       @name = m[1]
       @email = m[2]

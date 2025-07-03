@@ -10,7 +10,8 @@ module Git
 
       @base = base
 
-      @base.lib.stashes_all.each do |_id, message|
+      @base.lib.stashes_all.each do |indexed_message|
+        _index, message = indexed_message
         @stashes.unshift(Git::Stash.new(@base, message, true))
       end
     end

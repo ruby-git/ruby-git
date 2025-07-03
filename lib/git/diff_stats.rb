@@ -51,7 +51,7 @@ module Git
 
     # Lazily fetches and caches the stats from the git lib.
     def fetch_stats
-      @stats ||= @base.lib.diff_stats(
+      @fetch_stats ||= @base.lib.diff_stats(
         @from, @to, { path_limiter: @path_limiter }
       )
     end

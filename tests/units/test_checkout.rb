@@ -5,7 +5,7 @@ require 'test_helper'
 class TestCheckout < Test::Unit::TestCase
   test 'checkout with no args' do
     expected_command_line = ['checkout', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.checkout }
+    assert_command_line_eq(expected_command_line, &:checkout)
   end
 
   test 'checkout with no args and options' do
