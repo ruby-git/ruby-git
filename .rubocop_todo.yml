@@ -6,16 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 12
-# Configuration parameters: AllowedMethods, AllowedPatterns.
-Metrics/PerceivedComplexity:
-  Max: 22
-
-# Offense count: 1
-Naming/AccessorMethodName:
-  Exclude:
-    - 'lib/git/object.rb'
-
 # Offense count: 1
 # Configuration parameters: ForbiddenDelimiters.
 # ForbiddenDelimiters: (?i-mx:(^|\s)(EO[A-Z]{1}|END)(\s|$))
@@ -110,3 +100,8 @@ Metrics/CyclomaticComplexity:
 # Configuration parameters: CountComments, CountAsOne, AllowedMethods, AllowedPatterns.
 Metrics/MethodLength:
   Max: 51
+
+# Offense count: 12
+# Configuration parameters: AllowedMethods, AllowedPatterns.
+Metrics/PerceivedComplexity:
+  Max: 22

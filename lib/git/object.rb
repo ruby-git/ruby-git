@@ -159,7 +159,7 @@ module Git
         @message = nil
         return unless init
 
-        set_commit(init)
+        from_data(init)
       end
 
       def message
@@ -211,7 +211,12 @@ module Git
         diff(parent)
       end
 
-      def set_commit(data)
+      def set_commit(data) # rubocop:disable Naming/AccessorMethodName
+        Git.deprecation('Git::Object::Commit#set_commit is deprecated. Use #from_data instead.')
+        from_data(data)
+      end
+
+      def from_data(data)
         @sha ||= data['sha']
         @committer = Git::Author.new(data['committer'])
         @author = Git::Author.new(data['author'])
@@ -231,7 +236,7 @@ module Git
         return if @tree
 
         data = @base.lib.cat_file_commit(@objectish)
-        set_commit(data)
+        from_data(data)
       end
     end
 
