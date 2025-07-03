@@ -1522,6 +1522,16 @@ module Git
       true
     end
 
+    COMMAND_ARG_DEFAULTS = {
+      out: nil,
+      err: nil,
+      normalize: true,
+      chomp: true,
+      merge: false,
+      chdir: nil,
+      timeout: nil # Don't set to Git.config.timeout here since it is mutable
+    }.freeze
+
     private
 
     def command_lines(cmd, *opts, chdir: nil)
@@ -1569,26 +1579,20 @@ module Git
     # Runs a git command and returns the output
     #
     # Additional args are passed to the command line. They should exclude the 'git'
-    # command itself and global options.
+    # command itself and global options. Remember to splat the the arguments if given
+    # as an array.
     #
-    # For example, to run `git log --pretty=oneline`, you would pass `['log',
-    # '--pretty=oneline']`
+    # For example, to run `git log --pretty=oneline`, you would create the array
+    # `args = ['log', '--pretty=oneline']` and call `command(*args)`.
     #
-    # @param out [String, nil] the path to a file or an IO to write the command's
-    #   stdout to
-    #
-    # @param err [String, nil] the path to a file or an IO to write the command's
-    #   stdout to
-    #
-    # @param normalize [Boolean] true to normalize the output encoding
-    #
-    # @param chomp [Boolean] true to remove trailing newlines from the output
-    #
-    # @param merge [Boolean] true to merge stdout and stderr
-    #
-    # @param chdir [String, nil] the directory to run the command in
-    #
-    # @param timeout [Numeric, nil] the maximum seconds to wait for the command to complete
+    # @param options_hash [Hash] the options to pass to the command
+    # @option options_hash [IO, String, #write, nil] :out the destination for captured stdout
+    # @option options_hash [IO, String, #write, nil] :err the destination for captured stderr
+    # @option options_hash [Boolean] :normalize true to normalize the output encoding to UTF-8
+    # @option options_hash [Boolean] :chomp true to remove trailing newlines from the output
+    # @option options_hash [Boolean] :merge true to merge stdout and stderr into a single output
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
     #
     #   If timeout is nil, the global timeout from {Git::Config} is used.
     #
@@ -1603,9 +1607,14 @@ module Git
     # @return [String] the command's stdout (or merged stdout and stderr if `merge`
     # is true)
     #
+    # @raise [ArgumentError] if an unknown option is passed
+    #
     # @raise [Git::FailedError] if the command failed
+    #
     # @raise [Git::SignaledError] if the command was signaled
+    #
     # @raise [Git::TimeoutError] if the command times out
+    #
     # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
     #   The exception's `result` attribute is a {Git::CommandLineResult} which will
@@ -1614,10 +1623,14 @@ module Git
     #
     # @api private
     #
-    def command(*, out: nil, err: nil, normalize: true, chomp: true, merge: false, chdir: nil, timeout: nil)
-      timeout ||= Git.config.timeout
-      result = command_line.run(*, out: out, err: err, normalize: normalize, chomp: chomp, merge: merge,
-                                   chdir: chdir, timeout: timeout)
+    def command(*, **options_hash)
+      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
+      options_hash[:timeout] ||= Git.config.timeout
+
+      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      result = command_line.run(*, **options_hash)
       result.stdout
     end
 
