@@ -1573,12 +1573,11 @@ module Git
 
     # Runs a git command and returns the output
     #
-    # @param args [Array] the git command to run and its arguments
+    # Additional args are passed to the command line. They should exclude the 'git'
+    # command itself and global options.
     #
-    #   This should exclude the 'git' command itself and global options.
-    #
-    #   For example, to run `git log --pretty=oneline`, you would pass `['log',
-    #   '--pretty=oneline']`
+    # For example, to run `git log --pretty=oneline`, you would pass `['log',
+    # '--pretty=oneline']`
     #
     # @param out [String, nil] the path to a file or an IO to write the command's
     #   stdout to
