@@ -4,7 +4,8 @@ require 'test_helper'
 
 class TestSignaledError < Test::Unit::TestCase
   def test_initializer
-    status = Struct.new(:to_s).new('pid 65628 SIGKILL (signal 9)') # `kill -9 $$`
+    # `kill -9 $$`
+    status = Class.new { def to_s = 'pid 65628 SIGKILL (signal 9)' }.new
     result = Git::CommandLineResult.new(%w[git status], status, '', 'uncaught signal')
 
     error = Git::SignaledError.new(result)
@@ -13,7 +14,8 @@ class TestSignaledError < Test::Unit::TestCase
   end
 
   def test_to_s
-    status = Struct.new(:to_s).new('pid 65628 SIGKILL (signal 9)') # `kill -9 $$`
+    # `kill -9 $$`
+    status = Class.new { def to_s = 'pid 65628 SIGKILL (signal 9)' }.new
     result = Git::CommandLineResult.new(%w[git status], status, '', 'uncaught signal')
 
     error = Git::SignaledError.new(result)

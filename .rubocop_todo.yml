@@ -6,13 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 8
-Lint/StructNewOverride:
-  Exclude:
-    - 'tests/units/test_command_line_error.rb'
-    - 'tests/units/test_failed_error.rb'
-    - 'tests/units/test_signaled_error.rb'
-    - 'tests/units/test_timeout_error.rb'
 
 # Offense count: 2
 # Configuration parameters: AllowComments, AllowNil.
