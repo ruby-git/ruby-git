@@ -90,7 +90,7 @@ module Git
     end
 
     #
-    # Determines whether the given file has is tracked by git.
+    # Determines whether the given file is tracked by git.
     # File path starts at git base directory
     #
     # @param file [String] The name of the file.
