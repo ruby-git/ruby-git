@@ -14,7 +14,7 @@ class TestSignedCommits < Test::Unit::TestCase
     in_temp_dir do |path|
       `git init`
       ssh_key_file = File.expand_path(File.join('.git', 'test-key'))
-      `ssh-keygen -t dsa -N "" -C "test key" -f "#{ssh_key_file}"`
+      `ssh-keygen -t ed25519 -N "" -C "test key" -f "#{ssh_key_file}"`
       `git config --local gpg.format ssh`
       `git config --local user.signingkey #{ssh_key_file}.pub`
 
