@@ -3,6 +3,12 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
+# Don't care so much about length of methods in tests
+Metrics/MethodLength:
+  Exclude:
+    - "tests/test_helper.rb"
+    - "tests/units/**/*"
+
 # Allow test data to have long lines
 Layout/LineLength:
   Exclude:

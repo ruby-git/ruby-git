@@ -61,20 +61,13 @@ module Git
     #   @param [Logger] logger
     #
     def initialize(base = nil, logger = nil)
-      @git_dir = nil
-      @git_index_file = nil
-      @git_work_dir = nil
-      @path = nil
       @logger = logger || Logger.new(nil)
 
-      if base.is_a?(Git::Base)
-        @git_dir = base.repo.path
-        @git_index_file = base.index.path if base.index
-        @git_work_dir = base.dir.path if base.dir
-      elsif base.is_a?(Hash)
-        @git_dir = base[:repository]
-        @git_index_file = base[:index]
-        @git_work_dir = base[:working_directory]
+      case base
+      when Git::Base
+        initialize_from_base(base)
+      when Hash
+        initialize_from_hash(base)
       end
     end
 
@@ -138,32 +131,10 @@ module Git
       @path = opts[:path] || '.'
       clone_dir = opts[:path] ? File.join(@path, directory) : directory
 
-      arr_opts = []
-      arr_opts << '--bare' if opts[:bare]
-      arr_opts << '--branch' << opts[:branch] if opts[:branch]
-      arr_opts << '--depth' << opts[:depth].to_i if opts[:depth]
-      arr_opts << '--filter' << opts[:filter] if opts[:filter]
-      Array(opts[:config]).each { |c| arr_opts << '--config' << c }
-      (arr_opts << '--origin' << opts[:remote]) || opts[:origin] if opts[:remote] || opts[:origin]
-      arr_opts << '--recursive' if opts[:recursive]
-      arr_opts << '--mirror' if opts[:mirror]
-
-      arr_opts << '--'
-
-      arr_opts << repository_url
-      arr_opts << clone_dir
-
-      command('clone', *arr_opts, timeout: opts[:timeout])
+      args = build_clone_args(repository_url, clone_dir, opts)
+      command('clone', *args, timeout: opts[:timeout])
 
       return_base_opts_from_clone(clone_dir, opts)
-    end
-
-    def return_base_opts_from_clone(clone_dir, opts)
-      base_opts = {}
-      base_opts[:repository] = clone_dir if opts[:bare] || opts[:mirror]
-      base_opts[:working_directory] = clone_dir unless opts[:bare] || opts[:mirror]
-      base_opts[:log] = opts[:log] if opts[:log]
-      base_opts
     end
 
     # Returns the name of the default branch of the given repository
@@ -213,26 +184,12 @@ module Git
     def describe(commit_ish = nil, opts = {})
       assert_args_are_not_options('commit-ish object', commit_ish)
 
-      arr_opts = []
+      args = build_describe_boolean_opts(opts)
+      args += build_describe_valued_opts(opts)
+      args += build_describe_dirty_opt(opts)
+      args << commit_ish if commit_ish
 
-      arr_opts << '--all' if opts[:all]
-      arr_opts << '--tags' if opts[:tags]
-      arr_opts << '--contains' if opts[:contains]
-      arr_opts << '--debug' if opts[:debug]
-      arr_opts << '--long' if opts[:long]
-      arr_opts << '--always' if opts[:always]
-      arr_opts << '--exact-match' if opts[:exact_match] || opts[:'exact-match']
-
-      arr_opts << '--dirty' if opts[:dirty] == true
-      arr_opts << "--dirty=#{opts[:dirty]}" if opts[:dirty].is_a?(String)
-
-      arr_opts << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
-      arr_opts << "--candidates=#{opts[:candidates]}" if opts[:candidates]
-      arr_opts << "--match=#{opts[:match]}" if opts[:match]
-
-      arr_opts << commit_ish if commit_ish
-
-      command('describe', *arr_opts)
+      command('describe', *args)
     end
 
     # Return the commits that are within the given revision range
@@ -489,22 +446,12 @@ module Git
     alias commit_data cat_file_commit
 
     def process_commit_data(data, sha)
-      hsh = {
-        'sha' => sha,
-        'parent' => []
-      }
+      # process_commit_headers consumes the header lines from the `data` array,
+      # leaving only the message lines behind.
+      headers = process_commit_headers(data)
+      message = "#{data.join("\n")}\n"
 
-      each_cat_file_header(data) do |key, value|
-        if key == 'parent'
-          hsh['parent'] << value
-        else
-          hsh[key] = value
-        end
-      end
-
-      hsh['message'] = "#{data.join("\n")}\n"
-
-      hsh
+      { 'sha' => sha, 'message' => message }.merge(headers)
     end
 
     CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
@@ -580,45 +527,66 @@ module Git
     end
 
     def process_commit_log_data(data)
-      in_message = false
+      RawLogParser.new(data).parse
+    end
 
-      hsh_array = []
+    # A private parser class to process the output of `git log --pretty=raw`
+    # @api private
+    class RawLogParser
+      def initialize(lines)
+        @lines = lines
+        @commits = []
+        @current_commit = nil
+        @in_message = false
+      end
 
-      hsh = nil
+      def parse
+        @lines.each { |line| process_line(line.chomp) }
+        finalize_commit
+        @commits
+      end
 
-      data.each do |line|
-        line = line.chomp
+      private
 
-        if line[0].nil?
-          in_message = !in_message
-          next
+      def process_line(line)
+        if line.empty?
+          @in_message = !@in_message
+          return
         end
 
-        in_message = false if in_message && line[0..3] != '    '
+        @in_message = false if @in_message && !line.start_with?('    ')
 
-        if in_message
-          hsh['message'] << "#{line[4..]}\n"
-          next
-        end
+        @in_message ? process_message_line(line) : process_metadata_line(line)
+      end
 
+      def process_message_line(line)
+        @current_commit['message'] << "#{line[4..]}\n"
+      end
+
+      def process_metadata_line(line)
         key, *value = line.split
         value = value.join(' ')
 
         case key
         when 'commit'
-          hsh_array << hsh if hsh
-          hsh = { 'sha' => value, 'message' => +'', 'parent' => [] }
+          start_new_commit(value)
         when 'parent'
-          hsh['parent'] << value
+          @current_commit['parent'] << value
         else
-          hsh[key] = value
+          @current_commit[key] = value
         end
       end
 
-      hsh_array << hsh if hsh
+      def start_new_commit(sha)
+        finalize_commit
+        @current_commit = { 'sha' => sha, 'message' => +'', 'parent' => [] }
+      end
 
-      hsh_array
+      def finalize_commit
+        @commits << @current_commit if @current_commit
+      end
     end
+    private_constant :RawLogParser
 
     def ls_tree(sha, opts = {})
       data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
@@ -679,31 +647,9 @@ module Git
 
     def branches_all
       lines = command_lines('branch', '-a')
-      lines.each_with_index.map do |line, line_index|
-        match_data = line.match(BRANCH_LINE_REGEXP)
-
-        raise Git::UnexpectedResultError, unexpected_branch_line_error(lines, line, line_index) unless match_data
-        next nil if match_data[:not_a_branch] || match_data[:detached_ref]
-
-        [
-          match_data[:refname],
-          !match_data[:current].nil?,
-          !match_data[:worktree].nil?,
-          match_data[:symref]
-        ]
-      end.compact
-    end
-
-    def unexpected_branch_line_error(lines, line, index)
-      <<~ERROR
-        Unexpected line in output from `git branch -a`, line #{index + 1}
-
-        Full output:
-          #{lines.join("\n  ")}
-
-        Line #{index + 1}:
-          "#{line}"
-      ERROR
+      lines.each_with_index.filter_map do |line, index|
+        parse_branch_line(line, index, lines)
+      end
     end
 
     def worktrees_all
@@ -777,16 +723,7 @@ module Git
       branch_name = command('branch', '--show-current')
       return HeadState.new(:detached, 'HEAD') if branch_name.empty?
 
-      state =
-        begin
-          command('rev-parse', '--verify', '--quiet', branch_name)
-          :active
-        rescue Git::FailedError => e
-          raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
-
-          :unborn
-        end
-
+      state = get_branch_state(branch_name)
       HeadState.new(state, branch_name)
     end
 
@@ -804,29 +741,9 @@ module Git
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     def grep(string, opts = {})
       opts[:object] ||= 'HEAD'
-
-      grep_opts = ['-n']
-      grep_opts << '-i' if opts[:ignore_case]
-      grep_opts << '-v' if opts[:invert_match]
-      grep_opts << '-E' if opts[:extended_regexp]
-      grep_opts << '-e'
-      grep_opts << string
-      grep_opts << opts[:object] if opts[:object].is_a?(String)
-      grep_opts.push('--', opts[:path_limiter]) if opts[:path_limiter].is_a?(String)
-      grep_opts.push('--', *opts[:path_limiter]) if opts[:path_limiter].is_a?(Array)
-
-      hsh = {}
-      begin
-        command_lines('grep', *grep_opts).each do |line|
-          if (m = /(.*?):(\d+):(.*)/.match(line))
-            hsh[m[1]] ||= []
-            hsh[m[1]] << [m[2].to_i, m[3]]
-          end
-        end
-      rescue Git::FailedError => e
-        raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
-      end
-      hsh
+      args = build_grep_args(string, opts)
+      lines = execute_grep_command(args)
+      parse_grep_output(lines)
     end
 
     # Validate that the given arguments cannot be mistaken for a command-line option
@@ -857,24 +774,9 @@ module Git
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_args_are_not_options('commit or commit range', obj1, obj2)
-
-      diff_opts = ['--numstat']
-      diff_opts << obj1
-      diff_opts << obj2 if obj2.is_a?(String)
-      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
-
-      hsh = { total: { insertions: 0, deletions: 0, lines: 0, files: 0 }, files: {} }
-
-      command_lines('diff', *diff_opts).each do |file|
-        (insertions, deletions, filename) = file.split("\t")
-        hsh[:total][:insertions] += insertions.to_i
-        hsh[:total][:deletions] += deletions.to_i
-        hsh[:total][:lines] = (hsh[:total][:deletions] + hsh[:total][:insertions])
-        hsh[:total][:files] += 1
-        hsh[:files][filename] = { insertions: insertions.to_i, deletions: deletions.to_i }
-      end
-
-      hsh
+      args = build_diff_stats_args(obj1, obj2, opts)
+      output_lines = command_lines('diff', *args)
+      parse_diff_stats_output(output_lines)
     end
 
     def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
@@ -951,20 +853,12 @@ module Git
     end
 
     def ls_remote(location = nil, opts = {})
-      arr_opts = []
-      arr_opts << '--refs' if opts[:refs]
-      arr_opts << (location || '.')
+      args = []
+      args << '--refs' if opts[:refs]
+      args << (location || '.')
 
-      Hash.new { |h, k| h[k] = {} }.tap do |hsh|
-        command_lines('ls-remote', *arr_opts).each do |line|
-          (sha, info) = line.split("\t")
-          (ref, type, name) = info.split('/', 3)
-          type ||= 'head'
-          type = 'branches' if type == 'heads'
-          value = { ref: ref, sha: sha }
-          hsh[type].update(name.nil? ? value : { name => value })
-        end
-      end
+      output_lines = command_lines('ls-remote', *args)
+      parse_ls_remote_output(output_lines)
     end
 
     def ignored_files
@@ -1107,30 +1001,12 @@ module Git
     # @param [String] message the commit message to be used
     # @param [Hash] opts the commit options to be used
     def commit(message, opts = {})
-      arr_opts = []
-      arr_opts << "--message=#{message}" if message
-      arr_opts << '--amend' << '--no-edit' if opts[:amend]
-      arr_opts << '--all' if opts[:add_all] || opts[:all]
-      arr_opts << '--allow-empty' if opts[:allow_empty]
-      arr_opts << "--author=#{opts[:author]}" if opts[:author]
-      arr_opts << "--date=#{opts[:date]}" if opts[:date].is_a? String
-      arr_opts << '--no-verify' if opts[:no_verify]
-      arr_opts << '--allow-empty-message' if opts[:allow_empty_message]
+      args = []
+      args << "--message=#{message}" if message
+      args += build_commit_general_opts(opts)
+      args += build_commit_gpg_opts(opts)
 
-      if opts[:gpg_sign] && opts[:no_gpg_sign]
-        raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign'
-      elsif opts[:gpg_sign]
-        arr_opts <<
-          if opts[:gpg_sign] == true
-            '--gpg-sign'
-          else
-            "--gpg-sign=#{opts[:gpg_sign]}"
-          end
-      elsif opts[:no_gpg_sign]
-        arr_opts << '--no-gpg-sign'
-      end
-
-      command('commit', *arr_opts)
+      command('commit', *args)
     end
 
     def reset(commit, opts = {})
@@ -1174,19 +1050,9 @@ module Git
     end
 
     def stashes_all
-      arr = []
-      filename = File.join(@git_dir, 'logs/refs/stash')
-      if File.exist?(filename)
-        File.open(filename) do |f|
-          f.each_with_index do |line, i|
-            _, msg = line.split("\t")
-            # NOTE: this logic may be removed/changed in 3.x
-            m = msg.match(/^[^:]+:(.*)$/)
-            arr << [i, (m ? m[1] : msg).strip]
-          end
-        end
+      stash_log_lines.each_with_index.map do |line, index|
+        parse_stash_log_line(line, index)
       end
-      arr
     end
 
     def stash_save(message)
@@ -1282,16 +1148,13 @@ module Git
     end
 
     def conflicts # :yields: file, your, their
-      unmerged.each do |f|
-        Tempfile.create("YOUR-#{File.basename(f)}") do |your|
-          command('show', ":2:#{f}", out: your)
-          your.close
+      unmerged.each do |file_path|
+        Tempfile.create(['YOUR-', File.basename(file_path)]) do |your_file|
+          write_staged_content(file_path, 2, your_file).flush
 
-          Tempfile.create("THEIR-#{File.basename(f)}") do |their|
-            command('show', ":3:#{f}", out: their)
-            their.close
-
-            yield(f, your.path, their.path)
+          Tempfile.create(['THEIR-', File.basename(file_path)]) do |their_file|
+            write_staged_content(file_path, 3, their_file).flush
+            yield(file_path, your_file.path, their_file.path)
           end
         end
       end
@@ -1328,81 +1191,42 @@ module Git
       command_lines('tag')
     end
 
-    def tag(name, *opts)
-      target = opts[0].instance_of?(String) ? opts[0] : nil
+    def tag(name, *args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+      target = args.first
 
-      opts = opts.last.instance_of?(Hash) ? opts.last : {}
+      validate_tag_options!(opts)
 
-      if (opts[:a] || opts[:annotate]) && !(opts[:m] || opts[:message])
-        raise ArgumentError,
-              'Cannot create an annotated tag without a message.'
-      end
+      cmd_args = build_tag_flags(opts)
+      cmd_args.push(name, target).compact!
+      cmd_args.push('-m', opts[:m] || opts[:message]) if opts[:m] || opts[:message]
 
-      arr_opts = []
-
-      arr_opts << '-f' if opts[:force] || opts[:f]
-      arr_opts << '-a' if opts[:a] || opts[:annotate]
-      arr_opts << '-s' if opts[:s] || opts[:sign]
-      arr_opts << '-d' if opts[:d] || opts[:delete]
-      arr_opts << name
-      arr_opts << target if target
-
-      arr_opts << '-m' << (opts[:m] || opts[:message]) if opts[:m] || opts[:message]
-
-      command('tag', *arr_opts)
+      command('tag', *cmd_args)
     end
 
     def fetch(remote, opts)
-      arr_opts = []
-      arr_opts << '--all' if opts[:all]
-      arr_opts << '--tags' if opts[:t] || opts[:tags]
-      arr_opts << '--prune' if opts[:p] || opts[:prune]
-      arr_opts << '--prune-tags' if opts[:P] || opts[:'prune-tags']
-      arr_opts << '--force' if opts[:f] || opts[:force]
-      arr_opts << '--update-head-ok' if opts[:u] || opts[:'update-head-ok']
-      arr_opts << '--unshallow' if opts[:unshallow]
-      arr_opts << '--depth' << opts[:depth] if opts[:depth]
-      arr_opts << '--' if remote || opts[:ref]
-      arr_opts << remote if remote
-      arr_opts << opts[:ref] if opts[:ref]
+      args = build_fetch_args(opts)
 
-      command('fetch', *arr_opts, merge: true)
+      if remote || opts[:ref]
+        args << '--'
+        args << remote if remote
+        args << opts[:ref] if opts[:ref]
+      end
+
+      command('fetch', *args, merge: true)
     end
 
     def push(remote = nil, branch = nil, opts = nil)
-      if opts.nil? && branch.instance_of?(Hash)
-        opts = branch
-        branch = nil
-      end
+      remote, branch, opts = normalize_push_args(remote, branch, opts)
+      raise ArgumentError, 'remote is required if branch is specified' if !remote && branch
 
-      if opts.nil? && remote.instance_of?(Hash)
-        opts = remote
-        remote = nil
-      end
-
-      opts ||= {}
-
-      # Small hack to keep backwards compatibility with the 'push(remote, branch, tags)' method signature.
-      opts = { tags: opts } if [true, false].include?(opts)
-
-      raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
-
-      arr_opts = []
-      arr_opts << '--mirror'  if opts[:mirror]
-      arr_opts << '--delete'  if opts[:delete]
-      arr_opts << '--force'   if opts[:force] || opts[:f]
-      arr_opts << '--all'     if opts[:all] && remote
-
-      Array(opts[:push_option]).each { |o| arr_opts << '--push-option' << o } if opts[:push_option]
-      arr_opts << remote if remote
-      arr_opts_with_branch = arr_opts.dup
-      arr_opts_with_branch << branch if branch
+      args = build_push_args(remote, branch, opts)
 
       if opts[:mirror]
-        command('push', *arr_opts_with_branch)
+        command('push', *args)
       else
-        command('push', *arr_opts_with_branch)
-        command('push', '--tags', *arr_opts) if opts[:tags]
+        command('push', *args)
+        command('push', '--tags', *(args - [branch].compact)) if opts[:tags]
       end
     end
 
@@ -1473,46 +1297,14 @@ module Git
       command('checkout-index', *arr_opts)
     end
 
-    # creates an archive file
-    #
-    # options
-    #  :format  (zip, tar)
-    #  :prefix
-    #  :remote
-    #  :path
     def archive(sha, file = nil, opts = {})
-      opts[:format] ||= 'zip'
+      file ||= temp_file_name
+      format, gzip = parse_archive_format_options(opts)
+      args = build_archive_args(sha, format, opts)
 
-      if opts[:format] == 'tgz'
-        opts[:format] = 'tar'
-        opts[:add_gzip] = true
-      end
+      File.open(file, 'wb') { |f| command('archive', *args, out: f) }
+      apply_gzip(file) if gzip
 
-      unless file
-        tempfile = Tempfile.new('archive')
-        file = tempfile.path
-        # delete it now, before we write to it, so that Ruby doesn't delete it
-        # when it finalizes the Tempfile.
-        tempfile.close!
-      end
-
-      arr_opts = []
-      arr_opts << "--format=#{opts[:format]}" if opts[:format]
-      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
-      arr_opts << "--remote=#{opts[:remote]}" if opts[:remote]
-      arr_opts << sha
-      arr_opts << '--' << opts[:path] if opts[:path]
-
-      f = File.open(file, 'wb')
-      command('archive', *arr_opts, out: f)
-      f.close
-
-      if opts[:add_gzip]
-        file_content = File.read(file)
-        Zlib::GzipWriter.open(file) do |gz|
-          gz.write(file_content)
-        end
-      end
       file
     end
 
@@ -1571,7 +1363,397 @@ module Git
       timeout: nil # Don't set to Git.config.timeout here since it is mutable
     }.freeze
 
+    STATIC_GLOBAL_OPTS = %w[
+      -c core.quotePath=true
+      -c color.ui=false
+      -c color.advice=false
+      -c color.diff=false
+      -c color.grep=false
+      -c color.push=false
+      -c color.remote=false
+      -c color.showBranch=false
+      -c color.status=false
+      -c color.transport=false
+    ].freeze
+
     private
+
+    def initialize_from_base(base_object)
+      @git_dir = base_object.repo.path
+      @git_index_file = base_object.index&.path
+      @git_work_dir = base_object.dir&.path
+    end
+
+    def initialize_from_hash(base_hash)
+      @git_dir = base_hash[:repository]
+      @git_index_file = base_hash[:index]
+      @git_work_dir = base_hash[:working_directory]
+    end
+
+    def build_clone_args(repository_url, clone_dir, opts)
+      args = build_clone_flag_opts(opts)
+      args += build_clone_valued_opts(opts)
+      args.push('--', repository_url, clone_dir)
+    end
+
+    def build_clone_flag_opts(opts)
+      args = []
+      args << '--bare' if opts[:bare]
+      args << '--recursive' if opts[:recursive]
+      args << '--mirror' if opts[:mirror]
+      args
+    end
+
+    def build_clone_valued_opts(opts)
+      args = []
+      args.push('--branch', opts[:branch]) if opts[:branch]
+      args.push('--depth', opts[:depth].to_i) if opts[:depth]
+      args.push('--filter', opts[:filter]) if opts[:filter]
+
+      if (origin_name = opts[:remote] || opts[:origin])
+        args.push('--origin', origin_name)
+      end
+
+      Array(opts[:config]).each { |c| args.push('--config', c) }
+      args
+    end
+
+    def return_base_opts_from_clone(clone_dir, opts)
+      base_opts = {}
+      base_opts[:repository] = clone_dir if opts[:bare] || opts[:mirror]
+      base_opts[:working_directory] = clone_dir unless opts[:bare] || opts[:mirror]
+      base_opts[:log] = opts[:log] if opts[:log]
+      base_opts
+    end
+
+    def build_describe_boolean_opts(opts)
+      args = []
+      args << '--all' if opts[:all]
+      args << '--tags' if opts[:tags]
+      args << '--contains' if opts[:contains]
+      args << '--debug' if opts[:debug]
+      args << '--long' if opts[:long]
+      args << '--always' if opts[:always]
+      args << '--exact-match' if opts[:exact_match] || opts[:'exact-match']
+      args
+    end
+
+    def build_describe_valued_opts(opts)
+      args = []
+      args << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
+      args << "--candidates=#{opts[:candidates]}" if opts[:candidates]
+      args << "--match=#{opts[:match]}" if opts[:match]
+      args
+    end
+
+    def build_describe_dirty_opt(opts)
+      return ['--dirty'] if opts[:dirty] == true
+      return ["--dirty=#{opts[:dirty]}"] if opts[:dirty].is_a?(String)
+
+      []
+    end
+
+    def process_commit_headers(data)
+      headers = { 'parent' => [] } # Pre-initialize for multiple parents
+      each_cat_file_header(data) do |key, value|
+        if key == 'parent'
+          headers['parent'] << value
+        else
+          headers[key] = value
+        end
+      end
+      headers
+    end
+
+    def parse_branch_line(line, index, all_lines)
+      match_data = match_branch_line(line, index, all_lines)
+
+      return nil if match_data[:not_a_branch] || match_data[:detached_ref]
+
+      format_branch_data(match_data)
+    end
+
+    def match_branch_line(line, index, all_lines)
+      match_data = line.match(BRANCH_LINE_REGEXP)
+      raise Git::UnexpectedResultError, unexpected_branch_line_error(all_lines, line, index) unless match_data
+
+      match_data
+    end
+
+    def format_branch_data(match_data)
+      [
+        match_data[:refname],
+        !match_data[:current].nil?,
+        !match_data[:worktree].nil?,
+        match_data[:symref]
+      ]
+    end
+
+    def unexpected_branch_line_error(lines, line, index)
+      <<~ERROR
+        Unexpected line in output from `git branch -a`, line #{index + 1}
+
+        Full output:
+          #{lines.join("\n  ")}
+
+        Line #{index + 1}:
+          "#{line}"
+      ERROR
+    end
+
+    def get_branch_state(branch_name)
+      command('rev-parse', '--verify', '--quiet', branch_name)
+      :active
+    rescue Git::FailedError => e
+      # An exit status of 1 with empty stderr from `rev-parse --verify`
+      # indicates a ref that exists but does not yet point to a commit.
+      raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
+
+      :unborn
+    end
+
+    def build_grep_args(string, opts)
+      args = ['-n'] # Always get line numbers
+      args << '-i' if opts[:ignore_case]
+      args << '-v' if opts[:invert_match]
+      args << '-E' if opts[:extended_regexp]
+      args.push('-e', string, opts[:object])
+
+      if (limiter = opts[:path_limiter])
+        args << '--'
+        args.concat(Array(limiter))
+      end
+      args
+    end
+
+    def execute_grep_command(args)
+      command_lines('grep', *args)
+    rescue Git::FailedError => e
+      # `git grep` returns 1 when no lines are selected.
+      raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
+
+      [] # Return an empty array for "no matches found"
+    end
+
+    def parse_grep_output(lines)
+      lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
+        match = line.match(/\A(.*?):(\d+):(.*)/)
+        next unless match
+
+        _full, filename, line_num, text = match.to_a
+        hsh[filename] << [line_num.to_i, text]
+      end
+    end
+
+    def build_diff_stats_args(obj1, obj2, opts)
+      args = ['--numstat']
+      args << obj1
+      args << obj2 if obj2.is_a?(String)
+      args << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String)
+      args
+    end
+
+    def parse_diff_stats_output(lines)
+      file_stats = parse_stat_lines(lines)
+      build_final_stats_hash(file_stats)
+    end
+
+    def parse_stat_lines(lines)
+      lines.map do |line|
+        insertions_s, deletions_s, filename = line.split("\t")
+        {
+          filename: filename,
+          insertions: insertions_s.to_i,
+          deletions: deletions_s.to_i
+        }
+      end
+    end
+
+    def build_final_stats_hash(file_stats)
+      {
+        total: build_total_stats(file_stats),
+        files: build_files_hash(file_stats)
+      }
+    end
+
+    def build_total_stats(file_stats)
+      insertions = file_stats.sum { |s| s[:insertions] }
+      deletions = file_stats.sum { |s| s[:deletions] }
+      {
+        insertions: insertions,
+        deletions: deletions,
+        lines: insertions + deletions,
+        files: file_stats.size
+      }
+    end
+
+    def build_files_hash(file_stats)
+      file_stats.to_h { |s| [s[:filename], s.slice(:insertions, :deletions)] }
+    end
+
+    def parse_ls_remote_output(lines)
+      lines.each_with_object(Hash.new { |h, k| h[k] = {} }) do |line, hsh|
+        type, name, value = parse_ls_remote_line(line)
+        if name
+          hsh[type][name] = value
+        else # Handles the HEAD entry, which has no name
+          hsh[type].update(value)
+        end
+      end
+    end
+
+    def parse_ls_remote_line(line)
+      sha, info = line.split("\t", 2)
+      ref, type, name = info.split('/', 3)
+
+      type ||= 'head'
+      type = 'branches' if type == 'heads'
+
+      value = { ref: ref, sha: sha }
+
+      [type, name, value]
+    end
+
+    def build_commit_general_opts(opts)
+      args = []
+      args << '--amend' << '--no-edit' if opts[:amend]
+      args << '--all' if opts[:add_all] || opts[:all]
+      args << '--allow-empty' if opts[:allow_empty]
+      args << "--author=#{opts[:author]}" if opts[:author]
+      args << "--date=#{opts[:date]}" if opts[:date].is_a?(String)
+      args << '--no-verify' if opts[:no_verify]
+      args << '--allow-empty-message' if opts[:allow_empty_message]
+      args
+    end
+
+    def build_commit_gpg_opts(opts)
+      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts[:gpg_sign] && opts[:no_gpg_sign]
+
+      return ['--no-gpg-sign'] if opts[:no_gpg_sign]
+
+      if (key = opts[:gpg_sign])
+        return key == true ? ['--gpg-sign'] : ["--gpg-sign=#{key}"]
+      end
+
+      []
+    end
+
+    def stash_log_lines
+      path = File.join(@git_dir, 'logs/refs/stash')
+      return [] unless File.exist?(path)
+
+      File.readlines(path, chomp: true)
+    end
+
+    def parse_stash_log_line(line, index)
+      full_message = line.split("\t", 2).last
+      match_data = full_message.match(/^[^:]+:(.*)$/)
+      message = match_data ? match_data[1] : full_message
+
+      [index, message.strip]
+    end
+
+    # Writes the staged content of a conflicted file to an IO stream
+    #
+    # @param path [String] the path to the file in the index
+    #
+    # @param stage [Integer] the stage of the file to show (e.g., 2 for 'ours', 3 for 'theirs')
+    #
+    # @param out_io [IO] the IO object to write the staged content to
+    #
+    # @return [IO] the IO object that was written to
+    #
+    def write_staged_content(path, stage, out_io)
+      command('show', ":#{stage}:#{path}", out: out_io)
+      out_io
+    end
+
+    def validate_tag_options!(opts)
+      is_annotated = opts[:a] || opts[:annotate]
+      has_message = opts[:m] || opts[:message]
+
+      return unless is_annotated && !has_message
+
+      raise ArgumentError, 'Cannot create an annotated tag without a message.'
+    end
+
+    def build_tag_flags(opts)
+      flags = []
+      flags << '-f' if opts[:force] || opts[:f]
+      flags << '-a' if opts[:a] || opts[:annotate]
+      flags << '-s' if opts[:s] || opts[:sign]
+      flags << '-d' if opts[:d] || opts[:delete]
+      flags
+    end
+
+    def build_fetch_args(opts)
+      args = []
+      args << '--all' if opts[:all]
+      args << '--tags' if opts[:t] || opts[:tags]
+      args << '--prune' if opts[:p] || opts[:prune]
+      args << '--prune-tags' if opts[:P] || opts[:'prune-tags']
+      args << '--force' if opts[:f] || opts[:force]
+      args << '--update-head-ok' if opts[:u] || opts[:'update-head-ok']
+      args << '--unshallow' if opts[:unshallow]
+      args.push('--depth', opts[:depth]) if opts[:depth]
+      args
+    end
+
+    def normalize_push_args(remote, branch, opts)
+      if branch.is_a?(Hash)
+        opts = branch
+        branch = nil
+      elsif remote.is_a?(Hash)
+        opts = remote
+        remote = nil
+      end
+
+      opts ||= {}
+      # Backwards compatibility for `push(remote, branch, true)`
+      opts = { tags: opts } if [true, false].include?(opts)
+      [remote, branch, opts]
+    end
+
+    def build_push_args(remote, branch, opts)
+      args = []
+      args << '--mirror' if opts[:mirror]
+      args << '--delete' if opts[:delete]
+      args << '--force' if opts[:force] || opts[:f]
+      args << '--all' if opts[:all] && remote
+
+      Array(opts[:push_option]).each { |o| args.push('--push-option', o) } if opts[:push_option]
+
+      args << remote if remote
+      args << branch if branch
+      args
+    end
+
+    def temp_file_name
+      tempfile = Tempfile.new('archive')
+      file = tempfile.path
+      tempfile.close! # Prevents Ruby from deleting the file on garbage collection
+      file
+    end
+
+    def parse_archive_format_options(opts)
+      format = opts[:format] || 'zip'
+      gzip = opts[:add_gzip] == true || format == 'tgz'
+      format = 'tar' if format == 'tgz'
+      [format, gzip]
+    end
+
+    def build_archive_args(sha, format, opts)
+      args = ["--format=#{format}"]
+      %i[prefix remote].each { |name| args << "--#{name}=#{opts[name]}" if opts[name] }
+      args << sha
+      args << '--' << opts[:path] if opts[:path]
+      args
+    end
+
+    def apply_gzip(file)
+      file_content = File.read(file)
+      Zlib::GzipWriter.open(file) { |gz| gz.write(file_content) }
+    end
 
     def command_lines(cmd, *opts, chdir: nil)
       cmd_op = command(cmd, *opts, chdir: chdir)
@@ -1597,16 +1779,7 @@ module Git
       [].tap do |global_opts|
         global_opts << "--git-dir=#{@git_dir}" unless @git_dir.nil?
         global_opts << "--work-tree=#{@git_work_dir}" unless @git_work_dir.nil?
-        global_opts << '-c' << 'core.quotePath=true'
-        global_opts << '-c' << 'color.ui=false'
-        global_opts << '-c' << 'color.advice=false'
-        global_opts << '-c' << 'color.diff=false'
-        global_opts << '-c' << 'color.grep=false'
-        global_opts << '-c' << 'color.push=false'
-        global_opts << '-c' << 'color.remote=false'
-        global_opts << '-c' << 'color.showBranch=false'
-        global_opts << '-c' << 'color.status=false'
-        global_opts << '-c' << 'color.transport=false'
+        global_opts.concat(STATIC_GLOBAL_OPTS)
       end
     end
 
@@ -1686,11 +1859,8 @@ module Git
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 
         memo[file] = {
-          mode_index: mode_dest,
-          mode_repo: mode_src.to_s[1, 7],
-          path: file,
-          sha_repo: sha_src,
-          sha_index: sha_dest,
+          mode_index: mode_dest, mode_repo: mode_src.to_s[1, 7],
+          path: file, sha_repo: sha_src, sha_index: sha_dest,
           type: type
         }
       end
@@ -1701,24 +1871,19 @@ module Git
     # @param [Hash] opts the given options
     # @return [Array] the set of common options that the log command will use
     def log_common_options(opts)
-      arr_opts = []
-
       if opts[:count] && !opts[:count].is_a?(Integer)
-        raise ArgumentError,
-              "The log count option must be an Integer but was #{opts[:count].inspect}"
+        raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
       end
 
-      arr_opts << "--max-count=#{opts[:count]}" if opts[:count]
-      arr_opts << '--all' if opts[:all]
-      arr_opts << '--no-color'
-      arr_opts << '--cherry' if opts[:cherry]
-      arr_opts << "--since=#{opts[:since]}" if opts[:since].is_a? String
-      arr_opts << "--until=#{opts[:until]}" if opts[:until].is_a? String
-      arr_opts << "--grep=#{opts[:grep]}" if opts[:grep].is_a? String
-      arr_opts << "--author=#{opts[:author]}" if opts[:author].is_a? String
-      arr_opts << "#{opts[:between][0]}..#{opts[:between][1]}" if opts[:between] && opts[:between].size == 2
-
-      arr_opts
+      ['--no-color'].tap do |args|
+        # Switches
+        %i[all cherry].each { |name| args << "--#{name}" if opts[name] }
+        # Args with values
+        %i[since until grep author].each { |name| args << "--#{name}=#{opts[name]}" if opts[name] }
+        # Special args
+        args << "--max-count=#{opts[:count]}" if opts[:count]
+        args << "#{opts[:between][0]}..#{opts[:between][1]}" if opts[:between]
+      end
     end
 
     # Retrurns an array holding path options for the log commands

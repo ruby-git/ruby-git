@@ -115,41 +115,78 @@ module Git
       @full_diff_files = process_full_diff
     end
 
-    # CORRECTED: Pass the @path variable to the new objects
     def path_status_provider
       @path_status_provider ||= Git::DiffPathStatus.new(@base, @from, @to, @path)
     end
 
-    # CORRECTED: Pass the @path variable to the new objects
     def stats_provider
       @stats_provider ||= Git::DiffStats.new(@base, @from, @to, @path)
     end
 
     def process_full_diff
-      defaults = {
-        mode: '', src: '', dst: '', type: 'modified'
-      }
-      final = {}
-      current_file = nil
-      patch.split("\n").each do |line|
-        if (m = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}.match(line))
-          current_file = Git::EscapedPath.new(m[2]).unescape
-          final[current_file] = defaults.merge({ patch: line, path: current_file })
+      FullDiffParser.new(@base, patch).parse
+    end
+
+    # A private parser class to process the output of `git diff`
+    # @api private
+    class FullDiffParser
+      def initialize(base, patch_text)
+        @base = base
+        @patch_text = patch_text
+        @final_files = {}
+        @current_file_data = nil
+        @defaults = { mode: '', src: '', dst: '', type: 'modified', binary: false }
+      end
+
+      def parse
+        @patch_text.split("\n").each { |line| process_line(line) }
+        @final_files.map { |filename, data| [filename, DiffFile.new(@base, data)] }
+      end
+
+      private
+
+      def process_line(line)
+        if (new_file_match = line.match(%r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}))
+          start_new_file(new_file_match, line)
         else
-          if (m = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/.match(line))
-            final[current_file][:src] = m[1]
-            final[current_file][:dst] = m[2]
-            final[current_file][:mode] = m[3].strip if m[3]
-          end
-          if (m = /^([[:alpha:]]*?) file mode (......)/.match(line))
-            final[current_file][:type] = m[1]
-            final[current_file][:mode] = m[2]
-          end
-          final[current_file][:binary] = true if /^Binary files /.match(line)
-          final[current_file][:patch] << "\n#{line}"
+          append_to_current_file(line)
         end
       end
-      final.map { |e| [e[0], DiffFile.new(@base, e[1])] }
+
+      def start_new_file(match, line)
+        filename = Git::EscapedPath.new(match[2]).unescape
+        @current_file_data = @defaults.merge({ patch: line, path: filename })
+        @final_files[filename] = @current_file_data
+      end
+
+      def append_to_current_file(line)
+        return unless @current_file_data
+
+        parse_index_line(line)
+        parse_file_mode_line(line)
+        check_for_binary(line)
+
+        @current_file_data[:patch] << "\n#{line}"
+      end
+
+      def parse_index_line(line)
+        return unless (match = line.match(/^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)*/))
+
+        @current_file_data[:src] = match[1]
+        @current_file_data[:dst] = match[2]
+        @current_file_data[:mode] = match[3].strip if match[3]
+      end
+
+      def parse_file_mode_line(line)
+        return unless (match = line.match(/^([[:alpha:]]*?) file mode (......)/))
+
+        @current_file_data[:type] = match[1]
+        @current_file_data[:mode] = match[2]
+      end
+
+      def check_for_binary(line)
+        @current_file_data[:binary] = true if line.match?(/^Binary files /)
+      end
     end
   end
 end

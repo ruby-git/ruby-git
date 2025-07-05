@@ -145,10 +145,7 @@ module Git
           @blobs[key] = Git::Object::Blob.new(@base, blob[:sha], blob[:mode])
         end
 
-        {
-          trees: @trees,
-          blobs: @blobs
-        }
+        { trees: @trees, blobs: @blobs }
       end
     end
 
@@ -317,12 +314,10 @@ module Git
     # if we're calling this, we don't know what type it is yet
     # so this is our little factory method
     def self.new(base, objectish, type = nil, is_tag = false) # rubocop:disable Style/OptionalBooleanParameter
-      if is_tag
-        Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
-        return Git::Object::Tag.new(base, objectish)
-      end
+      return new_tag(base, objectish) if is_tag
 
       type ||= base.lib.cat_file_type(objectish)
+      # TODO: why not handle tag case here too?
       klass =
         case type
         when /blob/   then Blob
@@ -330,6 +325,11 @@ module Git
         when /tree/   then Tree
         end
       klass.new(base, objectish)
+    end
+
+    private_class_method def self.new_tag(base, objectish)
+      Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
+      Git::Object::Tag.new(base, objectish)
     end
   end
 end
