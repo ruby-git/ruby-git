@@ -39,20 +39,29 @@ module Git
     end
 
     def self.binary_version(binary_path)
-      result = nil
-      status = nil
-
-      begin
-        result, status = Open3.capture2e(binary_path, '-c', 'core.quotePath=true', '-c', 'color.ui=false', 'version')
-        result = result.chomp
-      rescue Errno::ENOENT
-        raise "Failed to get git version: #{binary_path} not found"
-      end
+      result, status = execute_git_version(binary_path)
 
       raise "Failed to get git version: #{status}\n#{result}" unless status.success?
 
-      version = result[/\d+(\.\d+)+/]
-      version_parts = version.split('.').collect(&:to_i)
+      parse_version_string(result)
+    end
+
+    private_class_method def self.execute_git_version(binary_path)
+      Open3.capture2e(
+        binary_path,
+        '-c', 'core.quotePath=true',
+        '-c', 'color.ui=false',
+        'version'
+      )
+    rescue Errno::ENOENT
+      raise "Failed to get git version: #{binary_path} not found"
+    end
+
+    private_class_method def self.parse_version_string(raw_string)
+      version_match = raw_string.match(/\d+(\.\d+)+/)
+      return [0, 0, 0] unless version_match
+
+      version_parts = version_match[0].split('.').map(&:to_i)
       version_parts.fill(0, version_parts.length...3)
     end
 
@@ -85,24 +94,28 @@ module Git
     end
 
     def self.root_of_worktree(working_dir)
-      result = working_dir
-      status = nil
-
       raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
 
-      begin
-        result, status = Open3.capture2e(
-          Git::Base.config.binary_path, '-c', 'core.quotePath=true', '-c',
-          'color.ui=false', 'rev-parse', '--show-toplevel', chdir: File.expand_path(working_dir)
-        )
-        result = result.chomp
-      rescue Errno::ENOENT
-        raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
-      end
+      result, status = execute_rev_parse_toplevel(working_dir)
+      process_rev_parse_result(result, status, working_dir)
+    end
 
+    private_class_method def self.execute_rev_parse_toplevel(working_dir)
+      Open3.capture2e(
+        Git::Base.config.binary_path,
+        '-c', 'core.quotePath=true',
+        '-c', 'color.ui=false',
+        'rev-parse', '--show-toplevel',
+        chdir: File.expand_path(working_dir)
+      )
+    rescue Errno::ENOENT
+      raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
+    end
+
+    private_class_method def self.process_rev_parse_result(result, status, working_dir)
       raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
 
-      result
+      result.chomp
     end
 
     # (see Git.open)
@@ -879,19 +892,58 @@ module Git
     #   2. the working directory if NOT working with a bare repository
     #
     private_class_method def self.normalize_repository(options, default:, bare: false)
-      repository =
-        if bare
-          File.expand_path(options[:repository] || default || Dir.pwd)
-        else
-          File.expand_path(options[:repository] || '.git', options[:working_directory])
-        end
+      initial_path = initial_repository_path(options, default: default, bare: bare)
+      final_path = resolve_gitdir_if_present(initial_path, options[:working_directory])
+      options[:repository] = final_path
+    end
 
-      if File.file?(repository)
-        repository = File.expand_path(File.read(repository)[8..].strip,
-                                      options[:working_directory])
+    # Determines the initial, potential path to the repository directory
+    #
+    # This path is considered 'initial' because it is not guaranteed to be the
+    # final repository location. For features like submodules or worktrees,
+    # this path may point to a text file containing a `gitdir:` pointer to the
+    # actual repository directory elsewhere. This initial path must be
+    # subsequently resolved.
+    #
+    # @api private
+    #
+    # @param options [Hash] The options hash, checked for `[:repository]`.
+    #
+    # @param default [String] A fallback path if `options[:repository]` is not set.
+    #
+    # @param bare [Boolean] Whether the repository is bare, which changes path resolution.
+    #
+    # @return [String] The initial, absolute path to the `.git` directory or file.
+    #
+    private_class_method def self.initial_repository_path(options, default:, bare:)
+      if bare
+        File.expand_path(options[:repository] || default || Dir.pwd)
+      else
+        File.expand_path(options[:repository] || '.git', options[:working_directory])
       end
+    end
 
-      options[:repository] = repository
+    # Resolves the path to the actual repository if it's a `gitdir:` pointer file.
+    #
+    # If `path` points to a file (common in submodules and worktrees), this
+    # method reads the `gitdir:` path from it and returns the real repository
+    # path. Otherwise, it returns the original path.
+    #
+    # @api private
+    #
+    # @param path [String] The initial path to the repository, which may be a pointer file.
+    #
+    # @param working_dir [String] The working directory, used as a base to resolve the path.
+    #
+    # @return [String] The final, resolved absolute path to the repository directory.
+    #
+    private_class_method def self.resolve_gitdir_if_present(path, working_dir)
+      return path unless File.file?(path)
+
+      # The file contains `gitdir: <path>`, so we read the file,
+      # extract the path part, and expand it.
+      gitdir_pointer = File.read(path).sub(/\Agitdir: /, '').strip
+      File.expand_path(gitdir_pointer, working_dir)
     end
 
     # Normalize options[:index]

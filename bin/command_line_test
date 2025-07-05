@@ -83,6 +83,11 @@ class CommandLineParser
   attr_reader :option_parser
 
   def define_options
+    define_banner_and_separators
+    define_all_cli_options
+  end
+
+  def define_banner_and_separators
     option_parser.banner = "Usage:\n#{command_template}"
     option_parser.separator ''
     option_parser.separator 'Both --stdout and --stderr can be given.'
@@ -90,6 +95,9 @@ class CommandLineParser
     option_parser.separator 'If nothing is given, the script will exit with exitstatus 0.'
     option_parser.separator ''
     option_parser.separator 'Options:'
+  end
+
+  def define_all_cli_options
     %i[
       define_help_option define_stdout_option define_stdout_file_option
       define_stderr_option define_stderr_file_option
