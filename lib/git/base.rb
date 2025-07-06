@@ -152,16 +152,9 @@ module Git
     #   of the opened working copy or bare repository
     #
     def initialize(options = {})
-      if (working_dir = options[:working_directory])
-        options[:repository] ||= File.join(working_dir, '.git')
-        options[:index] ||= File.join(options[:repository], 'index')
-      end
-      @logger = options[:log] || Logger.new(nil)
-      @logger.info('Starting Git')
-
-      @working_directory = options[:working_directory] ? Git::WorkingDirectory.new(options[:working_directory]) : nil
-      @repository = options[:repository] ? Git::Repository.new(options[:repository]) : nil
-      @index = options[:index] ? Git::Index.new(options[:index], false) : nil
+      options = default_paths(options)
+      setup_logger(options[:log])
+      initialize_components(options)
     end
 
     # Update the index from the current worktree to prepare the for the next commit
@@ -828,6 +821,38 @@ module Git
     alias diff_name_status diff_path_status
 
     private
+
+    # Sets default paths in the options hash for direct `Git::Base.new` calls
+    #
+    # Factory methods like `Git.open` pre-populate these options by calling
+    # `normalize_paths`, making this a fallback. It avoids mutating the
+    # original options hash by returning a new one.
+    #
+    # @param options [Hash] the original options hash
+    # @return [Hash] a new options hash with defaults applied
+    def default_paths(options)
+      return options unless (working_dir = options[:working_directory])
+
+      options.dup.tap do |opts|
+        opts[:repository] ||= File.join(working_dir, '.git')
+        opts[:index] ||= File.join(opts[:repository], 'index')
+      end
+    end
+
+    # Initializes the logger from the provided options
+    # @param log_option [Logger, nil] The logger instance from options.
+    def setup_logger(log_option)
+      @logger = log_option || Logger.new(nil)
+      @logger.info('Starting Git')
+    end
+
+    # Initializes the core git objects based on the provided options
+    # @param options [Hash] The processed options hash.
+    def initialize_components(options)
+      @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
+      @repository = Git::Repository.new(options[:repository]) if options[:repository]
+      @index = Git::Index.new(options[:index], false) if options[:index]
+    end
 
     # Normalize options before they are sent to Git::Base.new
     #

@@ -3,6 +3,13 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
+# Don't care about complexity in TestUnit tests
+# This should go away when we switch to RSpec
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - "tests/test_helper.rb"
+    - "tests/units/**/*"
+
 # Don't care so much about length of methods in tests
 Metrics/MethodLength:
   Exclude:
