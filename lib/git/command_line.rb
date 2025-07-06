@@ -278,50 +278,53 @@ module Git
     #
     def process_result(result, normalize, chomp, timeout)
       command = result.command
-      processed_out, processed_err = post_process_all([result.stdout, result.stderr], normalize, chomp)
+      processed_out, processed_err = post_process_output(result, normalize, chomp)
+      log_result(result, command, processed_out, processed_err)
+      command_line_result(command, result, processed_out, processed_err, timeout)
+    end
+
+    def log_result(result, command, processed_out, processed_err)
       logger.info { "#{command} exited with status #{result}" }
       logger.debug { "stdout:\n#{processed_out.inspect}\nstderr:\n#{processed_err.inspect}" }
+    end
+
+    def command_line_result(command, result, processed_out, processed_err, timeout)
       Git::CommandLineResult.new(command, result, processed_out, processed_err).tap do |processed_result|
         raise Git::TimeoutError.new(processed_result, timeout) if result.timeout?
+
         raise Git::SignaledError, processed_result if result.signaled?
+
         raise Git::FailedError, processed_result unless result.success?
       end
     end
 
-    # Post-process command output and return an array of the results
+    # Post-process and return an array of raw output strings
     #
-    # @param raw_outputs [Array] the output to post-process
+    # For each raw output string:
+    #
+    # * If normalize: is true, normalize the encoding by transcoding each line from
+    #   the detected encoding to UTF-8.
+    # * If chomp: is true chomp the output after normalization.
+    #
+    # Even if no post-processing is done based on the options, the strings returned
+    # are a copy of the raw output strings. The raw output strings are not modified.
+    #
+    # @param result [ProcessExecuter::ResultWithCapture] the command's output to post-process
+    #
     # @param normalize [Boolean] whether to normalize the output of each writer
     # @param chomp [Boolean] whether to chomp the output of each writer
     #
-    # @return [Array<String, nil>] the processed output of each command output object that supports `#string`
+    # @return [Array<String>]
     #
     # @api private
     #
-    def post_process_all(raw_outputs, normalize, chomp)
-      raw_outputs.map { |raw_output| post_process(raw_output, normalize, chomp) }
-    end
-
-    # Determine the output to return in the `CommandLineResult`
-    #
-    # If the writer can return the output by calling `#string` (such as a StringIO),
-    # then return the result of normalizing the encoding and chomping the output
-    # as requested.
-    #
-    # If the writer does not support `#string`, then return nil. The output is
-    # assumed to be collected by the writer itself such as when the  writer
-    # is a file instead of a StringIO.
-    #
-    # @param raw_output [#string] the output to post-process
-    # @return [String, nil]
-    #
-    # @api private
-    #
-    def post_process(raw_output, normalize, chomp)
-      output = raw_output.dup
-      output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
-      output.chomp! if chomp
-      output
+    def post_process_output(result, normalize, chomp)
+      [result.stdout, result.stderr].map do |raw_output|
+        output = raw_output.dup
+        output = output.lines.map { |l| Git::EncodingUtils.normalize_encoding(l) }.join if normalize
+        output.chomp! if chomp
+        output
+      end
     end
   end
 end
