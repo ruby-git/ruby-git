@@ -3,9 +3,14 @@ inherit_from: .rubocop_todo.yml
 inherit_gem:
   main_branch_shared_rubocop_config: config/rubocop.yml
 
-# Don't care about CyclomaticComplexity or AbcSize in TestUnit tests This should go
-# away when we switch to RSpec.
+# Don't care about complexity offenses in the TestUnit tests This exclusions
+# will be removed when we switch to RSpec.
 Metrics/CyclomaticComplexity:
+  Exclude:
+    - "tests/test_helper.rb"
+    - "tests/units/**/*"
+
+Metrics/ClassLength:
   Exclude:
     - "tests/test_helper.rb"
     - "tests/units/**/*"
