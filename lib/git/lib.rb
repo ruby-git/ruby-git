@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'args_builder'
+
 require 'git/command_line'
 require 'git/errors'
 require 'logger'
@@ -71,6 +73,11 @@ module Git
       end
     end
 
+    INIT_OPTION_MAP = [
+      { keys: [:bare], flag: '--bare', type: :boolean },
+      { keys: [:initial_branch], flag: '--initial-branch', type: :valued_equals }
+    ].freeze
+
     # creates or reinitializes the repository
     #
     # options:
@@ -79,12 +86,24 @@ module Git
     #   :initial_branch
     #
     def init(opts = {})
-      arr_opts = []
-      arr_opts << '--bare' if opts[:bare]
-      arr_opts << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
-
-      command('init', *arr_opts)
+      args = build_args(opts, INIT_OPTION_MAP)
+      command('init', *args)
     end
+
+    CLONE_OPTION_MAP = [
+      { keys: [:bare],      flag: '--bare',      type: :boolean },
+      { keys: [:recursive], flag: '--recursive', type: :boolean },
+      { keys: [:mirror],    flag: '--mirror',    type: :boolean },
+      { keys: [:branch],    flag: '--branch',    type: :valued_space },
+      { keys: [:filter],    flag: '--filter',    type: :valued_space },
+      { keys: %i[remote origin], flag: '--origin', type: :valued_space },
+      { keys: [:config], flag: '--config', type: :repeatable_valued_space },
+      {
+        keys: [:depth],
+        type: :custom,
+        builder: ->(value) { ['--depth', value.to_i] if value }
+      }
+    ].freeze
 
     # Clones a repository into a newly created directory
     #
@@ -131,7 +150,9 @@ module Git
       @path = opts[:path] || '.'
       clone_dir = opts[:path] ? File.join(@path, directory) : directory
 
-      args = build_clone_args(repository_url, clone_dir, opts)
+      args = build_args(opts, CLONE_OPTION_MAP)
+      args.push('--', repository_url, clone_dir)
+
       command('clone', *args, timeout: opts[:timeout])
 
       return_base_opts_from_clone(clone_dir, opts)
@@ -156,6 +177,29 @@ module Git
     end
 
     ## READ COMMANDS ##
+
+    # The map defining how to translate user options to git command arguments.
+    DESCRIBE_OPTION_MAP = [
+      { keys: [:all], flag: '--all', type: :boolean },
+      { keys: [:tags], flag: '--tags', type: :boolean },
+      { keys: [:contains], flag: '--contains', type: :boolean },
+      { keys: [:debug], flag: '--debug', type: :boolean },
+      { keys: [:long], flag: '--long', type: :boolean },
+      { keys: [:always], flag: '--always', type: :boolean },
+      { keys: %i[exact_match exact-match], flag: '--exact-match', type: :boolean },
+      { keys: [:abbrev], flag: '--abbrev', type: :valued_equals },
+      { keys: [:candidates], flag: '--candidates', type: :valued_equals },
+      { keys: [:match], flag: '--match', type: :valued_equals },
+      {
+        keys: [:dirty],
+        type: :custom,
+        builder: lambda do |value|
+          return '--dirty' if value == true
+
+          "--dirty=#{value}" if value.is_a?(String)
+        end
+      }
+    ].freeze
 
     # Finds most recent tag that is reachable from a commit
     #
@@ -184,9 +228,7 @@ module Git
     def describe(commit_ish = nil, opts = {})
       assert_args_are_not_options('commit-ish object', commit_ish)
 
-      args = build_describe_boolean_opts(opts)
-      args += build_describe_valued_opts(opts)
-      args += build_describe_dirty_opt(opts)
+      args = build_args(opts, DESCRIBE_OPTION_MAP)
       args << commit_ish if commit_ish
 
       command('describe', *args)
@@ -231,6 +273,12 @@ module Git
 
       command_lines('log', *arr_opts).map { |l| l.split.first }
     end
+
+    FULL_LOG_EXTRA_OPTIONS_MAP = [
+      { type: :static, flag: '--pretty=raw' },
+      { keys: [:skip], flag: '--skip', type: :valued_equals },
+      { keys: [:merges], flag: '--merges', type: :boolean }
+    ].freeze
 
     # Return the commits that are within the given revision range
     #
@@ -290,16 +338,11 @@ module Git
       assert_args_are_not_options('between', opts[:between]&.first)
       assert_args_are_not_options('object', opts[:object])
 
-      arr_opts = log_common_options(opts)
+      args = log_common_options(opts)
+      args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
+      args += log_path_options(opts)
 
-      arr_opts << '--pretty=raw'
-      arr_opts << "--skip=#{opts[:skip]}" if opts[:skip]
-      arr_opts << '--merges' if opts[:merges]
-
-      arr_opts += log_path_options(opts)
-
-      full_log = command_lines('log', *arr_opts)
-
+      full_log = command_lines('log', *args)
       process_commit_log_data(full_log)
     end
 
@@ -588,15 +631,18 @@ module Git
     end
     private_constant :RawLogParser
 
+    LS_TREE_OPTION_MAP = [
+      { keys: [:recursive], flag: '-r', type: :boolean }
+    ].freeze
+
     def ls_tree(sha, opts = {})
       data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
+      args = build_args(opts, LS_TREE_OPTION_MAP)
 
-      ls_tree_opts = []
-      ls_tree_opts << '-r' if opts[:recursive]
-      # path must be last arg
-      ls_tree_opts << opts[:path] if opts[:path]
+      args.unshift(sha)
+      args << opts[:path] if opts[:path]
 
-      command_lines('ls-tree', sha, *ls_tree_opts).each do |line|
+      command_lines('ls-tree', *args).each do |line|
         (info, filenm) = line.split("\t")
         (mode, type, sha) = info.split
         data[type][filenm] = { mode: mode, sha: sha }
@@ -736,12 +782,29 @@ module Git
       command('branch',  branch_name, '--contains', commit)
     end
 
+    GREP_OPTION_MAP = [
+      { keys: [:ignore_case],     flag: '-i', type: :boolean },
+      { keys: [:invert_match],    flag: '-v', type: :boolean },
+      { keys: [:extended_regexp], flag: '-E', type: :boolean },
+      # For validation only, as these are handled manually
+      { keys: [:object],       type: :validate_only },
+      { keys: [:path_limiter], type: :validate_only }
+    ].freeze
+
     # returns hash
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     # [tree-ish] = [[line_no, match], [line_no, match2]]
     def grep(string, opts = {})
       opts[:object] ||= 'HEAD'
-      args = build_grep_args(string, opts)
+      ArgsBuilder.validate!(opts, GREP_OPTION_MAP)
+
+      boolean_flags = build_args(opts, GREP_OPTION_MAP)
+      args = ['-n', *boolean_flags, '-e', string, opts[:object]]
+
+      if (limiter = opts[:path_limiter])
+        args.push('--', *Array(limiter))
+      end
+
       lines = execute_grep_command(args)
       parse_grep_output(lines)
     end
@@ -761,37 +824,59 @@ module Git
       raise ArgumentError, "Invalid #{arg_name}: '#{invalid_args.join("', '")}'"
     end
 
+    DIFF_FULL_OPTION_MAP = [
+      { type: :static, flag: '-p' },
+      { keys: [:path_limiter], type: :validate_only }
+    ].freeze
+
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_args_are_not_options('commit or commit range', obj1, obj2)
+      ArgsBuilder.validate!(opts, DIFF_FULL_OPTION_MAP)
 
-      diff_opts = ['-p']
-      diff_opts << obj1
-      diff_opts << obj2 if obj2.is_a?(String)
-      diff_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+      args = build_args(opts, DIFF_FULL_OPTION_MAP)
+      args.push(obj1, obj2).compact!
 
-      command('diff', *diff_opts)
+      if (path = opts[:path_limiter]) && path.is_a?(String)
+        args.push('--', path)
+      end
+
+      command('diff', *args)
     end
+
+    DIFF_STATS_OPTION_MAP = [
+      { type: :static, flag: '--numstat' },
+      { keys: [:path_limiter], type: :validate_only }
+    ].freeze
 
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_args_are_not_options('commit or commit range', obj1, obj2)
-      args = build_diff_stats_args(obj1, obj2, opts)
+      ArgsBuilder.validate!(opts, DIFF_STATS_OPTION_MAP)
+
+      args = build_args(opts, DIFF_STATS_OPTION_MAP)
+      args.push(obj1, obj2).compact!
+
+      if (path = opts[:path_limiter]) && path.is_a?(String)
+        args.push('--', path)
+      end
+
       output_lines = command_lines('diff', *args)
       parse_diff_stats_output(output_lines)
     end
 
+    DIFF_PATH_STATUS_OPTION_MAP = [
+      { type: :static, flag: '--name-status' },
+      { keys: [:path], type: :validate_only }
+    ].freeze
+
     def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
       assert_args_are_not_options('commit or commit range', reference1, reference2)
+      ArgsBuilder.validate!(opts, DIFF_PATH_STATUS_OPTION_MAP)
 
-      opts_arr = ['--name-status']
-      opts_arr << reference1 if reference1
-      opts_arr << reference2 if reference2
+      args = build_args(opts, DIFF_PATH_STATUS_OPTION_MAP)
+      args.push(reference1, reference2).compact!
+      args.push('--', opts[:path]) if opts[:path]
 
-      opts_arr << '--' << opts[:path] if opts[:path]
-
-      command_lines('diff', *opts_arr).each_with_object({}) do |line, memo|
-        status, path = line.split("\t")
-        memo[path] = status
-      end
+      parse_diff_path_status(args)
     end
 
     # compares the index and the working directory
@@ -852,12 +937,17 @@ module Git
       end
     end
 
-    def ls_remote(location = nil, opts = {})
-      args = []
-      args << '--refs' if opts[:refs]
-      args << (location || '.')
+    LS_REMOTE_OPTION_MAP = [
+      { keys: [:refs], flag: '--refs', type: :boolean }
+    ].freeze
 
-      output_lines = command_lines('ls-remote', *args)
+    def ls_remote(location = nil, opts = {})
+      ArgsBuilder.validate!(opts, LS_REMOTE_OPTION_MAP)
+
+      flags = build_args(opts, LS_REMOTE_OPTION_MAP)
+      positional_arg = location || '.'
+
+      output_lines = command_lines('ls-remote', *flags, positional_arg)
       parse_ls_remote_output(output_lines)
     end
 
@@ -921,17 +1011,24 @@ module Git
 
     ## WRITE COMMANDS ##
 
+    CONFIG_SET_OPTION_MAP = [
+      { keys: [:file], flag: '--file', type: :valued_space }
+    ].freeze
+
     def config_set(name, value, options = {})
-      if options[:file].to_s.empty?
-        command('config', name, value)
-      else
-        command('config', '--file', options[:file], name, value)
-      end
+      ArgsBuilder.validate!(options, CONFIG_SET_OPTION_MAP)
+      flags = build_args(options, CONFIG_SET_OPTION_MAP)
+      command('config', *flags, name, value)
     end
 
     def global_config_set(name, value)
       command('config', '--global', name, value)
     end
+
+    ADD_OPTION_MAP = [
+      { keys: [:all], flag: '--all', type: :boolean },
+      { keys: [:force], flag: '--force', type: :boolean }
+    ].freeze
 
     # Update the index from the current worktree to prepare the for the next commit
     #
@@ -947,28 +1044,27 @@ module Git
     # @option options [Boolean] :force Allow adding otherwise ignored files
     #
     def add(paths = '.', options = {})
-      arr_opts = []
+      args = build_args(options, ADD_OPTION_MAP)
 
-      arr_opts << '--all' if options[:all]
-      arr_opts << '--force' if options[:force]
+      args << '--'
+      args.concat(Array(paths))
 
-      arr_opts << '--'
-
-      arr_opts << paths
-
-      arr_opts.flatten!
-
-      command('add', *arr_opts)
+      command('add', *args)
     end
 
-    def rm(path = '.', opts = {})
-      arr_opts = ['-f'] # overrides the up-to-date check by default
-      arr_opts << '-r' if opts[:recursive]
-      arr_opts << '--cached' if opts[:cached]
-      arr_opts << '--'
-      arr_opts += Array(path)
+    RM_OPTION_MAP = [
+      { type: :static, flag: '-f' },
+      { keys: [:recursive], flag: '-r',       type: :boolean },
+      { keys: [:cached],    flag: '--cached', type: :boolean }
+    ].freeze
 
-      command('rm', *arr_opts)
+    def rm(path = '.', opts = {})
+      args = build_args(opts, RM_OPTION_MAP)
+
+      args << '--'
+      args.concat(Array(path))
+
+      command('rm', *args)
     end
 
     # Returns true if the repository is empty (meaning it has no commits)
@@ -985,6 +1081,27 @@ module Git
       true
     end
 
+    COMMIT_OPTION_MAP = [
+      { keys: %i[add_all all], flag: '--all', type: :boolean },
+      { keys: [:allow_empty],         flag: '--allow-empty',         type: :boolean },
+      { keys: [:no_verify],           flag: '--no-verify',           type: :boolean },
+      { keys: [:allow_empty_message], flag: '--allow-empty-message', type: :boolean },
+      { keys: [:author],              flag: '--author',              type: :valued_equals },
+      { keys: [:message],             flag: '--message',             type: :valued_equals },
+      { keys: [:no_gpg_sign],         flag: '--no-gpg-sign',         type: :boolean },
+      { keys: [:date], flag: '--date', type: :valued_equals, validator: ->(v) { v.is_a?(String) } },
+      { keys: [:amend], type: :custom, builder: ->(value) { ['--amend', '--no-edit'] if value } },
+      {
+        keys: [:gpg_sign],
+        type: :custom,
+        builder: lambda { |value|
+          if value
+            value == true ? '--gpg-sign' : "--gpg-sign=#{value}"
+          end
+        }
+      }
+    ].freeze
+
     # Takes the commit message with the options and executes the commit command
     #
     # accepts options:
@@ -1000,41 +1117,52 @@ module Git
     #
     # @param [String] message the commit message to be used
     # @param [Hash] opts the commit options to be used
-    def commit(message, opts = {})
-      args = []
-      args << "--message=#{message}" if message
-      args += build_commit_general_opts(opts)
-      args += build_commit_gpg_opts(opts)
 
+    def commit(message, opts = {})
+      opts[:message] = message if message # Handle message arg for backward compatibility
+
+      # Perform cross-option validation before building args
+      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts[:gpg_sign] && opts[:no_gpg_sign]
+
+      ArgsBuilder.validate!(opts, COMMIT_OPTION_MAP)
+
+      args = build_args(opts, COMMIT_OPTION_MAP)
       command('commit', *args)
     end
+    RESET_OPTION_MAP = [
+      { keys: [:hard], flag: '--hard', type: :boolean }
+    ].freeze
 
     def reset(commit, opts = {})
-      arr_opts = []
-      arr_opts << '--hard' if opts[:hard]
-      arr_opts << commit if commit
-      command('reset', *arr_opts)
+      args = build_args(opts, RESET_OPTION_MAP)
+      args << commit if commit
+      command('reset', *args)
     end
+
+    CLEAN_OPTION_MAP = [
+      { keys: [:force], flag: '--force', type: :boolean },
+      { keys: [:ff],    flag: '-ff',     type: :boolean },
+      { keys: [:d],     flag: '-d',      type: :boolean },
+      { keys: [:x],     flag: '-x',      type: :boolean }
+    ].freeze
 
     def clean(opts = {})
-      arr_opts = []
-      arr_opts << '--force' if opts[:force]
-      arr_opts << '-ff' if opts[:ff]
-      arr_opts << '-d' if opts[:d]
-      arr_opts << '-x' if opts[:x]
-
-      command('clean', *arr_opts)
+      args = build_args(opts, CLEAN_OPTION_MAP)
+      command('clean', *args)
     end
+
+    REVERT_OPTION_MAP = [
+      { keys: [:no_edit], flag: '--no-edit', type: :boolean }
+    ].freeze
 
     def revert(commitish, opts = {})
       # Forcing --no-edit as default since it's not an interactive session.
       opts = { no_edit: true }.merge(opts)
 
-      arr_opts = []
-      arr_opts << '--no-edit' if opts[:no_edit]
-      arr_opts << commitish
+      args = build_args(opts, REVERT_OPTION_MAP)
+      args << commitish
 
-      command('revert', *arr_opts)
+      command('revert', *args)
     end
 
     def apply(patch_file)
@@ -1084,6 +1212,12 @@ module Git
       command('branch', '-D', branch)
     end
 
+    CHECKOUT_OPTION_MAP = [
+      { keys: %i[force f],      flag: '--force', type: :boolean },
+      { keys: %i[new_branch b], type: :validate_only },
+      { keys: [:start_point], type: :validate_only }
+    ].freeze
+
     # Runs checkout command to checkout or create branch
     #
     # accepts options:
@@ -1094,18 +1228,16 @@ module Git
     # @param [String] branch
     # @param [Hash] opts
     def checkout(branch = nil, opts = {})
-      if branch.is_a?(Hash) && opts == {}
+      if branch.is_a?(Hash) && opts.empty?
         opts = branch
         branch = nil
       end
+      ArgsBuilder.validate!(opts, CHECKOUT_OPTION_MAP)
 
-      arr_opts = []
-      arr_opts << '-b' if opts[:new_branch] || opts[:b]
-      arr_opts << '--force' if opts[:force] || opts[:f]
-      arr_opts << branch if branch
-      arr_opts << opts[:start_point] if opts[:start_point] && arr_opts.include?('-b')
+      flags = build_args(opts, CHECKOUT_OPTION_MAP)
+      positional_args = build_checkout_positional_args(branch, opts)
 
-      command('checkout', *arr_opts)
+      command('checkout', *flags, *positional_args)
     end
 
     def checkout_file(version, file)
@@ -1115,28 +1247,38 @@ module Git
       command('checkout', *arr_opts)
     end
 
+    MERGE_OPTION_MAP = [
+      { keys: [:no_commit], flag: '--no-commit', type: :boolean },
+      { keys: [:no_ff],     flag: '--no-ff',     type: :boolean },
+      { keys: [:m],         flag: '-m',          type: :valued_space }
+    ].freeze
+
     def merge(branch, message = nil, opts = {})
-      arr_opts = []
-      arr_opts << '--no-commit' if opts[:no_commit]
-      arr_opts << '--no-ff' if opts[:no_ff]
-      arr_opts << '-m' << message if message
-      arr_opts += Array(branch)
-      command('merge', *arr_opts)
+      # For backward compatibility, treat the message arg as the :m option.
+      opts[:m] = message if message
+      ArgsBuilder.validate!(opts, MERGE_OPTION_MAP)
+
+      args = build_args(opts, MERGE_OPTION_MAP)
+      args.concat(Array(branch))
+
+      command('merge', *args)
     end
+
+    MERGE_BASE_OPTION_MAP = [
+      { keys: [:octopus],     flag: '--octopus',     type: :boolean },
+      { keys: [:independent], flag: '--independent', type: :boolean },
+      { keys: [:fork_point],  flag: '--fork-point',  type: :boolean },
+      { keys: [:all],         flag: '--all',         type: :boolean }
+    ].freeze
 
     def merge_base(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
+      ArgsBuilder.validate!(opts, MERGE_BASE_OPTION_MAP)
 
-      arg_opts = []
+      flags = build_args(opts, MERGE_BASE_OPTION_MAP)
+      command_args = flags + args
 
-      arg_opts << '--octopus' if opts[:octopus]
-      arg_opts << '--independent' if opts[:independent]
-      arg_opts << '--fork-point' if opts[:fork_point]
-      arg_opts << '--all' if opts[:all]
-
-      arg_opts += args
-
-      command('merge-base', *arg_opts).lines.map(&:strip)
+      command('merge-base', *command_args).lines.map(&:strip)
     end
 
     def unmerged
@@ -1160,15 +1302,19 @@ module Git
       end
     end
 
-    def remote_add(name, url, opts = {})
-      arr_opts = ['add']
-      arr_opts << '-f' if opts[:with_fetch] || opts[:fetch]
-      arr_opts << '-t' << opts[:track] if opts[:track]
-      arr_opts << '--'
-      arr_opts << name
-      arr_opts << url
+    REMOTE_ADD_OPTION_MAP = [
+      { keys: %i[with_fetch fetch], flag: '-f', type: :boolean },
+      { keys: [:track], flag: '-t', type: :valued_space }
+    ].freeze
 
-      command('remote', *arr_opts)
+    def remote_add(name, url, opts = {})
+      ArgsBuilder.validate!(opts, REMOTE_ADD_OPTION_MAP)
+
+      flags = build_args(opts, REMOTE_ADD_OPTION_MAP)
+      positional_args = ['--', name, url]
+      command_args = ['add'] + flags + positional_args
+
+      command('remote', *command_args)
     end
 
     def remote_set_url(name, url)
@@ -1191,21 +1337,42 @@ module Git
       command_lines('tag')
     end
 
+    TAG_OPTION_MAP = [
+      { keys: %i[force f],       flag: '-f', type: :boolean },
+      { keys: %i[annotate a],    flag: '-a', type: :boolean },
+      { keys: %i[sign s],        flag: '-s', type: :boolean },
+      { keys: %i[delete d],      flag: '-d', type: :boolean },
+      { keys: %i[message m],     flag: '-m', type: :valued_space }
+    ].freeze
+
     def tag(name, *args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       target = args.first
 
       validate_tag_options!(opts)
+      ArgsBuilder.validate!(opts, TAG_OPTION_MAP)
 
-      cmd_args = build_tag_flags(opts)
-      cmd_args.push(name, target).compact!
-      cmd_args.push('-m', opts[:m] || opts[:message]) if opts[:m] || opts[:message]
+      flags = build_args(opts, TAG_OPTION_MAP)
+      positional_args = [name, target].compact
 
-      command('tag', *cmd_args)
+      command('tag', *flags, *positional_args)
     end
 
+    FETCH_OPTION_MAP = [
+      { keys: [:all], flag: '--all', type: :boolean },
+      { keys: %i[tags t],            flag: '--tags',           type: :boolean },
+      { keys: %i[prune p],           flag: '--prune',          type: :boolean },
+      { keys: %i[prune-tags P], flag: '--prune-tags', type: :boolean },
+      { keys: %i[force f], flag: '--force', type: :boolean },
+      { keys: %i[update-head-ok u], flag: '--update-head-ok', type: :boolean },
+      { keys: [:unshallow],           flag: '--unshallow',      type: :boolean },
+      { keys: [:depth],               flag: '--depth',          type: :valued_space },
+      { keys: [:ref],                 type: :validate_only }
+    ].freeze
+
     def fetch(remote, opts)
-      args = build_fetch_args(opts)
+      ArgsBuilder.validate!(opts, FETCH_OPTION_MAP)
+      args = build_args(opts, FETCH_OPTION_MAP)
 
       if remote || opts[:ref]
         args << '--'
@@ -1216,8 +1383,19 @@ module Git
       command('fetch', *args, merge: true)
     end
 
+    PUSH_OPTION_MAP = [
+      { keys: [:mirror],      flag: '--mirror',      type: :boolean },
+      { keys: [:delete],      flag: '--delete',      type: :boolean },
+      { keys: %i[force f], flag: '--force', type: :boolean },
+      { keys: [:push_option], flag: '--push-option', type: :repeatable_valued_space },
+      { keys: [:all],         type: :validate_only }, # For validation purposes
+      { keys: [:tags],        type: :validate_only }  # From the `push` method's logic
+    ].freeze
+
     def push(remote = nil, branch = nil, opts = nil)
       remote, branch, opts = normalize_push_args(remote, branch, opts)
+      ArgsBuilder.validate!(opts, PUSH_OPTION_MAP)
+
       raise ArgumentError, 'remote is required if branch is specified' if !remote && branch
 
       args = build_push_args(remote, branch, opts)
@@ -1230,14 +1408,19 @@ module Git
       end
     end
 
+    PULL_OPTION_MAP = [
+      { keys: [:allow_unrelated_histories], flag: '--allow-unrelated-histories', type: :boolean }
+    ].freeze
+
     def pull(remote = nil, branch = nil, opts = {})
       raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
 
-      arr_opts = []
-      arr_opts << '--allow-unrelated-histories' if opts[:allow_unrelated_histories]
-      arr_opts << remote if remote
-      arr_opts << branch if branch
-      command('pull', *arr_opts)
+      ArgsBuilder.validate!(opts, PULL_OPTION_MAP)
+
+      flags = build_args(opts, PULL_OPTION_MAP)
+      positional_args = [remote, branch].compact
+
+      command('pull', *flags, *positional_args)
     end
 
     def tag_sha(tag_name)
@@ -1261,46 +1444,73 @@ module Git
       command('gc', '--prune', '--aggressive', '--auto')
     end
 
-    # reads a tree into the current index file
+    READ_TREE_OPTION_MAP = [
+      { keys: [:prefix], flag: '--prefix', type: :valued_equals }
+    ].freeze
+
     def read_tree(treeish, opts = {})
-      arr_opts = []
-      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
-      arr_opts += [treeish]
-      command('read-tree', *arr_opts)
+      ArgsBuilder.validate!(opts, READ_TREE_OPTION_MAP)
+      flags = build_args(opts, READ_TREE_OPTION_MAP)
+      command('read-tree', *flags, treeish)
     end
 
     def write_tree
       command('write-tree')
     end
 
+    COMMIT_TREE_OPTION_MAP = [
+      { keys: %i[parent parents], flag: '-p', type: :repeatable_valued_space },
+      { keys: [:message], flag: '-m', type: :valued_space }
+    ].freeze
+
     def commit_tree(tree, opts = {})
       opts[:message] ||= "commit tree #{tree}"
-      arr_opts = []
-      arr_opts << tree
-      arr_opts << '-p' << opts[:parent] if opts[:parent]
-      Array(opts[:parents]).each { |p| arr_opts << '-p' << p } if opts[:parents]
-      arr_opts << '-m' << opts[:message]
-      command('commit-tree', *arr_opts)
+      ArgsBuilder.validate!(opts, COMMIT_TREE_OPTION_MAP)
+
+      flags = build_args(opts, COMMIT_TREE_OPTION_MAP)
+      command('commit-tree', tree, *flags)
     end
 
     def update_ref(ref, commit)
       command('update-ref', ref, commit)
     end
 
-    def checkout_index(opts = {})
-      arr_opts = []
-      arr_opts << "--prefix=#{opts[:prefix]}" if opts[:prefix]
-      arr_opts << '--force' if opts[:force]
-      arr_opts << '--all' if opts[:all]
-      arr_opts << '--' << opts[:path_limiter] if opts[:path_limiter].is_a? String
+    CHECKOUT_INDEX_OPTION_MAP = [
+      { keys: [:prefix], flag: '--prefix', type: :valued_equals },
+      { keys: [:force],  flag: '--force',  type: :boolean },
+      { keys: [:all],    flag: '--all',    type: :boolean },
+      { keys: [:path_limiter], type: :validate_only }
+    ].freeze
 
-      command('checkout-index', *arr_opts)
+    def checkout_index(opts = {})
+      ArgsBuilder.validate!(opts, CHECKOUT_INDEX_OPTION_MAP)
+      args = build_args(opts, CHECKOUT_INDEX_OPTION_MAP)
+
+      if (path = opts[:path_limiter]) && path.is_a?(String)
+        args.push('--', path)
+      end
+
+      command('checkout-index', *args)
     end
 
+    ARCHIVE_OPTION_MAP = [
+      { keys: [:prefix],     flag: '--prefix', type: :valued_equals },
+      { keys: [:remote],     flag: '--remote', type: :valued_equals },
+      # These options are used by helpers or handled manually
+      { keys: [:path],       type: :validate_only },
+      { keys: [:format],     type: :validate_only },
+      { keys: [:add_gzip],   type: :validate_only }
+    ].freeze
+
     def archive(sha, file = nil, opts = {})
+      ArgsBuilder.validate!(opts, ARCHIVE_OPTION_MAP)
       file ||= temp_file_name
       format, gzip = parse_archive_format_options(opts)
-      args = build_archive_args(sha, format, opts)
+
+      args = build_args(opts, ARCHIVE_OPTION_MAP)
+      args.unshift("--format=#{format}")
+      args << sha
+      args.push('--', opts[:path]) if opts[:path]
 
       File.open(file, 'wb') { |f| command('archive', *args, out: f) }
       apply_gzip(file) if gzip
@@ -1376,7 +1586,41 @@ module Git
       -c color.transport=false
     ].freeze
 
+    LOG_OPTION_MAP = [
+      { type: :static, flag: '--no-color' },
+      { keys: [:all],    flag: '--all',    type: :boolean },
+      { keys: [:cherry], flag: '--cherry', type: :boolean },
+      { keys: [:since],  flag: '--since',     type: :valued_equals },
+      { keys: [:until],  flag: '--until',     type: :valued_equals },
+      { keys: [:grep],   flag: '--grep',      type: :valued_equals },
+      { keys: [:author], flag: '--author',    type: :valued_equals },
+      { keys: [:count],  flag: '--max-count', type: :valued_equals },
+      { keys: [:between], type: :custom, builder: ->(value) { "#{value[0]}..#{value[1]}" if value } }
+    ].freeze
+
     private
+
+    def parse_diff_path_status(args)
+      command_lines('diff', *args).each_with_object({}) do |line, memo|
+        status, path = line.split("\t")
+        memo[path] = status
+      end
+    end
+
+    def build_checkout_positional_args(branch, opts)
+      args = []
+      if opts[:new_branch] || opts[:b]
+        args.push('-b', branch)
+        args << opts[:start_point] if opts[:start_point]
+      elsif branch
+        args << branch
+      end
+      args
+    end
+
+    def build_args(opts, option_map)
+      Git::ArgsBuilder.new(opts, option_map).build
+    end
 
     def initialize_from_base(base_object)
       @git_dir = base_object.repo.path
@@ -1390,67 +1634,12 @@ module Git
       @git_work_dir = base_hash[:working_directory]
     end
 
-    def build_clone_args(repository_url, clone_dir, opts)
-      args = build_clone_flag_opts(opts)
-      args += build_clone_valued_opts(opts)
-      args.push('--', repository_url, clone_dir)
-    end
-
-    def build_clone_flag_opts(opts)
-      args = []
-      args << '--bare' if opts[:bare]
-      args << '--recursive' if opts[:recursive]
-      args << '--mirror' if opts[:mirror]
-      args
-    end
-
-    def build_clone_valued_opts(opts)
-      args = []
-      args.push('--branch', opts[:branch]) if opts[:branch]
-      args.push('--depth', opts[:depth].to_i) if opts[:depth]
-      args.push('--filter', opts[:filter]) if opts[:filter]
-
-      if (origin_name = opts[:remote] || opts[:origin])
-        args.push('--origin', origin_name)
-      end
-
-      Array(opts[:config]).each { |c| args.push('--config', c) }
-      args
-    end
-
     def return_base_opts_from_clone(clone_dir, opts)
       base_opts = {}
       base_opts[:repository] = clone_dir if opts[:bare] || opts[:mirror]
       base_opts[:working_directory] = clone_dir unless opts[:bare] || opts[:mirror]
       base_opts[:log] = opts[:log] if opts[:log]
       base_opts
-    end
-
-    def build_describe_boolean_opts(opts)
-      args = []
-      args << '--all' if opts[:all]
-      args << '--tags' if opts[:tags]
-      args << '--contains' if opts[:contains]
-      args << '--debug' if opts[:debug]
-      args << '--long' if opts[:long]
-      args << '--always' if opts[:always]
-      args << '--exact-match' if opts[:exact_match] || opts[:'exact-match']
-      args
-    end
-
-    def build_describe_valued_opts(opts)
-      args = []
-      args << "--abbrev=#{opts[:abbrev]}" if opts[:abbrev]
-      args << "--candidates=#{opts[:candidates]}" if opts[:candidates]
-      args << "--match=#{opts[:match]}" if opts[:match]
-      args
-    end
-
-    def build_describe_dirty_opt(opts)
-      return ['--dirty'] if opts[:dirty] == true
-      return ["--dirty=#{opts[:dirty]}"] if opts[:dirty].is_a?(String)
-
-      []
     end
 
     def process_commit_headers(data)
@@ -1512,20 +1701,6 @@ module Git
       :unborn
     end
 
-    def build_grep_args(string, opts)
-      args = ['-n'] # Always get line numbers
-      args << '-i' if opts[:ignore_case]
-      args << '-v' if opts[:invert_match]
-      args << '-E' if opts[:extended_regexp]
-      args.push('-e', string, opts[:object])
-
-      if (limiter = opts[:path_limiter])
-        args << '--'
-        args.concat(Array(limiter))
-      end
-      args
-    end
-
     def execute_grep_command(args)
       command_lines('grep', *args)
     rescue Git::FailedError => e
@@ -1543,14 +1718,6 @@ module Git
         _full, filename, line_num, text = match.to_a
         hsh[filename] << [line_num.to_i, text]
       end
-    end
-
-    def build_diff_stats_args(obj1, obj2, opts)
-      args = ['--numstat']
-      args << obj1
-      args << obj2 if obj2.is_a?(String)
-      args << '--' << opts[:path_limiter] if opts[:path_limiter].is_a?(String)
-      args
     end
 
     def parse_diff_stats_output(lines)
@@ -1614,30 +1781,6 @@ module Git
       [type, name, value]
     end
 
-    def build_commit_general_opts(opts)
-      args = []
-      args << '--amend' << '--no-edit' if opts[:amend]
-      args << '--all' if opts[:add_all] || opts[:all]
-      args << '--allow-empty' if opts[:allow_empty]
-      args << "--author=#{opts[:author]}" if opts[:author]
-      args << "--date=#{opts[:date]}" if opts[:date].is_a?(String)
-      args << '--no-verify' if opts[:no_verify]
-      args << '--allow-empty-message' if opts[:allow_empty_message]
-      args
-    end
-
-    def build_commit_gpg_opts(opts)
-      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts[:gpg_sign] && opts[:no_gpg_sign]
-
-      return ['--no-gpg-sign'] if opts[:no_gpg_sign]
-
-      if (key = opts[:gpg_sign])
-        return key == true ? ['--gpg-sign'] : ["--gpg-sign=#{key}"]
-      end
-
-      []
-    end
-
     def stash_log_lines
       path = File.join(@git_dir, 'logs/refs/stash')
       return [] unless File.exist?(path)
@@ -1677,28 +1820,6 @@ module Git
       raise ArgumentError, 'Cannot create an annotated tag without a message.'
     end
 
-    def build_tag_flags(opts)
-      flags = []
-      flags << '-f' if opts[:force] || opts[:f]
-      flags << '-a' if opts[:a] || opts[:annotate]
-      flags << '-s' if opts[:s] || opts[:sign]
-      flags << '-d' if opts[:d] || opts[:delete]
-      flags
-    end
-
-    def build_fetch_args(opts)
-      args = []
-      args << '--all' if opts[:all]
-      args << '--tags' if opts[:t] || opts[:tags]
-      args << '--prune' if opts[:p] || opts[:prune]
-      args << '--prune-tags' if opts[:P] || opts[:'prune-tags']
-      args << '--force' if opts[:f] || opts[:force]
-      args << '--update-head-ok' if opts[:u] || opts[:'update-head-ok']
-      args << '--unshallow' if opts[:unshallow]
-      args.push('--depth', opts[:depth]) if opts[:depth]
-      args
-    end
-
     def normalize_push_args(remote, branch, opts)
       if branch.is_a?(Hash)
         opts = branch
@@ -1715,14 +1836,11 @@ module Git
     end
 
     def build_push_args(remote, branch, opts)
-      args = []
-      args << '--mirror' if opts[:mirror]
-      args << '--delete' if opts[:delete]
-      args << '--force' if opts[:force] || opts[:f]
+      # Build the simple flags using the ArgsBuilder
+      args = build_args(opts, PUSH_OPTION_MAP)
+
+      # Manually handle the flag with external dependencies and positional args
       args << '--all' if opts[:all] && remote
-
-      Array(opts[:push_option]).each { |o| args.push('--push-option', o) } if opts[:push_option]
-
       args << remote if remote
       args << branch if branch
       args
@@ -1740,14 +1858,6 @@ module Git
       gzip = opts[:add_gzip] == true || format == 'tgz'
       format = 'tar' if format == 'tgz'
       [format, gzip]
-    end
-
-    def build_archive_args(sha, format, opts)
-      args = ["--format=#{format}"]
-      %i[prefix remote].each { |name| args << "--#{name}=#{opts[name]}" if opts[name] }
-      args << sha
-      args << '--' << opts[:path] if opts[:path]
-      args
     end
 
     def apply_gzip(file)
@@ -1875,15 +1985,7 @@ module Git
         raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
       end
 
-      ['--no-color'].tap do |args|
-        # Switches
-        %i[all cherry].each { |name| args << "--#{name}" if opts[name] }
-        # Args with values
-        %i[since until grep author].each { |name| args << "--#{name}=#{opts[name]}" if opts[name] }
-        # Special args
-        args << "--max-count=#{opts[:count]}" if opts[:count]
-        args << "#{opts[:between][0]}..#{opts[:between][1]}" if opts[:between]
-      end
+      build_args(opts, LOG_OPTION_MAP)
     end
 
     # Retrurns an array holding path options for the log commands
