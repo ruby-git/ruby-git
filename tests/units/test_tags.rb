@@ -76,7 +76,7 @@ class TestTags < Test::Unit::TestCase
 
   def test_tag_message_not_prefixed_with_space
     in_bare_repo_clone do |repo|
-      repo.add_tag('donkey', annotated: true, message: 'hello')
+      repo.add_tag('donkey', annotate: true, message: 'hello')
       tag = repo.tag('donkey')
       assert_equal(tag.message, 'hello')
     end
