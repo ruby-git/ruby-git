@@ -11,6 +11,7 @@
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
+- [📢 We Now Use RuboCop 📢](#-we-now-use-rubocop-)
 - [📢 Default Branch Rename 📢](#-default-branch-rename-)
 - [📢 We've Switched to Conventional Commits 📢](#-weve-switched-to-conventional-commits-)
 - [Summary](#summary)
@@ -22,6 +23,30 @@
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [License](#license)
+
+## 📢 We Now Use RuboCop 📢
+
+To improve code consistency and maintainability, the `ruby-git` project has now
+adopted [RuboCop](https://rubocop.org/) as our static code analyzer and formatter.
+
+This integration is a key part of our ongoing commitment to making `ruby-git` a
+high-quality, stable, and easy-to-contribute-to project. All new contributions will
+be expected to adhere to the style guidelines enforced by our RuboCop configuration.
+
+ RuboCop can be run from the project's Rakefile:
+
+```shell
+rake rubocop
+```
+
+RuboCop is also run  as part of the default rake task (by running `rake`) that is run
+in our Continuous Integration workflow.
+
+Going forward, any PRs that have any Robocop offenses will not be merged. In
+certain rare cases, it might be acceptable to disable a  RuboCop check for the most
+limited scope possible.
+
+If you have a problem fixing a  RuboCop offense, don't be afraid to ask a contributor.
 
 ## 📢 Default Branch Rename 📢
 
