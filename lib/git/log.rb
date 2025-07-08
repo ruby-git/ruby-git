@@ -90,28 +90,56 @@ module Git
 
     # @deprecated Use {#execute} and call `each` on the result.
     def each(&)
-      deprecate_and_run
+      Git::Deprecation.warn(
+        'Calling Git::Log#each is deprecated. Call #execute and then #each on the result object.'
+      )
+      run_log_if_dirty
       @commits.each(&)
     end
 
     # @deprecated Use {#execute} and call `size` on the result.
     def size
-      deprecate_and_run
+      Git::Deprecation.warn(
+        'Calling Git::Log#size is deprecated. Call #execute and then #size on the result object.'
+      )
+      run_log_if_dirty
       @commits&.size
     end
 
     # @deprecated Use {#execute} and call `to_s` on the result.
     def to_s
-      deprecate_and_run
+      Git::Deprecation.warn(
+        'Calling Git::Log#to_s is deprecated. Call #execute and then #to_s on the result object.'
+      )
+      run_log_if_dirty
       @commits&.map(&:to_s)&.join("\n")
     end
 
     # @deprecated Use {#execute} and call the method on the result.
-    %i[first last []].each do |method_name|
-      define_method(method_name) do |*args|
-        deprecate_and_run
-        @commits&.public_send(method_name, *args)
-      end
+    def first
+      Git::Deprecation.warn(
+        'Calling Git::Log#first is deprecated. Call #execute and then #first on the result object.'
+      )
+      run_log_if_dirty
+      @commits&.first
+    end
+
+    # @deprecated Use {#execute} and call the method on the result.
+    def last
+      Git::Deprecation.warn(
+        'Calling Git::Log#last is deprecated. Call #execute and then #last on the result object.'
+      )
+      run_log_if_dirty
+      @commits&.last
+    end
+
+    # @deprecated Use {#execute} and call the method on the result.
+    def [](index)
+      Git::Deprecation.warn(
+        'Calling Git::Log#[] is deprecated. Call #execute and then #[] on the result object.'
+      )
+      run_log_if_dirty
+      @commits&.[](index)
     end
 
     # @!endgroup
@@ -132,12 +160,5 @@ module Git
       @dirty = false
     end
 
-    def deprecate_and_run(method = caller_locations(1, 1)[0].label)
-      Git::Deprecation.warn(
-        "Calling Git::Log##{method} is deprecated. " \
-        "Call #execute and then ##{method} on the result object."
-      )
-      run_log_if_dirty
-    end
   end
 end
