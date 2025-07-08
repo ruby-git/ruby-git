@@ -4,7 +4,7 @@ require 'active_support'
 require 'active_support/deprecation'
 
 module Git
-  Deprecation = ActiveSupport::Deprecation.new('3.0', 'Git')
+  Deprecation = ActiveSupport::Deprecation.new('5.0.0', 'Git')
 end
 
 require 'git/author'
