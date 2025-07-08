@@ -13,14 +13,14 @@ $stdout.sync = true
 $stderr.sync = true
 
 # Make tests that emit a deprecation warning fail
-
+#
 # Deprecation warnings should not be ignored.
-
+#
 # This is important so that:
 # * when a user sees a deprecation warning, they can be confident it is coming from
 #   their code and not this gem
 # * test output is clean and does not contain noisey deprecation warnings
-
+#
 # Tests whose purpose is to test that a deprecation warning is issued in the right
 # circumstance should mock Git::Deprecation#warn to avoid raising an error.
 #
