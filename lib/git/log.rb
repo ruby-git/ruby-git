@@ -159,6 +159,5 @@ module Git
       @commits = log_data.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       @dirty = false
     end
-
   end
 end
