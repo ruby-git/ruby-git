@@ -38,38 +38,31 @@ module Git
       @full_diff_files.map { |file| file[1] }.each(&)
     end
 
+    def size
+      stats_provider.total[:files]
+    end
+
     #
     # DEPRECATED METHODS
     #
 
     def name_status
-      Git::Deprecation.warn('Git::Diff#name_status is deprecated. Use Git::Base#diff_path_status instead.')
       path_status_provider.to_h
     end
 
-    def size
-      Git::Deprecation.warn('Git::Diff#size is deprecated. Use Git::Base#diff_stats(...).total[:files] instead.')
-      stats_provider.total[:files]
-    end
-
     def lines
-      Git::Deprecation.warn('Git::Diff#lines is deprecated. Use Git::Base#diff_stats(...).lines instead.')
       stats_provider.lines
     end
 
     def deletions
-      Git::Deprecation.warn('Git::Diff#deletions is deprecated. Use Git::Base#diff_stats(...).deletions instead.')
       stats_provider.deletions
     end
 
     def insertions
-      Git::Deprecation.warn('Git::Diff#insertions is deprecated. Use Git::Base#diff_stats(...).insertions instead.')
       stats_provider.insertions
     end
 
     def stats
-      Git::Deprecation.warn('Git::Diff#stats is deprecated. Use Git::Base#diff_stats instead.')
-      # CORRECTED: Re-create the original hash structure for backward compatibility
       {
         files: stats_provider.files,
         total: stats_provider.total
