@@ -9,18 +9,18 @@ class TestGitPath < Test::Unit::TestCase
   end
 
   def test_initalize_with_good_path_and_check_path
-    path = Git::Path.new(@git.index.to_s, true)
+    path = Git::Path.new(@git.index.to_s, must_exist: true)
     assert_equal @git.index.to_s, path.to_s
   end
 
   def test_initialize_with_bad_path_and_check_path
     assert_raises ArgumentError do
-      Git::Path.new('/this path does not exist', true)
+      Git::Path.new('/this path does not exist', must_exist: true)
     end
   end
 
   def test_initialize_with_bad_path_and_no_check
-    path = Git::Path.new('/this path does not exist', false)
+    path = Git::Path.new('/this path does not exist', must_exist: false)
     assert path.to_s.end_with?('/this path does not exist')
 
     assert(path.to_s.match(%r{^(?:[A-Z]:)?/this path does not exist$}))

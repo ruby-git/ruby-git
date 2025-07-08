@@ -13,7 +13,7 @@ class TestWindowsCmdEscaping < Test::Unit::TestCase
       git = Git.init('.')
       git.add
       git.commit(expected_commit_message)
-      commits = git.log(1)
+      commits = git.log(1).execute
       actual_commit_message = commits.first.message
       assert_equal(expected_commit_message, actual_commit_message)
     end

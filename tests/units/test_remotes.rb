@@ -177,12 +177,14 @@ class TestRemotes < Test::Unit::TestCase
         new_file('test-file1', 'gonnaCommitYou')
         rem.add
         rem.commit('master commit 1')
-        first_commit_sha = rem.log.first.sha
+        commits = rem.log.execute
+        first_commit_sha = commits.first.sha
 
         new_file('test-file2', 'gonnaCommitYouToo')
         rem.add
         rem.commit('master commit 2')
-        second_commit_sha = rem.log.first.sha
+        commits = rem.log.execute
+        second_commit_sha = commits.first.sha
       end
 
       loc.chdir do

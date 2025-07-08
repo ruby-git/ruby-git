@@ -12,8 +12,8 @@ require 'git'
 $stdout.sync = true
 $stderr.sync = true
 
-# Silence deprecation warnings during tests
-Git::Deprecation.behavior = :silence
+# # Silence deprecation warnings during tests
+# Git::Deprecation.behavior = :silence
 
 module Test
   module Unit
