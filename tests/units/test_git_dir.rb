@@ -62,11 +62,13 @@ class TestGitDir < Test::Unit::TestCase
         # * the commit was added to the log
         #
         max_log_size = 100
-        assert_equal(64, git.log(max_log_size).size)
+        commits = git.log(max_log_size).execute
+        assert_equal(64, commits.size)
         git.add(file)
         git.commit('This is a new commit')
         assert_equal(false, git.status.changed?(file))
-        assert_equal(65, git.log(max_log_size).size)
+        commits = git.log(max_log_size).execute
+        assert_equal(65, commits.size)
       end
     end
   end

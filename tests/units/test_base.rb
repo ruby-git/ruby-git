@@ -88,11 +88,13 @@ class TestBase < Test::Unit::TestCase
       git.add('test_file_1')
       git.add('test_file_2')
 
-      base_commit_id = git.log[0].objectish
+      commits = git.log.execute
+      base_commit_id = commits[0].objectish
 
       git.commit('Test Commit')
 
-      original_commit_id = git.log[0].objectish
+      commits = git.log.execute
+      original_commit_id = commits[0].objectish
 
       create_file('test_commit/test_file_3', 'content test_file_3')
 
@@ -100,8 +102,9 @@ class TestBase < Test::Unit::TestCase
 
       git.commit(nil, amend: true)
 
-      assert(git.log[0].objectish != original_commit_id)
-      assert(git.log[1].objectish == base_commit_id)
+      commits = git.log.execute
+      assert(commits[0].objectish != original_commit_id)
+      assert(commits[1].objectish == base_commit_id)
     end
   end
 end

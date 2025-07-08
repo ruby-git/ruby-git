@@ -44,9 +44,11 @@ class TestPull < Test::Unit::TestCase
 
       Dir.chdir('local') do
         git = Git.open('.')
-        assert_equal(1, git.log.size)
+        commits = git.log.execute
+        assert_equal(1, commits.size)
         assert_nothing_raised { git.pull }
-        assert_equal(2, git.log.size)
+        commits = git.log.execute
+        assert_equal(2, commits.size)
       end
     end
   end
@@ -72,9 +74,11 @@ class TestPull < Test::Unit::TestCase
 
       Dir.chdir('local') do
         git = Git.open('.')
-        assert_equal(1, git.log.size)
+        commits = git.log.execute
+        assert_equal(1, commits.size)
         assert_nothing_raised { git.pull('origin') }
-        assert_equal(2, git.log.size)
+        commits = git.log.execute
+        assert_equal(2, commits.size)
       end
     end
   end
@@ -104,9 +108,11 @@ class TestPull < Test::Unit::TestCase
 
       Dir.chdir('local') do
         git = Git.open('.')
-        assert_equal(1, git.log.size)
+        commits = git.log.execute
+        assert_equal(1, commits.size)
         assert_nothing_raised { git.pull('origin', 'feature1') }
-        assert_equal(3, git.log.size)
+        commits = git.log.execute
+        assert_equal(3, commits.size)
       end
     end
   end
