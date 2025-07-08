@@ -12,7 +12,7 @@ module Git
 
       @base.lib.stashes_all.each do |indexed_message|
         _index, message = indexed_message
-        @stashes.unshift(Git::Stash.new(@base, message, true))
+        @stashes.unshift(Git::Stash.new(@base, message, save: true))
       end
     end
 
