@@ -851,7 +851,7 @@ module Git
     def initialize_components(options)
       @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
       @repository = Git::Repository.new(options[:repository]) if options[:repository]
-      @index = Git::Index.new(options[:index], false) if options[:index]
+      @index = Git::Index.new(options[:index], must_exist: false) if options[:index]
     end
 
     # Normalize options before they are sent to Git::Base.new
