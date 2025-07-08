@@ -14,9 +14,9 @@ task :test do
   # You can run individual test files (or multiple files) from the command
   # line with:
   #
-  # $ bin/test tests/units/test_archive.rb
+  # $ bin/test test_archive.rb
   #
-  # $ bin/test tests/units/test_archive.rb tests/units/test_object.rb
+  # $ bin/test test_archive.rb test_object.rb
 end
 default_tasks << :test
 
