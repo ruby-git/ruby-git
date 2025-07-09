@@ -1,6 +1,6 @@
 # Proposed Redesigned Architecture for the Git Gem
 
-This issue outlines a proposal for a major redesign of the git gem, targeted for version 5.0.0. The goal of this redesign is to modernize the gem's architecture, making it more robust, maintainable, testable, and easier for new contributors to understand.
+This document outlines a proposal for a major redesign of the git gem, targeted for version 5.0.0. The goal of this redesign is to modernize the gem's architecture, making it more robust, maintainable, testable, and easier for new contributors to understand.
 
 - [1. Motivation](#1-motivation)
 - [2. The New Architecture: A Three-Layered Approach](#2-the-new-architecture-a-three-layered-approach)
