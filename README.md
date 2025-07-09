@@ -11,6 +11,7 @@
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
+- [📢 Architectural Redesign 📢](#-architectural-redesign-)
 - [📢 We Now Use RuboCop 📢](#-we-now-use-rubocop-)
 - [📢 Default Branch Rename 📢](#-default-branch-rename-)
 - [📢 We've Switched to Conventional Commits 📢](#-weve-switched-to-conventional-commits-)
@@ -23,6 +24,39 @@
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [License](#license)
+
+## 📢 Architectural Redesign 📢
+
+The git gem is undergoing a significant architectural redesign for the upcoming
+v5.0.0 release. The current architecture has several design challenges that make it
+difficult to maintain and evolve. This redesign aims to address these issues by
+introducing a clearer, more robust, and more testable structure.
+
+We have prepared detailed documents outlining the analysis of the current
+architecture and the proposed changes. We encourage our community and contributors to
+review them:
+
+1. [Analysis of the Current Architecture](redesign/1_architecture_existing.md): A
+   breakdown of the existing design and its challenges.
+2. [The Proposed Redesign](redesign/2_architecture_redesign.md): An overview of the
+   new three-layered architecture.
+3. [Implementation Plan](redesign/3_architecture_implementation.md): The step-by-step
+   plan for implementing the redesign.
+
+Your feedback is welcome! Please feel free to open an issue to discuss the proposed
+changes.
+
+> **DON'T PANIC!**
+>
+> While this is a major internal refactoring, our goal is to keep the primary public
+API on the main repository object as stable as possible. Most users who rely on
+documented methods like `g.commit`, `g.add`, and `g.status` should find the
+transition to v5.0.0 straightforward.
+>
+> The breaking changes will primarily affect users who have been relying on the
+internal g.lib accessor, which will be removed as part of this cleanup. For more
+details, please see the "Impact on Users" section in [the redesign
+document](redesign/2_architecture_redesign.md).
 
 ## 📢 We Now Use RuboCop 📢
 
