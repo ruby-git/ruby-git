@@ -643,7 +643,7 @@ module Git
       args << opts[:path] if opts[:path]
 
       command_lines('ls-tree', *args).each do |line|
-        (info, filenm) = line.split("\t")
+        (info, filenm) = split_status_line(line)
         (mode, type, sha) = info.split
         data[type][filenm] = { mode: mode, sha: sha }
       end
@@ -905,9 +905,9 @@ module Git
       location ||= '.'
       {}.tap do |files|
         command_lines('ls-files', '--stage', location).each do |line|
-          (info, file) = line.split("\t")
+          (info, file) = split_status_line(line)
           (mode, sha, stage) = info.split
-          files[unescape_quoted_path(file)] = {
+          files[file] = {
             path: file, mode_index: mode, sha_index: sha, stage: stage
           }
         end
@@ -956,7 +956,9 @@ module Git
     end
 
     def untracked_files
-      command_lines('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir)
+      command_lines('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir).map do |f|
+        unescape_quoted_path(f)
+      end
     end
 
     def config_remote(name)
@@ -1602,7 +1604,7 @@ module Git
 
     def parse_diff_path_status(args)
       command_lines('diff', *args).each_with_object({}) do |line, memo|
-        status, path = line.split("\t")
+        status, path = split_status_line(line)
         memo[path] = status
       end
     end
@@ -1727,13 +1729,19 @@ module Git
 
     def parse_stat_lines(lines)
       lines.map do |line|
-        insertions_s, deletions_s, filename = line.split("\t")
+        insertions_s, deletions_s, filename = split_status_line(line)
         {
           filename: filename,
           insertions: insertions_s.to_i,
           deletions: deletions_s.to_i
         }
       end
+    end
+
+    def split_status_line(line)
+      parts = line.split("\t")
+      parts[-1] = unescape_quoted_path(parts[-1]) if parts.any?
+      parts
     end
 
     def build_final_stats_hash(file_stats)
@@ -1965,7 +1973,7 @@ module Git
       # update index before diffing to avoid spurious diffs
       command('status')
       command_lines(diff_command, *opts).each_with_object({}) do |line, memo|
-        info, file = line.split("\t")
+        info, file = split_status_line(line)
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 
         memo[file] = {

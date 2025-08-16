@@ -235,4 +235,54 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.changed?('test_file_1'))
     end
   end
+
+  def test_multibyte_path
+    # a name consisting of UTF-8 characters
+    multibyte_name = "\u30DE\u30EB\u30C1\u30D0\u30A4\u30C8\u6587\u5B57\u30D5\u30A1\u30A4\u30EB\u263A"
+
+    in_temp_dir do |_path|
+      `git init`
+
+      File.write('file1', 'contents1')
+      `git add file1`
+      `git commit -m "my message"`
+
+      git = Git.open('.')
+
+      # Test added
+      File.write("#{multibyte_name}_added.txt", 'contents_mb_added')
+      `git add #{multibyte_name}_added.txt`
+
+      status = git.status
+      assert_equal(1, status.added.size)
+      assert_equal(["#{multibyte_name}_added.txt"], status.added.keys)
+
+      # Test untracked
+      File.write("#{multibyte_name}_untracked.txt", 'contents_mb_untracked')
+
+      status = git.status
+      assert_equal(1, status.untracked.size)
+      assert_equal(["#{multibyte_name}_untracked.txt"], status.untracked.keys)
+
+      # Test changed
+      File.write("#{multibyte_name}_changed.txt", 'original_content')
+      `git add #{multibyte_name}_changed.txt`
+      `git commit -m "add multibyte file"`
+      File.write("#{multibyte_name}_changed.txt", 'modified_content')
+
+      status = git.status
+      assert_equal(1, status.changed.size)
+      assert_equal(["#{multibyte_name}_changed.txt"], status.changed.keys)
+
+      # Test deleted
+      File.write("#{multibyte_name}_deleted.txt", 'to_be_deleted')
+      `git add #{multibyte_name}_deleted.txt`
+      `git commit -m "add file to be deleted"`
+      File.delete("#{multibyte_name}_deleted.txt")
+
+      status = git.status
+      assert_equal(1, status.deleted.size)
+      assert_equal(["#{multibyte_name}_deleted.txt"], status.deleted.keys)
+    end
+  end
 end
