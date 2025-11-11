@@ -286,7 +286,10 @@ module Git
     end
 
     def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-      Git.deprecation('Git::Base#is_local_branch? is deprecated. Use Git::Base#local_branch? instead.')
+      Git::Deprecation.warn(
+        'Git::Base#is_local_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#local_branch? instead.'
+      )
       local_branch?(branch)
     end
 
@@ -297,7 +300,10 @@ module Git
     end
 
     def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-      Git.deprecated('Git::Base#is_remote_branch? is deprecated. Use Git::Base#remote_branch? instead.')
+      Git::Deprecation.warn(
+        'Git::Base#is_remote_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#remote_branch? instead.'
+      )
       remote_branch?(branch)
     end
 
@@ -308,7 +314,10 @@ module Git
     end
 
     def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
-      Git.deprecated('Git::Base#is_branch? is deprecated. Use Git::Base#branch? instead.')
+      Git::Deprecation.warn(
+        'Git::Base#is_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#branch? instead.'
+      )
       branch?(branch)
     end
 
