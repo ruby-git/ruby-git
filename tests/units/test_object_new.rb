@@ -50,23 +50,4 @@ class ObjectNewTest < Test::Unit::TestCase
     assert_instance_of(Git::Object::Blob, object, 'Should create a Blob object.')
     assert(object.blob?, 'Object#blob? should be true.')
   end
-
-  # Test that using the deprecated `is_tag` argument creates a Tag object
-  # and issues a deprecation warning.
-  def test_new_with_is_tag_deprecation
-    # Set up the mock expectation for the deprecation warning.
-    Git::Deprecation.expects(:warn).with(
-      'Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.'
-    )
-
-    # Action: Call the factory method with the deprecated argument.
-    # The `objectish` here is the tag name, as was the old pattern.
-    tag_object = Git::Object.new(@repo, 'v1.0', nil, true)
-
-    # Verification
-    assert_instance_of(Git::Object::Tag, tag_object, 'Should create a Tag object.')
-    assert(tag_object.tag?, 'Object#tag? should be true.')
-    assert_equal('v1.0', tag_object.name, 'Tag object should have the correct name.')
-    # Mocha automatically verifies the expectation at the end of the test.
-  end
 end

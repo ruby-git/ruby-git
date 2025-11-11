@@ -213,7 +213,10 @@ module Git
       end
 
       def set_commit(data) # rubocop:disable Naming/AccessorMethodName
-        Git.deprecation('Git::Object::Commit#set_commit is deprecated. Use #from_data instead.')
+        Git::Deprecation.warn(
+          'Git::Object::Commit#set_commit is deprecated and will be removed in a future version. ' \
+          'Use #from_data instead.'
+        )
         from_data(data)
       end
 
