@@ -679,7 +679,7 @@ module Git
         # The branch's full refname
         (?:
           (?<not_a_branch>\(not[[:blank:]]a[[:blank:]]branch\)) |
-          (?:\(HEAD[[:blank:]]detached[[:blank:]]at[[:blank:]](?<detached_ref>[^\)]+)\)) |
+           (?:\(HEAD[[:blank:]]detached[[:blank:]]at[[:blank:]](?<detached_ref>[^)]+)\)) |
           (?<refname>[^[[:blank:]]]+)
         )
 
