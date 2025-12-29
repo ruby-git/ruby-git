@@ -254,8 +254,8 @@ You must complete the _entire_ cycle for a checklist item before moving to the n
      checklist item
    - Only write enough of a test to get an expected, failing result (the test should
      fail for the *right* reason)
-   - **Execute** the test using the terminal command `bundle exec rspec
-     spec/path/to/spec.rb` and **analyze** the output.
+   - **Execute** the test using the terminal command `bundle exec ruby -I lib:tests
+     tests/units/test_name.rb` or `bin/test test_name` and **analyze** the output.
    - Confirm it fails with an _expected_ error (e.g., assertion failure or missing
      definition).
    - **Validation:** If the test passes without implementation, the test is invalid
@@ -267,8 +267,9 @@ You must complete the _entire_ cycle for a checklist item before moving to the n
    - It is acceptable to use hardcoded values or "quick and dirty" logic here just to
      get to green, even if this means intentionally writing clearly suboptimal code
      that you will improve during the REFACTOR step.
-   - **Execute** the test again using the terminal command `bundle exec rspec
-     spec/path/to/spec.rb` and **verify** it passes.
+   - **Execute** the test again using the terminal command `bundle exec ruby -I
+     lib:tests tests/units/test_name.rb` or `bin/test test_name` and **verify** it
+     passes.
    - _Constraint:_ Do not implement future features or optimizations yet.
 
 3. **REFACTOR (Make it Right):**
@@ -592,8 +593,12 @@ The simplest format: `type: description`
 - `docs:` - Documentation only
 - `test:` - Adding/updating tests
 - `refactor:` - Code restructuring without changing behavior
-- `chore:` - Build/tooling changes
+- `chore:` - Chores and maintenance (e.g., tooling, dependency bumps)
 - `perf:` - Performance improvements
+- `build:` - Build system or external dependency changes
+- `ci:` - Continuous integration configuration and scripts
+- `style:` - Code style and formatting only (no functional changes)
+- `revert:` - Revert a previous commit
 
 **Description rules:**
 1. Must NOT start with an upper case letter
