@@ -3,5 +3,5 @@
 module Git
   # The current gem version
   # @return [String] the current gem version.
-  VERSION = '4.0.6'
+  VERSION = '4.0.7'
 end
