@@ -12,7 +12,7 @@ The git gem wraps system calls to the `git` command line and provides an API to:
 - Handle complex interactions including branching, merging, and patch generation
 
 **Current Status:** Stable project supporting Ruby 3.2.0+ minimum and Git 2.28.0+.
-Compatible with MRI Ruby on Mac, Linux, and Windows.
+Compatible with MRI Ruby 3.2+ on Mac, Linux, and Windows.
 
 ## Architecture & Module Organization
 
@@ -434,7 +434,7 @@ open coverage/index.html
 
 - Minimum Ruby: 3.2.0
 - Minimum Git: 2.28.0 or greater
-- Actively tested on: MRI Ruby 3.2+
+- Actively tested on: MRI Ruby 3.2, 3.4, and 4.0
 - Platforms: Mac, Linux, Windows
 - CI tests on multiple Ruby versions and platforms
 
