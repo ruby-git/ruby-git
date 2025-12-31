@@ -1883,16 +1883,48 @@ module Git
       op.split("\n")
     end
 
-    def env_overrides(exclude: [])
-      env = {
+    # Returns a hash of environment variable overrides for git commands
+    #
+    # This method builds a hash of environment variables that control git's behavior,
+    # such as the git directory, working tree, and index file locations.
+    #
+    # @param additional_overrides [Hash] additional environment variables to set or unset
+    #
+    #   Keys should be environment variable names (String) and values should be either:
+    #   * A String value to set the environment variable
+    #   * `nil` to unset the environment variable
+    #
+    #   Per Process.spawn semantics, setting a key to `nil` will unset that environment
+    #   variable, removing it from the environment passed to the git command.
+    #
+    # @return [Hash<String, String|nil>] environment variable overrides
+    #
+    # @example Basic usage with default environment variables
+    #   env_overrides
+    #   # => { 'GIT_DIR' => '/path/to/.git', 'GIT_WORK_TREE' => '/path/to/worktree', ... }
+    #
+    # @example Adding a custom environment variable
+    #   env_overrides('GIT_TRACE' => '1')
+    #   # => { 'GIT_DIR' => '/path/to/.git', ..., 'GIT_TRACE' => '1' }
+    #
+    # @example Unsetting an environment variable (used by worktree_command_line)
+    #   env_overrides('GIT_INDEX_FILE' => nil)
+    #   # => { 'GIT_DIR' => '/path/to/.git', 'GIT_WORK_TREE' => '/path/to/worktree',
+    #   #      'GIT_INDEX_FILE' => nil, 'GIT_SSH' => <git_ssh_value>, 'LC_ALL' => 'en_US.UTF-8' }
+    #   # When passed to Process.spawn, GIT_INDEX_FILE will be unset in the environment
+    #
+    # @see https://ruby-doc.org/core/Process.html#method-c-spawn Process.spawn
+    #
+    # @api private
+    #
+    def env_overrides(**additional_overrides)
+      {
         'GIT_DIR' => @git_dir,
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
         'GIT_SSH' => Git::Base.config.git_ssh,
         'LC_ALL' => 'en_US.UTF-8'
-      }
-      exclude.each { |key| env.delete(key) }
-      env
+      }.merge(additional_overrides)
     end
 
     def global_opts
@@ -1918,7 +1950,7 @@ module Git
     #
     def worktree_command_line
       @worktree_command_line ||=
-        Git::CommandLine.new(env_overrides(exclude: ['GIT_INDEX_FILE']), Git::Base.config.binary_path, global_opts,
+        Git::CommandLine.new(env_overrides('GIT_INDEX_FILE' => nil), Git::Base.config.binary_path, global_opts,
                              @logger)
     end
 
