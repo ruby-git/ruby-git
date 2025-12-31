@@ -2442,7 +2442,7 @@ Before committing, ensure:
 **Testing:**
 
 - [ ] **TDD process followed** - Tests written before implementation
-- [ ] All tests pass (`bundle exec rake test`)
+- [ ] All tests pass (`bundle exec bin/test`)
 - [ ] No Ruby warnings when running tests
 
 **Code Style:**
