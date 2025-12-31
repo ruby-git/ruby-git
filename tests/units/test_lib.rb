@@ -347,7 +347,17 @@ class TestLib < Test::Unit::TestCase
 
   def test_ls_remote
     in_temp_dir do |_path|
+      saved_git_ssh = Git::Base.config.git_ssh
+      Git::Base.config.git_ssh = '/global/ssh'
+
       lib = Git::Lib.new
+
+      env = lib.send(:env_overrides)
+      assert_equal '/global/ssh', env['GIT_SSH'], 'env_overrides should honor global git_ssh'
+
+      # Ensure ls_remote uses a Lib instance whose env_overrides picks up the
+      # global git_ssh value. This call will exercise env_overrides with the global
+      # setting for git_ssh.
       ls = lib.ls_remote(BARE_REPO_PATH)
 
       assert_equal(%w[gitsearch1 v2.5 v2.6 v2.7 v2.8], ls['tags'].keys.sort)
@@ -365,6 +375,8 @@ class TestLib < Test::Unit::TestCase
       assert_equal({}, ls['head']) # head is not a ref
       assert_equal(%w[gitsearch1 v2.5 v2.6 v2.7 v2.8], ls['tags'].keys.sort)
       assert_equal(%w[git_grep master test test_branches test_object], ls['branches'].keys.sort)
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
     end
   end
 

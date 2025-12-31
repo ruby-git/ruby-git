@@ -34,9 +34,9 @@ command line.
 
 Get started by obtaining a repository object by:
 
-* opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
-* initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
-* cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
+- opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
+- initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
+- cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
 
@@ -223,6 +223,28 @@ end
 ```
 
 _NOTE: Another way to specify where is the `git` binary is through the environment variable `GIT_PATH`_
+
+**How SSH configuration is determined:**
+
+- If `git_ssh` is not specified in the API call, the global config (`Git.configure { |c| c.git_ssh = ... }`) is used.
+- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or script will be used).
+- If `git_ssh` is a non-empty string, it is used for that instance (overriding the global config).
+
+You can also specify a custom SSH script on a per-repository basis:
+
+```ruby
+# Use a specific SSH key for a single repository
+git = Git.open('/path/to/repo', git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when cloning
+git = Git.clone('git@github.com:user/repo.git', 'local-dir',
+                git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when initializing
+git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
+```
+
+This is especially useful in multi-threaded applications where different repositories require different SSH credentials.
 
 Here are the operations that need read permission only.
 

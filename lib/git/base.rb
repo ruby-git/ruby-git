@@ -21,7 +21,9 @@ module Git
 
     # (see Git.clone)
     def self.clone(repository_url, directory, options = {})
-      new_options = Git::Lib.new(nil, options[:log]).clone(repository_url, directory, options)
+      lib_options = {}
+      lib_options[:git_ssh] = options[:git_ssh] if options.key?(:git_ssh)
+      new_options = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
       normalize_paths(new_options, bare: options[:bare] || options[:mirror])
       new(new_options)
     end
@@ -148,12 +150,20 @@ module Git
     #   commands are logged at the `:info` level.  Additional logging is done
     #   at the `:debug` level.
     #
+    # @option options [String, nil] :git_ssh Path to a custom SSH executable or script.
+    #   Controls how SSH is configured for this {Git::Base} instance:
+    #   - If this option is not provided, the global Git::Base.config.git_ssh setting is used.
+    #   - If this option is explicitly set to nil, SSH is disabled for this instance.
+    #   - If this option is a non-empty String, that value is used as the SSH command for
+    #     this instance, overriding the global Git::Base.config.git_ssh setting.
+    #
     # @return [Git::Base] an object that can execute git commands in the context
     #   of the opened working copy or bare repository
     #
     def initialize(options = {})
       options = default_paths(options)
       setup_logger(options[:log])
+      @git_ssh = options.key?(:git_ssh) ? options[:git_ssh] : :use_global_config
       initialize_components(options)
     end
 
@@ -327,6 +337,17 @@ module Git
     def lib
       @lib ||= Git::Lib.new(self, @logger)
     end
+
+    # Returns the per-instance git_ssh configuration value.
+    #
+    # This may be:
+    # * a [String] path when an explicit git_ssh command has been configured
+    # * the Symbol `:use_global_config` when this instance is using the global config
+    # * `nil` when SSH has been explicitly disabled for this instance
+    #
+    # @return [String, Symbol, nil] the git_ssh configuration value for this instance
+    # @api private
+    attr_reader :git_ssh
 
     # Run a grep for 'string' on the HEAD of the git repository
     #
