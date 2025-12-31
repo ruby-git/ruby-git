@@ -187,4 +187,37 @@ class TestWorktree < Test::Unit::TestCase
       assert_equal(1, git.worktrees.size)
     end
   end
+
+  test 'adding a worktree should not corrupt the repository index' do
+    in_temp_dir do |path|
+      Dir.mkdir('main_worktree')
+      Dir.chdir('main_worktree') do
+        `git init --initial-branch=main`
+        File.write('VERSION', "1.0\n")
+        `git add VERSION`
+        `git commit -m "init commit"`
+        `git checkout -b new_branch`
+        File.write('VERSION', "2.0\n")
+        `git add VERSION`
+        `git commit -m "new version"`
+      end
+
+      git = Git.open('main_worktree')
+
+      # Add a worktree on the main branch from the new_branch
+      git.worktree(File.join(path, 'linked_worktree'), 'main').add
+
+      # Check that the main worktree is clean
+      Dir.chdir('main_worktree') do
+        status_output = `git status --porcelain`
+        assert_equal('', status_output, 'Main worktree should be clean after adding worktree')
+      end
+
+      # Check that the new worktree is clean
+      Dir.chdir(File.join(path, 'linked_worktree')) do
+        status_output = `git status --porcelain`
+        assert_equal('', status_output, 'New worktree should be clean after being added')
+      end
+    end
+  end
 end

@@ -719,17 +719,17 @@ module Git
     end
 
     def worktree_add(dir, commitish = nil)
-      return command('worktree', 'add', dir, commitish) unless commitish.nil?
+      return worktree_command('worktree', 'add', dir, commitish) unless commitish.nil?
 
-      command('worktree', 'add', dir)
+      worktree_command('worktree', 'add', dir)
     end
 
     def worktree_remove(dir)
-      command('worktree', 'remove', dir)
+      worktree_command('worktree', 'remove', dir)
     end
 
     def worktree_prune
-      command('worktree', 'prune')
+      worktree_command('worktree', 'prune')
     end
 
     def list_files(ref_dir)
@@ -1883,14 +1883,14 @@ module Git
       op.split("\n")
     end
 
-    def env_overrides
+    def env_overrides(**overrides)
       {
         'GIT_DIR' => @git_dir,
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
         'GIT_SSH' => Git::Base.config.git_ssh,
         'LC_ALL' => 'en_US.UTF-8'
-      }
+      }.merge(overrides)
     end
 
     def global_opts
@@ -1904,6 +1904,46 @@ module Git
     def command_line
       @command_line ||=
         Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+    end
+
+    # Returns a command line instance without GIT_INDEX_FILE for worktree commands
+    #
+    # Git worktrees manage their own index files and setting GIT_INDEX_FILE
+    # causes corruption of both the main worktree and new worktree indexes.
+    #
+    # @return [Git::CommandLine]
+    # @api private
+    #
+    def worktree_command_line
+      @worktree_command_line ||=
+        Git::CommandLine.new(env_overrides('GIT_INDEX_FILE' => nil), Git::Base.config.binary_path, global_opts,
+                             @logger)
+    end
+
+    # @overload worktree_command(*args, **options_hash)
+    #   Runs a git worktree command and returns the output
+    #
+    #   This method is similar to #command but uses a command line instance
+    #   that excludes GIT_INDEX_FILE from the environment to prevent index corruption.
+    #
+    #   @param args [Array<String>] the command arguments
+    #   @param options_hash [Hash] the options to pass to the command
+    #
+    #   @return [String] the command's stdout
+    #
+    # @see #command
+    #
+    # @api private
+    #
+    def worktree_command(*, **options_hash)
+      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
+      options_hash[:timeout] ||= Git.config.timeout
+
+      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      result = worktree_command_line.run(*, **options_hash)
+      result.stdout
     end
 
     # Runs a git command and returns the output
