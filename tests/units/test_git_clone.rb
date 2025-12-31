@@ -11,7 +11,8 @@ class TestGitClone < Test::Unit::TestCase
 
       in_temp_dir do |_path|
         setup_repo
-        Git.config.timeout = 0.00001
+        # Use larger timeout on JRuby due to subprocess timing differences
+        Git.config.timeout = jruby_platform? ? 0.001 : 0.00001
 
         error = assert_raise Git::TimeoutError do
           Git.clone('repository.git', 'temp2', timeout: nil)
@@ -29,7 +30,8 @@ class TestGitClone < Test::Unit::TestCase
 
         in_temp_dir do |_path|
           setup_repo
-          Git.config.timeout = 0.00001
+          # Use larger timeout on JRuby due to subprocess timing differences
+          Git.config.timeout = jruby_platform? ? 0.001 : 0.00001
 
           assert_nothing_raised do
             Git.clone('repository.git', 'temp2', timeout: 10)
@@ -44,8 +46,10 @@ class TestGitClone < Test::Unit::TestCase
       in_temp_dir do |_path|
         setup_repo
 
+        # Use larger timeout on JRuby due to subprocess timing differences
+        timeout_value = jruby_platform? ? 0.001 : 0.00001
         error = assert_raise Git::TimeoutError do
-          Git.clone('repository.git', 'temp2', timeout: 0.00001)
+          Git.clone('repository.git', 'temp2', timeout: timeout_value)
         end
 
         assert_equal(true, error.result.status.timeout?)
