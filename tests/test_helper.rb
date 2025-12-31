@@ -189,6 +189,10 @@ module Test
         RUBY_PLATFORM =~ win_platform_regex || RUBY_DESCRIPTION =~ win_platform_regex
       end
 
+      def jruby_platform?
+        RUBY_PLATFORM == 'java'
+      end
+
       # Run a command and return the status including stdout and stderr output
       #
       # @example
