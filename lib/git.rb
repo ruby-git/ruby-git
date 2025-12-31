@@ -93,6 +93,12 @@ module Git
   # @param [Hash] options The options for this command (see list of valid
   #   options below)
   #
+  # @option options [String, nil] :git_ssh An optional custom SSH command
+  #
+  #   - If not specified (or :use_global_config), uses the global config (Git.configure { |c| c.git_ssh = ... }).
+  #   - If nil, disables SSH for this instance.
+  #   - If a non-empty string, uses that value for this instance.
+  #
   # @option options [Logger] :log A logger to use for Git operations.  Git commands
   #   are logged at the `:info` level.  Additional logging is done at the `:debug`
   #   level.
@@ -145,6 +151,12 @@ module Git
   # @option options [String] :filter Request that the server send a partial
   #   clone according to the given filter
   #
+  # @option options [String, nil] :git_ssh An optional custom SSH command
+  #
+  #   - If not specified (or :use_global_config), uses the global config (Git.configure { |c| c.git_ssh = ... }).
+  #   - If nil, disables SSH for this instance.
+  #   - If a non-empty string, uses that value for this instance.
+  #
   # @option options [Logger] :log A logger to use for Git operations.  Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
@@ -185,6 +197,12 @@ module Git
   #   git = Git.clone(
   #     'https://github.com/ruby-git/ruby-git.git',
   #     config: ['user.name=John Doe', 'user.email=john@doe.com']
+  #   )
+  #
+  # @example Clone using a specific SSH key
+  #   git = Git.clone(
+  #     'git@github.com:ruby-git/ruby-git.git',
+  #     git_ssh: 'ssh -i /path/to/private_key'
   #   )
   #
   # @return [Git::Base] an object that can execute git commands in the context
@@ -300,6 +318,12 @@ module Git
   #   and converted to an absolute path using
   #   [File.expand_path](https://www.rubydoc.info/stdlib/core/File.expand_path).
   #
+  # @option options [String, nil] :git_ssh An optional custom SSH command
+  #
+  #   - If not specified (or :use_global_config), uses the global config (Git.configure { |c| c.git_ssh = ... }).
+  #   - If nil, disables SSH for this instance.
+  #   - If a non-empty string, uses that value for this instance.
+  #
   # @option options [Logger] :log A logger to use for Git operations.  Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
@@ -373,6 +397,12 @@ module Git
   #
   # @option options [Pathname] :index used to specify a non-standard path to an
   #   index file.  The default is `"#{working_dir}/.git/index"`
+  #
+  # @option options [String, nil] :git_ssh An optional custom SSH command
+  #
+  #   - If not specified (or :use_global_config), uses the global config (Git.configure { |c| c.git_ssh = ... }).
+  #   - If nil, disables SSH for this instance.
+  #   - If a non-empty string, uses that value for this instance.
   #
   # @option options [Logger] :log A logger to use for Git operations.  Git
   #   commands are logged at the `:info` level.  Additional logging is done

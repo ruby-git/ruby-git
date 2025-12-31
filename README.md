@@ -19,6 +19,7 @@
 - [Deprecations](#deprecations)
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
+- [Git version support policy](#git-version-support-policy)
 - [License](#license)
 - [📢 Project Announcements 📢](#-project-announcements-)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
@@ -222,6 +223,31 @@ end
 ```
 
 _NOTE: Another way to specify where is the `git` binary is through the environment variable `GIT_PATH`_
+
+
+### SSH configuration precedence
+
+**How SSH configuration is determined:**
+
+- If `git_ssh` is not specified in the API call, the global config (`Git.configure { |c| c.git_ssh = ... }`) is used.
+- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or script will be used).
+- If `git_ssh` is a non-empty string, it is used for that instance (overriding the global config).
+
+You can also specify a custom SSH script on a per-repository basis:
+
+```ruby
+# Use a specific SSH key for a single repository
+git = Git.open('/path/to/repo', git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when cloning
+git = Git.clone('git@github.com:user/repo.git', 'local-dir',
+                git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when initializing
+git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
+```
+
+This is especially useful in multi-threaded applications where different repositories require different SSH credentials.
 
 Here are the operations that need read permission only.
 
@@ -535,6 +561,25 @@ It is this project's intent to support the latest version of JRuby on Windows
 once the following JRuby bug is fixed:
 
 jruby/jruby#7515
+
+## Git version support policy
+
+This gem requires git version 2.28.0 or greater as specified in the gemspec. This
+requirement reflects:
+
+- The minimum git version necessary to support all features provided by this gem
+- A reasonable balance between supporting older systems and leveraging modern git
+  capabilities
+- The practical limitations of testing across multiple git versions in CI
+
+Git 2.28.0 was released on July 27, 2020. While this gem may work with earlier
+versions of git, compatibility with versions prior to 2.28.0 is not tested or
+guaranteed. Users on older git versions should upgrade to at least 2.28.0.
+
+The supported git version may be increased in future major or minor releases of this
+gem as new git features are adopted or as maintaining backward compatibility becomes
+impractical. Such changes will be clearly documented in the CHANGELOG and release
+notes.
 
 ## License
 

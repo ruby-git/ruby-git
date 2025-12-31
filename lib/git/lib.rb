@@ -1628,12 +1628,14 @@ module Git
       @git_dir = base_object.repo.path
       @git_index_file = base_object.index&.path
       @git_work_dir = base_object.dir&.path
+      @git_ssh = base_object.respond_to?(:git_ssh) ? base_object.git_ssh : :use_global_config
     end
 
     def initialize_from_hash(base_hash)
       @git_dir = base_hash[:repository]
       @git_index_file = base_hash[:index]
       @git_work_dir = base_hash[:working_directory]
+      @git_ssh = base_hash.key?(:git_ssh) ? base_hash[:git_ssh] : :use_global_config
     end
 
     def return_base_opts_from_clone(clone_dir, opts)
@@ -1641,6 +1643,7 @@ module Git
       base_opts[:repository] = clone_dir if opts[:bare] || opts[:mirror]
       base_opts[:working_directory] = clone_dir unless opts[:bare] || opts[:mirror]
       base_opts[:log] = opts[:log] if opts[:log]
+      base_opts[:git_ssh] = opts[:git_ssh] if opts[:git_ssh]
       base_opts
     end
 
@@ -1922,9 +1925,15 @@ module Git
         'GIT_DIR' => @git_dir,
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
-        'GIT_SSH' => Git::Base.config.git_ssh,
+        'GIT_SSH' => resolved_git_ssh,
         'LC_ALL' => 'en_US.UTF-8'
       }.merge(additional_overrides)
+    end
+
+    def resolved_git_ssh
+      return Git::Base.config.git_ssh if @git_ssh == :use_global_config
+
+      @git_ssh
     end
 
     def global_opts

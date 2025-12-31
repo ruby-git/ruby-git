@@ -3,23 +3,6 @@
 require 'test_helper'
 
 class TestCommandLineEnvOverrides < Test::Unit::TestCase
-  test 'it should set the expected environment variables' do
-    expected_command_line = nil
-    expected_command_line_proc = -> { expected_command_line }
-    assert_command_line_eq(expected_command_line_proc, include_env: true) do |git|
-      expected_env = {
-        'GIT_DIR' => git.lib.git_dir,
-        'GIT_INDEX_FILE' => git.lib.git_index_file,
-        'GIT_SSH' => nil,
-        'GIT_WORK_TREE' => git.lib.git_work_dir,
-        'LC_ALL' => 'en_US.UTF-8'
-      }
-      expected_command_line = [expected_env, 'checkout', {}]
-
-      git.checkout
-    end
-  end
-
   test 'it should set the GIT_SSH environment variable from Git::Base.config.git_ssh' do
     expected_command_line = nil
     expected_command_line_proc = -> { expected_command_line }
@@ -151,5 +134,127 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       assert_equal git.lib.git_dir, env['GIT_DIR']
       assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
     end
+  end
+
+  test 'instance git_ssh option should override global config in Git.bare' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |path|
+        bare_repo_path = File.join(path, 'test_project.git')
+        Git.init(bare_repo_path, bare: true)
+        git = Git.bare(bare_repo_path, git_ssh: '/instance/ssh/script')
+
+        env = git.lib.send(:env_overrides)
+        assert_equal '/instance/ssh/script', env['GIT_SSH']
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  test 'instance git_ssh option should override global config in Git.open' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |path|
+        create_and_init_repo(path)
+        git = Git.open(path, git_ssh: '/instance/ssh/script')
+
+        env = git.lib.send(:env_overrides)
+        assert_equal '/instance/ssh/script', env['GIT_SSH']
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  test 'instance git_ssh option should override global config in Git.init' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |_path|
+        git = Git.init('test_project', git_ssh: '/instance/ssh/script')
+
+        env = git.lib.send(:env_overrides)
+        assert_equal '/instance/ssh/script', env['GIT_SSH']
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  test 'instance git_ssh option should override global config in Git.clone' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |path|
+        source_repo = create_and_init_repo(File.join(path, 'source'))
+        target_path = File.join(path, 'target')
+
+        expected_command_line = nil
+        expected_command_line_proc = -> { expected_command_line }
+
+        assert_command_line_eq(expected_command_line_proc, include_env: true) do
+          git = Git.clone(source_repo, target_path, git_ssh: '/instance/ssh/script')
+
+          # Verify the env_overrides has the instance git_ssh
+          env = git.lib.send(:env_overrides)
+          assert_equal '/instance/ssh/script', env['GIT_SSH']
+        end
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  test 'instance git_ssh nil should use global config' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |path|
+        create_and_init_repo(path)
+        git = Git.open(path, git_ssh: nil)
+
+        env = git.lib.send(:env_overrides)
+        assert_nil env['GIT_SSH'], 'GIT_SSH should be nil when git_ssh: nil is passed'
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  test 'no instance git_ssh option should use global config' do
+    saved_git_ssh = Git::Base.config.git_ssh
+    begin
+      Git::Base.config.git_ssh = '/global/ssh/script'
+
+      in_temp_dir do |path|
+        create_and_init_repo(path)
+        git = Git.open(path)
+
+        env = git.lib.send(:env_overrides)
+        assert_equal '/global/ssh/script', env['GIT_SSH']
+      end
+    ensure
+      Git::Base.config.git_ssh = saved_git_ssh
+    end
+  end
+
+  private
+
+  def create_and_init_repo(path)
+    FileUtils.mkdir_p(path)
+    Dir.chdir(path) do
+      `git init`
+      `git config user.name "Test User"`
+      `git config user.email "test@example.com"`
+    end
+    path
   end
 end

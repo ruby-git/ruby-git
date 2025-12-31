@@ -21,7 +21,8 @@ module Git
 
     # (see Git.clone)
     def self.clone(repository_url, directory, options = {})
-      new_options = Git::Lib.new(nil, options[:log]).clone(repository_url, directory, options)
+      lib_options = { git_ssh: options[:git_ssh] }
+      new_options = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
       normalize_paths(new_options, bare: options[:bare] || options[:mirror])
       new(new_options)
     end
@@ -148,12 +149,16 @@ module Git
     #   commands are logged at the `:info` level.  Additional logging is done
     #   at the `:debug` level.
     #
+    # @option options [String] :git_ssh Path to a custom SSH executable or script.
+    #   This overrides the global Git::Base.config.git_ssh setting for this instance.
+    #
     # @return [Git::Base] an object that can execute git commands in the context
     #   of the opened working copy or bare repository
     #
     def initialize(options = {})
       options = default_paths(options)
       setup_logger(options[:log])
+      @git_ssh = options.key?(:git_ssh) ? options[:git_ssh] : :use_global_config
       initialize_components(options)
     end
 
@@ -327,6 +332,12 @@ module Git
     def lib
       @lib ||= Git::Lib.new(self, @logger)
     end
+
+    # Returns the per-instance git_ssh value if set, otherwise nil
+    #
+    # @return [String, nil] the git_ssh path for this instance
+    # @api private
+    attr_reader :git_ssh
 
     # Run a grep for 'string' on the HEAD of the git repository
     #
