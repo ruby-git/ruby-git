@@ -103,7 +103,7 @@ module Git
       {
         keys: [:single_branch],
         type: :custom,
-        validator: ->(value) { value.nil? || value == true || value == false },
+        validator: ->(value) { [nil, true, false].include?(value) },
         builder: lambda do |value|
           case value
           when true
