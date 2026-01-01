@@ -101,6 +101,21 @@ module Git
       { keys: %i[remote origin], flag: '--origin', type: :valued_space },
       { keys: [:config], flag: '--config', type: :repeatable_valued_space },
       {
+        keys: [:single_branch],
+        type: :custom,
+        validator: ->(value) { value.nil? || value == true || value == false },
+        builder: lambda do |value|
+          case value
+          when true
+            ['--single-branch']
+          when false
+            ['--no-single-branch']
+          else
+            []
+          end
+        end
+      },
+      {
         keys: [:depth],
         type: :custom,
         builder: ->(value) { ['--depth', value.to_i] if value }

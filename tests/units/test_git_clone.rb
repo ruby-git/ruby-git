@@ -162,6 +162,131 @@ class TestGitClone < Test::Unit::TestCase
     assert_equal(expected_command_line, actual_command_line)
   end
 
+  test 'clone without giving the single_branch option' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |_path|
+      git = Git.init('.')
+
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination)
+    end
+
+    expected_command_line = [
+      'clone',
+      '--', repository_url, destination, { timeout: nil }
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
+  test 'clone with single_branch true' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |_path|
+      git = Git.init('.')
+
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, single_branch: true)
+    end
+
+    expected_command_line = [
+      'clone',
+      '--single-branch',
+      '--', repository_url, destination, { timeout: nil }
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
+  test 'clone with single_branch false' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |_path|
+      git = Git.init('.')
+
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, single_branch: false)
+    end
+
+    expected_command_line = [
+      'clone',
+      '--no-single-branch',
+      '--', repository_url, destination, { timeout: nil }
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
+  test 'clone with single_branch nil adds no flag' do
+    repository_url = 'https://github.com/ruby-git/ruby-git.git'
+    destination = 'ruby-git'
+
+    actual_command_line = nil
+
+    in_temp_dir do |_path|
+      git = Git.init('.')
+
+      git.lib.define_singleton_method(:command) do |cmd, *opts|
+        actual_command_line = [cmd, *opts.flatten]
+      end
+
+      git.lib.clone(repository_url, destination, single_branch: nil)
+    end
+
+    expected_command_line = [
+      'clone',
+      '--', repository_url, destination, { timeout: nil }
+    ]
+
+    assert_equal(expected_command_line, actual_command_line)
+  end
+
+  test 'shallow clone with single_branch false uses wide refspec' do
+    in_temp_dir do |path|
+      repository_path = File.join(path, 'remote.git')
+      Git.init(repository_path, bare: true)
+
+      worktree_path = File.join(path, 'remote-worktree')
+      worktree = Git.clone(repository_path, worktree_path)
+      File.write(File.join(worktree_path, 'test.txt'), 'test')
+      worktree.add('test.txt')
+      worktree.commit('Initial commit')
+      worktree.push
+
+      worktree.branch('feature').checkout
+      File.write(File.join(worktree_path, 'feature.txt'), 'feature branch')
+      worktree.add('feature.txt')
+      worktree.commit('Add feature branch commit')
+      worktree.push('origin', 'feature')
+      FileUtils.rm_rf(worktree_path)
+
+      shallow_path = File.join(path, 'shallow')
+      shallow_clone = Git.clone(repository_path, shallow_path, depth: 1, single_branch: false)
+      fetch_spec = shallow_clone.config('remote.origin.fetch')
+
+      assert_equal('+refs/heads/*:refs/remotes/origin/*', fetch_spec)
+    end
+  end
+
   test 'clone with negative depth' do
     in_temp_dir do |path|
       # Give a bare repository with a single commit

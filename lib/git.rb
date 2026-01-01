@@ -151,6 +151,14 @@ module Git
   # @option options [String] :filter Request that the server send a partial
   #   clone according to the given filter
   #
+  # @option options [Boolean, nil] :single_branch Control whether the clone
+  #   limits fetch refspecs to a single branch.
+  #   - If nil (default), no flag is passed and the Git default is used.
+  #   - If true, `--single-branch` is passed to limit the refspec to the
+  #     checkout branch.
+  #   - If false, `--no-single-branch` is passed to broaden the refspec (useful
+  #     for shallow clones that should include all branches).
+  #
   # @option options [String, nil] :git_ssh An optional custom SSH command
   #
   #   - If not specified, uses the global config (Git.configure { |c| c.git_ssh = ... }).

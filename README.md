@@ -392,6 +392,9 @@ g.config('user.email', 'email@email.com')
 # Clone can take a filter to tell the serve to send a partial clone
 g = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
 
+# Clone can control single-branch behavior (nil default keeps current git behavior)
+g = Git.clone(git_url, name, :path => path, :depth => 1, :single_branch => false)
+
 # Clone can take an optional logger
 logger = Logger.new
 g = Git.clone(git_url, NAME, :log => logger)
