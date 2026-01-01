@@ -491,4 +491,57 @@ class TestLib < Test::Unit::TestCase
       @lib.cat_file_tag('--all')
     end
   end
+
+  def test_diff_with_pathname
+    require 'pathname'
+    path = Pathname.new('scott/')
+    stats = @lib.diff_stats('gitsearch1', 'v2.5', path_limiter: path)
+
+    assert(stats[:files].key?('scott/newfile'))
+  end
+
+  def test_diff_with_mixed_string_pathname_array
+    require 'pathname'
+    paths = ['example.txt', Pathname.new('scott/')]
+    stats = @lib.diff_stats('gitsearch1', 'v2.5', path_limiter: paths)
+
+    assert(stats[:files].key?('example.txt'))
+    assert(stats[:files].key?('scott/newfile'))
+  end
+
+  def test_diff_with_invalid_path_type
+    error = assert_raise(ArgumentError) do
+      @lib.diff_stats('gitsearch1', 'v2.5', path_limiter: 123)
+    end
+    assert_match(/Invalid path limiter: must be a String, Pathname, or Array/, error.message)
+  end
+
+  def test_diff_with_array_containing_invalid_type
+    error = assert_raise(ArgumentError) do
+      @lib.diff_stats('gitsearch1', 'v2.5', path_limiter: ['valid/', 123])
+    end
+    assert_match(/Invalid path limiter: must be a String, Pathname, or Array/, error.message)
+  end
+
+  def test_diff_with_empty_string_filtering
+    # Create a file to ensure we have some diff output
+    create_file("#{@wdir}/test.txt", 'test')
+    @lib.add('test.txt')
+    @lib.commit('test commit')
+
+    # This should filter out the empty string and return all files (nil pathspec)
+    stats = @lib.diff_stats('HEAD~1', 'HEAD', path_limiter: [''])
+    # Should behave as if no path limiter was provided (empty array becomes nil)
+    assert(stats[:files].key?('test.txt'))
+  end
+
+  def test_diff_with_array_of_empty_strings
+    create_file("#{@wdir}/another.txt", 'test')
+    @lib.add('another.txt')
+    @lib.commit('another commit')
+
+    # All empty strings should be filtered, resulting in nil pathspec
+    stats = @lib.diff_stats('HEAD~1', 'HEAD', path_limiter: ['', ''])
+    assert(stats[:files].key?('another.txt'))
+  end
 end

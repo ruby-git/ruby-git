@@ -33,6 +33,23 @@ class TestDiffStats < Test::Unit::TestCase
     assert_equal(0, stats.total[:insertions])
   end
 
+  def test_diff_stats_with_multiple_paths
+    stats = @git.diff_stats('gitsearch1', 'v2.5', path_limiter: ['scott/', 'example.txt'])
+
+    assert_equal(3, stats.total[:files])
+    assert_equal(74, stats.total[:lines])
+    assert_equal(10, stats.total[:deletions])
+    assert_equal(64, stats.total[:insertions])
+    assert(stats.files.key?('example.txt'))
+  end
+
+  def test_diff_stats_with_empty_path_array
+    @git.lib.expects(:command_lines).with('diff', '--numstat', 'gitsearch1', 'v2.5').returns([])
+
+    stats = @git.diff_stats('gitsearch1', 'v2.5', path_limiter: [])
+    assert_equal(0, stats.total[:files])
+  end
+
   def test_diff_stats_on_object
     stats = @git.diff_stats('v2.5', 'gitsearch1')
     assert_equal(10, stats.insertions)

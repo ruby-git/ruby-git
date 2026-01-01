@@ -48,6 +48,33 @@ class TestDiff < Test::Unit::TestCase
     assert_equal(0, d.insertions)
   end
 
+  def test_diff_path_multiple_paths
+    diff_paths = ['scott/', 'example.txt']
+    d = @git.diff('gitsearch1', 'v2.5').path(*diff_paths)
+
+    assert_equal('gitsearch1', d.from)
+    assert_equal('v2.5', d.to)
+    assert_equal(3, d.size)
+    assert_equal(74, d.lines)
+    assert_equal(10, d.deletions)
+    assert_equal(64, d.insertions)
+  end
+
+  def test_diff_path_empty_array
+    @git.lib.expects(:diff_full).with('gitsearch1', 'v2.5', { path_limiter: nil }).returns('')
+
+    d = @git.diff('gitsearch1', 'v2.5').path
+    d.patch
+  end
+
+  def test_diff_path_rejects_nested_arrays
+    d = @git.diff('gitsearch1', 'v2.5')
+    error = assert_raise(ArgumentError) do
+      d.path(['lib/', 'docs/'])
+    end
+    assert_match(/path expects individual arguments, not arrays/, error.message)
+  end
+
   def test_diff_objects
     d = @git.diff('gitsearch1', @git.gtree('v2.5'))
     assert_equal(3, d.size)

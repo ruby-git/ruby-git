@@ -30,6 +30,46 @@ class TestDiffPathStatus < Test::Unit::TestCase
     assert(!status_hash.key?('example.txt'))
   end
 
+  def test_path_status_with_multiple_paths
+    path_status = Git::DiffPathStatus.new(@git, 'gitsearch1', 'v2.5', ['scott/', 'example.txt'])
+    status_hash = path_status.to_h
+
+    assert_equal(3, status_hash.size)
+    assert_equal('M', status_hash['example.txt'])
+    assert_equal('D', status_hash['scott/newfile'])
+    assert_equal('D', status_hash['scott/text.txt'])
+  end
+
+  def test_path_status_path_option_deprecated
+    Git::Deprecation.expects(:warn).with('Git::Base#diff_path_status :path option is deprecated. Use :path_limiter instead.')
+
+    status_hash = @git.diff_path_status('gitsearch1', 'v2.5', path: 'scott/').to_h
+    assert(status_hash.key?('scott/newfile'))
+  end
+
+  def test_path_status_path_limiter_takes_precedence
+    Git::Deprecation.expects(:warn).never
+
+    status_hash = @git.diff_path_status('gitsearch1', 'v2.5', path: 'scott/', path_limiter: 'example.txt').to_h
+
+    assert_equal(1, status_hash.size)
+    assert_equal('M', status_hash['example.txt'])
+  end
+
+  def test_lib_path_status_path_option_deprecated
+    Git::Deprecation.expects(:warn).with('Git::Lib#diff_path_status :path option is deprecated. Use :path_limiter instead.')
+
+    status_hash = @git.lib.diff_path_status('gitsearch1', 'v2.5', path: 'scott/')
+    assert(status_hash.key?('scott/newfile'))
+  end
+
+  def test_path_status_with_empty_path_array
+    @git.lib.expects(:command_lines).with('diff', '--name-status', 'gitsearch1', 'v2.5').returns([])
+
+    status_hash = Git::DiffPathStatus.new(@git, 'gitsearch1', 'v2.5', []).to_h
+    assert_equal({}, status_hash)
+  end
+
   def test_path_status_with_bad_commit
     assert_raise(ArgumentError) do
       @git.diff_name_status('-s')
