@@ -18,8 +18,38 @@ module Git
     end
     attr_reader :from, :to
 
-    def path(path)
-      @path = path
+    # Limits the diff to the specified path(s)
+    #
+    # When called with no arguments (or only nil arguments), removes any existing
+    # path filter, showing all files in the diff. Internally stores a single path
+    # as a String and multiple paths as an Array for efficiency.
+    #
+    # @example Limit diff to a single path
+    #   git.diff('HEAD~3', 'HEAD').path('lib/')
+    #
+    # @example Limit diff to multiple paths
+    #   git.diff('HEAD~3', 'HEAD').path('src/', 'docs/', 'README.md')
+    #
+    # @example Remove path filtering (show all files)
+    #   diff.path  # or diff.path(nil)
+    #
+    # @param paths [String, Pathname] one or more paths to filter the diff. Pass no arguments to remove filtering.
+    # @return [self] returns self for method chaining
+    # @raise [ArgumentError] if any path is an Array (use splatted arguments instead)
+    #
+    def path(*paths)
+      validate_paths_not_arrays(paths)
+
+      cleaned_paths = paths.compact
+
+      @path = if cleaned_paths.empty?
+                nil
+              elsif cleaned_paths.length == 1
+                cleaned_paths.first
+              else
+                cleaned_paths
+              end
+
       self
     end
 
@@ -101,6 +131,14 @@ module Git
     end
 
     private
+
+    def validate_paths_not_arrays(paths)
+      return unless paths.any? { |p| p.is_a?(Array) }
+
+      raise ArgumentError,
+            'path expects individual arguments, not arrays. ' \
+            "Use path('lib/', 'docs/') not path(['lib/', 'docs/'])"
+    end
 
     def process_full
       return if @full_diff_files

@@ -39,7 +39,7 @@ module Git
     # Lazily fetches and caches the path status from the git lib.
     def fetch_path_status
       @fetch_path_status ||= @base.lib.diff_path_status(
-        @from, @to, { path: @path_limiter }
+        @from, @to, { path_limiter: @path_limiter }
       )
     end
   end
