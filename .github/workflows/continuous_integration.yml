@@ -30,6 +30,11 @@ jobs:
           - ruby: 3.2
             operating-system: windows-latest
             experimental: No
+          # One-off JRuby-on-Windows probe to observe upstream fix status for jruby/jruby#7515
+          - ruby: jruby-10.0.0.1
+            operating-system: windows-latest
+            experimental: Yes
+            java_version: "17"
 
     steps:
       - name: Checkout Code
