@@ -469,6 +469,9 @@ g.remote(name).remove
 g.remote(name).merge
 g.remote(name).merge(branch)
 
+g.remote_set_branches('origin', '*', add: true) # append additional fetch refspecs
+g.remote_set_branches('origin', 'feature', 'release/*') # replace fetch refspecs
+
 g.fetch
 g.fetch(g.remotes.first)
 g.fetch('origin', {:ref => 'some/ref/head'} )

@@ -1389,6 +1389,20 @@ module Git
       command('remote', *command_args)
     end
 
+    REMOTE_SET_BRANCHES_OPTION_MAP = [
+      { keys: [:add], flag: '--add', type: :boolean }
+    ].freeze
+
+    def remote_set_branches(name, branches, opts = {})
+      ArgsBuilder.validate!(opts, REMOTE_SET_BRANCHES_OPTION_MAP)
+
+      flags = build_args(opts, REMOTE_SET_BRANCHES_OPTION_MAP)
+      branch_args = Array(branches).flatten
+      command_args = ['set-branches'] + flags + [name] + branch_args
+
+      command('remote', *command_args)
+    end
+
     def remote_set_url(name, url)
       arr_opts = ['set-url']
       arr_opts << name
