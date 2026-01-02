@@ -530,8 +530,8 @@ module Git
     # @param branch [String] the branch to pull from
     # @param opts [Hash] options to pass to the pull command
     #
-    # @option opts [Boolean] :allow_unrelated_histories (false) Merges histories of two projects that started their
-    #   lives independently
+    # @option opts [Boolean] :allow_unrelated_histories (false) Merges histories of
+    #   two projects that started their lives independently
     # @example pulls from origin/master
     #   @git.pull
     # @example pulls from upstream/master
@@ -561,6 +561,43 @@ module Git
       url = url.repo.path if url.is_a?(Git::Base)
       lib.remote_set_url(name, url)
       Git::Remote.new(self, name)
+    end
+
+    # Configures which branches are fetched for a remote
+    #
+    # Uses `git remote set-branches` to set or append fetch refspecs. When the `add:`
+    # option is not given, the `--add` option is not passed to the git command
+    #
+    # @example Replace fetched branches with a single glob pattern
+    #   git = Git.open('/path/to/repo')
+    #   # Only fetch branches matching "feature/*" from origin
+    #   git.remote_set_branches('origin', 'feature/*')
+    #
+    # @example Append a glob pattern to existing fetched branches
+    #   git = Git.open('/path/to/repo')
+    #   # Keep existing fetch refspecs and add all release branches
+    #   git.remote_set_branches('origin', 'release/*', add: true)
+    #
+    # @example Configure multiple explicit branches
+    #   git = Git.open('/path/to/repo')
+    #   git.remote_set_branches('origin', 'main', 'development', 'hotfix')
+    #
+    # @param name [String] the remote name (for example, "origin")
+    # @param branches [Array<String>] branch names or globs (for example, '*')
+    # @param add [Boolean] when true, append to existing refspecs instead of replacing them
+    #
+    # @return [nil]
+    #
+    # @raise [ArgumentError] if no branches are provided @raise [Git::FailedError] if
+    # the underlying git command fails
+    #
+    def remote_set_branches(name, *branches, add: false)
+      branch_list = branches.flatten
+      raise ArgumentError, 'branches are required' if branch_list.empty?
+
+      lib.remote_set_branches(name, branch_list, add: add)
+
+      nil
     end
 
     # removes a remote from this repository
