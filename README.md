@@ -555,16 +555,17 @@ end
 
 ## Ruby version support policy
 
-This gem will be expected to function correctly on:
+This gem is expected to function correctly on:
 
-- All non-EOL versions of the MRI Ruby on Mac, Linux, and Windows
-- The latest version of JRuby on Linux
-- The latest version of Truffle Ruby on Linus
+- All [non-EOL versions](https://www.ruby-lang.org/en/downloads/branches/) of the MRI
+  Ruby on Mac, Linux, and Windows
+- The latest version of JRuby 9.4+ on Linux
+- The latest version of TruffleRuby 24+ on Linux
 
-It is this project's intent to support the latest version of JRuby on Windows
-once the following JRuby bug is fixed:
-
-jruby/jruby#7515
+It is this project's intent to support the latest version of JRuby on Windows once
+the [process_executer](https://github.com/main-branch/process_executer) gem properly
+supports subprocess status reporting on JRuby for Windows (see
+[main-branch/process_executer#156](https://github.com/main-branch/process_executer/issues/156)).
 
 ## Git version support policy
 
