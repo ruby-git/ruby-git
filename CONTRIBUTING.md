@@ -12,6 +12,7 @@
   - [Commit your changes to a fork of `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
   - [Create a pull request](#create-a-pull-request)
   - [Get your pull request reviewed](#get-your-pull-request-reviewed)
+- [AI-assisted contributions](#ai-assisted-contributions)
 - [Design philosophy](#design-philosophy)
   - [Direct mapping to git commands](#direct-mapping-to-git-commands)
   - [Parameter naming](#parameter-naming)
@@ -97,6 +98,13 @@ branch if other changes have been merged.
 At least one approval from a project maintainer is required before your pull request
 can be merged. The maintainer is responsible for ensuring that the pull request meets
 [the project's coding standards](#coding-standards).
+
+## AI-assisted contributions
+
+AI-assisted contributions are welcome. Please review and apply our [AI Policy](AI_POLICY.md)
+before submitting changes. You are responsible for understanding and verifying any
+AI-assisted work included in PRs and ensuring it meets our standards for quality,
+security, and licensing.
 
 ## Design philosophy
 
