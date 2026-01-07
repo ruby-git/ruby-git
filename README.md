@@ -10,8 +10,10 @@
 [![Change Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
 [![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+[![AI Policy](https://img.shields.io/badge/AI%20Policy-Required-blue)](AI_POLICY.md)
 
 - [Summary](#summary)
+- [AI Policy](#ai-policy)
 - [Install](#install)
 - [Major Objects](#major-objects)
 - [Errors Raised By This Gem](#errors-raised-by-this-gem)
@@ -22,6 +24,7 @@
 - [Git version support policy](#git-version-support-policy)
 - [License](#license)
 - [📢 Project Announcements 📢](#-project-announcements-)
+  - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
   - [2025-07-07: We Now Use RuboCop](#2025-07-07-we-now-use-rubocop)
   - [2025-06-06: Default Branch Rename](#2025-06-06-default-branch-rename)
@@ -39,6 +42,15 @@ Get started by obtaining a repository object by:
 - cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
+
+## AI Policy
+
+AI-assisted contributions are welcome on this project.
+
+We ask contributors to read, review, and apply our [AI Policy](AI_POLICY.md) before
+submitting changes. You are responsible for understanding and verifying any
+AI-assisted work you include in PRs, and contributions should meet our standards for
+quality, security, and licensing.
 
 ## Install
 
@@ -592,6 +604,17 @@ Licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for fur
 details.
 
 ## 📢 Project Announcements 📢
+
+### 2026-01-07: AI Policy Introduced
+
+We have adopted a formal [AI Policy](AI_POLICY.md) to clarify expectations for
+AI-assisted contributions. Please review it before opening a PR to ensure your
+changes are fully understood, meet our quality bar, and respect licensing
+requirements.
+
+We chose a principles-based policy to respect contributors’ time and expertise. It’s
+quick to read, easy to remember, and avoids unnecessary policy overhead while still
+setting clear expectations.
 
 ### 2025-07-09: Architectural Redesign
 
