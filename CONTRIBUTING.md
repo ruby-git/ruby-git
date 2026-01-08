@@ -42,6 +42,9 @@ judgment when contributing.
 If you have suggestions for improving these guidelines, please propose changes via a
 pull request.
 
+Please also review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when
+participating in the project.
+
 ## How to contribute
 
 You can contribute in the following ways:

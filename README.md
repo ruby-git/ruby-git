@@ -13,7 +13,6 @@
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Required-blue)](AI_POLICY.md)
 
 - [Summary](#summary)
-- [AI Policy](#ai-policy)
 - [Install](#install)
 - [Major Objects](#major-objects)
 - [Errors Raised By This Gem](#errors-raised-by-this-gem)
@@ -22,6 +21,8 @@
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [Git version support policy](#git-version-support-policy)
+- [AI Policy](#ai-policy)
+- [Code of Conduct](#code-of-conduct)
 - [License](#license)
 - [📢 Project Announcements 📢](#-project-announcements-)
   - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
@@ -42,15 +43,6 @@ Get started by obtaining a repository object by:
 - cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
-
-## AI Policy
-
-AI-assisted contributions are welcome on this project.
-
-We ask contributors to read, review, and apply our [AI Policy](AI_POLICY.md) before
-submitting changes. You are responsible for understanding and verifying any
-AI-assisted work you include in PRs, and contributions should meet our standards for
-quality, security, and licensing.
 
 ## Install
 
@@ -597,6 +589,20 @@ The supported git version may be increased in future major or minor releases of 
 gem as new git features are adopted or as maintaining backward compatibility becomes
 impractical. Such changes will be clearly documented in the CHANGELOG and release
 notes.
+
+## AI Policy
+
+AI-assisted contributions are welcome on this project.
+
+We ask contributors to read, review, and apply our [AI Policy](AI_POLICY.md) before
+submitting changes. You are responsible for understanding and verifying any
+AI-assisted work you include in PRs, and contributions should meet our standards for
+quality, security, and licensing.
+
+## Code of Conduct
+
+Please review and follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating
+in this project.
 
 ## License
 
