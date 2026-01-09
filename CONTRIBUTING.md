@@ -44,6 +44,8 @@ pull request.
 
 Please also review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when
 participating in the project.
+Governance and maintainer expectations are described in
+[GOVERNANCE.md](GOVERNANCE.md).
 
 ## How to contribute
 
