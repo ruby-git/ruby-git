@@ -1,9 +1,14 @@
 # frozen_string_literal: true
 
 module Git
-  # Builds and executes a `git log` query.
+  # Builds and executes a `git log` query
   #
   # This class provides a fluent interface for building complex `git log` queries.
+  #
+  # Queries default to returning 30 commits; call {#max_count} with `:all` to
+  # return every matching commit. Calling {#all} adds the `--all` flag to include
+  # all refs in the search but does not change the number of commits returned.
+  #
   # The query is lazily executed when results are requested either via the modern
   # `#execute` method or the deprecated Enumerable methods.
   #
