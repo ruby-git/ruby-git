@@ -57,6 +57,49 @@ Decisions are usually made by consensus among the active maintainers. If consens
 cannot be reached, the decision is made by a majority vote. If a vote results in a
 tie, the Project Lead has the final say.
 
+## Continuity
+
+The project must be able to ship releases and respond to security issues even if
+individual maintainers become unavailable.
+
+### RubyGems Ownership
+
+RubyGems ownership (the ability to push new gem versions) is granted to a subset
+of active maintainers—typically the Project Lead and at least one other
+maintainer—to balance security with continuity. Not all maintainers require
+RubyGems access.
+
+RubyGems owners follow the same activity principles as other elevated access: if
+an owner becomes inactive, their ownership is paused alongside other permissions.
+
+### Minimum Thresholds
+
+To avoid single points of failure:
+
+- At least two active maintainers should have RubyGems ownership for the `git` gem.
+- At least two active maintainers should have GitHub org Owner or repo Admin
+  access.
+
+If thresholds drop below these levels, remaining maintainers should prioritize
+onboarding or re-activating someone to restore redundancy.
+
+### Access Audits
+
+Periodically (at least annually), maintainers review access across all systems:
+
+- GitHub organization membership and roles
+- GitHub repository admin/write permissions
+- RubyGems gem ownership
+- GitHub Actions release automation: PATs/OIDC tokens (e.g., `AUTO_RELEASE_TOKEN` scope),
+  environment protection rules/approvers for RubyGems deployments, and any OIDC
+  trust configuration
+
+The Project Lead (or a delegated maintainer) schedules and drives this review so
+continuity checks do not slip.
+
+Audits ensure access reflects current activity and that continuity thresholds are
+met.
+
 ## Code of Conduct
 
 All maintainers and contributors must adhere to the project's [Code of
