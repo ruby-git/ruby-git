@@ -7,9 +7,12 @@
 
 [![Gem Version](https://badge.fury.io/rb/git.svg)](https://badge.fury.io/rb/git)
 [![Documentation](https://img.shields.io/badge/Documentation-Latest-green)](https://rubydoc.info/gems/git/)
-[![Change Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
-[![Build Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+[![Change
+Log](https://img.shields.io/badge/CHANGELOG-Latest-green)](https://rubydoc.info/gems/git/file/CHANGELOG.md)
+[![Build
+Status](https://github.com/ruby-git/ruby-git/workflows/CI/badge.svg?branch=main)](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI)
+[![Conventional
+Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![AI Policy](https://img.shields.io/badge/AI%20Policy-Required-blue)](AI_POLICY.md)
 
 - [Summary](#summary)
@@ -21,9 +24,7 @@
 - [Examples](#examples)
 - [Ruby version support policy](#ruby-version-support-policy)
 - [Git version support policy](#git-version-support-policy)
-- [AI Policy](#ai-policy)
-- [Code of Conduct](#code-of-conduct)
-- [License](#license)
+- [Project policies](#project-policies)
 - [📢 Project Announcements 📢](#-project-announcements-)
   - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
@@ -38,11 +39,15 @@ command line.
 
 Get started by obtaining a repository object by:
 
-- opening an existing working copy with [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
-- initializing a new repository with [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
-- cloning a repository with [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
+- opening an existing working copy with
+  [Git.open](https://rubydoc.info/gems/git/Git#open-class_method)
+- initializing a new repository with
+  [Git.init](https://rubydoc.info/gems/git/Git#init-class_method)
+- cloning a repository with
+  [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
-Methods that can be called on a repository object are documented in [Git::Base](https://rubydoc.info/gems/git/Git/Base)
+Methods that can be called on a repository object are documented in
+[Git::Base](https://rubydoc.info/gems/git/Git/Base)
 
 ## Install
 
@@ -72,19 +77,28 @@ gem install git --version "~> 1.19"
 
 ## Major Objects
 
-**Git::Base** - The object returned from a `Git.open` or `Git.clone`. Most major actions are called from this object.
+**Git::Base** - The object returned from a `Git.open` or `Git.clone`. Most major
+actions are called from this object.
 
-**Git::Object** - The base object for your tree, blob and commit objects, returned from `@git.gtree` or `@git.object` calls.  the `Git::AbstractObject` will have most of the calls in common for all those objects.
+**Git::Object** - The base object for your tree, blob and commit objects, returned
+from `@git.gtree` or `@git.object` calls.  the `Git::AbstractObject` will have most
+of the calls in common for all those objects.
 
-**Git::Diff** - returns from a `@git.diff` command.  It is an Enumerable that returns `Git::Diff:DiffFile` objects from which you can get per file patches and insertion/deletion statistics.  You can also get total statistics from the Git::Diff object directly.
+**Git::Diff** - returns from a `@git.diff` command.  It is an Enumerable that returns
+`Git::Diff:DiffFile` objects from which you can get per file patches and
+insertion/deletion statistics.  You can also get total statistics from the Git::Diff
+object directly.
 
-**Git::Status** - returns from a `@git.status` command.  It is an Enumerable that returns
-`Git:Status::StatusFile` objects for each object in git, which includes files in the working
-directory, in the index and in the repository.  Similar to running 'git status' on the command line to determine untracked and changed files.
+**Git::Status** - returns from a `@git.status` command.  It is an Enumerable that
+returns `Git:Status::StatusFile` objects for each object in git, which includes files
+in the working directory, in the index and in the repository.  Similar to running
+'git status' on the command line to determine untracked and changed files.
 
-**Git::Branches** - Enumerable object that holds `Git::Branch objects`.  You can call .local or .remote on it to filter to just your local or remote branches.
+**Git::Branches** - Enumerable object that holds `Git::Branch objects`.  You can call
+.local or .remote on it to filter to just your local or remote branches.
 
-**Git::Remote**- A reference to a remote repository that is tracked by this repository.
+**Git::Remote**- A reference to a remote repository that is tracked by this
+repository.
 
 **Git::Log** - An Enumerable object that references all the `Git::Object::Commit`
 objects that encompass your log query, which can be constructed through methods on
@@ -114,8 +128,8 @@ control how many commits are returned, you should call `max_count`.
 The git gem will only raise an `ArgumentError` or an error that is a subclass of
 `Git::Error`. It does not explicitly raise any other types of errors.
 
-It is recommended to rescue `Git::Error` to catch any runtime error raised by
-this gem unless you need more specific error handling.
+It is recommended to rescue `Git::Error` to catch any runtime error raised by this
+gem unless you need more specific error handling.
 
 ```ruby
 begin
@@ -226,13 +240,17 @@ Git.configure do |config|
 end
 ```
 
-_NOTE: Another way to specify where is the `git` binary is through the environment variable `GIT_PATH`_
+_NOTE: Another way to specify where is the `git` binary is through the environment
+variable `GIT_PATH`_
 
 **How SSH configuration is determined:**
 
-- If `git_ssh` is not specified in the API call, the global config (`Git.configure { |c| c.git_ssh = ... }`) is used.
-- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or script will be used).
-- If `git_ssh` is a non-empty string, it is used for that instance (overriding the global config).
+- If `git_ssh` is not specified in the API call, the global config (`Git.configure {
+  |c| c.git_ssh = ... }`) is used.
+- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or
+  script will be used).
+- If `git_ssh` is a non-empty string, it is used for that instance (overriding the
+  global config).
 
 You can also specify a custom SSH script on a per-repository basis:
 
@@ -248,7 +266,8 @@ git = Git.clone('git@github.com:user/repo.git', 'local-dir',
 git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
 ```
 
-This is especially useful in multi-threaded applications where different repositories require different SSH credentials.
+This is especially useful in multi-threaded applications where different repositories
+require different SSH credentials.
 
 Here are the operations that need read permission only.
 
@@ -590,24 +609,20 @@ gem as new git features are adopted or as maintaining backward compatibility bec
 impractical. Such changes will be clearly documented in the CHANGELOG and release
 notes.
 
-## AI Policy
+## Project policies
 
-AI-assisted contributions are welcome on this project.
+These documents set expectations for behavior, contribution workflows, AI-assisted
+changes, decision making, maintainer roles, and licensing. Please review them before
+opening issues or pull requests.
 
-We ask contributors to read, review, and apply our [AI Policy](AI_POLICY.md) before
-submitting changes. You are responsible for understanding and verifying any
-AI-assisted work you include in PRs, and contributions should meet our standards for
-quality, security, and licensing.
-
-## Code of Conduct
-
-Please review and follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating
-in this project.
-
-## License
-
-Licensed under MIT License Copyright (c) 2008  Scott Chacon. See LICENSE for further
-details.
+| Document | Description |
+| -------- | ----------- |
+| [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) | We follow the Ruby community Code of Conduct; expect respectful, harassment-free participation and report concerns to maintainers. |
+| [CONTRIBUTING](CONTRIBUTING.md) | How to report issues, submit PRs with Conventional Commits, meet coding/testing standards, and follow the Code of Conduct. |
+| [AI_POLICY](AI_POLICY.md) | AI-assisted contributions are welcome<br>Please read and apply the AI Policy, and ensure any AI-assisted work meets our quality, security, and licensing standards. |
+| [GOVERNANCE](GOVERNANCE.md) | Principles-first governance defining maintainer/project lead roles, least-privilege access, consensus/majority decisions, and nomination/emeritus steps. |
+| [MAINTAINERS](MAINTAINERS.md) | Lists active maintainers (Project Lead noted) and emeritus alumni with links; see governance for role scope. |
+| [LICENSE](LICENSE) | MIT License terms for using, modifying, and redistributing this project. |
 
 ## 📢 Project Announcements 📢
 
@@ -673,11 +688,12 @@ rake rubocop
 RuboCop is also run  as part of the default rake task (by running `rake`) that is run
 in our Continuous Integration workflow.
 
-Going forward, any PRs that have any Robocop offenses will not be merged. In
-certain rare cases, it might be acceptable to disable a  RuboCop check for the most
-limited scope possible.
+Going forward, any PRs that have any Robocop offenses will not be merged. In certain
+rare cases, it might be acceptable to disable a  RuboCop check for the most limited
+scope possible.
 
-If you have a problem fixing a  RuboCop offense, don't be afraid to ask a contributor.
+If you have a problem fixing a  RuboCop offense, don't be afraid to ask a
+contributor.
 
 ### 2025-06-06: Default Branch Rename
 
