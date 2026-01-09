@@ -17,14 +17,18 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 
 - [Summary](#summary)
 - [Install](#install)
-- [Major Objects](#major-objects)
+- [Quick Start](#quick-start)
+- [Examples](#examples)
+  - [Configuration](#configuration)
+  - [Read Operations](#read-operations)
+  - [Write Operations](#write-operations)
+  - [Index and Tree Operations](#index-and-tree-operations)
 - [Errors Raised By This Gem](#errors-raised-by-this-gem)
 - [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
 - [Deprecations](#deprecations)
-- [Examples](#examples)
-- [Ruby version support policy](#ruby-version-support-policy)
-- [Git version support policy](#git-version-support-policy)
-- [Project policies](#project-policies)
+- [Project Policies](#project-policies)
+  - [Ruby Version Support Policy](#ruby-version-support-policy)
+  - [Git Version Support Policy](#git-version-support-policy)
 - [📢 Project Announcements 📢](#-project-announcements-)
   - [2026-01-07: AI Policy Introduced](#2026-01-07-ai-policy-introduced)
   - [2025-07-09: Architectural Redesign](#2025-07-09-architectural-redesign)
@@ -75,53 +79,414 @@ to install version 1.x:
 gem install git --version "~> 1.19"
 ```
 
-## Major Objects
+## Quick Start
 
-**Git::Base** - The object returned from a `Git.open` or `Git.clone`. Most major
-actions are called from this object.
+All functionality for this gem starts with the top-level
+[`Git`](https://rubydoc.info/gems/git/Git) module. This module can be used to run
+non-repo scoped `git` commands such as `config`.
 
-**Git::Object** - The base object for your tree, blob and commit objects, returned
-from `@git.gtree` or `@git.object` calls.  the `Git::AbstractObject` will have most
-of the calls in common for all those objects.
+The `Git` module also has factory methods such as `open`, `clone`, and `init` which
+return a [`Git::Base`](https://rubydoc.info/gems/git/Git/Base) object. The
+`Git::Base` object is used to run repo-specific `git` commands such as `add`,
+`commit`, `push`, and `log`.
 
-**Git::Diff** - returns from a `@git.diff` command.  It is an Enumerable that returns
-`Git::Diff:DiffFile` objects from which you can get per file patches and
-insertion/deletion statistics.  You can also get total statistics from the Git::Diff
-object directly.
-
-**Git::Status** - returns from a `@git.status` command.  It is an Enumerable that
-returns `Git:Status::StatusFile` objects for each object in git, which includes files
-in the working directory, in the index and in the repository.  Similar to running
-'git status' on the command line to determine untracked and changed files.
-
-**Git::Branches** - Enumerable object that holds `Git::Branch objects`.  You can call
-.local or .remote on it to filter to just your local or remote branches.
-
-**Git::Remote**- A reference to a remote repository that is tracked by this
-repository.
-
-**Git::Log** - An Enumerable object that references all the `Git::Object::Commit`
-objects that encompass your log query, which can be constructed through methods on
-the `Git::Log object`, like:
+Clone, read status, and log:
 
 ```ruby
-git.log
-  .max_count(:all)
-  .object('README.md')
-  .since('10 years ago')
-  .between('v1.0.7', 'HEAD')
-  .map { |commit| commit.sha }
+require 'git'
+
+repo = Git.clone('https://github.com/ruby-git/ruby-git.git', 'ruby-git')
+repo.status.changed.each { |f| puts "changed: #{f.path}" }
+repo.log(5).each { |c| puts c.message }
 ```
 
-A maximum of 30 commits are returned if `max_count` is not called. To get all commits
-that match the log query, call `max_count(:all)`.
+Open an existing repo and commit:
 
-Note that `git.log.all` adds the `--all` option to the underlying `git log` command.
-This asks for the logs of all refs (basically all commits reachable by HEAD,
-branches, and tags). This does not control the maximum number of commits returned. To
-control how many commits are returned, you should call `max_count`.
+```ruby
+require 'git'
 
-**Git::Worktrees** - Enumerable object that holds `Git::Worktree objects`.
+repo = Git.open('/path/to/repo')
+repo.add(all: true)
+repo.commit('chore: update files')
+repo.push
+```
+
+Initialize a new repo and make the first commit:
+
+```ruby
+require 'git'
+
+repo = Git.init('my_project')
+repo.add(all: true)
+repo.commit('initial commit')
+```
+
+## Examples
+
+Beyond the basics covered in Quick Start, these examples show the full range of
+options and variations for each operation.
+
+### Configuration
+
+Configure the `git` command line:
+
+```ruby
+# Global config (in ~/.gitconfig)
+settings = Git.global_config # returns a Hash
+username = Git.global_config('user.email')
+Git.global_config('user.email', 'user@example.com')
+
+# Repository config
+repo = Git.open('path/to/repo')
+settings = repo.config # returns a Hash
+username = repo.config('user.email')
+repo.config('user.email', 'anotheruser@example.com')
+```
+
+Configure the git gem:
+
+```ruby
+Git.configure do |config|
+  config.binary_path = '/usr/local/bin/git'
+  config.git_ssh = 'ssh -i ~/.ssh/id_rsa'
+end
+
+# or
+
+Git.config.binary_path = '/usr/local/bin/git'
+Git.config.git_ssh = 'ssh -i ~/.ssh/id_rsa'
+```
+
+**How SSH configuration is determined:**
+
+- If `git_ssh` is not specified in the API call, the global config (`Git.configure {
+  |c| c.git_ssh = ... }`) is used.
+- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or
+  script will be used).
+- If `git_ssh` is a non-empty string, it is used for that instance (overriding the
+  global config).
+
+You can also specify a custom SSH script on a per-repository basis:
+
+```ruby
+# Use a specific SSH key for a single repository
+git = Git.open('/path/to/repo', git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when cloning
+git = Git.clone('git@github.com:user/repo.git', 'local-dir',
+                git_ssh: 'ssh -i /path/to/private_key')
+
+# Or when initializing
+git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
+```
+
+This is especially useful in multi-threaded applications where different repositories
+require different SSH credentials.
+
+### Read Operations
+
+Here are the operations that need read permission only:
+
+```ruby
+repo = Git.open(working_dir, :log => Logger.new(STDOUT))
+
+repo.index
+repo.index.readable?
+repo.index.writable?
+repo.repo
+repo.dir
+
+# ls-tree with recursion into subtrees (list files)
+repo.ls_tree("HEAD", recursive: true)
+
+# log - returns a Git::Log object, which is an Enumerator of Git::Commit objects
+# default configuration returns a max of 30 commits
+repo.log
+repo.log(200) # 200 most recent commits
+repo.log.since('2 weeks ago') # default count of commits since 2 weeks ago.
+repo.log(200).since('2 weeks ago') # commits since 2 weeks ago, limited to 200.
+repo.log.between('v2.5', 'v2.6')
+repo.log.each {|l| puts l.sha }
+repo.gblob('v2.5:Makefile').log.since('2 weeks ago')
+
+repo.object('HEAD^').to_s  # git show / git rev-parse
+repo.object('HEAD^').contents
+repo.object('v2.5:Makefile').size
+repo.object('v2.5:Makefile').sha
+
+repo.gtree(treeish)
+repo.gblob(treeish)
+repo.gcommit(treeish)
+
+
+commit = repo.gcommit('1cc8667014381')
+
+commit.gtree
+commit.parent.sha
+commit.parents.size
+commit.author.name
+commit.author.email
+commit.author.date.strftime("%m-%d-%y")
+commit.committer.name
+commit.date.strftime("%m-%d-%y")
+commit.message
+
+tree = repo.gtree("HEAD^{tree}")
+
+tree.blobs
+tree.subtrees
+tree.children # blobs and subtrees
+
+repo.rev_parse('v2.0.0:README.md')
+
+repo.branches # returns Git::Branch objects
+repo.branches.local
+repo.current_branch
+repo.branches.remote
+repo.branches[:main].gcommit
+repo.branches['origin/main'].gcommit
+
+repo.grep('hello')  # implies HEAD
+repo.blob('v2.5:Makefile').grep('hello')
+repo.tag('v2.5').grep('hello', 'docs/')
+repo.describe()
+repo.describe('0djf2aa')
+repo.describe('HEAD', {:all => true, :tags => true})
+
+repo.diff(commit1, commit2).size
+repo.diff(commit1, commit2).stats
+repo.diff(commit1, commit2).name_status
+repo.gtree('v2.5').diff('v2.6').insertions
+repo.diff('gitsearch1', 'v2.5').path('lib/')
+repo.diff('gitsearch1', 'v2.5').path('lib/', 'docs/', 'README.md')  # multiple paths
+repo.diff('gitsearch1', repo.gtree('v2.5'))
+repo.diff('gitsearch1', 'v2.5').path('docs/').patch
+repo.gtree('v2.5').diff('v2.6').patch
+
+repo.gtree('v2.5').diff('v2.6').each do |file_diff|
+  puts file_diff.path
+  puts file_diff.patch
+  puts file_diff.blob(:src).contents
+end
+
+repo.worktrees # returns Git::Worktree objects
+repo.worktrees.count
+repo.worktrees.each do |worktree|
+  worktree.dir
+  worktree.gcommit
+  worktree.to_s
+end
+
+repo.config('user.name')  # returns 'Scott Chacon'
+repo.config # returns whole config hash
+
+# Configuration can be set when cloning using the :config option.
+# This option can be an single configuration String or an Array
+# if multiple config items need to be set.
+#
+repo = Git.clone(
+  git_uri, destination_path,
+  :config => [
+    'core.sshCommand=ssh -i /home/user/.ssh/id_rsa',
+    'submodule.recurse=true'
+  ]
+)
+
+repo.tags # returns array of Git::Tag objects
+
+repo.show()
+repo.show('HEAD')
+repo.show('v2.8', 'README.md')
+
+Git.ls_remote('https://github.com/ruby-git/ruby-git.git') # returns a hash containing the available references of the repo.
+Git.ls_remote('/path/to/local/repo')
+Git.ls_remote() # same as Git.ls_remote('.')
+
+Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'main'
+```
+
+### Write Operations
+
+And here are the operations that will need to write to your git repository.
+
+```ruby
+repo = Git.init # default is the current directory
+repo = Git.init('project')
+repo = Git.init(
+  '/home/schacon/proj',
+  { :repository => '/opt/git/proj.git', :index => '/tmp/index'}
+)
+
+# Clone from a git url
+git_url = 'https://github.com/ruby-git/ruby-git.git'
+repo = Git.clone(git_url)
+
+# Clone into /tmp/clone/ruby-git-clean
+name = 'ruby-git-clean'
+path = '/tmp/clone'
+repo = Git.clone(git_url, name, :path => path)
+repo.dir #=> /tmp/clone/ruby-git-clean
+
+repo.config('user.name', 'Scott Chacon')
+repo.config('user.email', 'email@email.com')
+
+# Clone can take a filter to tell the serve to send a partial clone
+repo = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
+
+# Clone can control single-branch behavior (nil default keeps current git behavior)
+repo = Git.clone(git_url, name, :path => path, :depth => 1, :single_branch => false)
+
+# Clone can take an optional logger
+logger = Logger.new(STDOUT)
+repo = Git.clone(git_url, 'my-repo', :log => logger)
+
+repo.add                                   # git add -- "."
+repo.add(:all=>true)                       # git add --all -- "."
+repo.add('file_path')                      # git add -- "file_path"
+repo.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
+
+repo.remove()                                # git rm -f -- "."
+repo.remove('file.txt')                      # git rm -f -- "file.txt"
+repo.remove(['file.txt', 'file2.txt'])       # git rm -f -- "file.txt" "file2.txt"
+repo.remove('file.txt', :recursive => true)  # git rm -f -r -- "file.txt"
+repo.remove('file.txt', :cached => true)     # git rm -f --cached -- "file.txt"
+
+repo.commit('message')
+repo.commit_all('message')
+
+# Sign a commit using the gpg key configured in the user.signingkey config setting
+repo.config('user.signingkey', '0A46826A')
+repo.commit('message', gpg_sign: true)
+
+# Sign a commit using a specified gpg key
+key_id = '0A46826A'
+repo.commit('message', gpg_sign: key_id)
+
+# Skip signing a commit (overriding any global gpgsign setting)
+repo.commit('message', no_gpg_sign: true)
+
+repo = Git.clone(git_url, 'myrepo')
+repo.chdir do
+  File.write('test-file', 'blahblahblah')
+  repo.status.changed.each do |file|
+    puts file.blob(:index).contents
+  end
+end
+
+repo.reset # defaults to HEAD
+repo.reset_hard(Git::Commit)
+
+repo.branch('new_branch') # creates new or fetches existing
+repo.branch('new_branch').checkout
+repo.branch('new_branch').delete
+repo.branch('existing_branch').checkout
+repo.branch('main').contains?('existing_branch')
+
+# delete remote branch
+repo.push('origin', 'remote_branch_name', force: true, delete: true)
+
+repo.checkout('new_branch')
+repo.checkout('new_branch', new_branch: true, start_point: 'main')
+repo.checkout(repo.branch('new_branch'))
+
+repo.branch(name).merge(branch2)
+repo.branch(branch2).merge  # merges HEAD with branch2
+
+repo.branch(name).in_branch(message) { # add files }  # auto-commits
+repo.merge('new_branch')
+repo.merge('new_branch', 'merge commit message', no_ff: true)
+repo.merge('origin/remote_branch')
+repo.merge(repo.branch('main'))
+repo.merge([branch1, branch2])
+
+repo.merge_base('branch1', 'branch2')
+
+r = repo.add_remote(name, uri)  # Git::Remote
+r = repo.add_remote(name, Git::Base)  # Git::Remote
+
+repo.remotes  # array of Git::Remotes
+repo.remote(name).fetch
+repo.remote(name).remove
+repo.remote(name).merge
+repo.remote(name).merge(branch)
+
+repo.remote_set_branches('origin', '*', add: true) # append additional fetch refspecs
+repo.remote_set_branches('origin', 'feature', 'release/*') # replace fetch refspecs
+
+repo.fetch
+repo.fetch(repo.remotes.first)
+repo.fetch('origin', {:ref => 'some/ref/head'} )
+repo.fetch(all: true, force: true, depth: 2)
+repo.fetch('origin', {:'update-head-ok' => true})
+
+repo.pull
+repo.pull(Git::Repo, Git::Branch) # fetch and a merge
+
+repo.add_tag('tag_name') # returns Git::Tag
+repo.add_tag('tag_name', 'object_reference')
+repo.add_tag('tag_name', 'object_reference', {:options => 'here'})
+repo.add_tag('tag_name', {:options => 'here'})
+
+repo.delete_tag('tag_name')
+
+repo.repack
+
+repo.push
+repo.push(repo.remote('name'))
+
+# delete remote branch
+repo.push('origin', 'remote_branch_name', force: true, delete: true)
+
+# push all branches to remote at one time
+repo.push('origin', all: true)
+
+repo.worktree('/tmp/new_worktree').add
+repo.worktree('/tmp/new_worktree', 'branch1').add
+repo.worktree('/tmp/new_worktree').remove
+repo.worktrees.prune
+```
+
+### Index and Tree Operations
+
+Some examples of more low-level index and tree operations
+
+```ruby
+repo.with_temp_index do
+
+  repo.read_tree(tree3) # calls self.index.read_tree
+  repo.read_tree(tree1, :prefix => 'hi/')
+
+  c = repo.commit_tree('message')
+  # or #
+  t = repo.write_tree
+  c = repo.commit_tree(t, :message => 'message', :parents => [sha1, sha2])
+
+  repo.branch('branch_name').update_ref(c)
+  repo.update_ref(branch, c)
+
+  repo.with_temp_working do # new blank working directory
+    repo.checkout
+    repo.checkout(another_index)
+    repo.commit # commits to temp_index
+  end
+end
+
+repo.set_index('/path/to/index')
+
+repo.with_index(path) do
+  # calls set_index, then switches back after
+end
+
+repo.with_working(dir) do
+# calls set_working, then switches back after
+end
+
+repo.with_temp_working(dir) do
+  repo.checkout_index(:prefix => dir, :path_limiter => path)
+  # do file work
+  repo.commit # commits to index
+end
+```
 
 ## Errors Raised By This Gem
 
@@ -218,365 +583,24 @@ If deprecation warnings are silenced, you should reenable them before upgrading 
 git gem to the next major version. This will make it easier to identify changes
 needed for the upgrade.
 
-## Examples
-
-Here are a bunch of examples of how to use the Ruby/Git package.
-
-Require the 'git' gem.
-
-```ruby
-require 'git'
-```
-
-Git env config
-
-```ruby
-Git.configure do |config|
-  # If you want to use a custom git binary
-  config.binary_path = '/git/bin/path'
-
-  # If you need to use a custom SSH script
-  config.git_ssh = '/path/to/ssh/script'
-end
-```
-
-_NOTE: Another way to specify where is the `git` binary is through the environment
-variable `GIT_PATH`_
-
-**How SSH configuration is determined:**
-
-- If `git_ssh` is not specified in the API call, the global config (`Git.configure {
-  |c| c.git_ssh = ... }`) is used.
-- If `git_ssh: nil` is specified, SSH is disabled for that instance (no SSH key or
-  script will be used).
-- If `git_ssh` is a non-empty string, it is used for that instance (overriding the
-  global config).
-
-You can also specify a custom SSH script on a per-repository basis:
-
-```ruby
-# Use a specific SSH key for a single repository
-git = Git.open('/path/to/repo', git_ssh: 'ssh -i /path/to/private_key')
-
-# Or when cloning
-git = Git.clone('git@github.com:user/repo.git', 'local-dir',
-                git_ssh: 'ssh -i /path/to/private_key')
-
-# Or when initializing
-git = Git.init('new-repo', git_ssh: 'ssh -i /path/to/private_key')
-```
-
-This is especially useful in multi-threaded applications where different repositories
-require different SSH credentials.
-
-Here are the operations that need read permission only.
-
-```ruby
-g = Git.open(working_dir, :log => Logger.new(STDOUT))
-
-g.index
-g.index.readable?
-g.index.writable?
-g.repo
-g.dir
-
-# ls-tree with recursion into subtrees (list files)
-g.ls_tree("HEAD", recursive: true)
-
-# log - returns a Git::Log object, which is an Enumerator of Git::Commit objects
-# default configuration returns a max of 30 commits
-g.log
-g.log(200) # 200 most recent commits
-g.log.since('2 weeks ago') # default count of commits since 2 weeks ago.
-g.log(200).since('2 weeks ago') # commits since 2 weeks ago, limited to 200.
-g.log.between('v2.5', 'v2.6')
-g.log.each {|l| puts l.sha }
-g.gblob('v2.5:Makefile').log.since('2 weeks ago')
-
-g.object('HEAD^').to_s  # git show / git rev-parse
-g.object('HEAD^').contents
-g.object('v2.5:Makefile').size
-g.object('v2.5:Makefile').sha
-
-g.gtree(treeish)
-g.gblob(treeish)
-g.gcommit(treeish)
-
-
-commit = g.gcommit('1cc8667014381')
-
-commit.gtree
-commit.parent.sha
-commit.parents.size
-commit.author.name
-commit.author.email
-commit.author.date.strftime("%m-%d-%y")
-commit.committer.name
-commit.date.strftime("%m-%d-%y")
-commit.message
-
-tree = g.gtree("HEAD^{tree}")
-
-tree.blobs
-tree.subtrees
-tree.children # blobs and subtrees
-
-g.rev_parse('v2.0.0:README.md')
-
-g.branches # returns Git::Branch objects
-g.branches.local
-g.current_branch
-g.branches.remote
-g.branches[:main].gcommit
-g.branches['origin/main'].gcommit
-
-g.grep('hello')  # implies HEAD
-g.blob('v2.5:Makefile').grep('hello')
-g.tag('v2.5').grep('hello', 'docs/')
-g.describe()
-g.describe('0djf2aa')
-g.describe('HEAD', {:all => true, :tags => true})
-
-g.diff(commit1, commit2).size
-g.diff(commit1, commit2).stats
-g.diff(commit1, commit2).name_status
-g.gtree('v2.5').diff('v2.6').insertions
-g.diff('gitsearch1', 'v2.5').path('lib/')
-g.diff('gitsearch1', 'v2.5').path('lib/', 'docs/', 'README.md')  # multiple paths
-g.diff('gitsearch1', @git.gtree('v2.5'))
-g.diff('gitsearch1', 'v2.5').path('docs/').patch
-g.gtree('v2.5').diff('v2.6').patch
-
-g.gtree('v2.5').diff('v2.6').each do |file_diff|
-  puts file_diff.path
-  puts file_diff.patch
-  puts file_diff.blob(:src).contents
-end
-
-g.worktrees # returns Git::Worktree objects
-g.worktrees.count
-g.worktrees.each do |worktree|
-  worktree.dir
-  worktree.gcommit
-  worktree.to_s
-end
-
-g.config('user.name')  # returns 'Scott Chacon'
-g.config # returns whole config hash
-
-# Configuration can be set when cloning using the :config option.
-# This option can be an single configuration String or an Array
-# if multiple config items need to be set.
-#
-g = Git.clone(
-  git_uri, destination_path,
-  :config => [
-    'core.sshCommand=ssh -i /home/user/.ssh/id_rsa',
-    'submodule.recurse=true'
-  ]
-)
-
-g.tags # returns array of Git::Tag objects
-
-g.show()
-g.show('HEAD')
-g.show('v2.8', 'README.md')
-
-Git.ls_remote('https://github.com/ruby-git/ruby-git.git') # returns a hash containing the available references of the repo.
-Git.ls_remote('/path/to/local/repo')
-Git.ls_remote() # same as Git.ls_remote('.')
-
-Git.default_branch('https://github.com/ruby-git/ruby-git') #=> 'main'
-```
-
-And here are the operations that will need to write to your git repository.
-
-```ruby
-g = Git.init
-  Git.init('project')
-  Git.init('/home/schacon/proj',
-  { :repository => '/opt/git/proj.git',
-      :index => '/tmp/index'} )
-
-# Clone from a git url
-git_url = 'https://github.com/ruby-git/ruby-git.git'
-# Clone into the ruby-git directory
-g = Git.clone(git_url)
-
-# Clone into /tmp/clone/ruby-git-clean
-name = 'ruby-git-clean'
-path = '/tmp/clone'
-g = Git.clone(git_url, name, :path => path)
-g.dir #=> /tmp/clone/ruby-git-clean
-
-g.config('user.name', 'Scott Chacon')
-g.config('user.email', 'email@email.com')
-
-# Clone can take a filter to tell the serve to send a partial clone
-g = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
-
-# Clone can control single-branch behavior (nil default keeps current git behavior)
-g = Git.clone(git_url, name, :path => path, :depth => 1, :single_branch => false)
-
-# Clone can take an optional logger
-logger = Logger.new
-g = Git.clone(git_url, NAME, :log => logger)
-
-g.add                                   # git add -- "."
-g.add(:all=>true)                       # git add --all -- "."
-g.add('file_path')                      # git add -- "file_path"
-g.add(['file_path_1', 'file_path_2'])   # git add -- "file_path_1" "file_path_2"
-
-g.remove()                                # git rm -f -- "."
-g.remove('file.txt')                      # git rm -f -- "file.txt"
-g.remove(['file.txt', 'file2.txt'])       # git rm -f -- "file.txt" "file2.txt"
-g.remove('file.txt', :recursive => true)  # git rm -f -r -- "file.txt"
-g.remove('file.txt', :cached => true)     # git rm -f --cached -- "file.txt"
-
-g.commit('message')
-g.commit_all('message')
-
-# Sign a commit using the gpg key configured in the user.signingkey config setting
-g.config('user.signingkey', '0A46826A')
-g.commit('message', gpg_sign: true)
-
-# Sign a commit using a specified gpg key
-key_id = '0A46826A'
-g.commit('message', gpg_sign: key_id)
-
-# Skip signing a commit (overriding any global gpgsign setting)
-g.commit('message', no_gpg_sign: true)
-
-g = Git.clone(repo, 'myrepo')
-g.chdir do
-new_file('test-file', 'blahblahblah')
-g.status.changed.each do |file|
-  puts file.blob(:index).contents
-end
-end
-
-g.reset # defaults to HEAD
-g.reset_hard(Git::Commit)
-
-g.branch('new_branch') # creates new or fetches existing
-g.branch('new_branch').checkout
-g.branch('new_branch').delete
-g.branch('existing_branch').checkout
-g.branch('main').contains?('existing_branch')
-
-# delete remote branch
-g.push('origin', 'remote_branch_name', force: true, delete: true)
-
-g.checkout('new_branch')
-g.checkout('new_branch', new_branch: true, start_point: 'main')
-g.checkout(g.branch('new_branch'))
-
-g.branch(name).merge(branch2)
-g.branch(branch2).merge  # merges HEAD with branch2
-
-g.branch(name).in_branch(message) { # add files }  # auto-commits
-g.merge('new_branch')
-g.merge('new_branch', 'merge commit message', no_ff: true)
-g.merge('origin/remote_branch')
-g.merge(g.branch('main'))
-g.merge([branch1, branch2])
-
-g.merge_base('branch1', 'branch2')
-
-r = g.add_remote(name, uri)  # Git::Remote
-r = g.add_remote(name, Git::Base)  # Git::Remote
-
-g.remotes  # array of Git::Remotes
-g.remote(name).fetch
-g.remote(name).remove
-g.remote(name).merge
-g.remote(name).merge(branch)
-
-g.remote_set_branches('origin', '*', add: true) # append additional fetch refspecs
-g.remote_set_branches('origin', 'feature', 'release/*') # replace fetch refspecs
-
-g.fetch
-g.fetch(g.remotes.first)
-g.fetch('origin', {:ref => 'some/ref/head'} )
-g.fetch(all: true, force: true, depth: 2)
-g.fetch('origin', {:'update-head-ok' => true})
-
-g.pull
-g.pull(Git::Repo, Git::Branch) # fetch and a merge
-
-g.add_tag('tag_name') # returns Git::Tag
-g.add_tag('tag_name', 'object_reference')
-g.add_tag('tag_name', 'object_reference', {:options => 'here'})
-g.add_tag('tag_name', {:options => 'here'})
-
-Options:
-  :a | :annotate
-  :d
-  :f
-  :m | :message
-  :s
-
-g.delete_tag('tag_name')
-
-g.repack
-
-g.push
-g.push(g.remote('name'))
-
-# delete remote branch
-g.push('origin', 'remote_branch_name', force: true, delete: true)
-
-# push all branches to remote at one time
-g.push('origin', all: true)
-
-g.worktree('/tmp/new_worktree').add
-g.worktree('/tmp/new_worktree', 'branch1').add
-g.worktree('/tmp/new_worktree').remove
-g.worktrees.prune
-```
-
-Some examples of more low-level index and tree operations
-
-```ruby
-g.with_temp_index do
-
-  g.read_tree(tree3) # calls self.index.read_tree
-  g.read_tree(tree1, :prefix => 'hi/')
-
-  c = g.commit_tree('message')
-  # or #
-  t = g.write_tree
-  c = g.commit_tree(t, :message => 'message', :parents => [sha1, sha2])
-
-  g.branch('branch_name').update_ref(c)
-  g.update_ref(branch, c)
-
-  g.with_temp_working do # new blank working directory
-    g.checkout
-    g.checkout(another_index)
-    g.commit # commits to temp_index
-  end
-end
-
-g.set_index('/path/to/index')
-
-
-g.with_index(path) do
-  # calls set_index, then switches back after
-end
-
-g.with_working(dir) do
-# calls set_working, then switches back after
-end
-
-g.with_temp_working(dir) do
-  g.checkout_index(:prefix => dir, :path_limiter => path)
-  # do file work
-  g.commit # commits to index
-end
-```
-
-## Ruby version support policy
+## Project Policies
+
+These documents set expectations for behavior, contribution workflows, AI-assisted
+changes, decision making, maintainer roles, and licensing. Please review them before
+opening issues or pull requests.
+
+| Document | Description |
+| -------- | ----------- |
+| [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) | We follow the Ruby community Code of Conduct; expect respectful, harassment-free participation and report concerns to maintainers. |
+| [CONTRIBUTING](CONTRIBUTING.md) | How to report issues, submit PRs with Conventional Commits, meet coding/testing standards, and follow the Code of Conduct. |
+| [AI_POLICY](AI_POLICY.md) | AI-assisted contributions are welcome. Contributors are expected to read and apply the AI Policy, and ensure any AI-assisted work meets our quality, security, and licensing standards. |
+| [Ruby version support policy](#ruby-version-support-policy) | Supported Ruby runtimes and platforms; bump decisions and CI coverage expectations. |
+| [Git version support policy](#git-version-support-policy) | Minimum supported git version and how version bumps are communicated and enforced. |
+| [GOVERNANCE](GOVERNANCE.md) | Principles-first governance defining maintainer/project lead roles, least-privilege access, consensus/majority decisions, and nomination/emeritus steps. |
+| [MAINTAINERS](MAINTAINERS.md) | Lists active maintainers (Project Lead noted) and emeritus alumni with links; see governance for role scope. |
+| [LICENSE](LICENSE) | MIT License terms for using, modifying, and redistributing this project. |
+
+### Ruby Version Support Policy
 
 This gem is expected to function correctly on:
 
@@ -590,7 +614,7 @@ the [process_executer](https://github.com/main-branch/process_executer) gem prop
 supports subprocess status reporting on JRuby for Windows (see
 [main-branch/process_executer#156](https://github.com/main-branch/process_executer/issues/156)).
 
-## Git version support policy
+### Git Version Support Policy
 
 This gem requires git version 2.28.0 or greater as specified in the gemspec. This
 requirement reflects:
@@ -608,21 +632,6 @@ The supported git version may be increased in future major or minor releases of 
 gem as new git features are adopted or as maintaining backward compatibility becomes
 impractical. Such changes will be clearly documented in the CHANGELOG and release
 notes.
-
-## Project policies
-
-These documents set expectations for behavior, contribution workflows, AI-assisted
-changes, decision making, maintainer roles, and licensing. Please review them before
-opening issues or pull requests.
-
-| Document | Description |
-| -------- | ----------- |
-| [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) | We follow the Ruby community Code of Conduct; expect respectful, harassment-free participation and report concerns to maintainers. |
-| [CONTRIBUTING](CONTRIBUTING.md) | How to report issues, submit PRs with Conventional Commits, meet coding/testing standards, and follow the Code of Conduct. |
-| [AI_POLICY](AI_POLICY.md) | AI-assisted contributions are welcome<br>Please read and apply the AI Policy, and ensure any AI-assisted work meets our quality, security, and licensing standards. |
-| [GOVERNANCE](GOVERNANCE.md) | Principles-first governance defining maintainer/project lead roles, least-privilege access, consensus/majority decisions, and nomination/emeritus steps. |
-| [MAINTAINERS](MAINTAINERS.md) | Lists active maintainers (Project Lead noted) and emeritus alumni with links; see governance for role scope. |
-| [LICENSE](LICENSE) | MIT License terms for using, modifying, and redistributing this project. |
 
 ## 📢 Project Announcements 📢
 
