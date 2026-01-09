@@ -21,4 +21,5 @@ their past contributions.
 - [Vern Burton](https://github.com/tarcinil)
 - [Daniel Perez](https://github.com/dpmex4527)
 - [Richard Vodden](https://github.com/rvodden)
+- [Roberto Decurnex](https://github.com/robertodecurnex)
 - [Scott Chacon](https://github.com/schacon) (original creator)
