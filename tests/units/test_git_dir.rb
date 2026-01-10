@@ -8,14 +8,14 @@ class TestGitDir < Test::Unit::TestCase
       Dir.mktmpdir do |git_dir|
         git = Git.open(work_tree, repository: git_dir)
 
-        assert_equal(work_tree, git.dir.path)
-        assert_equal(git_dir, git.repo.path)
+        assert_equal(work_tree, git.dir.to_s)
+        assert_equal(git_dir, git.repo.to_s)
 
         # Since :index was not given in the options to Git#open, index should
         # be defined automatically based on the git_dir.
         #
         index = File.join(git_dir, 'index')
-        assert_equal(index, git.index.path)
+        assert_equal(index, git.index.to_s)
       end
     end
   end
@@ -31,8 +31,8 @@ class TestGitDir < Test::Unit::TestCase
         FileUtils.cp_r(Dir["#{source_git_dir}/*"], git_dir, preserve: true)
         git = Git.open(work_tree, repository: git_dir)
 
-        assert_equal(work_tree, git.dir.path)
-        assert_equal(git_dir, git.repo.path)
+        assert_equal(work_tree, git.dir.to_s)
+        assert_equal(git_dir, git.repo.to_s)
 
         # Reconstitute the work tree from the bare repository
         #

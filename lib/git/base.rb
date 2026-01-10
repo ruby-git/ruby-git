@@ -195,7 +195,7 @@ module Git
     #   :fetch => true
     #   :track => <branch_name>
     def add_remote(name, url, opts = {})
-      url = url.repo.path if url.is_a?(Git::Base)
+      url = url.repo.to_s if url.is_a?(Git::Base)
       lib.remote_add(name, url, opts)
       Git::Remote.new(self, name)
     end
@@ -210,8 +210,8 @@ module Git
     #    @git.commit('message')
     #  end
     def chdir # :yields: the Git::Path
-      Dir.chdir(dir.path) do
-        yield dir.path
+      Dir.chdir(dir.to_s) do
+        yield dir.to_s
       end
     end
 
@@ -558,7 +558,7 @@ module Git
     #  @git.set_remote_url('scotts_git', 'git://repo.or.cz/rubygit.git')
     #
     def set_remote_url(name, url)
-      url = url.repo.path if url.is_a?(Git::Base)
+      url = url.repo.to_s if url.is_a?(Git::Base)
       lib.remote_set_url(name, url)
       Git::Remote.new(self, name)
     end

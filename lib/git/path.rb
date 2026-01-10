@@ -7,7 +7,13 @@ module Git
   # directory or index file.
   #
   class Path
-    attr_accessor :path
+    def path
+      Git::Deprecation.warn(
+        'The .path accessor is deprecated and will be removed in v5.0. ' \
+        'Use .to_s instead.'
+      )
+      @path
+    end
 
     def initialize(path, must_exist: true)
       path = File.expand_path(path)

@@ -69,7 +69,7 @@ class TestDeprecations < Test::Unit::TestCase
       )
 
       @git.set_working(dir, false, must_exist: true)
-      assert_equal(dir, @git.dir.path)
+      assert_equal(dir, @git.dir.to_s)
     end
   end
 
@@ -183,5 +183,34 @@ class TestDeprecations < Test::Unit::TestCase
     )
 
     assert_equal(true, Git::Lib.warn_if_old_command(@git.lib))
+  end
+
+  # --- Git::Path deprecations ---
+
+  def test_working_directory_path_accessor_deprecation
+    Git::Deprecation.expects(:warn).with(
+      'The .path accessor is deprecated and will be removed in v5.0. ' \
+      'Use .to_s instead.'
+    )
+
+    @git.dir.path
+  end
+
+  def test_index_path_accessor_deprecation
+    Git::Deprecation.expects(:warn).with(
+      'The .path accessor is deprecated and will be removed in v5.0. ' \
+      'Use .to_s instead.'
+    )
+
+    @git.index.path
+  end
+
+  def test_repository_path_accessor_deprecation
+    Git::Deprecation.expects(:warn).with(
+      'The .path accessor is deprecated and will be removed in v5.0. ' \
+      'Use .to_s instead.'
+    )
+
+    @git.repo.path
   end
 end
