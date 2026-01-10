@@ -33,20 +33,20 @@ class SetWorkingTest < Test::Unit::TestCase
     repo.set_working(custom_working_path, must_exist: false)
 
     # Verification: The repo object should now point to the new working directory path.
-    assert_equal(custom_working_path, repo.dir.path, 'Working directory path should be updated to the custom path.')
+    assert_equal(custom_working_path, repo.dir.to_s, 'Working directory path should be updated to the custom path.')
   end
 
   # Tests that `set_working` successfully points to an existing directory
   # when `must_exist: true` is specified.
   def test_set_working_with_must_exist_true_for_existing_path
-    original_working_path = repo.dir.path
+    original_working_path = repo.dir.to_s
     assert(File.exist?(original_working_path), 'Precondition: Original working directory should exist.')
 
     # Action: Set the working directory to the same, existing path, explicitly requiring it to exist.
     repo.set_working(original_working_path, must_exist: true)
 
     # Verification: The working directory path should remain unchanged.
-    assert_equal(original_working_path, repo.dir.path, 'Working directory path should still be the original path.')
+    assert_equal(original_working_path, repo.dir.to_s, 'Working directory path should still be the original path.')
   end
 
   # Tests that `set_working` raises an ArgumentError when trying to point to a
@@ -77,7 +77,7 @@ class SetWorkingTest < Test::Unit::TestCase
     repo.set_working(custom_working_path, false)
 
     # Verification: The repo object should still point to the new working directory path.
-    assert_equal(custom_working_path, repo.dir.path, 'Working directory path should be updated even with deprecated argument.')
+    assert_equal(custom_working_path, repo.dir.to_s, 'Working directory path should be updated even with deprecated argument.')
     # Mocha automatically verifies the expectation at the end of the test.
   end
 end

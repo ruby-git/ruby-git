@@ -8,9 +8,9 @@ class TestInit < Test::Unit::TestCase
   def test_open_simple
     clone_working_repo
     g = Git.open(@wdir)
-    assert_match(/^C?:?#{@wdir}$/, g.dir.path)
-    assert_match(/^C?:?#{File.join(@wdir, '.git')}$/, g.repo.path)
-    assert_match(/^C?:?#{File.join(@wdir, '.git', 'index')}$/, g.index.path)
+    assert_match(/^C?:?#{@wdir}$/, g.dir.to_s)
+    assert_match(/^C?:?#{File.join(@wdir, '.git')}$/, g.repo.to_s)
+    assert_match(/^C?:?#{File.join(@wdir, '.git', 'index')}$/, g.index.to_s)
   end
 
   def test_open_from_non_root_dir
@@ -31,13 +31,13 @@ class TestInit < Test::Unit::TestCase
     clone_working_repo
     index = File.join(TEST_FIXTURES, 'index')
     g = Git.open @wdir, repository: BARE_REPO_PATH, index: index
-    assert_equal(g.repo.path, BARE_REPO_PATH)
-    assert_equal(g.index.path, index)
+    assert_equal(g.repo.to_s, BARE_REPO_PATH)
+    assert_equal(g.index.to_s, index)
   end
 
   def test_git_bare
     g = Git.bare BARE_REPO_PATH
-    assert_equal(g.repo.path, BARE_REPO_PATH)
+    assert_equal(g.repo.to_s, BARE_REPO_PATH)
   end
 
   # g = Git.init
@@ -90,7 +90,7 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co')
-      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.to_s, 'config')))
       assert(g.dir)
     end
   end
@@ -105,7 +105,7 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone_bare
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare.git', bare: true)
-      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.to_s, 'config')))
       assert_nil(g.dir)
     end
   end
@@ -113,7 +113,7 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone_mirror
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare.git', mirror: true)
-      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.to_s, 'config')))
       assert_nil(g.dir)
     end
   end
@@ -122,7 +122,7 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'config.git', config: 'receive.denyCurrentBranch=ignore')
       assert_equal('ignore', g.config['receive.denycurrentbranch'])
-      assert(File.exist?(File.join(g.repo.path, 'config')))
+      assert(File.exist?(File.join(g.repo.to_s, 'config')))
       assert(g.dir)
     end
   end

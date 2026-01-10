@@ -1709,9 +1709,9 @@ module Git
     end
 
     def initialize_from_base(base_object)
-      @git_dir = base_object.repo.path
-      @git_index_file = base_object.index&.path
-      @git_work_dir = base_object.dir&.path
+      @git_dir = base_object.repo.to_s
+      @git_index_file = base_object.index&.to_s
+      @git_work_dir = base_object.dir&.to_s
       @git_ssh = base_object.git_ssh
     end
 
