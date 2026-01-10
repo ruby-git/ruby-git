@@ -46,20 +46,20 @@ class SetIndexTest < Test::Unit::TestCase
     repo.set_index(custom_index_path, must_exist: false)
 
     # Verification: The repo object should now point to the new index path.
-    assert_equal(custom_index_path, repo.index.path, 'Index path should be updated to the custom path.')
+    assert_equal(custom_index_path, repo.index.to_s, 'Index path should be updated to the custom path.')
   end
 
   # Tests that `set_index` successfully points to an existing index file
   # when `must_exist: true` is specified.
   def test_set_index_with_must_exist_true_for_existing_path
-    original_index_path = repo.index.path
+    original_index_path = repo.index.to_s
     assert(File.exist?(original_index_path), 'Precondition: Original index file should exist.')
 
     # Action: Set the index to the same, existing path, explicitly requiring it to exist.
     repo.set_index(original_index_path, must_exist: true)
 
     # Verification: The index path should remain unchanged.
-    assert_equal(original_index_path, repo.index.path, 'Index path should still be the original path.')
+    assert_equal(original_index_path, repo.index.to_s, 'Index path should still be the original path.')
   end
 
   # Tests that `set_index` raises an ArgumentError when trying to point to a
@@ -90,7 +90,7 @@ class SetIndexTest < Test::Unit::TestCase
     repo.set_index(custom_index_path, false)
 
     # Verification: The repo object should still point to the new index path.
-    assert_equal(custom_index_path, repo.index.path, 'Index path should be updated even with deprecated argument.')
+    assert_equal(custom_index_path, repo.index.to_s, 'Index path should be updated even with deprecated argument.')
     # Mocha automatically verifies the expectation at the end of the test.
   end
 
@@ -110,7 +110,7 @@ class SetIndexTest < Test::Unit::TestCase
     # 3. Point the git object to use our custom index file.
     #    Since the file doesn't exist yet, we must pass `must_exist: false`.
     repo.set_index(custom_index_path, must_exist: false)
-    assert_equal(custom_index_path, repo.index.path, 'The git object should now be using the custom index.')
+    assert_equal(custom_index_path, repo.index.to_s, 'The git object should now be using the custom index.')
 
     # 4. Populate the new index by reading the tree from our initial commit into it.
     #    This stages all the files from the 'main' commit in our custom index.
