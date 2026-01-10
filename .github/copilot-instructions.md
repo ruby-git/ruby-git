@@ -2540,21 +2540,49 @@ automated releases based on conventional commits.
 
 **Branch Strategy:**
 
+This project maintains two active branches:
+
+- **`main`**: Active development for the next major version (v5.0.0+). May contain
+  breaking changes.
+- **`4.x`**: Maintenance branch for the v4.x release series. Bug fixes and
+  backward-compatible improvements only.
+
+**Important:** Never commit directly to `main` or `4.x`. All changes must be
+submitted via pull requests from feature branches. This ensures proper code review,
+CI validation, and maintains a clean commit history.
+
+**For new features and breaking changes (target `main`):**
+
 1. Ensure local main is up-to-date: `git fetch origin main`
 2. Create a new branch from origin/main: `git checkout -b feature/your-feature
    origin/main`
 3. Make your changes following TDD
 4. Ensure all tests pass and code quality checks pass
-5. Push the branch and create a PR
+5. Push the branch and create a PR targeting `main`
+
+**For bug fixes (target `main`, maintainers backport to `4.x` if applicable):**
+
+1. Ensure local main is up-to-date: `git fetch origin main`
+2. Create a new branch from origin/main: `git checkout -b fix/your-fix origin/main`
+3. Make your changes following TDD
+4. Push the branch and create a PR targeting `main`
+
+**For security fixes or 4.x-only changes (target `4.x`):**
+
+1. Ensure local 4.x is up-to-date: `git fetch origin 4.x`
+2. Create a new branch from origin/4.x: `git checkout -b fix/your-fix origin/4.x`
+3. Make your changes following TDD
+4. Push the branch and create a PR targeting `4.x`
 
 **When Submitting Existing Changes:**
 
-- Ensure changes are on a feature branch (not `main`), following the naming
+- Ensure changes are on a feature branch (not `main` or `4.x`), following the naming
   convention `<type>/<short-description>`
-- If changes are on the wrong branch, offer to create a new branch from
-  `origin/main` and relocate the user's existing work (commits or uncommitted
-  changes) onto that new branch, choosing an appropriate Git approach (for
-  example, cherry-pick, rebase, or recommitting) based on the situation
+- If changes are on the wrong branch, offer to create a new branch from the
+  appropriate base branch (`origin/main` or `origin/4.x`) and relocate the user's
+  existing work (commits or uncommitted changes) onto that new branch, choosing an
+  appropriate Git approach (for example, cherry-pick, rebase, or recommitting) based
+  on the situation
 
 **PR Creation Automation:**
 

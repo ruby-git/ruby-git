@@ -11,7 +11,7 @@ description: |
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "4.x"]
 
   workflow_dispatch:
 

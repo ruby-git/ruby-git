@@ -12,6 +12,7 @@
   - [Commit your changes to a fork of `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
   - [Create a pull request](#create-a-pull-request)
   - [Get your pull request reviewed](#get-your-pull-request-reviewed)
+- [Branch strategy](#branch-strategy)
 - [AI-assisted contributions](#ai-assisted-contributions)
 - [Design philosophy](#design-philosophy)
   - [Direct mapping to git commands](#direct-mapping-to-git-commands)
@@ -97,12 +98,31 @@ Once your pull request is ready for review, request a review from at least one
 [maintainer](MAINTAINERS.md) and any other contributors you deem necessary.
 
 During the review process, you may need to make additional commits, which should be
-squashed. Additionally, you may need to rebase your branch to the latest `master`
-branch if other changes have been merged.
+squashed. Additionally, you will need to rebase your branch to the latest version of
+the target branch (e.g., `main` or `4.x`) before merging.
 
 At least one approval from a project maintainer is required before your pull request
 can be merged. The maintainer is responsible for ensuring that the pull request meets
 [the project's coding standards](#coding-standards).
+
+## Branch strategy
+
+This project maintains two active branches:
+
+- **`main`**: Active development for the next major version (v5.0.0+). This branch
+  may contain breaking changes.
+- **`4.x`**: Maintenance branch for the v4.x release series. This branch receives
+  bug fixes and backward-compatible improvements only.
+
+**Important:** Never commit directly to `main` or `4.x`. All changes must be
+submitted via pull requests from feature branches. This ensures proper code review,
+CI validation, and maintains a clean commit history.
+
+When submitting a pull request:
+
+- **New features and breaking changes**: Target the `main` branch
+- **Bug fixes**: Target `main`, and maintainers will backport to `4.x` if applicable
+- **Security fixes**: Target both branches or `4.x` if the issue only affects v4.x
 
 ## AI-assisted contributions
 
