@@ -90,15 +90,23 @@ This will be implemented using `Data.define` or simple, frozen `Struct`s.
 
 For example, instead of returning a raw string, `repo.config('user.name')` will return a `Git::Config::Value` object containing the key, value, scope, and source path.
 
-### D. Clear Naming for Path Objects
+### D. Eliminate Custom Path Classes
 
-To improve clarity, all classes that represent filesystem paths will be renamed to follow a consistent `...Path` suffix convention.
+The existing path wrapper classes (`Git::WorkingDirectory`, `Git::Index`, `Git::Repository`, and their base class `Git::Path`) provide minimal value over Ruby's standard library. These classes will be eliminated entirely.
 
-- `Git::WorkingDirectory` -> `Git::WorkingTreePath`
+- `Git::Path` -> **Removed**
+- `Git::WorkingDirectory` -> **Removed**
+- `Git::Index` -> **Removed**
+- `Git::Repository` (the path class) -> **Removed**
 
-- `Git::Index` -> `Git::IndexPath`
+Instead, the `dir`, `repo`, and `index` accessors on the repository object will return `Pathname` objects directly. This provides:
 
-- The old `Git::Repository` (representing the .git directory/file) -> `Git::RepositoryPath`
+- Built-in `readable?` and `writable?` methods (preserving existing API)
+- Automatic path expansion and normalization
+- Seamless string coercion via `to_s` and `to_path`
+- No custom classes to maintain
+
+**Breaking change:** Code using `.path` (e.g., `g.dir.path`) must change to `.to_s` or use the `Pathname` directly. String interpolation and most other uses will continue to work unchanged.
 
 ## 4. Testing Strategy Overhaul
 

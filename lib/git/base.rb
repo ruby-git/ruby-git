@@ -2,6 +2,7 @@
 
 require 'logger'
 require 'open3'
+require 'pathname'
 
 module Git
   # The main public interface for interacting with Git commands
@@ -195,7 +196,7 @@ module Git
     #   :fetch => true
     #   :track => <branch_name>
     def add_remote(name, url, opts = {})
-      url = url.repo.path if url.is_a?(Git::Base)
+      url = url.repo.to_s if url.is_a?(Git::Base)
       lib.remote_add(name, url, opts)
       Git::Remote.new(self, name)
     end
@@ -209,9 +210,9 @@ module Git
     #    @git.add
     #    @git.commit('message')
     #  end
-    def chdir # :yields: the Git::Path
-      Dir.chdir(dir.path) do
-        yield dir.path
+    def chdir # :yields: the working directory Pathname
+      Dir.chdir(dir.to_s) do
+        yield dir
       end
     end
 
@@ -233,18 +234,31 @@ module Git
       end
     end
 
-    # returns a reference to the working directory
-    #  @git.dir.path
-    #  @git.dir.writeable?
+    # Returns a reference to the working directory
+    #
+    # @example
+    #   @git.dir.to_s
+    #   @git.dir.writable?
+    #
+    # @return [Pathname] the working directory path
+    #
     def dir
       @working_directory
     end
 
-    # returns reference to the git index file
+    # Returns a reference to the git index file
+    #
+    # @return [Pathname] the index file path
+    #
     attr_reader :index
 
-    # returns reference to the git repository directory
-    #  @git.dir.path
+    # Returns a reference to the git repository directory
+    #
+    # @example
+    #   @git.repo.to_s
+    #
+    # @return [Pathname] the repository directory path
+    #
     def repo
       @repository
     end
@@ -259,34 +273,37 @@ module Git
                .sum { |file| File.stat(file).size.to_i }
     end
 
-    def set_index(index_file, check = nil, must_exist: nil)
+    private
+
+    def deprecate_check_argument(check, must_exist)
       unless check.nil?
         Git::Deprecation.warn(
           'The "check" argument is deprecated and will be removed in a future version. ' \
           'Use "must_exist:" instead.'
         )
       end
-
       # default is true
-      must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
+      must_exist.nil? && check.nil? ? true : must_exist | check
+    end
 
+    def validate_path(path, must_exist)
+      Pathname.new(File.expand_path(path.to_s)).tap do |expanded_path|
+        raise ArgumentError, "path does not exist: #{expanded_path}" if must_exist && !expanded_path.exist?
+      end
+    end
+
+    public
+
+    def set_index(index_file, check = nil, must_exist: nil)
+      must_exist = deprecate_check_argument(check, must_exist)
       @lib = nil
-      @index = Git::Index.new(index_file.to_s, must_exist:)
+      @index = validate_path(index_file, must_exist)
     end
 
     def set_working(work_dir, check = nil, must_exist: nil)
-      unless check.nil?
-        Git::Deprecation.warn(
-          'The "check" argument is deprecated and will be removed in a future version. ' \
-          'Use "must_exist:" instead.'
-        )
-      end
-
-      # default is true
-      must_exist = must_exist.nil? && check.nil? ? true : must_exist | check
-
+      must_exist = deprecate_check_argument(check, must_exist)
       @lib = nil
-      @working_directory = Git::WorkingDirectory.new(work_dir.to_s, must_exist:)
+      @working_directory = validate_path(work_dir, must_exist)
     end
 
     # returns +true+ if the branch exists locally
@@ -558,7 +575,7 @@ module Git
     #  @git.set_remote_url('scotts_git', 'git://repo.or.cz/rubygit.git')
     #
     def set_remote_url(name, url)
-      url = url.repo.path if url.is_a?(Git::Base)
+      url = url.repo.to_s if url.is_a?(Git::Base)
       lib.remote_set_url(name, url)
       Git::Remote.new(self, name)
     end
@@ -774,7 +791,7 @@ module Git
       lib.ls_files(location)
     end
 
-    def with_working(work_dir) # :yields: the Git::WorkingDirectory
+    def with_working(work_dir) # :yields: the working directory Pathname
       return_value = false
       old_working = @working_directory
       set_working(work_dir)
@@ -982,9 +999,9 @@ module Git
     # Initializes the core git objects based on the provided options
     # @param options [Hash] The processed options hash.
     def initialize_components(options)
-      @working_directory = Git::WorkingDirectory.new(options[:working_directory]) if options[:working_directory]
-      @repository = Git::Repository.new(options[:repository]) if options[:repository]
-      @index = Git::Index.new(options[:index], must_exist: false) if options[:index]
+      @working_directory = Pathname.new(options[:working_directory]) if options[:working_directory]
+      @repository = Pathname.new(options[:repository]) if options[:repository]
+      @index = Pathname.new(options[:index]) if options[:index]
     end
 
     # Normalize options before they are sent to Git::Base.new

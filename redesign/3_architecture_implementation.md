@@ -19,15 +19,18 @@ This document outlines a step-by-step plan to implement the proposed architectur
 
      - `lib/git/repository/` (for the facade modules)
 
-2. **Rename Path Classes**:
+2. **Eliminate Custom Path Classes**:
 
-   - Perform a project-wide, safe rename of the existing path-related classes. This is a low-risk mechanical change.
+   - Remove the path wrapper classes entirely and replace them with `Pathname` objects:
 
-     - `Git::WorkingDirectory` -> `Git::WorkingTreePath`
+     - Delete `Git::Path` (`lib/git/path.rb`)
+     - Delete `Git::WorkingDirectory` (`lib/git/working_directory.rb`)
+     - Delete `Git::Index` (`lib/git/index.rb`)
+     - Delete `Git::Repository` (`lib/git/repository.rb`) - the path class, not the new facade
 
-     - `Git::Index` -> `Git::IndexPath`
+   - Update `Git::Base` to store paths as `Pathname` objects directly.
 
-     - `Git::Repository` -> `Git::RepositoryPath`
+   - Update tests to use `Pathname` methods (`.to_s` instead of `.path`).
 
    - Run the test suite to ensure everything still works as expected.
 

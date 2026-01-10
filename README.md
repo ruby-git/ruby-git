@@ -190,11 +190,11 @@ Here are the operations that need read permission only:
 ```ruby
 repo = Git.open(working_dir, :log => Logger.new(STDOUT))
 
-repo.index
-repo.index.readable?
-repo.index.writable?
-repo.repo
-repo.dir
+repo.index            # Pathname to the index file
+repo.index.readable?  # check if index is readable
+repo.index.writable?  # check if index is writable
+repo.repo             # Pathname to the .git directory
+repo.dir              # Pathname to the working directory
 
 # ls-tree with recursion into subtrees (list files)
 repo.ls_tree("HEAD", recursive: true)

@@ -54,8 +54,8 @@ class TestRemotes < Test::Unit::TestCase
       local.set_remote_url('testremote', remote2)
 
       assert(local.remotes.map(&:name).include?('testremote'))
-      assert(local.remote('testremote').url != remote1.repo.path)
-      assert(local.remote('testremote').url == remote2.repo.path)
+      assert(local.remote('testremote').url != remote1.repo.to_s)
+      assert(local.remote('testremote').url == remote2.repo.to_s)
     end
   end
 
@@ -114,7 +114,7 @@ class TestRemotes < Test::Unit::TestCase
         upstream.checkout(default_branch)
       end
 
-      local = Git.clone(upstream.dir.path, 'local', branch: upstream.current_branch, single_branch: true)
+      local = Git.clone(upstream.dir.to_s, 'local', branch: upstream.current_branch, single_branch: true)
       fetch_refspec = "+refs/heads/#{upstream.current_branch}:refs/remotes/origin/#{upstream.current_branch}"
       local.config('remote.origin.fetch', fetch_refspec)
 
@@ -142,7 +142,7 @@ class TestRemotes < Test::Unit::TestCase
         upstream.checkout(default_branch)
       end
 
-      local = Git.clone(upstream.dir.path, 'local', branch: upstream.current_branch, single_branch: true)
+      local = Git.clone(upstream.dir.to_s, 'local', branch: upstream.current_branch, single_branch: true)
 
       # create multiple fetch refspecs to ensure a replace operation is observable
       local.remote_set_branches('origin', upstream.current_branch, add: true)
