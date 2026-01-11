@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.1.3](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v4.1.3) (2026-01-11)
+
+
+### Other Changes
+
+* Mark main releases as prerelease ([1dca79a](https://github.com/ruby-git/ruby-git/commit/1dca79a8cb4827e4954f04d2918ccfb8a1737dba))
+
 ## [4.1.2](https://github.com/ruby-git/ruby-git/compare/v4.1.1...v4.1.2) (2026-01-10)
 
 
