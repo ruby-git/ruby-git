@@ -5,6 +5,19 @@
 
 # Change Log
 
+## [4.2.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v4.2.0) (2026-01-11)
+
+
+### Features
+
+* Add deprecation warning for .path accessor ([8af4543](https://github.com/ruby-git/ruby-git/commit/8af4543a25a46bf40ed7a05b31cea1a5b17e3f0b))
+
+
+### Other Changes
+
+* Add target-branch to release-please action ([13e041e](https://github.com/ruby-git/ruby-git/commit/13e041ebb76587b90549896a4c9b9b872f60696a))
+* Set 4.x manifest to start from 4.1.1 ([1ccee62](https://github.com/ruby-git/ruby-git/commit/1ccee62cdd832a6de2307b0a61ceb593548e7fe1))
+
 ## [4.1.2](https://github.com/ruby-git/ruby-git/compare/v4.1.1...v4.1.2) (2026-01-10)
 
 
