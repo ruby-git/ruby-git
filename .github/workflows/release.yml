@@ -37,9 +37,8 @@ jobs:
         id: release
         with:
           token: ${{ secrets.AUTO_RELEASE_TOKEN }}
-          config-file: release-please-config.json
+          config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
-          prerelease: true
 
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
