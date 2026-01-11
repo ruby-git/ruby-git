@@ -56,7 +56,7 @@ class TestDeprecations < Test::Unit::TestCase
 
     # Ensure must_exist is provided to avoid nil | check
     @git.set_index(tmp.path, false, must_exist: true)
-    assert_instance_of(Git::Index, @git.index)
+    assert_instance_of(Pathname, @git.index)
   ensure
     tmp&.unlink
   end
@@ -69,7 +69,7 @@ class TestDeprecations < Test::Unit::TestCase
       )
 
       @git.set_working(dir, false, must_exist: true)
-      assert_equal(dir, @git.dir.path)
+      assert_equal(dir, @git.dir.to_s)
     end
   end
 

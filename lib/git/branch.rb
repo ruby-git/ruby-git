@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/path'
-
 module Git
   # Represents a Git branch
   class Branch
