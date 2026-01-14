@@ -277,6 +277,20 @@ repo.worktrees.each do |worktree|
   worktree.to_s
 end
 
+# Check repository integrity with fsck
+result = repo.fsck
+result.dangling.each { |obj| puts "dangling #{obj.type}: #{obj.sha}" }
+result.missing.each { |obj| puts "missing #{obj.type}: #{obj.sha}" }
+
+# Check if repository has any issues
+puts "Repository is clean" if result.empty?
+
+# fsck with options
+result = repo.fsck(unreachable: true, strict: true)
+
+# Suppress dangling object output
+result = repo.fsck(dangling: false)
+
 repo.config('user.name')  # returns 'Scott Chacon'
 repo.config # returns whole config hash
 
