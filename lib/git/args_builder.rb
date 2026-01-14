@@ -12,6 +12,14 @@ module Git
     ARG_BUILDERS = {
       boolean: ->(config, value) { value ? config[:flag] : [] },
 
+      boolean_negatable: lambda do |config, value|
+        case value
+        when true then config[:flag]
+        when false then config[:flag].sub('--', '--no-')
+        else []
+        end
+      end,
+
       valued_equals: ->(config, value) { "#{config[:flag]}=#{value}" if value },
 
       valued_space: ->(config, value) { [config[:flag], value.to_s] if value },

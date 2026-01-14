@@ -9,4 +9,4 @@
 # Offense count: 2
 # Configuration parameters: CountComments, CountAsOne.
 Metrics/ClassLength:
-  Max: 1150
+  Max: 1160
