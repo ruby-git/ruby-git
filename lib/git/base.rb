@@ -654,6 +654,57 @@ module Git
       lib.gc
     end
 
+    # Verifies the connectivity and validity of objects in the database
+    #
+    # Runs `git fsck` to check repository integrity and identify dangling,
+    # missing, or unreachable objects.
+    #
+    # @overload fsck(objects = [], options = {})
+    #   @param objects [Array<String>] specific objects to treat as heads for unreachability trace.
+    #     If no objects are given, git fsck defaults to using the index file, all SHA-1
+    #     references in the refs namespace, and all reflogs.
+    #   @param [Hash] options options to pass to the underlying `git fsck` command
+    #
+    #   @option options [Boolean] :unreachable print unreachable objects
+    #   @option options [Boolean] :strict enable strict checking
+    #   @option options [Boolean] :connectivity_only check only connectivity (faster)
+    #   @option options [Boolean] :root report root nodes
+    #   @option options [Boolean] :tags report tags
+    #   @option options [Boolean] :cache consider objects in the index
+    #   @option options [Boolean] :no_reflogs do not consider reflogs
+    #   @option options [Boolean] :lost_found write dangling objects to .git/lost-found
+    #     (note: this modifies the repository by creating files)
+    #   @option options [Boolean, nil] :dangling print dangling objects (true/false/nil for default)
+    #   @option options [Boolean, nil] :full check objects in alternate pools (true/false/nil for default)
+    #   @option options [Boolean, nil] :name_objects name objects by refs (true/false/nil for default)
+    #   @option options [Boolean, nil] :references check refs database consistency (true/false/nil for default)
+    #
+    #   @return [Git::FsckResult] categorized objects flagged by fsck
+    #
+    #   @example Check repository integrity
+    #     result = git.fsck
+    #     result.dangling.each { |obj| puts "#{obj.type}: #{obj.sha}" }
+    #
+    #   @example Check with strict mode and suppress dangling output
+    #     result = git.fsck(strict: true, dangling: false)
+    #
+    #   @example Check if repository has any issues
+    #     result = git.fsck
+    #     puts "Repository is clean" if result.empty?
+    #
+    #   @example List root commits
+    #     result = git.fsck(root: true)
+    #     result.root.each { |obj| puts obj.sha }
+    #
+    #   @example Check specific objects
+    #     result = git.fsck('abc1234', 'def5678')
+    #
+    # rubocop:disable Style/ArgumentsForwarding
+    def fsck(*objects, **opts)
+      lib.fsck(*objects, **opts)
+    end
+    # rubocop:enable Style/ArgumentsForwarding
+
     def apply(file)
       return unless File.exist?(file)
 
