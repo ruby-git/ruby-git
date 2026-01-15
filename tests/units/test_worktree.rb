@@ -196,7 +196,7 @@ class TestWorktree < Test::Unit::TestCase
         File.write('VERSION', "1.0\n")
         `git add VERSION`
         `git commit -m "init commit"`
-        `git checkout -b new_branch`
+        `git checkout -b new_branch 2>#{File::NULL}`
         File.write('VERSION', "2.0\n")
         `git add VERSION`
         `git commit -m "new version"`
