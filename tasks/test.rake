@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-desc 'Run Unit Tests'
+desc 'Run Unit Tests (TestUnit)'
 task :test do
   sh 'ruby bin/test'
 
@@ -10,4 +10,10 @@ task :test do
   # $ bin/test test_archive.rb
   #
   # $ bin/test test_archive.rb test_object.rb
+end
+
+desc 'Run all tests (TestUnit and RSpec)'
+task :test_all do
+  Rake::Task[:test].invoke
+  Rake::Task[:spec].invoke if Rake::Task.task_defined?(:spec)
 end

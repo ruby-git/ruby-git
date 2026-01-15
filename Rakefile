@@ -7,6 +7,7 @@ Dir.glob('tasks/**/*.rake').each { |r| load r }
 
 default_tasks = []
 default_tasks << :test if Rake::Task.task_defined?(:test)
+default_tasks << :spec if Rake::Task.task_defined?(:spec)
 default_tasks << :rubocop if Rake::Task.task_defined?(:rubocop)
 default_tasks << :yard if Rake::Task.task_defined?(:yard)
 default_tasks << :'yardstick:coverage' if Rake::Task.task_defined?(:'yardstick:coverage')
