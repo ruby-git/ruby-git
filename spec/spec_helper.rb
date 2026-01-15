@@ -1,0 +1,61 @@
+# frozen_string_literal: true
+
+# Configure RSpec
+RSpec.configure do |config|
+  # Enable flags like --only-failures and --next-failure
+  config.example_status_persistence_file_path = '.rspec_status'
+
+  # Disable RSpec exposing methods globally on `Module` and `main`
+  config.disable_monkey_patching!
+
+  # Configure expectations
+  config.expect_with :rspec do |expectations|
+    expectations.syntax = :expect
+  end
+
+  # Use the documentation formatter for detailed output
+  config.default_formatter = 'doc' if config.files_to_run.one?
+
+  # Run specs in random order to surface order dependencies
+  config.order = :random
+  Kernel.srand config.seed
+
+  # Configure mocking
+  config.mock_with :rspec do |mocks|
+    # Prevent mocking or stubbing of methods that don't exist
+    mocks.verify_partial_doubles = true
+  end
+
+  # Shared setup for all specs
+  config.before(:each) do
+    # Any global setup can go here
+  end
+
+  # Shared teardown for all specs
+  config.after(:each) do
+    # Any global teardown can go here
+  end
+end
+
+# SimpleCov configuration
+#
+require 'simplecov'
+require 'simplecov-lcov'
+require 'simplecov-rspec'
+
+def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
+
+if ci_build?
+  SimpleCov.formatters = [
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::LcovFormatter
+  ]
+end
+
+SimpleCov::RSpec.start(
+  coverage_threshold: 100,
+  fail_on_low_coverage: false,
+  list_uncovered_lines: ci_build?
+)
+
+require 'git'

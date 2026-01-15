@@ -12,3 +12,6 @@ node_modules
 package-lock.json
 ai-prompt.erb
 rubocop-report.json
+
+# rspec failure tracking
+.rspec_status
