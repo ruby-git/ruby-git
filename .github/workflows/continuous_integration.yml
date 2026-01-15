@@ -53,3 +53,37 @@ jobs:
 
       - name: Test Gem
         run: bundle exec rake test:gem
+
+  # Experimental: TruffleRuby with pre-built container (for speed comparison)
+  build-truffleruby-container:
+    name: Ruby truffleruby-24.2.2 (container) on ubuntu-latest
+
+    # Skip this job if triggered by a release PR
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && !startsWith(github.event.pull_request.head.ref, 'release-please--'))
+
+    runs-on: ubuntu-latest
+    # Use flavorjones/truffleruby - Debian-based with buildpack-deps (git + build tools included)
+    container: ghcr.io/flavorjones/truffleruby:24.2.2
+    continue-on-error: true  # Experimental, don't block CI
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # No setup-ruby needed - TruffleRuby is pre-installed in the container
+      # No system deps install needed - buildpack-deps includes git and build tools
+
+      # Fix git "dubious ownership" error in container
+      - name: Configure Git Safe Directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install Dependencies
+        run: bundle install
+
+      - name: Run Build
+        run: bundle exec rake default
+
+      - name: Test Gem
+        run: bundle exec rake test:gem
