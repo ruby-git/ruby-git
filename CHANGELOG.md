@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.3.0](https://github.com/ruby-git/ruby-git/compare/v4.2.0...v4.3.0) (2026-01-15)
+
+
+### Features
+
+* Add support for git fsck command ([c402003](https://github.com/ruby-git/ruby-git/commit/c402003ce0c626a5c4737838cddc4b932638c172)), closes [#218](https://github.com/ruby-git/ruby-git/issues/218)
+
 ## [4.2.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v4.2.0) (2026-01-11)
 
 
