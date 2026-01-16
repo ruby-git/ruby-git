@@ -2208,6 +2208,9 @@ module Git
       result.stdout
     end
 
+    # Make command public for use by Git::Commands classes
+    public :command
+
     # Takes the diff command line output (as Array) and parse it into a Hash
     #
     # @param [String] diff_command the diff commadn to be used

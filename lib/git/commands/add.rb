@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'git/args_builder'
+
 module Git
   module Commands
     # Implements the `git add` command
@@ -48,7 +50,7 @@ module Git
         args << '--'
         args.concat(Array(paths))
 
-        run_command('add', *args)
+        @execution_context.command('add', *args)
       end
 
       private
@@ -60,18 +62,6 @@ module Git
       #
       def build_args(options)
         Git::ArgsBuilder.new(options, OPTION_MAP).build
-      end
-
-      # Run a git command through the execution context
-      #
-      # Uses send to access the private command method during the transition period.
-      # Once ExecutionContext is fully implemented, this can be changed to a direct call.
-      #
-      # @param args [Array] the command and arguments to pass to git
-      # @return [String] the command output
-      #
-      def run_command(...)
-        @execution_context.send(:command, ...)
       end
     end
   end
