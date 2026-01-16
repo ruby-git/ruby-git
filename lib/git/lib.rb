@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'args_builder'
+require_relative 'commands/add'
+require_relative 'commands/fsck'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1522,37 +1524,20 @@ module Git
       command('gc', '--prune', '--aggressive', '--auto')
     end
 
-    FSCK_OPTION_MAP = [
-      { flag: '--no-progress', type: :static },
-      { keys: [:unreachable],       flag: '--unreachable',       type: :boolean },
-      { keys: [:strict],            flag: '--strict',            type: :boolean },
-      { keys: [:connectivity_only], flag: '--connectivity-only', type: :boolean },
-      { keys: [:root],              flag: '--root',              type: :boolean },
-      { keys: [:tags],              flag: '--tags',              type: :boolean },
-      { keys: [:cache],             flag: '--cache',             type: :boolean },
-      { keys: [:no_reflogs],        flag: '--no-reflogs',        type: :boolean },
-      { keys: [:lost_found],        flag: '--lost-found',        type: :boolean },
-      { keys: [:dangling],          flag: '--dangling',          type: :boolean_negatable },
-      { keys: [:full],              flag: '--full',              type: :boolean_negatable },
-      { keys: [:name_objects],      flag: '--name-objects',      type: :boolean_negatable },
-      { keys: [:references],        flag: '--references',        type: :boolean_negatable }
-    ].freeze
-
+    # Execute git fsck to verify repository integrity
+    #
+    # @param objects [Array<String>] optional object identifiers to check
+    # @param opts [Hash] command options (see {Git::Commands::Fsck#call})
+    #
+    # @return [Git::FsckResult] the structured result
+    #
+    # @note This method delegates to {Git::Commands::Fsck}
+    #
+    # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
-      args = ArgsBuilder.build(opts, FSCK_OPTION_MAP)
-      args.concat(objects) unless objects.empty?
-      # fsck returns non-zero exit status when issues are found:
-      # 1 = errors found, 2 = missing objects, 4 = warnings
-      # We still want to parse the output in these cases
-      output = begin
-        command('fsck', *args)
-      rescue Git::FailedError => e
-        raise unless [1, 2, 4].include?(e.result.status.exitstatus)
-
-        e.result.stdout
-      end
-      parse_fsck_output(output)
+      Git::Commands::Fsck.new(self).call(*objects, **opts)
     end
+    # rubocop:enable Style/ArgumentsForwarding
 
     READ_TREE_OPTION_MAP = [
       { keys: [:prefix], flag: '--prefix', type: :valued_equals }
@@ -1708,51 +1693,7 @@ module Git
       { keys: [:between], type: :custom, builder: ->(value) { "#{value[0]}..#{value[1]}" if value } }
     ].freeze
 
-    FSCK_OBJECT_PATTERN = /\A(dangling|missing|unreachable) (\w+) ([0-9a-f]{40})(?: \((.+)\))?\z/
-    FSCK_WARNING_PATTERN = /\Awarning in (\w+) ([0-9a-f]{40}): (.+)\z/
-    FSCK_ROOT_PATTERN = /\Aroot ([0-9a-f]{40})\z/
-    FSCK_TAGGED_PATTERN = /\Atagged (\w+) ([0-9a-f]{40}) \((.+)\) in ([0-9a-f]{40})\z/
-
-    private_constant :FSCK_OBJECT_PATTERN, :FSCK_WARNING_PATTERN, :FSCK_ROOT_PATTERN, :FSCK_TAGGED_PATTERN
-
     private
-
-    def parse_fsck_output(output)
-      result = { dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [] }
-      output.each_line { |line| parse_fsck_line(line.strip, result) }
-      Git::FsckResult.new(**result)
-    end
-
-    def parse_fsck_line(line, result)
-      parse_fsck_object_line(line, result) ||
-        parse_fsck_warning_line(line, result) ||
-        parse_fsck_root_line(line, result) ||
-        parse_fsck_tagged_line(line, result)
-    end
-
-    def parse_fsck_object_line(line, result)
-      return unless (match = FSCK_OBJECT_PATTERN.match(line))
-
-      result[match[1].to_sym] << Git::FsckObject.new(type: match[2].to_sym, sha: match[3], name: match[4])
-    end
-
-    def parse_fsck_warning_line(line, result)
-      return unless (match = FSCK_WARNING_PATTERN.match(line))
-
-      result[:warnings] << Git::FsckObject.new(type: match[1].to_sym, sha: match[2], message: match[3])
-    end
-
-    def parse_fsck_root_line(line, result)
-      return unless (match = FSCK_ROOT_PATTERN.match(line))
-
-      result[:root] << Git::FsckObject.new(type: :commit, sha: match[1])
-    end
-
-    def parse_fsck_tagged_line(line, result)
-      return unless (match = FSCK_TAGGED_PATTERN.match(line))
-
-      result[:tagged] << Git::FsckObject.new(type: match[1].to_sym, sha: match[2], name: match[3])
-    end
 
     def parse_diff_path_status(args)
       command_lines('diff', *args).each_with_object({}) do |line, memo|
