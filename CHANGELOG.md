@@ -5,6 +5,28 @@
 
 # Change Log
 
+## [5.0.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v5.0.0) (2026-01-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* The .path accessor has been removed. Use .to_s instead:   - repo.dir.path → repo.dir.to_s   - repo.index.path → repo.index.to_s   - repo.repo.path → repo.repo.to_s
+
+### Features
+
+* Add support for git fsck command ([96a0958](https://github.com/ruby-git/ruby-git/commit/96a09588f94ad270cae6e9e3c14fe39d8b141fa1)), closes [#218](https://github.com/ruby-git/ruby-git/issues/218)
+* Introduce Git::ExecutionContext and Git::Repository classes ([6163fa3](https://github.com/ruby-git/ruby-git/commit/6163fa371e08b95bcb59774919c035a53ef8fab2))
+
+
+### Other Changes
+
+* Configure prerelease releases ([94064ae](https://github.com/ruby-git/ruby-git/commit/94064ae4a90ab7448203bb59c0a4545efd8bb72e))
+* Mark main releases as prerelease ([1dca79a](https://github.com/ruby-git/ruby-git/commit/1dca79a8cb4827e4954f04d2918ccfb8a1737dba))
+* Replace path wrapper classes with Pathname ([c7b7b1f](https://github.com/ruby-git/ruby-git/commit/c7b7b1f1e782533140ba22b831385097da2e3d09))
+* Restructure CONTRIBUTING.md and link from copilot-instructions ([7e3481b](https://github.com/ruby-git/ruby-git/commit/7e3481b42b306ec00111cc91d6bd8ab282766ee8))
+* Set up RSpec testing environment ([452929a](https://github.com/ruby-git/ruby-git/commit/452929aa63d2fb022a107e441417e777de5c038f))
+* Silence superfluous test output ([1da9f66](https://github.com/ruby-git/ruby-git/commit/1da9f669409b9dfbfd248edac66d9e71aa9b0a47))
+
 ## [4.1.2](https://github.com/ruby-git/ruby-git/compare/v4.1.1...v4.1.2) (2026-01-10)
 
 
