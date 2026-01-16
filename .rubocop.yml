@@ -38,6 +38,7 @@ Metrics/BlockLength:
   Exclude:
     - "tests/test_helper.rb"
     - "tests/units/**/*"
+    - "spec/**/*"
     - "*.gemspec"
 
 # Don't force every test class to be described
