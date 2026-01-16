@@ -1097,11 +1097,6 @@ module Git
       command('config', '--global', name, value)
     end
 
-    ADD_OPTION_MAP = [
-      { keys: [:all], flag: '--all', type: :boolean },
-      { keys: [:force], flag: '--force', type: :boolean }
-    ].freeze
-
     # Update the index from the current worktree to prepare the for the next commit
     #
     # @example
@@ -1115,13 +1110,10 @@ module Git
     # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
     # @option options [Boolean] :force Allow adding otherwise ignored files
     #
+    # @note This method delegates to {Git::Commands::Add}
+    #
     def add(paths = '.', options = {})
-      args = build_args(options, ADD_OPTION_MAP)
-
-      args << '--'
-      args.concat(Array(paths))
-
-      command('add', *args)
+      Git::Commands::Add.new(self).call(paths, options)
     end
 
     RM_OPTION_MAP = [
