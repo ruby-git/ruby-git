@@ -15,16 +15,21 @@
 - [Branch strategy](#branch-strategy)
 - [AI-assisted contributions](#ai-assisted-contributions)
 - [Design philosophy](#design-philosophy)
-  - [Direct mapping to git commands](#direct-mapping-to-git-commands)
+- [Wrapping a git command](#wrapping-a-git-command)
+  - [Method placement](#method-placement)
+  - [Method naming](#method-naming)
   - [Parameter naming](#parameter-naming)
+  - [Parameter values](#parameter-values)
+    - [Options](#options)
+    - [Positional arguments](#positional-arguments)
   - [Output processing](#output-processing)
+  - [From design to implementation](#from-design-to-implementation)
+  - [Example implementations](#example-implementations)
 - [Coding standards](#coding-standards)
   - [Commit message guidelines](#commit-message-guidelines)
     - [What does this mean for contributors?](#what-does-this-mean-for-contributors)
     - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
   - [Unit tests](#unit-tests)
-  - [Continuous integration](#continuous-integration)
-  - [Documentation](#documentation)
 - [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
   - [Install pre-requisites](#install-pre-requisites)
   - [Obtain Git source code](#obtain-git-source-code)
@@ -44,8 +49,7 @@ If you have suggestions for improving these guidelines, please propose changes v
 pull request.
 
 Please also review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when
-participating in the project.
-Governance and maintainer expectations are described in
+participating in the project. Governance and maintainer expectations are described in
 [GOVERNANCE.md](GOVERNANCE.md).
 
 ## How to contribute
@@ -111,8 +115,8 @@ This project maintains two active branches:
 
 - **`main`**: Active development for the next major version (v5.0.0+). This branch
   may contain breaking changes.
-- **`4.x`**: Maintenance branch for the v4.x release series. This branch receives
-  bug fixes and backward-compatible improvements only.
+- **`4.x`**: Maintenance branch for the v4.x release series. This branch receives bug
+  fixes and backward-compatible improvements only.
 
 **Important:** Never commit directly to `main` or `4.x`. All changes must be
 submitted via pull requests from feature branches. This ensures proper code review,
@@ -126,15 +130,12 @@ When submitting a pull request:
 
 ## AI-assisted contributions
 
-AI-assisted contributions are welcome. Please review and apply our [AI Policy](AI_POLICY.md)
-before submitting changes. You are responsible for understanding and verifying any
-AI-assisted work included in PRs and ensuring it meets our standards for quality,
-security, and licensing.
+AI-assisted contributions are welcome. Please review and apply our [AI
+Policy](AI_POLICY.md) before submitting changes. You are responsible for
+understanding and verifying any AI-assisted work included in PRs and ensuring it
+meets our standards for quality, security, and licensing.
 
 ## Design philosophy
-
-*Note: As of v2.x of the `git` gem, this design philosophy is aspirational. Future
-versions may include interface changes to fully align with these principles.*
 
 The `git` gem is designed as a lightweight wrapper around the `git` command-line
 tool, providing Ruby developers with a simple and intuitive interface for
@@ -149,31 +150,176 @@ By following this philosophy, the `git` gem allows users to leverage their exist
 knowledge of Git while benefiting from the expressiveness and power of Ruby's syntax
 and paradigms.
 
-### Direct mapping to git commands
+## Wrapping a git command
 
-Git commands are implemented within the `Git::Base` class, with each method directly
-corresponding to a `git` command. When a `Git::Base` object is instantiated via
-`Git.open`, `Git.clone`, or `Git.init`, the user can invoke these methods to interact
-with the underlying Git repository.
+This section guides you through wrapping a git command. The first subsections focus
+on **API design**: where methods belong, how to name them, and how to handle
+parameters and output. These describe the public interface that gem users will see.
 
-For example, the `git add` command is implemented as `Git::Base#add`, and the `git
-ls-files` command is implemented as `Git::Base#ls_files`.
+[From design to implementation](#from-design-to-implementation) then shows how to
+structure your code using the gem's three-layer architecture, where `Git::Repository`
+methods are thin facades that delegate to internal command classes.
 
-When a single Git command serves multiple distinct purposes, method names within the
-`Git::Base` class should use the `git` command name as a prefix, followed by a
-descriptive suffix to indicate the specific function.
+### Method placement
 
-For instance, `#ls_files_untracked` and `#ls_files_staged` could be used to execute
-the `git ls-files` command and return untracked and staged files, respectively.
+When implementing a git command, first determine what type of command it is. This
+determines where to implement it in the Ruby API:
+
+**Repository factory methods** are implemented on the `Git` module. Use these to
+obtain a repository object for subsequent operations:
+
+```ruby
+repo = Git.clone('https://github.com/user/repo.git', 'local_path')
+repo = Git.init('new_repo')
+repo = Git.open('.')
+```
+
+**Repository-scoped commands** operate within a repository context. Implement these
+as `Git::Repository` instance methods:
+
+```ruby
+repo.add('file.txt')
+repo.commit('Add file')
+repo.log
+```
+
+**Non-repository commands** do not require a repository context. Implement these as
+methods on the `Git` module:
+
+```ruby
+Git.config_get('user.name', global: true)
+Git.config_set('user.email', 'user@example.com', global: true)
+```
+
+Some commands, like `git config`, can operate in multiple contexts:
+
+- **On the `Git` module**: A scope parameter (`global: true`, `system: true`) or
+  `file:` parameter is required. The `local:` and `worktree:` options are not allowed
+  since they require a repository.
+- **On a `Git::Repository` instance**: The command defaults to the repository's local
+  scope. The `worktree: true` option is also available.
+
+### Method naming
+
+Each method corresponds directly to a `git` command. For example, the `git add`
+command is implemented as `Git::Repository#add`, and the `git ls-files` command is
+implemented as `Git::Repository#ls_files`.
+
+When a single Git command serves multiple distinct purposes, method names should use
+the git command name as a prefix, followed by a descriptive suffix indicating the
+specific function. The suffix should correspond to the git option that distinguishes
+the behavior.
+
+For example, `git config` supports `--get`, `--set`, `--list`, `--unset`, and other
+options. These are implemented as separate methods:
+
+```ruby
+repo.config_get('user.name')              # git config --get user.name
+repo.config_set('user.name', 'Scott')     # git config user.name Scott
+repo.config_list                          # git config --list
+repo.config_unset('user.name')            # git config --unset user.name
+repo.config_get_all('remote.origin.url')  # git config --get-all remote.origin.url
+```
 
 To enhance usability, aliases may be introduced to provide more user-friendly method
 names where appropriate.
+
+See also [Output processing](#output-processing) for when different output formats
+require separate methods.
 
 ### Parameter naming
 
 Parameters within the `git` gem methods are named after their corresponding long
 command-line options, ensuring familiarity and ease of use for developers already
-accustomed to Git. Note that not all Git command options are supported.
+accustomed to Git.
+
+For example, `git config --global` becomes `global: true`, and `git config --file`
+becomes `file: '/path/to/config'`.
+
+As a lightweight wrapper, the gem passes options directly to the git command-line.
+This means git itself will validate option combinations and report errors. This
+approach is preferred as long as the error messages returned by git are actionable
+and understandable for users of the gem.
+
+When multiple options are mutually exclusive (like `--global`, `--local`,
+`--system`), only one may be specified. Providing more than one will raise an
+`ArgumentError`.
+
+Note that not all Git command options are supported.
+
+### Parameter values
+
+This section defines how git command-line options and positional arguments map to
+Ruby method parameters. Contributors must follow these conventions:
+
+#### Options
+
+Git command-line options are passed as keyword arguments in the Ruby API. Methods
+accept these via an options splat parameter (e.g., `def replace(object, replacement,
+**options)`). Each option is mapped to a keyword argument as described below.
+
+- **Boolean flags**: Git options like `--global` or `--bare` are mapped to `global:
+  true` or `bare: true`. Omit the key or use `false` to leave the flag unset.
+  - `git config --global` → `global: true`
+
+- **Negated boolean flags**: Options like `--no-reflogs` are mapped to `no_reflogs:
+  true`.
+  - `git branch --no-reflogs` → `no_reflogs: true`
+
+- **Value options**: Options that take a value, such as `--file <path>` or `--author
+  <name>`, are mapped as `file: '/path'`, `author: 'Name'`.
+  - `git config --file /tmp/config` → `file: '/tmp/config'`
+
+- **Options with optional values**: If a git option can be used as a flag or with a
+  value (e.g., `--color` or `--color=always`), use `color: true` for the flag form,
+  or `color: 'always'` for the value form.
+  - `git log --color` → `color: true`
+  - `git log --color=always` → `color: 'always'`
+
+- **List/array options**: Options that can be repeated or take multiple values (e.g.,
+  `--exclude <pattern>`, `--pathspec-from-file <file>`) are mapped to arrays:
+  `exclude: ['foo', 'bar']`.
+  - `git ls-files --exclude=foo --exclude=bar` → `exclude: ['foo', 'bar']`
+
+- **Key-value pair options**: Options like `-c key=value` are mapped as `c: { 'key'
+  => 'value' }` or as an array of pairs if multiple are allowed.
+  - `git -c user.name=Scott` → `c: { 'user.name' => 'Scott' }`
+
+- **Mutually exclusive options**: If options are mutually exclusive (e.g.,
+  `--global`, `--local`, `--system`), only one may be set to `true`. Setting more
+  than one raises `ArgumentError`.
+
+#### Positional arguments
+
+Arguments that are not options (e.g., file names, branch names) are passed as method
+arguments, not as keyword arguments.
+
+- **Only single-valued positional arguments**: If a command has one or more
+  single-valued positional arguments (e.g., `<arg1>` or `<arg1> <arg2>`), pass each
+  as a separate method argument, in the order they appear in the official git
+  documentation and CLI usage. Optional arguments (indicated by `[<arg>]`) should
+  default to `nil`.
+  - `git cmd <object>` → `def cmd(object)` (fictitious command)
+  - `git replace <object> <replacement>` → `def replace(object, replacement)`
+  - `git clone <repository> [<directory>]` → `def clone(repository, directory = nil)`
+
+- **Single multi-valued positional argument**: If a command has a single multi-valued
+  positional argument (e.g., `<pathspec>...` or `[<pathspec>...]`), use a splat
+  parameter to accept zero or more values (optional) or one or more values
+  (required).
+  - `git add [<pathspec>...]` → `def add(*paths)`
+
+- **Mixed single-valued and multi-valued positional arguments**: If a command has
+  both single-valued and multi-valued positional arguments (e.g., `<branch>
+  [<pathspec>...]`), accept the single-valued positional arguments first (with `nil`
+  for omitted optionals), and use a keyword argument with an empty array default for
+  the multi-valued argument. The keyword argument should accept either a single value
+  or an array. If a single value is provided, wrap it in an array internally.
+  - `git checkout [<branch>] [-- <pathspec>...]` → `def checkout(branch = nil,
+    pathspecs: [])`
+
+These conventions ensure the API is predictable and closely aligned with the git CLI.
+If a new option type is encountered, extend this section to document the mapping.
 
 ### Output processing
 
@@ -183,6 +329,129 @@ easier to work with programmatically.
 These Ruby objects often include methods that allow for further Git operations where
 useful, providing additional functionality while staying true to the underlying Git
 behavior.
+
+When a single git command can produce distinctly different output types based on its
+options, implement separate methods for each output type. Follow the same naming
+convention used for commands with multiple purposes: use the git command name as a
+prefix, followed by a suffix that describes the specific output type or
+functionality.
+
+For example, `git diff` can produce full diffs, statistical summaries, or path status
+information depending on the options used. These are implemented as separate methods:
+
+```ruby
+repo.diff_full('HEAD~1', 'HEAD')       # Full diff output (git diff -p)
+repo.diff_stats('HEAD~1', 'HEAD')      # Statistical summary (git diff --numstat)
+repo.diff_path_status('HEAD~1', 'HEAD') # File paths and status (git diff --name-status)
+```
+
+This approach ensures each method has a clear, predictable return type and allows for
+targeted parsing logic appropriate to each output format.
+
+### From design to implementation
+
+The gem uses a three-layer architecture that separates the public API from internal
+implementation:
+
+1. **Facade layer (`Git::Repository` and `Git` module)** — The public interface.
+   Methods here are thin wrappers that delegate to command classes. This is where
+   the API design guidelines above apply.
+
+2. **Command layer (`Git::Commands::*`)** — Internal classes that implement git
+   commands. Each command class handles argument building and output parsing.
+
+3. **Execution layer (`Git::ExecutionContext`)** — Runs raw git commands. Command
+   classes use this to execute git and receive output.
+
+When wrapping a new git command:
+
+1. **Design the public API** using the guidelines in this section (placement, naming,
+   parameters, output)
+
+2. **Create a command class** in `lib/git/commands/` that:
+   - Accepts an `ExecutionContext` and any required arguments
+   - Builds the git command-line arguments
+   - Parses the output into Ruby objects
+
+3. **Add the facade method** to `Git::Repository` (or `Git` module) that instantiates
+   and calls the command class
+
+Example structure for `git stash`:
+
+```ruby
+# lib/git/commands/stash.rb (internal)
+module Git
+  module Commands
+    class Stash
+      def initialize(context, message = nil, **options)
+        @context = context
+        @message = message
+        @options = options
+      end
+
+      def run
+        args = build_args
+        output = @context.run('stash', *args)
+        parse_output(output)
+      end
+
+      private
+
+      def build_args
+        args = []
+        args << '--keep-index' if @options[:keep_index]
+        args << '--include-untracked' if @options[:include_untracked]
+        args += ['--message', @message] if @message
+        args
+      end
+
+      def parse_output(output)
+        # Return structured result
+      end
+    end
+  end
+end
+
+# lib/git/repository.rb (public facade)
+class Git::Repository
+  def stash(message = nil, **options)
+    Git::Commands::Stash.new(@execution_context, message, **options).run
+  end
+end
+```
+
+For factory methods and non-repository commands, the pattern is similar but differs
+in how the `ExecutionContext` is obtained:
+
+```ruby
+# Factory method (Git.clone) — creates context, runs command, returns repository
+module Git
+  def self.clone(url, path = nil, **options)
+    context = Git::ExecutionContext.new(working_dir: path)
+    Git::Commands::Clone.new(context, url, **options).run
+    Git::Repository.new(path)
+  end
+end
+
+# Non-repository command (Git.config_get) — standalone context, no repository
+module Git
+  def self.config_get(key, **options)
+    context = Git::ExecutionContext.new
+    Git::Commands::ConfigGet.new(context, key, **options).run
+  end
+end
+```
+
+### Example implementations
+
+The command classes referenced below are part of the v5.0.0 architecture and may not
+yet exist. Use them as reference patterns when implementing new commands:
+
+- **Simple command**: `Git::Commands::Add` — straightforward argument building
+- **Multiple outputs**: `Git::Commands::Diff::*` — subclasses for different output
+  formats
+- **Multi-context**: `Git::Commands::Config` — handles both module and instance
+  variants
 
 ## Coding standards
 
@@ -236,7 +505,7 @@ Examples of valid commits:
 Commits that include breaking changes must include an exclaimation mark before the
 colon:
 
-- `feat!: removed Git::Base.commit_force`
+- `feat!: removed Git::Repository#commit_force`
 
 The commit messages will drive how the version is incremented for each release:
 
@@ -289,22 +558,6 @@ $ bin/test
 # run unit tests with a different version of the git command line:
 $ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
 ```
-
-### Continuous integration
-
-All tests must pass in the project's [GitHub Continuous Integration
-build](https://github.com/ruby-git/ruby-git/actions?query=workflow%3ACI) before the
-pull request will be merged.
-
-The [Continuous Integration
-workflow](https://github.com/ruby-git/ruby-git/blob/master/.github/workflows/continuous_integration.yml)
-runs both `bundle exec rake default` and `bundle exec rake test:gem` from the
-project's [Rakefile](https://github.com/ruby-git/ruby-git/blob/master/Rakefile).
-
-### Documentation
-
-New and updated public methods must include [YARD](https://yardoc.org/)
-documentation.
 
 New and updated public-facing features should be documented in the project's
 [README.md](README.md).

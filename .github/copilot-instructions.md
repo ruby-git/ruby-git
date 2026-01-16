@@ -237,6 +237,17 @@ existing codebase and idiomatic Ruby:
 
 ## Design Philosophy
 
+For detailed guidelines on wrapping git commands, see the following sections in
+[CONTRIBUTING.md](../CONTRIBUTING.md):
+
+- **[Design philosophy](../CONTRIBUTING.md#design-philosophy)** — Core principles
+- **[Wrapping a git command](../CONTRIBUTING.md#wrapping-a-git-command)** —
+  Implementation guide including method placement, naming, parameters, and output
+  processing
+
+The summary below outlines key principles. **For authoritative and complete
+guidelines, always refer to CONTRIBUTING.md.**
+
 **Note:** As of v2.x, this design philosophy is aspirational. Future versions may
 include interface changes to fully align with these principles.
 
@@ -547,6 +558,10 @@ clean baseline, and create a clear implementation plan before writing any code.
    suggest them to the user. If the user confirms the refactoring, do the refactoring
    in a separate TDD process. Only once the refactoring is completed should the
    current feature or bug fix be worked on.
+7. **Review Implementation Guidelines:** When implementing or modifying git command
+   wrappers, read the [Wrapping a git command](../CONTRIBUTING.md#wrapping-a-git-command)
+   section in CONTRIBUTING.md before proceeding. This ensures consistent API design
+   for method placement, naming, parameters, and output processing.
 
 ### Phase 2: EXECUTE
 
