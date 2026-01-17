@@ -80,5 +80,13 @@ RSpec.describe Git::Commands::Add do
         command.call('path/to/файл.rb')
       end
     end
+
+    context 'with unsupported options' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call('.', invalid_option: true) }.to(
+          raise_error(ArgumentError, /Unsupported options: :invalid_option/)
+        )
+      end
+    end
   end
 end

@@ -61,7 +61,7 @@ module Git
       # @return [Array<String>] the command-line arguments
       #
       def build_args(options)
-        Git::ArgsBuilder.new(options, OPTION_MAP).build
+        Git::ArgsBuilder.build(options, OPTION_MAP)
       end
     end
   end

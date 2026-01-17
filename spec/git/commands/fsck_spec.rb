@@ -384,5 +384,13 @@ RSpec.describe Git::Commands::Fsck do
         expect { command.call }.to raise_error(Git::FailedError)
       end
     end
+
+    context 'with unsupported options' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(invalid_option: true) }.to(
+          raise_error(ArgumentError, /Unsupported options: :invalid_option/)
+        )
+      end
+    end
   end
 end
