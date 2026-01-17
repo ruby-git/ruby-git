@@ -174,6 +174,7 @@ modular architecture:
 
 - **Git::Base** - Main interface for repository operations (most major actions)
 - **Git::Lib** - Low-level Git command execution via system calls
+- **Git::Commands** - Command-specific argument building and output parsing (new architecture)
 - **Git::CommandLine** - Handles Git command construction and execution with timeout
   support
 - **Git Objects** - Repository objects (Commit, Tree, Blob, Tag) via `Git::Object`
@@ -188,7 +189,9 @@ modular architecture:
 Key directories:
 
 - `lib/git/` - Core library code
-- `tests/units/` - Test::Unit test suite
+- `lib/git/commands/` - Command classes for the new architecture
+- `tests/units/` - Legacy Test::Unit suite
+- `spec/` - RSpec test suite (primary for new code)
 - `doc/` - YARD-generated documentation
 - `pkg/` - Built gem packages
 - `redesign/` - Architecture redesign documentation
@@ -358,10 +361,17 @@ specific responsibilities:
 
 2. **Git::Lib**: Low-level command execution
    - Executes Git commands via `Git::CommandLine`
+   - Delegates to `Git::Commands::*` classes for argument building
    - Parses Git command output
-   - Minimal business logic - focuses on command execution
+   - Being incrementally migrated to delegate to `Git::Commands::*`
 
-3. **Git::CommandLine**: Command execution layer
+3. **Git::Commands::*** (New Architecture): Command-specific logic
+   - Each command class handles argument building via Options DSL
+   - Translates Ruby options to git command-line flags
+   - Located in `lib/git/commands/`
+   - Unit tested with RSpec in `spec/git/commands/`
+
+4. **Git::CommandLine**: Command execution layer
    - Builds Git command arrays with proper escaping
    - Manages subprocess execution with timeout support
    - Handles timeout and error conditions
@@ -426,9 +436,13 @@ project's requirements.
 > the phases below. Do not guess commands.
 
 - **Setup Project:** `bin/setup`
-- **Run All Tests:** `bundle exec bin/test`
-- **Run A Specific Test:** `bundle exec bin/test <test_file_name_without_extension>`
+- **Run All Tests:** `bundle exec rake test_all`
+- **Run Unit Tests (TestUnit only):** `bundle exec rake test`
+- **Run RSpec Tests:** `bundle exec rake spec`
+- **Run A Specific TestUnit Test:** `bundle exec bin/test <test_file_name_without_extension>`
   (e.g., `bundle exec bin/test test_branch`)
+- **Run A Specific RSpec Test:** `bundle exec rspec <spec_file_path>`
+  (e.g., `bundle exec rspec spec/git/commands/add_spec.rb`)
 - **Run Linters:** `bundle exec rake rubocop yard`
 - **Run Continuous Integration Workflow:** `bundle exec rake default`
 
@@ -561,7 +575,10 @@ clean baseline, and create a clear implementation plan before writing any code.
 7. **Review Implementation Guidelines:** When implementing or modifying git command
    wrappers, read the [Wrapping a git command](../CONTRIBUTING.md#wrapping-a-git-command)
    section in CONTRIBUTING.md before proceeding. This ensures consistent API design
-   for method placement, naming, parameters, and output processing.
+   for method placement, naming, parameters, and output processing. **Pay special
+   attention to the Note annotations (blockquoted sections starting with `> **Note:**`)
+   which provide critical guidance about the architectural transition and what to do
+   at each step.**
 
 ### Phase 2: EXECUTE
 
@@ -2239,11 +2256,32 @@ bundle exec yard ri Git::Base
 
 ### Test Framework
 
-- Use **Test::Unit** for all tests
-- Tests located in `tests/units/` directory
-- Test files named `test_*.rb`
-- Main test helper: `tests/test_helper.rb` provides utility methods
-- Uses Mocha for mocking
+- **RSpec** (`spec/`): **Use for all new code.**
+  - Required for `Git::Commands::*` classes (new architecture)
+  - Preferred for bug fixes and new features
+  - Uses standard RSpec syntax (`describe`, `it`, `let`)
+
+- **Test::Unit** (`tests/units/`): **Legacy support only.**
+  - Do not add new Test::Unit tests unless modifying existing legacy files
+  - Main test helper: `tests/test_helper.rb`
+  - Uses Mocha for mocking
+
+### RSpec Testing Standards
+
+Follow these guidelines for all RSpec tests:
+
+- **Method Isolation**: Use a separate `describe '#method_name'` block for each public method being tested.
+- **Context Isolation**: Use separate `context` blocks for different scenarios (state, inputs, configurations).
+
+**For Git::Commands options:**
+
+When implementing a command using the `Git::Commands::Options` DSL, you **MUST** include comprehensive tests for every option defined:
+
+- **Structure**: use a separate `context` block for each option (e.g., `context 'with :force option'`) to keep tests organized and readable.
+- **Valid Values**: Test each supported value type in its context (e.g., boolean `true/false`, string `'value'`, array `['a', 'b']`).
+- **Invalid Values**: Test that invalid values raise appropriate errors or are handled correctly.
+- **Argument Building**: Verify that the generated git command arguments match the expected CLI flags.
+- **Edge Cases**: Test nil values, empty strings/arrays, and special characters.
 
 ### Coverage Target
 

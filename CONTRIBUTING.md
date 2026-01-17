@@ -30,6 +30,7 @@
     - [What does this mean for contributors?](#what-does-this-mean-for-contributors)
     - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
   - [Unit tests](#unit-tests)
+    - [RSpec best practices](#rspec-best-practices)
 - [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
   - [Install pre-requisites](#install-pre-requisites)
   - [Obtain Git source code](#obtain-git-source-code)
@@ -152,18 +153,33 @@ and paradigms.
 
 ## Wrapping a git command
 
+> **Note:** This documentation reflects **Phase 2 (Strangler Fig)** of the architectural
+> redesign. It will be updated in **Phase 3** when `Git::Repository` becomes the primary
+> public API and `Git::Lib` is bypassed. Currently, `Git::Base` remains the public API
+> and `Git::Lib` acts as the delegation layer.
+
 This section guides you through wrapping a git command. The first subsections focus
 on **API design**: where methods belong, how to name them, and how to handle
 parameters and output. These describe the public interface that gem users will see.
 
 [From design to implementation](#from-design-to-implementation) then shows how to
-structure your code using the gem's three-layer architecture, where `Git::Repository`
-methods are thin facades that delegate to internal command classes.
+structure your code using the gem's three-layer architecture. Note that while we are
+transitioning to `Git::Repository`, the current public API is `Git::Base`, which
+delegates to `Git::Lib`, which in turn delegates to internal command classes.
+
+> **Note:** When adding new git command wrappers, **always use the new architecture**
+> described in "From design to implementation" with `Git::Commands::*` classes and
+> the Options DSL. The gem is being incrementally migrated from `Git::Lib` to this
+> pattern. Do not add new methods directly to `Git::Lib`.
 
 ### Method placement
 
 When implementing a git command, first determine what type of command it is. This
 determines where to implement it in the Ruby API:
+
+> **Note:** These placement guidelines define the **public API**. Always add public
+> methods to `Git` module or `Git::Base` (which acts as the current facade for
+> `Git::Repository`), even though the implementation will be in a `Git::Commands::*` class.
 
 **Repository factory methods** are implemented on the `Git` module. Use these to
 obtain a repository object for subsequent operations:
@@ -175,7 +191,7 @@ repo = Git.open('.')
 ```
 
 **Repository-scoped commands** operate within a repository context. Implement these
-as `Git::Repository` instance methods:
+`Git::Base` instance methods:
 
 ```ruby
 repo.add('file.txt')
@@ -196,14 +212,14 @@ Some commands, like `git config`, can operate in multiple contexts:
 - **On the `Git` module**: A scope parameter (`global: true`, `system: true`) or
   `file:` parameter is required. The `local:` and `worktree:` options are not allowed
   since they require a repository.
-- **On a `Git::Repository` instance**: The command defaults to the repository's local
+- **On a `Git::Base` instance**: The command defaults to the repository's local
   scope. The `worktree: true` option is also available.
 
 ### Method naming
 
 Each method corresponds directly to a `git` command. For example, the `git add`
-command is implemented as `Git::Repository#add`, and the `git ls-files` command is
-implemented as `Git::Repository#ls_files`.
+command is implemented as `Git::Base#add`, and the `git ls-files` command is
+implemented as `Git::Base#ls_files`.
 
 When a single Git command serves multiple distinct purposes, method names should use
 the git command name as a prefix, followed by a descriptive suffix indicating the
@@ -350,12 +366,28 @@ targeted parsing logic appropriate to each output format.
 
 ### From design to implementation
 
+> **Note:** **Use this architecture for all new commands.** The gem is being
+> incrementally migrated using the "Strangler Fig" pattern:
+>
+> 1. **Phase 1 (completed)**: Foundation work to introduce the new command architecture
+>    and prepare the codebase for incremental migration.
+> 2. **Phase 2 (current)**: New `Git::Commands::*` classes are created, and `Git::Lib`
+>    methods delegate to them. `Git::Lib` remains but becomes a thin wrapper.
+> 3. **Phase 3 (planned)**: Public API (`Git::Base`) will be refactored to use
+>    `Git::Commands::*` directly, bypassing `Git::Lib`.
+> 4. **Phase 4 (planned)**: `Git::Lib` will be removed entirely.
+>
+> When adding new commands, create the `Git::Commands::*` class and have the
+> corresponding `Git::Lib` method delegate to it (see `Git::Lib#add` for an example).
+> When you encounter existing commands, you may optionally refactor them to this
+> pattern following the TDD workflow.
+
 The gem uses a three-layer architecture that separates the public API from internal
 implementation:
 
-1. **Facade layer (`Git::Repository` and `Git` module)** — The public interface.
-   Methods here are thin wrappers that delegate to command classes. This is where
-   the API design guidelines above apply.
+1. **Facade layer (`Git::Base` and `Git` module)** — The current public interface.
+   Methods here are thin wrappers that delegate to `Git::Lib`, which in turn
+   delegates to internal command classes.
 
 2. **Command layer (`Git::Commands::*`)** — Internal classes that implement git
    commands. Each command class handles argument building and output parsing.
@@ -370,52 +402,55 @@ When wrapping a new git command:
 
 2. **Create a command class** in `lib/git/commands/` that:
    - Accepts an `ExecutionContext` and any required arguments
-   - Builds the git command-line arguments
+   - Defines options using the Options DSL
    - Parses the output into Ruby objects
 
-3. **Add the facade method** to `Git::Repository` (or `Git` module) that instantiates
-   and calls the command class
+3. **Add the facade method** to `Git::Base` (or `Git` module) that delegates to
+   `Git::Lib`.
 
-Example structure for `git stash`:
+Example structure for `git add`:
 
 ```ruby
-# lib/git/commands/stash.rb (internal)
+# lib/git/commands/add.rb (internal)
 module Git
   module Commands
-    class Stash
-      def initialize(context, message = nil, **options)
-        @context = context
-        @message = message
-        @options = options
+    class Add
+      # Define options using the Options DSL
+      OPTIONS = Options.define do
+        flag :all
+        flag :force
+        positional :paths, variadic: true, default: ['.'], separator: '--'
       end
 
-      def run
-        args = build_args
-        output = @context.run('stash', *args)
-        parse_output(output)
+      def initialize(execution_context)
+        @execution_context = execution_context
       end
 
-      private
-
-      def build_args
-        args = []
-        args << '--keep-index' if @options[:keep_index]
-        args << '--include-untracked' if @options[:include_untracked]
-        args += ['--message', @message] if @message
-        args
-      end
-
-      def parse_output(output)
-        # Return structured result
+      def call(paths = '.', **options)
+        args = OPTIONS.build(*Array(paths), **options)
+        @execution_context.command('add', *args)
       end
     end
   end
 end
 
-# lib/git/repository.rb (public facade)
-class Git::Repository
-  def stash(message = nil, **options)
-    Git::Commands::Stash.new(@execution_context, message, **options).run
+> **Testing Requirement:** When defining options with the DSL, you must write RSpec
+> tests that verify each option handles valid values correctly (booleans, strings,
+> arrays) and handles invalid values appropriately. Use a separate `context` block for
+> testing each option to ensure clarity and isolation. See
+> `spec/git/commands/add_spec.rb` for examples of comprehensive option testing.
+
+# lib/git/lib.rb (delegation)
+class Git::Lib
+  def add(paths = '.', options = {})
+    Git::Commands::Add.new(self).call(paths, options)
+  end
+end
+
+# lib/git/base.rb (public facade)
+class Git::Base
+  def add(paths = '.', **options)
+    lib.add(paths, options)
   end
 end
 ```
@@ -427,31 +462,37 @@ in how the `ExecutionContext` is obtained:
 # Factory method (Git.clone) — creates context, runs command, returns repository
 module Git
   def self.clone(url, path = nil, **options)
-    context = Git::ExecutionContext.new(working_dir: path)
-    Git::Commands::Clone.new(context, url, **options).run
-    Git::Repository.new(path)
+    # logic to call Git::Commands::Clone via Git::Lib
   end
 end
 
-# Non-repository command (Git.config_get) — standalone context, no repository
+# Non-repository command (Git.global_config) — standalone context
 module Git
-  def self.config_get(key, **options)
-    context = Git::ExecutionContext.new
-    Git::Commands::ConfigGet.new(context, key, **options).run
+  def self.global_config(name, value = nil)
+    Git::Lib.new.global_config(name, value)
   end
 end
 ```
 
+> **Note:** The `Git::Lib` class currently acts as the execution context. In the new
+> architecture, `Git::Lib` methods delegate to `Git::Commands::*` classes, passing `self`
+> (the `Git::Lib` instance) as the execution context.
+
 ### Example implementations
 
-The command classes referenced below are part of the v5.0.0 architecture and may not
-yet exist. Use them as reference patterns when implementing new commands:
+The following command classes demonstrate patterns for implementing new commands.
+See `lib/git/commands/` and `spec/git/commands/` for the full implementations:
 
-- **Simple command**: `Git::Commands::Add` — straightforward argument building
+- **Simple command**: `Git::Commands::Add` — straightforward argument building with
+  the Options DSL
+- **Command with output parsing**: `Git::Commands::Fsck` — parses git output into
+  structured Ruby objects
+- **Factory command**: `Git::Commands::Clone` — returns data for creating a
+  repository object
 - **Multiple outputs**: `Git::Commands::Diff::*` — subclasses for different output
-  formats
+  formats (planned)
 - **Multi-context**: `Git::Commands::Config` — handles both module and instance
-  variants
+  variants (planned)
 
 ## Coding standards
 
@@ -542,20 +583,42 @@ specification](https://www.conventionalcommits.org/en/v1.0.0/) for more details.
 - The entire test suite must pass when `bundle exec rake default` is run from the
   project's local working copy.
 
-While working on specific features, you can run individual test files or a group of
-tests using `bin/test`:
+This project uses two test frameworks:
+
+- **RSpec** (`spec/`) - **Primary framework for all new tests.**
+- **Test::Unit** (`tests/units/`) - **Legacy test suite.** Maintained for existing
+  coverage but should not be extended for new features unless absolutely necessary.
+
+#### RSpec best practices
+
+- **Public methods**: Use a separate `describe '#method_name'` block for each public
+  method.
+- **Contexts**: Use separate `context` blocks for different scenarios.
+- **Options**: For methods accepting options (like commands), use a separate
+  `context` for each option to ensure isolation and comprehensiveness.
+
+While working on specific features, you can run tests using:
 
 ```bash
-# run a single file (from tests/units):
+# Run all tests (TestUnit + RSpec):
+$ bundle exec rake test_all
+
+# Run only TestUnit integration tests:
+$ bundle exec rake test
+
+# Run only RSpec unit tests:
+$ bundle exec rake spec
+
+# Run a single TestUnit file (from tests/units):
 $ bin/test test_object
 
-# run multiple files:
+# Run multiple TestUnit files:
 $ bin/test test_object test_archive
 
-# run all unit tests:
-$ bin/test
+# Run a specific RSpec file:
+$ bundle exec rspec spec/git/commands/add_spec.rb
 
-# run unit tests with a different version of the git command line:
+# Run TestUnit tests with a different version of the git command line:
 $ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
 ```
 
