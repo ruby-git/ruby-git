@@ -44,8 +44,8 @@ module Git
       #
       # @return [String] the command output (typically empty on success)
       #
-      def call(paths = nil, **)
-        args = OPTIONS.build(*Array(paths), **)
+      def call(paths = nil, options = {})
+        args = OPTIONS.build(*Array(paths), **options)
         @execution_context.command('add', *args)
       end
     end

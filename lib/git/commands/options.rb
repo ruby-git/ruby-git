@@ -35,58 +35,60 @@ module Git
 
       def initialize
         @option_definitions = {}
+        @alias_map = {} # Maps alias keys to primary keys
         @static_flags = []
         @positional_definitions = []
       end
 
       # Define a boolean flag option (--flag when true)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @param flag [String, nil] custom flag string (e.g., '-r' instead of '--recursive')
       # @return [void]
       #
-      def flag(name, flag: nil)
-        @option_definitions[name] = { type: :flag, flag: flag }
+      def flag(names, flag: nil)
+        register_option(names, type: :flag, flag: flag)
       end
 
       # Define a negatable boolean flag option (--flag when true, --no-flag when false)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @param flag [String, nil] custom flag string
+      # @param validator [Proc, nil] optional validator proc that receives the value and returns true if valid
       # @return [void]
       #
-      def negatable_flag(name, flag: nil)
-        @option_definitions[name] = { type: :negatable_flag, flag: flag }
+      def negatable_flag(names, flag: nil, validator: nil)
+        register_option(names, type: :negatable_flag, flag: flag, validator: validator)
       end
 
       # Define a valued option (--flag value as separate arguments)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @param flag [String, nil] custom flag string
       # @return [void]
       #
-      def value(name, flag: nil)
-        @option_definitions[name] = { type: :value, flag: flag }
+      def value(names, flag: nil)
+        register_option(names, type: :value, flag: flag)
       end
 
       # Define an inline valued option (--flag=value as single argument)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @param flag [String, nil] custom flag string
       # @return [void]
       #
-      def inline_value(name, flag: nil)
-        @option_definitions[name] = { type: :inline_value, flag: flag }
+      def inline_value(names, flag: nil)
+        register_option(names, type: :inline_value, flag: flag)
       end
 
       # Define a multi-value option (--flag value repeated for each value)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @param flag [String, nil] custom flag string
       # @return [void]
       #
-      def multi_value(name, flag: nil)
-        @option_definitions[name] = { type: :multi_value, flag: flag }
+      def multi_value(names, flag: nil)
+        register_option(names, type: :multi_value, flag: flag)
       end
 
       # Define a static flag that is always included
@@ -100,21 +102,21 @@ module Git
 
       # Define a custom option with a custom builder block
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @yield [value] block that receives the option value and returns the argument string
       # @return [void]
       #
-      def custom(name, &block)
-        @option_definitions[name] = { type: :custom, builder: block }
+      def custom(names, &block)
+        register_option(names, type: :custom, builder: block)
       end
 
       # Define a metadata option (for validation only, not included in command)
       #
-      # @param name [Symbol] the option name
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       # @return [void]
       #
-      def metadata(name)
-        @option_definitions[name] = { type: :metadata }
+      def metadata(names)
+        register_option(names, type: :metadata)
       end
 
       # Define a positional argument
@@ -136,18 +138,35 @@ module Git
         }
       end
 
+      # Register an option with optional aliases
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      # @param definition [Hash] the option definition
+      # @return [void]
+      #
+      def register_option(names, **definition)
+        keys = Array(names)
+        primary = keys.first
+        definition[:aliases] = keys
+        @option_definitions[primary] = definition
+        keys.each { |key| @alias_map[key] = primary }
+      end
+
       # Build command-line arguments from the given positionals and options
       #
       # @param positionals [Array] positional argument values
       # @param opts [Hash] the keyword options to build arguments from
       # @return [Array<String>] the command-line arguments
-      # @raise [ArgumentError] if unsupported options are provided
+      # @raise [ArgumentError] if unsupported options are provided or validation fails
       #
       def build(*positionals, **opts)
         validate_unsupported_options!(opts)
+        validate_conflicting_aliases!(opts)
+        normalized_opts = normalize_aliases(opts)
+        validate_option_values!(normalized_opts)
         args = @static_flags.dup
         @option_definitions.each do |name, definition|
-          build_option(args, name, definition, opts[name])
+          build_option(args, name, definition, normalized_opts[name])
         end
         build_positionals(args, positionals)
         args
@@ -163,7 +182,10 @@ module Git
         value: ->(args, flag_name, value, _) { args << flag_name << value.to_s },
         inline_value: ->(args, flag_name, value, _) { args << "#{flag_name}=#{value}" },
         multi_value: ->(args, flag_name, value, _) { Array(value).each { |v| args << flag_name << v.to_s } },
-        custom: ->(args, _, value, definition) { (result = definition[:builder]&.call(value)) && (args << result) },
+        custom: lambda do |args, _, value, definition|
+          result = definition[:builder]&.call(value)
+          result.is_a?(Array) ? args.concat(result) : (args << result if result)
+        end,
         metadata: ->(*) {}
       }.freeze
       private_constant :BUILDERS
@@ -227,10 +249,37 @@ module Git
       end
 
       def validate_unsupported_options!(opts)
-        unsupported = opts.keys - @option_definitions.keys
+        unsupported = opts.keys - @alias_map.keys
         return if unsupported.empty?
 
         raise ArgumentError, "Unsupported options: #{unsupported.map(&:inspect).join(', ')}"
+      end
+
+      def validate_conflicting_aliases!(opts)
+        @option_definitions.each_value do |definition|
+          aliases = definition[:aliases]
+          next unless aliases.size > 1
+
+          provided = aliases & opts.keys
+          next unless provided.size > 1
+
+          raise ArgumentError, "Conflicting options: #{provided.map(&:inspect).join(' and ')}"
+        end
+      end
+
+      def normalize_aliases(opts)
+        opts.transform_keys { |key| @alias_map[key] || key }
+      end
+
+      def validate_option_values!(opts)
+        @option_definitions.each do |name, definition|
+          validator = definition[:validator]
+          next unless validator
+          next unless opts.key?(name)
+          next if validator.call(opts[name])
+
+          raise ArgumentError, "Invalid value for option: #{name}"
+        end
       end
     end
   end

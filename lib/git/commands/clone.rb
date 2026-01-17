@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/args_builder'
+require 'git/commands/options'
 require 'git/url'
 
 module Git
@@ -20,43 +20,25 @@ module Git
     #   result = clone.call('https://github.com/user/repo.git', 'local-dir', bare: true, depth: 1)
     #
     class Clone
-      # Option map for building command-line arguments
-      #
-      # @return [Array<Hash>] the option configuration
-      OPTION_MAP = [
-        { keys: [:bare],      flag: '--bare',      type: :boolean },
-        { keys: [:recursive], flag: '--recursive', type: :boolean },
-        { keys: [:mirror],    flag: '--mirror',    type: :boolean },
-        { keys: [:branch],    flag: '--branch',    type: :valued_space },
-        { keys: [:filter],    flag: '--filter',    type: :valued_space },
-        { keys: %i[remote origin], flag: '--origin', type: :valued_space },
-        { keys: [:config], flag: '--config', type: :repeatable_valued_space },
-        {
-          keys: [:single_branch],
-          type: :custom,
-          validator: ->(value) { [nil, true, false].include?(value) },
-          builder: lambda do |value|
-            case value
-            when true
-              ['--single-branch']
-            when false
-              ['--no-single-branch']
-            else
-              []
-            end
-          end
-        },
-        {
-          keys: [:depth],
-          type: :custom,
-          builder: ->(value) { ['--depth', value.to_i] if value }
-        },
+      # Options DSL for building command-line arguments
+      OPTIONS = Options.define do
+        flag :bare
+        flag :recursive
+        flag :mirror
+        value :branch
+        value :filter
+        value %i[origin remote]
+        multi_value :config
+        negatable_flag :single_branch, validator: ->(v) { [nil, true, false].include?(v) }
+        custom(:depth) { |v| ['--depth', v.to_i] }
         # Options handled by the command itself, not passed to git
-        { keys: [:path], type: :validate_only },
-        { keys: [:timeout], type: :validate_only },
-        { keys: [:log], type: :validate_only },
-        { keys: [:git_ssh], type: :validate_only }
-      ].freeze
+        metadata :path
+        metadata :timeout
+        metadata :log
+        metadata :git_ssh
+        positional :repository_url, required: true, separator: '--'
+        positional :directory
+      end.freeze
 
       # Initialize the Clone command
       #
@@ -96,11 +78,11 @@ module Git
       #   or if any option fails validation
       #
       def call(repository_url, directory = nil, options = {})
+        options = options.dup
         directory = options.delete(:path) if options[:path]
         directory ||= Git::URL.clone_to(repository_url, bare: options[:bare], mirror: options[:mirror])
 
-        args = build_args(options)
-        args.push('--', repository_url, directory)
+        args = OPTIONS.build(repository_url, directory, **options)
 
         @execution_context.command('clone', *args, timeout: options[:timeout])
 
@@ -108,15 +90,6 @@ module Git
       end
 
       private
-
-      # Build command-line arguments from options
-      #
-      # @param options [Hash] the options hash
-      # @return [Array<String>] the command-line arguments
-      #
-      def build_args(options)
-        Git::ArgsBuilder.build(options, OPTION_MAP)
-      end
 
       # Build the result hash for creating a Git::Base instance
       #
