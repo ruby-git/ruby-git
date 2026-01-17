@@ -37,19 +37,22 @@ RSpec.describe Git::Commands::Init do
 
     context 'with initial_branch option' do
       it 'includes the --initial-branch flag' do
-        expect(execution_context).to receive(:command).with('init', '--initial-branch=main').and_return('Initialized repository')
+        expect(execution_context).to receive(:command)
+          .with('init', '--initial-branch=main').and_return('Initialized')
         init_command.call(initial_branch: 'main')
       end
 
       it 'handles different branch names' do
-        expect(execution_context).to receive(:command).with('init', '--initial-branch=develop').and_return('Initialized repository')
+        expect(execution_context).to receive(:command)
+          .with('init', '--initial-branch=develop').and_return('Initialized')
         init_command.call(initial_branch: 'develop')
       end
     end
 
     context 'with both options' do
       it 'includes all specified flags' do
-        expect(execution_context).to receive(:command).with('init', '--bare', '--initial-branch=develop').and_return('Initialized repository')
+        expect(execution_context).to receive(:command)
+          .with('init', '--bare', '--initial-branch=develop').and_return('Initialized')
         init_command.call(bare: true, initial_branch: 'develop')
       end
     end
