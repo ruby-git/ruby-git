@@ -2,6 +2,7 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/clone'
 require_relative 'commands/fsck'
 
 require 'git/command_line'
@@ -94,36 +95,6 @@ module Git
       command('init', *args)
     end
 
-    CLONE_OPTION_MAP = [
-      { keys: [:bare],      flag: '--bare',      type: :boolean },
-      { keys: [:recursive], flag: '--recursive', type: :boolean },
-      { keys: [:mirror],    flag: '--mirror',    type: :boolean },
-      { keys: [:branch],    flag: '--branch',    type: :valued_space },
-      { keys: [:filter],    flag: '--filter',    type: :valued_space },
-      { keys: %i[remote origin], flag: '--origin', type: :valued_space },
-      { keys: [:config], flag: '--config', type: :repeatable_valued_space },
-      {
-        keys: [:single_branch],
-        type: :custom,
-        validator: ->(value) { [nil, true, false].include?(value) },
-        builder: lambda do |value|
-          case value
-          when true
-            ['--single-branch']
-          when false
-            ['--no-single-branch']
-          else
-            []
-          end
-        end
-      },
-      {
-        keys: [:depth],
-        type: :custom,
-        builder: ->(value) { ['--depth', value.to_i] if value }
-      }
-    ].freeze
-
     # Clones a repository into a newly created directory
     #
     # @param [String] repository_url the URL of the repository to clone
@@ -163,18 +134,12 @@ module Git
     #
     # @return [Hash] the options to pass to {Git::Base.new}
     #
+    # @note This method delegates to {Git::Commands::Clone}
+    #
     # @todo make this work with SSH password or auth_key
     #
-    def clone(repository_url, directory, opts = {})
-      @path = opts[:path] || '.'
-      clone_dir = opts[:path] ? File.join(@path, directory) : directory
-
-      args = build_args(opts, CLONE_OPTION_MAP)
-      args.push('--', repository_url, clone_dir)
-
-      command('clone', *args, timeout: opts[:timeout])
-
-      return_base_opts_from_clone(clone_dir, opts)
+    def clone(repository_url, directory = nil, opts = {})
+      Git::Commands::Clone.new(self).call(repository_url, directory, opts)
     end
 
     # Returns the name of the default branch of the given repository
@@ -1729,15 +1694,6 @@ module Git
       @git_index_file = base_hash[:index]
       @git_work_dir = base_hash[:working_directory]
       @git_ssh = base_hash.key?(:git_ssh) ? base_hash[:git_ssh] : :use_global_config
-    end
-
-    def return_base_opts_from_clone(clone_dir, opts)
-      base_opts = {}
-      base_opts[:repository] = clone_dir if opts[:bare] || opts[:mirror]
-      base_opts[:working_directory] = clone_dir unless opts[:bare] || opts[:mirror]
-      base_opts[:log] = opts[:log] if opts[:log]
-      base_opts[:git_ssh] = opts[:git_ssh] if opts.key?(:git_ssh)
-      base_opts
     end
 
     def process_commit_headers(data)

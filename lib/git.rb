@@ -218,8 +218,6 @@ module Git
   #   of the cloned local working copy or cloned repository.
   #
   def self.clone(repository_url, directory = nil, options = {})
-    clone_to_options = options.slice(:bare, :mirror)
-    directory ||= Git::URL.clone_to(repository_url, **clone_to_options)
     Base.clone(repository_url, directory, options)
   end
 
