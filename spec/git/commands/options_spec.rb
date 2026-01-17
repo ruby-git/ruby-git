@@ -321,5 +321,81 @@ RSpec.describe Git::Commands::Options do
         )
       end
     end
+
+    context 'with custom options returning arrays' do
+      let(:options) do
+        described_class.define do
+          custom(:depth) { |v| ['--depth', v.to_i] }
+        end
+      end
+
+      it 'concatenates array results' do
+        expect(options.build(depth: 5)).to eq(['--depth', 5])
+      end
+
+      it 'handles string values converted to integers' do
+        expect(options.build(depth: '10')).to eq(['--depth', 10])
+      end
+    end
+
+    context 'with validator on negatable_flag' do
+      let(:options) do
+        described_class.define do
+          negatable_flag :single_branch, validator: ->(v) { [nil, true, false].include?(v) }
+        end
+      end
+
+      it 'allows valid true value' do
+        expect(options.build(single_branch: true)).to eq(['--single-branch'])
+      end
+
+      it 'allows valid false value' do
+        expect(options.build(single_branch: false)).to eq(['--no-single-branch'])
+      end
+
+      it 'allows valid nil value' do
+        expect(options.build(single_branch: nil)).to eq([])
+      end
+
+      it 'raises ArgumentError for invalid values' do
+        expect { options.build(single_branch: 'yes') }.to(
+          raise_error(ArgumentError, /Invalid value for option: single_branch/)
+        )
+      end
+    end
+
+    context 'with option aliases' do
+      let(:options) do
+        described_class.define do
+          value %i[origin remote]
+        end
+      end
+
+      it 'accepts the primary key' do
+        expect(options.build(origin: 'upstream')).to eq(['--origin', 'upstream'])
+      end
+
+      it 'accepts the alias key' do
+        expect(options.build(remote: 'upstream')).to eq(['--origin', 'upstream'])
+      end
+
+      it 'uses first key for flag name by default' do
+        opts = described_class.define { flag %i[verbose v] }
+        expect(opts.build(verbose: true)).to eq(['--verbose'])
+        expect(opts.build(v: true)).to eq(['--verbose'])
+      end
+
+      it 'allows custom flag with aliases' do
+        opts = described_class.define { flag %i[recursive r], flag: '-R' }
+        expect(opts.build(recursive: true)).to eq(['-R'])
+        expect(opts.build(r: true)).to eq(['-R'])
+      end
+
+      it 'raises error if both alias and primary provided' do
+        expect { options.build(origin: 'one', remote: 'two') }.to(
+          raise_error(ArgumentError, /Conflicting options.*origin.*remote/)
+        )
+      end
+    end
   end
 end
