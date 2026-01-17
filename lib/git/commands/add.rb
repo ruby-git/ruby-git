@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/args_builder'
+require 'git/commands/options'
 
 module Git
   module Commands
@@ -18,13 +18,12 @@ module Git
     #   add.call('.', all: true)
     #
     class Add
-      # Option map for building command-line arguments
-      #
-      # @return [Array<Hash>] the option configuration
-      OPTION_MAP = [
-        { keys: [:all], flag: '--all', type: :boolean },
-        { keys: [:force], flag: '--force', type: :boolean }
-      ].freeze
+      # Options DSL for building command-line arguments
+      OPTIONS = Options.define do
+        flag :all
+        flag :force
+        positional :paths, variadic: true, default: ['.'], separator: '--'
+      end.freeze
 
       # Initialize the Add command
       #
@@ -45,23 +44,9 @@ module Git
       #
       # @return [String] the command output (typically empty on success)
       #
-      def call(paths = '.', options = {})
-        args = build_args(options)
-        args << '--'
-        args.concat(Array(paths))
-
+      def call(paths = nil, **)
+        args = OPTIONS.build(*Array(paths), **)
         @execution_context.command('add', *args)
-      end
-
-      private
-
-      # Build command-line arguments from options
-      #
-      # @param options [Hash] the options hash
-      # @return [Array<String>] the command-line arguments
-      #
-      def build_args(options)
-        Git::ArgsBuilder.build(options, OPTION_MAP)
       end
     end
   end

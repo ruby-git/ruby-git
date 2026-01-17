@@ -141,8 +141,10 @@ module Git
       # @param positionals [Array] positional argument values
       # @param opts [Hash] the keyword options to build arguments from
       # @return [Array<String>] the command-line arguments
+      # @raise [ArgumentError] if unsupported options are provided
       #
       def build(*positionals, **opts)
+        validate_unsupported_options!(opts)
         args = @static_flags.dup
         @option_definitions.each do |name, definition|
           build_option(args, name, definition, opts[name])
@@ -222,6 +224,13 @@ module Git
 
       def value_empty?(value)
         value.nil? || (value.respond_to?(:empty?) && value.empty?)
+      end
+
+      def validate_unsupported_options!(opts)
+        unsupported = opts.keys - @option_definitions.keys
+        return if unsupported.empty?
+
+        raise ArgumentError, "Unsupported options: #{unsupported.map(&:inspect).join(', ')}"
       end
     end
   end
