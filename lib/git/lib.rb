@@ -4,6 +4,7 @@ require_relative 'args_builder'
 require_relative 'commands/add'
 require_relative 'commands/clone'
 require_relative 'commands/fsck'
+require_relative 'commands/init'
 
 require 'git/command_line'
 require 'git/errors'
@@ -78,11 +79,6 @@ module Git
       end
     end
 
-    INIT_OPTION_MAP = [
-      { keys: [:bare], flag: '--bare', type: :boolean },
-      { keys: [:initial_branch], flag: '--initial-branch', type: :valued_equals }
-    ].freeze
-
     # creates or reinitializes the repository
     #
     # options:
@@ -90,9 +86,10 @@ module Git
     #   :working_directory
     #   :initial_branch
     #
+    # @note This method delegates to {Git::Commands::Init}
+    #
     def init(opts = {})
-      args = build_args(opts, INIT_OPTION_MAP)
-      command('init', *args)
+      Git::Commands::Init.new(self).call(opts)
     end
 
     # Clones a repository into a newly created directory
