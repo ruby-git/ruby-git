@@ -5,6 +5,39 @@
 
 # Change Log
 
+## [5.0.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v5.0.0) (2026-01-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* The .path accessor has been removed. Use .to_s instead:   - repo.dir.path → repo.dir.to_s   - repo.index.path → repo.index.to_s   - repo.repo.path → repo.repo.to_s
+
+### Features
+
+* Add support for git fsck command ([96a0958](https://github.com/ruby-git/ruby-git/commit/96a09588f94ad270cae6e9e3c14fe39d8b141fa1)), closes [#218](https://github.com/ruby-git/ruby-git/issues/218)
+* Introduce Git::ExecutionContext and Git::Repository classes ([6163fa3](https://github.com/ruby-git/ruby-git/commit/6163fa371e08b95bcb59774919c035a53ef8fab2))
+
+
+### Other Changes
+
+* **add:** Use Options DSL for argument building ([a8b3236](https://github.com/ruby-git/ruby-git/commit/a8b32369607e53b30f3cfed601be23de7c619960))
+* **clone:** Use Options DSL for argument building ([2e4047d](https://github.com/ruby-git/ruby-git/commit/2e4047da960a8c1a48420215d2ef32bd14a0c579))
+* **commands:** Add Git::Commands::Options DSL ([21401e0](https://github.com/ruby-git/ruby-git/commit/21401e0c0f5d52fa90d6387767ecd776a9fd270f))
+* Configure prerelease releases ([94064ae](https://github.com/ruby-git/ruby-git/commit/94064ae4a90ab7448203bb59c0a4545efd8bb72e))
+* Enable option validation in Add and Fsck commands ([37aa0d5](https://github.com/ruby-git/ruby-git/commit/37aa0d5b4f513f30ff7a7d6fecff8c78a7a5a915))
+* Exclude spec/**/* from Metrics/BlockLength ([1cc1001](https://github.com/ruby-git/ruby-git/commit/1cc10012a3a0c59db046aa5c9d7b5b3c86bbdb8f))
+* Extract git add to Git::Commands::Add ([baf2a76](https://github.com/ruby-git/ruby-git/commit/baf2a761e3e165be59c185f665c02424dc05cd9e))
+* Extract git fsck to Git::Commands::Fsck ([ad28871](https://github.com/ruby-git/ruby-git/commit/ad2887103ff99ac17faa907ba5fa730da9e71f1e))
+* **fsck:** Use Options DSL for argument building ([7464439](https://github.com/ruby-git/ruby-git/commit/7464439b8915640563e1c4d609f206856ed9bc73))
+* Make Git::Lib#command public for Command classes ([e946d04](https://github.com/ruby-git/ruby-git/commit/e946d043e4fcab192e4d7761db9fa836dae51366))
+* Mark main releases as prerelease ([1dca79a](https://github.com/ruby-git/ruby-git/commit/1dca79a8cb4827e4954f04d2918ccfb8a1737dba))
+* Merge Exclude arrays with inherited rubocop config ([0d7b582](https://github.com/ruby-git/ruby-git/commit/0d7b58260c571f8371b133f0b36fcb6a84c4e618))
+* Migrate git clone to Git::Commands::Clone ([a16d14a](https://github.com/ruby-git/ruby-git/commit/a16d14afc5bc1447ecd9c56cb39ecf85c206c87c))
+* Replace path wrapper classes with Pathname ([c7b7b1f](https://github.com/ruby-git/ruby-git/commit/c7b7b1f1e782533140ba22b831385097da2e3d09))
+* Restructure CONTRIBUTING.md and link from copilot-instructions ([7e3481b](https://github.com/ruby-git/ruby-git/commit/7e3481b42b306ec00111cc91d6bd8ab282766ee8))
+* Set up RSpec testing environment ([452929a](https://github.com/ruby-git/ruby-git/commit/452929aa63d2fb022a107e441417e777de5c038f))
+* Silence superfluous test output ([1da9f66](https://github.com/ruby-git/ruby-git/commit/1da9f669409b9dfbfd248edac66d9e71aa9b0a47))
+
 ## [4.1.2](https://github.com/ruby-git/ruby-git/compare/v4.1.1...v4.1.2) (2026-01-10)
 
 
