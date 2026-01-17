@@ -106,7 +106,7 @@ module Git
       # @return [Array<String>] the command-line arguments
       #
       def build_args(options)
-        Git::ArgsBuilder.new(options, OPTION_MAP).build
+        Git::ArgsBuilder.build(options, OPTION_MAP)
       end
 
       # Parse the output from git fsck into a structured result
