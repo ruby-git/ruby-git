@@ -301,5 +301,25 @@ RSpec.describe Git::Commands::Options do
         expect(options.build(skip: 'file.txt')).to eq(['--skip-worktree', 'file.txt'])
       end
     end
+
+    context 'with unsupported options' do
+      let(:options) do
+        described_class.define do
+          flag :force
+        end
+      end
+
+      it 'raises ArgumentError for unknown options' do
+        expect { options.build(invalid: true) }.to(
+          raise_error(ArgumentError, /Unsupported options: :invalid/)
+        )
+      end
+
+      it 'raises ArgumentError listing all unknown options' do
+        expect { options.build(foo: true, bar: true) }.to(
+          raise_error(ArgumentError, /Unsupported options: :foo, :bar/)
+        )
+      end
+    end
   end
 end
