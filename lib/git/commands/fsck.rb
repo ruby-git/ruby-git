@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/args_builder'
+require 'git/commands/options'
 
 module Git
   module Commands
@@ -26,24 +26,23 @@ module Git
     #   result = fsck.call(unreachable: true, strict: true)
     #
     class Fsck
-      # Option map for building command-line arguments
-      #
-      # @return [Array<Hash>] the option configuration
-      OPTION_MAP = [
-        { flag: '--no-progress', type: :static },
-        { keys: [:unreachable],       flag: '--unreachable',       type: :boolean },
-        { keys: [:strict],            flag: '--strict',            type: :boolean },
-        { keys: [:connectivity_only], flag: '--connectivity-only', type: :boolean },
-        { keys: [:root],              flag: '--root',              type: :boolean },
-        { keys: [:tags],              flag: '--tags',              type: :boolean },
-        { keys: [:cache],             flag: '--cache',             type: :boolean },
-        { keys: [:no_reflogs],        flag: '--no-reflogs',        type: :boolean },
-        { keys: [:lost_found],        flag: '--lost-found',        type: :boolean },
-        { keys: [:dangling],          flag: '--dangling',          type: :boolean_negatable },
-        { keys: [:full],              flag: '--full',              type: :boolean_negatable },
-        { keys: [:name_objects],      flag: '--name-objects',      type: :boolean_negatable },
-        { keys: [:references],        flag: '--references',        type: :boolean_negatable }
-      ].freeze
+      # Options DSL for building command-line arguments
+      OPTIONS = Options.define do
+        static '--no-progress'
+        flag :unreachable
+        flag :strict
+        flag :connectivity_only
+        flag :root
+        flag :tags
+        flag :cache
+        flag :no_reflogs
+        flag :lost_found
+        negatable_flag :dangling
+        negatable_flag :full
+        negatable_flag :name_objects
+        negatable_flag :references
+        positional :objects, variadic: true
+      end.freeze
 
       # Pattern matchers for parsing fsck output
       OBJECT_PATTERN = /\A(dangling|missing|unreachable) (\w+) ([0-9a-f]{40})(?: \((.+)\))?\z/
@@ -61,28 +60,41 @@ module Git
 
       # Execute the git fsck command
       #
-      # @param objects [Array<String>] optional object identifiers to check
-      # @param options [Hash] command options
+      # @overload call(*objects, **options)
       #
-      # @option options [Boolean] :unreachable Print out objects that exist but aren't
-      #   reachable from any of the reference nodes
-      # @option options [Boolean] :strict Enable more strict checking
-      # @option options [Boolean] :connectivity_only Check only the connectivity
-      # @option options [Boolean] :root Report root nodes
-      # @option options [Boolean] :tags Report tags
-      # @option options [Boolean] :cache Consider any object recorded in the index also as a head node
-      # @option options [Boolean] :no_reflogs Don't check reflogs
-      # @option options [Boolean] :lost_found Write dangling objects into .git/lost-found
-      # @option options [Boolean] :dangling Print out dangling objects (default true, set false to disable)
-      # @option options [Boolean] :full Check all objects, not just reachable ones (default false, set true to enable)
-      # @option options [Boolean] :name_objects Show name of each object from refs (default false, set true to enable)
-      # @option options [Boolean] :references Check reference objects (default true, set false to disable)
+      #   @param objects [Array<String>] optional object identifiers to check
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :unreachable Print out objects that exist but aren't
+      #     reachable from any of the reference nodes
+      #
+      #   @option options [Boolean] :strict Enable more strict checking
+      #
+      #   @option options [Boolean] :connectivity_only Check only the connectivity
+      #
+      #   @option options [Boolean] :root Report root nodes
+      #
+      #   @option options [Boolean] :tags Report tags
+      #
+      #   @option options [Boolean] :cache Consider any object recorded in the index also as a head node
+      #
+      #   @option options [Boolean] :no_reflogs Don't check reflogs
+      #
+      #   @option options [Boolean] :lost_found Write dangling objects into .git/lost-found
+      #
+      #   @option options [Boolean] :dangling Print out dangling objects (default true, set false to disable)
+      #
+      #   @option options [Boolean] :full Check all objects, not just reachable ones (default false, set true to enable)
+      #
+      #   @option options [Boolean] :name_objects Show name of each object from refs (default false, set true to enable)
+      #
+      #   @option options [Boolean] :references Check reference objects (default true, set false to disable)
       #
       # @return [Git::FsckResult] the structured result containing categorized objects
       #
-      def call(*objects, **options)
-        args = build_args(options)
-        args.concat(objects) unless objects.empty?
+      def call(*, **)
+        args = OPTIONS.build(*, **)
 
         # fsck returns non-zero exit status when issues are found:
         # 1 = errors found, 2 = missing objects, 4 = warnings
@@ -99,15 +111,6 @@ module Git
       end
 
       private
-
-      # Build command-line arguments from options
-      #
-      # @param options [Hash] the options hash
-      # @return [Array<String>] the command-line arguments
-      #
-      def build_args(options)
-        Git::ArgsBuilder.build(options, OPTION_MAP)
-      end
 
       # Parse the output from git fsck into a structured result
       #
