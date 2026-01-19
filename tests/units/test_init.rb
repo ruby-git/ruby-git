@@ -77,6 +77,17 @@ class TestInit < Test::Unit::TestCase
     end
   end
 
+  def test_git_init_separate_git_dir
+    in_temp_dir do |dir|
+      assert(!File.exist?(File.join(dir, 'config')))
+
+      in_temp_dir do |path|
+        Git.init(path, separate_git_dir: dir)
+        assert(File.exist?(File.join(dir, 'config')))
+      end
+    end
+  end
+
   def test_git_init_initial_branch
     in_temp_dir do |path|
       repo = Git.init(path, initial_branch: 'main')
