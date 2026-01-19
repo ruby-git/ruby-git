@@ -16,17 +16,22 @@ module Git
   class Base
     # (see Git.bare)
     def self.bare(git_dir, options = {})
-      normalize_paths(options, default_repository: git_dir, bare: true)
-      new(options)
+      paths = resolve_paths(repository: git_dir, bare: true)
+      new(options.merge(paths))
     end
 
     # (see Git.clone)
     def self.clone(repository_url, directory, options = {})
       lib_options = {}
       lib_options[:git_ssh] = options[:git_ssh] if options.key?(:git_ssh)
-      new_options = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
-      normalize_paths(new_options, bare: options[:bare] || options[:mirror])
-      new(new_options)
+      clone_result = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
+      bare = options[:bare] || options[:mirror]
+      paths = resolve_paths(
+        working_directory: clone_result[:working_directory],
+        repository: clone_result[:repository],
+        bare: bare
+      )
+      new(options.merge(paths))
     end
 
     # (see Git.default_branch)
@@ -70,30 +75,26 @@ module Git
 
     # (see Git.init)
     def self.init(directory = '.', options = {})
-      normalize_paths(options, default_working_directory: directory, default_repository: directory,
-                               bare: options[:bare])
+      bare = options[:bare]
+      paths = resolve_paths(
+        working_directory: directory,
+        repository: options[:repository],
+        bare: bare
+      )
 
-      init_options = {
-        bare: options[:bare],
-        initial_branch: options[:initial_branch]
-      }
+      create_and_init_repository(paths, options)
+    end
 
-      directory = options[:bare] ? options[:repository] : options[:working_directory]
-      FileUtils.mkdir_p(directory)
+    private_class_method def self.create_and_init_repository(paths, options)
+      bare = options[:bare]
+      target_directory = bare ? paths[:repository] : paths[:working_directory]
+      FileUtils.mkdir_p(target_directory)
 
-      # TODO: this dance seems awkward: this creates a Git::Lib so we can call
-      #   init so we can create a new Git::Base which in turn (ultimately)
-      #   creates another/different Git::Lib.
-      #
-      # TODO: maybe refactor so this Git::Bare.init does this:
-      #   self.new(opts).init(init_opts) and move all/some of this code into
-      #   Git::Bare#init. This way the init method can be called on any
-      #   repository you have a Git::Base instance for.  This would not
-      #   change the existing interface (other than adding to it).
-      #
-      Git::Lib.new(options).init(init_options)
-
-      new(options)
+      # Create the Git::Base instance first, then initialize the repository.
+      # This avoids creating a temporary Git::Lib just for the init command.
+      new(options.merge(paths)).tap do |base|
+        base.lib.init(bare: bare, initial_branch: options[:initial_branch])
+      end
     end
 
     def self.root_of_worktree(working_dir)
@@ -127,9 +128,13 @@ module Git
 
       working_dir = root_of_worktree(working_dir) unless options[:repository]
 
-      normalize_paths(options, default_working_directory: working_dir)
+      paths = resolve_paths(
+        working_directory: working_dir,
+        repository: options[:repository],
+        index: options[:index]
+      )
 
-      new(options)
+      new(options.merge(paths))
     end
 
     # Create an object that executes Git commands in the context of a working
@@ -162,7 +167,6 @@ module Git
     #   of the opened working copy or bare repository
     #
     def initialize(options = {})
-      options = default_paths(options)
       setup_logger(options[:log])
       @git_ssh = options.key?(:git_ssh) ? options[:git_ssh] : :use_global_config
       initialize_components(options)
@@ -972,23 +976,6 @@ module Git
 
     private
 
-    # Sets default paths in the options hash for direct `Git::Base.new` calls
-    #
-    # Factory methods like `Git.open` pre-populate these options by calling
-    # `normalize_paths`, making this a fallback. It avoids mutating the
-    # original options hash by returning a new one.
-    #
-    # @param options [Hash] the original options hash
-    # @return [Hash] a new options hash with defaults applied
-    def default_paths(options)
-      return options unless (working_dir = options[:working_directory])
-
-      options.dup.tap do |opts|
-        opts[:repository] ||= File.join(working_dir, '.git')
-        opts[:index] ||= File.join(opts[:repository], 'index')
-      end
-    end
-
     # Initializes the logger from the provided options
     # @param log_option [Logger, nil] The logger instance from options.
     def setup_logger(log_option)
@@ -1004,131 +991,94 @@ module Git
       @index = Pathname.new(options[:index]) if options[:index]
     end
 
-    # Normalize options before they are sent to Git::Base.new
+    # Resolve and normalize paths for a Git repository
     #
-    # Updates the options parameter by setting appropriate values for the following keys:
-    #   * options[:working_directory]
-    #   * options[:repository]
-    #   * options[:index]
+    # Returns a new hash containing the resolved absolute paths for:
+    #   * :working_directory - the working tree root (nil for bare repos)
+    #   * :repository - the .git directory
+    #   * :index - the index file
     #
-    # All three values will be set to absolute paths. An exception is that
-    # :working_directory will be set to nil if bare is true.
+    # This method does not mutate any inputs.
     #
-    private_class_method def self.normalize_paths(
-      options, default_working_directory: nil, default_repository: nil, bare: false
-    )
-      normalize_working_directory(options, default: default_working_directory, bare: bare)
-      normalize_repository(options, default: default_repository, bare: bare)
-      normalize_index(options)
+    # @param working_directory [String, nil] the working directory path
+    # @param repository [String, nil] the repository (.git) directory path
+    # @param index [String, nil] the index file path
+    # @param bare [Boolean] whether this is a bare repository
+    #
+    # @return [Hash] a hash with :working_directory, :repository, and :index keys
+    #
+    private_class_method def self.resolve_paths(working_directory: nil, repository: nil, index: nil, bare: false)
+      working_dir = resolve_working_directory(working_directory, bare: bare)
+      # For bare repos, use working_directory as the default repository location
+      repo_path = resolve_repository(repository, working_dir, bare: bare, bare_default: working_directory)
+      index_path = resolve_index(index, repo_path)
+
+      {
+        working_directory: working_dir,
+        repository: repo_path,
+        index: index_path
+      }
     end
 
-    # Normalize options[:working_directory]
+    # Resolve the working directory path
     #
-    # If working with a bare repository, set to `nil`.
-    # Otherwise, set to the first non-nil value of:
-    #   1. `options[:working_directory]`,
-    #   2. the `default` parameter, or
-    #   3. the current working directory
+    # @param path [String, nil] the working directory path or nil
+    # @param bare [Boolean] whether this is a bare repository
+    # @return [String, nil] the absolute path or nil for bare repos
     #
-    # Finally, if options[:working_directory] is a relative path, convert it to an absoluite
-    # path relative to the current directory.
-    #
-    private_class_method def self.normalize_working_directory(options, default:, bare: false)
-      working_directory =
-        if bare
-          nil
-        else
-          File.expand_path(options[:working_directory] || default || Dir.pwd)
-        end
+    private_class_method def self.resolve_working_directory(path, bare:)
+      return nil if bare
 
-      options[:working_directory] = working_directory
+      File.expand_path(path || Dir.pwd)
     end
 
-    # Normalize options[:repository]
+    # Resolve the repository (.git) directory path
     #
-    # If working with a bare repository, set to the first non-nil value out of:
-    #   1. `options[:repository]`
-    #   2. the `default` parameter
-    #   3. the current working directory
+    # Handles the gitdir pointer file case for submodules and worktrees.
     #
-    # Otherwise, set to the first non-nil value of:
-    #   1. `options[:repository]`
-    #   2. `.git`
+    # @param path [String, nil] the repository path or nil
+    # @param working_dir [String, nil] the working directory for relative path resolution
+    # @param bare [Boolean] whether this is a bare repository
+    # @param bare_default [String, nil] for bare repos, use this as default if path is nil
+    # @return [String] the absolute path to the repository
     #
-    # Next, if options[:repository] refers to a *file* and not a *directory*, set
-    # options[:repository] to the contents of that file.  This is the case when
-    # working with a submodule or a secondary working tree (created with git worktree
-    # add). In these cases the repository is actually contained/nested within the
-    # parent's repository directory.
-    #
-    # Finally, if options[:repository] is a relative path, convert it to an absolute
-    # path relative to:
-    #   1. the current directory if working with a bare repository or
-    #   2. the working directory if NOT working with a bare repository
-    #
-    private_class_method def self.normalize_repository(options, default:, bare: false)
-      initial_path = initial_repository_path(options, default: default, bare: bare)
-      final_path = resolve_gitdir_if_present(initial_path, options[:working_directory])
-      options[:repository] = final_path
+    private_class_method def self.resolve_repository(path, working_dir, bare:, bare_default: nil)
+      initial_path = if bare
+                       File.expand_path(path || bare_default || Dir.pwd)
+                     else
+                       File.expand_path(path || '.git', working_dir)
+                     end
+
+      resolve_gitdir_pointer(initial_path, working_dir)
     end
 
-    # Determines the initial, potential path to the repository directory
+    # Resolve gitdir pointer files used by submodules and worktrees
     #
-    # This path is considered 'initial' because it is not guaranteed to be the
-    # final repository location. For features like submodules or worktrees,
-    # this path may point to a text file containing a `gitdir:` pointer to the
-    # actual repository directory elsewhere. This initial path must be
-    # subsequently resolved.
+    # If the path points to a file containing "gitdir: <path>", returns the
+    # resolved path. Otherwise returns the original path.
     #
-    # @api private
+    # @param path [String] the path to check
+    # @param working_dir [String, nil] base directory for relative path resolution
+    # @return [String] the resolved absolute path
     #
-    # @param options [Hash] The options hash, checked for `[:repository]`.
-    #
-    # @param default [String] A fallback path if `options[:repository]` is not set.
-    #
-    # @param bare [Boolean] Whether the repository is bare, which changes path resolution.
-    #
-    # @return [String] The initial, absolute path to the `.git` directory or file.
-    #
-    private_class_method def self.initial_repository_path(options, default:, bare:)
-      if bare
-        File.expand_path(options[:repository] || default || Dir.pwd)
-      else
-        File.expand_path(options[:repository] || '.git', options[:working_directory])
-      end
-    end
-
-    # Resolves the path to the actual repository if it's a `gitdir:` pointer file.
-    #
-    # If `path` points to a file (common in submodules and worktrees), this
-    # method reads the `gitdir:` path from it and returns the real repository
-    # path. Otherwise, it returns the original path.
-    #
-    # @api private
-    #
-    # @param path [String] The initial path to the repository, which may be a pointer file.
-    #
-    # @param working_dir [String] The working directory, used as a base to resolve the path.
-    #
-    # @return [String] The final, resolved absolute path to the repository directory.
-    #
-    private_class_method def self.resolve_gitdir_if_present(path, working_dir)
+    private_class_method def self.resolve_gitdir_pointer(path, working_dir)
       return path unless File.file?(path)
 
-      # The file contains `gitdir: <path>`, so we read the file,
-      # extract the path part, and expand it.
-      gitdir_pointer = File.read(path).sub(/\Agitdir: /, '').strip
-      File.expand_path(gitdir_pointer, working_dir)
+      gitdir_content = File.read(path).strip
+      return path unless gitdir_content.start_with?('gitdir: ')
+
+      gitdir_path = gitdir_content.sub(/\Agitdir: /, '')
+      File.expand_path(gitdir_path, working_dir)
     end
 
-    # Normalize options[:index]
+    # Resolve the index file path
     #
-    # If options[:index] is a relative directory, convert it to an absolute
-    # directory relative to the repository directory
+    # @param path [String, nil] the index path or nil
+    # @param repository [String] the repository directory for relative path resolution
+    # @return [String] the absolute path to the index file
     #
-    private_class_method def self.normalize_index(options)
-      index = File.expand_path(options[:index] || 'index', options[:repository])
-      options[:index] = index
+    private_class_method def self.resolve_index(path, repository)
+      File.expand_path(path || 'index', repository)
     end
   end
 end

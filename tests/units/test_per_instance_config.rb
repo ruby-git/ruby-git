@@ -78,17 +78,21 @@ class TestPerInstanceConfig < Test::Unit::TestCase
     end
   end
 
-  test 'Git.init passes git_ssh to Git::Lib for execution' do
+  test 'Git.init passes git_ssh through Git::Base to Git::Lib' do
     git_ssh = '/custom/ssh'
 
-    # Git.init passes the options hash (including git_ssh) to Git::Lib.new(options).init(init_options)
+    # Git.init creates a Git::Base with the git_ssh option, then calls base.lib.init
+    # The git_ssh flows through Git::Base#git_ssh to Git::Lib#initialize_from_base
 
-    Git::Lib.expects(:new).with(has_entry(git_ssh: git_ssh)).returns(stub_everything(init: true))
+    in_temp_dir do |path|
+      repo = Git.init(path, git_ssh: git_ssh)
 
-    begin
-      Git.init('dir', git_ssh: git_ssh)
-    rescue StandardError
-      # Ignore errors
+      # Verify git_ssh is stored in the Git::Base instance
+      assert_equal git_ssh, repo.git_ssh
+
+      # Verify git_ssh flows through to the Git::Lib instance
+      env = repo.lib.send(:env_overrides)
+      assert_equal git_ssh, env['GIT_SSH']
     end
   end
 end
