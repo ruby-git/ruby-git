@@ -1,6 +1,9 @@
 # Proposed Redesigned Architecture for the Git Gem
 
-This document outlines a proposal for a major redesign of the git gem, targeted for version 5.0.0. The goal of this redesign is to modernize the gem's architecture, making it more robust, maintainable, testable, and easier for new contributors to understand.
+This document outlines a proposal for a major redesign of the git gem, targeted for
+version 5.0.0. The goal of this redesign is to modernize the gem's architecture,
+making it more robust, maintainable, testable, and easier for new contributors to
+understand.
 
 - [1. Motivation](#1-motivation)
 - [2. The New Architecture: A Three-Layered Approach](#2-the-new-architecture-a-three-layered-approach)
@@ -8,57 +11,136 @@ This document outlines a proposal for a major redesign of the git gem, targeted 
   - [A. Clear Public vs. Private API](#a-clear-public-vs-private-api)
   - [B. Dependency Injection](#b-dependency-injection)
   - [C. Immutable Return Values](#c-immutable-return-values)
-  - [D. Clear Naming for Path Objects](#d-clear-naming-for-path-objects)
+  - [D. Eliminate Custom Path Classes](#d-eliminate-custom-path-classes)
 - [4. Testing Strategy Overhaul](#4-testing-strategy-overhaul)
 - [5. Impact on Users: Breaking Changes for v5.0.0](#5-impact-on-users-breaking-changes-for-v500)
 
 ## 1. Motivation
 
-The current architecture, while functional, has several design issues that have accrued over time, making it difficult to extend and maintain.
+The current architecture, while functional, has several design issues that have
+accrued over time, making it difficult to extend and maintain.
 
-- **Unclear Separation of Concerns**: The responsibilities of the `Git`, `Git::Base`, and `Git::Lib` classes are "muddy." `Git::Base` acts as both a high-level API and a factory, while `Git::Lib` contains a mix of low-level command execution and high-level output parsing.
+- **Unclear Separation of Concerns**: The responsibilities of the `Git`, `Git::Base`,
+  and `Git::Lib` classes are "muddy." `Git::Base` acts as both a high-level API and a
+  factory, while `Git::Lib` contains a mix of low-level command execution and
+  high-level output parsing.
 
-- **Circular Dependency**: A key architectural flaw is the circular dependency between `Git::Base` and `Git::Lib`. `Git::Base` creates and depends on `Git::Lib`, but `Git::Lib`'s constructor requires an instance of Git::Base to access configuration. This tight coupling makes the classes difficult to reason about and test in isolation.
+- **Circular Dependency**: A key architectural flaw is the circular dependency
+  between `Git::Base` and `Git::Lib`. `Git::Base` creates and depends on `Git::Lib`,
+  but `Git::Lib`'s constructor requires an instance of Git::Base to access
+  configuration. This tight coupling makes the classes difficult to reason about and
+  test in isolation.
 
-- **Undefined Public API**: The boundary between the gem's public API and its internal implementation is not clearly defined. This has led some users to rely on internal classes like `Git::Lib`, making it difficult to refactor the internals without introducing breaking changes.
+- **Undefined Public API**: The boundary between the gem's public API and its
+  internal implementation is not clearly defined. This has led some users to rely on
+  internal classes like `Git::Lib`, making it difficult to refactor the internals
+  without introducing breaking changes.
 
-- **Slow and Brittle Test Suite**: The current tests rely heavily on filesystem fixtures and shelling out to the git command line for almost every test case. This makes the test suite slow and difficult to maintain, especially on non-UNIX platforms.
+- **Slow and Brittle Test Suite**: The current tests rely heavily on filesystem
+  fixtures and shelling out to the git command line for almost every test case. This
+  makes the test suite slow and difficult to maintain, especially on non-UNIX
+  platforms.
 
 ## 2. The New Architecture: A Three-Layered Approach
 
-The new design is built on a clear separation of concerns, dividing responsibilities into three distinct layers: a Facade, an Execution Context, and Command Objects.
+The new design is built on a clear separation of concerns, dividing responsibilities
+into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
 1. The Facade Layer: Git::Repository
 
     This is the primary public interface that users will interact with.
 
-    **Renaming**: `Git::Base` will be renamed to `Git::Repository`. This name is more descriptive and intuitive.
+    **Renaming**: `Git::Base` will be renamed to `Git::Repository`. This name is more
+    descriptive and intuitive.
 
-    **Responsibility**: It will serve as a clean, high-level facade for all common git operations. Its methods will be simple, one-line calls that delegate the actual work to an appropriate command object.
+    **Responsibility**: It will serve as a clean, high-level facade for all common
+    git operations. Its methods will be simple, one-line calls that delegate the
+    actual work to an appropriate command object.
 
-    **Scalability**: To prevent this class from growing too large, its methods will be organized into logical modules (e.g., `Git::Repository::Branching`, `Git::Repository::History`) which are then included in the main class. This keeps the core class definition small and the features well-organized. These categories will be inspired by (but not slavishly follow) the git command line reference in [this page](https://git-scm.com/docs).
+    **Scalability**: To prevent this class from growing too large, its methods will
+    be organized into logical modules (e.g., `Git::Repository::Branching`,
+    `Git::Repository::History`) which are then included in the main class. This keeps
+    the core class definition small and the features well-organized. These categories
+    will be inspired by (but not slavishly follow) the git command line reference in
+    [this page](https://git-scm.com/docs).
 
 2. The Execution Layer: Git::ExecutionContext
 
     This is the low-level, private engine for running commands.
 
-    **Renaming**: `Git::Lib` will be renamed to `Git::ExecutionContext`.
+    **Renaming**: `Git::Lib` will be renamed to `Git::ExecutionContext` (as an
+    abstract base class).
 
-    **Responsibility**: Its sole purpose is to execute raw git commands. It will manage the repository's environment (working directory, .git path, logger) and use the existing `Git::CommandLine` class to interact with the system's git binary. It will have no knowledge of any specific git command's arguments or output.
+    **Responsibility**: Its purpose is to provide a configured `command` method for
+    executing git commands. This method wraps `Git::CommandLine` with essential
+    functionality including default options (normalize, chomp, timeout), option
+    validation, and a simplified interface that returns stdout. The execution context
+    has no knowledge of any specific git command's arguments or output.
+
+    **Two Context Types**: The execution layer will consist of an abstract base class
+    with two concrete implementations:
+
+    - **Git::GlobalContext**: For commands that do not require an existing repository
+      (`init`, `clone`, `config --global`, `version`). These commands execute in a
+      clean environment with no repository paths set. In the specific case of
+      `init`/`clone`, the command itself runs in `GlobalContext`, but on success it
+      yields a newly created `Git::Repository` instance backed by a
+      `Git::RepositoryContext`.
+
+    - **Git::RepositoryContext**: For repository-bound commands (`add`, `commit`,
+      `status`, `log`, etc.). Manages the repository environment (working directory,
+      .git path, index file) and provides the ability to override environment
+      variables per-command (e.g., unsetting `GIT_INDEX_FILE` for worktree
+      mutations).
+
+    The base `ExecutionContext` class provides the common `command` method that wraps
+    command execution with defaults, validation, and timeout handling. Subclasses
+    implement environment-specific configuration (paths, environment variables) to
+    create properly configured command execution contexts.
 
 3. The Logic Layer: Git::Commands
 
     This is where all the command-specific implementation details will live.
 
-    **New Classes**: For each git operation, a new command class will be created within the `Git::Commands` namespace (e.g., `Git::Commands::Commit`, `Git::Commands::Diff`).
+    **New Classes**: For each git operation, a new command class will be created
+    within the `Git::Commands` namespace (e.g., `Git::Commands::Commit`,
+    `Git::Commands::Diff`).
 
     **Dual Responsibility**: Each command class will be responsible for:
 
-    1. **Building Arguments**: Translating high-level Ruby options into the specific command-line flags and arguments that git expects.
+    1. **Building Arguments**: Translating Ruby options into the specific
+       command-line flags and arguments that git expects. Command parameters should
+       generally match the underlying git command's interface to keep this layer thin
+       and transparent.
 
-    2. **Parsing Output**: Taking the raw string output from the ExecutionContext and converting it into rich, structured Ruby objects.
+    2. **Parsing Output**: Taking the raw string output from
+       `ExecutionContext#command` and converting it into rich, structured Ruby
+       objects.
 
-    **Handling Complexity**: For commands with multiple behaviors (like git diff), we can use specialized subclasses (e.g., Git::Commands::Diff::NameStatus, Git::Commands::Diff::Stats) to keep each class focused on a single responsibility.
+    **Options DSL**: To standardize argument building across commands, a declarative
+    `Git::Commands::Options` DSL is provided. This allows each command to define its
+    accepted options in a clear, self-documenting way:
+
+    ```ruby
+    OPTIONS = Git::Commands::Options.define do
+      flag :force                    # --force when true
+      flag :all                      # --all when true
+      value :branch                  # --branch <value>
+      multi_value :config            # --config <v1> --config <v2>
+      negatable_flag :single_branch  # --single-branch / --no-single-branch
+      custom(:depth) { |v| ['--depth', v.to_i] }
+      positional :paths, variadic: true, separator: '--'
+    end
+    ```
+
+    The DSL supports flags, values, multi-values, negatable flags, custom
+    transformations, static flags, metadata (options not passed to git), and
+    positional arguments with optional separators.
+
+    **Handling Complexity**: For commands with multiple behaviors (like git diff), we
+    can use specialized subclasses (e.g., Git::Commands::Diff::NameStatus,
+    Git::Commands::Diff::Stats) to keep each class focused on a single
+    responsibility.
 
 ## 3. Key Design Principles
 
@@ -66,73 +148,108 @@ The new architecture will be guided by the following modern design principles.
 
 ### A. Clear Public vs. Private API
 
-A primary goal of this redesign is to establish a crisp boundary between the public API and internal implementation details.
+A primary goal of this redesign is to establish a crisp boundary between the public
+API and internal implementation details.
 
-- **Public Interface**: The public API will consist of the `Git` module (for factories), the `Git::Repository` class, and the specialized data/query objects it returns (e.g., `Git::Log`, `Git::Status`, `Git::Object::Commit`).
+- **Public Interface**: The public API will consist of the `Git` module (for
+  factories), the `Git::Repository` class, and the specialized data/query objects it
+  returns (e.g., `Git::Log`, `Git::Status`, `Git::Object::Commit`).
 
-- **Private Implementation**: All other components, including `Git::ExecutionContext` and all classes within the `Git::Commands` namespace, will be considered internal. They will be explicitly marked with the `@api private` YARD tag to discourage external use.
+- **Private Implementation**: All other components, including `Git::ExecutionContext`
+  and all classes within the `Git::Commands` namespace, will be considered internal.
+  They will be explicitly marked with the `@api private` YARD tag to discourage
+  external use.
 
 ### B. Dependency Injection
 
-The circular dependency will be resolved by implementing a clear, one-way dependency flow.
+The circular dependency will be resolved by implementing a clear, one-way dependency
+flow.
 
-1. The factory methods (`Git.open`, `Git.clone`) will create and configure an instance of `Git::ExecutionContext`.
+1. The factory methods (`Git.open`, `Git.clone`) will create and configure an
+   instance of the appropriate `Git::ExecutionContext` subclass (`Git::GlobalContext`
+   for `init`/`clone`, `Git::RepositoryContext` for `open`/`bare`).
 
-2. This `ExecutionContext` instance will then be injected into the constructor of the `Git::Repository` object.
+2. This context instance will then be wired into the system in two ways:
+   - For commands that run before a repository exists (e.g., `Git::Commands::Init`,
+     `Git::Commands::Clone`), the context will be passed directly into the
+     constructor of the command object.
+   - For repository-scoped commands (e.g., `Git::Commands::Log`,
+     `Git::Commands::Status`), the context will be injected once into the
+     `Git::Repository` constructor (for `open`/`bare`), and those command objects
+     will access the context through the repository instance rather than receiving it
+     directly.
 
-This decouples the `Repository` from its execution environment, making the system more modular and easier to test.
+This decouples the `Repository` from its execution environment, making the system
+more modular and easier to test.
 
 ### C. Immutable Return Values
 
-To create a more predictable and robust API, methods will return structured, immutable data objects instead of raw strings or hashes.
+To create a more predictable and robust API, methods will return structured,
+immutable data objects instead of raw strings or hashes.
 
 This will be implemented using `Data.define` or simple, frozen `Struct`s.
 
-For example, instead of returning a raw string, `repo.config('user.name')` will return a `Git::Config::Value` object containing the key, value, scope, and source path.
+For example, instead of returning a raw string, `repo.config('user.name')` will
+return a `Git::Config::Value` object containing the key, value, scope, and source
+path.
 
 ### D. Eliminate Custom Path Classes
 
-The existing path wrapper classes (`Git::WorkingDirectory`, `Git::Index`, `Git::Repository`, and their base class `Git::Path`) provide minimal value over Ruby's standard library. These classes will be eliminated entirely.
+The existing path wrapper classes (`Git::WorkingDirectory`, `Git::Index`,
+`Git::Repository`, and their base class `Git::Path`) provide minimal value over
+Ruby's standard library. These classes will be eliminated entirely.
 
 - `Git::Path` -> **Removed**
 - `Git::WorkingDirectory` -> **Removed**
 - `Git::Index` -> **Removed**
 - `Git::Repository` (the path class) -> **Removed**
 
-Instead, the `dir`, `repo`, and `index` accessors on the repository object will return `Pathname` objects directly. This provides:
+Instead, the `dir`, `repo`, and `index` accessors on the repository object will
+return `Pathname` objects directly. This provides:
 
 - Built-in `readable?` and `writable?` methods (preserving existing API)
 - Automatic path expansion and normalization
 - Seamless string coercion via `to_s` and `to_path`
 - No custom classes to maintain
 
-**Breaking change:** Code using `.path` (e.g., `g.dir.path`) must change to `.to_s` or use the `Pathname` directly. String interpolation and most other uses will continue to work unchanged.
+**Breaking change:** Code using `.path` (e.g., `g.dir.path`) must change to `.to_s`
+or use the `Pathname` directly. String interpolation and most other uses will
+continue to work unchanged.
 
 ## 4. Testing Strategy Overhaul
 
-The test suite will be modernized to be faster, more reliable, and easier to work with.
+The test suite will be modernized to be faster, more reliable, and easier to work
+with.
 
-- **Migration to RSpec**: The entire test suite will be migrated from TestUnit to RSpec to leverage its modern tooling and expressive DSL.
+- **Migration to RSpec**: The entire test suite will be migrated from TestUnit to
+  RSpec to leverage its modern tooling and expressive DSL.
 
 - **Layered Testing**: A three-layered testing strategy will be adopted:
 
-  1. **Unit Tests**: The majority of tests will be fast, isolated unit tests for the `Command` classes, using mock `ExecutionContexts`.
+  1. **Unit Tests**: The majority of tests will be fast, isolated unit tests for the
+     `Command` classes, using mock `ExecutionContexts`.
 
-  2. **Integration Tests**: A small number of integration tests will verify that `ExecutionContext` correctly interacts with the system's `git` binary.
+  2. **Integration Tests**: A small number of integration tests will verify that
+     `ExecutionContext` correctly interacts with the system's `git` binary.
 
-  3. **Feature Tests**: A minimal set of high-level tests will ensure the public facade on `Git::Repository` works end-to-end.
+  3. **Feature Tests**: A minimal set of high-level tests will ensure the public
+     facade on `Git::Repository` works end-to-end.
 
-- **Reduced Filesystem Dependency**: This new structure will dramatically reduce the suite's reliance on slow and brittle filesystem fixtures.
+- **Reduced Filesystem Dependency**: This new structure will dramatically reduce the
+  suite's reliance on slow and brittle filesystem fixtures.
 
 ## 5. Impact on Users: Breaking Changes for v5.0.0
 
-This redesign is a significant undertaking and will be released as version 5.0.0. It includes several breaking changes that users will need to be aware of when upgrading.
+This redesign is a significant undertaking and will be released as version 5.0.0. It
+includes several breaking changes that users will need to be aware of when upgrading.
 
 - **`Git::Lib` is Removed**: Any code directly referencing `Git::Lib` will break.
 
-- **g.lib Accessor is Removed**: The `.lib` accessor on repository objects will be removed.
+- **g.lib Accessor is Removed**: The `.lib` accessor on repository objects will be
+  removed.
 
-- **Internal Methods Relocated**: Methods that were previously accessible via g.lib will now be private implementation details of the new command classes and will not be directly reachable.
+- **Internal Methods Relocated**: Methods that were previously accessible via g.lib
+  will now be private implementation details of the new command classes and will not
+  be directly reachable.
 
 Users should only rely on the newly defined public interface.
-

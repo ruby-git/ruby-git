@@ -433,6 +433,7 @@ module Git
     end
   end
 end
+```
 
 > **Testing Requirement:** When defining options with the DSL, you must write RSpec
 > tests that verify each option handles valid values correctly (booleans, strings,
@@ -440,6 +441,7 @@ end
 > testing each option to ensure clarity and isolation. See
 > `spec/git/commands/add_spec.rb` for examples of comprehensive option testing.
 
+```ruby
 # lib/git/lib.rb (delegation)
 class Git::Lib
   def add(paths = '.', options = {})

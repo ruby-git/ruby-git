@@ -57,6 +57,16 @@ category includes a link to the workflow that should be followed.
 - **"Add missing YARD documentation to Git::Base methods"** - Enhance documentation
 - **"Add tests for Git::Remote#fetch"** - Improve test coverage
 
+### Architectural Redesign Tasks
+
+**→ Use [Architectural Redesign Workflow](#architectural-redesign-workflow)**
+
+- **"Do the next task in the redesign"** - Migrate the next command per the implementation plan
+- **"Migrate the commit command"** - Migrate a specific command to the new architecture
+- **"Continue the architectural redesign"** - Pick up where the last migration left off
+
+See `redesign/3_architecture_implementation.md` for the current progress tracker and next task details.
+
 ### Pull Request Review
 
 **→ Use [Pull Request Review Workflow](#pull-request-review-workflow)**
@@ -405,8 +415,7 @@ ruby-git handles three types of paths:
 - **Git directory paths**: The `.git` directory location
 - **Object paths**: Paths within Git tree objects
 
-The gem provides `Git::Path` and `Git::EscapedPath` for handling paths with special
-characters.
+Paths are stored as `Pathname` objects on `Git::Base` (`@working_directory`, `@repository`, `@index`). The `Git::EscapedPath` class handles paths with special characters when needed.
 
 ### Error Hierarchy
 
@@ -2115,6 +2124,143 @@ Create an impact assessment:
 
 3. **Update README if applicable**
 
+## Architectural Redesign Workflow
+
+This workflow guides implementing tasks for the v5.0.0 architectural redesign. The
+redesign is migrating command logic from `Git::Lib` to dedicated `Git::Commands::*`
+classes using a "Strangler Fig" pattern.
+
+**Always start by reading the current task in
+`redesign/3_architecture_implementation.md`.**
+
+### Step 1: Read the Next Task
+
+1. Open `redesign/3_architecture_implementation.md`
+2. Find the "Next Task" section under "Progress Tracker"
+3. Review the specific command to migrate and the workflow steps provided
+
+### Step 2: Analyze the Existing Implementation
+
+1. **Find the current implementation in `Git::Lib`:**
+
+   ```bash
+   # Search for the method definition
+   grep -n "def <command_name>" lib/git/lib.rb
+   ```
+
+2. **Understand all options and edge cases** by reading:
+   - The method in `lib/git/lib.rb`
+   - Any related methods in `lib/git/base.rb`
+   - Existing tests in `tests/units/`
+
+### Step 3: Write Tests First (TDD)
+
+1. **Create the spec file:** `spec/git/commands/<command>_spec.rb`
+
+2. **Follow the testing pattern from existing specs:**
+
+   ```ruby
+   # frozen_string_literal: true
+
+   require 'spec_helper'
+
+   RSpec.describe Git::Commands::<CommandName> do
+     let(:execution_context) { double('ExecutionContext') }
+     let(:command) { described_class.new(execution_context) }
+
+     describe '#call' do
+       context 'with default arguments' do
+         it 'executes the expected git command' do
+           expect(execution_context).to receive(:command)
+             .with('<git-subcommand>', '<expected>', '<args>')
+           command.call
+         end
+       end
+
+       # Add context blocks for each option...
+     end
+   end
+   ```
+
+3. **Test every option** defined in the original `Git::Lib` method
+
+### Step 4: Implement the Command Class
+
+1. **Create the command file:** `lib/git/commands/<command>.rb`
+
+2. **Follow the pattern from existing commands:**
+
+   ```ruby
+   # frozen_string_literal: true
+
+   require 'git/commands/options'
+
+   module Git
+     module Commands
+       # Implements the `git <command>` command
+       #
+       # @api private
+       class <CommandName>
+         OPTIONS = Options.define do
+           # Define options using the DSL
+         end.freeze
+
+         def initialize(execution_context)
+           @execution_context = execution_context
+         end
+
+         def call(...)
+           args = OPTIONS.build(...)
+           @execution_context.command('<git-subcommand>', *args)
+         end
+       end
+     end
+   end
+   ```
+
+3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
+
+### Step 5: Delegate from Git::Lib
+
+1. **Update the method in `lib/git/lib.rb`:**
+
+   ```ruby
+   def <command_name>(...)
+     Git::Commands::<CommandName>.new(self).call(...)
+   end
+   ```
+
+2. **Add the require statement** at the top of `lib/git/lib.rb`:
+
+   ```ruby
+   require_relative 'commands/<command>'
+   ```
+
+### Step 6: Verify All Tests Pass
+
+```bash
+# Run the new RSpec tests
+bundle exec rspec spec/git/commands/<command>_spec.rb
+
+# Run all RSpec tests
+bundle exec rspec
+
+# Run legacy TestUnit tests
+bundle exec rake test
+
+# Run linter
+bundle exec rubocop
+```
+
+### Step 7: Update the Checklist
+
+1. Move the command from "Commands To Migrate" to "Migrated Commands" in
+   `redesign/3_architecture_implementation.md`
+
+2. Update the "Next Task" section to point to the next command
+
+3. Update the progress count in the Progress Tracker table
+
 ## Documentation Workflow
 
 This workflow guides creating and maintaining documentation for the ruby-git gem.
@@ -2755,7 +2901,7 @@ See [Project Configuration](#project-configuration) for primary development comm
 
 ### When Working with Paths
 
-- Use `Git::Path` for path handling
+- Paths are stored as `Pathname` objects (not custom wrapper classes)
 - Use `Git::EscapedPath` for paths with special characters
 - Handle Windows path separators appropriately
 - Test with Unicode filenames
