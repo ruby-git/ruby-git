@@ -22,24 +22,24 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (3/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (4/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `init` command** → `Git::Commands::Init`
+**Migrate the `rm` command** → `Git::Commands::Rm`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   init`). Understand all options and edge cases.
+   remove`). Understand all options and edge cases.
 
-2. **Design**: Create `lib/git/commands/init.rb` with a `Git::Commands::Init` class
+2. **Design**: Create `lib/git/commands/rm.rb` with a `Git::Commands::Rm` class
    following the pattern in `lib/git/commands/add.rb`. The interface for
-   `Git::Commands::Init#call` should match the public interface for `Git::Base.init`
+   `Git::Commands::Rm#call` should match the public interface for `Git::Base#remove`
 
-3. **TDD**: Write `spec/git/commands/init_spec.rb` *before* implementing:
+3. **TDD**: Write `spec/git/commands/rm_spec.rb` *before* implementing:
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
@@ -50,16 +50,16 @@ risk and allows for a gradual, controlled migration to the new architecture.
      tags
    - Mark class with `@api private`
 
-5. **Delegate**: Update `Git::Lib#init` to delegate to the new class:
+5. **Delegate**: Update `Git::Lib#remove` to delegate to the new class:
 
    ```ruby
-   def init(options = {})
-     Git::Commands::Init.new(self).call(options)
+   def remove(path = '.', options = {})
+     Git::Commands::Rm.new(self).call(path, options)
    end
    ```
 
 6. **Verify**:
-   - `bundle exec rspec spec/git/commands/init_spec.rb` — new tests pass
+   - `bundle exec rspec spec/git/commands/rm_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -68,9 +68,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_archive`)
 
-7. **Update Checklist**: Move `init` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move `rm` from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
-   `rm`.
+   `mv`.
 
 #### Reference Files
 
@@ -212,15 +212,12 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `add` | `Git::Commands::Add` | `spec/git/commands/add_spec.rb` | `git add` |
 | `clone` | `Git::Commands::Clone` | `spec/git/commands/clone_spec.rb` | `git clone` |
 | `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
+| `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
 
 #### ⏳ Commands To Migrate
 
 Commands are listed in recommended migration order within each group. Migrate in
 order: Basic Snapshotting → Branching & Merging → etc.
-
-**Setup & Init** (migrate these first):
-
-- [ ] `init` → `Git::Commands::Init` — `git init`
 
 **Basic Snapshotting**:
 

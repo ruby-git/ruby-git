@@ -73,30 +73,6 @@ module Git
       version_parts.fill(0, version_parts.length...3)
     end
 
-    # (see Git.init)
-    def self.init(directory = '.', options = {})
-      bare = options[:bare]
-      paths = resolve_paths(
-        working_directory: directory,
-        repository: options[:repository],
-        bare: bare
-      )
-
-      create_and_init_repository(paths, options)
-    end
-
-    private_class_method def self.create_and_init_repository(paths, options)
-      bare = options[:bare]
-      target_directory = bare ? paths[:repository] : paths[:working_directory]
-      FileUtils.mkdir_p(target_directory)
-
-      # Create the Git::Base instance first, then initialize the repository.
-      # This avoids creating a temporary Git::Lib just for the init command.
-      new(options.merge(paths)).tap do |base|
-        base.lib.init(bare: bare, initial_branch: options[:initial_branch])
-      end
-    end
-
     def self.root_of_worktree(working_dir)
       raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
 

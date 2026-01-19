@@ -326,6 +326,8 @@ module Git
   #   and converted to an absolute path using
   #   [File.expand_path](https://www.rubydoc.info/stdlib/core/File.expand_path).
   #
+  # @option options [Pathname] :separate_git_dir Alias for `:repository`.
+  #
   # @option options [String, nil] :git_ssh An optional custom SSH command
   #
   #   - If not specified, uses the global config (Git.configure { |c| c.git_ssh = ... }).
@@ -354,7 +356,29 @@ module Git
   # @see https://git-scm.com/docs/git-init git init
   #
   def self.init(directory = '.', options = {})
-    Base.init(directory, options)
+    require_relative 'git/commands/init'
+
+    options = options.dup
+    options[:repository] ||= options.delete(:separate_git_dir)
+    init_opts = options.slice(:bare, :initial_branch, :repository)
+    Git::Commands::Init.new(Git::Lib.new(nil, options[:log])).call(directory, init_opts)
+
+    open_initialized_repository(directory, options)
+  end
+
+  # Open the repository after initialization
+  #
+  # @param directory [String] the directory containing the repository
+  # @param options [Hash] the options hash
+  # @return [Git::Base] the opened repository
+  # @api private
+  #
+  private_class_method def self.open_initialized_repository(directory, options)
+    if options[:bare]
+      Git.bare(options[:repository] || directory, options.slice(:log, :git_ssh).compact)
+    else
+      Git.open(directory, options.slice(:log, :git_ssh, :index, :repository).compact)
+    end
   end
 
   # returns a Hash containing information about the references

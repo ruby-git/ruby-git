@@ -4,6 +4,7 @@ require_relative 'args_builder'
 require_relative 'commands/add'
 require_relative 'commands/clone'
 require_relative 'commands/fsck'
+require_relative 'commands/init'
 
 require 'git/command_line'
 require 'git/errors'
@@ -78,20 +79,22 @@ module Git
       end
     end
 
-    INIT_OPTION_MAP = [
-      { keys: [:bare], flag: '--bare', type: :boolean },
-      { keys: [:initial_branch], flag: '--initial-branch', type: :valued_equals }
-    ].freeze
-
-    # creates or reinitializes the repository
+    # creates or reinitializes the repository in the current directory
     #
-    # options:
-    #   :bare
-    #   :working_directory
-    #   :initial_branch
+    # This is a low-level method that just runs `git init` with the given options.
+    # For full repository initialization including directory creation and path
+    # resolution, use Git.init instead.
+    #
+    # @param opts [Hash] command options
+    # @option opts [Boolean] :bare Create a bare repository
+    # @option opts [String] :initial_branch Use the specified name for the initial branch
+    #
+    # @return [String] the command output
     #
     def init(opts = {})
-      args = build_args(opts, INIT_OPTION_MAP)
+      args = []
+      args << '--bare' if opts[:bare]
+      args << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
       command('init', *args)
     end
 
