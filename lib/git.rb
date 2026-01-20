@@ -361,7 +361,7 @@ module Git
     options = options.dup
     options[:repository] ||= options.delete(:separate_git_dir)
     init_opts = options.slice(:bare, :initial_branch, :repository)
-    Git::Commands::Init.new(Git::Lib.new(nil, options[:log])).call(directory, init_opts)
+    Git::Commands::Init.new(Git::Lib.new(nil, options[:log])).call(directory, **init_opts)
 
     open_initialized_repository(directory, options)
   end

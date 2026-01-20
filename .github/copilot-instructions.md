@@ -316,6 +316,7 @@ guidelines:
 
 - Use YARD syntax for all public methods
 - Include `@param`, `@return`, `@raise`, `@example` tags
+- Use `@overload` with explicit keyword parameters when methods use anonymous keyword forwarding (`**`), and use individual `@param` tags for each keyword (not `@option`)
 - Document edge cases, platform differences, and security considerations
 - Keep method documentation up-to-date with implementation
 - Add `@api private` for internal-only methods
@@ -378,6 +379,7 @@ specific responsibilities:
 3. **Git::Commands::*** (New Architecture): Command-specific logic
    - Each command class handles argument building via Options DSL
    - Translates Ruby options to git command-line flags
+   - `#call` methods use keyword arguments (`**`) not options hashes
    - Located in `lib/git/commands/`
    - Unit tested with RSpec in `spec/git/commands/`
 
@@ -2203,20 +2205,27 @@ classes using a "Strangler Fig" pattern.
        class <CommandName>
          OPTIONS = Options.define do
            # Define options using the DSL
+           # For variadic positional: positional :paths, variadic: true
          end.freeze
 
          def initialize(execution_context)
            @execution_context = execution_context
          end
 
-         def call(...)
-           args = OPTIONS.build(...)
+         # Preferred: anonymous forwarding when just passing to OPTIONS.build
+         def call(*, **)
+           args = OPTIONS.build(*, **)
            @execution_context.command('<git-subcommand>', *args)
          end
        end
      end
    end
    ```
+
+   **Method Signature Convention:**
+   - **SHOULD** use anonymous `def call(*, **)` when just forwarding to `OPTIONS.build`
+   - **MAY** name args when needed to inspect or manipulate them before passing to `OPTIONS.build`
+   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `OPTIONS.build`
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
 
@@ -2225,8 +2234,10 @@ classes using a "Strangler Fig" pattern.
 1. **Update the method in `lib/git/lib.rb`:**
 
    ```ruby
-   def <command_name>(...)
-     Git::Commands::<CommandName>.new(self).call(...)
+   # Git::Lib may accept an options hash for backward compatibility
+   def <command_name>(paths = '.', options = {})
+     # Convert to splat + keyword arguments when calling the command class
+     Git::Commands::<CommandName>.new(self).call(*Array(paths), **options)
    end
    ```
 

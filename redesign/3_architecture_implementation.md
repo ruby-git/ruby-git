@@ -54,9 +54,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
    ```ruby
    def mv(source, destination, options = {})
-     Git::Commands::Mv.new(self).call(source, destination, options)
+     Git::Commands::Mv.new(self).call(*Array(source), destination, **options)
    end
    ```
+
+   Note: `Git::Lib` methods may accept an options hash for backward compatibility,
+   but they must convert it to keyword arguments when calling the command class
+   using `**options`.
 
 6. **Verify**:
    - `bundle exec rspec spec/git/commands/mv_spec.rb` — new tests pass
@@ -154,6 +158,43 @@ thin and transparent—directly mapping to git documentation. The public facade 
 Keep Command parameters matching git closely for simplicity, maintainability, and
 easier testing. Allow the public API to diverge when it adds real value, but without
 obscuring what's actually happening underneath.
+
+**Method Signature Convention**: The `#call` signature SHOULD, if possible, use
+anonymous variadic arguments for both positional and keyword arguments:
+
+```ruby
+# ✅ Preferred: anonymous forwarding when just passing to OPTIONS.build
+# Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
+# are applied automatically by OPTIONS.build
+def call(*, **)
+  args = OPTIONS.build(*, **)
+  @execution_context.command('add', *args)
+end
+
+# ✅ Acceptable: explicit positional args when command needs to manipulate them
+def call(repository_url, directory = nil, **options)
+  directory ||= derive_directory_from(repository_url)
+  args = OPTIONS.build(repository_url, directory, **options)
+  @execution_context.command('clone', *args)
+end
+
+# ❌ Incorrect: options hash parameter
+def call(paths = '.', options = {})
+  args = OPTIONS.build(*Array(paths), **options)
+  @execution_context.command('add', *args)
+end
+```
+
+This convention provides:
+
+- **Better IDE support**: Editors can autocomplete and validate keyword arguments
+- **Clearer method signatures**: The `#call` signature documents available options
+- **Centralized validation**: `OPTIONS.build` enforces allowed options and raises errors for unknown or invalid keywords
+- **Consistency**: All command classes follow the same pattern
+
+The facade layer (`Git::Lib`, `Git::Base`) may accept either keyword arguments or an
+options hash for backward compatibility, but must use `**options` when delegating to
+command classes.
 
 - **1. Migrate the First Command (`add`)**:
 
