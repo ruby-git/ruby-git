@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 
 module Git
   module Commands
@@ -22,8 +22,8 @@ module Git
     #   mv.call('source.rb', 'dest.rb', force: true)
     #
     class Mv
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         flag :force, flag: '--force'
         flag :dry_run, flag: '--dry-run'
         flag :verbose, flag: '--verbose'
@@ -61,7 +61,7 @@ module Git
       # @return [String] the command output
       #
       def call(*source, destination, **)
-        args = OPTIONS.build(*source, destination, **)
+        args = ARGS.build(*source, destination, **)
         @execution_context.command('mv', *args)
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 
 module Git
   module Commands
@@ -26,8 +26,8 @@ module Git
     #   result = fsck.call(unreachable: true, strict: true)
     #
     class Fsck
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         static '--no-progress'
         flag :unreachable
         flag :strict
@@ -94,7 +94,7 @@ module Git
       # @return [Git::FsckResult] the structured result containing categorized objects
       #
       def call(*, **)
-        args = OPTIONS.build(*, **)
+        args = ARGS.build(*, **)
 
         # fsck returns non-zero exit status when issues are found:
         # 1 = errors found, 2 = missing objects, 4 = warnings

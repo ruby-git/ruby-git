@@ -2,35 +2,35 @@
 
 module Git
   module Commands
-    # Git::Commands::Options provides a DSL for defining command-line options
-    # and positional arguments for Git commands.
+    # Git::Commands::Arguments provides a DSL for defining command-line arguments
+    # (both options and positional arguments) for Git commands.
     #
-    # @example Defining options for a command
-    #   OPTIONS = Git::Commands::Options.define do
+    # @example Defining arguments for a command
+    #   ARGS = Git::Commands::Arguments.define do
     #     flag :force
     #     value :branch
     #     positional :repository, required: true
     #   end
     #
     # @example Building command-line arguments
-    #   OPTIONS.build('https://github.com/user/repo', force: true, branch: 'main')
+    #   ARGS.build('https://github.com/user/repo', force: true, branch: 'main')
     #   # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
     #
-    class Options
-      # Define a new Options instance using the DSL
+    class Arguments
+      # Define a new Arguments instance using the DSL
       #
-      # @yield The block where options are defined using DSL methods
-      # @return [Options] The configured Options instance
+      # @yield The block where arguments are defined using DSL methods
+      # @return [Arguments] The configured Arguments instance
       #
       # @example
-      #   options = Git::Command::Options.define do
+      #   args = Git::Commands::Arguments.define do
       #     flag :verbose
       #   end
       #
       def self.define(&block)
-        options = new
-        options.instance_eval(&block) if block
-        options
+        args = new
+        args.instance_eval(&block) if block
+        args
       end
 
       def initialize
