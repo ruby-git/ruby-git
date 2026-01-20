@@ -8,24 +8,19 @@ RSpec.describe Git::Commands::Rm do
 
   describe '#call' do
     context 'when no paths are provided' do
-      let(:result_double) do
-        double('Result',
-               status: double('Status', exitstatus: 128),
-               stdout: '',
-               stderr: 'fatal: No pathspec was given. Which files should I remove?',
-               git_cmd: 'git rm')
-      end
-      let(:failed_error) { Git::FailedError.new(result_double) }
-
-      before do
-        allow(execution_context).to receive(:command).and_raise(failed_error)
-      end
-
-      it 'raises Git::FailedError for nil' do
-        expect { command.call(nil) }.to raise_error(Git::FailedError)
+      it 'raises ArgumentError for nil' do
+        expect { command.call(nil) }.to raise_error(ArgumentError, /nil values are not allowed/)
       end
 
       it 'raises Git::FailedError for empty array' do
+        result_double = double('Result',
+                               status: double('Status', exitstatus: 128),
+                               stdout: '',
+                               stderr: 'fatal: No pathspec was given. Which files should I remove?',
+                               git_cmd: 'git rm')
+        failed_error = Git::FailedError.new(result_double)
+        allow(execution_context).to receive(:command).and_raise(failed_error)
+
         expect { command.call([]) }.to raise_error(Git::FailedError)
       end
     end
