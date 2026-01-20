@@ -10,27 +10,32 @@ require 'test_helper'
 
 class TestRm < Test::Unit::TestCase
   test 'rm with no options should specify "." for the pathspec' do
-    expected_command_line = ['rm', '-f', '--', '.', {}]
+    expected_command_line = ['rm', '--', '.', {}]
     assert_command_line_eq(expected_command_line, &:rm)
   end
 
   test 'rm with one pathspec' do
-    expected_command_line = ['rm', '-f', '--', 'pathspec', {}]
+    expected_command_line = ['rm', '--', 'pathspec', {}]
     assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec') }
   end
 
   test 'rm with multiple pathspecs' do
-    expected_command_line = ['rm', '-f', '--', 'pathspec1', 'pathspec2', {}]
+    expected_command_line = ['rm', '--', 'pathspec1', 'pathspec2', {}]
     assert_command_line_eq(expected_command_line) { |git| git.rm(%w[pathspec1 pathspec2]) }
   end
 
+  test 'rm with the force option' do
+    expected_command_line = ['rm', '-f', '--', 'pathspec', {}]
+    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', force: true) }
+  end
+
   test 'rm with the recursive option' do
-    expected_command_line = ['rm', '-f', '-r', '--', 'pathspec', {}]
+    expected_command_line = ['rm', '-r', '--', 'pathspec', {}]
     assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', recursive: true) }
   end
 
   test 'rm with the cached option' do
-    expected_command_line = ['rm', '-f', '--cached', '--', 'pathspec', {}]
+    expected_command_line = ['rm', '--cached', '--', 'pathspec', {}]
     assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', cached: true) }
   end
 
@@ -44,7 +49,7 @@ class TestRm < Test::Unit::TestCase
       assert(File.exist?('README.txt'))
 
       assert_nothing_raised do
-        git.rm('README.txt')
+        git.rm('README.txt', force: true)
       end
 
       assert(!File.exist?('README.txt'))
@@ -61,7 +66,7 @@ class TestRm < Test::Unit::TestCase
       assert(File.exist?('README.txt'))
 
       assert_nothing_raised do
-        git.remove('README.txt')
+        git.remove('README.txt', force: true)
       end
 
       assert(!File.exist?('README.txt'))
