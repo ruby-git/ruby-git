@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (5/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (6/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `mv` command** → `Git::Commands::Mv`
+**Migrate the `commit` command** → `Git::Commands::Commit`
 
 #### Workflow
 
@@ -68,9 +68,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_archive`)
 
-7. **Update Checklist**: Move `mv` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move `commit` from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
-   `commit`.
+   the next command in the list.
 
 #### Reference Files
 
@@ -213,6 +213,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `clone` | `Git::Commands::Clone` | `spec/git/commands/clone_spec.rb` | `git clone` |
 | `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
 | `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
+| `mv` | `Git::Commands::Mv` | `spec/git/commands/mv_spec.rb` | `git mv` |
 | `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
 
 #### ⏳ Commands To Migrate
@@ -223,7 +224,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Basic Snapshotting**:
 
 - [x] `rm` → `Git::Commands::Rm` — `git rm`
-- [ ] `mv` → `Git::Commands::Mv` — `git mv`
+- [x] `mv` → `Git::Commands::Mv` — `git mv`
 - [ ] `commit` → `Git::Commands::Commit` — `git commit`
 - [ ] `reset` → `Git::Commands::Reset` — `git reset`
 - [ ] `clean` → `Git::Commands::Clean` — `git clean`
