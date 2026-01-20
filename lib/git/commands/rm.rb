@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 
 module Git
   module Commands
@@ -28,8 +28,8 @@ module Git
     #   rm.call('modified_file.txt', force: true)
     #
     class Rm
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         flag :force, flag: '-f'
         flag :recursive, flag: '-r'
         flag :cached
@@ -64,7 +64,7 @@ module Git
       # @return [String] the command output (typically empty on success)
       #
       def call(*, **)
-        args = OPTIONS.build(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('rm', *args)
       end
     end

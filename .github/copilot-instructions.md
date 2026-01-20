@@ -377,7 +377,7 @@ specific responsibilities:
    - Being incrementally migrated to delegate to `Git::Commands::*`
 
 3. **Git::Commands::*** (New Architecture): Command-specific logic
-   - Each command class handles argument building via Options DSL
+   - Each command class handles argument building via Arguments DSL
    - Translates Ruby options to git command-line flags
    - `#call` methods use keyword arguments (`**`) not options hashes
    - Located in `lib/git/commands/`
@@ -2195,7 +2195,7 @@ classes using a "Strangler Fig" pattern.
    ```ruby
    # frozen_string_literal: true
 
-   require 'git/commands/options'
+   require 'git/commands/arguments'
 
    module Git
      module Commands
@@ -2203,8 +2203,8 @@ classes using a "Strangler Fig" pattern.
        #
        # @api private
        class <CommandName>
-         OPTIONS = Options.define do
-           # Define options using the DSL
+         ARGS = Arguments.define do
+           # Define arguments using the DSL
            # For variadic positional: positional :paths, variadic: true
          end.freeze
 
@@ -2212,9 +2212,9 @@ classes using a "Strangler Fig" pattern.
            @execution_context = execution_context
          end
 
-         # Preferred: anonymous forwarding when just passing to OPTIONS.build
+         # Preferred: anonymous forwarding when just passing to ARGS.build
          def call(*, **)
-           args = OPTIONS.build(*, **)
+           args = ARGS.build(*, **)
            @execution_context.command('<git-subcommand>', *args)
          end
        end
@@ -2223,9 +2223,9 @@ classes using a "Strangler Fig" pattern.
    ```
 
    **Method Signature Convention:**
-   - **SHOULD** use anonymous `def call(*, **)` when just forwarding to `OPTIONS.build`
-   - **MAY** name args when needed to inspect or manipulate them before passing to `OPTIONS.build`
-   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `OPTIONS.build`
+   - **SHOULD** use anonymous `def call(*, **)` when just forwarding to `ARGS.build`
+   - **MAY** name args when needed to inspect or manipulate them before passing to `ARGS.build`
+   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.build`
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
 

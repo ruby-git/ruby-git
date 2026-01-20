@@ -117,12 +117,12 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
        `ExecutionContext#command` and converting it into rich, structured Ruby
        objects.
 
-    **Options DSL**: To standardize argument building across commands, a declarative
-    `Git::Commands::Options` DSL is provided. This allows each command to define its
-    accepted options in a clear, self-documenting way:
+    **Arguments DSL**: To standardize argument building across commands, a declarative
+    `Git::Commands::Arguments` DSL is provided. This allows each command to define its
+    accepted arguments in a clear, self-documenting way:
 
     ```ruby
-    OPTIONS = Git::Commands::Options.define do
+    ARGS = Git::Commands::Arguments.define do
       flag :force                    # --force when true
       flag :all                      # --all when true
       value :branch                  # --branch <value>
@@ -140,13 +140,13 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     **Interface Convention**: The `#call` signature SHOULD use anonymous variadic
     arguments when possible. Arguments MAY be named when needed to inspect or manipulate
     them. Note that defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
-    are applied automatically by `OPTIONS.build`, so manual default checking is usually
+    are applied automatically by `ARGS.build`, so manual default checking is usually
     unnecessary:
 
     ```ruby
     # Preferred: anonymous forwarding (DSL handles defaults)
     def call(*, **)
-      args = OPTIONS.build(*, **)
+      args = ARGS.build(*, **)
       @execution_context.command('add', *args)
     end
 

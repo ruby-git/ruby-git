@@ -45,7 +45,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    - Verify argument building matches expected git CLI args
 
 4. **Implement**:
-   - Use `Git::Commands::Options.define` DSL for argument handling
+   - Use `Git::Commands::Arguments.define` DSL for argument handling
    - Include comprehensive YARD documentation with `@param`, `@option`, and `@return`
      tags
    - Mark class with `@api private`
@@ -114,8 +114,8 @@ logic. The gem will be fully functional after this phase.*
    - `Git::Repository` in `lib/git/repository.rb` ✅
      - Currently an empty shell, to be populated in Phase 3
 
-   - `Git::Commands::Options` DSL in `lib/git/commands/options.rb` ✅
-     - Provides declarative option definition for command classes
+   - `Git::Commands::Arguments` DSL in `lib/git/commands/arguments.rb` ✅
+     - Provides declarative argument definition for command classes
 
 4. **Set Up RSpec Environment**
 
@@ -163,24 +163,24 @@ obscuring what's actually happening underneath.
 anonymous variadic arguments for both positional and keyword arguments:
 
 ```ruby
-# ✅ Preferred: anonymous forwarding when just passing to OPTIONS.build
+# ✅ Preferred: anonymous forwarding when just passing to ARGS.build
 # Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
-# are applied automatically by OPTIONS.build
+# are applied automatically by ARGS.build
 def call(*, **)
-  args = OPTIONS.build(*, **)
+  args = ARGS.build(*, **)
   @execution_context.command('add', *args)
 end
 
 # ✅ Acceptable: explicit positional args when command needs to manipulate them
 def call(repository_url, directory = nil, **options)
   directory ||= derive_directory_from(repository_url)
-  args = OPTIONS.build(repository_url, directory, **options)
+  args = ARGS.build(repository_url, directory, **options)
   @execution_context.command('clone', *args)
 end
 
 # ❌ Incorrect: options hash parameter
 def call(paths = '.', options = {})
-  args = OPTIONS.build(*Array(paths), **options)
+  args = ARGS.build(*Array(paths), **options)
   @execution_context.command('add', *args)
 end
 ```
@@ -189,7 +189,7 @@ This convention provides:
 
 - **Better IDE support**: Editors can autocomplete and validate keyword arguments
 - **Clearer method signatures**: The `#call` signature documents available options
-- **Centralized validation**: `OPTIONS.build` enforces allowed options and raises errors for unknown or invalid keywords
+- **Centralized validation**: `ARGS.build` enforces allowed options and raises errors for unknown or invalid keywords
 - **Consistency**: All command classes follow the same pattern
 
 The facade layer (`Git::Lib`, `Git::Base`) may accept either keyword arguments or an

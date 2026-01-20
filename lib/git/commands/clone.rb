@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 require 'git/url'
 
 module Git
@@ -20,8 +20,8 @@ module Git
     #   result = clone.call('https://github.com/user/repo.git', 'local-dir', bare: true, depth: 1)
     #
     class Clone
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         flag :bare
         flag :recursive
         flag :mirror
@@ -97,7 +97,7 @@ module Git
         directory = options.delete(:path) if options[:path]
         directory ||= Git::URL.clone_to(repository_url, bare: options[:bare], mirror: options[:mirror])
 
-        args = OPTIONS.build(repository_url, directory, **options)
+        args = ARGS.build(repository_url, directory, **options)
 
         @execution_context.command('clone', *args, timeout: options[:timeout])
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 
 module Git
   module Commands
@@ -18,8 +18,8 @@ module Git
     #   add.call(all: true)
     #
     class Add
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         flag :all
         flag :force
         positional :paths, variadic: true, default: [], separator: '--'
@@ -47,7 +47,7 @@ module Git
       # @return [String] the command output (typically empty on success)
       #
       def call(*, **)
-        args = OPTIONS.build(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('add', *args)
       end
     end

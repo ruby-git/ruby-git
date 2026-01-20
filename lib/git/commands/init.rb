@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/options'
+require 'git/commands/arguments'
 
 module Git
   module Commands
@@ -23,8 +23,8 @@ module Git
     #   init.call('my-repo', initial_branch: 'main')
     #
     class Init
-      # Options DSL for building command-line arguments
-      OPTIONS = Options.define do
+      # Arguments DSL for building command-line arguments
+      ARGS = Arguments.define do
         flag :bare
         inline_value :initial_branch
         inline_value :repository, flag: '--separate-git-dir'
@@ -59,7 +59,7 @@ module Git
       #
       def call(directory = '.', **)
         path = File.expand_path(directory)
-        args = OPTIONS.build(path, **)
+        args = ARGS.build(path, **)
         @execution_context.command('init', *args)
       end
     end

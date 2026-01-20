@@ -169,7 +169,7 @@ delegates to `Git::Lib`, which in turn delegates to internal command classes.
 
 > **Note:** When adding new git command wrappers, **always use the new architecture**
 > described in "From design to implementation" with `Git::Commands::*` classes and
-> the Options DSL. The gem is being incrementally migrated from `Git::Lib` to this
+> the Arguments DSL. The gem is being incrementally migrated from `Git::Lib` to this
 > pattern. Do not add new methods directly to `Git::Lib`.
 
 ### Method placement
@@ -402,7 +402,7 @@ When wrapping a new git command:
 
 2. **Create a command class** in `lib/git/commands/` that:
    - Accepts an `ExecutionContext` and any required arguments
-   - Defines options using the Options DSL
+   - Defines arguments using the Arguments DSL
    - Parses the output into Ruby objects
 
 3. **Add the facade method** to `Git::Base` (or `Git` module) that delegates to
@@ -415,8 +415,8 @@ Example structure for `git add`:
 module Git
   module Commands
     class Add
-      # Define options using the Options DSL
-      OPTIONS = Options.define do
+      # Define arguments using the Arguments DSL
+      ARGS = Arguments.define do
         flag :all
         flag :force
         positional :paths, variadic: true, default: ['.'], separator: '--'
@@ -439,7 +439,7 @@ module Git
       # @return [String] the command output
       #
       def call(*, **)
-        args = OPTIONS.build(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('add', *args)
       end
     end
@@ -452,28 +452,28 @@ anonymous variadic arguments for both positional and keyword arguments:
 
 ```ruby
 def call(*, **)
-  args = OPTIONS.build(*, **)
+  args = ARGS.build(*, **)
   @execution_context.command('add', *args)
 end
 ```
 
 The `#call` method MAY name arguments when needed to inspect or manipulate them
-before passing to `OPTIONS.build`. Note that default values defined in the DSL
+before passing to `ARGS.build`. Note that default values defined in the DSL
 (e.g., `positional :paths, default: ['.']`) are applied automatically by
-`OPTIONS.build`, so manual default checking is usually unnecessary.
+`ARGS.build`, so manual default checking is usually unnecessary.
 
 Specific arguments MAY be extracted when the command needs to inspect or manipulate
-them before passing to `OPTIONS.build`:
+them before passing to `ARGS.build`:
 
 ```ruby
 def call(repository_url, directory = nil, **options)
   directory ||= derive_directory_from(repository_url)
-  args = OPTIONS.build(repository_url, directory, **options)
+  args = ARGS.build(repository_url, directory, **options)
   @execution_context.command('clone', *args)
 end
 ```
 
-Validation of supported options is handled by the `Options` DSL via `OPTIONS.build`,
+Validation of supported options is handled by the `Arguments` DSL via `ARGS.build`,
 which raises `ArgumentError` for unsupported keywords. The public API in `Git::Lib`
 handles the translation from single values or arrays to the splat format.
 
@@ -483,11 +483,11 @@ handles the translation from single values or arrays to the splat format.
 > document each keyword with its own `@param` tag. Do not use `@option` with
 > `@overload`. See the example above for the pattern.
 
-> **Testing Requirement:** When defining options with the DSL, you must write RSpec
-> tests that verify each option handles valid values correctly (booleans, strings,
+> **Testing Requirement:** When defining arguments with the DSL, you must write RSpec
+> tests that verify each argument handles valid values correctly (booleans, strings,
 > arrays) and handles invalid values appropriately. Use a separate `context` block for
 > testing each option to ensure clarity and isolation. See
-> `spec/git/commands/add_spec.rb` for examples of comprehensive option testing.
+> `spec/git/commands/add_spec.rb` for examples of comprehensive argument testing.
 
 ```ruby
 # lib/git/lib.rb (delegation)
@@ -536,7 +536,7 @@ The following command classes demonstrate patterns for implementing new commands
 See `lib/git/commands/` and `spec/git/commands/` for the full implementations:
 
 - **Simple command**: `Git::Commands::Add` — straightforward argument building with
-  the Options DSL
+  the Arguments DSL
 - **Command with output parsing**: `Git::Commands::Fsck` — parses git output into
   structured Ruby objects
 - **Factory command**: `Git::Commands::Clone` — returns data for creating a
