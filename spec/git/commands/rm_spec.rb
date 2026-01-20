@@ -12,16 +12,12 @@ RSpec.describe Git::Commands::Rm do
         expect { command.call(nil) }.to raise_error(ArgumentError, /nil values are not allowed/)
       end
 
-      it 'raises Git::FailedError for empty array' do
-        result_double = double('Result',
-                               status: double('Status', exitstatus: 128),
-                               stdout: '',
-                               stderr: 'fatal: No pathspec was given. Which files should I remove?',
-                               git_cmd: 'git rm')
-        failed_error = Git::FailedError.new(result_double)
-        allow(execution_context).to receive(:command).and_raise(failed_error)
+      it 'raises ArgumentError for empty array' do
+        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
+      end
 
-        expect { command.call([]) }.to raise_error(Git::FailedError)
+      it 'raises ArgumentError for no arguments' do
+        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for paths/)
       end
     end
 

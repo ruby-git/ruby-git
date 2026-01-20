@@ -122,7 +122,7 @@ module Git
       # Define a positional argument
       #
       # @param name [Symbol] the positional argument name
-      # @param required [Boolean] whether the argument is required
+      # @param required [Boolean] whether the argument is required (for variadic, requires at least one value)
       # @param variadic [Boolean] whether the argument accepts multiple values
       # @param default [Object] the default value if not provided
       # @param separator [String, nil] separator to insert before this positional (e.g., '--')
@@ -241,6 +241,8 @@ module Git
       def validate_required_positional(value, definition)
         return unless definition[:required]
         return unless value_empty?(value)
+
+        raise ArgumentError, "at least one value is required for #{definition[:name]}" if definition[:variadic]
 
         raise ArgumentError, "#{definition[:name]} is required"
       end

@@ -236,6 +236,30 @@ RSpec.describe Git::Commands::Options do
       end
     end
 
+    context 'with required variadic positional arguments' do
+      let(:options) do
+        described_class.define do
+          positional :paths, variadic: true, required: true
+        end
+      end
+
+      it 'accepts multiple positional arguments' do
+        expect(options.build('file1.rb', 'file2.rb')).to eq(%w[file1.rb file2.rb])
+      end
+
+      it 'accepts single positional argument' do
+        expect(options.build('file.rb')).to eq(['file.rb'])
+      end
+
+      it 'raises ArgumentError when no paths provided' do
+        expect { options.build }.to raise_error(ArgumentError, /at least one value is required for paths/)
+      end
+
+      it 'raises ArgumentError when empty array provided' do
+        expect { options.build([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
+      end
+    end
+
     context 'with positional arguments with default values' do
       let(:options) do
         described_class.define do
