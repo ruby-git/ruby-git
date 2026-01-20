@@ -426,14 +426,62 @@ module Git
         @execution_context = execution_context
       end
 
-      def call(paths = '.', **options)
-        args = OPTIONS.build(*Array(paths), **options)
+      # Execute the git add command
+      #
+      # @overload call(*paths, all: nil, force: nil)
+      #
+      #   @param paths [Array<String>] files to be added
+      #
+      #   @param all [Boolean] Add, modify, and remove index entries to match the worktree
+      #
+      #   @param force [Boolean] Allow adding otherwise ignored files
+      #
+      # @return [String] the command output
+      #
+      def call(*, **)
+        args = OPTIONS.build(*, **)
         @execution_context.command('add', *args)
       end
     end
   end
 end
 ```
+
+**Method Signature Convention**: The `#call` signature SHOULD, if possible, use
+anonymous variadic arguments for both positional and keyword arguments:
+
+```ruby
+def call(*, **)
+  args = OPTIONS.build(*, **)
+  @execution_context.command('add', *args)
+end
+```
+
+The `#call` method MAY name arguments when needed to inspect or manipulate them
+before passing to `OPTIONS.build`. Note that default values defined in the DSL
+(e.g., `positional :paths, default: ['.']`) are applied automatically by
+`OPTIONS.build`, so manual default checking is usually unnecessary.
+
+Specific arguments MAY be extracted when the command needs to inspect or manipulate
+them before passing to `OPTIONS.build`:
+
+```ruby
+def call(repository_url, directory = nil, **options)
+  directory ||= derive_directory_from(repository_url)
+  args = OPTIONS.build(repository_url, directory, **options)
+  @execution_context.command('clone', *args)
+end
+```
+
+Validation of supported options is handled by the `Options` DSL via `OPTIONS.build`,
+which raises `ArgumentError` for unsupported keywords. The public API in `Git::Lib`
+handles the translation from single values or arrays to the splat format.
+
+> **YARD Documentation Note:** When using anonymous keyword forwarding (`**`), YARD
+> cannot infer the method signature. Use the `@overload` directive with **explicit
+> keyword parameters** (e.g., `@overload call(paths, all: nil, force: nil)`) and
+> document each keyword with its own `@param` tag. Do not use `@option` with
+> `@overload`. See the example above for the pattern.
 
 > **Testing Requirement:** When defining options with the DSL, you must write RSpec
 > tests that verify each option handles valid values correctly (booleans, strings,
@@ -444,8 +492,10 @@ end
 ```ruby
 # lib/git/lib.rb (delegation)
 class Git::Lib
+  # Git::Lib may accept an options hash for backward compatibility
   def add(paths = '.', options = {})
-    Git::Commands::Add.new(self).call(paths, options)
+    # Convert to splat + keyword arguments when calling the command class
+    Git::Commands::Add.new(self).call(*Array(paths), **options)
   end
 end
 

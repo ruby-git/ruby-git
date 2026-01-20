@@ -137,6 +137,29 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     transformations, static flags, metadata (options not passed to git), and
     positional arguments with optional separators.
 
+    **Interface Convention**: The `#call` signature SHOULD use anonymous variadic
+    arguments when possible. Arguments MAY be named when needed to inspect or manipulate
+    them. Note that defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
+    are applied automatically by `OPTIONS.build`, so manual default checking is usually
+    unnecessary:
+
+    ```ruby
+    # Preferred: anonymous forwarding (DSL handles defaults)
+    def call(*, **)
+      args = OPTIONS.build(*, **)
+      @execution_context.command('add', *args)
+    end
+
+    # Acceptable: explicit args when manipulation needed
+    def call(repository_url, directory = nil, **options)
+      directory ||= derive_directory_from(repository_url)
+      # ...
+    end
+    ```
+
+    The facade layer (`Git::Base`, `Git::Lib`) handles translation from the public API
+    (which may accept single values or arrays) using `*Array(paths)`.
+
     **Handling Complexity**: For commands with multiple behaviors (like git diff), we
     can use specialized subclasses (e.g., Git::Commands::Diff::NameStatus,
     Git::Commands::Diff::Stats) to keep each class focused on a single
