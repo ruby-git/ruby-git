@@ -13,7 +13,7 @@ module Git
     # @example Basic usage
     #   rm = Git::Commands::Rm.new(execution_context)
     #   rm.call('file.txt')
-    #   rm.call(['file1.txt', 'file2.txt'])
+    #   rm.call('file1.txt', 'file2.txt')
     #
     # @example Remove a directory recursively
     #   rm = Git::Commands::Rm.new(execution_context)
@@ -46,22 +46,25 @@ module Git
 
       # Execute the git rm command
       #
-      # @param paths [String, Array<String>] files or directories to be removed from the repository
-      #   (relative to the worktree root). At least one path is required.
-      # @param options [Hash] command options
+      # @overload call(*paths, force: nil, recursive: nil, cached: nil)
       #
-      # @option options [Boolean] :force Override the up-to-date check and remove files with
-      #   local modifications. Without this, git rm will refuse to remove files that have
-      #   uncommitted changes.
-      # @option options [Boolean] :recursive Remove directories and their contents recursively
-      # @option options [Boolean] :cached Only remove from the index, keeping the working tree files
+      #   @param paths [Array<String>] files or directories to be removed from the repository
+      #     (relative to the worktree root). At least one path is required.
+      #
+      #   @param force [Boolean] Override the up-to-date check and remove files with
+      #     local modifications. Without this, git rm will refuse to remove files that have
+      #     uncommitted changes.
+      #
+      #   @param recursive [Boolean] Remove directories and their contents recursively
+      #
+      #   @param cached [Boolean] Only remove from the index, keeping the working tree files
       #
       # @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
       #
       # @return [String] the command output (typically empty on success)
       #
-      def call(paths, options = {})
-        args = OPTIONS.build(*Array(paths), **options)
+      def call(*, **)
+        args = OPTIONS.build(*, **)
         @execution_context.command('rm', *args)
       end
     end

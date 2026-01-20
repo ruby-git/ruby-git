@@ -8,8 +8,8 @@ RSpec.describe Git::Commands::Add do
 
   describe '#call' do
     context 'with default arguments' do
-      it 'adds the current directory' do
-        expect(execution_context).to receive(:command).with('add', '--', '.')
+      it 'adds nothing' do
+        expect(execution_context).to receive(:command).with('add')
 
         command.call
       end

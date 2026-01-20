@@ -14,15 +14,15 @@ module Git
     # @example Basic usage
     #   add = Git::Commands::Add.new(execution_context)
     #   add.call('path/to/file')
-    #   add.call(['file1.rb', 'file2.rb'])
-    #   add.call('.', all: true)
+    #   add.call('file1.rb', 'file2.rb')
+    #   add.call(all: true)
     #
     class Add
       # Options DSL for building command-line arguments
       OPTIONS = Options.define do
         flag :all
         flag :force
-        positional :paths, variadic: true, default: ['.'], separator: '--'
+        positional :paths, variadic: true, default: [], separator: '--'
       end.freeze
 
       # Initialize the Add command
@@ -35,17 +35,19 @@ module Git
 
       # Execute the git add command
       #
-      # @param paths [String, Array<String>] files to be added to the repository
-      #   (relative to the worktree root)
-      # @param options [Hash] command options
+      # @overload call(*paths, all: nil, force: nil)
       #
-      # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
-      # @option options [Boolean] :force Allow adding otherwise ignored files
+      #   @param paths [Array<String>] files to be added to the repository
+      #     (relative to the worktree root)
+      #
+      #   @param all [Boolean] Add, modify, and remove index entries to match the worktree
+      #
+      #   @param force [Boolean] Allow adding otherwise ignored files
       #
       # @return [String] the command output (typically empty on success)
       #
-      def call(paths = nil, options = {})
-        args = OPTIONS.build(*Array(paths), **options)
+      def call(*, **)
+        args = OPTIONS.build(*, **)
         @execution_context.command('add', *args)
       end
     end
