@@ -22,24 +22,24 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (4/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (5/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `rm` command** → `Git::Commands::Rm`
+**Migrate the `mv` command** → `Git::Commands::Mv`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   remove`). Understand all options and edge cases.
+   mv`). Understand all options and edge cases.
 
-2. **Design**: Create `lib/git/commands/rm.rb` with a `Git::Commands::Rm` class
+2. **Design**: Create `lib/git/commands/mv.rb` with a `Git::Commands::Mv` class
    following the pattern in `lib/git/commands/add.rb`. The interface for
-   `Git::Commands::Rm#call` should match the public interface for `Git::Base#remove`
+   `Git::Commands::Mv#call` should match the public interface for `Git::Base#mv`
 
-3. **TDD**: Write `spec/git/commands/rm_spec.rb` *before* implementing:
+3. **TDD**: Write `spec/git/commands/mv_spec.rb` *before* implementing:
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
@@ -50,16 +50,16 @@ risk and allows for a gradual, controlled migration to the new architecture.
      tags
    - Mark class with `@api private`
 
-5. **Delegate**: Update `Git::Lib#remove` to delegate to the new class:
+5. **Delegate**: Update `Git::Lib#mv` to delegate to the new class:
 
    ```ruby
-   def remove(path = '.', options = {})
-     Git::Commands::Rm.new(self).call(path, options)
+   def mv(source, destination, options = {})
+     Git::Commands::Mv.new(self).call(source, destination, options)
    end
    ```
 
 6. **Verify**:
-   - `bundle exec rspec spec/git/commands/rm_spec.rb` — new tests pass
+   - `bundle exec rspec spec/git/commands/mv_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -68,9 +68,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_archive`)
 
-7. **Update Checklist**: Move `rm` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move `mv` from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
-   `mv`.
+   `commit`.
 
 #### Reference Files
 
@@ -213,6 +213,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `clone` | `Git::Commands::Clone` | `spec/git/commands/clone_spec.rb` | `git clone` |
 | `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
 | `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
+| `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
 
 #### ⏳ Commands To Migrate
 
@@ -221,7 +222,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Basic Snapshotting**:
 
-- [ ] `rm` → `Git::Commands::Rm` — `git rm`
+- [x] `rm` → `Git::Commands::Rm` — `git rm`
 - [ ] `mv` → `Git::Commands::Mv` — `git mv`
 - [ ] `commit` → `Git::Commands::Commit` — `git commit`
 - [ ] `reset` → `Git::Commands::Reset` — `git reset`

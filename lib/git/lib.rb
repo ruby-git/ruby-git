@@ -5,6 +5,7 @@ require_relative 'commands/add'
 require_relative 'commands/clone'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
+require_relative 'commands/rm'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1086,19 +1087,18 @@ module Git
       Git::Commands::Add.new(self).call(paths, options)
     end
 
-    RM_OPTION_MAP = [
-      { type: :static, flag: '-f' },
-      { keys: [:recursive], flag: '-r',       type: :boolean },
-      { keys: [:cached],    flag: '--cached', type: :boolean }
-    ].freeze
-
+    # Remove files from the working tree and from the index
+    #
+    # @param path [String, Array<String>] files or directories to remove
+    # @param opts [Hash] command options
+    #
+    # @option opts [Boolean] :recursive Remove directories and their contents recursively
+    # @option opts [Boolean] :cached Only remove from the index, keeping working tree files
+    #
+    # @note This method delegates to {Git::Commands::Rm}
+    #
     def rm(path = '.', opts = {})
-      args = build_args(opts, RM_OPTION_MAP)
-
-      args << '--'
-      args.concat(Array(path))
-
-      command('rm', *args)
+      Git::Commands::Rm.new(self).call(path, opts)
     end
 
     # Returns true if the repository is empty (meaning it has no commits)
