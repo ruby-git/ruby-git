@@ -33,7 +33,7 @@ module Git
         flag :force, flag: '-f'
         flag :recursive, flag: '-r'
         flag :cached
-        positional :paths, variadic: true, separator: '--'
+        positional :paths, variadic: true, required: true, separator: '--'
       end.freeze
 
       # Initialize the Rm command
