@@ -41,23 +41,25 @@ module Git
 
       # Execute the git init command
       #
-      # @param directory [String] the directory to initialize (default: '.')
-      #   If :bare is false, creates the repository in +<directory>/.git+.
-      #   If :bare is true, creates a bare repository in +<directory>+.
+      # @overload call(directory, bare: nil, initial_branch: nil, repository: nil)
       #
-      # @param options [Hash] command options
+      #   @param directory [String] the directory to initialize (default: '.')
+      #     If :bare is false, creates the repository in +<directory>/.git+.
+      #     If :bare is true, creates a bare repository in +<directory>+.
       #
-      # @option options [Boolean] :bare Create a bare repository
-      # @option options [String] :initial_branch Use the specified name for the initial branch
-      # @option options [String] :repository Path to put the .git directory (uses --separate-git-dir)
+      #   @param bare [Boolean] Create a bare repository
+      #
+      #   @param initial_branch [String] Use the specified name for the initial branch
+      #
+      #   @param repository [String] Path to put the .git directory (uses --separate-git-dir)
       #
       # @return [void]
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      def call(directory = '.', options = {})
+      def call(directory = '.', **)
         path = File.expand_path(directory)
-        args = OPTIONS.build(path, **options)
+        args = OPTIONS.build(path, **)
         @execution_context.command('init', *args)
       end
     end

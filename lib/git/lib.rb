@@ -144,7 +144,7 @@ module Git
     # @todo make this work with SSH password or auth_key
     #
     def clone(repository_url, directory = nil, opts = {})
-      Git::Commands::Clone.new(self).call(repository_url, directory, opts)
+      Git::Commands::Clone.new(self).call(repository_url, directory, **opts)
     end
 
     # Returns the name of the default branch of the given repository
@@ -1085,7 +1085,7 @@ module Git
     # @note This method delegates to {Git::Commands::Add}
     #
     def add(paths = '.', options = {})
-      Git::Commands::Add.new(self).call(paths, options)
+      Git::Commands::Add.new(self).call(*Array(paths), **options)
     end
 
     # Remove files from the working tree and from the index
@@ -1099,7 +1099,7 @@ module Git
     # @note This method delegates to {Git::Commands::Rm}
     #
     def rm(path = '.', opts = {})
-      Git::Commands::Rm.new(self).call(path, opts)
+      Git::Commands::Rm.new(self).call(*Array(path), **opts)
     end
 
     # Returns true if the repository is empty (meaning it has no commits)
