@@ -5,6 +5,7 @@ require_relative 'commands/add'
 require_relative 'commands/clone'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
+require_relative 'commands/mv'
 require_relative 'commands/rm'
 
 require 'git/command_line'
@@ -640,8 +641,8 @@ module Git
       data
     end
 
-    def mv(file1, file2)
-      command_lines('mv', '--', file1, file2)
+    def mv(source, destination, options = {})
+      Git::Commands::Mv.new(self).call(*Array(source), destination, **options)
     end
 
     def full_tree(sha)
