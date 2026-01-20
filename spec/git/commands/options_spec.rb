@@ -397,5 +397,29 @@ RSpec.describe Git::Commands::Options do
         )
       end
     end
+
+    context 'with variadic positional arguments containing nil values' do
+      let(:options) do
+        described_class.define do
+          positional :paths, variadic: true
+        end
+      end
+
+      it 'rejects nil values with clear ArgumentError' do
+        expect { options.build('file1.rb', nil, 'file2.rb') }.to(
+          raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
+        )
+      end
+
+      it 'rejects array containing nil values' do
+        expect { options.build(['file1.rb', nil, 'file2.rb']) }.to(
+          raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
+        )
+      end
+
+      it 'accepts all valid values' do
+        expect(options.build('file1.rb', 'file2.rb')).to eq(%w[file1.rb file2.rb])
+      end
+    end
   end
 end

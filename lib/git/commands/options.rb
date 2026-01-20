@@ -204,6 +204,7 @@ module Git
         @positional_definitions.each do |definition|
           value = extract_positional_value(positionals, positional_index, definition)
           validate_required_positional(value, definition)
+          validate_no_nil_values!(value, definition)
           positional_index = append_positional(args, value, definition, positional_index, positionals.size)
         end
       end
@@ -242,6 +243,16 @@ module Git
         return unless value_empty?(value)
 
         raise ArgumentError, "#{definition[:name]} is required"
+      end
+
+      def validate_no_nil_values!(value, definition)
+        return unless definition[:variadic]
+        return if value_empty?(value)
+
+        values = Array(value)
+        return unless values.any?(&:nil?)
+
+        raise ArgumentError, "nil values are not allowed in variadic positional argument: #{definition[:name]}"
       end
 
       def value_empty?(value)
