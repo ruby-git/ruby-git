@@ -24,10 +24,10 @@ module Git
     class Mv
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        flag :force, flag: '--force'
-        flag :dry_run, flag: '--dry-run'
-        flag :verbose, flag: '--verbose'
-        flag :skip_errors, flag: '-k'
+        flag :force, args: '--force'
+        flag :dry_run, args: '--dry-run'
+        flag :verbose, args: '--verbose'
+        flag :skip_errors, args: '-k'
         positional :source, variadic: true, separator: '--'
         positional :destination
       end.freeze

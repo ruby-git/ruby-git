@@ -30,8 +30,8 @@ module Git
     class Rm
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        flag :force, flag: '-f'
-        flag :recursive, flag: '-r'
+        flag :force, args: '-f'
+        flag :recursive, args: '-r'
         flag :cached
         positional :paths, variadic: true, required: true, separator: '--'
       end.freeze
