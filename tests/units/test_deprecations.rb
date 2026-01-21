@@ -73,6 +73,16 @@ class TestDeprecations < Test::Unit::TestCase
     end
   end
 
+  def test_base_reset_hard_deprecation
+    Git::Deprecation.expects(:warn).with(
+      'Git::Base#reset_hard is deprecated and will be removed in a future version. ' \
+      'Use Git::Base#reset(commitish, hard: true) instead.'
+    )
+
+    # Call reset_hard - it should work but emit deprecation warning
+    @git.reset_hard
+  end
+
   # --- Git::Log deprecations ---
 
   def test_log_each_deprecation

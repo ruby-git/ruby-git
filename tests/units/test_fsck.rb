@@ -193,7 +193,7 @@ class TestFsck < Test::Unit::TestCase
         git.commit('Second commit')
 
         # Create a dangling commit by resetting and expiring reflogs
-        git.reset_hard('HEAD~1')
+        git.reset('HEAD~1', hard: true)
         `git reflog expire --expire=now --all 2>&1`
 
         result = git.fsck
@@ -243,7 +243,7 @@ class TestFsck < Test::Unit::TestCase
         git.commit('Second commit')
 
         # Create unreachable commit and expire reflogs
-        git.reset_hard('HEAD~1')
+        git.reset('HEAD~1', hard: true)
         `git reflog expire --expire=now --all 2>&1`
 
         result = git.fsck(unreachable: true, dangling: false)
@@ -370,7 +370,7 @@ class TestFsck < Test::Unit::TestCase
         git.commit('Second commit')
 
         # Create dangling commit and expire reflogs
-        git.reset_hard('HEAD~1')
+        git.reset('HEAD~1', hard: true)
         `git reflog expire --expire=now --all 2>&1`
 
         result = git.fsck(name_objects: true)
