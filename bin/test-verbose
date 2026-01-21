@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# This script runs the tests and displays the test name as each test is run.
+# This is useful for debugging test failures or hangs.
+#
+# Usage:
+#   bundle exec ruby bin/test-verbose
+
+require 'bundler/setup'
+
+`git config --global user.email "git@example.com"` if `git config --global user.email`.empty?
+`git config --global user.name "GitExample"` if `git config --global user.name`.empty?
+`git config --global init.defaultBranch main` if `git config --global init.defaultBranch`.empty?
+
+project_root = File.expand_path(File.join(__dir__, '..'))
+
+$LOAD_PATH.unshift(File.join(project_root, 'tests'))
+
+# Hook into Test::Unit to print test names as they run
+# This must be defined before requiring test files
+require 'test/unit'
+
+module Test
+  module Unit
+    # Extends TestCase to print test names as they execute
+    class TestCase
+      alias original_run run
+
+      def run(result, &)
+        puts "#{self.class}##{@method_name}"
+        $stdout.flush
+        original_run(result, &)
+      end
+    end
+  end
+end
+
+paths =
+  if ARGV.empty?
+    Dir.glob('tests/units/test_*.rb').map { |p| File.basename(p) }
+  else
+    ARGV
+  end.map { |p| File.join(project_root, 'tests/units', p) }
+
+paths.each { |p| require p }
