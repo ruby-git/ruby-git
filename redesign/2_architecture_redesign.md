@@ -117,6 +117,30 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
        `ExecutionContext#command` and converting it into rich, structured Ruby
        objects.
 
+    **Migration Strategy: Git::Lib as Adapter Layer**
+
+    During the migration to this architecture, `Git::Lib` methods serve as **adapters**
+    between the legacy public interface and the new `Git::Commands::*` classes. This
+    separation ensures backward compatibility while enabling incremental migration:
+
+    - **Legacy Interface Acceptance**: `Git::Lib` methods continue to accept the
+      historical interface—positional arguments, deprecated options, and quirky
+      parameter names.
+
+    - **Interface Translation**: The adapter converts legacy patterns to the clean
+      `Git::Commands::*` API (e.g., positional `message` → `:message` keyword,
+      `:no_gpg_sign => true` → `:gpg_sign => false`).
+
+    - **Deprecation Handling**: Warnings about deprecated options are issued in the
+      adapter layer before delegating, ensuring users are informed even if they make
+      other errors.
+
+    - **Clean Command Classes**: `Git::Commands::*` classes remain free of legacy
+      baggage with a consistent, modern API.
+
+    Once all commands are migrated and deprecation periods end, the adapter logic can
+    be simplified or moved to the new facade layer (`Git::Repository`).
+
     **Arguments DSL**: To standardize argument building across commands, a declarative
     `Git::Commands::Arguments` DSL is provided. This allows each command to define its
     accepted arguments in a clear, self-documenting way:

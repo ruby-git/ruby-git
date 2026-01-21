@@ -3,6 +3,7 @@
 require_relative 'args_builder'
 require_relative 'commands/add'
 require_relative 'commands/clone'
+require_relative 'commands/commit'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
 require_relative 'commands/mv'
@@ -1116,27 +1117,6 @@ module Git
       true
     end
 
-    COMMIT_OPTION_MAP = [
-      { keys: %i[add_all all], flag: '--all', type: :boolean },
-      { keys: [:allow_empty],         flag: '--allow-empty',         type: :boolean },
-      { keys: [:no_verify],           flag: '--no-verify',           type: :boolean },
-      { keys: [:allow_empty_message], flag: '--allow-empty-message', type: :boolean },
-      { keys: [:author],              flag: '--author',              type: :valued_equals },
-      { keys: [:message],             flag: '--message',             type: :valued_equals },
-      { keys: [:no_gpg_sign],         flag: '--no-gpg-sign',         type: :boolean },
-      { keys: [:date], flag: '--date', type: :valued_equals, validator: ->(v) { v.is_a?(String) } },
-      { keys: [:amend], type: :custom, builder: ->(value) { ['--amend', '--no-edit'] if value } },
-      {
-        keys: [:gpg_sign],
-        type: :custom,
-        builder: lambda { |value|
-          if value
-            value == true ? '--gpg-sign' : "--gpg-sign=#{value}"
-          end
-        }
-      }
-    ].freeze
-
     # Takes the commit message with the options and executes the commit command
     #
     # accepts options:
@@ -1152,18 +1132,26 @@ module Git
     #
     # @param [String] message the commit message to be used
     # @param [Hash] opts the commit options to be used
-
+    #
+    # @note This method delegates to {Git::Commands::Commit}
+    #
     def commit(message, opts = {})
-      opts[:message] = message if message # Handle message arg for backward compatibility
+      opts = opts.merge(message: message) if message
 
-      # Perform cross-option validation before building args
-      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts[:gpg_sign] && opts[:no_gpg_sign]
+      # TODO: deprecate :no_gpg_sign in favor of :gpg_sign => false
+      # This adapter was added to maintain backward compatibility
+      if opts[:no_gpg_sign]
+        Git::Deprecation.warn(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
 
-      ArgsBuilder.validate!(opts, COMMIT_OPTION_MAP)
+        raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts.key?(:gpg_sign)
 
-      args = build_args(opts, COMMIT_OPTION_MAP)
-      command('commit', *args)
+        opts.delete(:no_gpg_sign)
+        opts[:gpg_sign] = false
+      end
+
+      Git::Commands::Commit.new(self).call(**opts)
     end
+
     RESET_OPTION_MAP = [
       { keys: [:hard], flag: '--hard', type: :boolean }
     ].freeze
