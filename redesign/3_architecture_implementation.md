@@ -22,24 +22,24 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (6/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (7/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `commit` command** → `Git::Commands::Commit`
+**Migrate the `reset` command** → `Git::Commands::Reset`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   mv`). Understand all options and edge cases.
+   reset`). Understand all options and edge cases.
 
-2. **Design**: Create `lib/git/commands/mv.rb` with a `Git::Commands::Mv` class
-   following the pattern in `lib/git/commands/add.rb`. The interface for
-   `Git::Commands::Mv#call` should match the public interface for `Git::Base#mv`
+2. **Design**: Create `lib/git/commands/reset.rb` with a `Git::Commands::Reset` class
+   following the pattern in `lib/git/commands/commit.rb`. The interface for
+   `Git::Commands::Reset#call` should match the public interface for `Git::Base#reset`
 
-3. **TDD**: Write `spec/git/commands/mv_spec.rb` *before* implementing:
+3. **TDD**: Write `spec/git/commands/reset_spec.rb` *before* implementing:
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
@@ -72,7 +72,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_archive`)
 
-7. **Update Checklist**: Move `commit` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move `reset` from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
    the next command in the list.
 
@@ -144,6 +144,57 @@ The `command` method provides important functionality including default options
 (normalize, chomp, timeout), option validation, and a simplified interface that
 returns just stdout. Commands should call `@execution_context.command('subcommand',
 *args, **opts)` rather than working with `CommandLine` instances directly.
+
+**Key Architectural Insight: Git::Lib as the Adapter Layer**
+
+A fundamental principle of this migration is that `Git::Lib` methods serve as
+**adapters** between the legacy public interface and the new `Git::Commands::*`
+classes. This separation of concerns provides several benefits:
+
+1. **Legacy Interface Acceptance**: `Git::Lib` methods continue to accept the
+   historical interface—positional arguments, deprecated options, and quirky
+   parameter names that users have come to rely on.
+
+2. **Interface Translation**: The adapter converts legacy patterns to the clean
+   `Git::Commands::*` API. For example:
+   - Positional `message` argument → `:message` keyword
+   - `:no_gpg_sign => true` → `:gpg_sign => false`
+   - Options hash → keyword arguments via `**options`
+
+3. **Deprecation Handling**: Warnings about deprecated options are issued in the
+   adapter layer, *before* delegating to the command class. This ensures users are
+   informed even if they're making other errors.
+
+4. **Clean Command Classes**: `Git::Commands::*` classes remain free of legacy
+   baggage. They have a consistent, modern API that:
+   - Uses keyword arguments with sensible defaults
+   - Matches the underlying git command's interface closely
+   - Is easier to test in isolation
+   - Could potentially be used directly by advanced users
+
+Example adapter pattern:
+
+```ruby
+# Git::Lib#commit - the adapter layer
+def commit(message, opts = {})
+  # Legacy: positional message → keyword argument
+  opts = opts.merge(message: message) if message
+
+  # Legacy: :no_gpg_sign → :gpg_sign => false (with deprecation warning)
+  if opts[:no_gpg_sign]
+    Git::Deprecation.warn(':no_gpg_sign option is deprecated...')
+    raise ArgumentError, '...' if opts.key?(:gpg_sign)
+    opts.delete(:no_gpg_sign)
+    opts[:gpg_sign] = false
+  end
+
+  # Delegate to clean interface
+  Git::Commands::Commit.new(self).call(**opts)
+end
+```
+
+This pattern makes future cleanup straightforward—once deprecation periods end, the
+adapter logic can be simplified or removed entirely.
 
 **Parameter Design Principle**: Command class `#call` method parameters should
 generally match the underlying git command's interface. This keeps the Commands layer
@@ -252,6 +303,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | --------------- | ------------- | ---- | ----------- |
 | `add` | `Git::Commands::Add` | `spec/git/commands/add_spec.rb` | `git add` |
 | `clone` | `Git::Commands::Clone` | `spec/git/commands/clone_spec.rb` | `git clone` |
+| `commit` | `Git::Commands::Commit` | `spec/git/commands/commit_spec.rb` | `git commit` |
 | `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
 | `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
 | `mv` | `Git::Commands::Mv` | `spec/git/commands/mv_spec.rb` | `git mv` |
@@ -266,7 +318,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [x] `rm` → `Git::Commands::Rm` — `git rm`
 - [x] `mv` → `Git::Commands::Mv` — `git mv`
-- [ ] `commit` → `Git::Commands::Commit` — `git commit`
+- [x] `commit` → `Git::Commands::Commit` — `git commit`
 - [ ] `reset` → `Git::Commands::Reset` — `git reset`
 - [ ] `clean` → `Git::Commands::Clean` — `git clean`
 
