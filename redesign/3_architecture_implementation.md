@@ -22,24 +22,24 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (7/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (8/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `reset` command** → `Git::Commands::Reset`
+**Migrate the `clean` command** → `Git::Commands::Clean`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   reset`). Understand all options and edge cases.
+   clean`). Understand all options and edge cases.
 
-2. **Design**: Create `lib/git/commands/reset.rb` with a `Git::Commands::Reset` class
+2. **Design**: Create `lib/git/commands/clean.rb` with a `Git::Commands::Clean` class
    following the pattern in `lib/git/commands/commit.rb`. The interface for
-   `Git::Commands::Reset#call` should match the public interface for `Git::Base#reset`
+   `Git::Commands::Clean#call` should match the public interface for `Git::Base#clean`
 
-3. **TDD**: Write `spec/git/commands/reset_spec.rb` *before* implementing:
+3. **TDD**: Write `spec/git/commands/clean_spec.rb` *before* implementing:
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
@@ -50,11 +50,11 @@ risk and allows for a gradual, controlled migration to the new architecture.
      tags
    - Mark class with `@api private`
 
-5. **Delegate**: Update `Git::Lib#mv` to delegate to the new class:
+5. **Delegate**: Update `Git::Lib#clean` to delegate to the new class:
 
    ```ruby
-   def mv(source, destination, options = {})
-     Git::Commands::Mv.new(self).call(*Array(source), destination, **options)
+   def clean(options = {})
+     Git::Commands::Clean.new(self).call(**options)
    end
    ```
 
@@ -63,7 +63,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    using `**options`.
 
 6. **Verify**:
-   - `bundle exec rspec spec/git/commands/mv_spec.rb` — new tests pass
+   - `bundle exec rspec spec/git/commands/clean_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -72,7 +72,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_archive`)
 
-7. **Update Checklist**: Move `reset` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move `clean` from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
    the next command in the list.
 
@@ -307,6 +307,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
 | `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
 | `mv` | `Git::Commands::Mv` | `spec/git/commands/mv_spec.rb` | `git mv` |
+| `reset` | `Git::Commands::Reset` | `spec/git/commands/reset_spec.rb` | `git reset` |
 | `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
 
 #### ⏳ Commands To Migrate
@@ -319,7 +320,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `rm` → `Git::Commands::Rm` — `git rm`
 - [x] `mv` → `Git::Commands::Mv` — `git mv`
 - [x] `commit` → `Git::Commands::Commit` — `git commit`
-- [ ] `reset` → `Git::Commands::Reset` — `git reset`
+- [x] `reset` → `Git::Commands::Reset` — `git reset`
 - [ ] `clean` → `Git::Commands::Clean` — `git clean`
 
 **Branching & Merging:**

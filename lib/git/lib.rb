@@ -7,6 +7,7 @@ require_relative 'commands/commit'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
 require_relative 'commands/mv'
+require_relative 'commands/reset'
 require_relative 'commands/rm'
 
 require 'git/command_line'
@@ -1152,14 +1153,8 @@ module Git
       Git::Commands::Commit.new(self).call(**opts)
     end
 
-    RESET_OPTION_MAP = [
-      { keys: [:hard], flag: '--hard', type: :boolean }
-    ].freeze
-
-    def reset(commit, opts = {})
-      args = build_args(opts, RESET_OPTION_MAP)
-      args << commit if commit
-      command('reset', *args)
+    def reset(commit = nil, opts = {})
+      Git::Commands::Reset.new(self).call(commit, **opts)
     end
 
     CLEAN_OPTION_MAP = [

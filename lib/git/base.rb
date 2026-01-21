@@ -402,7 +402,14 @@ module Git
     end
 
     # resets the working directory to the commitish with '--hard'
+    #
+    # @deprecated Use {#reset} with `hard: true` instead.
+    #
     def reset_hard(commitish = nil, opts = {})
+      Git::Deprecation.warn(
+        'Git::Base#reset_hard is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#reset(commitish, hard: true) instead.'
+      )
       opts = { hard: true }.merge(opts)
       lib.reset(commitish, opts)
     end

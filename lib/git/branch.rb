@@ -42,7 +42,7 @@ module Git
       if yield
         @base.commit_all(message)
       else
-        @base.reset_hard
+        @base.reset(nil, hard: true)
       end
       @base.checkout(old_current)
     end

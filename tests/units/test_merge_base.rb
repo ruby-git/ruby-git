@@ -38,7 +38,7 @@ class TestMergeBase < Test::Unit::TestCase
 
       add_commit(repo, 'new_branch')
 
-      repo.reset_hard(repo.gcommit('HEAD^'))
+      repo.reset(repo.gcommit('HEAD^'), hard: true)
 
       add_commit(repo, 'master')
 
