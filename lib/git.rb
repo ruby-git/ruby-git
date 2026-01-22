@@ -10,6 +10,7 @@ end
 require 'git/author'
 require 'git/base'
 require 'git/branch'
+require 'git/branch_info'
 require 'git/branches'
 require 'git/command_line_result'
 require 'git/command_line'
