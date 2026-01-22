@@ -28,7 +28,7 @@ module Git
         value :branch
         value :filter
         value %i[origin remote]
-        multi_value :config
+        value :config, multi_valued: true
         negatable_flag :single_branch, validator: ->(v) { [nil, true, false].include?(v) }
         custom(:depth) { |v| ['--depth', v.to_i] }
         # Options handled by the command itself, not passed to git

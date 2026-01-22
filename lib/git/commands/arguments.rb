@@ -26,12 +26,21 @@ module Git
     # - {#negatable_flag} - Boolean flag with negation (--flag or --no-flag)
     # - {#value} - Valued option (--flag value as separate arguments)
     # - {#inline_value} - Inline valued option (--flag=value as single argument)
-    # - {#multi_value} - Multi-value option (--flag value repeated for each value)
     # - {#flag_or_inline_value} - Flag or inline value (--flag or --flag=value)
     # - {#negatable_flag_or_inline_value} - Negatable flag or inline value
     # - {#static} - Static flag always included
     # - {#custom} - Custom option with builder block
     # - {#metadata} - Validation-only option (not included in command output)
+    #
+    # Both {#value} and {#inline_value} support a `multi_valued: true` parameter
+    # that allows the option to accept an array of values, repeating the flag for each:
+    #
+    # @example Multi-valued options
+    #   value :config, multi_valued: true
+    #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
+    #
+    #   inline_value :sort, multi_valued: true
+    #   # sort: ['refname', '-committerdate'] => ['--sort=refname', '--sort=-committerdate']
     #
     # == Positional Arguments
     #
@@ -163,6 +172,9 @@ module Git
       # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
       #   When false (default), empty strings are skipped entirely. When true, the flag and empty
       #   value are included in the output.
+      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
+      #   of values and repeats the flag for each (e.g., --flag v1 --flag v2). A single value or nil
+      #   is also accepted.
       # @return [void]
       #
       # @example With type validation
@@ -177,8 +189,15 @@ module Git
       #   # message: ""     => [] (skipped)
       #   # message: "text" => ['--message', 'text']
       #
-      def value(names, args: nil, type: nil, allow_empty: false)
-        register_option(names, type: :value, args: args, expected_type: type, allow_empty: allow_empty)
+      # @example With multi_valued
+      #   value :config, multi_valued: true
+      #   # config: 'a=b'          => ['--config', 'a=b']
+      #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
+      #   # config: nil            => []
+      #
+      def value(names, args: nil, type: nil, allow_empty: false, multi_valued: false)
+        register_option(names, type: :value, args: args, expected_type: type, allow_empty: allow_empty,
+                               multi_valued: multi_valued)
       end
 
       # Define an inline valued option (--flag=value as single argument)
@@ -190,6 +209,9 @@ module Git
       # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
       #   When false (default), empty strings are skipped entirely. When true, the flag with empty
       #   value is included in the output (e.g., --message=).
+      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
+      #   of values and repeats the flag for each (e.g., --flag=v1 --flag=v2). A single value or nil
+      #   is also accepted.
       # @return [void]
       #
       # @example With type validation
@@ -205,20 +227,15 @@ module Git
       #   # message: ""     => [] (skipped)
       #   # message: "text" => ['--message=text']
       #
-      def inline_value(names, args: nil, type: nil, allow_empty: false)
-        register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty)
-      end
-
-      # Define a multi-value option (--flag value repeated for each value)
+      # @example With multi_valued
+      #   inline_value :sort, multi_valued: true
+      #   # sort: 'refname'                  => ['--sort=refname']
+      #   # sort: ['refname', 'committerdate'] => ['--sort=refname', '--sort=committerdate']
+      #   # sort: nil                         => []
       #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (arrays not supported for value types)
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
-      # @return [void]
-      #
-      def multi_value(names, args: nil, type: nil)
-        register_option(names, type: :multi_value, args: args, expected_type: type)
+      def inline_value(names, args: nil, type: nil, allow_empty: false, multi_valued: false)
+        register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty,
+                               multi_valued: multi_valued)
       end
 
       # Define a flag or inline value option (--flag when true, --flag=value when string)
@@ -496,9 +513,20 @@ module Git
             args << (value ? arg_spec : arg_spec.sub(/\A--/, '--no-'))
           end
         end,
-        value: ->(args, arg_spec, value, _) { args << arg_spec << value.to_s },
-        inline_value: ->(args, arg_spec, value, _) { args << "#{arg_spec}=#{value}" },
-        multi_value: ->(args, arg_spec, value, _) { Array(value).each { |v| args << arg_spec << v.to_s } },
+        value: lambda do |args, arg_spec, value, definition|
+          if definition[:multi_valued]
+            Array(value).each { |v| args << arg_spec << v.to_s }
+          else
+            args << arg_spec << value.to_s
+          end
+        end,
+        inline_value: lambda do |args, arg_spec, value, definition|
+          if definition[:multi_valued]
+            Array(value).each { |v| args << "#{arg_spec}=#{v}" }
+          else
+            args << "#{arg_spec}=#{value}"
+          end
+        end,
         flag_or_inline_value: lambda do |args, arg_spec, value, _|
           unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
             raise ArgumentError,
