@@ -8,8 +8,8 @@ RSpec.describe Git::Commands::Rm do
 
   describe '#call' do
     context 'when no paths are provided' do
-      it 'raises ArgumentError for nil' do
-        expect { command.call(nil) }.to raise_error(ArgumentError, /nil values are not allowed/)
+      it 'raises ArgumentError for nil (treated as not provided)' do
+        expect { command.call(nil) }.to raise_error(ArgumentError, /at least one value is required/)
       end
 
       it 'raises ArgumentError for empty array' do
