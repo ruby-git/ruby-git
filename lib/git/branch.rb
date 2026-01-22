@@ -1,16 +1,41 @@
 # frozen_string_literal: true
 
+require_relative 'branch_info'
+
 module Git
   # Represents a Git branch
+  #
+  # Branch objects provide access to branch metadata and operations like checkout,
+  # delete, and merge. They should be obtained via {Git::Base#branch} or
+  # {Git::Base#branches}, not constructed directly.
+  #
+  # @example Getting a branch
+  #   git = Git.open('.')
+  #   branch = git.branch('main')
+  #   branch.checkout
+  #
+  # @example Listing branches
+  #   git.branches.each { |b| puts b.name }
+  #
   class Branch
     attr_accessor :full, :remote, :name
 
-    def initialize(base, name)
-      @full = name
+    # Initialize a new Branch object
+    #
+    # @api private
+    #
+    # @note Use {Git::Base#branch} or {Git::Base#branches} instead of constructing directly
+    #
+    # @param base [Git::Base] the git repository
+    # @param branch_info_or_name [Git::BranchInfo, String] branch info object or name string
+    #   Passing a BranchInfo is preferred; String support is for backward compatibility.
+    #
+    def initialize(base, branch_info_or_name)
       @base = base
       @gcommit = nil
       @stashes = nil
-      @remote, @name = parse_name(name)
+
+      initialize_from_argument(branch_info_or_name)
     end
 
     def gcommit
@@ -104,6 +129,34 @@ module Git
     }x
 
     private
+
+    # @api private
+    def initialize_from_argument(branch_info_or_name)
+      if branch_info_or_name.is_a?(Git::BranchInfo)
+        initialize_from_branch_info(branch_info_or_name)
+      else
+        initialize_from_name(branch_info_or_name)
+      end
+    end
+
+    # Initialize from a BranchInfo object (preferred path)
+    #
+    # @param branch_info [Git::BranchInfo] the branch info
+    #
+    def initialize_from_branch_info(branch_info)
+      @full = branch_info.refname
+      @name = branch_info.short_name
+      @remote = branch_info.remote_name ? Git::Remote.new(@base, branch_info.remote_name) : nil
+    end
+
+    # Initialize from a string name (legacy path, deprecated)
+    #
+    # @param name [String] the branch name
+    #
+    def initialize_from_name(name)
+      @full = name
+      @remote, @name = parse_name(name)
+    end
 
     # Given a full branch name return an Array containing the remote and branch names.
     #
