@@ -18,6 +18,59 @@ module Git
     #   ARGS.build('https://github.com/user/repo', force: true, branch: 'main')
     #   # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
     #
+    # == Option Types
+    #
+    # The DSL supports several option types:
+    #
+    # - {#flag} - Boolean flag (--flag when true)
+    # - {#negatable_flag} - Boolean flag with negation (--flag or --no-flag)
+    # - {#value} - Valued option (--flag value as separate arguments)
+    # - {#inline_value} - Inline valued option (--flag=value as single argument)
+    # - {#multi_value} - Multi-value option (--flag value repeated for each value)
+    # - {#flag_or_inline_value} - Flag or inline value (--flag or --flag=value)
+    # - {#negatable_flag_or_inline_value} - Negatable flag or inline value
+    # - {#static} - Static flag always included
+    # - {#custom} - Custom option with builder block
+    # - {#metadata} - Validation-only option (not included in command output)
+    #
+    # == Positional Arguments
+    #
+    # Positional arguments are mapped using Ruby-like semantics for a supported
+    # subset of method signature layouts:
+    #
+    # 1. Required positionals before variadic are filled first (left to right)
+    # 2. Required positionals after variadic are filled from the end
+    # 3. Optional positionals (with defaults) are filled with remaining args
+    # 4. Variadic positional gets whatever is left in the middle
+    #
+    # @note Not all valid Ruby parameter layouts are supported. In particular,
+    #   combinations that place optional positionals before a variadic positional
+    #   together with post-variadic positionals (e.g., `def foo(a = 1, *rest, tail)`)
+    #   are not handled correctly and should be avoided in command definitions.
+    #
+    # @example Simple positional (like `def foo(repo)`)
+    #   positional :repository, required: true
+    #
+    # @example Variadic positional (like `def foo(*paths)`)
+    #   positional :paths, variadic: true
+    #
+    # @example git mv pattern (like `def mv(*sources, destination)`)
+    #   positional :sources, variadic: true, required: true
+    #   positional :destination, required: true
+    #   # build('src1', 'src2', 'dest') => ['src1', 'src2', 'dest']
+    #
+    # == Nil Handling for Positionals
+    #
+    # Nil values have special meaning for positional arguments:
+    #
+    # - For non-variadic positionals: nil means "not provided" and is skipped
+    # - For variadic positionals: nil within the values is an error
+    # - Empty strings are valid and passed through to git
+    #
+    # @example Skipping optional positional with nil
+    #   # positional :commit; positional :paths, variadic: true
+    #   build(nil, 'file1', 'file2')  # => ['file1', 'file2']
+    #
     # == Type Validation
     #
     # The `type:` parameter provides declarative type validation for option values.
@@ -37,6 +90,16 @@ module Git
     #
     # @note The `type:` parameter cannot be combined with a custom `validator:` parameter.
     #   Attempting to use both will raise an ArgumentError during definition.
+    #
+    # == Conflict Detection
+    #
+    # Use {#conflicts} to declare mutually exclusive options. When building arguments,
+    # if more than one option in a conflict group is provided, an ArgumentError is raised.
+    #
+    # @example
+    #   conflicts :force, :force_force
+    #   # build(force: true, force_force: true)
+    #   #   => ArgumentError: cannot specify :force and :force_force
     #
     class Arguments
       # Define a new Arguments instance using the DSL
@@ -267,14 +330,76 @@ module Git
 
       # Define a positional argument
       #
-      # @param name [Symbol] the positional argument name
-      # @param required [Boolean] whether the argument is required (for variadic, requires at least one value)
+      # Positional arguments are mapped to values following Ruby method signature
+      # semantics. Required positionals before a variadic are filled left-to-right,
+      # required positionals after a variadic are filled from the end, and the
+      # variadic gets whatever remains in the middle.
+      #
+      # @param name [Symbol] the positional argument name (used in error messages)
+      # @param required [Boolean] whether the argument is required. For variadic
+      #   positionals, this means at least one value must be provided.
       # @param variadic [Boolean] whether the argument accepts multiple values
-      # @param default [Object] the default value if not provided
-      # @param separator [String, nil] separator to insert before this positional (e.g., '--')
+      #   (like Ruby's splat operator *args). Only one variadic positional is
+      #   allowed per definition; attempting to define a second will raise an
+      #   ArgumentError.
+      # @param default [Object] the default value if not provided. For variadic
+      #   positionals, this should be an array (e.g., `default: ['.']`).
+      #
+      # @note Optional positionals before a variadic combined with required
+      #   positionals after the variadic (e.g., `def foo(a = 1, *rest, b)`) is
+      #   not supported. Use required positionals before the variadic instead.
+      # @param separator [String, nil] separator string to insert before this
+      #   positional in the output (e.g., '--' for the common pathspec separator)
       # @return [void]
       #
+      # @example Required positional (like `def clone(repository)`)
+      #   positional :repository, required: true
+      #   # build('https://github.com/user/repo')
+      #   #   => ['https://github.com/user/repo']
+      #
+      # @example Optional positional with default (like `def log(commit = 'HEAD')`)
+      #   positional :commit, default: 'HEAD'
+      #   # build()        => ['HEAD']
+      #   # build('main')  => ['main']
+      #
+      # @example Variadic positional (like `def add(*paths)`)
+      #   positional :paths, variadic: true
+      #   # build('file1', 'file2', 'file3')
+      #   #   => ['file1', 'file2', 'file3']
+      #
+      # @example Required variadic with at least one value (like `def rm(*paths)` with validation)
+      #   positional :paths, variadic: true, required: true
+      #   # build()         => raises ArgumentError
+      #   # build('file1')  => ['file1']
+      #
+      # @example git mv pattern (like `def mv(*sources, destination)`)
+      #   positional :sources, variadic: true, required: true
+      #   positional :destination, required: true
+      #   # build('src1', 'src2', 'dest')
+      #   #   => ['src1', 'src2', 'dest']
+      #   # build('src', 'dest')
+      #   #   => ['src', 'dest']
+      #
+      # @example Positional with separator (pathspec after --)
+      #   flag :force
+      #   positional :paths, variadic: true, separator: '--'
+      #   # build('file1', 'file2', force: true)
+      #   #   => ['--force', '--', 'file1', 'file2']
+      #
+      # @example Complex pattern (like `def diff(commit1, commit2 = nil, *paths)`)
+      #   positional :commit1, required: true
+      #   positional :commit2
+      #   positional :paths, variadic: true, separator: '--'
+      #   # build('HEAD~1')
+      #   #   => ['HEAD~1']
+      #   # build('HEAD~1', 'HEAD')
+      #   #   => ['HEAD~1', 'HEAD']
+      #   # build('HEAD~1', 'HEAD', 'file.rb')
+      #   #   => ['HEAD~1', 'HEAD', '--', 'file.rb']
+      #
       def positional(name, required: false, variadic: false, default: nil, separator: nil)
+        validate_single_variadic!(name) if variadic
+
         @positional_definitions << {
           name: name,
           required: required,
@@ -344,6 +469,15 @@ module Git
 
       private
 
+      def validate_single_variadic!(name)
+        existing_variadic = @positional_definitions.find { |d| d[:variadic] }
+        return unless existing_variadic
+
+        raise ArgumentError,
+              "only one variadic positional is allowed; :#{existing_variadic[:name]} is already variadic, " \
+              "cannot add :#{name} as variadic"
+      end
+
       BUILDERS = {
         flag: lambda do |args, arg_spec, value, _|
           return unless value
@@ -409,16 +543,31 @@ module Git
         value.respond_to?(:empty?) && value.empty? && !definition[:allow_empty]
       end
 
+      # Build positional arguments following Ruby method signature semantics
+      #
+      # Ruby allocation rules:
+      # 1. Required positionals before variadic are filled first (left to right)
+      # 2. Required positionals after variadic are filled from the end
+      # 3. Optional positionals are filled with remaining args
+      # 4. Variadic positional gets whatever is left in the middle
+      #
+      # Example: def foo(a, b, *middle, c, d)
+      #   foo(1, 2, 3, 4)    => a=1, b=2, middle=[], c=3, d=4
+      #   foo(1, 2, 3, 4, 5) => a=1, b=2, middle=[3], c=4, d=5
+      #
       def build_positionals(args, positionals)
         positionals = normalize_positionals(positionals)
-        positional_index = 0
+        allocation, consumed_count = allocate_positionals(positionals)
 
         @positional_definitions.each do |definition|
-          value = extract_positional_value(positionals, positional_index, definition)
+          value = allocation[definition[:name]]
           validate_required_positional(value, definition)
           validate_no_nil_values!(value, definition)
-          positional_index = append_positional(args, value, definition, positional_index, positionals.size)
+          append_positional_to_args(args, value, definition)
         end
+
+        # Check for unexpected positionals
+        check_unexpected_positionals(positionals, consumed_count)
       end
 
       def normalize_positionals(positionals)
@@ -427,27 +576,122 @@ module Git
         Array(positionals)
       end
 
-      def append_positional(args, value, definition, index, total)
-        return index if value_empty?(value)
+      # Allocate positional arguments to definitions following Ruby semantics
+      # Returns [allocation_hash, consumed_count] where consumed_count is the
+      # number of non-nil positionals that were consumed by definitions.
+      def allocate_positionals(positionals)
+        variadic_index = find_variadic_index
+        allocation = {}
+
+        consumed_count = if variadic_index.nil?
+                           allocate_without_variadic(positionals, allocation)
+                         else
+                           allocate_with_variadic(positionals, allocation, variadic_index)
+                         end
+
+        [allocation, consumed_count]
+      end
+
+      def find_variadic_index
+        @positional_definitions.find_index { |d| d[:variadic] }
+      end
+
+      def allocate_without_variadic(positionals, allocation)
+        consumed = 0
+        @positional_definitions.each_with_index do |definition, index|
+          value = positionals[index]
+          allocation[definition[:name]] = value.nil? ? definition[:default] : value
+          consumed += 1 if index < positionals.size && !positionals[index].nil?
+        end
+        consumed
+      end
+
+      def allocate_with_variadic(positionals, allocation, variadic_index)
+        pre_defs, variadic_def, post_defs = split_definitions_around_variadic(variadic_index)
+        reserved_for_post = calculate_post_variadic_reservation(positionals.size, pre_defs.size, post_defs.size)
+
+        pre_consumed = allocate_pre_variadic(positionals, allocation, pre_defs)
+        post_start = positionals.size - reserved_for_post
+        post_consumed = allocate_post_variadic(positionals, allocation, post_defs, post_start)
+        variadic_consumed = allocate_variadic(positionals, allocation, variadic_def, pre_defs.size, post_start)
+
+        pre_consumed + variadic_consumed + post_consumed
+      end
+
+      def split_definitions_around_variadic(variadic_index)
+        [
+          @positional_definitions[0...variadic_index],
+          @positional_definitions[variadic_index],
+          @positional_definitions[(variadic_index + 1)..]
+        ]
+      end
+
+      def calculate_post_variadic_reservation(positionals_size, pre_count, post_count)
+        available = [positionals_size - pre_count, 0].max
+        [available, post_count].min
+      end
+
+      def allocate_pre_variadic(positionals, allocation, pre_defs)
+        consumed = 0
+        pre_defs.each_with_index do |definition, index|
+          value = positionals[index]
+          allocation[definition[:name]] = value.nil? ? definition[:default] : value
+          consumed += 1 if index < positionals.size && !positionals[index].nil?
+        end
+        consumed
+      end
+
+      def allocate_post_variadic(positionals, allocation, post_defs, post_start)
+        consumed = 0
+        post_defs.each_with_index do |definition, offset|
+          pos_index = post_start + offset
+          value = pos_index < positionals.size ? positionals[pos_index] : nil
+          allocation[definition[:name]] = value.nil? ? definition[:default] : value
+          consumed += 1 if pos_index < positionals.size && !positionals[pos_index].nil?
+        end
+        consumed
+      end
+
+      def allocate_variadic(positionals, allocation, variadic_def, variadic_start, variadic_end)
+        variadic_values = positionals[variadic_start...variadic_end] || []
+        allocation[variadic_def[:name]] =
+          if variadic_values.empty? || variadic_values.all?(&:nil?)
+            variadic_def[:default]
+          else
+            variadic_values
+          end
+        variadic_values.compact.size
+      end
+
+      def append_positional_to_args(args, value, definition)
+        return if positional_value_empty?(value, definition)
 
         args << definition[:separator] if definition[:separator]
+        append_positional_value(args, value, definition[:variadic])
+      end
 
-        if definition[:variadic]
+      def positional_value_empty?(value, definition)
+        return true if value.nil?
+
+        definition[:variadic] && value.respond_to?(:empty?) && value.empty?
+      end
+
+      def append_positional_value(args, value, variadic)
+        if variadic
           args.concat(Array(value).map(&:to_s))
-          total # consume all remaining
         else
           args << value.to_s
-          index + 1
         end
       end
 
-      def extract_positional_value(positionals, index, definition)
-        if definition[:variadic]
-          values = positionals[index..]
-          values.empty? ? definition[:default] : values
-        else
-          positionals[index] || definition[:default]
-        end
+      def check_unexpected_positionals(positionals, consumed_count)
+        provided_count = positionals.compact.size
+
+        return if provided_count <= consumed_count
+
+        unexpected_count = provided_count - consumed_count
+        unexpected = positionals.compact.last(unexpected_count)
+        raise ArgumentError, "Unexpected positional arguments: #{unexpected.join(', ')}"
       end
 
       def validate_required_positional(value, definition)
@@ -461,16 +705,25 @@ module Git
 
       def validate_no_nil_values!(value, definition)
         return unless definition[:variadic]
-        return if value_empty?(value)
+        return if value.nil? # Allow nil as "not provided"
 
+        # For variadic positionals, check if array contains any nil values
         values = Array(value)
         return unless values.any?(&:nil?)
 
         raise ArgumentError, "nil values are not allowed in variadic positional argument: #{definition[:name]}"
       end
 
+      # Check if a positional value is empty (not provided)
+      #
+      # Only nil means "not provided" for positionals. Empty strings and empty
+      # arrays are valid values that should be passed through.
+      #
+      # @param value [Object] the value to check
+      # @return [Boolean] true if the value is nil
+      #
       def value_empty?(value)
-        value.nil? || (value.respond_to?(:empty?) && value.empty?)
+        value.nil?
       end
 
       def validate_unsupported_options!(opts)

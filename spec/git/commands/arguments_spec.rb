@@ -266,6 +266,10 @@ RSpec.describe Git::Commands::Arguments do
       it 'raises error when required positional is missing' do
         expect { args.build }.to raise_error(ArgumentError, /repository is required/)
       end
+
+      it 'accepts empty string as valid value for required positional' do
+        expect(args.build('')).to eq([''])
+      end
     end
 
     context 'with optional positional arguments' do
@@ -327,6 +331,10 @@ RSpec.describe Git::Commands::Arguments do
       it 'raises ArgumentError when empty array provided' do
         expect { args.build([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
       end
+
+      it 'accepts empty string as valid value in variadic positional' do
+        expect(args.build('', 'file.rb')).to eq(['', 'file.rb'])
+      end
     end
 
     context 'with positional arguments with default values' do
@@ -375,6 +383,637 @@ RSpec.describe Git::Commands::Arguments do
       it 'outputs options before positionals' do
         result = args.build('https://example.com', 'my-dir', bare: true, branch: 'main')
         expect(result).to eq(['--bare', '--branch', 'main', 'https://example.com', 'my-dir'])
+      end
+    end
+
+    context 'with unexpected positional arguments' do
+      context 'when no positionals are defined' do
+        let(:args) do
+          described_class.define do
+            flag :force
+          end
+        end
+
+        it 'raises ArgumentError for single unexpected positional' do
+          expect { args.build('unexpected') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+
+        it 'raises ArgumentError for multiple unexpected positionals' do
+          expect { args.build('arg1', 'arg2', 'arg3') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: arg1, arg2, arg3/
+          )
+        end
+
+        it 'does not raise for nil positional arguments' do
+          expect(args.build(nil)).to eq([])
+        end
+
+        it 'does not raise for multiple nil positional arguments' do
+          expect(args.build(nil, nil)).to eq([])
+        end
+      end
+
+      context 'when optional positional is defined' do
+        let(:args) do
+          described_class.define do
+            positional :commit, required: false
+          end
+        end
+
+        it 'accepts expected positional' do
+          expect(args.build('HEAD~1')).to eq(['HEAD~1'])
+        end
+
+        it 'accepts nil as the positional (treated as not provided)' do
+          expect(args.build(nil)).to eq([])
+        end
+
+        it 'raises ArgumentError for extra positional beyond defined ones' do
+          expect { args.build('HEAD~1', 'unexpected') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+
+        it 'raises ArgumentError for multiple extra positionals' do
+          expect { args.build('HEAD~1', 'extra1', 'extra2') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: extra1, extra2/
+          )
+        end
+
+        it 'does not count trailing nils as unexpected' do
+          expect(args.build('HEAD~1', nil, nil)).to eq(['HEAD~1'])
+        end
+
+        it 'raises for non-nil unexpected arguments even with trailing nils' do
+          expect { args.build('HEAD~1', 'unexpected', nil) }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+      end
+
+      context 'when required positional is defined' do
+        let(:args) do
+          described_class.define do
+            positional :repository, required: true
+          end
+        end
+
+        it 'accepts the required positional' do
+          expect(args.build('https://example.com')).to eq(['https://example.com'])
+        end
+
+        it 'raises ArgumentError for extra positional beyond required one' do
+          expect { args.build('https://example.com', 'unexpected') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+      end
+
+      context 'when multiple positionals are defined' do
+        let(:args) do
+          described_class.define do
+            positional :repository, required: true
+            positional :directory, required: false
+          end
+        end
+
+        it 'accepts both defined positionals' do
+          expect(args.build('https://example.com', 'my-dir')).to eq(['https://example.com', 'my-dir'])
+        end
+
+        it 'accepts only the required positional' do
+          expect(args.build('https://example.com')).to eq(['https://example.com'])
+        end
+
+        it 'raises ArgumentError for extra positionals beyond defined ones' do
+          expect { args.build('https://example.com', 'my-dir', 'unexpected') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+
+        it 'raises ArgumentError for multiple extra positionals' do
+          expect { args.build('repo', 'dir', 'extra1', 'extra2', 'extra3') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: extra1, extra2, extra3/
+          )
+        end
+      end
+
+      context 'when variadic positional is defined' do
+        let(:args) do
+          described_class.define do
+            positional :paths, variadic: true
+          end
+        end
+
+        it 'accepts any number of positionals (no unexpected arguments)' do
+          expect(args.build('file1.rb', 'file2.rb', 'file3.rb')).to eq(['file1.rb', 'file2.rb', 'file3.rb'])
+        end
+
+        it 'accepts many positionals without raising' do
+          many_files = (1..10).map { |i| "file#{i}.rb" }
+          expect(args.build(*many_files)).to eq(many_files)
+        end
+      end
+
+      context 'when variadic positional comes after regular positional' do
+        let(:args) do
+          described_class.define do
+            positional :command, required: true
+            positional :args, variadic: true
+          end
+        end
+
+        it 'accepts command with variadic args (no unexpected arguments)' do
+          expect(args.build('run', '--verbose', '--debug')).to eq(['run', '--verbose', '--debug'])
+        end
+
+        it 'accepts just the required command' do
+          expect(args.build('run')).to eq(['run'])
+        end
+      end
+
+      context 'edge case: empty strings vs nil for positionals' do
+        let(:args) do
+          described_class.define do
+            positional :commit, required: false
+          end
+        end
+
+        it 'passes through empty string as a valid positional value' do
+          expect(args.build('')).to eq([''])
+        end
+
+        it 'treats nil as not provided' do
+          expect(args.build(nil)).to eq([])
+        end
+
+        it 'raises for unexpected positional after empty string' do
+          expect { args.build('', 'unexpected') }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+
+        it 'does not count nil as unexpected' do
+          expect { args.build('valid', nil) }.to_not raise_error
+          expect(args.build('valid', nil)).to eq(['valid'])
+        end
+      end
+
+      context 'edge case: empty arrays for variadic positionals' do
+        let(:args) do
+          described_class.define do
+            positional :paths, variadic: true
+          end
+        end
+
+        it 'treats empty array as not provided (equivalent to nil)' do
+          expect(args.build([])).to eq([])
+        end
+
+        it 'treats nil as not provided' do
+          expect(args.build(nil)).to eq([])
+        end
+
+        it 'accepts non-empty array' do
+          expect(args.build(['file1.rb', 'file2.rb'])).to eq(['file1.rb', 'file2.rb'])
+        end
+
+        context 'with separator' do
+          let(:args) do
+            described_class.define do
+              flag :force
+              positional :paths, variadic: true, separator: '--'
+            end
+          end
+
+          it 'omits separator when empty array provided' do
+            expect(args.build([], force: true)).to eq(['--force'])
+          end
+
+          it 'omits separator when nil provided' do
+            expect(args.build(nil, force: true)).to eq(['--force'])
+          end
+
+          it 'includes separator when non-empty array provided' do
+            expect(args.build(['file.rb'], force: true)).to eq(['--force', '--', 'file.rb'])
+          end
+        end
+
+        context 'with default value' do
+          let(:args) do
+            described_class.define do
+              positional :paths, variadic: true, default: ['.']
+            end
+          end
+
+          it 'uses default when empty array provided' do
+            expect(args.build([])).to eq(['.'])
+          end
+
+          it 'uses default when nil provided' do
+            expect(args.build(nil)).to eq(['.'])
+          end
+
+          it 'overrides default when non-empty array provided' do
+            expect(args.build(['src/'])).to eq(['src/'])
+          end
+
+          it 'accepts value identical to the default (no false positive unexpected)' do
+            # This is a regression test: passing a value that equals the default
+            # should not be treated as unexpected
+            expect(args.build(['.'])).to eq(['.'])
+            expect(args.build('.')).to eq(['.'])
+          end
+        end
+      end
+
+      context 'multiple variadic positionals (rejected at definition time)' do
+        it 'raises ArgumentError when defining a second variadic positional' do
+          expect do
+            described_class.define do
+              positional :sources, variadic: true
+              positional :middle
+              positional :paths, variadic: true
+            end
+          end.to raise_error(
+            ArgumentError,
+            /only one variadic positional is allowed.*:sources is already variadic.*cannot add :paths/
+          )
+        end
+      end
+
+      context 'with mixed options and unexpected positionals' do
+        let(:args) do
+          described_class.define do
+            flag :force
+            positional :path, required: false
+          end
+        end
+
+        it 'raises for unexpected positional even when options are present' do
+          expect { args.build('expected', 'unexpected', force: true) }.to raise_error(
+            ArgumentError,
+            /Unexpected positional arguments: unexpected/
+          )
+        end
+
+        it 'allows expected positional with options' do
+          expect(args.build('expected', force: true)).to eq(['--force', 'expected'])
+        end
+      end
+
+      # =======================================================================
+      # Positional Argument Mapping (Ruby Method Signature Semantics)
+      # =======================================================================
+      #
+      # These tests verify that positional arguments are mapped following the
+      # same rules as Ruby method signatures:
+      #
+      # 1. Required positionals before variadic are filled first (left to right)
+      # 2. Required positionals after variadic are filled from the end
+      # 3. Optional positionals (with defaults) are filled with remaining args
+      # 4. Variadic positional gets whatever is left in the middle
+      #
+      # Example Ruby method: def foo(a, b, *middle, c, d)
+      #   foo(1, 2, 3)       => a=1, b=2, middle=[], c=3, d raises ArgumentError
+      #   foo(1, 2, 3, 4)    => a=1, b=2, middle=[], c=3, d=4
+      #   foo(1, 2, 3, 4, 5) => a=1, b=2, middle=[3], c=4, d=5
+      #
+      # =======================================================================
+
+      context 'positional mapping (Ruby semantics)' do
+        # Pattern: def foo(arg1)
+        context 'single required positional' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, required: true
+            end
+          end
+
+          it 'maps the argument correctly' do
+            expect(args.build('value1')).to eq(['value1'])
+          end
+
+          it 'raises when not provided' do
+            expect { args.build }.to raise_error(ArgumentError, /arg1 is required/)
+          end
+        end
+
+        # Pattern: def foo(arg1 = 'default')
+        context 'single optional positional with default' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, default: 'default_value'
+            end
+          end
+
+          it 'uses provided value' do
+            expect(args.build('provided')).to eq(['provided'])
+          end
+
+          it 'uses default when not provided' do
+            expect(args.build).to eq(['default_value'])
+          end
+        end
+
+        # Pattern: def foo(arg1, arg2)
+        context 'two required positionals' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, required: true
+              positional :arg2, required: true
+            end
+          end
+
+          it 'maps arguments in order' do
+            expect(args.build('value1', 'value2')).to eq(%w[value1 value2])
+          end
+
+          it 'raises when second is missing' do
+            expect { args.build('value1') }.to raise_error(ArgumentError, /arg2 is required/)
+          end
+        end
+
+        # Pattern: def foo(arg1, arg2 = 'default')
+        context 'required followed by optional' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, required: true
+              positional :arg2, default: 'default2'
+            end
+          end
+
+          it 'maps both when both provided' do
+            expect(args.build('val1', 'val2')).to eq(%w[val1 val2])
+          end
+
+          it 'uses default for second when only first provided' do
+            expect(args.build('val1')).to eq(%w[val1 default2])
+          end
+        end
+
+        # Pattern: def foo(*args)
+        context 'variadic only' do
+          let(:args) do
+            described_class.define do
+              positional :paths, variadic: true
+            end
+          end
+
+          it 'accepts no arguments' do
+            expect(args.build).to eq([])
+          end
+
+          it 'accepts one argument' do
+            expect(args.build('file1')).to eq(['file1'])
+          end
+
+          it 'accepts many arguments' do
+            expect(args.build('f1', 'f2', 'f3', 'f4')).to eq(%w[f1 f2 f3 f4])
+          end
+        end
+
+        # Pattern: def foo(arg1, *rest)
+        context 'required followed by variadic' do
+          let(:args) do
+            described_class.define do
+              positional :command, required: true
+              positional :args, variadic: true
+            end
+          end
+
+          it 'maps first to required, rest to variadic' do
+            expect(args.build('cmd', 'arg1', 'arg2')).to eq(%w[cmd arg1 arg2])
+          end
+
+          it 'maps only required when variadic is empty' do
+            expect(args.build('cmd')).to eq(['cmd'])
+          end
+
+          it 'raises when required is missing' do
+            expect { args.build }.to raise_error(ArgumentError, /command is required/)
+          end
+        end
+
+        # Pattern: def foo(*sources, destination) - the git mv pattern!
+        context 'variadic followed by required (git mv pattern)' do
+          let(:args) do
+            described_class.define do
+              positional :sources, variadic: true, required: true
+              positional :destination, required: true
+            end
+          end
+
+          it 'maps last to destination, rest to sources' do
+            expect(args.build('src1', 'src2', 'dest')).to eq(%w[src1 src2 dest])
+          end
+
+          it 'handles single source and destination' do
+            expect(args.build('src', 'dest')).to eq(%w[src dest])
+          end
+
+          it 'handles many sources' do
+            expect(args.build('s1', 's2', 's3', 's4', 'dest')).to eq(%w[s1 s2 s3 s4 dest])
+          end
+
+          it 'raises when only destination provided (sources required)' do
+            expect { args.build('dest') }.to raise_error(
+              ArgumentError,
+              /at least one value is required for sources/
+            )
+          end
+
+          it 'raises when nothing provided' do
+            expect { args.build }.to raise_error(ArgumentError)
+          end
+        end
+
+        # Pattern: def foo(first, *middle, last)
+        context 'required, variadic, required' do
+          let(:args) do
+            described_class.define do
+              positional :first, required: true
+              positional :middle, variadic: true
+              positional :last, required: true
+            end
+          end
+
+          it 'maps first and last, middle gets the rest' do
+            expect(args.build('a', 'b', 'c', 'd', 'e')).to eq(%w[a b c d e])
+          end
+
+          it 'handles empty middle' do
+            expect(args.build('first', 'last')).to eq(%w[first last])
+          end
+
+          it 'handles single middle value' do
+            expect(args.build('first', 'mid', 'last')).to eq(%w[first mid last])
+          end
+
+          it 'raises when only one argument (need at least 2)' do
+            expect { args.build('only') }.to raise_error(ArgumentError, /last is required/)
+          end
+        end
+
+        # Pattern: def foo(a, b, *middle, c, d)
+        context 'two required, variadic, two required' do
+          let(:args) do
+            described_class.define do
+              positional :a, required: true
+              positional :b, required: true
+              positional :middle, variadic: true
+              positional :c, required: true
+              positional :d, required: true
+            end
+          end
+
+          it 'maps with empty middle' do
+            expect(args.build('1', '2', '3', '4')).to eq(%w[1 2 3 4])
+          end
+
+          it 'maps with one middle value' do
+            expect(args.build('1', '2', 'm1', '3', '4')).to eq(%w[1 2 m1 3 4])
+          end
+
+          it 'maps with multiple middle values' do
+            expect(args.build('1', '2', 'm1', 'm2', 'm3', '3', '4')).to eq(%w[1 2 m1 m2 m3 3 4])
+          end
+
+          it 'raises when not enough arguments' do
+            expect { args.build('1', '2', '3') }.to raise_error(ArgumentError, /d is required/)
+          end
+        end
+
+        # Pattern: def foo(a, *middle, c = 'default')
+        context 'required, variadic, optional' do
+          let(:args) do
+            described_class.define do
+              positional :a, required: true
+              positional :middle, variadic: true
+              positional :c, default: 'default_c'
+            end
+          end
+
+          it 'uses default for c when only a provided' do
+            expect(args.build('val_a')).to eq(%w[val_a default_c])
+          end
+
+          it 'maps a and c, middle empty' do
+            expect(args.build('val_a', 'val_c')).to eq(%w[val_a val_c])
+          end
+
+          it 'maps all three parts' do
+            expect(args.build('val_a', 'm1', 'm2', 'val_c')).to eq(%w[val_a m1 m2 val_c])
+          end
+        end
+
+        # UNSUPPORTED PATTERN: def foo(a = 'default', *middle, b)
+        # This doesn't follow Ruby semantics - optional before variadic with
+        # required after is not supported. Documents current (non-Ruby) behavior.
+        context 'UNSUPPORTED: optional, variadic, required' do
+          let(:args) do
+            described_class.define do
+              positional :a, default: 'default_a'
+              positional :middle, variadic: true
+              positional :b, required: true
+            end
+          end
+
+          # Ruby would: foo('x') => a='default_a', middle=[], b='x'
+          # We do:      build('x') => a='x', raises 'b is required'
+          it 'does NOT follow Ruby semantics (optional steals from required)' do
+            # This documents the limitation - we don't match Ruby here
+            expect { args.build('only_one') }.to raise_error(ArgumentError, /b is required/)
+          end
+
+          it 'works when enough arguments are provided' do
+            # With 2+ args, both a and b get values, so it works
+            expect(args.build('val_a', 'val_b')).to eq(%w[val_a val_b])
+          end
+
+          it 'works with middle values' do
+            expect(args.build('val_a', 'm1', 'm2', 'val_b')).to eq(%w[val_a m1 m2 val_b])
+          end
+        end
+      end
+
+      # =======================================================================
+      # Nil Handling for Positional Arguments
+      # =======================================================================
+      #
+      # Nil has a special meaning: "this positional argument was not provided"
+      # This is separate from the mapping rules above.
+      #
+      # =======================================================================
+
+      context 'nil handling for positionals' do
+        context 'with non-variadic positionals' do
+          let(:args) do
+            described_class.define do
+              positional :arg1
+              positional :arg2
+            end
+          end
+
+          it 'nil means not provided - skipped in output' do
+            expect(args.build(nil, 'value2')).to eq(['value2'])
+          end
+
+          it 'skips nil at end' do
+            expect(args.build('value1', nil)).to eq(['value1'])
+          end
+
+          it 'skips all nils' do
+            expect(args.build(nil, nil)).to eq([])
+          end
+        end
+
+        context 'with variadic positional at end' do
+          let(:args) do
+            described_class.define do
+              positional :first
+              positional :rest, variadic: true
+            end
+          end
+
+          it 'nil for first means not provided' do
+            expect(args.build(nil, 'a', 'b')).to eq(%w[a b])
+          end
+
+          it 'rejects nil mixed within variadic values' do
+            expect { args.build('first', 'a', nil, 'b') }.to raise_error(
+              ArgumentError,
+              /nil values are not allowed in variadic positional argument: rest/
+            )
+          end
+        end
+
+        context 'with variadic followed by required' do
+          let(:args) do
+            described_class.define do
+              positional :sources, variadic: true, required: true
+              positional :destination, required: true
+            end
+          end
+
+          it 'rejects nil within variadic' do
+            expect { args.build('s1', nil, 's2', 'dest') }.to raise_error(
+              ArgumentError,
+              /nil values are not allowed in variadic positional argument: sources/
+            )
+          end
+        end
       end
     end
 
