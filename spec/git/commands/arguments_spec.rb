@@ -160,10 +160,10 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with multi_value options' do
+    context 'with value multi_valued: true' do
       let(:args) do
         described_class.define do
-          multi_value :config
+          value :config, multi_valued: true
         end
       end
 
@@ -181,6 +181,96 @@ RSpec.describe Git::Commands::Arguments do
 
       it 'outputs nothing when value is empty array' do
         expect(args.build(config: [])).to eq([])
+      end
+
+      it 'includes empty strings in array even with allow_empty: false (default)' do
+        expect(args.build(config: ['', 'value'])).to eq(['--config', '', '--config', 'value'])
+      end
+
+      it 'outputs nothing for single empty string with allow_empty: false (default)' do
+        expect(args.build(config: '')).to eq([])
+      end
+
+      context 'with allow_empty: true' do
+        let(:args) do
+          described_class.define do
+            value :config, multi_valued: true, allow_empty: true
+          end
+        end
+
+        it 'includes empty strings in the array' do
+          expect(args.build(config: ['', 'value'])).to eq(['--config', '', '--config', 'value'])
+        end
+
+        it 'outputs flag with empty value for single empty string' do
+          expect(args.build(config: '')).to eq(['--config', ''])
+        end
+      end
+    end
+
+    context 'with inline_value multi_valued: true' do
+      let(:args) do
+        described_class.define do
+          inline_value :sort, multi_valued: true
+        end
+      end
+
+      it 'outputs --flag=value for each array element' do
+        expect(args.build(sort: %w[refname -committerdate])).to eq(['--sort=refname', '--sort=-committerdate'])
+      end
+
+      it 'outputs --flag=value for single value' do
+        expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
+      end
+
+      it 'outputs nothing when value is nil' do
+        expect(args.build(sort: nil)).to eq([])
+      end
+
+      it 'outputs nothing when value is empty array' do
+        expect(args.build(sort: [])).to eq([])
+      end
+
+      it 'includes empty strings in array even with allow_empty: false (default)' do
+        expect(args.build(sort: ['', 'refname'])).to eq(['--sort=', '--sort=refname'])
+      end
+
+      it 'outputs nothing for single empty string with allow_empty: false (default)' do
+        expect(args.build(sort: '')).to eq([])
+      end
+
+      context 'with allow_empty: true' do
+        let(:args) do
+          described_class.define do
+            inline_value :sort, multi_valued: true, allow_empty: true
+          end
+        end
+
+        it 'includes empty strings in the array' do
+          expect(args.build(sort: ['', 'refname'])).to eq(['--sort=', '--sort=refname'])
+        end
+
+        it 'outputs flag with empty value for single empty string' do
+          expect(args.build(sort: '')).to eq(['--sort='])
+        end
+      end
+
+      context 'with type: validation' do
+        let(:args) do
+          described_class.define do
+            inline_value :sort, multi_valued: true, type: String
+          end
+        end
+
+        it 'validates type against the provided value (not array elements)' do
+          # Type validation applies to the entire value, not individual elements
+          # Arrays pass String validation because type check happens before Array() normalization
+          expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
+        end
+
+        it 'rejects values that do not match the type' do
+          expect { args.build(sort: 123) }.to raise_error(ArgumentError, /must be a String/)
+        end
       end
     end
 
@@ -1186,14 +1276,6 @@ RSpec.describe Git::Commands::Arguments do
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
 
-      it 'rejects arrays for multi_value type' do
-        expect do
-          described_class.define do
-            multi_value :config, args: ['--config', '--global']
-          end
-        end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
-      end
-
       it 'rejects arrays for flag_or_inline_value type' do
         expect do
           described_class.define do
@@ -1265,26 +1347,6 @@ RSpec.describe Git::Commands::Arguments do
           expect(args_with_allow_empty.build(abbrev: '7')).to eq(['--abbrev=7'])
         end
       end
-
-      context 'for multi_value types' do
-        let(:args) do
-          described_class.define do
-            multi_value :config
-          end
-        end
-
-        it 'skips empty array' do
-          expect(args.build(config: [])).to eq([])
-        end
-
-        it 'includes empty strings in array (no filtering)' do
-          expect(args.build(config: ['', 'value'])).to eq(['--config', '', '--config', 'value'])
-        end
-
-        it 'processes all non-empty values' do
-          expect(args.build(config: %w[a b c])).to eq(['--config', 'a', '--config', 'b', '--config', 'c'])
-        end
-      end
     end
 
     context 'with type: parameter for validation' do
@@ -1330,29 +1392,6 @@ RSpec.describe Git::Commands::Arguments do
           expect { args.build(depth: 'not a number') }.to raise_error(
             ArgumentError,
             /The :depth option must be a Integer, but was a String/
-          )
-        end
-      end
-
-      context 'with Array type' do
-        let(:args) do
-          described_class.define do
-            multi_value :paths, type: Array
-          end
-        end
-
-        it 'accepts Array values' do
-          expect(args.build(paths: %w[a b])).to eq(['--paths', 'a', '--paths', 'b'])
-        end
-
-        it 'accepts nil values (skips validation and output)' do
-          expect(args.build(paths: nil)).to eq([])
-        end
-
-        it 'raises descriptive error for non-Array values' do
-          expect { args.build(paths: 'single') }.to raise_error(
-            ArgumentError,
-            /The :paths option must be a Array, but was a String/
           )
         end
       end
