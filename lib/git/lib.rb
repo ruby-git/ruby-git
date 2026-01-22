@@ -2,6 +2,7 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/branch/list'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -1919,6 +1920,9 @@ module Git
            end
       op.split("\n")
     end
+
+    # Make command_lines public for use by Git::Commands classes
+    public :command_lines
 
     # Returns a hash of environment variable overrides for git commands
     #
