@@ -2,6 +2,7 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
 require_relative 'commands/fsck'
@@ -1157,16 +1158,13 @@ module Git
       Git::Commands::Reset.new(self).call(commit, **opts)
     end
 
-    CLEAN_OPTION_MAP = [
-      { keys: [:force], flag: '--force', type: :boolean },
-      { keys: [:ff],    flag: '-ff',     type: :boolean },
-      { keys: [:d],     flag: '-d',      type: :boolean },
-      { keys: [:x],     flag: '-x',      type: :boolean }
-    ].freeze
-
     def clean(opts = {})
-      args = build_args(opts, CLEAN_OPTION_MAP)
-      command('clean', *args)
+      if opts.key?(:ff)
+        Git::Deprecation.warn(':ff option is deprecated. Use :force_force instead.')
+        opts = opts.dup
+        opts[:force_force] = opts.delete(:ff)
+      end
+      Git::Commands::Clean.new(self).call(**opts)
     end
 
     REVERT_OPTION_MAP = [

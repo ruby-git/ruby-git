@@ -194,4 +194,19 @@ class TestDeprecations < Test::Unit::TestCase
 
     assert_equal(true, Git::Lib.warn_if_old_command(@git.lib))
   end
+
+  def test_clean_ff_deprecation
+    Dir.mktmpdir('git_clean') do |dir|
+      git = Git.init(dir)
+      File.write(File.join(dir, 'tempfile.txt'), 'temporary content')
+      git.add('tempfile.txt')
+
+      Git::Deprecation.expects(:warn).with(
+        ':ff option is deprecated. Use :force_force instead.'
+      )
+
+      # Call clean with deprecated :ff option
+      git.lib.clean(ff: true)
+    end
+  end
 end
