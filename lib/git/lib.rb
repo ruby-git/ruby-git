@@ -661,34 +661,9 @@ module Git
       command('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
     end
 
-    BRANCH_LINE_REGEXP = /
-      ^
-        # Prefix indicates if this branch is checked out. The prefix is one of:
-        (?:
-          (?<current>\*[[:blank:]]) |  # Current branch (checked out in the current worktree)
-          (?<worktree>\+[[:blank:]]) | # Branch checked out in a different worktree
-          [[:blank:]]{2}               # Branch not checked out
-        )
-
-        # The branch's full refname
-        (?:
-          (?<not_a_branch>\(not[[:blank:]]a[[:blank:]]branch\)) |
-           (?:\(HEAD[[:blank:]]detached[[:blank:]]at[[:blank:]](?<detached_ref>[^)]+)\)) |
-          (?<refname>[^[[:blank:]]]+)
-        )
-
-        # Optional symref
-        # If this ref is a symbolic reference, this is the ref referenced
-        (?:
-          [[:blank:]]->[[:blank:]](?<symref>.*)
-        )?
-      $
-    /x
-
     def branches_all
-      lines = command_lines('branch', '-a')
-      lines.each_with_index.filter_map do |line, index|
-        parse_branch_line(line, index, lines)
+      Git::Commands::Branch::List.new(self).call(all: true).map do |branch_info|
+        [branch_info.refname, branch_info.current, branch_info.worktree, branch_info.symref]
       end
     end
 
@@ -1692,42 +1667,6 @@ module Git
         end
       end
       headers
-    end
-
-    def parse_branch_line(line, index, all_lines)
-      match_data = match_branch_line(line, index, all_lines)
-
-      return nil if match_data[:not_a_branch] || match_data[:detached_ref]
-
-      format_branch_data(match_data)
-    end
-
-    def match_branch_line(line, index, all_lines)
-      match_data = line.match(BRANCH_LINE_REGEXP)
-      raise Git::UnexpectedResultError, unexpected_branch_line_error(all_lines, line, index) unless match_data
-
-      match_data
-    end
-
-    def format_branch_data(match_data)
-      [
-        match_data[:refname],
-        !match_data[:current].nil?,
-        !match_data[:worktree].nil?,
-        match_data[:symref]
-      ]
-    end
-
-    def unexpected_branch_line_error(lines, line, index)
-      <<~ERROR
-        Unexpected line in output from `git branch -a`, line #{index + 1}
-
-        Full output:
-          #{lines.join("\n  ")}
-
-        Line #{index + 1}:
-          "#{line}"
-      ERROR
     end
 
     def get_branch_state(branch_name)
