@@ -75,7 +75,7 @@ class TestIndexOps < Test::Unit::TestCase
 
       assert(File.exist?('nested'))
 
-      g.clean(ff: true, d: true)
+      g.clean(force_force: true, d: true)
       assert(!File.exist?('nested'))
     end
   end
