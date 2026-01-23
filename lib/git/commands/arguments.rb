@@ -7,6 +7,14 @@ module Git
     #
     # @api private
     #
+    # == Overview
+    #
+    # This class enables declarative definition of git command arguments, handling:
+    # - Option flags (boolean, valued, inline-valued)
+    # - Positional arguments (required, optional, variadic)
+    # - Validation (type checking, conflicts)
+    # - Argument building (converting Ruby values to CLI argument arrays)
+    #
     # @example Defining arguments for a command
     #   ARGS = Git::Commands::Arguments.define do
     #     flag :force
@@ -17,6 +25,24 @@ module Git
     # @example Building command-line arguments
     #   ARGS.build('https://github.com/user/repo', force: true, branch: 'main')
     #   # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
+    #
+    # == Design
+    #
+    # The class uses a two-phase approach:
+    #
+    # 1. **Definition phase**: DSL methods ({#flag}, {#value}, {#positional}, etc.)
+    #    record argument definitions in internal data structures.
+    #
+    # 2. **Build phase**: {#build} transforms Ruby values into a CLI argument array
+    #    by iterating over definitions and applying type-specific builders.
+    #
+    # Key internal components:
+    #
+    # - +@option_definitions+: Hash mapping option names to their definitions
+    # - +@positional_definitions+: Array of positional argument definitions (order matters)
+    # - +@alias_map+: Maps option aliases to their primary names
+    # - +BUILDERS+: Hash of lambdas that convert values to CLI arguments by type
+    # - {PositionalAllocator}: Handles Ruby-like positional argument allocation
     #
     # == Option Types
     #
@@ -44,18 +70,15 @@ module Git
     #
     # == Positional Arguments
     #
-    # Positional arguments are mapped using Ruby-like semantics for a supported
-    # subset of method signature layouts:
+    # Positional arguments are mapped using Ruby-like semantics:
     #
-    # 1. Required positionals before variadic are filled first (left to right)
-    # 2. Required positionals after variadic are filled from the end
-    # 3. Optional positionals (with defaults) are filled with remaining args
+    # 1. Post-variadic required positionals are reserved first (from the end)
+    # 2. Pre-variadic positionals are filled with remaining values (required first, then optional)
+    # 3. Optional positionals (with defaults) get values only if extras are available
     # 4. Variadic positional gets whatever is left in the middle
     #
-    # @note Not all valid Ruby parameter layouts are supported. In particular,
-    #   combinations that place optional positionals before a variadic positional
-    #   together with post-variadic positionals (e.g., `def foo(a = 1, *rest, tail)`)
-    #   are not handled correctly and should be avoided in command definitions.
+    # This matches Ruby's parameter binding behavior, including patterns like
+    # `def foo(a = default, *rest, b)` where the required `b` is filled before optional `a`.
     #
     # @example Simple positional (like `def foo(repo)`)
     #   positional :repository, required: true
@@ -361,10 +384,6 @@ module Git
       #   ArgumentError.
       # @param default [Object] the default value if not provided. For variadic
       #   positionals, this should be an array (e.g., `default: ['.']`).
-      #
-      # @note Optional positionals before a variadic combined with required
-      #   positionals after the variadic (e.g., `def foo(a = 1, *rest, b)`) is
-      #   not supported. Use required positionals before the variadic instead.
       # @param separator [String, nil] separator string to insert before this
       #   positional in the output (e.g., '--' for the common pathspec separator)
       # @return [void]
@@ -396,6 +415,14 @@ module Git
       #   #   => ['src1', 'src2', 'dest']
       #   # build('src', 'dest')
       #   #   => ['src', 'dest']
+      #
+      # @example Optional before variadic with required after (like `def foo(a = 'default', *middle, b)`)
+      #   positional :a, default: 'default_a'
+      #   positional :middle, variadic: true
+      #   positional :b, required: true
+      #   # build('x')           => ['default_a', 'x']  (a=default, middle=[], b='x')
+      #   # build('x', 'y')      => ['x', 'y']          (a='x', middle=[], b='y')
+      #   # build('x', 'm', 'y') => ['x', 'm', 'y']     (a='x', middle=['m'], b='y')
       #
       # @example Positional with separator (pathspec after --)
       #   flag :force
@@ -608,87 +635,7 @@ module Git
       # Returns [allocation_hash, consumed_count] where consumed_count is the
       # number of non-nil positionals that were consumed by definitions.
       def allocate_positionals(positionals)
-        variadic_index = find_variadic_index
-        allocation = {}
-
-        consumed_count = if variadic_index.nil?
-                           allocate_without_variadic(positionals, allocation)
-                         else
-                           allocate_with_variadic(positionals, allocation, variadic_index)
-                         end
-
-        [allocation, consumed_count]
-      end
-
-      def find_variadic_index
-        @positional_definitions.find_index { |d| d[:variadic] }
-      end
-
-      def allocate_without_variadic(positionals, allocation)
-        consumed = 0
-        @positional_definitions.each_with_index do |definition, index|
-          value = positionals[index]
-          allocation[definition[:name]] = value.nil? ? definition[:default] : value
-          consumed += 1 if index < positionals.size && !positionals[index].nil?
-        end
-        consumed
-      end
-
-      def allocate_with_variadic(positionals, allocation, variadic_index)
-        pre_defs, variadic_def, post_defs = split_definitions_around_variadic(variadic_index)
-        reserved_for_post = calculate_post_variadic_reservation(positionals.size, pre_defs.size, post_defs.size)
-
-        pre_consumed = allocate_pre_variadic(positionals, allocation, pre_defs)
-        post_start = positionals.size - reserved_for_post
-        post_consumed = allocate_post_variadic(positionals, allocation, post_defs, post_start)
-        variadic_consumed = allocate_variadic(positionals, allocation, variadic_def, pre_defs.size, post_start)
-
-        pre_consumed + variadic_consumed + post_consumed
-      end
-
-      def split_definitions_around_variadic(variadic_index)
-        [
-          @positional_definitions[0...variadic_index],
-          @positional_definitions[variadic_index],
-          @positional_definitions[(variadic_index + 1)..]
-        ]
-      end
-
-      def calculate_post_variadic_reservation(positionals_size, pre_count, post_count)
-        available = [positionals_size - pre_count, 0].max
-        [available, post_count].min
-      end
-
-      def allocate_pre_variadic(positionals, allocation, pre_defs)
-        consumed = 0
-        pre_defs.each_with_index do |definition, index|
-          value = positionals[index]
-          allocation[definition[:name]] = value.nil? ? definition[:default] : value
-          consumed += 1 if index < positionals.size && !positionals[index].nil?
-        end
-        consumed
-      end
-
-      def allocate_post_variadic(positionals, allocation, post_defs, post_start)
-        consumed = 0
-        post_defs.each_with_index do |definition, offset|
-          pos_index = post_start + offset
-          value = pos_index < positionals.size ? positionals[pos_index] : nil
-          allocation[definition[:name]] = value.nil? ? definition[:default] : value
-          consumed += 1 if pos_index < positionals.size && !positionals[pos_index].nil?
-        end
-        consumed
-      end
-
-      def allocate_variadic(positionals, allocation, variadic_def, variadic_start, variadic_end)
-        variadic_values = positionals[variadic_start...variadic_end] || []
-        allocation[variadic_def[:name]] =
-          if variadic_values.empty? || variadic_values.all?(&:nil?)
-            variadic_def[:default]
-          else
-            variadic_values
-          end
-        variadic_values.compact.size
+        PositionalAllocator.new(@positional_definitions).allocate(positionals)
       end
 
       def append_positional_to_args(args, value, definition)
@@ -815,6 +762,207 @@ module Git
 
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
+        end
+      end
+    end
+
+    # Allocates positional argument values to definitions following Ruby semantics.
+    #
+    # This class handles the complex logic of mapping positional values to their
+    # definitions, supporting required, optional, and variadic positionals.
+    #
+    # @api private
+    class PositionalAllocator
+      # @param definitions [Array<Hash>] positional argument definitions
+      def initialize(definitions)
+        @definitions = definitions
+      end
+
+      # Allocate values to definitions
+      # @param values [Array] the positional argument values
+      # @return [Array(Hash, Integer)] [allocation_hash, consumed_count]
+      def allocate(values)
+        allocation = {}
+        variadic_index = @definitions.find_index { |d| d[:variadic] }
+
+        consumed = if variadic_index.nil?
+                     allocate_without_variadic(values, allocation)
+                   else
+                     allocate_with_variadic(values, allocation, variadic_index)
+                   end
+
+        [allocation, consumed]
+      end
+
+      private
+
+      # Allocate when there's no variadic positional, following Ruby semantics:
+      # - Required positionals at the END are reserved first
+      # - Leading positionals get remaining values left-to-right
+      # - Optional positionals are skipped when there aren't enough values
+      def allocate_without_variadic(values, allocation)
+        trailing = count_trailing_required
+        leading_defs = @definitions[0...(@definitions.size - trailing)]
+        trailing_defs = @definitions[(@definitions.size - trailing)..]
+
+        values_for_leading = [values.size - trailing, 0].max
+        leading_values = values[0...values_for_leading]
+        trailing_values = values[values_for_leading..]
+
+        consumed = allocate_leading(allocation, leading_defs, leading_values)
+        consumed + allocate_trailing(allocation, trailing_defs, trailing_values)
+      end
+
+      def count_trailing_required
+        count = 0
+        @definitions.reverse_each do |d|
+          break unless required?(d)
+
+          count += 1
+        end
+        count
+      end
+
+      def required?(definition)
+        definition[:required] && definition[:default].nil?
+      end
+
+      # Allocate leading positionals (those before any trailing required)
+      # Required positionals consume values; optional ones only consume if extras available
+      def allocate_leading(allocation, definitions, values)
+        return 0 if definitions.empty?
+
+        state = LeadingAllocationState.new(definitions, values, method(:required?))
+        state.allocate(allocation)
+      end
+
+      def allocate_trailing(allocation, definitions, values)
+        consumed = 0
+        definitions.each_with_index do |definition, index|
+          allocation[definition[:name]] = index < values.size ? values[index] : definition[:default]
+          consumed += 1 if index < values.size
+        end
+        consumed
+      end
+
+      def allocate_with_variadic(values, allocation, variadic_index)
+        parts = split_around_variadic(variadic_index)
+        slices = calculate_variadic_slices(values, parts)
+
+        pre_consumed = allocate_pre_variadic_smart(allocation, parts[:pre], slices[:pre_values])
+        variadic_consumed = allocate_variadic(
+          allocation, parts[:variadic], values, slices[:var_start], slices[:var_end]
+        )
+        post_consumed = allocate_post_variadic(allocation, parts[:post], values, slices[:post_start])
+
+        pre_consumed + variadic_consumed + post_consumed
+      end
+
+      def calculate_variadic_slices(values, parts)
+        post_required_count = count_required(parts[:post])
+        pre_available = [values.size - post_required_count, 0].max
+        pre_end = [pre_available, parts[:pre].size].min
+        post_start = [values.size - parts[:post].size, pre_end].max
+
+        {
+          pre_values: values[0...pre_end],
+          var_start: pre_end,
+          var_end: post_start,
+          post_start: post_start
+        }
+      end
+
+      def count_required(definitions)
+        definitions.count { |d| required?(d) }
+      end
+
+      def split_around_variadic(variadic_index)
+        {
+          pre: @definitions[0...variadic_index],
+          variadic: @definitions[variadic_index],
+          post: @definitions[(variadic_index + 1)..]
+        }
+      end
+
+      # Allocate pre-variadic positionals with Ruby-like semantics
+      # (required get values first, optional only if extra values available)
+      def allocate_pre_variadic_smart(allocation, definitions, values)
+        return 0 if definitions.empty?
+
+        state = LeadingAllocationState.new(definitions, values, method(:required?))
+        state.allocate(allocation)
+      end
+
+      def allocate_variadic(allocation, definition, values, start_idx, end_idx)
+        variadic_values = values[start_idx...end_idx] || []
+        allocation[definition[:name]] =
+          if variadic_values.empty? || variadic_values.all?(&:nil?)
+            definition[:default]
+          else
+            variadic_values
+          end
+        variadic_values.compact.size
+      end
+
+      def allocate_post_variadic(allocation, definitions, values, post_start)
+        consumed = 0
+        definitions.each_with_index do |definition, offset|
+          pos_index = post_start + offset
+          value = pos_index < values.size ? values[pos_index] : nil
+          allocation[definition[:name]] = value.nil? ? definition[:default] : value
+          consumed += 1 if pos_index < values.size && !values[pos_index].nil?
+        end
+        consumed
+      end
+
+      # Encapsulates state for allocating leading positionals
+      # @api private
+      class LeadingAllocationState
+        def initialize(definitions, values, required_check)
+          @definitions = definitions
+          @values = values
+          @required_check = required_check
+          @required_count = definitions.count { |d| required_check.call(d) }
+          @extra_for_optionals = [values.size - @required_count, 0].max
+          @val_idx = 0
+          @opt_idx = 0
+          @consumed = 0
+        end
+
+        def allocate(allocation)
+          @definitions.each { |definition| allocate_one(allocation, definition) }
+          @consumed
+        end
+
+        private
+
+        def allocate_one(allocation, definition)
+          if @required_check.call(definition)
+            allocate_required(allocation, definition)
+          else
+            allocate_optional(allocation, definition)
+          end
+        end
+
+        def allocate_required(allocation, definition)
+          allocation[definition[:name]] = value_or_default(definition)
+          @consumed += 1 if @val_idx < @values.size
+          @val_idx += 1
+        end
+
+        def allocate_optional(allocation, definition)
+          if @opt_idx < @extra_for_optionals
+            allocation[definition[:name]] = value_or_default(definition)
+            @consumed += 1 if @val_idx < @values.size
+            @val_idx += 1
+          else
+            allocation[definition[:name]] = definition[:default]
+          end
+          @opt_idx += 1
+        end
+
+        def value_or_default(definition)
+          @val_idx < @values.size ? @values[@val_idx] : definition[:default]
         end
       end
     end
