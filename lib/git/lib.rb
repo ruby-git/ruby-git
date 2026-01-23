@@ -2,6 +2,7 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/branch/create'
 require_relative 'commands/branch/list'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
@@ -1194,8 +1195,16 @@ module Git
       command('stash', 'list')
     end
 
-    def branch_new(branch)
-      command('branch', branch)
+    # Create a new branch
+    #
+    # @param branch [String] the name of the branch to create
+    # @param start_point [String, nil] the commit, branch, or tag to start the new branch from
+    # @param options [Hash] command options (see {Git::Commands::Branch::Create#call})
+    #
+    # @note This method delegates to {Git::Commands::Branch::Create}
+    #
+    def branch_new(branch, start_point = nil, options = {})
+      Git::Commands::Branch::Create.new(self).call(branch, start_point, **options)
     end
 
     def branch_delete(branch)
