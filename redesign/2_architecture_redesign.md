@@ -240,6 +240,26 @@ For example, instead of returning a raw string, `repo.config('user.name')` will
 return a `Git::Config::Value` object containing the key, value, scope, and source
 path.
 
+**Value Objects vs Domain Objects**: A critical architectural distinction exists
+between:
+
+- **Value objects** (e.g., `Git::BranchInfo`): Pure data returned by commands. No
+  repository context, no operations, no dependencies. Created by `Data.define`.
+  These are the return types of `Git::Commands::*` classes.
+
+- **Domain objects** (e.g., `Git::Branch`): Rich objects with operations that require
+  repository context (`@base`). These wrap value objects and provide methods like
+  `checkout`, `merge`, `delete`.
+
+Commands return value objects. The facade layer (`Git::Repository`) or collection
+classes (`Git::Branches`) convert them to domain objects when needed. This separation
+keeps commands pure and testable while domain objects provide the rich API users
+expect.
+
+**Note on `Data.define` constraints**: Objects created with `Data.define` are frozen.
+This means memoization patterns like `@cached ||= ...` will raise `FrozenError`.
+Either accept repeated computation or use a different approach for caching.
+
 ### D. Eliminate Custom Path Classes
 
 The existing path wrapper classes (`Git::WorkingDirectory`, `Git::Index`,
