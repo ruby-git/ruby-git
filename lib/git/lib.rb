@@ -3,6 +3,7 @@
 require_relative 'args_builder'
 require_relative 'commands/add'
 require_relative 'commands/branch/create'
+require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
@@ -1207,8 +1208,20 @@ module Git
       Git::Commands::Branch::Create.new(self).call(branch, start_point, **options)
     end
 
-    def branch_delete(branch)
-      command('branch', '-D', branch)
+    # Delete one or more branches
+    #
+    # @param branches [Array<String>] the name(s) of the branch(es) to delete
+    # @param options [Hash] command options (see {Git::Commands::Branch::Delete#call})
+    # @option options [Boolean] :force allow deleting unmerged branches (default: true for backward compatibility)
+    # @option options [Boolean] :remotes delete remote-tracking branches
+    # @option options [Boolean] :quiet suppress non-error messages
+    #
+    # @note This method delegates to {Git::Commands::Branch::Delete}
+    # @note Default force: true preserves backward compatibility with original -D behavior
+    #
+    def branch_delete(*branches, **options)
+      options = { force: true }.merge(options)
+      Git::Commands::Branch::Delete.new(self).call(*branches, **options)
     end
 
     CHECKOUT_OPTION_MAP = [
