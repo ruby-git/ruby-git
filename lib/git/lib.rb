@@ -662,9 +662,7 @@ module Git
     end
 
     def branches_all
-      Git::Commands::Branch::List.new(self).call(all: true).map do |branch_info|
-        [branch_info.refname, branch_info.current, branch_info.worktree, branch_info.symref]
-      end
+      Git::Commands::Branch::List.new(self).call(all: true)
     end
 
     def worktrees_all
