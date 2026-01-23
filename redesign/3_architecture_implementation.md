@@ -420,6 +420,62 @@ future work:
 
     This allows callers to delete multiple branches efficiently in one git command.
 
+11. **Use `def call(*, **)` when Arguments DSL handles all validation**
+
+    When using the Arguments DSL with patterns where optional positionals precede
+    required ones (matching Ruby's parameter binding semantics), prefer the
+    catch-all signature `def call(*, **)` and let `ARGS.build(*, **)` handle
+    all validation:
+
+    ```ruby
+    # git branch -m [<old-branch>] <new-branch>
+    ARGS = Arguments.define do
+      static '--move'
+      flag :force
+      positional :old_branch                  # optional (no required: true)
+      positional :new_branch, required: true  # required
+    end.freeze
+
+    # ✅ Preferred: let ARGS.build handle validation
+    def call(*, **)
+      args = ARGS.build(*, **)
+      @execution_context.command('branch', *args)
+    end
+
+    # ❌ Avoid: explicit params trigger RuboCop Style/OptionalArguments
+    def call(old_branch = nil, new_branch, **)
+      # ...
+    end
+    ```
+
+    The Arguments DSL with Ruby-like positional allocation correctly fills
+    required parameters before optional ones, so `move.call('new-name')` works
+    as expected.
+
+12. **Arguments DSL supports Ruby-like positional parameter allocation**
+
+    The `PositionalAllocator` in the Arguments DSL follows Ruby's method parameter
+    binding semantics. When optional positionals precede required ones, values are
+    allocated to required parameters first:
+
+    ```ruby
+    # Ruby method: def foo(a = 'default', b); end
+    # foo('value') → a='default', b='value' (required b filled first)
+
+    # Arguments DSL equivalent:
+    positional :old_branch                  # optional
+    positional :new_branch, required: true  # required
+
+    # Single value: ARGS.build('new-name')
+    # → old_branch=nil, new_branch='new-name'
+
+    # Two values: ARGS.build('old-name', 'new-name')
+    # → old_branch='old-name', new_branch='new-name'
+    ```
+
+    This enables command interfaces that match git CLI patterns like
+    `git branch -m [<old-branch>] <new-branch>` without awkward workarounds.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
@@ -486,6 +542,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
 | `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
 | `branch_delete` | `Git::Commands::Branch::Delete` | `spec/git/commands/branch/delete_spec.rb` | `git branch --delete` |
+| `branch_move` | `Git::Commands::Branch::Move` | `spec/git/commands/branch/move_spec.rb` | `git branch --move` |
 
 #### ⏳ Commands To Migrate
 
