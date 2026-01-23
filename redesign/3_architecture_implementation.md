@@ -476,6 +476,40 @@ future work:
     This enables command interfaces that match git CLI patterns like
     `git branch -m [<old-branch>] <new-branch>` without awkward workarounds.
 
+13. **Commands layer maps option semantics, not argument ergonomics**
+
+    The Commands layer should strictly mirror git CLI semantics. When git uses
+    `--option=value` syntax, the Commands class should use a keyword argument—even
+    if a positional would feel more natural in Ruby:
+
+    ```ruby
+    # Git CLI: git branch --set-upstream-to=<upstream> [<branch>]
+    # ↑ <upstream> is the VALUE of --set-upstream-to option, not a positional
+
+    # ✅ Commands layer: strict CLI mapping
+    class SetUpstream
+      ARGS = Arguments.define do
+        inline_value :set_upstream_to  # keyword, not positional
+        positional :branch_name
+      end
+
+      def call(branch_name = nil, set_upstream_to:)
+        args = ARGS.build(branch_name, set_upstream_to: set_upstream_to)
+        @execution_context.command('branch', *args)
+      end
+    end
+
+    # ✅ Git::Lib adapter: ergonomic Ruby API
+    def branch_set_upstream(upstream, branch_name = nil)
+      SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
+    end
+    ```
+
+    This separation keeps Commands classes predictable (they mirror git 1:1) while
+    allowing the adapter layer to provide intuitive Ruby interfaces. Ergonomic
+    transformations—like reordering arguments or converting keywords to
+    positionals—belong in `Git::Lib` or higher layers (`Git::Base`, `Git::Branch`).
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
