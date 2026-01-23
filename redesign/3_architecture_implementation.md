@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (9/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (10/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `branch` command** → `Git::Commands::Branch`
+**Migrate the `branch create/delete` commands** → `Git::Commands::Branch::Create`, `Git::Commands::Branch::Delete`
 
 #### Workflow
 
@@ -251,6 +251,69 @@ The facade layer (`Git::Lib`, `Git::Base`) may accept either keyword arguments o
 options hash for backward compatibility, but must use `**options` when delegating to
 command classes.
 
+**Architectural Insights from Command Migrations**
+
+The following insights were discovered during command migrations and should guide
+future work:
+
+1. **`Data.define` creates frozen objects—no memoization allowed**
+
+   Ruby's `Data.define` creates immutable, frozen objects. This means patterns like
+   `@cached ||= expensive_computation` will raise `FrozenError`. When using
+   `Data.define` for value objects, either:
+   - Accept repeated computation (preferred for simple operations)
+   - Move caching outside the value object
+   - Use a regular class with `freeze` called explicitly after initialization
+
+2. **Parsing logic duplication is unavoidable when one path needs repository context**
+
+   Value objects like `BranchInfo` cannot create domain objects like `Remote` because
+   they lack repository context. This leads to seemingly duplicate parsing:
+
+   ```ruby
+   # Value object (pure, no context)
+   BranchInfo#short_name  # → returns String
+
+   # Domain object (has @base context)
+   Branch#parse_name      # → returns [Remote, String]
+   ```
+
+   This is **intentional duplication**, not a code smell. Eliminating it would couple
+   the value object to the repository, defeating its purpose.
+
+3. **The command's return type shapes the entire downstream architecture**
+
+   When a command returns primitive types (`Array<Array>`), all consumers need magic
+   index knowledge. Changing to value objects (`Array<BranchInfo>`) ripples through
+   every consumer. Plan return types carefully—they define contracts across the
+   system.
+
+4. **Constructor polymorphism enables gradual deprecation**
+
+   When changing a constructor's expected argument type, accept both old and new
+   types with a deprecation warning for the legacy path:
+
+   ```ruby
+   def initialize(base, branch_info_or_name)
+     if branch_info_or_name.is_a?(Git::BranchInfo)
+       initialize_from_branch_info(branch_info_or_name)
+     else
+       Git::Deprecation.warn('...')
+       initialize_from_name(branch_info_or_name)
+     end
+   end
+   ```
+
+   This allows migrating internal code first while external users continue working.
+
+5. **The boundary between "pure data" and "contextualized operations" is the most
+   important architectural decision**
+
+   Commands should return pure value objects (no repository context needed).
+   Domain objects wrap those value objects and add operations requiring context.
+   This single decision determines where parsing lives, what types flow where, and
+   how the system layers together.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
@@ -314,6 +377,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `reset` | `Git::Commands::Reset` | `spec/git/commands/reset_spec.rb` | `git reset` |
 | `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
 | `clean` | `Git::Commands::Clean` | `spec/git/commands/clean_spec.rb` | `git clean` |
+| `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
 
 #### ⏳ Commands To Migrate
 
@@ -330,7 +394,8 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Branching & Merging:**
 
-- [ ] `branch_new` / `branch_delete` → `Git::Commands::Branch` — `git branch`
+- [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
+- [ ] `branch_new` / `branch_delete` → `Git::Commands::Branch::Create`, `Git::Commands::Branch::Delete` — `git branch`
 - [ ] `checkout` / `checkout_file` → `Git::Commands::Checkout` — `git checkout`
 - [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
