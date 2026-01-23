@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (10/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (11/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `branch create/delete` commands** → `Git::Commands::Branch::Create`, `Git::Commands::Branch::Delete`
+**Migrate the `branch delete` command** → `Git::Commands::Branch::Delete`
 
 #### Workflow
 
@@ -314,6 +314,48 @@ future work:
    This single decision determines where parsing lives, what types flow where, and
    how the system layers together.
 
+6. **Use `negatable_flag_or_inline_value` for tri-state options with optional values**
+
+   When a git option supports `--flag`, `--no-flag`, AND `--flag=value` forms (like
+   `--track`/`--no-track`/`--track=inherit`), use the `negatable_flag_or_inline_value`
+   DSL type instead of defining separate options with conflict declarations:
+
+   ```ruby
+   # ✅ Preferred: single definition handles all forms
+   negatable_flag_or_inline_value :track
+   # track: nil     → (omitted)
+   # track: true    → --track
+   # track: false   → --no-track
+   # track: 'inherit' → --track=inherit
+
+   # ❌ Avoid: separate definitions require conflict management
+   flag :track
+   flag :no_track
+   conflicts :track, :no_track
+   ```
+
+7. **Adapter methods should forward all positional arguments, not just options**
+
+   **BUT ONLY IF BACKWARD COMPATIBILITY IS MAINTAINED**
+
+   When `Git::Lib` methods delegate to command classes, ensure the method signature
+   supports ALL positional arguments the command class accepts:
+
+   ```ruby
+   # ❌ Wrong: loses start_point positional argument
+   def branch_new(branch, options = {})
+     Git::Commands::Branch::Create.new(self).call(branch, **options)
+   end
+
+   # ✅ Correct: forwards all positional arguments
+   def branch_new(branch, start_point = nil, options = {})
+     Git::Commands::Branch::Create.new(self).call(branch, start_point = nil, **options)
+   end
+   ```
+
+   Review the command class's `#call` signature when writing the adapter to ensure
+   no arguments are lost in translation.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
@@ -378,6 +420,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
 | `clean` | `Git::Commands::Clean` | `spec/git/commands/clean_spec.rb` | `git clean` |
 | `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
+| `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
 
 #### ⏳ Commands To Migrate
 
@@ -395,7 +438,8 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Branching & Merging:**
 
 - [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
-- [ ] `branch_new` / `branch_delete` → `Git::Commands::Branch::Create`, `Git::Commands::Branch::Delete` — `git branch`
+- [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
+- [ ] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch -d/-D`
 - [ ] `checkout` / `checkout_file` → `Git::Commands::Checkout` — `git checkout`
 - [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
