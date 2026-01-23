@@ -386,6 +386,11 @@ module Git
       #   positionals, this should be an array (e.g., `default: ['.']`).
       # @param separator [String, nil] separator string to insert before this
       #   positional in the output (e.g., '--' for the common pathspec separator)
+      # @param allow_nil [Boolean] whether nil is a valid value for a required
+      #   positional. When true, nil consumes the positional slot but is omitted
+      #   from output. This is useful for commands like `git checkout` where
+      #   the tree-ish is required to consume a slot but may be nil to restore
+      #   from the index. Defaults to false.
       # @return [void]
       #
       # @example Required positional (like `def clone(repository)`)
@@ -441,7 +446,17 @@ module Git
       #   # build('HEAD~1', 'HEAD', 'file.rb')
       #   #   => ['HEAD~1', 'HEAD', '--', 'file.rb']
       #
-      def positional(name, required: false, variadic: false, default: nil, separator: nil)
+      # @example Required positional that allows nil (like `git checkout [tree-ish] -- paths`)
+      #   positional :tree_ish, required: true, allow_nil: true
+      #   positional :paths, variadic: true, separator: '--'
+      #   # build('HEAD', 'file.rb')
+      #   #   => ['HEAD', '--', 'file.rb']
+      #   # build(nil, 'file.rb')
+      #   #   => ['--', 'file.rb']  (nil consumes slot but is omitted from output)
+      #
+      # rubocop:disable Metrics/ParameterLists
+      def positional(name, required: false, variadic: false, default: nil, separator: nil, allow_nil: false)
+        # rubocop:enable Metrics/ParameterLists
         validate_single_variadic!(name) if variadic
 
         @positional_definitions << {
@@ -449,7 +464,8 @@ module Git
           required: required,
           variadic: variadic,
           default: default,
-          separator: separator
+          separator: separator,
+          allow_nil: allow_nil
         }
       end
 
@@ -671,6 +687,7 @@ module Git
 
       def validate_required_positional(value, definition)
         return unless definition[:required]
+        return if definition[:allow_nil] && value.nil?
         return unless value_empty?(value)
 
         raise ArgumentError, "at least one value is required for #{definition[:name]}" if definition[:variadic]
