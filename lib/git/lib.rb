@@ -7,6 +7,8 @@ require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
 require_relative 'commands/branch/move'
+require_relative 'commands/branch/set_upstream'
+require_relative 'commands/branch/unset_upstream'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -1266,6 +1268,27 @@ module Git
     #
     def branch_copy(*, **)
       Git::Commands::Branch::Copy.new(self).call(*, **)
+    end
+
+    # Set upstream tracking information for a branch
+    #
+    # @param upstream [String] the upstream branch (e.g., 'origin/main')
+    # @param branch_name [String, nil] the branch to configure (defaults to current branch)
+    #
+    # @note This method delegates to {Git::Commands::Branch::SetUpstream}
+    #
+    def branch_set_upstream(upstream, branch_name = nil)
+      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
+    end
+
+    # Remove upstream tracking information for a branch
+    #
+    # @param branch_name [String, nil] the branch to configure (defaults to current branch)
+    #
+    # @note This method delegates to {Git::Commands::Branch::UnsetUpstream}
+    #
+    def branch_unset_upstream(branch_name = nil)
+      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
     end
 
     CHECKOUT_OPTION_MAP = [
