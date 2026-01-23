@@ -5,6 +5,7 @@ require_relative 'commands/add'
 require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
+require_relative 'commands/branch/move'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -1222,6 +1223,27 @@ module Git
     def branch_delete(*branches, **options)
       options = { force: true }.merge(options)
       Git::Commands::Branch::Delete.new(self).call(*branches, **options)
+    end
+
+    # Move/rename a branch
+    #
+    # @overload branch_move(new_branch, options = {})
+    #   Rename the current branch
+    #   @param new_branch [String] the new name for the current branch
+    #   @param options [Hash] command options
+    #
+    # @overload branch_move(old_branch, new_branch, options = {})
+    #   Rename a specific branch
+    #   @param old_branch [String] the branch to rename
+    #   @param new_branch [String] the new name for the branch
+    #   @param options [Hash] command options
+    #
+    # @option options [Boolean] :force allow renaming even if new_branch already exists
+    #
+    # @note This method delegates to {Git::Commands::Branch::Move}
+    #
+    def branch_move(*, **)
+      Git::Commands::Branch::Move.new(self).call(*, **)
     end
 
     CHECKOUT_OPTION_MAP = [
