@@ -289,14 +289,15 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
-  # returns Git::Branch object array
+  # returns Git::BranchInfo object array
   def test_branches_all
     branches = @lib.branches_all
     assert(branches.size.positive?)
-    assert(branches.select { |b| b[1] }.size.positive?) # has a current branch
-    assert(branches.select { |b| %r{/}.match(b[0]) }.size.positive?) # has a remote branch
-    assert(branches.reject { |b| %r{/}.match(b[0]) }.size.positive?) # has a local branch
-    assert(branches.select { |b| /master/.match(b[0]) }.size.positive?) # has a master branch
+    assert(branches.all? { |b| b.is_a?(Git::BranchInfo) }) # all are BranchInfo objects
+    assert(branches.select(&:current).size.positive?) # has a current branch
+    assert(branches.select { |b| %r{/}.match(b.refname) }.size.positive?) # has a remote branch
+    assert(branches.reject { |b| %r{/}.match(b.refname) }.size.positive?) # has a local branch
+    assert(branches.select { |b| /master/.match(b.refname) }.size.positive?) # has a master branch
   end
 
   test 'Git::Lib#branches_all with unexpected output from git branches -a' do

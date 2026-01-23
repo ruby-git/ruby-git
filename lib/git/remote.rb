@@ -25,7 +25,13 @@ module Git
 
     def branch(branch = @base.current_branch)
       remote_tracking_branch = "#{@name}/#{branch}"
-      Git::Branch.new(@base, remote_tracking_branch)
+      branch_info = Git::BranchInfo.new(
+        refname: remote_tracking_branch,
+        current: false,
+        worktree: false,
+        symref: nil
+      )
+      Git::Branch.new(@base, branch_info)
     end
 
     def remove

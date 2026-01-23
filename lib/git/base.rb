@@ -834,7 +834,13 @@ module Git
 
     # @return [Git::Branch] an object for branch_name
     def branch(branch_name = current_branch)
-      Git::Branch.new(self, branch_name)
+      branch_info = Git::BranchInfo.new(
+        refname: branch_name,
+        current: false,
+        worktree: false,
+        symref: nil
+      )
+      Git::Branch.new(self, branch_info)
     end
 
     # @return [Git::Branches] a collection of all the branches in the repository.

@@ -10,8 +10,8 @@ module Git
 
       @base = base
 
-      @base.lib.branches_all.each do |b|
-        @branches[b[0]] = Git::Branch.new(@base, b[0])
+      @base.lib.branches_all.each do |branch_info|
+        @branches[branch_info.refname] = Git::Branch.new(@base, branch_info)
       end
     end
 
