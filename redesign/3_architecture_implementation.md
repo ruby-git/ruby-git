@@ -46,9 +46,37 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 4. **Implement**:
    - Use `Git::Commands::Arguments.define` DSL for argument handling
-   - Include comprehensive YARD documentation with `@param`, `@option`, and `@return`
-     tags
+   - Include comprehensive YARD documentation (see format below)
    - Mark class with `@api private`
+
+   **YARD Documentation Format for `#call` methods:**
+
+   Use `@overload` with `options = {}` to make `@option` tags render correctly:
+
+   ```ruby
+   # Execute the git example command
+   #
+   # @overload call(positional_arg, *variadic_args, options = {})
+   #
+   #   @param positional_arg [String] Description of the positional argument
+   #
+   #   @param variadic_args [Array<String>] Description of variadic arguments
+   #
+   #   @param options [Hash] command options
+   #
+   #   @option options [Boolean] :force (nil) Description. Alias: :f
+   #
+   #   @option options [String] :message (nil) Description
+   #
+   # @return [String] the command output
+   #
+   # @raise [Git::FailedError] if the command fails
+   #
+   def call(*, **)
+   ```
+
+   **Important**: The `@overload` signature must use `options = {}` (not keyword
+   arguments) for `@option` tags to render in generated documentation.
 
 5. **Delegate**: Update `Git::Lib#branch_new` and `Git::Lib#branch_delete` to delegate to the new class:
 

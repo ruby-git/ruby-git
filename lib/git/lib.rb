@@ -9,6 +9,8 @@ require_relative 'commands/branch/list'
 require_relative 'commands/branch/move'
 require_relative 'commands/branch/set_upstream'
 require_relative 'commands/branch/unset_upstream'
+require_relative 'commands/checkout/branch'
+require_relative 'commands/checkout/files'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -1291,39 +1293,44 @@ module Git
       Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
     end
 
-    CHECKOUT_OPTION_MAP = [
-      { keys: %i[force f],      flag: '--force', type: :boolean },
-      { keys: %i[new_branch b], type: :validate_only },
-      { keys: [:start_point], type: :validate_only }
-    ].freeze
-
     # Runs checkout command to checkout or create branch
     #
     # accepts options:
-    #  :new_branch
-    #  :force
-    #  :start_point
+    #  :new_branch / :b - create a new branch with the given name (true = legacy, string = new)
+    #  :force / :f - proceed even with uncommitted changes
+    #  :start_point - start the new branch at this commit (used with :new_branch in legacy mode)
     #
-    # @param [String] branch
-    # @param [Hash] opts
+    # @param [String] branch the branch to checkout, or nil
+    # @param [Hash] opts options for the checkout command
+    # @return [String] the command output
+    #
     def checkout(branch = nil, opts = {})
+      # Handle the case where branch is actually the options hash
       if branch.is_a?(Hash) && opts.empty?
         opts = branch
         branch = nil
       end
-      ArgsBuilder.validate!(opts, CHECKOUT_OPTION_MAP)
 
-      flags = build_args(opts, CHECKOUT_OPTION_MAP)
-      positional_args = build_checkout_positional_args(branch, opts)
-
-      command('checkout', *flags, *positional_args)
+      # Translate legacy interface to new command class interface
+      # Legacy: checkout('branch', new_branch: true, start_point: 'main')
+      # New: checkout('main', new_branch: 'branch')
+      if opts[:new_branch] == true || opts[:b] == true
+        # Legacy mode: branch name is the first argument, start_point is in opts
+        new_opts = opts.except(:new_branch, :b, :start_point).merge(new_branch: branch)
+        Git::Commands::Checkout::Branch.new(self).call(opts[:start_point], **new_opts)
+      else
+        Git::Commands::Checkout::Branch.new(self).call(branch, **opts)
+      end
     end
 
+    # Checkout a specific version of a file
+    #
+    # @param version [String] the tree-ish (commit, branch, tag) to restore from
+    # @param file [String] the file path to restore
+    # @return [String] the command output
+    #
     def checkout_file(version, file)
-      arr_opts = []
-      arr_opts << version
-      arr_opts << file
-      command('checkout', *arr_opts)
+      Git::Commands::Checkout::Files.new(self).call(version, file)
     end
 
     MERGE_OPTION_MAP = [
@@ -1713,17 +1720,6 @@ module Git
         status, path = split_status_line(line)
         memo[path] = status
       end
-    end
-
-    def build_checkout_positional_args(branch, opts)
-      args = []
-      if opts[:new_branch] || opts[:b]
-        args.push('-b', branch)
-        args << opts[:start_point] if opts[:start_point]
-      elsif branch
-        args << branch
-      end
-      args
     end
 
     def build_args(opts, option_map)
