@@ -853,6 +853,78 @@ RSpec.describe Git::Commands::Arguments do
           end
         end
 
+        # Pattern: def foo(arg1 = 'default', arg2)
+        # Ruby fills required args first (from the end), then optional from remaining
+        context 'optional followed by required' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, default: 'default1'
+              positional :arg2, required: true
+            end
+          end
+
+          it 'maps both when both provided' do
+            expect(args.build('val1', 'val2')).to eq(%w[val1 val2])
+          end
+
+          it 'uses default for first when only one arg provided (Ruby semantics)' do
+            # Ruby: def foo(a = 1, b); foo(2) => a=1, b=2
+            expect(args.build('val2')).to eq(%w[default1 val2])
+          end
+
+          it 'raises when no arguments provided' do
+            expect { args.build }.to raise_error(ArgumentError, /arg2 is required/)
+          end
+        end
+
+        # Pattern: def foo(arg1 = 'default1', arg2 = 'default2', arg3)
+        context 'two optionals followed by required' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, default: 'default1'
+              positional :arg2, default: 'default2'
+              positional :arg3, required: true
+            end
+          end
+
+          it 'maps all when all provided' do
+            expect(args.build('val1', 'val2', 'val3')).to eq(%w[val1 val2 val3])
+          end
+
+          it 'uses both defaults when only required provided' do
+            expect(args.build('val3')).to eq(%w[default1 default2 val3])
+          end
+
+          it 'fills first optional when two args provided' do
+            # Ruby: def foo(a = 1, b = 2, c); foo('x', 'y') => a='x', b=2, c='y'
+            expect(args.build('val1', 'val3')).to eq(%w[val1 default2 val3])
+          end
+        end
+
+        # Pattern: def foo(arg1, arg2 = 'default2', arg3)
+        context 'required, optional, required' do
+          let(:args) do
+            described_class.define do
+              positional :arg1, required: true
+              positional :arg2, default: 'default2'
+              positional :arg3, required: true
+            end
+          end
+
+          it 'maps all when all provided' do
+            expect(args.build('val1', 'val2', 'val3')).to eq(%w[val1 val2 val3])
+          end
+
+          it 'uses default for middle when only two args provided' do
+            # Ruby: def foo(a, b = 2, c); foo('x', 'y') => a='x', b=2, c='y'
+            expect(args.build('val1', 'val3')).to eq(%w[val1 default2 val3])
+          end
+
+          it 'raises when only one argument provided' do
+            expect { args.build('val1') }.to raise_error(ArgumentError, /is required/)
+          end
+        end
+
         # Pattern: def foo(*args)
         context 'variadic only' do
           let(:args) do
@@ -952,7 +1024,9 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'raises when only one argument (need at least 2)' do
-            expect { args.build('only') }.to raise_error(ArgumentError, /last is required/)
+            # With Ruby-like allocation, post-variadic required are reserved first,
+            # so pre-variadic required fails when not enough values remain
+            expect { args.build('only') }.to raise_error(ArgumentError, /first is required/)
           end
         end
 
@@ -981,7 +1055,9 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'raises when not enough arguments' do
-            expect { args.build('1', '2', '3') }.to raise_error(ArgumentError, /d is required/)
+            # With Ruby-like allocation, post-variadic required are reserved first,
+            # so pre-variadic required fails when not enough values remain
+            expect { args.build('1', '2', '3') }.to raise_error(ArgumentError, /b is required/)
           end
         end
 
@@ -1008,10 +1084,9 @@ RSpec.describe Git::Commands::Arguments do
           end
         end
 
-        # UNSUPPORTED PATTERN: def foo(a = 'default', *middle, b)
-        # This doesn't follow Ruby semantics - optional before variadic with
-        # required after is not supported. Documents current (non-Ruby) behavior.
-        context 'UNSUPPORTED: optional, variadic, required' do
+        # Pattern: def foo(a = 'default', *middle, b)
+        # Now follows Ruby semantics: optional before variadic with required after
+        context 'optional, variadic, required (Ruby semantics)' do
           let(:args) do
             described_class.define do
               positional :a, default: 'default_a'
@@ -1020,20 +1095,101 @@ RSpec.describe Git::Commands::Arguments do
             end
           end
 
-          # Ruby would: foo('x') => a='default_a', middle=[], b='x'
-          # We do:      build('x') => a='x', raises 'b is required'
-          it 'does NOT follow Ruby semantics (optional steals from required)' do
-            # This documents the limitation - we don't match Ruby here
-            expect { args.build('only_one') }.to raise_error(ArgumentError, /b is required/)
+          # Ruby: foo('x') => a='default_a', middle=[], b='x'
+          it 'follows Ruby semantics - optional gets default when only required is provided' do
+            expect(args.build('only_one')).to eq(%w[default_a only_one])
           end
 
-          it 'works when enough arguments are provided' do
-            # With 2+ args, both a and b get values, so it works
+          it 'fills optional when enough arguments provided' do
             expect(args.build('val_a', 'val_b')).to eq(%w[val_a val_b])
           end
 
-          it 'works with middle values' do
+          it 'fills variadic with middle values' do
             expect(args.build('val_a', 'm1', 'm2', 'val_b')).to eq(%w[val_a m1 m2 val_b])
+          end
+        end
+
+        # Pattern: def foo(a = 'default', *rest)
+        context 'optional followed by variadic (no post)' do
+          let(:args) do
+            described_class.define do
+              positional :a, default: 'default_a'
+              positional :rest, variadic: true
+            end
+          end
+
+          it 'uses default when no arguments' do
+            expect(args.build).to eq(['default_a'])
+          end
+
+          it 'fills optional first, then variadic' do
+            expect(args.build('val_a')).to eq(['val_a'])
+          end
+
+          it 'fills variadic with remaining arguments' do
+            expect(args.build('val_a', 'r1', 'r2')).to eq(%w[val_a r1 r2])
+          end
+        end
+
+        # Pattern: def foo(a, b = 'default', *rest)
+        context 'required, optional, variadic (no post)' do
+          let(:args) do
+            described_class.define do
+              positional :a, required: true
+              positional :b, default: 'default_b'
+              positional :rest, variadic: true
+            end
+          end
+
+          it 'uses default for optional when only required provided' do
+            expect(args.build('val_a')).to eq(%w[val_a default_b])
+          end
+
+          it 'fills optional when enough arguments' do
+            expect(args.build('val_a', 'val_b')).to eq(%w[val_a val_b])
+          end
+
+          it 'fills variadic with remaining arguments' do
+            expect(args.build('val_a', 'val_b', 'r1', 'r2')).to eq(%w[val_a val_b r1 r2])
+          end
+
+          it 'raises when required is missing' do
+            expect { args.build }.to raise_error(ArgumentError, /a is required/)
+          end
+        end
+
+        # Pattern: def foo(a, b = 'default', *middle, c)
+        context 'required, optional, variadic, required' do
+          let(:args) do
+            described_class.define do
+              positional :a, required: true
+              positional :b, default: 'default_b'
+              positional :middle, variadic: true
+              positional :c, required: true
+            end
+          end
+
+          it 'uses default for optional when minimum arguments provided' do
+            # 2 args: a and c get values, b gets default, middle is empty
+            expect(args.build('val_a', 'val_c')).to eq(%w[val_a default_b val_c])
+          end
+
+          it 'fills optional when enough arguments' do
+            # 3 args: a, b, c all get values, middle is empty
+            expect(args.build('val_a', 'val_b', 'val_c')).to eq(%w[val_a val_b val_c])
+          end
+
+          it 'fills variadic with middle arguments' do
+            # 4+ args: middle gets the extras
+            expect(args.build('val_a', 'val_b', 'm1', 'val_c')).to eq(%w[val_a val_b m1 val_c])
+          end
+
+          it 'fills variadic with multiple middle arguments' do
+            expect(args.build('val_a', 'val_b', 'm1', 'm2', 'val_c')).to eq(%w[val_a val_b m1 m2 val_c])
+          end
+
+          it 'raises when not enough arguments for required params' do
+            expect { args.build('only_one') }.to raise_error(ArgumentError, /a is required/)
           end
         end
       end
