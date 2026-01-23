@@ -2,6 +2,7 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/branch/copy'
 require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
@@ -1244,6 +1245,27 @@ module Git
     #
     def branch_move(*, **)
       Git::Commands::Branch::Move.new(self).call(*, **)
+    end
+
+    # Copy a branch, along with its config and reflog
+    #
+    # @overload branch_copy(new_branch, options = {})
+    #   Copy the current branch
+    #   @param new_branch [String] the name for the new branch
+    #   @param options [Hash] command options
+    #
+    # @overload branch_copy(old_branch, new_branch, options = {})
+    #   Copy a specific branch
+    #   @param old_branch [String] the branch to copy
+    #   @param new_branch [String] the name for the new branch
+    #   @param options [Hash] command options
+    #
+    # @option options [Boolean] :force allow copying even if new_branch already exists
+    #
+    # @note This method delegates to {Git::Commands::Branch::Copy}
+    #
+    def branch_copy(*, **)
+      Git::Commands::Branch::Copy.new(self).call(*, **)
     end
 
     CHECKOUT_OPTION_MAP = [
