@@ -1756,5 +1756,70 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
     end
+
+    context 'with allow_nil positional arguments' do
+      context 'when required with allow_nil' do
+        let(:args) do
+          described_class.define do
+            positional :tree_ish, required: true, allow_nil: true
+            positional :paths, variadic: true, separator: '--'
+          end
+        end
+
+        it 'accepts non-nil value and outputs it' do
+          expect(args.build('HEAD', 'file.txt')).to eq(['HEAD', '--', 'file.txt'])
+        end
+
+        it 'accepts nil and omits it from output' do
+          expect(args.build(nil, 'file.txt')).to eq(['--', 'file.txt'])
+        end
+
+        it 'consumes nil as the positional slot' do
+          # nil takes the tree_ish slot, 'file.txt' goes to paths
+          expect(args.build(nil, 'file.txt', 'file2.txt')).to eq(['--', 'file.txt', 'file2.txt'])
+        end
+
+        it 'works when only nil is provided with no paths' do
+          expect(args.build(nil)).to eq([])
+        end
+
+        it 'works when tree_ish is provided with no paths' do
+          expect(args.build('HEAD')).to eq(['HEAD'])
+        end
+      end
+
+      context 'when not required with allow_nil (optional positional)' do
+        let(:args) do
+          described_class.define do
+            positional :tree_ish, allow_nil: true
+            positional :paths, variadic: true, separator: '--'
+          end
+        end
+
+        it 'accepts non-nil value and outputs it' do
+          expect(args.build('HEAD', 'file.txt')).to eq(['HEAD', '--', 'file.txt'])
+        end
+
+        it 'accepts nil and omits it from output' do
+          expect(args.build(nil, 'file.txt')).to eq(['--', 'file.txt'])
+        end
+
+        it 'works with no arguments' do
+          expect(args.build).to eq([])
+        end
+      end
+
+      context 'allow_nil defaults to false for required positional' do
+        let(:args) do
+          described_class.define do
+            positional :tree_ish, required: true
+          end
+        end
+
+        it 'raises error when nil is passed' do
+          expect { args.build(nil) }.to raise_error(ArgumentError, /tree_ish is required/)
+        end
+      end
+    end
   end
 end
