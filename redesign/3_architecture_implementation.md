@@ -538,6 +538,56 @@ future work:
     transformations—like reordering arguments or converting keywords to
     positionals—belong in `Git::Lib` or higher layers (`Git::Base`, `Git::Branch`).
 
+14. **Use `allow_nil: true` for positional arguments that can be intentionally omitted**
+
+    Some git commands have positional arguments that are semantically present but
+    should not appear in the command line. For example, `git checkout -- file.txt`
+    restores from the index (no tree-ish), while `git checkout HEAD -- file.txt`
+    restores from a commit.
+
+    Use `allow_nil: true` to mark a positional that can accept `nil` as a valid
+    "present but empty" value:
+
+    ```ruby
+    ARGS = Arguments.define do
+      positional :tree_ish, required: true, allow_nil: true
+      positional :paths, variadic: true, separator: '--'
+    end
+
+    # Restore from index (tree_ish intentionally nil)
+    ARGS.build(nil, 'file.txt')
+    # → ['--', 'file.txt']
+
+    # Restore from commit
+    ARGS.build('HEAD', 'file.txt')
+    # → ['HEAD', '--', 'file.txt']
+    ```
+
+    Without `allow_nil: true`, passing `nil` would either skip the positional slot
+    (causing argument misalignment) or raise a validation error for required
+    arguments.
+
+15. **Namespace commands by mode, not just by operation**
+
+    When a git command has fundamentally different modes (not just different
+    operations on the same concept), use nested namespaces that reflect the mode:
+
+    ```ruby
+    # ✅ Different modes of git checkout → separate namespaces
+    Git::Commands::Checkout::Branch  # branch switching, creation
+    Git::Commands::Checkout::Files   # file restoration from tree-ish/index
+
+    # ✅ Different operations on same concept → flat namespace with operation suffix
+    Git::Commands::Branch::Create
+    Git::Commands::Branch::Delete
+    Git::Commands::Branch::Move
+    ```
+
+    The distinction: `Checkout::Branch` and `Checkout::Files` accept fundamentally
+    different arguments and have different semantics. `Branch::Create` and
+    `Branch::Delete` operate on the same conceptual entity (a branch) with the same
+    core argument (branch name).
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
