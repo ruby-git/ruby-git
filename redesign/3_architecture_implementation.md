@@ -22,24 +22,24 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (11/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (12/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `branch delete` command** → `Git::Commands::Branch::Delete`
+**Migrate the `checkout` command** → `Git::Commands::Checkout`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   branch_new`, `def branch_delete`). Understand all options and edge cases.
+   checkout`). Understand all options and edge cases.
 
-2. **Design**: Create `lib/git/commands/branch.rb` with a `Git::Commands::Branch` class
-   following the pattern in `lib/git/commands/commit.rb`. The interface for
-   `Git::Commands::Branch#call` should support multiple operations (create, delete, list).
+2. **Design**: Create command class following the pattern in
+   `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
+   options relevant to the command being implemented.
 
-3. **TDD**: Write `spec/git/commands/branch_spec.rb` *before* implementing:
+3. **TDD**: Write spec file *before* implementing:
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
@@ -356,6 +356,70 @@ future work:
    Review the command class's `#call` signature when writing the adapter to ensure
    no arguments are lost in translation.
 
+8. **Static flags are always output first—define them first for readability**
+
+   The Arguments DSL outputs arguments in this order: static flags → dynamic flags
+   (in definition order) → positionals. For readability, define `static` flags first
+   to match the actual output order:
+
+   ```ruby
+   # ✅ Preferred: static first matches output order
+   ARGS = Arguments.define do
+     static '--delete'                    # Always first in output
+     flag %i[force f], args: '--force'
+     flag %i[remotes r], args: '--remotes'
+     positional :branch_names, variadic: true, required: true
+   end
+
+   # ❌ Less clear: static at end is misleading
+   ARGS = Arguments.define do
+     flag %i[force f], args: '--force'
+     static '--delete'                    # Still output first, but confusing
+     positional :branch_names, variadic: true, required: true
+   end
+   ```
+
+9. **Use `%i[long short]` array syntax for flag aliases**
+
+   When defining flags with short aliases, use the `%i[]` symbol array syntax with
+   the long (canonical) name first. This provides a clean, consistent pattern:
+
+   ```ruby
+   flag %i[force f], args: '--force'      # force: true OR f: true
+   flag %i[remotes r], args: '--remotes'  # remotes: true OR r: true
+   flag %i[quiet q], args: '--quiet'      # quiet: true OR q: true
+   ```
+
+   The first symbol becomes the primary name used in documentation and error
+   messages; subsequent symbols are aliases.
+
+10. **Consider variadic support in adapter methods when command supports it**
+
+    When a command class supports variadic positional arguments (e.g., deleting
+    multiple branches), consider whether the `Git::Lib` adapter should expose this
+    capability:
+
+    ```ruby
+    # Command class supports multiple branches
+    def call(*, **)  # variadic positional
+      args = ARGS.build(*, **)
+      @execution_context.command('branch', *args)
+    end
+
+    # ❌ Adapter only accepts single branch
+    def branch_delete(branch, options = {})
+      Git::Commands::Branch::Delete.new(self).call(branch, **options)
+    end
+
+    # ✅ Adapter exposes variadic capability
+    def branch_delete(*branches, **options)
+      options = { force: true }.merge(options)
+      Git::Commands::Branch::Delete.new(self).call(*branches, **options)
+    end
+    ```
+
+    This allows callers to delete multiple branches efficiently in one git command.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
@@ -421,6 +485,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `clean` | `Git::Commands::Clean` | `spec/git/commands/clean_spec.rb` | `git clean` |
 | `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
 | `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
+| `branch_delete` | `Git::Commands::Branch::Delete` | `spec/git/commands/branch/delete_spec.rb` | `git branch --delete` |
 
 #### ⏳ Commands To Migrate
 
@@ -439,7 +504,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
 - [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
-- [ ] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch -d/-D`
+- [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
 - [ ] `checkout` / `checkout_file` → `Git::Commands::Checkout` — `git checkout`
 - [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
