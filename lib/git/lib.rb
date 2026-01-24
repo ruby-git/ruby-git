@@ -22,6 +22,9 @@ require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/reset'
 require_relative 'commands/rm'
+require_relative 'commands/tag/create'
+require_relative 'commands/tag/delete'
+require_relative 'commands/tag/list'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1493,29 +1496,30 @@ module Git
       command_lines('remote')
     end
 
+    # List all tags in the repository
+    #
+    # @return [Array<String>] array of tag names
+    #
     def tags
-      command_lines('tag')
+      Git::Commands::Tag::List.new(self).call.map(&:name)
     end
 
-    TAG_OPTION_MAP = [
-      { keys: %i[force f],       flag: '-f', type: :boolean },
-      { keys: %i[annotate a],    flag: '-a', type: :boolean },
-      { keys: %i[sign s],        flag: '-s', type: :boolean },
-      { keys: %i[delete d],      flag: '-d', type: :boolean },
-      { keys: %i[message m],     flag: '-m', type: :valued_space }
-    ].freeze
-
+    # Create or delete a tag
+    #
+    # @param name [String] the tag name
+    # @param args [Array] optional commit/target and options hash
+    # @return [String] the command output
+    #
     def tag(name, *args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       target = args.first
 
-      validate_tag_options!(opts)
-      ArgsBuilder.validate!(opts, TAG_OPTION_MAP)
-
-      flags = build_args(opts, TAG_OPTION_MAP)
-      positional_args = [name, target].compact
-
-      command('tag', *flags, *positional_args)
+      if opts[:d] || opts[:delete]
+        tag_names = [name, *args].compact
+        Git::Commands::Tag::Delete.new(self).call(*tag_names)
+      else
+        Git::Commands::Tag::Create.new(self).call(name, target, **opts)
+      end
     end
 
     FETCH_OPTION_MAP = [
@@ -1957,15 +1961,6 @@ module Git
     def write_staged_content(path, stage, out_io)
       command('show', ":#{stage}:#{path}", out: out_io)
       out_io
-    end
-
-    def validate_tag_options!(opts)
-      is_annotated = opts[:a] || opts[:annotate]
-      has_message = opts[:m] || opts[:message]
-
-      return unless is_annotated && !has_message
-
-      raise ArgumentError, 'Cannot create an annotated tag without a message.'
     end
 
     def normalize_push_args(remote, branch, opts)
