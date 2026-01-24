@@ -1,0 +1,163 @@
+# frozen_string_literal: true
+
+require 'git/commands/arguments'
+
+module Git
+  module Commands
+    module Merge
+      # Implements the `git merge` command for merging branches
+      #
+      # This command joins two or more development histories together by
+      # incorporating changes from named commits into the current branch.
+      #
+      # @see https://git-scm.com/docs/git-merge git-merge
+      #
+      # @api private
+      #
+      # @example Simple merge
+      #   merge = Git::Commands::Merge::Start.new(execution_context)
+      #   merge.call('feature')
+      #
+      # @example Merge with no fast-forward
+      #   merge.call('feature', ff: false, message: 'Merge feature branch')
+      #
+      # @example Squash merge
+      #   merge.call('feature', squash: true)
+      #
+      # @example Merge with strategy option
+      #   merge.call('feature', strategy: 'ort', strategy_option: 'theirs')
+      #
+      # @example Octopus merge (multiple branches)
+      #   merge.call('branch1', 'branch2', 'branch3')
+      #
+      class Start
+        # Arguments DSL for building command-line arguments
+        #
+        # NOTE: The order of definitions determines the order of arguments
+        # in the final command line.
+        #
+        ARGS = Arguments.define do
+          # Always suppress editor (non-interactive use)
+          static '--no-edit'
+
+          # Commit behavior
+          negatable_flag :commit
+          flag :squash, args: '--squash'
+
+          # Fast-forward behavior
+          negatable_flag :ff
+          flag :ff_only, args: '--ff-only'
+
+          # Message options
+          value %i[message m], args: '-m'
+          value %i[file F], args: '-F'
+          inline_value :into_name, args: '--into-name'
+
+          # Strategy options
+          value %i[strategy s], args: '-s'
+          value %i[strategy_option X], args: '-X', multi_valued: true
+
+          # Verification
+          negatable_flag :verify
+          negatable_flag :verify_signatures
+          negatable_flag :gpg_sign
+
+          # History
+          negatable_flag :allow_unrelated_histories
+          negatable_flag :rerere_autoupdate
+
+          # Other
+          negatable_flag :autostash
+          negatable_flag :signoff
+          negatable_flag :log
+
+          # Positional: commits to merge (variadic, required)
+          positional :commits, variadic: true, required: true
+        end.freeze
+
+        # Initialize the Merge::Start command
+        #
+        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
+        #
+        def initialize(execution_context)
+          @execution_context = execution_context
+        end
+
+        # Execute the git merge command
+        #
+        # @overload call(*commits, options = {})
+        #
+        #   @param commits [Array<String>] One or more branch names, commit SHAs,
+        #     or refs to merge into the current branch. Multiple commits create
+        #     an octopus merge.
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :commit (nil) Perform merge and commit.
+        #     true for --commit, false for --no-commit
+        #
+        #   @option options [Boolean] :squash (nil) Create a single commit on top
+        #     of current branch with the effect of merging another branch
+        #
+        #   @option options [Boolean] :ff (nil) Fast-forward behavior.
+        #     true for --ff, false for --no-ff
+        #
+        #   @option options [Boolean] :ff_only (nil) Refuse to merge unless
+        #     fast-forward is possible
+        #
+        #   @option options [String] :message (nil) Commit message for merge commit.
+        #     Alias: :m
+        #
+        #   @option options [String] :file (nil) Read commit message from file.
+        #     Alias: :F
+        #
+        #   @option options [String] :into_name (nil) Prepare merge message as if
+        #     merging into this branch name
+        #
+        #   @option options [String] :strategy (nil) Merge strategy to use
+        #     (e.g., 'ort', 'recursive', 'resolve', 'octopus', 'ours', 'subtree').
+        #     Alias: :s
+        #
+        #   @option options [String, Array<String>] :strategy_option (nil) Pass
+        #     option(s) to the merge strategy (e.g., 'ours', 'theirs', 'patience').
+        #     Can be a single value or array for multiple -X flags. Alias: :X
+        #
+        #   @option options [Boolean] :verify (nil) Run pre-merge and commit-msg
+        #     hooks. true for --verify, false for --no-verify
+        #
+        #   @option options [Boolean] :verify_signatures (nil) Verify commit
+        #     signatures. true for --verify-signatures, false for
+        #     --no-verify-signatures
+        #
+        #   @option options [Boolean] :gpg_sign (nil) GPG-sign the merge commit.
+        #     true for --gpg-sign, false for --no-gpg-sign
+        #
+        #   @option options [Boolean] :allow_unrelated_histories (nil) Allow
+        #     merging histories without common ancestor. true for
+        #     --allow-unrelated-histories, false for --no-allow-unrelated-histories
+        #
+        #   @option options [Boolean] :rerere_autoupdate (nil) Allow rerere to
+        #     update index. true for --rerere-autoupdate, false for
+        #     --no-rerere-autoupdate
+        #
+        #   @option options [Boolean] :autostash (nil) Automatically stash/unstash
+        #     before/after merge. true for --autostash, false for --no-autostash
+        #
+        #   @option options [Boolean] :signoff (nil) Add Signed-off-by trailer.
+        #     true for --signoff, false for --no-signoff
+        #
+        #   @option options [Boolean] :log (nil) Include one-line descriptions
+        #     from commits in merge message. true for --log, false for --no-log
+        #
+        # @return [String] the command output
+        #
+        # @raise [Git::FailedError] if the merge fails (e.g., conflicts)
+        #
+        def call(*, **)
+          args = ARGS.build(*, **)
+          @execution_context.command('merge', *args)
+        end
+      end
+    end
+  end
+end
