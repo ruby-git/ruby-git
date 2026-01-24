@@ -16,6 +16,9 @@ require_relative 'commands/clone'
 require_relative 'commands/commit'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
+require_relative 'commands/merge/start'
+require_relative 'commands/merge/resolve'
+require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/reset'
 require_relative 'commands/rm'
@@ -1333,38 +1336,95 @@ module Git
       Git::Commands::Checkout::Files.new(self).call(version, file)
     end
 
-    MERGE_OPTION_MAP = [
-      { keys: [:no_commit], flag: '--no-commit', type: :boolean },
-      { keys: [:no_ff],     flag: '--no-ff',     type: :boolean },
-      { keys: [:m],         flag: '-m',          type: :valued_space }
-    ].freeze
-
+    # Merge one or more branches into the current branch
+    #
+    # @param branch [String, Array<String>] branch name(s) to merge
+    # @param message [String, nil] commit message for merge commit
+    # @param opts [Hash] merge options
+    #
+    # @option opts [Boolean] :no_commit (nil) stop before creating merge commit
+    #   (deprecated: use commit: false instead)
+    # @option opts [Boolean] :no_ff (nil) create merge commit even for fast-forward
+    #   (deprecated: use ff: false instead)
+    # @option opts [String] :m (nil) commit message (deprecated: use message: option)
+    # @option opts [Boolean] :commit (nil) true for --commit, false for --no-commit
+    # @option opts [Boolean] :ff (nil) true for --ff, false for --no-ff
+    # @option opts [Boolean] :ff_only (nil) only merge if fast-forward possible
+    # @option opts [Boolean] :squash (nil) squash commits into single commit
+    # @option opts [String] :message (nil) commit message
+    # @option opts [String] :strategy (nil) merge strategy (e.g., 'ort', 'ours')
+    # @option opts [String, Array<String>] :strategy_option (nil) strategy-specific options
+    # @option opts [Boolean] :allow_unrelated_histories (nil) allow merging unrelated histories
+    #
+    # @return [String] the command output
+    #
     def merge(branch, message = nil, opts = {})
-      # For backward compatibility, treat the message arg as the :m option.
-      opts[:m] = message if message
-      ArgsBuilder.validate!(opts, MERGE_OPTION_MAP)
+      # Handle legacy positional message argument
+      opts = opts.merge(message: message) if message
 
-      args = build_args(opts, MERGE_OPTION_MAP)
-      args.concat(Array(branch))
+      # Map legacy option names to new interface
+      opts = translate_merge_options(opts)
 
-      command('merge', *args)
+      Git::Commands::Merge::Start.new(self).call(*Array(branch), **opts)
     end
 
-    MERGE_BASE_OPTION_MAP = [
-      { keys: [:octopus],     flag: '--octopus',     type: :boolean },
-      { keys: [:independent], flag: '--independent', type: :boolean },
-      { keys: [:fork_point],  flag: '--fork-point',  type: :boolean },
-      { keys: [:all],         flag: '--all',         type: :boolean }
-    ].freeze
+    # Abort the current merge in progress
+    #
+    # Reconstructs the pre-merge state. If an autostash entry is present,
+    # applies it to the worktree.
+    #
+    # @return [String] the command output
+    #
+    # @raise [Git::FailedError] if no merge is in progress
+    #
+    def merge_abort
+      Git::Commands::Merge::Resolve.new(self).call(abort: true)
+    end
 
+    # Continue a merge after conflict resolution
+    #
+    # Completes the merge after conflicts have been resolved and staged.
+    #
+    # @return [String] the command output
+    #
+    # @raise [Git::FailedError] if conflicts remain unresolved
+    #
+    def merge_continue
+      Git::Commands::Merge::Resolve.new(self).call(continue: true)
+    end
+
+    # Quit the current merge, leaving working tree as-is
+    #
+    # Forgets about the current merge in progress. Leaves the index and
+    # working tree as-is. If an autostash entry is present, saves it to
+    # the stash list.
+    #
+    # @return [String] the command output
+    #
+    # @raise [Git::FailedError] if no merge is in progress
+    #
+    def merge_quit
+      Git::Commands::Merge::Resolve.new(self).call(quit: true)
+    end
+
+    # Find common ancestor commit(s) for merge
+    #
+    # @overload merge_base(*commits, options = {})
+    #
+    #   @param commits [Array<String>] commits to find common ancestor(s) of
+    #
+    #   @param options [Hash] merge-base options
+    #
+    #   @option options [Boolean] :octopus (nil) compute best ancestor for n-way merge
+    #   @option options [Boolean] :independent (nil) list commits not reachable from others
+    #   @option options [Boolean] :fork_point (nil) find fork point
+    #   @option options [Boolean] :all (nil) output all merge bases
+    #
+    # @return [Array<String>] array of commit SHAs
+    #
     def merge_base(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
-      ArgsBuilder.validate!(opts, MERGE_BASE_OPTION_MAP)
-
-      flags = build_args(opts, MERGE_BASE_OPTION_MAP)
-      command_args = flags + args
-
-      command('merge-base', *command_args).lines.map(&:strip)
+      Git::Commands::MergeBase.new(self).call(*args, **opts)
     end
 
     def unmerged
@@ -1714,6 +1774,26 @@ module Git
     ].freeze
 
     private
+
+    # Translate legacy merge option names to new interface
+    #
+    # @param opts [Hash] options with possibly legacy keys
+    # @return [Hash] options with new keys
+    #
+    def translate_merge_options(opts)
+      result = opts.dup
+
+      # :no_commit => true becomes :commit => false
+      result[:commit] = false if result.delete(:no_commit)
+
+      # :no_ff => true becomes :ff => false
+      result[:ff] = false if result.delete(:no_ff)
+
+      # :m => 'msg' becomes :message => 'msg'
+      result[:message] = result.delete(:m) if result.key?(:m)
+
+      result
+    end
 
     def parse_diff_path_status(args)
       command_lines('diff', *args).each_with_object({}) do |line, memo|
