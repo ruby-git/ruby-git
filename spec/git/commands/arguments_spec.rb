@@ -1821,5 +1821,409 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
     end
+
+    context 'with required keyword options' do
+      context 'with required: true on flag' do
+        let(:args) do
+          described_class.define do
+            flag :force, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(force: true)).to eq(['--force'])
+        end
+
+        it 'accepts false value (key present but falsy)' do
+          expect(args.build(force: false)).to eq([])
+        end
+
+        it 'accepts nil value (key present but nil)' do
+          expect(args.build(force: nil)).to eq([])
+        end
+      end
+
+      context 'with required: true on value' do
+        let(:args) do
+          described_class.define do
+            value :message, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :message/)
+        end
+
+        it 'accepts string value' do
+          expect(args.build(message: 'hello')).to eq(['--message', 'hello'])
+        end
+
+        it 'accepts nil value (key present but nil)' do
+          expect(args.build(message: nil)).to eq([])
+        end
+      end
+
+      context 'with required: true on inline_value' do
+        let(:args) do
+          described_class.define do
+            inline_value :upstream, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
+        end
+
+        it 'accepts string value' do
+          expect(args.build(upstream: 'origin/main')).to eq(['--upstream=origin/main'])
+        end
+
+        it 'accepts nil value (key present but nil)' do
+          expect(args.build(upstream: nil)).to eq([])
+        end
+      end
+
+      context 'with required: true on negatable_flag' do
+        let(:args) do
+          described_class.define do
+            negatable_flag :verify, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :verify/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(verify: true)).to eq(['--verify'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(verify: false)).to eq(['--no-verify'])
+        end
+      end
+
+      context 'with required: true on flag_or_inline_value' do
+        let(:args) do
+          described_class.define do
+            flag_or_inline_value :gpg_sign, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+        end
+
+        it 'accepts string value' do
+          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+        end
+      end
+
+      context 'with required: true on negatable_flag_or_inline_value' do
+        let(:args) do
+          described_class.define do
+            negatable_flag_or_inline_value :gpg_sign, required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(gpg_sign: false)).to eq(['--no-gpg-sign'])
+        end
+
+        it 'accepts string value' do
+          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+        end
+      end
+
+      context 'with required: true on custom' do
+        let(:args) do
+          described_class.define do
+            custom :special, required: true do |value|
+              value ? "--special=#{value}" : nil
+            end
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :special/)
+        end
+
+        it 'accepts value' do
+          expect(args.build(special: 'foo')).to eq(['--special=foo'])
+        end
+      end
+
+      context 'with multiple required options' do
+        let(:args) do
+          described_class.define do
+            inline_value :upstream, required: true
+            value :message, required: true
+          end
+        end
+
+        it 'raises ArgumentError listing all missing required options' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream, :message/)
+        end
+
+        it 'raises ArgumentError when only some required options provided' do
+          expect do
+            args.build(upstream: 'origin/main')
+          end.to raise_error(ArgumentError, /Required options not provided: :message/)
+        end
+
+        it 'succeeds when all required options provided' do
+          expect(args.build(upstream: 'origin/main',
+                            message: 'hello')).to eq(['--upstream=origin/main',
+                                                      '--message', 'hello'])
+        end
+      end
+
+      context 'with required option and aliases' do
+        let(:args) do
+          described_class.define do
+            flag %i[force f], required: true
+          end
+        end
+
+        it 'raises ArgumentError when required option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+        end
+
+        it 'accepts primary name' do
+          expect(args.build(force: true)).to eq(['--force'])
+        end
+
+        it 'accepts alias name' do
+          expect(args.build(f: true)).to eq(['--force'])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on value' do
+        let(:args) do
+          described_class.define do
+            value :message, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :message/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect { args.build(message: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :message/)
+        end
+
+        it 'accepts non-nil value' do
+          expect(args.build(message: 'hello')).to eq(['--message', 'hello'])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on inline_value' do
+        let(:args) do
+          described_class.define do
+            inline_value :upstream, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect do
+            args.build(upstream: nil)
+          end.to raise_error(ArgumentError, /Required options cannot be nil: :upstream/)
+        end
+
+        it 'accepts non-nil value' do
+          expect(args.build(upstream: 'origin/main')).to eq(['--upstream=origin/main'])
+        end
+      end
+
+      context 'with multiple required options and allow_nil: false' do
+        let(:args) do
+          described_class.define do
+            inline_value :upstream, required: true, allow_nil: false
+            value :message, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError listing all nil values' do
+          expect { args.build(upstream: nil, message: nil) }.to raise_error(
+            ArgumentError, /Required options cannot be nil: :upstream, :message/
+          )
+        end
+
+        it 'raises ArgumentError for single nil value' do
+          expect { args.build(upstream: 'origin/main', message: nil) }.to raise_error(
+            ArgumentError, /Required options cannot be nil: :message/
+          )
+        end
+
+        it 'succeeds when all values are non-nil' do
+          expect(args.build(upstream: 'origin/main', message: 'hello')).to eq(
+            ['--upstream=origin/main', '--message', 'hello']
+          )
+        end
+      end
+
+      context 'with required: true and default allow_nil (true)' do
+        let(:args) do
+          described_class.define do
+            value :message, required: true
+          end
+        end
+
+        it 'allows nil value when allow_nil defaults to true' do
+          expect(args.build(message: nil)).to eq([])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on flag' do
+        let(:args) do
+          described_class.define do
+            flag :force, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect { args.build(force: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :force/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(force: true)).to eq(['--force'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(force: false)).to eq([])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on negatable_flag' do
+        let(:args) do
+          described_class.define do
+            negatable_flag :verify, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :verify/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect { args.build(verify: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :verify/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(verify: true)).to eq(['--verify'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(verify: false)).to eq(['--no-verify'])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on flag_or_inline_value' do
+        let(:args) do
+          described_class.define do
+            flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect do
+            args.build(gpg_sign: nil)
+          end.to raise_error(ArgumentError, /Required options cannot be nil: :gpg_sign/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(gpg_sign: false)).to eq([])
+        end
+
+        it 'accepts string value' do
+          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on negatable_flag_or_inline_value' do
+        let(:args) do
+          described_class.define do
+            negatable_flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect do
+            args.build(gpg_sign: nil)
+          end.to raise_error(ArgumentError, /Required options cannot be nil: :gpg_sign/)
+        end
+
+        it 'accepts true value' do
+          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+        end
+
+        it 'accepts false value' do
+          expect(args.build(gpg_sign: false)).to eq(['--no-gpg-sign'])
+        end
+
+        it 'accepts string value' do
+          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+        end
+      end
+
+      context 'with required: true and allow_nil: false on custom' do
+        let(:args) do
+          described_class.define do
+            custom :special, required: true, allow_nil: false do |value|
+              value ? "--special=#{value}" : nil
+            end
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :special/)
+        end
+
+        it 'raises ArgumentError when value is nil' do
+          expect { args.build(special: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :special/)
+        end
+
+        it 'accepts non-nil value' do
+          expect(args.build(special: 'foo')).to eq(['--special=foo'])
+        end
+      end
+    end
   end
 end

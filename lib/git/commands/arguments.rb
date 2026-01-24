@@ -12,7 +12,7 @@ module Git
     # This class enables declarative definition of git command arguments, handling:
     # - Option flags (boolean, valued, inline-valued)
     # - Positional arguments (required, optional, variadic)
-    # - Validation (type checking, conflicts)
+    # - Validation (type checking, required options, conflicts)
     # - Argument building (converting Ruby values to CLI argument arrays)
     #
     # @example Defining arguments for a command
@@ -67,6 +67,43 @@ module Git
     #
     #   inline_value :sort, multi_valued: true
     #   # sort: ['refname', '-committerdate'] => ['--sort=refname', '--sort=-committerdate']
+    #
+    # == Common Option Parameters
+    #
+    # Most option types support parameters that affect **input validation**
+    # (checking the provided values before building):
+    #
+    # - +required:+ - When true, the option key must be present in the provided opts.
+    #   Raises ArgumentError if the key is missing.
+    #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
+    #   {#flag_or_inline_value}, {#negatable_flag_or_inline_value}, {#custom}.
+    # - +allow_nil:+ - When false (with required: true), the value cannot be nil.
+    #   Raises ArgumentError if a nil value is provided. Defaults to true.
+    #   Supported by: same as +required:+.
+    # - +type:+ - Validates the value is an instance of the specified class(es).
+    #   Raises ArgumentError if type doesn't match.
+    #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
+    #   {#flag_or_inline_value}, {#negatable_flag_or_inline_value}.
+    #
+    # Note: {#static} and {#metadata} do not support these validation parameters.
+    #
+    # These parameters affect **output generation** (what CLI arguments are produced):
+    #
+    # - +args:+ - Custom flag string(s) to output instead of deriving from name.
+    # - +allow_empty:+ - ({#value}/{#inline_value} only) Include flag even for empty strings.
+    # - +multi_valued:+ - ({#value}/{#inline_value} only) Repeat flag for each array element.
+    #
+    # @example Required option with non-nil value
+    #   inline_value :upstream, required: true, allow_nil: false
+    #   # build()                    => ArgumentError: Required options not provided: :upstream
+    #   # build(upstream: nil)       => ArgumentError: Required options cannot be nil: :upstream
+    #   # build(upstream: 'origin')  => ['--upstream=origin']
+    #
+    # @example Required option allowing nil (default)
+    #   inline_value :branch, required: true
+    #   # build()                => ArgumentError: Required options not provided: :branch
+    #   # build(branch: nil)     => []  (key present, nil value produces no output)
+    #   # build(branch: 'main')  => ['--branch=main']
     #
     # == Positional Arguments
     #
@@ -164,13 +201,21 @@ module Git
       # @param args [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   When false with required: true, raises ArgumentError if value is nil.
       # @return [void]
       #
       # @example With type validation
       #   flag :force, type: [TrueClass, FalseClass]
       #
-      def flag(names, args: nil, type: nil)
-        register_option(names, type: :flag, args: args, expected_type: type)
+      # @example With required and allow_nil: false
+      #   flag :force, required: true, allow_nil: false
+      #   # Raises ArgumentError if nil or not provided
+      #
+      def flag(names, args: nil, type: nil, required: false, allow_nil: true)
+        register_option(names, type: :flag, args: args, expected_type: type, required: required,
+                               allow_nil: allow_nil)
       end
 
       # Define a negatable boolean flag option (--flag when true, --no-flag when false)
@@ -180,10 +225,16 @@ module Git
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
       # @param validator [Proc, nil] optional validator block (cannot be combined with type:)
+      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   When false with required: true, raises ArgumentError if value is nil.
       # @return [void]
       #
-      def negatable_flag(names, args: nil, type: nil, validator: nil)
-        register_option(names, type: :negatable_flag, args: args, expected_type: type, validator: validator)
+      # rubocop:disable Metrics/ParameterLists
+      def negatable_flag(names, args: nil, type: nil, validator: nil, required: false, allow_nil: true)
+        # rubocop:enable Metrics/ParameterLists
+        register_option(names, type: :negatable_flag, args: args, expected_type: type, validator: validator,
+                               required: required, allow_nil: allow_nil)
       end
 
       # Define a valued option (--flag value as separate arguments)
@@ -198,6 +249,10 @@ module Git
       # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
       #   of values and repeats the flag for each (e.g., --flag v1 --flag v2). A single value or nil
       #   is also accepted.
+      # @param required [Boolean] when true, the option key must be present in the provided options hash.
+      #   Raises ArgumentError if the key is missing. Defaults to false.
+      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
+      #   Raises ArgumentError if a nil value is provided. Defaults to true.
       # @return [void]
       #
       # @example With type validation
@@ -218,9 +273,23 @@ module Git
       #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
       #   # config: nil            => []
       #
-      def value(names, args: nil, type: nil, allow_empty: false, multi_valued: false)
+      # @example With required
+      #   value :message, required: true
+      #   # Must be provided: build(message: 'text') or build(message: nil)
+      #   # Raises ArgumentError if not provided: build()
+      #
+      # @example With required and allow_nil: false
+      #   value :message, required: true, allow_nil: false
+      #   # Must be provided with non-nil value: build(message: 'text')
+      #   # Raises ArgumentError if nil: build(message: nil)
+      #   # Raises ArgumentError if not provided: build()
+      #
+      # rubocop:disable Metrics/ParameterLists
+      def value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
+                allow_nil: true)
+        # rubocop:enable Metrics/ParameterLists
         register_option(names, type: :value, args: args, expected_type: type, allow_empty: allow_empty,
-                               multi_valued: multi_valued)
+                               multi_valued: multi_valued, required: required, allow_nil: allow_nil)
       end
 
       # Define an inline valued option (--flag=value as single argument)
@@ -235,6 +304,10 @@ module Git
       # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
       #   of values and repeats the flag for each (e.g., --flag=v1 --flag=v2). A single value or nil
       #   is also accepted.
+      # @param required [Boolean] when true, the option key must be present in the provided options hash.
+      #   Raises ArgumentError if the key is missing. Defaults to false.
+      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
+      #   Raises ArgumentError if a nil value is provided. Defaults to true.
       # @return [void]
       #
       # @example With type validation
@@ -256,9 +329,23 @@ module Git
       #   # sort: ['refname', 'committerdate'] => ['--sort=refname', '--sort=committerdate']
       #   # sort: nil                         => []
       #
-      def inline_value(names, args: nil, type: nil, allow_empty: false, multi_valued: false)
+      # @example With required
+      #   inline_value :upstream, required: true
+      #   # Must be provided: build(upstream: 'origin/main') or build(upstream: nil)
+      #   # Raises ArgumentError if not provided: build()
+      #
+      # @example With required and allow_nil: false
+      #   inline_value :upstream, required: true, allow_nil: false
+      #   # Must be provided with non-nil value: build(upstream: 'origin/main')
+      #   # Raises ArgumentError if nil: build(upstream: nil)
+      #   # Raises ArgumentError if not provided: build()
+      #
+      # rubocop:disable Metrics/ParameterLists
+      def inline_value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
+                       allow_nil: true)
+        # rubocop:enable Metrics/ParameterLists
         register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty,
-                               multi_valued: multi_valued)
+                               multi_valued: multi_valued, required: required, allow_nil: allow_nil)
       end
 
       # Define a flag or inline value option (--flag when true, --flag=value when string)
@@ -279,8 +366,13 @@ module Git
       #   # "KEY" => --gpg-sign=KEY
       #   # nil   => (nothing)
       #
-      def flag_or_inline_value(names, args: nil, type: nil)
-        register_option(names, type: :flag_or_inline_value, args: args, expected_type: type)
+      # @example With required and allow_nil: false
+      #   flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+      #   # Raises ArgumentError if nil or not provided
+      #
+      def flag_or_inline_value(names, args: nil, type: nil, required: false, allow_nil: true)
+        register_option(names, type: :flag_or_inline_value, args: args, expected_type: type, required: required,
+                               allow_nil: allow_nil)
       end
 
       # Define a negatable flag or inline value option
@@ -303,8 +395,13 @@ module Git
       #   # "KEY" => --gpg-sign=KEY
       #   # nil   => (nothing)
       #
-      def negatable_flag_or_inline_value(names, args: nil, type: nil)
-        register_option(names, type: :negatable_flag_or_inline_value, args: args, expected_type: type)
+      # @example With required and allow_nil: false
+      #   negatable_flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+      #   # Raises ArgumentError if nil or not provided
+      #
+      def negatable_flag_or_inline_value(names, args: nil, type: nil, required: false, allow_nil: true)
+        register_option(names, type: :negatable_flag_or_inline_value, args: args, expected_type: type,
+                               required: required, allow_nil: allow_nil)
       end
 
       # Define a static flag that is always included
@@ -319,11 +416,14 @@ module Git
       # Define a custom option with a custom builder block
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   When false with required: true, raises ArgumentError if value is nil.
       # @yield [value] block that receives the option value and returns the argument string
       # @return [void]
       #
-      def custom(names, &block)
-        register_option(names, type: :custom, builder: block)
+      def custom(names, required: false, allow_nil: true, &block)
+        register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
       end
 
       # Define a metadata option (for validation only, not included in command)
@@ -513,6 +613,7 @@ module Git
         validate_unsupported_options!(opts)
         validate_conflicting_aliases!(opts)
         normalized_opts = normalize_aliases(opts)
+        validate_required_options!(normalized_opts)
         validate_option_values!(normalized_opts)
         validate_conflicts!(normalized_opts)
         args = @static_flags.dup
@@ -739,6 +840,32 @@ module Git
 
       def normalize_aliases(opts)
         opts.transform_keys { |key| @alias_map[key] || key }
+      end
+
+      def validate_required_options!(opts)
+        missing, nil_not_allowed = collect_required_option_errors(opts)
+        raise_missing_options_error(missing) if missing.any?
+        raise_nil_options_error(nil_not_allowed) if nil_not_allowed.any?
+      end
+
+      def collect_required_option_errors(opts)
+        missing = []
+        nil_not_allowed = []
+        @option_definitions.each do |name, definition|
+          next unless definition[:required]
+
+          missing << name unless opts.key?(name)
+          nil_not_allowed << name if opts.key?(name) && opts[name].nil? && definition[:allow_nil] == false
+        end
+        [missing, nil_not_allowed]
+      end
+
+      def raise_missing_options_error(missing)
+        raise ArgumentError, "Required options not provided: #{missing.map(&:inspect).join(', ')}"
+      end
+
+      def raise_nil_options_error(nil_not_allowed)
+        raise ArgumentError, "Required options cannot be nil: #{nil_not_allowed.map(&:inspect).join(', ')}"
       end
 
       def validate_option_values!(opts)
