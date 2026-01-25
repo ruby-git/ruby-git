@@ -52,16 +52,27 @@ module Git
 
         # Execute the git branch --move command to rename a branch
         #
-        # @overload call(new_branch, force: nil)
-        #   Rename the current branch
-        #   @param new_branch [String] The new name for the current branch
-        #   @param force [Boolean] Allow renaming even if new_branch already exists
+        # @overload call(new_branch, **options)
         #
-        # @overload call(old_branch, new_branch, force: nil)
-        #   Rename a specific branch
-        #   @param old_branch [String] The name of the branch to rename
-        #   @param new_branch [String] The new name for the branch
-        #   @param force [Boolean] Allow renaming even if new_branch already exists
+        #   Rename the current branch to new_branch
+        #
+        #   @param new_branch [String] the new name for the branch
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists
+        #
+        # @overload call(old_branch, new_branch, **options)
+        #
+        #   Rename old_branch to new_branch
+        #
+        #   @param old_branch [String] the current name of the branch
+        #
+        #   @param new_branch [String] the new name for the branch
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists
         #
         # @return [String] the command output
         #

@@ -64,7 +64,7 @@ module Git
 
         # Execute the git checkout command for restoring files
         #
-        # @overload call(tree_ish, *paths, options = {})
+        # @overload call(tree_ish, *paths, **options)
         #
         #   @param tree_ish [String, nil] The commit, branch, or tree to restore
         #     files from. When nil, files are restored from the index.

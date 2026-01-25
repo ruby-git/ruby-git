@@ -70,7 +70,7 @@ module Git
 
         # Execute the git checkout command for branch switching
         #
-        # @overload call(branch = nil, options = {})
+        # @overload call(branch = nil, **options)
         #
         #   @param branch [String, nil] The branch name, commit SHA, or ref to
         #     checkout. When used with branch creation options, this becomes the

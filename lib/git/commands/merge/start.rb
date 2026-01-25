@@ -85,7 +85,7 @@ module Git
 
         # Execute the git merge command
         #
-        # @overload call(*commits, options = {})
+        # @overload call(*commits, **options)
         #
         #   @param commits [Array<String>] One or more branch names, commit SHAs,
         #     or refs to merge into the current branch. Multiple commits create

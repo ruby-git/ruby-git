@@ -55,7 +55,7 @@ module Git
 
       # Execute the git merge-base command
       #
-      # @overload call(*commits, options = {})
+      # @overload call(*commits, **options)
       #
       #   @param commits [Array<String>] Two or more commit SHAs, branch names,
       #     or refs to find common ancestor(s) of

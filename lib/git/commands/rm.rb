@@ -46,18 +46,20 @@ module Git
 
       # Execute the git rm command
       #
-      # @overload call(*paths, force: nil, recursive: nil, cached: nil)
+      # @overload call(*paths, **options)
       #
       #   @param paths [Array<String>] files or directories to be removed from the repository
       #     (relative to the worktree root). At least one path is required.
       #
-      #   @param force [Boolean] Override the up-to-date check and remove files with
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :force (nil) Override the up-to-date check and remove files with
       #     local modifications. Without this, git rm will refuse to remove files that have
       #     uncommitted changes.
       #
-      #   @param recursive [Boolean] Remove directories and their contents recursively
+      #   @option options [Boolean] :recursive (nil) Remove directories and their contents recursively
       #
-      #   @param cached [Boolean] Only remove from the index, keeping the working tree files
+      #   @option options [Boolean] :cached (nil) Only remove from the index, keeping the working tree files
       #
       # @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
       #

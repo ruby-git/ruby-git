@@ -59,25 +59,23 @@ module Git
 
         # Execute the git branch --delete command to delete branches
         #
-        # @overload call(*branch_names, force: nil, remotes: nil, quiet: nil)
+        # @overload call(*branch_names, **options)
         #
         #   @param branch_names [Array<String>] One or more branch names to delete.
-        #     You may specify more than one branch for deletion.
         #
-        #   @param force [Boolean] Allow deleting the branch irrespective of its merged
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Allow deleting the branch irrespective of its merged
         #     status, or whether it even points to a valid commit. This is equivalent
         #     to the `-D` shortcut (`--delete --force`).
-        #     Adds `--force` flag.
         #
-        #   @param remotes [Boolean] Delete remote-tracking branches. Use this together
+        #   @option options [Boolean] :remotes (nil) Delete remote-tracking branches. Use this together
         #     with `--delete` to delete remote-tracking branches. Note that this only
         #     makes sense if the remote-tracking branches no longer exist in the remote
         #     repository or if `git fetch` was configured not to fetch them again.
-        #     Adds `--remotes` flag.
         #
-        #   @param quiet [Boolean] Be more quiet when deleting a branch, suppressing
+        #   @option options [Boolean] :quiet (nil) Be more quiet when deleting a branch, suppressing
         #     non-error messages.
-        #     Adds `--quiet` flag.
         #
         # @return [String] the command output
         #

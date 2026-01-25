@@ -44,20 +44,22 @@ module Git
 
       # Execute the git clean command
       #
-      # @overload call(force: nil, force_force: nil, d: nil, x: nil)
+      # @overload call(**options)
       #
-      #   @param force [Boolean] Force the clean operation when clean.requireForce is
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :force (nil) Force the clean operation when clean.requireForce is
       #   not set to false
       #
       #     If the Git configuration variable `clean.requireForce` is not set to `false`,
       #     git clean will refuse to delete files or directories unless given `-f`.
       #
-      #   @param force_force [Boolean] Remove untracked nested git repositories
+      #   @option options [Boolean] :force_force (nil) Remove untracked nested git repositories
       #     (directories with a .git subdirectory)
       #
-      #   @param d [Boolean] recurse into untracked directories
+      #   @option options [Boolean] :d (nil) recurse into untracked directories
       #
-      #   @param x [Boolean] Don’t use the standard ignore rules
+      #   @option options [Boolean] :x (nil) Don't use the standard ignore rules
       #
       # @return [String] the command output (typically empty on success)
       #
