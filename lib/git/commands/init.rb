@@ -41,17 +41,19 @@ module Git
 
       # Execute the git init command
       #
-      # @overload call(directory, bare: nil, initial_branch: nil, repository: nil)
+      # @overload call(directory = '.', **options)
       #
       #   @param directory [String] the directory to initialize (default: '.')
       #     If :bare is false, creates the repository in +<directory>/.git+.
       #     If :bare is true, creates a bare repository in +<directory>+.
       #
-      #   @param bare [Boolean] Create a bare repository
+      #   @param options [Hash] command options
       #
-      #   @param initial_branch [String] Use the specified name for the initial branch
+      #   @option options [Boolean] :bare (nil) Create a bare repository
       #
-      #   @param repository [String] Path to put the .git directory (uses --separate-git-dir)
+      #   @option options [String] :initial_branch (nil) Use the specified name for the initial branch
+      #
+      #   @option options [String] :repository (nil) Path to put the .git directory (uses --separate-git-dir)
       #
       # @return [void]
       #

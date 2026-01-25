@@ -50,42 +50,44 @@ module Git
 
       # Execute the git clone command
       #
-      # @overload call(repository_url, directory = nil, bare: nil, branch: nil, config: nil,
-      #   depth: nil, filter: nil, git_ssh: nil, log: nil, mirror: nil, origin: nil,
-      #   path: nil, recursive: nil, remote: nil, single_branch: nil, timeout: nil)
+      # @overload call(repository_url, directory = nil, **options)
       #
       #   @param repository_url [String] the URL of the repository to clone
       #
       #   @param directory [String, nil] the directory to clone into.
       #     If nil, the directory name is derived from the repository URL.
       #
-      #   @param bare [Boolean] Clone as a bare repository
+      #   @param options [Hash] command options
       #
-      #   @param branch [String] The branch to checkout after cloning
+      #   @option options [Boolean] :bare (nil) Clone as a bare repository
       #
-      #   @param config [String, Array<String>] Configuration options to set
+      #   @option options [String] :branch (nil) The branch to checkout after cloning
       #
-      #   @param depth [Integer] Create a shallow clone with the specified number of commits
+      #   @option options [String, Array<String>] :config (nil) Configuration options to set
       #
-      #   @param filter [String] Specify partial clone (e.g., 'tree:0', 'blob:none')
+      #   @option options [Integer] :depth (nil) Create a shallow clone with the specified number of commits
       #
-      #   @param git_ssh [String, nil] SSH command or binary to use for git over SSH
+      #   @option options [String] :filter (nil) Specify partial clone (e.g., 'tree:0', 'blob:none')
       #
-      #   @param log [Logger] Logger instance to use for git operations
+      #   @option options [String, nil] :git_ssh (nil) SSH command or binary to use for git over SSH
       #
-      #   @param mirror [Boolean] Set up a mirror of the source repository
+      #   @option options [Logger] :log (nil) Logger instance to use for git operations
       #
-      #   @param origin [String] Name of the remote (defaults to 'origin')
+      #   @option options [Boolean] :mirror (nil) Set up a mirror of the source repository
       #
-      #   @param path [String] Prefix path for the clone directory
+      #   @option options [String] :origin (nil) Name of the remote (defaults to 'origin')
       #
-      #   @param recursive [Boolean] Initialize submodules after cloning
+      #   @option options [String] :path (nil) Prefix path for the clone directory
       #
-      #   @param remote [String] Alias for :origin
+      #   @option options [Boolean] :recursive (nil) Initialize submodules after cloning
       #
-      #   @param single_branch [Boolean, nil] Clone only the history leading to the tip of a single branch
+      #   @option options [String] :remote (nil) Alias for :origin
       #
-      #   @param timeout [Numeric, nil] The number of seconds to wait for the command to complete
+      #   @option options [Boolean, nil] :single_branch (nil) Clone only the history
+      #     leading to the tip of a single branch
+      #
+      #   @option options [Numeric, nil] :timeout (nil) The number of seconds to wait for
+      #     the command to complete
       #
       # @return [Hash] options to pass to Git::Base.new for creating the repository object
       #

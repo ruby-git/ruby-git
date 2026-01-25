@@ -48,25 +48,27 @@ module Git
 
       # Execute the git reset command
       #
-      # @overload call(commit = nil, hard: nil, soft: nil, mixed: nil)
+      # @overload call(commit = nil, **options)
       #
       #   @param commit [String, nil] the commit to reset to (defaults to HEAD if not specified)
       #
-      #   @param hard [Boolean] reset the index and working tree. Any changes to tracked
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :hard (nil) reset the index and working tree. Any changes to tracked
       #     files in the working tree since the commit are discarded
       #
-      #   @param soft [Boolean] does not touch the index file or the working tree at all,
+      #   @option options [Boolean] :soft (nil) does not touch the index file or the working tree at all,
       #     but resets the head to the commit
       #
-      #   @param mixed [Boolean] resets the index but not the working tree (i.e., the
+      #   @option options [Boolean] :mixed (nil) resets the index but not the working tree (i.e., the
       #     changed files are preserved but not marked for commit)
       #
       # @raise [ArgumentError] if more than one of :hard, :soft, or :mixed is specified
       #
       # @return [String] the command output (typically empty on success)
       #
-      def call(commit = nil, **)
-        args = ARGS.build(commit, **)
+      def call(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('reset', *args)
       end
     end

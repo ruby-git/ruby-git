@@ -52,16 +52,27 @@ module Git
 
         # Execute the git branch --copy command to copy a branch
         #
-        # @overload call(new_branch, force: nil)
-        #   Copy the current branch
-        #   @param new_branch [String] The new name for the copied branch
-        #   @param force [Boolean] Allow copying even if new_branch already exists
+        # @overload call(new_branch, **options)
         #
-        # @overload call(old_branch, new_branch, force: nil)
-        #   Copy a specific branch
-        #   @param old_branch [String] The name of the branch to copy
-        #   @param new_branch [String] The new name for the copied branch
-        #   @param force [Boolean] Allow copying even if new_branch already exists
+        #   Copies the current branch to the new_branch
+        #
+        #   @param new_branch [String] the new name for the copied branch
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists
+        #
+        # @overload call(old_branch, new_branch, **options)
+        #
+        #   Copies old_branch to new_branch
+        #
+        #   @param old_branch [String] branch to copy from
+        #
+        #   @param new_branch [String] the new name for the copied branch
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists
         #
         # @return [String] the command output
         #

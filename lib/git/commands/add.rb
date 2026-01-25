@@ -35,14 +35,16 @@ module Git
 
       # Execute the git add command
       #
-      # @overload call(*paths, all: nil, force: nil)
+      # @overload call(*paths, **options)
       #
       #   @param paths [Array<String>] files to be added to the repository
       #     (relative to the worktree root)
       #
-      #   @param all [Boolean] Add, modify, and remove index entries to match the worktree
+      #   @param options [Hash] command options
       #
-      #   @param force [Boolean] Allow adding otherwise ignored files
+      #   @option options [Boolean] :all (nil) Add, modify, and remove index entries to match the worktree
+      #
+      #   @option options [Boolean] :force (nil) Allow adding otherwise ignored files
       #
       # @return [String] the command output (typically empty on success)
       #
