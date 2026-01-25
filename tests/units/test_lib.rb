@@ -316,7 +316,7 @@ class TestLib < Test::Unit::TestCase
       @lib.branches_all
     rescue Git::UnexpectedResultError => e
       assert_equal(<<~MESSAGE, e.message)
-        Unexpected line in output from `git branch -a`, line 2
+        Unexpected line in output from `git branch --list -a`, line 2
 
         Full output:
           * (HEAD detached at origin/master)

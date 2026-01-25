@@ -37,6 +37,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static '--list'
           flag :all, args: '-a'
           flag :remotes, args: '-r'
           inline_value :sort, multi_valued: true
@@ -45,12 +46,7 @@ module Git
           value :merged
           value :no_merged
           value :points_at
-          custom(:patterns) do |patterns|
-            next [] if patterns.nil?
-
-            patterns_array = Array(patterns)
-            ['--list', *patterns_array]
-          end
+          positional :patterns, variadic: true
         end.freeze
 
         # Regular expression for parsing git branch output
@@ -94,44 +90,50 @@ module Git
 
         # Execute the git branch --list command
         #
-        # @overload call(all: nil, remotes: nil, sort: nil,
-        #   contains: nil, no_contains: nil, merged: nil, no_merged: nil,
-        #   points_at: nil, patterns: nil)
+        # @overload call(*patterns, **options)
         #
-        #   @param all [Boolean] List both local and remote branches (adds -a flag)
+        #   @param patterns [Array<String>] Shell wildcard patterns to filter
+        #   branches
         #
-        #   @param remotes [Boolean] List only remote-tracking branches (adds -r flag)
+        #     If multiple patterns are given, a branch is shown if it matches any of the patterns.
         #
-        #   @param sort [String, Array<String>] Sort branches by the specified key(s)
-        #     Single value adds --sort=<key>
-        #     Array adds multiple --sort=<key> (e.g., ['refname', '-committerdate'])
-        #     Common keys: 'refname', '-refname', 'committerdate', '-committerdate'
+        #   @param options [Hash] command options
         #
-        #   @param contains [String] List only branches that contain the specified commit
-        #     Adds --contains <commit>
+        #   @option options [Boolean] :all (nil) List both local and remote branches
+        #   (adds -a flag)
         #
-        #   @param no_contains [String] List only branches that don't contain the specified commit
-        #     Adds --no-contains <commit>
+        #   @option options [Boolean] :remotes (nil) List only remote-tracking
+        #   branches (adds -r flag)
         #
-        #   @param merged [String] List only branches merged into the specified commit
-        #     Adds --merged <commit>
+        #   @option options [String, Array<String>] :sort (nil) Sort branches by the
+        #   specified key(s)
         #
-        #   @param no_merged [String] List only branches not merged into the specified commit
-        #     Adds --no-merged <commit>
+        #     Give an array to add multiple --sort options. Prefix each key with '-' for
+        #     descending order. For example, sort: ['refname', '-committerdate']).
         #
-        #   @param points_at [String] List only branches that point at the specified object
-        #     Adds --points-at <object>
+        #   @option options [String] :contains (nil) List only branches that contain
+        #     the specified commit
         #
-        #   @param patterns [String, Array<String>] Shell wildcard patterns to filter branches
-        #     Automatically adds --list flag when patterns are provided
+        #   @option options [String] :no_contains (nil) List only branches that don't
+        #     contain the specified commit
+        #
+        #   @option options [String] :merged (nil) List only branches merged into the
+        #     specified commit
+        #
+        #   @option options [String] :no_merged (nil) List only branches not merged
+        #     into the specified commit
+        #
+        #   @option options [String] :points_at (nil) List only branches that point
+        #     at the specified object
         #
         # @return [Array<Git::BranchInfo>] array of branch info objects
         #
         # @raise [ArgumentError] if unsupported options are provided
+        #
         # @raise [Git::UnexpectedResultError] if git output format is unexpected
         #
-        def call(**)
-          args = ARGS.build(**)
+        def call(*, **)
+          args = ARGS.build(*, **)
           lines = @execution_context.command_lines('branch', *args)
           parse_branches(lines, args)
         end

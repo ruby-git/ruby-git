@@ -54,32 +54,32 @@ module Git
 
       # Execute the git commit command
       #
-      # @overload call(message: nil, all: nil, add_all: nil, allow_empty: nil,
-      #   allow_empty_message: nil, amend: nil, author: nil, date: nil,
-      #   no_verify: nil, gpg_sign: nil)
+      # @overload call(**options)
       #
-      #   @param message [String] The commit message
+      #   @param options [Hash] command options
       #
-      #   @param all [Boolean] Automatically stage all modified and deleted files
+      #   @option options [String] :message (nil) The commit message
+      #
+      #   @option options [Boolean] :all (nil) Automatically stage all modified and deleted files
       #     before committing (alias: add_all)
       #
-      #   @param add_all [Boolean] Alias for :all
+      #   @option options [Boolean] :add_all (nil) Alias for :all
       #
-      #   @param allow_empty [Boolean] Allow creating a commit with no changes
+      #   @option options [Boolean] :allow_empty (nil) Allow creating a commit with no changes
       #
-      #   @param allow_empty_message [Boolean] Allow creating a commit with an empty message
+      #   @option options [Boolean] :allow_empty_message (nil) Allow creating a commit with an empty message
       #
-      #   @param amend [Boolean] Amend the previous commit instead of creating a new one.
+      #   @option options [Boolean] :amend (nil) Amend the previous commit instead of creating a new one.
       #     When true, --no-edit is also added to prevent opening an editor.
       #
-      #   @param author [String] Override the commit author in the format 'Name <email>'
+      #   @option options [String] :author (nil) Override the commit author in the format 'Name <email>'
       #
-      #   @param date [String] Override the author date. Must be a string in a format
+      #   @option options [String] :date (nil) Override the author date. Must be a string in a format
       #     that git understands (e.g., '2023-01-15T10:30:00', 'now', 'yesterday')
       #
-      #   @param no_verify [Boolean] Bypass the pre-commit and commit-msg hooks
+      #   @option options [Boolean] :no_verify (nil) Bypass the pre-commit and commit-msg hooks
       #
-      #   @param gpg_sign [Boolean, String, false] GPG-sign the commit. When true, uses the
+      #   @option options [Boolean, String, false] :gpg_sign (nil) GPG-sign the commit. When true, uses the
       #     default key. When a string, uses the specified key ID. When false, adds --no-gpg-sign
       #     to override any commit.gpgsign configuration.
       #
@@ -88,8 +88,8 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       # @raise [ArgumentError] if :date is not a String
       #
-      def call(**)
-        args = ARGS.build(**)
+      def call(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('commit', *args)
       end
     end

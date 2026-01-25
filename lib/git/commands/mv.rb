@@ -28,8 +28,8 @@ module Git
         flag :dry_run, args: '--dry-run'
         flag :verbose, args: '--verbose'
         flag :skip_errors, args: '-k'
-        positional :source, variadic: true, separator: '--'
-        positional :destination
+        positional :source, variadic: true, required: true, separator: '--'
+        positional :destination, required: true
       end.freeze
 
       # Initialize the Mv command
@@ -42,7 +42,7 @@ module Git
 
       # Execute the git mv command
       #
-      # @overload call(source, destination, options = {})
+      # @overload call(*source, destination, **options)
       #
       #   @param source [Array<String>] one or more source file(s) or directories to move
       #
@@ -50,18 +50,18 @@ module Git
       #
       #   @param options [Hash] command options
       #
-      #   @option options [Boolean] :force Force renaming or moving even if the destination exists
+      #   @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists
       #
-      #   @option options [Boolean] :dry_run Do nothing; only show what would happen
+      #   @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen
       #
-      #   @option options [Boolean] :verbose Report the names of files as they are moved
+      #   @option options [Boolean] :verbose (nil) Report the names of files as they are moved
       #
-      #   @option options [Boolean] :skip_errors Skip move or rename actions which would lead to an error
+      #   @option options [Boolean] :skip_errors (nil) Skip move or rename actions which would lead to an error
       #
       # @return [String] the command output
       #
-      def call(*source, destination, **)
-        args = ARGS.build(*source, destination, **)
+      def call(*, **)
+        args = ARGS.build(*, **)
         @execution_context.command('mv', *args)
       end
     end

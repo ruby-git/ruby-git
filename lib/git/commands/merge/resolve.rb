@@ -49,7 +49,7 @@ module Git
 
         # Execute the git merge state management command
         #
-        # @overload call(options = {})
+        # @overload call(**options)
         #
         #   @param options [Hash] command options (exactly one must be true)
         #
@@ -69,8 +69,8 @@ module Git
         # @raise [Git::FailedError] if the command fails (e.g., no merge in progress,
         #   unresolved conflicts for continue)
         #
-        def call(**)
-          args = ARGS.build(**)
+        def call(*, **)
+          args = ARGS.build(*, **)
           @execution_context.command('merge', *args)
         end
       end
