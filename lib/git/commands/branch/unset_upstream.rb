@@ -43,20 +43,19 @@ module Git
 
         # Execute the git branch --unset-upstream command
         #
-        # @overload call
-        #   Unset upstream for the current branch
+        # @overload call(branch_name = nil, **options)
         #
-        # @overload call(branch_name)
-        #   Unset upstream for a specific branch
-        #   @param branch_name [String] The branch to configure
+        #   @param branch_name [String, nil] The branch to configure (defaults to current branch if nil)
+        #
+        #   @param options [Hash] command options (none currently supported)
         #
         # @return [String] the command output
         #
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch doesn't exist or has no upstream
         #
-        def call(branch_name = nil, **)
-          args = ARGS.build(branch_name, **)
+        def call(*, **)
+          args = ARGS.build(*, **)
           @execution_context.command('branch', *args)
         end
       end

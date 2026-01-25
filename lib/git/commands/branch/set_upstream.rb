@@ -30,7 +30,7 @@ module Git
         # The set_upstream_to keyword is required by the Ruby method signature, not the DSL.
         #
         ARGS = Arguments.define do
-          inline_value :set_upstream_to
+          inline_value :set_upstream_to, required: true, allow_nil: false
           positional :branch_name
         end.freeze
 
@@ -44,14 +44,23 @@ module Git
 
         # Execute the git branch --set-upstream-to command
         #
-        # @overload call(set_upstream_to:)
-        #   Set upstream for the current branch
-        #   @param set_upstream_to [String] The upstream branch (e.g., 'origin/main')
+        # @overload call(**options)
         #
-        # @overload call(branch_name, set_upstream_to:)
-        #   Set upstream for a specific branch
-        #   @param branch_name [String] The branch to configure
-        #   @param set_upstream_to [String] The upstream branch (e.g., 'origin/main')
+        #   Sets upstream for the current branch
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #
+        # @overload call(branch_name, **options)
+        #
+        #    Set upstream for the specified branch
+        #
+        #   @param branch_name [String] the branch to set upstream for
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
         #
         # @return [String] the command output
         #
@@ -59,8 +68,8 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch or upstream doesn't exist
         #
-        def call(branch_name = nil, set_upstream_to:)
-          args = ARGS.build(branch_name, set_upstream_to: set_upstream_to)
+        def call(*, **)
+          args = ARGS.build(*, **)
           @execution_context.command('branch', *args)
         end
       end

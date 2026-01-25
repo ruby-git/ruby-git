@@ -9,34 +9,34 @@ RSpec.describe Git::Commands::Branch::List do
 
   describe '#call' do
     context 'with no options (basic list)' do
-      it 'calls git branch with no additional arguments' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return([])
+      it 'calls git branch --list with no additional arguments' do
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return([])
         command.call
       end
     end
 
     context 'with :all option' do
       it 'adds -a flag' do
-        expect(execution_context).to receive(:command_lines).with('branch', '-a').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '-a').and_return([])
         command.call(all: true)
       end
     end
 
     context 'with :remotes option' do
       it 'adds -r flag' do
-        expect(execution_context).to receive(:command_lines).with('branch', '-r').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '-r').and_return([])
         command.call(remotes: true)
       end
     end
 
     context 'with :sort option' do
       it 'adds --sort=<key> with single value' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--sort=refname').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--sort=refname').and_return([])
         command.call(sort: 'refname')
       end
 
       it 'adds multiple --sort=<key> with array of values' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--sort=refname',
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--sort=refname',
                                                                   '--sort=-committerdate').and_return([])
         command.call(sort: ['refname', '-committerdate'])
       end
@@ -44,35 +44,39 @@ RSpec.describe Git::Commands::Branch::List do
 
     context 'with :contains option' do
       it 'adds --contains <commit>' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--contains', 'abc123').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--contains',
+                                                                  'abc123').and_return([])
         command.call(contains: 'abc123')
       end
     end
 
     context 'with :no_contains option' do
       it 'adds --no-contains <commit>' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--no-contains', 'abc123').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--no-contains',
+                                                                  'abc123').and_return([])
         command.call(no_contains: 'abc123')
       end
     end
 
     context 'with :merged option' do
       it 'adds --merged <commit>' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--merged', 'main').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--merged', 'main').and_return([])
         command.call(merged: 'main')
       end
     end
 
     context 'with :no_merged option' do
       it 'adds --no-merged <commit>' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--no-merged', 'main').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--no-merged',
+                                                                  'main').and_return([])
         command.call(no_merged: 'main')
       end
     end
 
     context 'with :points_at option' do
       it 'adds --points-at <object>' do
-        expect(execution_context).to receive(:command_lines).with('branch', '--points-at', 'v1.0').and_return([])
+        expect(execution_context).to receive(:command_lines).with('branch', '--list', '--points-at',
+                                                                  'v1.0').and_return([])
         command.call(points_at: 'v1.0')
       end
     end
@@ -80,20 +84,20 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with patterns' do
       it 'adds pattern arguments' do
         expect(execution_context).to receive(:command_lines).with('branch', '--list', 'feature/*').and_return([])
-        command.call(patterns: 'feature/*')
+        command.call('feature/*')
       end
 
       it 'adds multiple pattern arguments' do
         expect(execution_context).to receive(:command_lines).with('branch', '--list', 'feature/*',
                                                                   'bugfix/*').and_return([])
-        command.call(patterns: ['feature/*', 'bugfix/*'])
+        command.call('feature/*', 'bugfix/*')
       end
     end
 
     context 'with multiple options' do
       it 'combines flags correctly' do
         expect(execution_context).to receive(:command_lines).with(
-          'branch', '-a', '--sort=refname', '--contains', 'abc123'
+          'branch', '--list', '-a', '--sort=refname', '--contains', 'abc123'
         ).and_return([])
         command.call(all: true, sort: 'refname', contains: 'abc123')
       end
@@ -110,7 +114,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'returns parsed branch data as array of BranchInfo objects' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(branch_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(branch_output)
         result = command.call
         expect(result).to be_an(Array)
         expect(result.size).to eq(4)
@@ -118,14 +122,14 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'marks current branch correctly' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(branch_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(branch_output)
         result = command.call
         expect(result[0]).to have_attributes(refname: 'main', current: true, worktree: false, symref: nil)
         expect(result[1]).to have_attributes(refname: 'feature-branch', current: false, worktree: false, symref: nil)
       end
 
       it 'parses remote branch names' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(branch_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(branch_output)
         result = command.call
         expect(result[2].refname).to eq('remotes/origin/main')
         expect(result[3].refname).to eq('remotes/origin/feature-branch')
@@ -142,7 +146,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'marks worktree branch correctly' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(worktree_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(worktree_output)
         result = command.call
         expect(result[0]).to have_attributes(refname: 'main', current: true, worktree: false, symref: nil)
         expect(result[1]).to have_attributes(
@@ -162,7 +166,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'filters out detached HEAD lines' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(detached_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(detached_output)
         result = command.call
         expect(result.size).to eq(2)
         expect(result.map(&:refname)).to eq(%w[main feature-branch])
@@ -179,7 +183,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'filters out (not a branch) lines' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(not_a_branch_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(not_a_branch_output)
         result = command.call
         expect(result.size).to eq(2)
         expect(result.map(&:refname)).to eq(%w[main feature-branch])
@@ -195,7 +199,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'includes symbolic reference information' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(symref_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(symref_output)
         result = command.call
         expect(result[0].symref).to eq('origin/main')
       end
@@ -216,7 +220,7 @@ RSpec.describe Git::Commands::Branch::List do
       end
 
       it 'raises Git::UnexpectedResultError' do
-        expect(execution_context).to receive(:command_lines).with('branch').and_return(malformed_output)
+        expect(execution_context).to receive(:command_lines).with('branch', '--list').and_return(malformed_output)
         expect { command.call }.to raise_error(Git::UnexpectedResultError)
       end
     end

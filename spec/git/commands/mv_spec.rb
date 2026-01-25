@@ -138,7 +138,13 @@ RSpec.describe Git::Commands::Mv do
     context 'with missing arguments' do
       it 'raises ArgumentError when no arguments provided' do
         expect { command.call }.to(
-          raise_error(ArgumentError, /wrong number of arguments/)
+          raise_error(ArgumentError, /at least one value is required for source/)
+        )
+      end
+
+      it 'raises ArgumentError when only destination provided (no source)' do
+        expect { command.call('dest.rb') }.to(
+          raise_error(ArgumentError, /at least one value is required for source/)
         )
       end
     end

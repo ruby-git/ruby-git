@@ -59,29 +59,58 @@ module Git
 
         # Execute the git branch command to create a new branch
         #
-        # @overload call(branch_name, start_point = nil, force: nil, create_reflog: nil,
-        #   recurse_submodules: nil, track: nil)
+        # @overload call(branch_name, **options)
         #
-        #   @param branch_name [String] The name of the branch to create. Must pass all checks
-        #     defined by git-check-ref-format.
+        #   Create a new branch from the current HEAD
         #
-        #   @param start_point [String, nil] The commit, branch, or tag to start the new branch from.
-        #     If omitted, defaults to HEAD. Can also use `<rev-A>...<rev-B>` syntax for merge base.
+        #   @param branch_name [String] The name of the branch to create
         #
-        #   @param force [Boolean] Reset the branch to `start_point` even if it already exists.
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
         #     Without this, git branch refuses to change an existing branch.
         #     Adds `--force` flag.
         #
-        #   @param create_reflog [Boolean] Create the branch's reflog, enabling date-based sha1
+        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
         #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
         #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
         #     Adds `--create-reflog` flag.
         #
-        #   @param recurse_submodules [Boolean] Create the branch in the superproject and all
+        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
         #     submodules. This is an experimental feature.
         #     Adds `--recurse-submodules` flag.
         #
-        #   @param track [Boolean, String, false] Configure upstream tracking for the new branch.
+        #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
+        #     - `true`: Set up tracking using the start-point branch itself (`--track`)
+        #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
+        #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
+        #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #
+        # @overload call(branch_name, start_point, **options)
+        #
+        #   Create a new branch from the specified start point
+        #
+        #   @param branch_name [String] The name of the branch to create
+        #
+        #   @param start_point [String, nil] The commit, branch, or tag to start the new branch from.
+        #     Can also use `<rev-A>...<rev-B>` syntax for merge base.
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
+        #     Without this, git branch refuses to change an existing branch.
+        #     Adds `--force` flag.
+        #
+        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
+        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
+        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
+        #     Adds `--create-reflog` flag.
+        #
+        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
+        #     submodules. This is an experimental feature.
+        #     Adds `--recurse-submodules` flag.
+        #
+        #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
         #     - `true`: Set up tracking using the start-point branch itself (`--track`)
         #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
         #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
@@ -91,8 +120,8 @@ module Git
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
-        def call(branch_name, start_point = nil, **)
-          args = ARGS.build(branch_name, start_point, **)
+        def call(*, **)
+          args = ARGS.build(*, **)
           @execution_context.command('branch', *args)
         end
       end
