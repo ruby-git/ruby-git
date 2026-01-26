@@ -25,6 +25,12 @@ require_relative 'commands/rm'
 require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
+require_relative 'commands/stash/apply'
+require_relative 'commands/stash/clear'
+require_relative 'commands/stash/drop'
+require_relative 'commands/stash/list'
+require_relative 'commands/stash/pop'
+require_relative 'commands/stash/push'
 
 require 'git/command_line'
 require 'git/errors'
@@ -156,8 +162,6 @@ module Git
     #   See {Git::Lib#command} for more information about :timeout
     #
     # @return [Hash] the options to pass to {Git::Base.new}
-    #
-    # @note This method delegates to {Git::Commands::Clone}
     #
     # @todo make this work with SSH password or auth_key
     #
@@ -1073,8 +1077,6 @@ module Git
     # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
     # @option options [Boolean] :force Allow adding otherwise ignored files
     #
-    # @note This method delegates to {Git::Commands::Add}
-    #
     def add(paths = '.', options = {})
       Git::Commands::Add.new(self).call(*Array(paths), **options)
     end
@@ -1086,8 +1088,6 @@ module Git
     #
     # @option opts [Boolean] :recursive Remove directories and their contents recursively
     # @option opts [Boolean] :cached Only remove from the index, keeping working tree files
-    #
-    # @note This method delegates to {Git::Commands::Rm}
     #
     def rm(path = '.', opts = {})
       Git::Commands::Rm.new(self).call(*Array(path), **opts)
@@ -1122,8 +1122,6 @@ module Git
     #
     # @param [String] message the commit message to be used
     # @param [Hash] opts the commit options to be used
-    #
-    # @note This method delegates to {Git::Commands::Commit}
     #
     def commit(message, opts = {})
       opts = opts.merge(message: message) if message
@@ -1181,29 +1179,83 @@ module Git
       command('am', *arr_opts)
     end
 
+    # List all stash entries
+    #
+    # @return [Array<Git::StashInfo>] array of stash info objects
+    #
+    def stashes_list
+      Git::Commands::Stash::List.new(self).call
+    end
+
+    # List all stash entries (legacy format)
+    #
+    # @deprecated Use {#stashes_list} instead, which returns {Git::StashInfo} objects.
+    # @return [Array<Array(Integer, String)>] array of `[index, message]` pairs
+    #
     def stashes_all
-      stash_log_lines.each_with_index.map do |line, index|
-        parse_stash_log_line(line, index)
-      end
+      stashes_list.map { |info| stash_info_to_legacy(info) }
     end
 
-    def stash_save(message)
-      output = command('stash', 'save', message)
-      output =~ /HEAD is now at/
+    # Push changes onto the stash
+    #
+    # @param message [String, nil] message for the stash entry
+    # @param options [Hash] command options (see {Git::Commands::Stash::Push#call})
+    #
+    # @return [Boolean] true if stash was created, false otherwise
+    #
+    # rubocop:disable Naming/PredicateMethod
+    def stash_save(message = nil, options = {})
+      # rubocop:enable Naming/PredicateMethod
+      opts = message ? options.merge(message: message) : options
+      stash_info = Git::Commands::Stash::Push.new(self).call(**opts)
+
+      # Push returns nil if nothing was stashed, StashInfo otherwise
+      !stash_info.nil?
     end
 
-    def stash_apply(id = nil)
-      if id
-        command('stash', 'apply', id)
-      else
-        command('stash', 'apply')
-      end
+    # Apply stashed changes
+    #
+    # @param id [String, nil] stash reference to apply
+    # @param options [Hash] command options (see {Git::Commands::Stash::Apply#call})
+    #
+    # @return [String] the name of the applied stash (e.g., +"stash@\\{0}"+)
+    #
+    def stash_apply(id = nil, options = {})
+      stash_info = Git::Commands::Stash::Apply.new(self).call(id, **options)
+      stash_info.name
     end
 
+    # Clear all stash entries
+    #
     def stash_clear
-      command('stash', 'clear')
+      Git::Commands::Stash::Clear.new(self).call
     end
 
+    # Pop stashed changes
+    #
+    # @param id [String, nil] stash reference to pop
+    # @param options [Hash] command options (see {Git::Commands::Stash::Pop#call})
+    #
+    def stash_pop(id = nil, options = {})
+      Git::Commands::Stash::Pop.new(self).call(id, **options)
+    end
+
+    # Drop a stash entry
+    #
+    # @param id [String, nil] stash reference to drop
+    # @param options [Hash] command options (see {Git::Commands::Stash::Drop#call})
+    #
+    def stash_drop(id = nil, options = {})
+      Git::Commands::Stash::Drop.new(self).call(id, **options)
+    end
+
+    # List stash entries (raw output)
+    #
+    # @return [String] raw git stash list output
+    #
+    # @deprecated Use {#stashes_list} instead for parsed output
+    #   (or {#stashes_all} for the legacy [index, message] format)
+    #
     def stash_list
       command('stash', 'list')
     end
@@ -1213,8 +1265,6 @@ module Git
     # @param branch [String] the name of the branch to create
     # @param start_point [String, nil] the commit, branch, or tag to start the new branch from
     # @param options [Hash] command options (see {Git::Commands::Branch::Create#call})
-    #
-    # @note This method delegates to {Git::Commands::Branch::Create}
     #
     def branch_new(branch, start_point = nil, options = {})
       Git::Commands::Branch::Create.new(self).call(branch, start_point, **options)
@@ -1227,9 +1277,6 @@ module Git
     # @option options [Boolean] :force allow deleting unmerged branches (default: true for backward compatibility)
     # @option options [Boolean] :remotes delete remote-tracking branches
     # @option options [Boolean] :quiet suppress non-error messages
-    #
-    # @note This method delegates to {Git::Commands::Branch::Delete}
-    # @note Default force: true preserves backward compatibility with original -D behavior
     #
     def branch_delete(*branches, **options)
       options = { force: true }.merge(options)
@@ -1251,8 +1298,6 @@ module Git
     #
     # @option options [Boolean] :force allow renaming even if new_branch already exists
     #
-    # @note This method delegates to {Git::Commands::Branch::Move}
-    #
     def branch_move(*, **)
       Git::Commands::Branch::Move.new(self).call(*, **)
     end
@@ -1272,8 +1317,6 @@ module Git
     #
     # @option options [Boolean] :force allow copying even if new_branch already exists
     #
-    # @note This method delegates to {Git::Commands::Branch::Copy}
-    #
     def branch_copy(*, **)
       Git::Commands::Branch::Copy.new(self).call(*, **)
     end
@@ -1283,8 +1326,6 @@ module Git
     # @param upstream [String] the upstream branch (e.g., 'origin/main')
     # @param branch_name [String, nil] the branch to configure (defaults to current branch)
     #
-    # @note This method delegates to {Git::Commands::Branch::SetUpstream}
-    #
     def branch_set_upstream(upstream, branch_name = nil)
       Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
     end
@@ -1292,8 +1333,6 @@ module Git
     # Remove upstream tracking information for a branch
     #
     # @param branch_name [String, nil] the branch to configure (defaults to current branch)
-    #
-    # @note This method delegates to {Git::Commands::Branch::UnsetUpstream}
     #
     def branch_unset_upstream(branch_name = nil)
       Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
@@ -1615,8 +1654,6 @@ module Git
     #
     # @return [Git::FsckResult] the structured result
     #
-    # @note This method delegates to {Git::Commands::Fsck}
-    #
     # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
       Git::Commands::Fsck.new(self).call(*objects, **opts)
@@ -1933,6 +1970,7 @@ module Git
       [type, name, value]
     end
 
+    # @deprecated No longer used - stash parsing moved to Git::Commands::Stash::List
     def stash_log_lines
       path = File.join(@git_dir, 'logs/refs/stash')
       return [] unless File.exist?(path)
@@ -1940,12 +1978,40 @@ module Git
       File.readlines(path, chomp: true)
     end
 
+    # Parse a stash log line into index and message
+    #
+    # @param line [String] a line from the stash reflog
+    # @param index [Integer] the stash index
+    # @return [Array(Integer, String)] `[index, message]` pair with prefix stripped
+    #
+    # @api private
+    #
+    # @deprecated No longer used - stash parsing moved to Git::Commands::Stash::List
+    #
     def parse_stash_log_line(line, index)
       full_message = line.split("\t", 2).last
       match_data = full_message.match(/^[^:]+:(.*)$/)
       message = match_data ? match_data[1] : full_message
 
       [index, message.strip]
+    end
+
+    # Convert a StashInfo to the legacy [index, message] format
+    #
+    # The legacy format strips the "WIP on <branch>:" or "On <branch>:" prefix
+    # from the message and returns only the suffix.
+    #
+    # @param info [Git::StashInfo] the stash info object
+    # @return [Array(Integer, String)] `[index, message]` pair with prefix stripped
+    #
+    # @api private
+    #
+    def stash_info_to_legacy(info)
+      full_message = info.message
+      match_data = full_message.match(/^[^:]+:(.*)$/)
+      message = match_data ? match_data[1] : full_message
+
+      [info.index, message.strip]
     end
 
     # Writes the staged content of a conflicted file to an IO stream
