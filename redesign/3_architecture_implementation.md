@@ -384,27 +384,30 @@ future work:
    Review the command class's `#call` signature when writing the adapter to ensure
    no arguments are lost in translation.
 
-8. **Static flags are always output first—define them first for readability**
+8. **Arguments are rendered in definition order**
 
-   The Arguments DSL outputs arguments in this order: static flags → dynamic flags
-   (in definition order) → positionals. For readability, define `static` flags first
-   to match the actual output order:
+   The Arguments DSL outputs arguments in the exact order they are defined,
+   regardless of type. This allows precise control over argument positioning,
+   which is important for commands like `git checkout` where `--` must appear
+   between options and pathspecs:
 
    ```ruby
-   # ✅ Preferred: static first matches output order
+   # Arguments render in definition order
    ARGS = Arguments.define do
-     static '--delete'                    # Always first in output
-     flag %i[force f], args: '--force'
-     flag %i[remotes r], args: '--remotes'
-     positional :branch_names, variadic: true, required: true
+     flag :force
+     positional :tree_ish
+     static '--'
+     positional :paths, variadic: true
    end
+   # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
 
-   # ❌ Less clear: static at end is misleading
+   # Common pattern: static flags first for subcommands like branch --delete
    ARGS = Arguments.define do
+     static '--delete'
      flag %i[force f], args: '--force'
-     static '--delete'                    # Still output first, but confusing
      positional :branch_names, variadic: true, required: true
    end
+   # build('feature', force: true) => ['--delete', '--force', 'feature']
    ```
 
 9. **Use `%i[long short]` array syntax for flag aliases**

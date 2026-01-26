@@ -23,9 +23,6 @@ module Git
       #
       class Delete
         # Arguments DSL for building command-line arguments
-        #
-        # NOTE: Static flags are always output first regardless of definition order.
-        #
         ARGS = Arguments.define do
           static '-d'
           positional :tag_names, variadic: true, required: true
