@@ -380,6 +380,8 @@ specific responsibilities:
    - Each command class handles argument building via Arguments DSL
    - Translates Ruby options to git command-line flags
    - `#call` methods use keyword arguments (`**`) not options hashes
+   - `#call` SHOULD return meaningful value objects (e.g., `StashInfo`, `BranchInfo`)
+     rather than raw strings or booleans, enabling method chaining and richer APIs
    - Located in `lib/git/commands/`
    - Unit tested with RSpec in `spec/git/commands/`
 
@@ -2226,6 +2228,12 @@ classes using a "Strangler Fig" pattern.
    - **SHOULD** use anonymous `def call(*, **)` when just forwarding to `ARGS.build`
    - **MAY** name args when needed to inspect or manipulate them before passing to `ARGS.build`
    - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.build`
+
+   **Return Value Convention:**
+   - `#call` **SHOULD** return meaningful value objects (e.g., `StashInfo`, `BranchInfo`)
+     rather than raw strings or booleans
+   - This enables method chaining and provides richer APIs for consumers
+   - Commands with no meaningful output (e.g., `git add`) **MAY** return `nil` or raw output
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
 
