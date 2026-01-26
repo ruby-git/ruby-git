@@ -184,6 +184,20 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     The facade layer (`Git::Base`, `Git::Lib`) handles translation from the public API
     (which may accept single values or arrays) using `*Array(paths)`.
 
+    **Return Value Convention**: The `#call` method SHOULD return meaningful,
+    structured objects rather than raw strings or booleans. This enables method
+    chaining and provides richer APIs for consumers. For example:
+
+    - `Git::Commands::Stash::Push#call` returns a `StashInfo` object, allowing
+      callers to immediately access the stash's SHA, message, index, etc.
+    - `Git::Commands::Branch::Create#call` returns a `BranchInfo` object with
+      the branch name and commit SHA.
+    - Commands that produce no meaningful output (e.g., `git add`) MAY return `nil`
+      or the raw output string.
+
+    This convention ensures the command layer produces value objects that can be
+    consumed directly or wrapped by domain objects in the facade layer.
+
     **Handling Complexity**: For commands with multiple behaviors (like git diff), we
     can use specialized subclasses (e.g., Git::Commands::Diff::NameStatus,
     Git::Commands::Diff::Stats) to keep each class focused on a single
