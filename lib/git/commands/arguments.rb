@@ -2,6 +2,8 @@
 
 module Git
   module Commands
+    # rubocop:disable Metrics/ParameterLists
+
     # Git::Commands::Arguments provides a DSL for defining command-line arguments
     # (both options and positional arguments) for Git commands.
     #
@@ -34,15 +36,31 @@ module Git
     #    record argument definitions in internal data structures.
     #
     # 2. **Build phase**: {#build} transforms Ruby values into a CLI argument array
-    #    by iterating over definitions and applying type-specific builders.
+    #    by iterating over definitions in the exact order they were defined.
     #
     # Key internal components:
     #
+    # - +@ordered_definitions+: Array tracking all definitions in definition order
     # - +@option_definitions+: Hash mapping option names to their definitions
-    # - +@positional_definitions+: Array of positional argument definitions (order matters)
+    # - +@positional_definitions+: Array of positional argument definitions
     # - +@alias_map+: Maps option aliases to their primary names
     # - +BUILDERS+: Hash of lambdas that convert values to CLI arguments by type
     # - {PositionalAllocator}: Handles Ruby-like positional argument allocation
+    #
+    # == Argument Ordering
+    #
+    # Arguments are rendered in the exact order they are defined in the DSL block,
+    # regardless of type (options, positionals, or static flags). This is important
+    # for git commands where argument order matters, such as when using `--` to
+    # separate options from pathspecs.
+    #
+    # @example Ordering example
+    #   args = Arguments.define do
+    #     positional :ref
+    #     static '--'
+    #     positional :path
+    #   end
+    #   args.build('HEAD', 'file.txt')  # => ['HEAD', '--', 'file.txt']
     #
     # == Option Types
     #
@@ -193,6 +211,7 @@ module Git
         @static_flags = []
         @positional_definitions = []
         @conflicts = [] # Array of conflicting option pairs/groups
+        @ordered_definitions = [] # Tracks all definitions in definition order
       end
 
       # Define a boolean flag option (--flag when true)
@@ -230,9 +249,7 @@ module Git
       #   When false with required: true, raises ArgumentError if value is nil.
       # @return [void]
       #
-      # rubocop:disable Metrics/ParameterLists
       def negatable_flag(names, args: nil, type: nil, validator: nil, required: false, allow_nil: true)
-        # rubocop:enable Metrics/ParameterLists
         register_option(names, type: :negatable_flag, args: args, expected_type: type, validator: validator,
                                required: required, allow_nil: allow_nil)
       end
@@ -284,10 +301,8 @@ module Git
       #   # Raises ArgumentError if nil: build(message: nil)
       #   # Raises ArgumentError if not provided: build()
       #
-      # rubocop:disable Metrics/ParameterLists
       def value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
                 allow_nil: true)
-        # rubocop:enable Metrics/ParameterLists
         register_option(names, type: :value, args: args, expected_type: type, allow_empty: allow_empty,
                                multi_valued: multi_valued, required: required, allow_nil: allow_nil)
       end
@@ -340,10 +355,8 @@ module Git
       #   # Raises ArgumentError if nil: build(upstream: nil)
       #   # Raises ArgumentError if not provided: build()
       #
-      # rubocop:disable Metrics/ParameterLists
       def inline_value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
                        allow_nil: true)
-        # rubocop:enable Metrics/ParameterLists
         register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty,
                                multi_valued: multi_valued, required: required, allow_nil: allow_nil)
       end
@@ -404,13 +417,31 @@ module Git
                                required: required, allow_nil: allow_nil)
       end
 
-      # Define a static flag that is always included
+      # Define a static flag that is always included in the output
       #
-      # @param flag_string [String] the static flag string (e.g., '--no-progress')
+      # Static flags are output at their definition position (not grouped at the start).
+      # This allows precise control over argument ordering, which is important for
+      # git commands where argument position matters.
+      #
+      # @param flag_string [String] the static flag string (e.g., '--', '--no-progress')
       # @return [void]
+      #
+      # @example Static flag for subcommand mode
+      #   static '--delete'
+      #   flag :force
+      #   positional :branches, variadic: true
+      #   # build('feature', force: true) => ['--delete', '--force', 'feature']
+      #
+      # @example Static separator between options and pathspecs
+      #   flag :force
+      #   positional :tree_ish
+      #   static '--'
+      #   positional :paths, variadic: true
+      #   # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
       #
       def static(flag_string)
         @static_flags << flag_string
+        @ordered_definitions << { kind: :static, flag: flag_string }
       end
 
       # Define a custom option with a custom builder block
@@ -554,9 +585,7 @@ module Git
       #   # build(nil, 'file.rb')
       #   #   => ['--', 'file.rb']  (nil consumes slot but is omitted from output)
       #
-      # rubocop:disable Metrics/ParameterLists
       def positional(name, required: false, variadic: false, default: nil, separator: nil, allow_nil: false)
-        # rubocop:enable Metrics/ParameterLists
         validate_single_variadic!(name) if variadic
 
         @positional_definitions << {
@@ -567,7 +596,31 @@ module Git
           separator: separator,
           allow_nil: allow_nil
         }
+        @ordered_definitions << { kind: :positional, name: name }
       end
+
+      # Build command-line arguments from the given positionals and options
+      #
+      # Arguments are rendered in the exact order they were defined in the DSL block,
+      # regardless of type. This is important for git commands where argument order
+      # matters, such as when using `--` to separate options from pathspecs.
+      #
+      # @param positionals [Array] positional argument values
+      # @param opts [Hash] the keyword options to build arguments from
+      # @return [Array<String>] the command-line arguments
+      # @raise [ArgumentError] if unsupported options are provided or validation fails
+      #
+      def build(*positionals, **opts)
+        validate_unsupported_options!(opts)
+        validate_conflicting_aliases!(opts)
+        normalized_opts = normalize_aliases(opts)
+        validate_required_options!(normalized_opts)
+        validate_option_values!(normalized_opts)
+        validate_conflicts!(normalized_opts)
+        build_ordered_arguments(positionals, normalized_opts)
+      end
+
+      private
 
       # Register an option with optional aliases
       #
@@ -583,6 +636,7 @@ module Git
         apply_type_validator!(definition, primary)
         @option_definitions[primary] = definition
         keys.each { |key| @alias_map[key] = primary }
+        @ordered_definitions << { kind: :option, name: primary }
       end
 
       def apply_type_validator!(definition, option_name)
@@ -602,33 +656,73 @@ module Git
               "arrays for args: parameter are only supported for flag types, not :#{type} (option :#{option_name})"
       end
 
-      # Build command-line arguments from the given positionals and options
+      # Build arguments by iterating over definitions in their defined order
       #
       # @param positionals [Array] positional argument values
-      # @param opts [Hash] the keyword options to build arguments from
+      # @param normalized_opts [Hash] normalized keyword options
       # @return [Array<String>] the command-line arguments
-      # @raise [ArgumentError] if unsupported options are provided or validation fails
       #
-      def build(*positionals, **opts)
-        validate_unsupported_options!(opts)
-        validate_conflicting_aliases!(opts)
-        normalized_opts = normalize_aliases(opts)
-        validate_required_options!(normalized_opts)
-        validate_option_values!(normalized_opts)
-        validate_conflicts!(normalized_opts)
-        args = @static_flags.dup
-        build_options(args, normalized_opts)
-        build_positionals(args, positionals)
+      def build_ordered_arguments(positionals, normalized_opts)
+        args = []
+        allocated_positionals = allocate_and_validate_positionals(positionals)
+
+        @ordered_definitions.each do |entry|
+          build_entry(args, entry, normalized_opts, allocated_positionals)
+        end
+
         args
       end
 
-      def build_options(args, normalized_opts)
-        @option_definitions.each do |name, definition|
-          build_option(args, name, definition, normalized_opts[name])
+      # Build a single definition entry and append to args
+      #
+      # @param args [Array<String>] the argument array to append to
+      # @param entry [Hash] the definition entry with :kind and name/flag
+      # @param normalized_opts [Hash] normalized keyword options
+      # @param allocated_positionals [Hash] the allocated positional values
+      # @return [void]
+      #
+      def build_entry(args, entry, normalized_opts, allocated_positionals)
+        case entry[:kind]
+        when :static
+          args << entry[:flag]
+        when :option
+          build_option(args, entry[:name], @option_definitions[entry[:name]], normalized_opts[entry[:name]])
+        when :positional
+          build_single_positional(args, entry[:name], allocated_positionals)
         end
       end
 
-      private
+      # Allocate positionals and perform validation, returning the allocation hash
+      #
+      # @param positionals [Array] positional argument values
+      # @return [Hash] allocation of positional names to values
+      #
+      def allocate_and_validate_positionals(positionals)
+        positionals = normalize_positionals(positionals)
+        allocation, consumed_count = allocate_positionals(positionals)
+
+        @positional_definitions.each do |definition|
+          value = allocation[definition[:name]]
+          validate_required_positional(value, definition)
+          validate_no_nil_values!(value, definition)
+        end
+
+        check_unexpected_positionals(positionals, consumed_count)
+        allocation
+      end
+
+      # Build a single positional argument
+      #
+      # @param args [Array<String>] the argument array to append to
+      # @param name [Symbol] the positional argument name
+      # @param allocation [Hash] the allocated positional values
+      # @return [void]
+      #
+      def build_single_positional(args, name, allocation)
+        definition = @positional_definitions.find { |d| d[:name] == name }
+        value = allocation[name]
+        append_positional_to_args(args, value, definition)
+      end
 
       def validate_single_variadic!(name)
         existing_variadic = @positional_definitions.find { |d| d[:variadic] }
@@ -713,33 +807,6 @@ module Git
         return true if value == false && definition[:type] == :flag_or_inline_value
 
         value.respond_to?(:empty?) && value.empty? && !definition[:allow_empty]
-      end
-
-      # Build positional arguments following Ruby method signature semantics
-      #
-      # Ruby allocation rules:
-      # 1. Required positionals before variadic are filled first (left to right)
-      # 2. Required positionals after variadic are filled from the end
-      # 3. Optional positionals are filled with remaining args
-      # 4. Variadic positional gets whatever is left in the middle
-      #
-      # Example: def foo(a, b, *middle, c, d)
-      #   foo(1, 2, 3, 4)    => a=1, b=2, middle=[], c=3, d=4
-      #   foo(1, 2, 3, 4, 5) => a=1, b=2, middle=[3], c=4, d=5
-      #
-      def build_positionals(args, positionals)
-        positionals = normalize_positionals(positionals)
-        allocation, consumed_count = allocate_positionals(positionals)
-
-        @positional_definitions.each do |definition|
-          value = allocation[definition[:name]]
-          validate_required_positional(value, definition)
-          validate_no_nil_values!(value, definition)
-          append_positional_to_args(args, value, definition)
-        end
-
-        # Check for unexpected positionals
-        check_unexpected_positionals(positionals, consumed_count)
       end
 
       def normalize_positionals(positionals)
@@ -1110,5 +1177,6 @@ module Git
         end
       end
     end
+    # rubocop:enable Metrics/ParameterLists
   end
 end

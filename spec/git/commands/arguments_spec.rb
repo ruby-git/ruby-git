@@ -2225,5 +2225,177 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
     end
+
+    describe 'argument ordering' do
+      context 'when arguments are rendered in definition order across types' do
+        it 'renders arguments in definition order for flag, positional, static pattern' do
+          args = described_class.define do
+            flag :verbose
+            positional :command, required: true
+            static '--'
+            positional :paths, variadic: true
+          end
+
+          result = args.build('status', 'file1.txt', 'file2.txt', verbose: true)
+          expect(result).to eq(['--verbose', 'status', '--', 'file1.txt', 'file2.txt'])
+        end
+
+        it 'renders static flags in definition position (not first)' do
+          args = described_class.define do
+            positional :ref, required: true
+            static '--'
+            positional :path, required: true
+          end
+
+          result = args.build('HEAD', 'file.txt')
+          expect(result).to eq(['HEAD', '--', 'file.txt'])
+        end
+
+        it 'renders positional before flag when positional is defined first' do
+          args = described_class.define do
+            positional :file, required: true
+            flag :force
+            static '--'
+          end
+
+          result = args.build('file.txt', force: true)
+          expect(result).to eq(['file.txt', '--force', '--'])
+        end
+
+        it 'renders interleaved options and positionals in definition order' do
+          args = described_class.define do
+            flag :verbose
+            positional :source, required: true
+            flag :force
+            positional :dest, required: true
+            static '--'
+            positional :extra
+          end
+
+          result = args.build('src.txt', 'dst.txt', 'extra.txt', verbose: true, force: true)
+          expect(result).to eq(['--verbose', 'src.txt', '--force', 'dst.txt', '--', 'extra.txt'])
+        end
+
+        it 'skips omitted options while preserving order' do
+          args = described_class.define do
+            flag :verbose
+            positional :source, required: true
+            flag :force
+            positional :dest, required: true
+          end
+
+          result = args.build('src.txt', 'dst.txt', force: true)
+          expect(result).to eq(['src.txt', '--force', 'dst.txt'])
+        end
+
+        it 'handles multiple static flags in definition order' do
+          args = described_class.define do
+            static '-a'
+            flag :force
+            static '-b'
+            positional :file, required: true
+            static '-c'
+          end
+
+          result = args.build('file.txt', force: true)
+          expect(result).to eq(['-a', '--force', '-b', 'file.txt', '-c'])
+        end
+
+        it 'handles complex git checkout pattern: [tree-ish] -- paths' do
+          args = described_class.define do
+            flag :force
+            flag :quiet
+            positional :tree_ish
+            static '--'
+            positional :paths, variadic: true
+          end
+
+          # git checkout HEAD -- file1 file2
+          result = args.build('HEAD', 'file1.txt', 'file2.txt', force: true)
+          expect(result).to eq(['--force', 'HEAD', '--', 'file1.txt', 'file2.txt'])
+
+          # git checkout -- file1 (no tree-ish)
+          result_no_treeish = args.build(nil, 'file1.txt')
+          expect(result_no_treeish).to eq(['--', 'file1.txt'])
+        end
+
+        it 'handles git diff pattern: commit1 commit2 -- paths' do
+          args = described_class.define do
+            flag :stat
+            positional :commit1
+            positional :commit2
+            static '--'
+            positional :paths, variadic: true
+          end
+
+          # git diff --stat HEAD~1 HEAD -- file.rb
+          result = args.build('HEAD~1', 'HEAD', 'file.rb', stat: true)
+          expect(result).to eq(['--stat', 'HEAD~1', 'HEAD', '--', 'file.rb'])
+
+          # git diff HEAD~1 -- (no commit2 or paths)
+          result_single = args.build('HEAD~1', nil)
+          expect(result_single).to eq(['HEAD~1', '--'])
+        end
+      end
+
+      context 'when static flags are defined first (matching common git patterns)' do
+        it 'renders static before options when static is defined first' do
+          args = described_class.define do
+            static '--delete'
+            flag :force
+            flag :remotes
+            positional :branch_names, variadic: true, required: true
+          end
+
+          result = args.build('feature', 'bugfix', force: true, remotes: true)
+          expect(result).to eq(['--delete', '--force', '--remotes', 'feature', 'bugfix'])
+        end
+      end
+
+      context 'with inline_value and value types' do
+        it 'renders valued options in definition order' do
+          args = described_class.define do
+            value :branch
+            positional :commit, required: true
+            inline_value :date
+          end
+
+          result = args.build('HEAD', branch: 'main', date: '2024-01-01')
+          expect(result).to eq(['--branch', 'main', 'HEAD', '--date=2024-01-01'])
+        end
+      end
+
+      context 'with custom options' do
+        it 'renders custom options in definition order' do
+          args = described_class.define do
+            positional :source, required: true
+            custom :mode do |value|
+              "--mode=#{value}" if value
+            end
+            static '--'
+            positional :dest, required: true
+          end
+
+          result = args.build('src', 'dst', mode: 'fast')
+          expect(result).to eq(['src', '--mode=fast', '--', 'dst'])
+        end
+      end
+
+      context 'with negatable flags' do
+        it 'renders negatable flags in definition order' do
+          args = described_class.define do
+            positional :path, required: true
+            negatable_flag :gpg_sign
+            static '--'
+          end
+
+          result_true = args.build('commit.txt', gpg_sign: true)
+          expect(result_true).to eq(['commit.txt', '--gpg-sign', '--'])
+
+          result_false = args.build('commit.txt', gpg_sign: false)
+          expect(result_false).to eq(['commit.txt', '--no-gpg-sign', '--'])
+        end
+      end
+    end
   end
 end

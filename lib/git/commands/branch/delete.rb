@@ -37,10 +37,6 @@ module Git
       #
       class Delete
         # Arguments DSL for building command-line arguments
-        #
-        # NOTE: Static flags are always output first regardless of definition order,
-        # so we define them first for readability.
-        #
         ARGS = Arguments.define do
           static '--delete'
           flag %i[force f], args: '--force'
