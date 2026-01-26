@@ -31,6 +31,7 @@ module Git
     class Reset
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'reset'
         flag :hard
         flag :soft
         flag :mixed
@@ -69,7 +70,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('reset', *args)
+        @execution_context.command(*args)
       end
     end
   end

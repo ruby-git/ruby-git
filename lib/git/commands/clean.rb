@@ -27,6 +27,7 @@ module Git
     class Clean
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'clean'
         flag :force
         flag :force_force, args: '-ff'
         flag :d, args: '-d'
@@ -65,7 +66,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('clean', *args)
+        @execution_context.command(*args)
       end
     end
   end

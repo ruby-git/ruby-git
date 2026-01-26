@@ -37,6 +37,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'tag'
           static '--list'
           inline_value :sort, multi_valued: true
           value :contains
@@ -90,7 +91,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          lines = @execution_context.command_lines('tag', *args)
+          lines = @execution_context.command_lines(*args)
           parse_tags(lines)
         end
 

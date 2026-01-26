@@ -20,6 +20,7 @@ module Git
     class Add
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'add'
         flag :all
         flag :force
         positional :paths, variadic: true, default: [], separator: '--'
@@ -50,7 +51,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('add', *args)
+        @execution_context.command(*args)
       end
     end
   end

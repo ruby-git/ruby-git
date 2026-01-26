@@ -24,6 +24,7 @@ module Git
     class Mv
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'mv'
         flag :force, args: '--force'
         flag :dry_run, args: '--dry-run'
         flag :verbose, args: '--verbose'
@@ -62,7 +63,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('mv', *args)
+        @execution_context.command(*args)
       end
     end
   end

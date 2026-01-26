@@ -33,6 +33,7 @@ module Git
       # for backward compatibility with existing tests.
       #
       ARGS = Arguments.define do
+        static 'commit'
         flag %i[all add_all]
         flag :allow_empty
         flag :no_verify
@@ -90,7 +91,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('commit', *args)
+        @execution_context.command(*args)
       end
     end
   end

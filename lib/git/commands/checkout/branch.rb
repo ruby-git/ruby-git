@@ -38,6 +38,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'checkout'
           flag %i[force f], args: '--force'
           flag %i[merge m], args: '--merge'
           flag %i[detach d], args: '--detach'
@@ -115,7 +116,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('checkout', *args)
+          @execution_context.command(*args)
         end
       end
     end

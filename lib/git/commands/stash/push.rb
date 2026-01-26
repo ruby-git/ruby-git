@@ -30,6 +30,8 @@ module Git
       class Push
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
+          static 'stash'
+          static 'push'
           flag %i[patch p], args: '--patch'
           flag %i[staged S], args: '--staged'
           negatable_flag %i[keep_index k], args: '--keep-index'
@@ -83,8 +85,7 @@ module Git
         # @return [Git::StashInfo, nil] the newly created stash info, or nil if nothing was stashed
         #
         def call(*, **)
-          args = ARGS.build(*, **)
-          output = @execution_context.command('stash', 'push', *args)
+          output = @execution_context.command(*ARGS.build(*, **))
 
           # No stash created if there were no local changes
           return nil if output&.include?('No local changes to save')

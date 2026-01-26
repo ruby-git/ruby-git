@@ -26,6 +26,8 @@ module Git
       class Apply
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
+          static 'stash'
+          static 'apply'
           flag :index
           positional :stash
         end.freeze
@@ -66,8 +68,7 @@ module Git
           # Capture stash info before applying (stash still exists after apply)
           info = find_stash_info(stash)
 
-          args = ARGS.build(stash, **)
-          @execution_context.command('stash', 'apply', *args)
+          @execution_context.command(*ARGS.build(stash, **))
 
           info
         end

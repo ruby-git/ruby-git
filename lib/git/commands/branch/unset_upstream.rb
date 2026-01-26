@@ -29,6 +29,7 @@ module Git
         # The branch_name positional is optional; if omitted, git uses the current branch.
         #
         ARGS = Arguments.define do
+          static 'branch'
           static '--unset-upstream'
           positional :branch_name
         end.freeze
@@ -56,7 +57,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('branch', *args)
+          @execution_context.command(*args)
         end
       end
     end

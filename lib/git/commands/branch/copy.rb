@@ -36,6 +36,7 @@ module Git
         # This matches the git CLI: `git branch -c [<old-branch>] <new-branch>`
         #
         ARGS = Arguments.define do
+          static 'branch'
           static '--copy'
           flag :force
           positional :old_branch
@@ -81,7 +82,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('branch', *args)
+          @execution_context.command(*args)
         end
       end
     end

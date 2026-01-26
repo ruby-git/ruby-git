@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'git/commands/arguments'
 require 'git/stash_info'
 
 module Git
@@ -22,6 +23,15 @@ module Git
       #   end
       #
       class List
+        # Arguments DSL for building command-line arguments
+        ARGS = Arguments.define do
+          static 'stash'
+          static 'list'
+          custom :format do |v|
+            "--format=#{v}"
+          end
+        end.freeze
+
         # Field separator used in custom format output
         # Using a non-printable unit separator (US, 0x1F) to avoid collisions with
         # stash messages and author/committer fields, while still working with
@@ -88,7 +98,7 @@ module Git
         # @raise [Git::UnexpectedResultError] if stash output cannot be parsed
         #
         def call
-          lines = @execution_context.command_lines('stash', 'list', "--format=#{STASH_FORMAT}")
+          lines = @execution_context.command_lines(*ARGS.build(format: STASH_FORMAT))
           lines.each_with_index.map { |line, idx| parse_stash_line(line, idx, lines) }
         end
 
