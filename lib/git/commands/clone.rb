@@ -22,6 +22,7 @@ module Git
     class Clone
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'clone'
         flag :bare
         flag :recursive
         flag :mirror
@@ -101,7 +102,7 @@ module Git
 
         args = ARGS.build(repository_url, directory, **options)
 
-        @execution_context.command('clone', *args, timeout: options[:timeout])
+        @execution_context.command(*args, timeout: options[:timeout])
 
         build_result(directory, options)
       end

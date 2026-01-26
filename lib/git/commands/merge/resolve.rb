@@ -32,6 +32,7 @@ module Git
         # NOTE: Exactly one of abort, continue, or quit must be specified.
         #
         ARGS = Arguments.define do
+          static 'merge'
           flag :abort, args: '--abort'
           flag :continue, args: '--continue'
           flag :quit, args: '--quit'
@@ -71,7 +72,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('merge', *args)
+          @execution_context.command(*args)
         end
       end
     end

@@ -24,6 +24,7 @@ module Git
       class Delete
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
+          static 'tag'
           static '-d'
           positional :tag_names, variadic: true, required: true
         end.freeze
@@ -49,7 +50,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('tag', *args)
+          @execution_context.command(*args)
         end
       end
     end

@@ -26,6 +26,8 @@ module Git
       class Pop
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
+          static 'stash'
+          static 'pop'
           flag :index
           positional :stash
         end.freeze
@@ -66,8 +68,7 @@ module Git
           # Capture stash info BEFORE popping (it will be removed)
           info = find_stash_info(stash)
 
-          args = ARGS.build(stash, **)
-          @execution_context.command('stash', 'pop', *args)
+          @execution_context.command(*ARGS.build(stash, **))
 
           info
         end

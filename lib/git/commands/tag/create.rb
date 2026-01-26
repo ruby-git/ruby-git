@@ -37,6 +37,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'tag'
           flag %i[annotate a], args: '-a'
           flag %i[sign s], args: '-s'
           flag :no_sign
@@ -103,7 +104,7 @@ module Git
         def call(*, **)
           validate_options!(**)
           command_args = ARGS.build(*, **)
-          @execution_context.command('tag', *command_args)
+          @execution_context.command(*command_args)
         end
 
         private

@@ -30,6 +30,7 @@ module Git
         # The set_upstream_to keyword is required by the Ruby method signature, not the DSL.
         #
         ARGS = Arguments.define do
+          static 'branch'
           inline_value :set_upstream_to, required: true, allow_nil: false
           positional :branch_name
         end.freeze
@@ -70,7 +71,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('branch', *args)
+          @execution_context.command(*args)
         end
       end
     end

@@ -30,6 +30,7 @@ module Git
     class Rm
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'rm'
         flag :force, args: '-f'
         flag :recursive, args: '-r'
         flag :cached
@@ -67,7 +68,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        @execution_context.command('rm', *args)
+        @execution_context.command(*args)
       end
     end
   end

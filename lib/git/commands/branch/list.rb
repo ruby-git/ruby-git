@@ -37,6 +37,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'branch'
           static '--list'
           flag :all, args: '-a'
           flag :remotes, args: '-r'
@@ -134,7 +135,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          lines = @execution_context.command_lines('branch', *args)
+          lines = @execution_context.command_lines(*args)
           parse_branches(lines, args)
         end
 
@@ -204,11 +205,11 @@ module Git
         # @param lines [Array<String>] all output lines
         # @param line [String] the problematic line
         # @param index [Integer] the line index
-        # @param args [Array<String>] the arguments passed to git branch
+        # @param args [Array<String>] the arguments passed to git (includes command name)
         # @return [String] formatted error message
         #
         def unexpected_branch_line_error(lines, line, index, args)
-          command_str = "git branch #{args.join(' ')}".strip
+          command_str = "git #{args.join(' ')}".strip
           <<~ERROR
             Unexpected line in output from `#{command_str}`, line #{index + 1}
 

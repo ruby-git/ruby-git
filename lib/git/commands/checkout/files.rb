@@ -41,6 +41,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'checkout'
           flag %i[force f], args: '--force'
           flag :ours, args: '--ours'
           flag :theirs, args: '--theirs'
@@ -101,7 +102,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('checkout', *args)
+          @execution_context.command(*args)
         end
       end
     end

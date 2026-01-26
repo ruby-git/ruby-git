@@ -23,6 +23,8 @@ module Git
       class Drop
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
+          static 'stash'
+          static 'drop'
           positional :stash
         end.freeze
 
@@ -54,8 +56,7 @@ module Git
           # Capture stash info BEFORE dropping (it will be removed)
           info = find_stash_info(stash)
 
-          args = ARGS.build(stash, **)
-          @execution_context.command('stash', 'drop', *args)
+          @execution_context.command(*ARGS.build(stash, **))
 
           info
         end

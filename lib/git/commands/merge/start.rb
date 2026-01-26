@@ -37,6 +37,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'merge'
           # Always suppress editor (non-interactive use)
           static '--no-edit'
 
@@ -155,7 +156,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('merge', *args)
+          @execution_context.command(*args)
         end
       end
     end

@@ -36,6 +36,7 @@ module Git
       # in the final command line.
       #
       ARGS = Arguments.define do
+        static 'merge-base'
         flag :octopus, args: '--octopus'
         flag :independent, args: '--independent'
         flag :fork_point, args: '--fork-point'
@@ -80,7 +81,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        output = @execution_context.command('merge-base', *args)
+        output = @execution_context.command(*args)
         parse_output(output)
       end
 

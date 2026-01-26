@@ -25,6 +25,7 @@ module Git
     class Init
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'init'
         flag :bare
         inline_value :initial_branch
         inline_value :repository, args: '--separate-git-dir'
@@ -62,7 +63,7 @@ module Git
       def call(directory = '.', **)
         path = File.expand_path(directory)
         args = ARGS.build(path, **)
-        @execution_context.command('init', *args)
+        @execution_context.command(*args)
       end
     end
   end

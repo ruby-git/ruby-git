@@ -41,6 +41,7 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
+          static 'branch'
           flag :force
           flag :create_reflog
           flag :recurse_submodules
@@ -122,7 +123,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          @execution_context.command('branch', *args)
+          @execution_context.command(*args)
         end
       end
     end

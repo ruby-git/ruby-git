@@ -28,6 +28,7 @@ module Git
     class Fsck
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
+        static 'fsck'
         static '--no-progress'
         flag :unreachable
         flag :strict
@@ -100,7 +101,7 @@ module Git
         # 1 = errors found, 2 = missing objects, 4 = warnings
         # We still want to parse the output in these cases
         output = begin
-          @execution_context.command('fsck', *args)
+          @execution_context.command(*args)
         rescue Git::FailedError => e
           raise unless [1, 2, 4].include?(e.result.status.exitstatus)
 
