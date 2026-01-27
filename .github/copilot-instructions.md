@@ -2871,7 +2871,7 @@ Use this at the end of implementation to prepare for PR submission:
 
 Execute and report results for:
 - `bundle exec rake test_all` - all RSpec and Test::Unit tests must pass
-- `bundle exec rubocop` on all changed files - zero violations required
+- `bundle exec rake rubocop yard` - zero violations required
 - Check test output for any Ruby warnings
 
 ### 2. Verify Testing Quality
@@ -2954,7 +2954,7 @@ Provide a comprehensive report with:
 
 **Next Steps:**
 - Any remaining items to address before PR submission
-- Confirmation that all checklist items are complete"
+- Confirmation that all checklist items are complete
 
 ## PR Special Considerations
 
