@@ -2861,6 +2861,101 @@ description" --body "..."`
 - No breaking changes without major version bump or exclamation mark in commit
 - At least one approval from a project maintainer required before merge
 
+## AI Prompt: Create Comprehensive PR
+
+Use this at the end of implementation to prepare for PR submission:
+
+**"I've completed the implementation. Please perform a comprehensive PR readiness review:**
+
+### 1. Run Final Validation
+
+Execute and report results for:
+- `bundle exec rake test_all` - all tests must pass (979 RSpec + 530 TestUnit)
+- `bundle exec rubocop` on all changed files - zero violations required
+- Check test output for any Ruby warnings
+
+### 2. Verify Testing Quality
+
+**Unit Tests (Critical):**
+- [ ] **100% coverage of all changed code** - every branch, edge case, error condition
+- [ ] All external dependencies properly mocked (execution_context, git commands)
+- [ ] Each test verifies one specific behavior
+- [ ] Comprehensive coverage: success paths, failures, edge cases, error handling
+- [ ] Test both public API and private methods where complexity exists
+
+**Integration Tests (Essential Only):**
+- [ ] **Minimal and purposeful** - only test what unit tests cannot verify
+- [ ] Each test validates one specific git interaction pattern
+- [ ] Tests verify mocked assumptions match real git behavior
+- [ ] No redundancy - don't duplicate what unit tests already cover
+- [ ] Follow CONTRIBUTING.md guidelines: test gem's interaction with git, not git itself
+
+### 3. Review Code Quality
+
+- [ ] YARD documentation complete for all public methods/classes
+- [ ] Include `@api public` or `@api private` tags appropriately
+- [ ] Usage examples in YARD docs show common patterns
+- [ ] No breaking changes (or properly marked with `!` in commits)
+- [ ] Cross-platform compatible (no platform-specific code)
+- [ ] No security issues (command injection, path traversal, etc.)
+- [ ] Uses Arguments DSL for building git commands
+
+### 4. Verify Against Git Documentation
+
+- [ ] Read https://git-scm.com/docs/git-[command] for the implemented command
+- [ ] Confirm all documented options are considered
+- [ ] All edge cases from git documentation are tested
+- [ ] Error handling matches git's actual behavior
+- [ ] Exit codes handled correctly (especially partial failures)
+
+### 5. Check Commit Quality
+
+- [ ] All commits follow Conventional Commits format: `type: description`
+- [ ] Description is lowercase, no ending period, under 100 chars
+- [ ] Valid types: feat, fix, docs, test, refactor, chore, perf, build, ci, style, revert
+- [ ] Breaking changes marked with `!` and include `BREAKING CHANGE:` footer
+- [ ] Each commit is atomic and has a clear purpose
+
+### 6. Review Documentation
+
+- [ ] Architecture docs updated if new patterns introduced (redesign/*.md)
+- [ ] README.md updated if public API changed
+- [ ] Examples are clear and demonstrate common use cases
+- [ ] All `@param`, `@return`, `@raise` tags are accurate
+
+### 7. Generate PR Summary
+
+Provide a comprehensive report with:
+
+**Implementation Summary:**
+- What was implemented and why
+- Key design decisions made
+- Any trade-offs or limitations
+
+**Test Coverage:**
+- Unit tests: X examples covering Y scenarios
+- Integration tests: Z examples validating specific git interactions
+- Coverage: 100% of changed lines (or explain gaps)
+- Edge cases tested: [list critical ones]
+
+**Quality Verification:**
+- ✅ Items that passed all checks
+- ⚠️ Items that need attention (if any)
+- Reference to relevant documentation verified
+
+**Suggested PR Materials:**
+- PR Title: `type: clear description of change`
+- PR Description draft including:
+  - Summary of changes
+  - Why this change is needed
+  - Test coverage details
+  - Breaking changes (if any)
+  - Checklist from .github/pull_request_template.md
+
+**Next Steps:**
+- Any remaining items to address before PR submission
+- Confirmation that all checklist items are complete"
+
 ## PR Special Considerations
 
 ### Security
