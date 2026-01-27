@@ -2865,12 +2865,12 @@ description" --body "..."`
 
 Use this at the end of implementation to prepare for PR submission:
 
-**"I've completed the implementation. Please perform a comprehensive PR readiness review:**
+**"I've completed the implementation. Please perform a comprehensive PR readiness review."**
 
 ### 1. Run Final Validation
 
 Execute and report results for:
-- `bundle exec rake test_all` - all tests must pass (979 RSpec + 530 TestUnit)
+- `bundle exec rake test_all` - all RSpec and Test::Unit tests must pass
 - `bundle exec rubocop` on all changed files - zero violations required
 - Check test output for any Ruby warnings
 
@@ -2896,7 +2896,7 @@ Execute and report results for:
 - [ ] Include `@api public` or `@api private` tags appropriately
 - [ ] Usage examples in YARD docs show common patterns
 - [ ] No breaking changes (or properly marked with `!` in commits)
-- [ ] Cross-platform compatible (no platform-specific code)
+- [ ] Cross-platform compatible on all supported OSes; any platform-specific logic is properly guarded and tested
 - [ ] No security issues (command injection, path traversal, etc.)
 - [ ] Uses Arguments DSL for building git commands
 
