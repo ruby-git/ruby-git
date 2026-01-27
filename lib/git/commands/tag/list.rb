@@ -31,6 +31,36 @@ module Git
       #   tags = list.call('v1.*', 'v2.*', sort: 'version:refname')
       #
       class List
+        # Delimiter for separating fields in git tag --format output
+        # Field separator used in custom format output
+        # Using the ASCII unit separator (US, 0x1F / "\x1f"), a non-printable character,
+        # minimizes the chance of collisions with tag names or messages and remains
+        # safe to pass through Process.spawn and shell argument boundaries.
+        FIELD_DELIMITER = "\x1f"
+
+        # Number of fields expected in the parsed output
+        FIELD_COUNT = 7
+
+        # Format string for git tag --format
+        #
+        # Fields:
+        # - %(refname:short) - tag name
+        # - %(objectname) - SHA of the tag object or commit
+        # - %(objecttype) - 'tag' for annotated tags, target object type (commit/tree/blob/etc.) for lightweight tags
+        # - %(taggername) - tagger name (empty for lightweight tags)
+        # - %(taggeremail) - tagger email (empty for lightweight tags)
+        # - %(taggerdate:iso8601-strict) - tagger date in strict ISO 8601 format
+        # - %(contents:subject) - first line of tag message
+        FORMAT_STRING = [
+          '%(refname:short)',
+          '%(objectname)',
+          '%(objecttype)',
+          '%(taggername)',
+          '%(taggeremail)',
+          '%(taggerdate:iso8601-strict)',
+          '%(contents:subject)'
+        ].join(FIELD_DELIMITER)
+
         # Arguments DSL for building command-line arguments
         #
         # NOTE: The order of definitions here determines the order of arguments
@@ -39,6 +69,7 @@ module Git
         ARGS = Arguments.define do
           static 'tag'
           static '--list'
+          static "--format=#{FORMAT_STRING}"
           inline_value :sort, multi_valued: true
           value :contains
           value :no_contains
@@ -97,29 +128,90 @@ module Git
 
         private
 
-        # Parse the output lines from git tag
+        # Parse the output lines from git tag --format
         #
         # @param lines [Array<String>] output lines from git tag command
         # @return [Array<Git::TagInfo>] parsed tag data
         #
+        # @raise [Git::UnexpectedResultError] if any line has unexpected format
+        #
         def parse_tags(lines)
-          lines.map { |line| build_tag_info(line.strip) }
+          lines.map.with_index { |line, index| parse_tag_line(line, index, lines) }
         end
 
-        # Build a TagInfo from a tag name
+        # Parse a single formatted tag line
         #
-        # @note Currently only populates the name field. Other metadata fields
-        #   (sha, objecttype, tagger_*, message) are set to nil. A future
-        #   enhancement could use git tag --format to populate these fields.
+        # The line format is:
+        #   name<FS>sha<FS>objecttype<FS>tagger_name<FS>tagger_email<FS>tagger_date<FS>message
+        # where <FS> is the unit separator character ("\x1f").
         #
-        # @param name [String] the tag name
-        # @return [Git::TagInfo] tag info with name populated, other fields nil
+        # For lightweight tags, Git emits empty strings for the tagger fields and message;
+        # these are converted to nil by {#parse_optional_field} and {#parse_message}.
         #
-        def build_tag_info(name)
+        # @param line [String] a single line from git tag --format output
+        # @param index [Integer] line index for error reporting
+        # @param all_lines [Array<String>] all output lines for error messages
+        # @return [Git::TagInfo] tag info with all fields populated
+        #
+        # @raise [Git::UnexpectedResultError] if line format is unexpected
+        #
+        def parse_tag_line(line, index, all_lines)
+          parts = line.split(FIELD_DELIMITER, FIELD_COUNT)
+
+          unless parts.length == FIELD_COUNT
+            raise Git::UnexpectedResultError, unexpected_tag_line_error(all_lines, line, index)
+          end
+
+          build_tag_info(parts)
+        end
+
+        # Build a TagInfo object from parsed parts
+        #
+        # @param parts [Array<String>] the parsed format fields
+        # @return [Git::TagInfo]
+        #
+        def build_tag_info(parts)
           Git::TagInfo.new(
-            name: name, sha: nil, objecttype: nil,
-            tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
+            name: parts[0],
+            sha: parts[1],
+            objecttype: parts[2],
+            tagger_name: parse_optional_field(parts[3]),
+            tagger_email: parse_optional_field(parts[4]),
+            tagger_date: parse_optional_field(parts[5]),
+            message: parse_message(parts[2], parts[6])
           )
+        end
+
+        # Parse an optional field, returning nil if empty
+        def parse_optional_field(value)
+          value.empty? ? nil : value
+        end
+
+        # Parse message field, returning nil for lightweight tags or empty messages
+        def parse_message(objecttype, message)
+          objecttype == 'tag' && !message.empty? ? message : nil
+        end
+
+        # Generate error message for unexpected tag line format
+        #
+        # @param lines [Array<String>] all output lines
+        # @param line [String] the problematic line
+        # @param index [Integer] the line index
+        # @return [String] formatted error message
+        #
+        def unexpected_tag_line_error(lines, line, index)
+          format_str = FORMAT_STRING.gsub(FIELD_DELIMITER, '<FS>')
+          <<~ERROR
+            Unexpected line in output from `git tag --list --format=#{format_str}`, at index #{index}
+
+            Expected #{FIELD_COUNT} fields separated by '\\x1f' (unit separator), got #{line.split(FIELD_DELIMITER, -1).length}
+
+            Full output:
+              #{lines.join("\n  ")}
+
+            Line at index #{index}:
+              "#{line}"
+          ERROR
         end
       end
     end
