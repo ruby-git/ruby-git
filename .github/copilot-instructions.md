@@ -201,7 +201,9 @@ Key directories:
 - `lib/git/` - Core library code
 - `lib/git/commands/` - Command classes for the new architecture
 - `tests/units/` - Legacy Test::Unit suite
-- `spec/` - RSpec test suite (primary for new code)
+- `spec/unit/` - RSpec unit tests (mocked execution context)
+- `spec/integration/` - RSpec integration tests (real git repositories)
+- `spec/support/` - Shared test contexts and helpers
 - `doc/` - YARD-generated documentation
 - `pkg/` - Built gem packages
 - `redesign/` - Architecture redesign documentation
@@ -342,6 +344,33 @@ def self.open(path, options = {})
 end
 ```
 
+### Testing Philosophy
+
+The project uses RSpec for all new tests, with tests organized into unit and
+integration categories:
+
+**Unit Tests** (`spec/unit/`): Test individual classes and methods with mocked
+execution context. Unit tests verify that:
+- The gem builds correct git command arguments
+- Command output is properly parsed into Ruby objects
+- Edge cases and error conditions are handled correctly
+- All code paths and options are exercised
+
+**Integration Tests** (`spec/integration/`): Test the gem's behavior against real git
+repositories. Integration tests verify that:
+- Mocked assumptions in unit tests match actual git behavior
+- The gem correctly handles real git output formats
+- Command options produce expected git behavior in practice
+- Edge cases (unicode, special characters, etc.) work with real git
+
+**Purpose of Integration Tests**: Integration tests validate the gem's interaction
+with git, not git's functionality. They answer: "Does our mocked execution context
+accurately represent what git actually does?" Integration tests should be minimal and
+purposeful, focusing on key behaviors that unit tests cannot verify.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md#rspec-best-practices) for detailed testing
+guidelines including test organization, best practices, and examples.
+
 ## Key Technical Details
 
 This section outlines the critical technical mechanisms that power the gem.
@@ -451,11 +480,13 @@ project's requirements.
 - **Setup Project:** `bin/setup`
 - **Run All Tests:** `bundle exec rake test_all`
 - **Run Unit Tests (TestUnit only):** `bundle exec rake test`
-- **Run RSpec Tests:** `bundle exec rake spec`
+- **Run RSpec Tests (unit + integration):** `bundle exec rake spec`
+- **Run RSpec Unit Tests Only:** `bundle exec rake spec:unit`
+- **Run RSpec Integration Tests Only:** `bundle exec rake spec:integration`
 - **Run A Specific TestUnit Test:** `bundle exec bin/test <test_file_name_without_extension>`
   (e.g., `bundle exec bin/test test_branch`)
 - **Run A Specific RSpec Test:** `bundle exec rspec <spec_file_path>`
-  (e.g., `bundle exec rspec spec/git/commands/add_spec.rb`)
+  (e.g., `bundle exec rspec spec/unit/git/commands/add_spec.rb`)
 - **Run Linters:** `bundle exec rake rubocop yard`
 - **Run Continuous Integration Workflow:** `bundle exec rake default`
 

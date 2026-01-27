@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Load support files
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
+
 # Configure RSpec
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -24,6 +27,11 @@ RSpec.configure do |config|
   config.mock_with :rspec do |mocks|
     # Prevent mocking or stubbing of methods that don't exist
     mocks.verify_partial_doubles = true
+  end
+
+  # Automatically tag specs in spec/integration as :integration
+  config.define_derived_metadata(file_path: %r{/spec/integration/}) do |metadata|
+    metadata[:integration] = true
   end
 
   # Shared setup for all specs

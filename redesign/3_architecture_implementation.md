@@ -43,6 +43,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
    - Test every option using separate `context` blocks
    - Mock the execution context with `double('ExecutionContext')`
    - Verify argument building matches expected git CLI args
+   - Unit tests go in `spec/unit/git/commands/`
+   - Optionally add integration tests in `spec/integration/` to verify behavior
+     against real git (see CONTRIBUTING.md for integration test guidelines)
 
 4. **Implement**:
    - Use `Git::Commands::Arguments.define` DSL for argument handling

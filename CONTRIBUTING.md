@@ -648,6 +648,44 @@ This project uses two test frameworks:
 - **Contexts**: Use separate `context` blocks for different scenarios.
 - **Options**: For methods accepting options (like commands), use a separate
   `context` for each option to ensure isolation and comprehensiveness.
+- **One assertion per test**: Each test should verify one specific aspect of
+  behavior. Exceptions include: (a) testing that an object has expected attributes
+  after creation (e.g., verifying multiple fields of a returned object), (b)
+  verifying expected side effects of a single operation (e.g., a method that both
+  returns a value and modifies state), (c) testing that multiple related
+  assertions hold for the same setup (e.g., boundary conditions).
+
+#### Unit tests vs Integration tests
+
+This project uses two types of RSpec tests, organized by directory:
+
+- **Unit tests** (`spec/unit/`) - Test individual classes and methods with mocked
+  execution context. These verify that the gem builds correct git command arguments
+  and properly handles git output. Unit tests should mock `@execution_context` to
+  avoid calling real git commands.
+
+- **Integration tests** (`spec/integration/`) - Test the gem's behavior against real
+  git repositories. These verify that mocked assumptions in unit tests match actual
+  git behavior. Integration tests create temporary repositories using `Dir.mktmpdir`
+  and run real git commands through the gem's public API.
+
+**Purpose of integration tests**: Integration tests validate that the gem correctly
+interacts with git, not that git itself works correctly. They should verify:
+- That the gem's mocked command expectations match real git output format
+- That the gem correctly handles real git behavior (e.g., unicode in branch names)
+- That command options produce expected git behavior
+- Edge cases that are difficult to mock reliably
+
+**Integration test guidelines**:
+- Keep tests **minimal and purposeful** - only create what's needed for the test
+- Focus on **key behaviors** that unit tests can't verify
+- Don't test git's functionality - test the gem's interaction with git
+- Use the shared context `'in an empty repository'` for temporary repo setup
+- Use `Git::IntegrationTestHelpers` methods for file operations
+- Each test should verify one specific git interaction pattern
+
+**Example**: An integration test for branch listing should verify that the gem
+correctly parses git's branch list format, not that git can create branches.
 
 While working on specific features, you can run tests using:
 
@@ -658,8 +696,14 @@ $ bundle exec rake test_all
 # Run only TestUnit integration tests:
 $ bundle exec rake test
 
-# Run only RSpec unit tests:
+# Run only RSpec tests (unit + integration):
 $ bundle exec rake spec
+
+# Run only RSpec unit tests:
+$ bundle exec rake spec:unit
+
+# Run only RSpec integration tests:
+$ bundle exec rake spec:integration
 
 # Run a single TestUnit file (from tests/units):
 $ bin/test test_object
