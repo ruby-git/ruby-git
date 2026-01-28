@@ -173,7 +173,7 @@ class TestFsck < Test::Unit::TestCase
       result.dangling.each do |obj|
         assert_instance_of(Git::FsckObject, obj)
         assert_includes(%i[commit tree blob tag], obj.type)
-        assert_match(/\A[0-9a-f]{40}\z/, obj.sha)
+        assert_match(/\A[0-9a-f]{40}\z/, obj.oid)
       end
     end
   end
@@ -200,7 +200,7 @@ class TestFsck < Test::Unit::TestCase
 
         assert_equal(1, result.dangling.size)
         assert_equal(:commit, result.dangling.first.type)
-        assert_match(/\A[0-9a-f]{40}\z/, result.dangling.first.sha)
+        assert_match(/\A[0-9a-f]{40}\z/, result.dangling.first.oid)
         assert(result.any_issues?)
         assert_equal(false, result.empty?)
       end
@@ -223,7 +223,7 @@ class TestFsck < Test::Unit::TestCase
         result = git.fsck
 
         assert(result.dangling.any? { |obj| obj.type == :blob })
-        dangling_blob = result.dangling.find { |obj| obj.sha == blob_sha }
+        dangling_blob = result.dangling.find { |obj| obj.oid == blob_sha }
         assert_not_nil(dangling_blob)
         assert_equal(:blob, dangling_blob.type)
       end
@@ -268,7 +268,7 @@ class TestFsck < Test::Unit::TestCase
         # Should have exactly one root commit (the initial commit)
         assert_equal(1, result.root.size)
         assert_equal(:commit, result.root.first.type)
-        assert_match(/\A[0-9a-f]{40}\z/, result.root.first.sha)
+        assert_match(/\A[0-9a-f]{40}\z/, result.root.first.oid)
 
         # root commits are not considered "issues"
         assert_equal(false, result.any_issues?) if result.dangling.empty? && result.missing.empty?
@@ -297,7 +297,7 @@ class TestFsck < Test::Unit::TestCase
         assert_equal(2, result.root.size)
         result.root.each do |obj|
           assert_equal(:commit, obj.type)
-          assert_match(/\A[0-9a-f]{40}\z/, obj.sha)
+          assert_match(/\A[0-9a-f]{40}\z/, obj.oid)
         end
       end
     end
@@ -320,7 +320,7 @@ class TestFsck < Test::Unit::TestCase
         assert(result.tagged.size >= 1)
         tagged_obj = result.tagged.first
         assert_equal(:commit, tagged_obj.type)
-        assert_match(/\A[0-9a-f]{40}\z/, tagged_obj.sha)
+        assert_match(/\A[0-9a-f]{40}\z/, tagged_obj.oid)
         assert_equal('v1.0.0', tagged_obj.name)
       end
     end
@@ -349,7 +349,7 @@ class TestFsck < Test::Unit::TestCase
         result = git.fsck
 
         assert(result.missing.size >= 1)
-        missing_obj = result.missing.find { |obj| obj.sha == blob_sha }
+        missing_obj = result.missing.find { |obj| obj.oid == blob_sha }
         assert_not_nil(missing_obj)
         assert_equal(:blob, missing_obj.type)
         assert(result.any_issues?)
@@ -381,7 +381,7 @@ class TestFsck < Test::Unit::TestCase
         # but the parsing should work either way
         dangling = result.dangling.first
         assert_equal(:commit, dangling.type)
-        assert_match(/\A[0-9a-f]{40}\z/, dangling.sha)
+        assert_match(/\A[0-9a-f]{40}\z/, dangling.oid)
       end
     end
   end

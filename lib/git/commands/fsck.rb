@@ -146,7 +146,7 @@ module Git
       def parse_object_line(line, result)
         return unless (match = OBJECT_PATTERN.match(line))
 
-        result[match[1].to_sym] << Git::FsckObject.new(type: match[2].to_sym, sha: match[3], name: match[4])
+        result[match[1].to_sym] << Git::FsckObject.new(type: match[2].to_sym, oid: match[3], name: match[4])
       end
 
       # Parse a warning line
@@ -158,7 +158,7 @@ module Git
       def parse_warning_line(line, result)
         return unless (match = WARNING_PATTERN.match(line))
 
-        result[:warnings] << Git::FsckObject.new(type: match[1].to_sym, sha: match[2], message: match[3])
+        result[:warnings] << Git::FsckObject.new(type: match[1].to_sym, oid: match[2], message: match[3])
       end
 
       # Parse a root line
@@ -170,7 +170,7 @@ module Git
       def parse_root_line(line, result)
         return unless (match = ROOT_PATTERN.match(line))
 
-        result[:root] << Git::FsckObject.new(type: :commit, sha: match[1])
+        result[:root] << Git::FsckObject.new(type: :commit, oid: match[1])
       end
 
       # Parse a tagged line
@@ -182,7 +182,7 @@ module Git
       def parse_tagged_line(line, result)
         return unless (match = TAGGED_PATTERN.match(line))
 
-        result[:tagged] << Git::FsckObject.new(type: match[1].to_sym, sha: match[2], name: match[3])
+        result[:tagged] << Git::FsckObject.new(type: match[1].to_sym, oid: match[2], name: match[3])
       end
     end
   end

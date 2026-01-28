@@ -15,10 +15,10 @@ class TestFsckResult < Test::Unit::TestCase
   end
 
   test 'initialize with provided arrays' do
-    dangling = [Git::FsckObject.new(type: :commit, sha: 'a' * 40)]
-    missing = [Git::FsckObject.new(type: :blob, sha: 'b' * 40)]
-    unreachable = [Git::FsckObject.new(type: :tree, sha: 'c' * 40)]
-    warnings = [Git::FsckObject.new(type: :commit, sha: 'd' * 40, message: 'badTimezone')]
+    dangling = [Git::FsckObject.new(type: :commit, oid: 'a' * 40)]
+    missing = [Git::FsckObject.new(type: :blob, oid: 'b' * 40)]
+    unreachable = [Git::FsckObject.new(type: :tree, oid: 'c' * 40)]
+    warnings = [Git::FsckObject.new(type: :commit, oid: 'd' * 40, message: 'badTimezone')]
 
     result = Git::FsckResult.new(
       dangling: dangling,
@@ -40,7 +40,7 @@ class TestFsckResult < Test::Unit::TestCase
   end
 
   test 'empty? returns false when dangling is not empty' do
-    dangling = [Git::FsckObject.new(type: :commit, sha: 'a' * 40)]
+    dangling = [Git::FsckObject.new(type: :commit, oid: 'a' * 40)]
     result = Git::FsckResult.new(dangling: dangling)
 
     assert_equal(false, result.empty?)
@@ -53,17 +53,17 @@ class TestFsckResult < Test::Unit::TestCase
   end
 
   test 'any_issues? returns true when missing is not empty' do
-    missing = [Git::FsckObject.new(type: :blob, sha: 'b' * 40)]
+    missing = [Git::FsckObject.new(type: :blob, oid: 'b' * 40)]
     result = Git::FsckResult.new(missing: missing)
 
     assert(result.any_issues?)
   end
 
   test 'all_objects returns combined array' do
-    obj1 = Git::FsckObject.new(type: :commit, sha: 'a' * 40)
-    obj2 = Git::FsckObject.new(type: :blob, sha: 'b' * 40)
-    obj3 = Git::FsckObject.new(type: :tree, sha: 'c' * 40)
-    obj4 = Git::FsckObject.new(type: :tag, sha: 'd' * 40, message: 'badTimezone')
+    obj1 = Git::FsckObject.new(type: :commit, oid: 'a' * 40)
+    obj2 = Git::FsckObject.new(type: :blob, oid: 'b' * 40)
+    obj3 = Git::FsckObject.new(type: :tree, oid: 'c' * 40)
+    obj4 = Git::FsckObject.new(type: :tag, oid: 'd' * 40, message: 'badTimezone')
 
     result = Git::FsckResult.new(
       dangling: [obj1],
@@ -82,12 +82,12 @@ class TestFsckResult < Test::Unit::TestCase
 
   test 'count returns total number of objects' do
     result = Git::FsckResult.new(
-      dangling: [Git::FsckObject.new(type: :commit, sha: 'a' * 40)],
-      missing: [Git::FsckObject.new(type: :blob, sha: 'b' * 40)],
+      dangling: [Git::FsckObject.new(type: :commit, oid: 'a' * 40)],
+      missing: [Git::FsckObject.new(type: :blob, oid: 'b' * 40)],
       unreachable: [],
       warnings: [
-        Git::FsckObject.new(type: :commit, sha: 'c' * 40, message: 'msg1'),
-        Git::FsckObject.new(type: :commit, sha: 'd' * 40, message: 'msg2')
+        Git::FsckObject.new(type: :commit, oid: 'c' * 40, message: 'msg1'),
+        Git::FsckObject.new(type: :commit, oid: 'd' * 40, message: 'msg2')
       ]
     )
 
@@ -95,8 +95,8 @@ class TestFsckResult < Test::Unit::TestCase
   end
 
   test 'to_h returns hash representation' do
-    dangling = [Git::FsckObject.new(type: :commit, sha: 'a' * 40)]
-    missing = [Git::FsckObject.new(type: :blob, sha: 'b' * 40)]
+    dangling = [Git::FsckObject.new(type: :commit, oid: 'a' * 40)]
+    missing = [Git::FsckObject.new(type: :blob, oid: 'b' * 40)]
 
     result = Git::FsckResult.new(dangling: dangling, missing: missing)
     hash = result.to_h
@@ -111,8 +111,8 @@ class TestFsckResult < Test::Unit::TestCase
   end
 
   test 'empty? returns true even when root and tagged have items' do
-    root = [Git::FsckObject.new(type: :commit, sha: 'a' * 40)]
-    tagged = [Git::FsckObject.new(type: :commit, sha: 'b' * 40, name: 'v1.0.0')]
+    root = [Git::FsckObject.new(type: :commit, oid: 'a' * 40)]
+    tagged = [Git::FsckObject.new(type: :commit, oid: 'b' * 40, name: 'v1.0.0')]
 
     result = Git::FsckResult.new(root: root, tagged: tagged)
 
