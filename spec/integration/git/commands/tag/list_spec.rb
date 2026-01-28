@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Tag::List, :integration do
         expect(result.size).to eq(1)
         tag = result.first
         expect(tag.name).to eq('v1.0.0')
-        expect(tag.sha).to match(/^[0-9a-f]{40}$/)
+        expect(tag.target_oid).to match(/^[0-9a-f]{40}$/)
         expect(tag.objecttype).to eq('commit')
       end
 
@@ -39,13 +39,21 @@ RSpec.describe Git::Commands::Tag::List, :integration do
         expect(result.first.annotated?).to be false
       end
 
-      it 'has nil tagger fields for lightweight tags' do
+      it 'has nil oid and tagger fields for lightweight tags' do
         result = command.call
         tag = result.first
+        expect(tag.oid).to be_nil
         expect(tag.tagger_name).to be_nil
         expect(tag.tagger_email).to be_nil
         expect(tag.tagger_date).to be_nil
         expect(tag.message).to be_nil
+      end
+
+      it 'has target_oid pointing to the commit' do
+        result = command.call
+        tag = result.first
+        # For lightweight tags, target_oid should be a valid commit SHA
+        expect(tag.target_oid).to match(/^[0-9a-f]{40}$/)
       end
     end
 
@@ -62,7 +70,8 @@ RSpec.describe Git::Commands::Tag::List, :integration do
         expect(result.size).to eq(1)
         tag = result.first
         expect(tag.name).to eq('v2.0.0')
-        expect(tag.sha).to match(/^[0-9a-f]{40}$/)
+        expect(tag.oid).to match(/^[0-9a-f]{40}$/)
+        expect(tag.target_oid).to match(/^[0-9a-f]{40}$/)
         expect(tag.objecttype).to eq('tag')
       end
 

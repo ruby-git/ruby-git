@@ -39,13 +39,14 @@ module Git
         FIELD_DELIMITER = "\x1f"
 
         # Number of fields expected in the parsed output
-        FIELD_COUNT = 7
+        FIELD_COUNT = 8
 
         # Format string for git tag --format
         #
         # Fields:
         # - %(refname:short) - tag name
-        # - %(objectname) - SHA of the tag object or commit
+        # - %(objectname) - SHA of the tag object (for annotated) or commit (for lightweight)
+        # - %(*objectname) - Dereferenced SHA (commit ID for annotated tags, empty for lightweight)
         # - %(objecttype) - 'tag' for annotated tags, target object type (commit/tree/blob/etc.) for lightweight tags
         # - %(taggername) - tagger name (empty for lightweight tags)
         # - %(taggeremail) - tagger email (empty for lightweight tags)
@@ -54,6 +55,7 @@ module Git
         FORMAT_STRING = [
           '%(refname:short)',
           '%(objectname)',
+          '%(*objectname)',
           '%(objecttype)',
           '%(taggername)',
           '%(taggeremail)',
@@ -170,15 +172,38 @@ module Git
         # @param parts [Array<String>] the parsed format fields
         # @return [Git::TagInfo]
         #
+        # @note For annotated tags:
+        #   - oid = %(objectname) (the tag object's ID)
+        #   - target_oid = %(*objectname) (the dereferenced commit ID)
+        #
+        # @note For lightweight tags:
+        #   - oid = nil (lightweight tags are not objects)
+        #   - target_oid = %(objectname) (the commit ID)
+        #
         def build_tag_info(parts)
+          objecttype = parts[3]
+          objectname = parts[1]
+          dereferenced = parts[2]
+
+          # For annotated tags: oid is the tag object ID, target_oid is the dereferenced commit
+          # For lightweight tags: oid is nil, target_oid is the objectname (the commit)
+          if objecttype == 'tag'
+            oid = objectname
+            target_oid = dereferenced
+          else
+            oid = nil
+            target_oid = objectname
+          end
+
           Git::TagInfo.new(
             name: parts[0],
-            sha: parts[1],
-            objecttype: parts[2],
-            tagger_name: parse_optional_field(parts[3]),
-            tagger_email: parse_optional_field(parts[4]),
-            tagger_date: parse_optional_field(parts[5]),
-            message: parse_message(parts[2], parts[6])
+            oid: oid,
+            target_oid: target_oid,
+            objecttype: objecttype,
+            tagger_name: parse_optional_field(parts[4]),
+            tagger_email: parse_optional_field(parts[5]),
+            tagger_date: parse_optional_field(parts[6]),
+            message: parse_message(objecttype, parts[7])
           )
         end
 

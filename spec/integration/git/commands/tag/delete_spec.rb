@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         deleted_tag = result.deleted.first
         expect(deleted_tag).to be_a(Git::TagInfo)
         expect(deleted_tag.name).to eq('v1.0.0')
-        expect(deleted_tag.sha).to match(/^[0-9a-f]{40}$/)
+        expect(deleted_tag.target_oid).to match(/^[0-9a-f]{40}$/)
         expect(deleted_tag.objecttype).to eq('commit')
         # Lightweight tags have no tagger metadata
         expect(deleted_tag.tagger_name).to be_nil
@@ -144,7 +144,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
 
         deleted_tag = result.deleted.first
         expect(deleted_tag.name).to eq('v1.0.0')
-        expect(deleted_tag.sha).to match(/^[0-9a-f]{40}$/)
+        expect(deleted_tag.oid).to match(/^[0-9a-f]{40}$/)
         expect(deleted_tag.objecttype).to eq('tag')
         # Annotated tags have tagger metadata
         expect(deleted_tag.tagger_name).not_to be_nil

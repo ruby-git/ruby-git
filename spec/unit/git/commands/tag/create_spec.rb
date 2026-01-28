@@ -13,7 +13,8 @@ RSpec.describe Git::Commands::Tag::Create do
     [
       Git::TagInfo.new(
         name: 'v1.0.0',
-        sha: 'abc123',
+        oid: nil,
+        target_oid: 'abc123',
         objecttype: 'commit',
         tagger_name: nil,
         tagger_email: nil,

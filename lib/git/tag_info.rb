@@ -12,7 +12,8 @@ module Git
   # @example Annotated tag
   #   info = Git::TagInfo.new(
   #     name: 'v1.0.0',
-  #     sha: 'abc123def456',
+  #     oid: 'abc123def456',        # tag object's ID
+  #     target_oid: 'def456abc789', # commit it points to
   #     objecttype: 'tag',
   #     tagger_name: 'John Doe',
   #     tagger_email: '<john@example.com>',
@@ -25,7 +26,8 @@ module Git
   # @example Lightweight tag
   #   info = Git::TagInfo.new(
   #     name: 'v1.0.0',
-  #     sha: 'abc123def456',
+  #     oid: nil,                   # no tag object exists
+  #     target_oid: 'def456abc789', # commit ID
   #     objecttype: 'commit',
   #     tagger_name: nil,
   #     tagger_email: nil,
@@ -40,15 +42,49 @@ module Git
   #
   # @api public
   #
-  TagInfo = Data.define(:name, :sha, :objecttype, :tagger_name, :tagger_email, :tagger_date, :message) do
-    # @return [Boolean] true if this is an annotated tag (objecttype is 'tag')
+  # @!attribute [r] name
+  #   @return [String] the tag name (e.g., 'v1.0.0')
+  #
+  # @!attribute [r] oid
+  #   The object ID of the tag object itself.
+  #
+  #   For annotated tags, this is the tag object's ID. For lightweight tags,
+  #   this is nil because lightweight tags are not objects in the git database.
+  #
+  #   @return [String, nil] the tag object's ID, or nil for lightweight tags
+  #
+  # @!attribute [r] target_oid
+  #   The object ID of the commit this tag ultimately points to.
+  #
+  #   For both annotated and lightweight tags, this is the commit ID that the
+  #   tag resolves to (i.e., the dereferenced target).
+  #
+  #   @return [String] the commit ID this tag points to
+  #
+  # @!attribute [r] objecttype
+  #   @return [String] 'tag' for annotated tags, 'commit' for lightweight tags
+  #
+  # @!attribute [r] tagger_name
+  #   @return [String, nil] the tagger's name, or nil for lightweight tags
+  #
+  # @!attribute [r] tagger_email
+  #   @return [String, nil] the tagger's email, or nil for lightweight tags
+  #
+  # @!attribute [r] tagger_date
+  #   @return [String, nil] the tag date in ISO 8601 format, or nil for lightweight tags
+  #
+  # @!attribute [r] message
+  #   @return [String, nil] the tag message, or nil for lightweight tags
+  #
+  TagInfo = Data.define(:name, :oid, :target_oid, :objecttype, :tagger_name, :tagger_email, :tagger_date, :message) do
+    # @return [Boolean] true if this is an annotated tag (oid is present)
     def annotated?
-      objecttype == 'tag'
+      !oid.nil?
     end
 
-    # @return [Boolean] true if this is a lightweight tag (objecttype is 'commit')
+    # @return [Boolean] true if this is a lightweight tag (oid is nil)
     def lightweight?
-      objecttype == 'commit'
+      oid.nil?
     end
 
     # Return the tagger as an Author object
