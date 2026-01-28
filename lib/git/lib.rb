@@ -1791,6 +1791,7 @@ module Git
 
     STATIC_GLOBAL_OPTS = %w[
       -c core.quotePath=true
+      -c core.editor=false
       -c color.ui=false
       -c color.advice=false
       -c color.diff=false

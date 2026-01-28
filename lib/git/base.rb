@@ -58,6 +58,7 @@ module Git
       Open3.capture2e(
         binary_path,
         '-c', 'core.quotePath=true',
+        '-c', 'core.editor=false',
         '-c', 'color.ui=false',
         'version'
       )
@@ -84,6 +85,7 @@ module Git
       Open3.capture2e(
         Git::Base.config.binary_path,
         '-c', 'core.quotePath=true',
+        '-c', 'core.editor=false',
         '-c', 'color.ui=false',
         'rev-parse', '--show-toplevel',
         chdir: File.expand_path(working_dir)
