@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/commands/tag/list'
 
 module Git
   module Commands
@@ -95,64 +96,18 @@ module Git
         #     Use `-` to read from standard input.
         #     Implies `-a` if none of `-a`, `-s`, or `-u` is given. Alias: `:F`
         #
-        # @return [String] the command output
+        # @return [Git::TagInfo] the info for the tag that was created
         #
-        # @raise [ArgumentError] if creating an annotated tag without a message
+        # @raise [Git::FailedError] if the tag already exists (without force) or if
+        #   an annotated tag is requested without a message
         #
-        # @raise [Git::FailedError] if the tag already exists (without force)
-        #
-        def call(*, **)
-          validate_options!(**)
-          command_args = ARGS.build(*, **)
+        def call(*args, **)
+          command_args = ARGS.build(*args, **)
           @execution_context.command(*command_args)
-        end
 
-        private
-
-        # Validate options before executing the command
-        #
-        # This prevents git from trying to open an editor for the tag message,
-        # which would fail in non-interactive mode or block in interactive mode.
-        #
-        # @param options [Hash] the parsed options
-        #
-        # @raise [ArgumentError] if an annotated tag is requested without a message
-        #
-        # @return [void]
-        #
-        def validate_options!(**options)
-          return unless annotated_tag?(options)
-          return if message?(options)
-
-          raise ArgumentError, 'Cannot create an annotated tag without a message.'
-        end
-
-        # Check if an annotated tag is being requested
-        #
-        # @param options [Hash] the parsed options
-        # @return [Boolean]
-        #
-        def annotated_tag?(options)
-          options[:annotate] || options[:a] || options[:sign] || options[:s] ||
-            options[:local_user] || options[:u]
-        end
-
-        # Check if a message is provided for the tag
-        #
-        # Empty strings are not considered valid messages since ARGS.build will
-        # drop them (allow_empty: false is the default), which would cause git
-        # to open an editor unexpectedly.
-        #
-        # @param options [Hash] the parsed options
-        # @return [Boolean]
-        #
-        def message?(options)
-          [
-            options[:message],
-            options[:m],
-            options[:file],
-            options[:F]
-          ].compact.any? { |value| value != '' }
+          # Get tag info for the newly created tag
+          tag_name = args[0]
+          Git::Commands::Tag::List.new(@execution_context).call(tag_name).first
         end
       end
     end

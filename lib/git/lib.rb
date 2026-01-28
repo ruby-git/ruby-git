@@ -1547,7 +1547,8 @@ module Git
     #
     # @param name [String] the tag name
     # @param args [Array] optional commit/target and options hash
-    # @return [String] the command output
+    # @return [Git::TagInfo, Git::TagDeleteResult] TagInfo when creating a tag,
+    #   TagDeleteResult when deleting a tag
     #
     def tag(name, *args)
       opts = args.last.is_a?(Hash) ? args.pop : {}

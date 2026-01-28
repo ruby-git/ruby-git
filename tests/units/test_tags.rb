@@ -32,11 +32,11 @@ class TestTags < Test::Unit::TestCase
       assert(r2.tags.any? { |t| t.name == 'third' })
       assert(r2.tags.none? { |t| t.name == 'second' })
 
-      error = assert_raises ArgumentError do
+      error = assert_raises Git::FailedError do
         r2.add_tag('fourth', { a: true })
       end
 
-      assert_equal(error.message, 'Cannot create an annotated tag without a message.')
+      assert(!error.message.to_s.empty?, 'Expected error message to be present')
 
       r2.add_tag('fourth', { a: true, m: 'test message' })
 
