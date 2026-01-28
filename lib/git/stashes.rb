@@ -23,7 +23,7 @@ module Git
     #
     # @example Listing stashes with metadata
     #   git.stashes.all.each do |info|
-    #     puts "#{info.short_sha} #{info.name}: #{info.message}"
+    #     puts "#{info.short_oid} #{info.name}: #{info.message}"
     #   end
     #
     # @return [Array<Git::StashInfo>] array of stash info objects

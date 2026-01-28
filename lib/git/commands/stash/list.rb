@@ -19,7 +19,7 @@ module Git
       # @example List all stashes
       #   stashes = Git::Commands::Stash::List.new(execution_context).call
       #   stashes.each do |s|
-      #     puts "#{s.short_sha} #{s.name}: #{s.message} (#{s.author_name})"
+      #     puts "#{s.short_oid} #{s.name}: #{s.message} (#{s.author_name})"
       #   end
       #
       class List
@@ -67,8 +67,8 @@ module Git
 
         # Field indices for parsed output
         module Fields
-          SHA = 0
-          SHORT_SHA = 1
+          OID = 0
+          SHORT_OID = 1
           REFLOG = 2
           MESSAGE = 3
           AUTHOR_NAME = 4
@@ -143,8 +143,8 @@ module Git
           {
             index: index,
             name: parts[Fields::REFLOG],
-            sha: parts[Fields::SHA],
-            short_sha: parts[Fields::SHORT_SHA],
+            oid: parts[Fields::OID],
+            short_oid: parts[Fields::SHORT_OID],
             branch: extract_branch(parts[Fields::MESSAGE]),
             message: parts[Fields::MESSAGE],
             author_name: parts[Fields::AUTHOR_NAME],
