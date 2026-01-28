@@ -5,6 +5,106 @@
 
 # Change Log
 
+## [5.0.0](https://github.com/ruby-git/ruby-git/compare/v4.1.2...v5.0.0) (2026-01-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* This is a breaking API change for users accessing `fsck_object.sha`. Use `fsck_object.oid` instead.
+* force: true is now required to remove files with local modifications
+* The .path accessor has been removed. Use .to_s instead:   - repo.dir.path → repo.dir.to_s   - repo.index.path → repo.index.to_s   - repo.repo.path → repo.repo.to_s
+
+### Features
+
+* Add Git::BranchInfo value object ([b9b6168](https://github.com/ruby-git/ruby-git/commit/b9b6168b832ef82589a538e5fa467982a8d594f8))
+* Add Git::Commands::Branch::List command ([d1a0230](https://github.com/ruby-git/ruby-git/commit/d1a02307b069e4dace9ae52ea025c6713b251665))
+* Add support for git fsck command ([96a0958](https://github.com/ruby-git/ruby-git/commit/96a09588f94ad270cae6e9e3c14fe39d8b141fa1)), closes [#218](https://github.com/ruby-git/ruby-git/issues/218)
+* Introduce Git::ExecutionContext and Git::Repository classes ([6163fa3](https://github.com/ruby-git/ruby-git/commit/6163fa371e08b95bcb59774919c035a53ef8fab2))
+* Migrate mv command to new architecture (Phase 2) ([ffce1c0](https://github.com/ruby-git/ruby-git/commit/ffce1c0e26560b07e0512ebaec0be9c76e7be2fe))
+
+
+### Bug Fixes
+
+* **commands:** Add required validation for variadic positionals ([f2e9380](https://github.com/ruby-git/ruby-git/commit/f2e9380a5c0a569a816d5118c5249af12dd2a23e))
+* Disable interactive editor to prevent process hanging ([49e28bc](https://github.com/ruby-git/ruby-git/commit/49e28bc211ddffe1fc3750ff5d85bc21374c0faf)), closes [#953](https://github.com/ruby-git/ruby-git/issues/953)
+* Render arguments in definition order instead of grouped by type ([cbdb482](https://github.com/ruby-git/ruby-git/commit/cbdb4822d9bb36719842439e19203d7705561a65))
+
+
+### Other Changes
+
+* Add architectural insight about option semantics vs ergonomics ([e077820](https://github.com/ruby-git/ruby-git/commit/e07782026c9b8243562f0a11c29882ca58fbaa3b))
+* Add architectural insights from branch delete migration ([a7e470b](https://github.com/ruby-git/ruby-git/commit/a7e470baca49e191ff66ed9f44f1f122e02dde31))
+* Add architectural insights from branch move implementation ([68b762a](https://github.com/ruby-git/ruby-git/commit/68b762a8d2110e0a900adab9424a4b7d0865c0d5))
+* Add architectural insights from checkout migration ([e4da8ce](https://github.com/ruby-git/ruby-git/commit/e4da8ce944f855cc59ceb886677f2a61aaaec929))
+* Add branch copy command class for copying branches ([e329654](https://github.com/ruby-git/ruby-git/commit/e329654bb81439724c52ec5cd90d6594413113e3))
+* Add comprehensive PR readiness prompt for AI agents ([01ed5c1](https://github.com/ruby-git/ruby-git/commit/01ed5c1adc777404ec61eda7dd8dff7e9cde5cf7))
+* Add multi_valued option to value and inline_value in Arguments DSL ([d12d795](https://github.com/ruby-git/ruby-git/commit/d12d7952d8c2067bc6c905c9355b4511208783f1))
+* Add RSpec integration test infrastructure ([0c364a8](https://github.com/ruby-git/ruby-git/commit/0c364a8df24a7f9f194d424eb03d93b6f3981e52))
+* Add RSpec tests for Git::Branch dual-mode initialization ([94d11bb](https://github.com/ruby-git/ruby-git/commit/94d11bb53efd2edefd23858d5758813a0c6f0558))
+* Add tag-related classes to main git.rb requires ([d94741f](https://github.com/ruby-git/ruby-git/commit/d94741fda3a164e42a569e180c790d60e5d0dea5))
+* Add test-verbose script for debugging test execution ([5b3041f](https://github.com/ruby-git/ruby-git/commit/5b3041fe782ec72b6c1ba7d25f61904b8ec7faf8))
+* Address additional copilot review feedback ([5f79882](https://github.com/ruby-git/ruby-git/commit/5f798824460a8ba13b2a672a63ae840be4d81723))
+* Address copilot review comments ([15cc7b0](https://github.com/ruby-git/ruby-git/commit/15cc7b081f9ae3c37b83fd737e0b6d87ae0e647d))
+* **add:** Use Options DSL for argument building ([a8b3236](https://github.com/ruby-git/ruby-git/commit/a8b32369607e53b30f3cfed601be23de7c619960))
+* **arguments:** Add allow_nil option for positional arguments ([c2280b2](https://github.com/ruby-git/ruby-git/commit/c2280b221ec6c5b987b7634ede5f5fc2f954b9ac))
+* **arguments:** Add required and allow_nil parameters to DSL ([4ce91fb](https://github.com/ruby-git/ruby-git/commit/4ce91fb4b7c0038f55390992908d59bf1da3ce4e))
+* **arguments:** Support ruby-like positional allocation with optional + variadic ([5e02bbf](https://github.com/ruby-git/ruby-git/commit/5e02bbf5a6028dcd2f8592fc44ac58522884c072))
+* **base:** Simplify path resolution and init flow ([3badcc7](https://github.com/ruby-git/ruby-git/commit/3badcc79505cffba55953c2a2047999fc9a27ba3))
+* **branch:** Add move command class for branch renaming ([97625e6](https://github.com/ruby-git/ruby-git/commit/97625e65a689303cd3763f129aac196257a5455f))
+* **branch:** Add target_oid and upstream attributes to BranchInfo ([4a0814a](https://github.com/ruby-git/ruby-git/commit/4a0814ac348c23141c703b0be4320b0887b0184f)), closes [#962](https://github.com/ruby-git/ruby-git/issues/962)
+* Capture learnings from implementing stash commands ([84abd3b](https://github.com/ruby-git/ruby-git/commit/84abd3b12994cdcc14b5ebb31d72a4ed44599831))
+* **clone:** Use Options DSL for argument building ([2e4047d](https://github.com/ruby-git/ruby-git/commit/2e4047da960a8c1a48420215d2ef32bd14a0c579))
+* **commands:** Add Git::Commands::Options DSL ([21401e0](https://github.com/ruby-git/ruby-git/commit/21401e0c0f5d52fa90d6387767ecd776a9fd270f))
+* **commands:** Fix command classes and standardize signatures ([e26e562](https://github.com/ruby-git/ruby-git/commit/e26e562ab43c9a49d52ffd1b466b96a7e7bc9833))
+* **commands:** Standardize Yardoc for #call methods ([31a3f20](https://github.com/ruby-git/ruby-git/commit/31a3f208e69e0e77ea5038dfefa4b4649fcd85cd))
+* Configure prerelease releases ([94064ae](https://github.com/ruby-git/ruby-git/commit/94064ae4a90ab7448203bb59c0a4545efd8bb72e))
+* Document architectural insights from Branch::List migration ([52f322c](https://github.com/ruby-git/ruby-git/commit/52f322cb01b9e27df305e3dd8b4efbd8324cf1f4))
+* Enable option validation in Add and Fsck commands ([37aa0d5](https://github.com/ruby-git/ruby-git/commit/37aa0d5b4f513f30ff7a7d6fecff8c78a7a5a915))
+* Enhance Arguments DSL with new features ([88e6d5d](https://github.com/ruby-git/ruby-git/commit/88e6d5df2c1867ce2484de8f4c7a61ff3b2c77d9))
+* Establish method signature convention for Git::Commands::* #call ([d1e103c](https://github.com/ruby-git/ruby-git/commit/d1e103cb35a27abe8d18e7f8c67257595af52eec))
+* Exclude spec/**/* from Metrics/BlockLength ([1cc1001](https://github.com/ruby-git/ruby-git/commit/1cc10012a3a0c59db046aa5c9d7b5b3c86bbdb8f))
+* Extract branch creation to Git::Commands::Branch::Create ([6252090](https://github.com/ruby-git/ruby-git/commit/62520904a39bcec9490bbf51bec991d351812a12))
+* Extract branch delete to Git::Commands::Branch::Delete ([90bb682](https://github.com/ruby-git/ruby-git/commit/90bb68271ac93329f85fb5f5ecfef839421f088f))
+* Extract git add to Git::Commands::Add ([baf2a76](https://github.com/ruby-git/ruby-git/commit/baf2a761e3e165be59c185f665c02424dc05cd9e))
+* Extract git fsck to Git::Commands::Fsck ([ad28871](https://github.com/ruby-git/ruby-git/commit/ad2887103ff99ac17faa907ba5fa730da9e71f1e))
+* Finalize architectural redesign documentation for PR ([40255b3](https://github.com/ruby-git/ruby-git/commit/40255b3f5e7f27b86543cf11d692cdfcfc74a16f))
+* Fix tagger_date regex to handle both timezone offset and Z format ([5d4686b](https://github.com/ruby-git/ruby-git/commit/5d4686b6395b933d4184a783b57dab682037c1dd))
+* **fsck:** Use Options DSL for argument building ([7464439](https://github.com/ruby-git/ruby-git/commit/7464439b8915640563e1c4d609f206856ed9bc73))
+* Implement Branch::SetUpstream and Branch::UnsetUpstream commands ([bf1f634](https://github.com/ruby-git/ruby-git/commit/bf1f634f6fd19cc05d8ffcfcee5ad641aa32c783))
+* Implement Ruby-style positional argument mapping in Arguments DSL ([895f9f2](https://github.com/ruby-git/ruby-git/commit/895f9f2b2621ebaf2252bcdba8c8098f0dbe9b69))
+* Implement tag delete command with structured result objects ([5908a0e](https://github.com/ruby-git/ruby-git/commit/5908a0ef25a837482f45826e3128f52e885fd799))
+* Make Git::Lib#command public for Command classes ([e946d04](https://github.com/ruby-git/ruby-git/commit/e946d043e4fcab192e4d7761db9fa836dae51366))
+* Mark main releases as prerelease ([1dca79a](https://github.com/ruby-git/ruby-git/commit/1dca79a8cb4827e4954f04d2918ccfb8a1737dba))
+* Merge Exclude arrays with inherited rubocop config ([0d7b582](https://github.com/ruby-git/ruby-git/commit/0d7b58260c571f8371b133f0b36fcb6a84c4e618))
+* Migrate checkout to Commands architecture ([89b79ed](https://github.com/ruby-git/ruby-git/commit/89b79ed6f827f90987ff8cd7709edcbcdf6ca1df))
+* Migrate clean command to Git::Commands::Clean ([87e6bcb](https://github.com/ruby-git/ruby-git/commit/87e6bcbe17aabac4173fc512857e2fb7b1f8c191))
+* Migrate commit command to Git::Commands::Commit ([03cb887](https://github.com/ruby-git/ruby-git/commit/03cb887e8dd52e82e0860485d732011e595d7da1))
+* Migrate git clone to Git::Commands::Clone ([a16d14a](https://github.com/ruby-git/ruby-git/commit/a16d14afc5bc1447ecd9c56cb39ecf85c206c87c))
+* Migrate git stash commands to new architecture ([cd83218](https://github.com/ruby-git/ruby-git/commit/cd83218a64313f581b93a8ff103f0a252d4e9fed))
+* Migrate git tag commands to new architecture ([717fca2](https://github.com/ruby-git/ruby-git/commit/717fca25d48663fc620ec71aa4a3b4b27fb1bb13))
+* Migrate init command to new architecture ([482e5f0](https://github.com/ruby-git/ruby-git/commit/482e5f0d7e4b2b1aaab2dc359a781fc283342731))
+* Migrate merge commands to Commands layer ([e6e3866](https://github.com/ruby-git/ruby-git/commit/e6e386636bf6e0c69115e15fa0ee5368de80d403))
+* Migrate reset command to Git::Commands::Reset ([6e3cca7](https://github.com/ruby-git/ruby-git/commit/6e3cca72536c57f8aea06ff91f04c451ea86a4f8))
+* Migrate rm command to Git::Commands::Rm ([61d8940](https://github.com/ruby-git/ruby-git/commit/61d894047c1e7a899791cd9224ae118395d82ec2))
+* Move static command names into Arguments.define ([175fe0e](https://github.com/ruby-git/ruby-git/commit/175fe0eeaaf6d16bf6d29c775680be71b0a919bd)), closes [#949](https://github.com/ruby-git/ruby-git/issues/949)
+* **options:** Add nil validation for variadic positional arguments ([5b793da](https://github.com/ruby-git/ruby-git/commit/5b793da11a24408701e6b8e5fd69524484f00977))
+* Populate TagInfo with rich metadata using git tag --format ([c8c455d](https://github.com/ruby-git/ruby-git/commit/c8c455dd3255a62e1012aec23fd8edc573592688)), closes [#955](https://github.com/ruby-git/ruby-git/issues/955)
+* Rename FsckObject sha to oid ([c84d317](https://github.com/ruby-git/ruby-git/commit/c84d3175b2000c7566bc022cc85cacb09d0a8aa5)), closes [#967](https://github.com/ruby-git/ruby-git/issues/967)
+* Rename Options to Arguments and OPTIONS to ARGS ([b76c9c3](https://github.com/ruby-git/ruby-git/commit/b76c9c388d43fe26d7a7be0c4eaeaeafea0a6abb))
+* Rename StashInfo sha/short_sha to oid/short_oid ([789cb41](https://github.com/ruby-git/ruby-git/commit/789cb41c5025ada7d8cd751038210ca5b34442e3)), closes [#966](https://github.com/ruby-git/ruby-git/issues/966)
+* Rename TagInfo sha to oid and add target_oid ([39ca36b](https://github.com/ruby-git/ruby-git/commit/39ca36bd813fe60573dabb85bb7a9000843c1f44)), closes [#963](https://github.com/ruby-git/ruby-git/issues/963)
+* Replace path wrapper classes with Pathname ([c7b7b1f](https://github.com/ruby-git/ruby-git/commit/c7b7b1f1e782533140ba22b831385097da2e3d09))
+* Restructure CONTRIBUTING.md and link from copilot-instructions ([7e3481b](https://github.com/ruby-git/ruby-git/commit/7e3481b42b306ec00111cc91d6bd8ab282766ee8))
+* Return BranchInfo from Branch::Create command ([a23f384](https://github.com/ruby-git/ruby-git/commit/a23f384602861abc1ad7263405ade42039a969f2))
+* Return TagInfo from Tag::Create command ([2dde55c](https://github.com/ruby-git/ruby-git/commit/2dde55cfb8f45fcc8043b5058ddeb0938511eab5))
+* Set up RSpec testing environment ([452929a](https://github.com/ruby-git/ruby-git/commit/452929aa63d2fb022a107e441417e777de5c038f))
+* Silence superfluous test output ([1da9f66](https://github.com/ruby-git/ruby-git/commit/1da9f669409b9dfbfd248edac66d9e71aa9b0a47))
+* Update architecture documentation for redesign phases and public API ([8544cc7](https://github.com/ruby-git/ruby-git/commit/8544cc7209d41428b5a52733b3a3b3324739c5af))
+* Update architecture implementation plan with branch create insights ([1736617](https://github.com/ruby-git/ruby-git/commit/1736617aa8cfd76d7df5a3131324bc39b1763c5a))
+* Update branch consumers to use BranchInfo ([dffc94a](https://github.com/ruby-git/ruby-git/commit/dffc94ab0a051541a2c2c489844f2dc4362e7167))
+* Update Git::Commands::* to use keyword arguments ([ece055d](https://github.com/ruby-git/ruby-git/commit/ece055dfb0aa9aadc1ac3a99de1315c11f470574))
+* Use Branch::List command in Git::Lib#branches_all ([d872f17](https://github.com/ruby-git/ruby-git/commit/d872f17332f0f872926e7ba3a27608cb4705986b))
+
 ## [4.1.2](https://github.com/ruby-git/ruby-git/compare/v4.1.1...v4.1.2) (2026-01-10)
 
 
