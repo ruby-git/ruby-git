@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Stash::Apply do
   let(:command) { described_class.new(execution_context) }
   let(:first_stash_info) do
     Git::StashInfo.new(
-      index: 0, name: 'stash@{0}', sha: 'abc123', short_sha: 'abc123',
+      index: 0, name: 'stash@{0}', oid: 'abc123', short_oid: 'abc123',
       branch: 'main', message: 'WIP on main: test',
       author_name: 'Test', author_email: 'test@example.com', author_date: '2024-01-01',
       committer_name: 'Test', committer_email: 'test@example.com', committer_date: '2024-01-01'
@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Stash::Apply do
   end
   let(:second_stash_info) do
     Git::StashInfo.new(
-      index: 1, name: 'stash@{1}', sha: 'def456', short_sha: 'def456',
+      index: 1, name: 'stash@{1}', oid: 'def456', short_oid: 'def456',
       branch: 'main', message: 'WIP on main: other',
       author_name: 'Test', author_email: 'test@example.com', author_date: '2024-01-01',
       committer_name: 'Test', committer_email: 'test@example.com', committer_date: '2024-01-01'
@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Stash::Apply do
   end
   let(:third_stash_info) do
     Git::StashInfo.new(
-      index: 2, name: 'stash@{2}', sha: 'ghi789', short_sha: 'ghi789',
+      index: 2, name: 'stash@{2}', oid: 'ghi789', short_oid: 'ghi789',
       branch: 'main', message: 'WIP on main: third',
       author_name: 'Test', author_email: 'test@example.com', author_date: '2024-01-01',
       committer_name: 'Test', committer_email: 'test@example.com', committer_date: '2024-01-01'

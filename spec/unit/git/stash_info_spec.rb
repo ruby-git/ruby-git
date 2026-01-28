@@ -9,8 +9,8 @@ RSpec.describe Git::StashInfo do
     {
       index: 0,
       name: 'stash@{0}',
-      sha: 'abc1234567890abcdef1234567890abcdef123456',
-      short_sha: 'abc1234',
+      oid: 'abc1234567890abcdef1234567890abcdef123456',
+      short_oid: 'abc1234',
       branch: 'main',
       message: 'WIP on main: abc123 Initial commit',
       author_name: 'Test Author',
@@ -28,8 +28,8 @@ RSpec.describe Git::StashInfo do
 
       expect(info.index).to eq(0)
       expect(info.name).to eq('stash@{0}')
-      expect(info.sha).to eq('abc1234567890abcdef1234567890abcdef123456')
-      expect(info.short_sha).to eq('abc1234')
+      expect(info.oid).to eq('abc1234567890abcdef1234567890abcdef123456')
+      expect(info.short_oid).to eq('abc1234')
       expect(info.branch).to eq('main')
       expect(info.message).to eq('WIP on main: abc123 Initial commit')
       expect(info.author_name).to eq('Test Author')
@@ -90,11 +90,11 @@ RSpec.describe Git::StashInfo do
 
     it 'supports Ruby pattern matching with all attributes' do
       case info
-      in [idx, name, sha, short_sha, branch, message, *rest]
+      in [idx, name, oid, short_oid, branch, message, *rest]
         expect(idx).to eq(0)
         expect(name).to eq('stash@{0}')
-        expect(sha).to eq('abc1234567890abcdef1234567890abcdef123456')
-        expect(short_sha).to eq('abc1234')
+        expect(oid).to eq('abc1234567890abcdef1234567890abcdef123456')
+        expect(short_oid).to eq('abc1234')
         expect(branch).to eq('main')
         expect(message).to eq('WIP on main: abc123 Initial commit')
         expect(rest.length).to eq(6) # remaining author/committer fields

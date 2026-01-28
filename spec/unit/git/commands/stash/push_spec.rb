@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Stash::Push do
   let(:command) { described_class.new(execution_context) }
   let(:stash_info) do
     Git::StashInfo.new(
-      index: 0, name: 'stash@{0}', sha: 'abc123', short_sha: 'abc123',
+      index: 0, name: 'stash@{0}', oid: 'abc123', short_oid: 'abc123',
       branch: 'main', message: 'WIP on main: test',
       author_name: 'Test', author_email: 'test@example.com', author_date: '2024-01-01',
       committer_name: 'Test', committer_email: 'test@example.com', committer_date: '2024-01-01'

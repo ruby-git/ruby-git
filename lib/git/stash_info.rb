@@ -14,8 +14,8 @@ module Git
   #   info = Git::StashInfo.new(
   #     index: 0,
   #     name: 'stash@{0}',
-  #     sha: 'abc123def456789...',
-  #     short_sha: 'abc123d',
+  #     oid: 'abc123def456789...',
+  #     short_oid: 'abc123d',
   #     branch: 'main',
   #     message: 'WIP on main: abc123 Initial commit',
   #     author_name: 'Jane Doe',
@@ -28,8 +28,8 @@ module Git
   #
   #   info.index           # => 0
   #   info.name            # => 'stash@{0}'
-  #   info.sha             # => 'abc123def456789...'
-  #   info.short_sha       # => 'abc123d'
+  #   info.oid             # => 'abc123def456789...'
+  #   info.short_oid       # => 'abc123d'
   #   info.branch          # => 'main'
   #   info.message         # => 'WIP on main: abc123 Initial commit'
   #   info.author_name     # => 'Jane Doe'
@@ -45,11 +45,11 @@ module Git
   # @!attribute [r] name
   #   @return [String] the stash reference name (e.g., 'stash@\\{0\\}')
   #
-  # @!attribute [r] sha
-  #   @return [String] the full 40-character commit SHA of the stash
+  # @!attribute [r] oid
+  #   @return [String] the full 40-character object identifier of the stash
   #
-  # @!attribute [r] short_sha
-  #   @return [String] the abbreviated commit SHA (typically 7 characters)
+  # @!attribute [r] short_oid
+  #   @return [String] the abbreviated object identifier (typically 7 characters)
   #
   # @!attribute [r] branch
   #   @return [String, nil] the branch name where the stash was created,
@@ -79,8 +79,8 @@ module Git
   StashInfo = Data.define(
     :index,
     :name,
-    :sha,
-    :short_sha,
+    :oid,
+    :short_oid,
     :branch,
     :message,
     :author_name,

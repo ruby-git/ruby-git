@@ -10,8 +10,8 @@ RSpec.describe Git::Commands::Stash::List do
   # Default stash line attributes for building test data
   let(:default_stash_attrs) do
     {
-      sha: 'abc1234567890abcdef1234567890abcdef123456',
-      short_sha: 'abc1234',
+      oid: 'abc1234567890abcdef1234567890abcdef123456',
+      short_oid: 'abc1234',
       reflog: 'stash@{0}',
       message: 'WIP on main: abc1234 Initial commit',
       author_name: 'Test Author',
@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Stash::List do
   # Helper to build stash format line with unit separator (0x1F)
   def stash_line(attrs)
     [
-      attrs[:sha], attrs[:short_sha], attrs[:reflog], attrs[:message],
+      attrs[:oid], attrs[:short_oid], attrs[:reflog], attrs[:message],
       attrs[:author_name], attrs[:author_email], attrs[:author_date],
       attrs[:committer_name], attrs[:committer_email], attrs[:committer_date]
     ].join("\x1f")
@@ -48,20 +48,20 @@ RSpec.describe Git::Commands::Stash::List do
       let(:stash_output) do
         [
           stash_line(default_stash_attrs.merge(
-                       sha: 'abc1234567890abcdef1234567890abcdef123456',
-                       short_sha: 'abc1234',
+                       oid: 'abc1234567890abcdef1234567890abcdef123456',
+                       short_oid: 'abc1234',
                        reflog: 'stash@{0}',
                        message: 'WIP on main: abc1234 Initial commit'
                      )),
           stash_line(default_stash_attrs.merge(
-                       sha: 'def5678901234567890abcdef1234567890abcdef',
-                       short_sha: 'def5678',
+                       oid: 'def5678901234567890abcdef1234567890abcdef',
+                       short_oid: 'def5678',
                        reflog: 'stash@{1}',
                        message: 'On feature: def5678 Add feature'
                      )),
           stash_line(default_stash_attrs.merge(
-                       sha: '9876543210abcdef1234567890abcdef12345678',
-                       short_sha: '9876543',
+                       oid: '9876543210abcdef1234567890abcdef12345678',
+                       short_oid: '9876543',
                        reflog: 'stash@{2}',
                        message: 'WIP on bugfix: 9876543 Fix bug'
                      ))
@@ -103,10 +103,10 @@ RSpec.describe Git::Commands::Stash::List do
           .with('stash', 'list', format_arg).and_return(stash_output)
         result = command.call
 
-        expect(result[0].sha).to eq('abc1234567890abcdef1234567890abcdef123456')
-        expect(result[0].short_sha).to eq('abc1234')
-        expect(result[1].sha).to eq('def5678901234567890abcdef1234567890abcdef')
-        expect(result[1].short_sha).to eq('def5678')
+        expect(result[0].oid).to eq('abc1234567890abcdef1234567890abcdef123456')
+        expect(result[0].short_oid).to eq('abc1234')
+        expect(result[1].oid).to eq('def5678901234567890abcdef1234567890abcdef')
+        expect(result[1].short_oid).to eq('def5678')
       end
 
       it 'parses branch name correctly' do
@@ -265,7 +265,7 @@ RSpec.describe Git::Commands::Stash::List do
     context 'with unexpected output format' do
       it 'raises UnexpectedResultError when field count is wrong' do
         # Malformed line with only 5 fields instead of 10
-        malformed_line = %w[sha short_sha reflog message author_name].join("\x1f")
+        malformed_line = %w[oid short_oid reflog message author_name].join("\x1f")
         expect(execution_context).to receive(:command_lines)
           .with('stash', 'list', format_arg).and_return([malformed_line])
 
