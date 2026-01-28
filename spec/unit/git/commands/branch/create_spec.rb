@@ -10,7 +10,14 @@ RSpec.describe Git::Commands::Branch::Create do
 
   # Create a BranchInfo for testing
   def build_branch_info(branch_name)
-    Git::BranchInfo.new(refname: branch_name, current: false, worktree: false, symref: nil)
+    Git::BranchInfo.new(
+      refname: branch_name,
+      target_oid: nil,
+      current: false,
+      worktree: false,
+      symref: nil,
+      upstream: nil
+    )
   end
 
   # Set up mock for Branch::List command

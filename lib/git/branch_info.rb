@@ -41,9 +41,11 @@ module Git
   # @example Creating from git branch output
   #   info = Git::BranchInfo.new(
   #     refname: 'main',
+  #     target_oid: 'abc123def456789012345678901234567890abcd',
   #     current: true,
   #     worktree: false,
-  #     symref: nil
+  #     symref: nil,
+  #     upstream: nil
   #   )
   #   info.current?     #=> true
   #   info.remote?      #=> false
@@ -52,20 +54,82 @@ module Git
   # @example Remote branch
   #   info = Git::BranchInfo.new(
   #     refname: 'remotes/origin/main',
+  #     target_oid: 'abc123def456789012345678901234567890abcd',
   #     current: false,
   #     worktree: false,
-  #     symref: nil
+  #     symref: nil,
+  #     upstream: nil
   #   )
   #   info.remote?      #=> true
   #   info.remote_name  #=> 'origin'
   #   info.short_name   #=> 'main'
+  #
+  # @example Local branch with upstream tracking
+  #   upstream_info = Git::BranchInfo.new(
+  #     refname: 'remotes/origin/main',
+  #     target_oid: 'abc123def456789012345678901234567890abcd',
+  #     current: false,
+  #     worktree: false,
+  #     symref: nil,
+  #     upstream: nil
+  #   )
+  #   info = Git::BranchInfo.new(
+  #     refname: 'main',
+  #     target_oid: 'abc123def456789012345678901234567890abcd',
+  #     current: true,
+  #     worktree: false,
+  #     symref: nil,
+  #     upstream: upstream_info
+  #   )
+  #   info.upstream.remote_name  #=> 'origin'
   #
   # @see Git::Branch for the full-featured branch object with operations
   # @see Git::Commands::Branch::List for the command that produces these
   #
   # @api public
   #
-  BranchInfo = Data.define(:refname, :current, :worktree, :symref) do
+  # @!attribute [r] refname
+  #
+  #   The full reference name of the branch
+  #
+  #   @return [String] the branch refname (e.g., 'main', 'remotes/origin/main')
+  #
+  # @!attribute [r] target_oid
+  #
+  #   The commit object ID (SHA) that this branch points to
+  #
+  #   @return [String, nil] the full 40-character object ID, or nil if unavailable
+  #
+  # @!attribute [r] current
+  #
+  #   Whether this branch is currently checked out in the current worktree
+  #
+  #   @return [Boolean] true if this is the current branch
+  #
+  # @!attribute [r] worktree
+  #
+  #   Whether this branch is checked out in another linked worktree
+  #
+  #   @return [Boolean] true if checked out in a different worktree
+  #
+  # @!attribute [r] symref
+  #
+  #   The target reference if this is a symbolic reference
+  #
+  #   @return [String, nil] the target ref (e.g., 'refs/heads/main'), or nil if not a symref
+  #
+  # @!attribute [r] upstream
+  #
+  #   The configured upstream/tracking branch
+  #
+  #   @return [Git::BranchInfo, nil] the upstream branch info, or nil if no upstream is configured
+  #
+  #   @note Remote-tracking branches (e.g., 'origin/main') have upstream: nil
+  #
+  #   @note When upstream exists but the remote-tracking branch hasn't been fetched,
+  #     the upstream's target_oid may be nil
+  #
+  BranchInfo = Data.define(:refname, :target_oid, :current, :worktree, :symref, :upstream) do
     # @return [Boolean] true if this is the currently checked out branch
     def current? = current
 

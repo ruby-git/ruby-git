@@ -838,9 +838,11 @@ module Git
     def branch(branch_name = current_branch)
       branch_info = Git::BranchInfo.new(
         refname: branch_name,
+        target_oid: nil,
         current: false,
         worktree: false,
-        symref: nil
+        symref: nil,
+        upstream: nil
       )
       Git::Branch.new(self, branch_info)
     end

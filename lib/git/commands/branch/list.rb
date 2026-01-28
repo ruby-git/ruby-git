@@ -9,6 +9,7 @@ module Git
       # Implements the `git branch --list` command
       #
       # This command lists existing branches with optional filtering and formatting.
+      # Uses `--format` to retrieve structured data including target OID and upstream.
       #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
@@ -31,6 +32,22 @@ module Git
       #   feature_branches = list.call(patterns: 'feature/*')
       #
       class List
+        # Format string for git branch --format
+        #
+        # Fields (pipe-delimited):
+        # 1. refname - full ref name (e.g., refs/heads/main, refs/remotes/origin/main)
+        # 2. objectname - full SHA of the commit the branch points to
+        # 3. HEAD - '*' if current branch, empty otherwise
+        # 4. worktreepath - path if checked out in another worktree, empty otherwise
+        # 5. symref - target ref if symbolic reference, empty otherwise
+        # 6. upstream - full upstream ref (e.g., refs/remotes/origin/main), empty if none
+        #
+        # @api private
+        FORMAT_STRING = '%(refname)|%(objectname)|%(HEAD)|%(worktreepath)|%(symref)|%(upstream)'
+
+        # Delimiter used in format output
+        FIELD_DELIMITER = '|'
+
         # Arguments DSL for building command-line arguments
         #
         # NOTE: The order of definitions here determines the order of arguments
@@ -39,6 +56,7 @@ module Git
         ARGS = Arguments.define do
           static 'branch'
           static '--list'
+          inline_value :format
           flag :all, args: '-a'
           flag :remotes, args: '-r'
           inline_value :sort, multi_valued: true
@@ -49,37 +67,6 @@ module Git
           value :points_at
           positional :patterns, variadic: true
         end.freeze
-
-        # Regular expression for parsing git branch output
-        #
-        # Matches the format of each line in `git branch` output, capturing:
-        # - The prefix indicating branch state (current, checked out in worktree, or neither)
-        # - The branch reference name
-        # - Optional symbolic reference target
-        #
-        BRANCH_LINE_REGEXP = /
-          ^
-            # Prefix indicates if this branch is checked out. The prefix is one of:
-            (?:
-              (?<current>\*[[:blank:]]) |  # Current branch (checked out in the current worktree)
-              (?<worktree>\+[[:blank:]]) | # Branch checked out in a different worktree
-              [[:blank:]]{2}               # Branch not checked out
-            )
-
-            # The branch's full refname
-            (?:
-              (?<not_a_branch>\(not[[:blank:]]a[[:blank:]]branch\)) |
-               (?:\(HEAD[[:blank:]]detached[[:blank:]]at[[:blank:]](?<detached_ref>[^)]+)\)) |
-              (?<refname>[^[[:blank:]]]+)
-            )
-
-            # Optional symref
-            # If this ref is a symbolic reference, this is the ref referenced
-            (?:
-              [[:blank:]]->[[:blank:]](?<symref>.*)
-            )?
-          $
-        /x
 
         # Initialize the List command
         #
@@ -131,94 +118,120 @@ module Git
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
-        # @raise [Git::UnexpectedResultError] if git output format is unexpected
-        #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.build(*, format: FORMAT_STRING, **)
           lines = @execution_context.command_lines(*args)
-          parse_branches(lines, args)
+          parse_branches(lines)
         end
 
         private
 
-        # Parse the output lines from git branch
+        # Parse the output lines from git branch --format
         #
         # @param lines [Array<String>] output lines from git branch command
-        # @param args [Array<String>] the arguments passed to git branch
-        # @return [Array<Array>] parsed branch data
+        # @return [Array<Git::BranchInfo>] parsed branch data
         #
-        def parse_branches(lines, args)
-          lines.each_with_index.filter_map do |line, index|
-            parse_branch_line(line, index, lines, args)
-          end
+        def parse_branches(lines)
+          lines.filter_map { |line| parse_branch_line(line) }
         end
 
-        # Parse a single branch line
+        # Parse a single formatted branch line
         #
-        # @param line [String] the line to parse
-        # @param index [Integer] the line index (for error messages)
-        # @param all_lines [Array<String>] all output lines (for error messages)
-        # @param args [Array<String>] the arguments passed to git branch
-        # @return [Array, nil] parsed branch data or nil if line should be filtered
+        # @param line [String] the line to parse (pipe-delimited fields)
+        # @return [Git::BranchInfo, nil] branch info object, or nil if line should be skipped
         #
-        def parse_branch_line(line, index, all_lines, args)
-          match_data = match_branch_line(line, index, all_lines, args)
+        def parse_branch_line(line)
+          fields = line.split(FIELD_DELIMITER, 6)
 
-          # Filter out non-branch lines (detached HEAD, etc.)
-          return nil if match_data[:not_a_branch] || match_data[:detached_ref]
+          return nil if non_branch_entry?(fields[0])
 
-          format_branch_data(match_data)
+          build_branch_info(fields)
         end
 
-        # Match a branch line against the expected format
+        # Build a BranchInfo from parsed fields
         #
-        # @param line [String] the line to match
-        # @param index [Integer] the line index (for error messages)
-        # @param all_lines [Array<String>] all output lines (for error messages)
-        # @param args [Array<String>] the arguments passed to git branch
-        # @return [MatchData] the match data
-        # @raise [Git::UnexpectedResultError] if line doesn't match expected format
+        # @param fields [Array<String>] the parsed fields: [refname, objectname, head, worktreepath, symref, upstream]
+        # @return [Git::BranchInfo] the branch info object
         #
-        def match_branch_line(line, index, all_lines, args)
-          match_data = line.match(BRANCH_LINE_REGEXP)
-          raise Git::UnexpectedResultError, unexpected_branch_line_error(all_lines, line, index, args) unless match_data
+        def build_branch_info(fields)
+          raw_refname, objectname, head, worktreepath, symref, upstream = fields
+          current = head == '*'
 
-          match_data
-        end
-
-        # Format match data into BranchInfo object
-        #
-        # @param match_data [MatchData] the regex match data
-        # @return [Git::BranchInfo] branch info object
-        #
-        def format_branch_data(match_data)
           Git::BranchInfo.new(
-            refname: match_data[:refname],
-            current: !match_data[:current].nil?,
-            worktree: !match_data[:worktree].nil?,
-            symref: match_data[:symref]
+            refname: normalize_refname(raw_refname),
+            target_oid: presence(objectname),
+            current: current,
+            worktree: in_other_worktree?(worktreepath, current),
+            symref: presence(symref),
+            upstream: build_upstream_info(upstream)
           )
         end
 
-        # Generate error message for unexpected branch line format
+        # Check if the refname represents a detached HEAD state or non-branch entry
         #
-        # @param lines [Array<String>] all output lines
-        # @param line [String] the problematic line
-        # @param index [Integer] the line index
-        # @param args [Array<String>] the arguments passed to git (includes command name)
-        # @return [String] formatted error message
+        # Git outputs special entries for detached HEAD and non-branch states:
+        # - "(HEAD detached at <ref>)" when in detached HEAD state
+        # - "(not a branch)" for non-branch entries
         #
-        def unexpected_branch_line_error(lines, line, index, args)
-          command_str = "git #{args.join(' ')}".strip
-          <<~ERROR
-            Unexpected line in output from `#{command_str}`, line #{index + 1}
+        # @param refname [String] the refname to check
+        # @return [Boolean] true if this is a non-branch entry
+        #
+        def non_branch_entry?(refname)
+          refname.match?(/^\(HEAD detached/) || refname.match?(/^\(not a branch\)/)
+        end
 
-            Full output:
-              #{lines.join("\n  ")}
+        # Normalize a full refname to the expected format
+        #
+        # Converts:
+        # - refs/heads/main -> main
+        # - refs/remotes/origin/main -> remotes/origin/main
+        #
+        # @param refname [String] the full refname from git
+        # @return [String] normalized refname
+        #
+        def normalize_refname(refname)
+          refname.sub(%r{^refs/heads/}, '').sub(%r{^refs/}, '')
+        end
 
-            Line #{index + 1}:
-              "#{line}"
-          ERROR
+        # Check if the branch is checked out in another worktree
+        #
+        # worktree is true when the branch is checked out in ANOTHER worktree
+        # (worktreepath is non-empty AND it's not the current branch)
+        #
+        # @param worktreepath [String, nil] the worktree path from git output
+        # @param current [Boolean] whether this is the current branch
+        # @return [Boolean] true if checked out in another worktree
+        #
+        def in_other_worktree?(worktreepath, current)
+          has_worktree = !worktreepath.nil? && !worktreepath.empty?
+          has_worktree && !current
+        end
+
+        # Build upstream BranchInfo from upstream refname
+        #
+        # @param upstream_ref [String, nil] the upstream ref (e.g., 'refs/remotes/origin/main')
+        # @return [Git::BranchInfo, nil] upstream branch info or nil
+        #
+        def build_upstream_info(upstream_ref)
+          return nil if upstream_ref.nil? || upstream_ref.empty?
+
+          Git::BranchInfo.new(
+            refname: normalize_refname(upstream_ref),
+            target_oid: nil, # We don't have upstream's OID from this format
+            current: false,
+            worktree: false,
+            symref: nil,
+            upstream: nil # Upstream branches don't have their own upstream in this context
+          )
+        end
+
+        # Return value if non-empty, nil otherwise
+        #
+        # @param value [String, nil] the value to check
+        # @return [String, nil] the value or nil
+        #
+        def presence(value)
+          value.nil? || value.empty? ? nil : value
         end
       end
     end
