@@ -27,9 +27,11 @@ module Git
       remote_tracking_branch = "#{@name}/#{branch}"
       branch_info = Git::BranchInfo.new(
         refname: remote_tracking_branch,
+        target_oid: nil,
         current: false,
         worktree: false,
-        symref: nil
+        symref: nil,
+        upstream: nil
       )
       Git::Branch.new(@base, branch_info)
     end

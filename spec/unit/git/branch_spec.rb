@@ -11,9 +11,11 @@ RSpec.describe Git::Branch do
       let(:branch_info) do
         Git::BranchInfo.new(
           refname: 'feature/my-feature',
+          target_oid: 'abc123',
           current: true,
           worktree: false,
-          symref: nil
+          symref: nil,
+          upstream: nil
         )
       end
 
@@ -36,9 +38,11 @@ RSpec.describe Git::Branch do
       let(:branch_info) do
         Git::BranchInfo.new(
           refname: 'remotes/origin/main',
+          target_oid: 'abc123',
           current: false,
           worktree: false,
-          symref: nil
+          symref: nil,
+          upstream: nil
         )
       end
 
@@ -94,9 +98,11 @@ RSpec.describe Git::Branch do
       let(:branch_info) do
         Git::BranchInfo.new(
           refname: refname,
+          target_oid: 'abc123',
           current: false,
           worktree: false,
-          symref: nil
+          symref: nil,
+          upstream: nil
         )
       end
 
