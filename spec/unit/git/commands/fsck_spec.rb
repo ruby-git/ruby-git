@@ -217,7 +217,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.dangling.size).to eq(1)
           expect(result.dangling.first.type).to eq(:blob)
-          expect(result.dangling.first.sha).to eq('1234567890abcdef1234567890abcdef12345678')
+          expect(result.dangling.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
         end
 
         it 'parses dangling objects with names' do
@@ -239,7 +239,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.missing.size).to eq(1)
           expect(result.missing.first.type).to eq(:tree)
-          expect(result.missing.first.sha).to eq('abcdef1234567890abcdef1234567890abcdef12')
+          expect(result.missing.first.oid).to eq('abcdef1234567890abcdef1234567890abcdef12')
         end
       end
 
@@ -252,7 +252,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.unreachable.size).to eq(1)
           expect(result.unreachable.first.type).to eq(:commit)
-          expect(result.unreachable.first.sha).to eq('fedcba0987654321fedcba0987654321fedcba09')
+          expect(result.unreachable.first.oid).to eq('fedcba0987654321fedcba0987654321fedcba09')
         end
       end
 
@@ -265,7 +265,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.warnings.size).to eq(1)
           expect(result.warnings.first.type).to eq(:commit)
-          expect(result.warnings.first.sha).to eq('1234567890abcdef1234567890abcdef12345678')
+          expect(result.warnings.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
           expect(result.warnings.first.message).to eq('invalid author/committer')
         end
       end
@@ -279,7 +279,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.root.size).to eq(1)
           expect(result.root.first.type).to eq(:commit)
-          expect(result.root.first.sha).to eq('1234567890abcdef1234567890abcdef12345678')
+          expect(result.root.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
         end
       end
 
@@ -293,7 +293,7 @@ RSpec.describe Git::Commands::Fsck do
 
           expect(result.tagged.size).to eq(1)
           expect(result.tagged.first.type).to eq(:commit)
-          expect(result.tagged.first.sha).to eq('abcdef1234567890abcdef1234567890abcdef12')
+          expect(result.tagged.first.oid).to eq('abcdef1234567890abcdef1234567890abcdef12')
           expect(result.tagged.first.name).to eq('v1.0.0')
         end
       end

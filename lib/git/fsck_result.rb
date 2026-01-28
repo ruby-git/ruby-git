@@ -85,7 +85,7 @@ module Git
     #
     # @example
     #   result = git.fsck
-    #   result.all_objects.each { |obj| puts obj.sha }
+    #   result.all_objects.each { |obj| puts obj.oid }
     #
     def all_objects
       dangling + missing + unreachable + warnings

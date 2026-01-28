@@ -689,7 +689,7 @@ module Git
     #
     #   @example Check repository integrity
     #     result = git.fsck
-    #     result.dangling.each { |obj| puts "#{obj.type}: #{obj.sha}" }
+    #     result.dangling.each { |obj| puts "#{obj.type}: #{obj.oid}" }
     #
     #   @example Check with strict mode and suppress dangling output
     #     result = git.fsck(strict: true, dangling: false)
@@ -700,7 +700,7 @@ module Git
     #
     #   @example List root commits
     #     result = git.fsck(root: true)
-    #     result.root.each { |obj| puts obj.sha }
+    #     result.root.each { |obj| puts obj.oid }
     #
     #   @example Check specific objects
     #     result = git.fsck('abc1234', 'def5678')

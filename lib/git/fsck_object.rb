@@ -13,9 +13,9 @@ module Git
     # @return [Symbol] one of :commit, :tree, :blob, or :tag
     attr_reader :type
 
-    # The SHA-1 hash of the object
-    # @return [String] the 40-character SHA-1 hash
-    attr_reader :sha
+    # The object identifier (OID) of the object
+    # @return [String] the 40-character object identifier
+    attr_reader :oid
 
     # A warning or error message associated with this object
     # @return [String, nil] the message, or nil if no message
@@ -28,21 +28,21 @@ module Git
     # Create a new FsckObject
     #
     # @param type [Symbol] the object type (:commit, :tree, :blob, or :tag)
-    # @param sha [String] the 40-character SHA-1 hash
+    # @param oid [String] the 40-character object identifier
     # @param message [String, nil] optional warning/error message
     # @param name [String, nil] optional name from --name-objects (e.g., "HEAD~2^2:src/")
     #
-    def initialize(type:, sha:, message: nil, name: nil)
+    def initialize(type:, oid:, message: nil, name: nil)
       @type = type
-      @sha = sha
+      @oid = oid
       @message = message
       @name = name
     end
 
-    # Returns the SHA as the string representation
-    # @return [String] the SHA-1 hash
+    # Returns the OID as the string representation
+    # @return [String] the object identifier
     def to_s
-      sha
+      oid
     end
   end
 end
