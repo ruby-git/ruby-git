@@ -2955,6 +2955,7 @@ Provide a comprehensive report with:
 **Next Steps:**
 - Any remaining items to address before PR submission
 - Confirmation that all checklist items are complete
+- Make sure to create a feature branch for the PR -- never push directly to main or 4.x
 
 ## PR Special Considerations
 
