@@ -198,6 +198,10 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     This convention ensures the command layer produces value objects that can be
     consumed directly or wrapped by domain objects in the facade layer.
 
+    **Naming Convention for Return Types**: Use the `-Info` suffix for data objects
+    representing git entities (e.g., `TagInfo`, `BranchInfo`, `StashInfo`), and use
+    `Result` for operation outcomes (e.g., `FsckResult`, `TagDeleteResult`).
+
     **Handling Complexity**: For commands with multiple behaviors (like git diff), we
     can use specialized subclasses (e.g., Git::Commands::Diff::NameStatus,
     Git::Commands::Diff::Stats) to keep each class focused on a single
