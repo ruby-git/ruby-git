@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -36,9 +37,6 @@ module Git
       #
       class Create
         # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions here determines the order of arguments
-        # in the final command line.
         #
         ARGS = Arguments.define do
           static 'branch'
@@ -117,13 +115,16 @@ module Git
         #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
         #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        # @return [String] the command output
+        # @return [Git::BranchInfo] the info for the branch that was created
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
-        def call(*, **)
-          args = ARGS.build(*, **)
-          @execution_context.command(*args)
+        def call(branch_name, *, **)
+          command_args = ARGS.build(branch_name, *, **)
+          @execution_context.command(*command_args)
+
+          # Get branch info for the newly created branch
+          Git::Commands::Branch::List.new(@execution_context).call(branch_name).first
         end
       end
     end
