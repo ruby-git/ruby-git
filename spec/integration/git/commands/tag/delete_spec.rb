@@ -149,7 +149,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         # Annotated tags have tagger metadata
         expect(deleted_tag.tagger_name).not_to be_nil
         expect(deleted_tag.tagger_email).not_to be_nil
-        expect(deleted_tag.tagger_date).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/)
+        expect(deleted_tag.tagger_date).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)$/)
         expect(deleted_tag.message).to eq('Release 1.0.0')
       end
     end
