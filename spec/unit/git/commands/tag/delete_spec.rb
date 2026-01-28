@@ -14,19 +14,19 @@ RSpec.describe Git::Commands::Tag::Delete do
 
   let(:tag_v1) do
     Git::TagInfo.new(
-      name: 'v1.0.0', sha: 'abc123', objecttype: 'commit',
+      name: 'v1.0.0', oid: nil, target_oid: 'abc123', objecttype: 'commit',
       tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
     )
   end
   let(:tag_v2) do
     Git::TagInfo.new(
-      name: 'v2.0.0', sha: 'def456', objecttype: 'commit',
+      name: 'v2.0.0', oid: nil, target_oid: 'def456', objecttype: 'commit',
       tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
     )
   end
   let(:tag_v3) do
     Git::TagInfo.new(
-      name: 'v3.0.0', sha: 'ghi789', objecttype: 'commit',
+      name: 'v3.0.0', oid: nil, target_oid: 'ghi789', objecttype: 'commit',
       tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
     )
   end
@@ -173,7 +173,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       let(:lightweight_tag) do
         lambda do |name|
           Git::TagInfo.new(
-            name: name, sha: 'abc', objecttype: 'commit',
+            name: name, oid: nil, target_oid: 'abc', objecttype: 'commit',
             tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
           )
         end

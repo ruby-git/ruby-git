@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         expect(result).to be_a(Git::TagInfo)
         expect(result.name).to eq('v1.0.0')
-        expect(result.sha).to match(/^[0-9a-f]{40}$/)
+        expect(result.target_oid).to match(/^[0-9a-f]{40}$/)
         expect(result.objecttype).to eq('commit')
       end
 
@@ -48,7 +48,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         result = command.call('v1.0.0')
 
-        expect(result.sha).to eq(commit_sha)
+        expect(result.target_oid).to eq(commit_sha)
       end
     end
 
@@ -64,7 +64,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         expect(result).to be_a(Git::TagInfo)
         expect(result.name).to eq('v2.0.0')
-        expect(result.sha).to match(/^[0-9a-f]{40}$/)
+        expect(result.target_oid).to match(/^[0-9a-f]{40}$/)
         expect(result.objecttype).to eq('tag')
       end
 
@@ -130,7 +130,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         expect(result).to be_a(Git::TagInfo)
         expect(result.name).to eq('v1.0.0')
-        expect(result.sha).to eq(first_commit_sha)
+        expect(result.target_oid).to eq(first_commit_sha)
       end
 
       it 'works with branch names' do
@@ -139,7 +139,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
         result = command.call('v1.0.0', 'test-branch')
 
         expect(result).to be_a(Git::TagInfo)
-        expect(result.sha).to eq(first_commit_sha)
+        expect(result.target_oid).to eq(first_commit_sha)
       end
     end
 
@@ -162,7 +162,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         expect(result).to be_a(Git::TagInfo)
         expect(result.name).to eq('v1.0.0')
-        expect(result.sha).to eq(new_commit_sha)
+        expect(result.target_oid).to eq(new_commit_sha)
       end
 
       it 'does not create duplicate tags' do
