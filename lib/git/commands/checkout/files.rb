@@ -96,7 +96,7 @@ module Git
         #   @option options [Boolean] :pathspec_file_nul (nil) NUL-separated paths in
         #     pathspec file
         #
-        # @return [String] the command output (typically empty on success)
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [Git::FailedError] if the checkout fails
         #

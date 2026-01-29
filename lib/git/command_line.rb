@@ -177,6 +177,18 @@ module Git
     #
     #   If the command does not respond to SIGKILL, it will hang this method.
     #
+    # @option options_hash [Boolean] :raise_on_failure whether to raise Git::FailedError on non-zero exit status
+    #
+    #   Defaults to `true`. When `false`, non-zero exit status will not raise an exception,
+    #   but Git::TimeoutError and Git::SignaledError are always raised regardless of this setting.
+    #
+    # @option options_hash [Hash] :env additional environment variable overrides for this command
+    #
+    #   These are merged with the environment variables set in the constructor.
+    #   Keys should be environment variable names (String) and values should be either:
+    #   * A String value to set the environment variable
+    #   * `nil` to unset the environment variable
+    #
     # @return [Git::CommandLineResult] the output of the command
     #
     #   This result of running the command.
@@ -197,7 +209,8 @@ module Git
       raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
 
       result = run_with_capture(*, **options_hash)
-      process_result(result, options_hash[:normalize], options_hash[:chomp], options_hash[:timeout])
+      process_result(result, options_hash[:normalize], options_hash[:chomp], options_hash[:timeout],
+                     options_hash[:raise_on_failure])
     end
 
     # @return [Git::CommandLineResult] the result of running the command
@@ -207,7 +220,8 @@ module Git
     def run_with_capture(*args, **options_hash)
       git_cmd = build_git_cmd(args)
       options = run_with_capture_options(**options_hash)
-      ProcessExecuter.run_with_capture(env, *git_cmd, **options)
+      merged_env = env.merge(options_hash[:env] || {})
+      ProcessExecuter.run_with_capture(merged_env, *git_cmd, **options)
     rescue ProcessExecuter::ProcessIOError => e
       raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
     end
@@ -232,7 +246,9 @@ module Git
       out: nil,
       err: nil,
       chdir: nil,
-      timeout: nil
+      timeout: nil,
+      raise_on_failure: true,
+      env: {}
     }.freeze
 
     private
@@ -276,11 +292,11 @@ module Git
     #
     # @api private
     #
-    def process_result(result, normalize, chomp, timeout)
+    def process_result(result, normalize, chomp, timeout, raise_on_failure)
       command = result.command
       processed_out, processed_err = post_process_output(result, normalize, chomp)
       log_result(result, command, processed_out, processed_err)
-      command_line_result(command, result, processed_out, processed_err, timeout)
+      command_line_result(command, result, processed_out, processed_err, timeout, raise_on_failure)
     end
 
     def log_result(result, command, processed_out, processed_err)
@@ -288,15 +304,17 @@ module Git
       logger.debug { "stdout:\n#{processed_out.inspect}\nstderr:\n#{processed_err.inspect}" }
     end
 
-    def command_line_result(command, result, processed_out, processed_err, timeout)
+    # rubocop:disable Metrics/ParameterLists
+    def command_line_result(command, result, processed_out, processed_err, timeout, raise_on_failure)
       Git::CommandLineResult.new(command, result, processed_out, processed_err).tap do |processed_result|
-        raise Git::TimeoutError.new(processed_result, timeout) if result.timeout?
+        raise Git::TimeoutError.new(processed_result, timeout) if result.timed_out?
 
         raise Git::SignaledError, processed_result if result.signaled?
 
-        raise Git::FailedError, processed_result unless result.success?
+        raise Git::FailedError, processed_result if raise_on_failure && !result.success?
       end
     end
+    # rubocop:enable Metrics/ParameterLists
 
     # Post-process and return an array of raw output strings
     #

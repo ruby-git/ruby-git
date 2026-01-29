@@ -13,10 +13,11 @@ RSpec.describe Git::Commands::Stash::Clear do
       command.call
     end
 
-    it 'returns the command output' do
-      expect(execution_context).to receive(:command).with('stash', 'clear').and_return('')
+    it 'returns the CommandLineResult' do
+      mock_result = command_result('')
+      expect(execution_context).to receive(:command).with('stash', 'clear').and_return(mock_result)
       result = command.call
-      expect(result).to eq('')
+      expect(result).to eq(mock_result)
     end
   end
 end

@@ -74,7 +74,7 @@ module Git
         #   @option options [Boolean] :quiet (nil) Be more quiet when deleting a branch, suppressing
         #     non-error messages.
         #
-        # @return [String] the command output
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch is not fully merged (without force)

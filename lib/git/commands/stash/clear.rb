@@ -32,7 +32,7 @@ module Git
 
         # Clear all stash entries
         #
-        # @return [String] the command output (empty on success)
+        # @return [Git::CommandLineResult] the result of the command
         #
         def call
           @execution_context.command(*ARGS.build)

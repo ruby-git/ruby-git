@@ -67,3 +67,14 @@ SimpleCov::RSpec.start(
 )
 
 require 'git'
+
+# Helper to create a mock CommandLineResult for use in specs
+#
+# @param stdout [String] the stdout to return
+# @param stderr [String] the stderr to return (default: '')
+# @param exitstatus [Integer] the exit status code (default: 0)
+# @return [Git::CommandLineResult] a CommandLineResult object
+def command_result(stdout = '', stderr: '', exitstatus: 0)
+  status = double('status', success?: exitstatus.zero?, exitstatus: exitstatus, signaled?: false)
+  Git::CommandLineResult.new(%w[git], status, stdout, stderr)
+end

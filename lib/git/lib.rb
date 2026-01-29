@@ -176,7 +176,7 @@ module Git
     # @return [String] the name of the default branch
     #
     def repository_default_branch(repository)
-      output = command('ls-remote', '--symref', '--', repository, 'HEAD')
+      output = command('ls-remote', '--symref', '--', repository, 'HEAD').stdout
 
       match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
       return match_data[:default_branch] if match_data
@@ -242,7 +242,7 @@ module Git
       args = build_args(opts, DESCRIBE_OPTION_MAP)
       args << commit_ish if commit_ish
 
-      command('describe', *args)
+      command('describe', *args).stdout
     end
 
     # Return the commits that are within the given revision range
@@ -283,7 +283,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command_lines('log', *arr_opts).map { |l| l.split.first }
+      command('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
     end
 
     FULL_LOG_EXTRA_OPTIONS_MAP = [
@@ -354,7 +354,7 @@ module Git
       args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
       args += log_path_options(opts)
 
-      full_log = command_lines('log', *args)
+      full_log = command('log', *args).stdout.split("\n")
       process_commit_log_data(full_log)
     end
 
@@ -379,7 +379,7 @@ module Git
     def rev_parse(revision)
       assert_args_are_not_options('rev', revision)
 
-      command('rev-parse', '--revs-only', '--end-of-options', revision, '--')
+      command('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
     end
 
     # For backwards compatibility with the old method name
@@ -396,7 +396,7 @@ module Git
     def name_rev(commit_ish)
       assert_args_are_not_options('commit_ish', commit_ish)
 
-      command('name-rev', commit_ish).split[1]
+      command('name-rev', commit_ish).stdout.split[1]
     end
 
     alias namerev name_rev
@@ -431,7 +431,7 @@ module Git
         end
       else
         # If a block is not given, return the file contents as a string
-        command('cat-file', '-p', object)
+        command('cat-file', '-p', object).stdout
       end
     end
 
@@ -450,7 +450,7 @@ module Git
     def cat_file_type(object)
       assert_args_are_not_options('object', object)
 
-      command('cat-file', '-t', object)
+      command('cat-file', '-t', object).stdout
     end
 
     alias object_type cat_file_type
@@ -468,7 +468,7 @@ module Git
     def cat_file_size(object)
       assert_args_are_not_options('object', object)
 
-      command('cat-file', '-s', object).to_i
+      command('cat-file', '-s', object).stdout.to_i
     end
 
     alias object_size cat_file_size
@@ -494,7 +494,7 @@ module Git
     def cat_file_commit(object)
       assert_args_are_not_options('object', object)
 
-      cdata = command_lines('cat-file', 'commit', object)
+      cdata = command('cat-file', 'commit', object).stdout.split("\n")
       process_commit_data(cdata, object)
     end
 
@@ -563,7 +563,7 @@ module Git
     def cat_file_tag(object)
       assert_args_are_not_options('object', object)
 
-      tdata = command_lines('cat-file', 'tag', object)
+      tdata = command('cat-file', 'tag', object).stdout.split("\n")
       process_tag_data(tdata, object)
     end
 
@@ -654,7 +654,7 @@ module Git
       args.unshift(sha)
       args << opts[:path] if opts[:path]
 
-      command_lines('ls-tree', *args).each do |line|
+      command('ls-tree', *args).stdout.split("\n").each do |line|
         (info, filenm) = split_status_line(line)
         (mode, type, sha) = info.split
         data[type][filenm] = { mode: mode, sha: sha }
@@ -663,12 +663,14 @@ module Git
       data
     end
 
+    # @return [String] the command output
+    #
     def mv(source, destination, options = {})
-      Git::Commands::Mv.new(self).call(*Array(source), destination, **options)
+      Git::Commands::Mv.new(self).call(*Array(source), destination, **options).stdout
     end
 
     def full_tree(sha)
-      command_lines('ls-tree', '-r', sha)
+      command('ls-tree', '-r', sha).stdout.split("\n")
     end
 
     def tree_depth(sha)
@@ -695,7 +697,7 @@ module Git
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
       #
-      command_lines('worktree', 'list', '--porcelain').each do |w|
+      command('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
         s = w.split
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
@@ -703,18 +705,23 @@ module Git
       arr
     end
 
-    def worktree_add(dir, commitish = nil)
-      return worktree_command('worktree', 'add', dir, commitish) unless commitish.nil?
+    # Environment override to exclude GIT_INDEX_FILE for worktree commands
+    # Git worktrees manage their own index files and setting GIT_INDEX_FILE
+    # causes corruption of both the main worktree and new worktree indexes.
+    WORKTREE_ENV = { 'GIT_INDEX_FILE' => nil }.freeze
 
-      worktree_command('worktree', 'add', dir)
+    def worktree_add(dir, commitish = nil)
+      return command('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
+
+      command('worktree', 'add', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_remove(dir)
-      worktree_command('worktree', 'remove', dir)
+      command('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_prune
-      worktree_command('worktree', 'prune')
+      command('worktree', 'prune', env: WORKTREE_ENV).stdout
     end
 
     def list_files(ref_dir)
@@ -751,7 +758,7 @@ module Git
     # @return [HeadState] the state and name of the current branch
     #
     def current_branch_state
-      branch_name = command('branch', '--show-current')
+      branch_name = command('branch', '--show-current').stdout
       return HeadState.new(:detached, 'HEAD') if branch_name.empty?
 
       state = get_branch_state(branch_name)
@@ -759,12 +766,12 @@ module Git
     end
 
     def branch_current
-      branch_name = command('branch', '--show-current')
+      branch_name = command('branch', '--show-current').stdout
       branch_name.empty? ? 'HEAD' : branch_name
     end
 
     def branch_contains(commit, branch_name = '')
-      command('branch',  branch_name, '--contains', commit)
+      command('branch', branch_name, '--contains', commit).stdout
     end
 
     GREP_OPTION_MAP = [
@@ -872,7 +879,7 @@ module Git
         args.push('--', *pathspecs)
       end
 
-      command('diff', *args)
+      command('diff', *args).stdout
     end
 
     DIFF_STATS_OPTION_MAP = [
@@ -891,7 +898,7 @@ module Git
         args.push('--', *pathspecs)
       end
 
-      output_lines = command_lines('diff', *args)
+      output_lines = command('diff', *args).stdout.split("\n")
       parse_diff_stats_output(output_lines)
     end
 
@@ -941,7 +948,7 @@ module Git
     def ls_files(location = nil)
       location ||= '.'
       {}.tap do |files|
-        command_lines('ls-files', '--stage', location).each do |line|
+        command('ls-files', '--stage', location).stdout.split("\n").each do |line|
           (info, file) = split_status_line(line)
           (mode, sha, stage) = info.split
           files[file] = {
@@ -984,16 +991,18 @@ module Git
       flags = build_args(opts, LS_REMOTE_OPTION_MAP)
       positional_arg = location || '.'
 
-      output_lines = command_lines('ls-remote', *flags, positional_arg)
+      output_lines = command('ls-remote', *flags, positional_arg).stdout.split("\n")
       parse_ls_remote_output(output_lines)
     end
 
     def ignored_files
-      command_lines('ls-files', '--others', '-i', '--exclude-standard').map { |f| unescape_quoted_path(f) }
+      command('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
+        unescape_quoted_path(f)
+      end
     end
 
     def untracked_files
-      command_lines('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir).map do |f|
+      command('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir).stdout.split("\n").map do |f|
         unescape_quoted_path(f)
       end
     end
@@ -1007,19 +1016,19 @@ module Git
     end
 
     def config_get(name)
-      command('config', '--get', name, chdir: @git_dir)
+      command('config', '--get', name, chdir: @git_dir).stdout
     end
 
     def global_config_get(name)
-      command('config', '--global', '--get', name)
+      command('config', '--global', '--get', name).stdout
     end
 
     def config_list
-      parse_config_list command_lines('config', '--list', chdir: @git_dir)
+      parse_config_list command('config', '--list', chdir: @git_dir).stdout.split("\n")
     end
 
     def global_config_list
-      parse_config_list command_lines('config', '--global', '--list')
+      parse_config_list command('config', '--global', '--list').stdout.split("\n")
     end
 
     def parse_config_list(lines)
@@ -1032,7 +1041,7 @@ module Git
     end
 
     def parse_config(file)
-      parse_config_list command_lines('config', '--list', '--file', file)
+      parse_config_list command('config', '--list', '--file', file).stdout.split("\n")
     end
 
     # Shows objects
@@ -1045,7 +1054,7 @@ module Git
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
 
-      command('show', *arr_opts.compact, chomp: false)
+      command('show', *arr_opts.compact, chomp: false).stdout
     end
 
     ## WRITE COMMANDS ##
@@ -1077,8 +1086,10 @@ module Git
     # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
     # @option options [Boolean] :force Allow adding otherwise ignored files
     #
+    # @return [String] the command output (typically empty on success)
+    #
     def add(paths = '.', options = {})
-      Git::Commands::Add.new(self).call(*Array(paths), **options)
+      Git::Commands::Add.new(self).call(*Array(paths), **options).stdout
     end
 
     # Remove files from the working tree and from the index
@@ -1089,8 +1100,10 @@ module Git
     # @option opts [Boolean] :recursive Remove directories and their contents recursively
     # @option opts [Boolean] :cached Only remove from the index, keeping working tree files
     #
+    # @return [String] the command output
+    #
     def rm(path = '.', opts = {})
-      Git::Commands::Rm.new(self).call(*Array(path), **opts)
+      Git::Commands::Rm.new(self).call(*Array(path), **opts).stdout
     end
 
     # Returns true if the repository is empty (meaning it has no commits)
@@ -1137,20 +1150,24 @@ module Git
         opts[:gpg_sign] = false
       end
 
-      Git::Commands::Commit.new(self).call(**opts)
+      Git::Commands::Commit.new(self).call(**opts).stdout
     end
 
+    # @return [String] the command output
+    #
     def reset(commit = nil, opts = {})
-      Git::Commands::Reset.new(self).call(commit, **opts)
+      Git::Commands::Reset.new(self).call(commit, **opts).stdout
     end
 
+    # @return [String] the command output
+    #
     def clean(opts = {})
       if opts.key?(:ff)
         Git::Deprecation.warn(':ff option is deprecated. Use :force_force instead.')
         opts = opts.dup
         opts[:force_force] = opts.delete(:ff)
       end
-      Git::Commands::Clean.new(self).call(**opts)
+      Git::Commands::Clean.new(self).call(**opts).stdout
     end
 
     REVERT_OPTION_MAP = [
@@ -1227,8 +1244,10 @@ module Git
 
     # Clear all stash entries
     #
+    # @return [String] the command output (empty on success)
+    #
     def stash_clear
-      Git::Commands::Stash::Clear.new(self).call
+      Git::Commands::Stash::Clear.new(self).call.stdout
     end
 
     # Pop stashed changes
@@ -1257,7 +1276,7 @@ module Git
     #   (or {#stashes_all} for the legacy [index, message] format)
     #
     def stash_list
-      command('stash', 'list')
+      command('stash', 'list').stdout
     end
 
     # Create a new branch
@@ -1278,9 +1297,11 @@ module Git
     # @option options [Boolean] :remotes delete remote-tracking branches
     # @option options [Boolean] :quiet suppress non-error messages
     #
+    # @return [String] the command output
+    #
     def branch_delete(*branches, **options)
       options = { force: true }.merge(options)
-      Git::Commands::Branch::Delete.new(self).call(*branches, **options)
+      Git::Commands::Branch::Delete.new(self).call(*branches, **options).stdout
     end
 
     # Move/rename a branch
@@ -1298,8 +1319,10 @@ module Git
     #
     # @option options [Boolean] :force allow renaming even if new_branch already exists
     #
+    # @return [String] the command output
+    #
     def branch_move(*, **)
-      Git::Commands::Branch::Move.new(self).call(*, **)
+      Git::Commands::Branch::Move.new(self).call(*, **).stdout
     end
 
     # Copy a branch, along with its config and reflog
@@ -1317,8 +1340,10 @@ module Git
     #
     # @option options [Boolean] :force allow copying even if new_branch already exists
     #
+    # @return [String] the command output
+    #
     def branch_copy(*, **)
-      Git::Commands::Branch::Copy.new(self).call(*, **)
+      Git::Commands::Branch::Copy.new(self).call(*, **).stdout
     end
 
     # Set upstream tracking information for a branch
@@ -1326,16 +1351,20 @@ module Git
     # @param upstream [String] the upstream branch (e.g., 'origin/main')
     # @param branch_name [String, nil] the branch to configure (defaults to current branch)
     #
+    # @return [String] the command output
+    #
     def branch_set_upstream(upstream, branch_name = nil)
-      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
+      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream).stdout
     end
 
     # Remove upstream tracking information for a branch
     #
     # @param branch_name [String, nil] the branch to configure (defaults to current branch)
     #
+    # @return [String] the command output
+    #
     def branch_unset_upstream(branch_name = nil)
-      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
+      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name).stdout
     end
 
     # Runs checkout command to checkout or create branch
@@ -1362,9 +1391,9 @@ module Git
       if opts[:new_branch] == true || opts[:b] == true
         # Legacy mode: branch name is the first argument, start_point is in opts
         new_opts = opts.except(:new_branch, :b, :start_point).merge(new_branch: branch)
-        Git::Commands::Checkout::Branch.new(self).call(opts[:start_point], **new_opts)
+        Git::Commands::Checkout::Branch.new(self).call(opts[:start_point], **new_opts).stdout
       else
-        Git::Commands::Checkout::Branch.new(self).call(branch, **opts)
+        Git::Commands::Checkout::Branch.new(self).call(branch, **opts).stdout
       end
     end
 
@@ -1375,7 +1404,7 @@ module Git
     # @return [String] the command output
     #
     def checkout_file(version, file)
-      Git::Commands::Checkout::Files.new(self).call(version, file)
+      Git::Commands::Checkout::Files.new(self).call(version, file).stdout
     end
 
     # Merge one or more branches into the current branch
@@ -1407,7 +1436,7 @@ module Git
       # Map legacy option names to new interface
       opts = translate_merge_options(opts)
 
-      Git::Commands::Merge::Start.new(self).call(*Array(branch), **opts)
+      Git::Commands::Merge::Start.new(self).call(*Array(branch), **opts).stdout
     end
 
     # Abort the current merge in progress
@@ -1420,7 +1449,7 @@ module Git
     # @raise [Git::FailedError] if no merge is in progress
     #
     def merge_abort
-      Git::Commands::Merge::Resolve.new(self).call(abort: true)
+      Git::Commands::Merge::Resolve.new(self).call(abort: true).stdout
     end
 
     # Continue a merge after conflict resolution
@@ -1432,7 +1461,7 @@ module Git
     # @raise [Git::FailedError] if conflicts remain unresolved
     #
     def merge_continue
-      Git::Commands::Merge::Resolve.new(self).call(continue: true)
+      Git::Commands::Merge::Resolve.new(self).call(continue: true).stdout
     end
 
     # Quit the current merge, leaving working tree as-is
@@ -1446,7 +1475,7 @@ module Git
     # @raise [Git::FailedError] if no merge is in progress
     #
     def merge_quit
-      Git::Commands::Merge::Resolve.new(self).call(quit: true)
+      Git::Commands::Merge::Resolve.new(self).call(quit: true).stdout
     end
 
     # Find common ancestor commit(s) for merge
@@ -1471,7 +1500,7 @@ module Git
 
     def unmerged
       unmerged = []
-      command_lines('diff', '--cached').each do |line|
+      command('diff', '--cached').stdout.split("\n").each do |line|
         unmerged << ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
       end
       unmerged
@@ -1532,7 +1561,7 @@ module Git
     end
 
     def remotes
-      command_lines('remote')
+      command('remote').stdout.split("\n")
     end
 
     # List all tags in the repository
@@ -1584,7 +1613,7 @@ module Git
         args << opts[:ref] if opts[:ref]
       end
 
-      command('fetch', *args, merge: true)
+      command('fetch', *args, merge: true).stdout
     end
 
     PUSH_OPTION_MAP = [
@@ -1624,7 +1653,7 @@ module Git
       flags = build_args(opts, PULL_OPTION_MAP)
       positional_args = [remote, branch].compact
 
-      command('pull', *flags, *positional_args)
+      command('pull', *flags, *positional_args).stdout
     end
 
     def tag_sha(tag_name)
@@ -1632,7 +1661,7 @@ module Git
       return File.read(head).chomp if File.exist?(head)
 
       begin
-        command('show-ref', '--tags', '-s', tag_name)
+        command('show-ref', '--tags', '-s', tag_name).stdout
       rescue Git::FailedError => e
         raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
 
@@ -1672,7 +1701,7 @@ module Git
     end
 
     def write_tree
-      command('write-tree')
+      command('write-tree').stdout
     end
 
     COMMIT_TREE_OPTION_MAP = [
@@ -1685,7 +1714,7 @@ module Git
       ArgsBuilder.validate!(opts, COMMIT_TREE_OPTION_MAP)
 
       flags = build_args(opts, COMMIT_TREE_OPTION_MAP)
-      command('commit-tree', tree, *flags)
+      command('commit-tree', tree, *flags).stdout
     end
 
     def update_ref(ref, commit)
@@ -1737,7 +1766,7 @@ module Git
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
-      output = command('version')
+      output = command('version').stdout
       version = output[/\d+(\.\d+)+/]
       version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
@@ -1787,7 +1816,9 @@ module Git
       chomp: true,
       merge: false,
       chdir: nil,
-      timeout: nil # Don't set to Git.config.timeout here since it is mutable
+      timeout: nil, # Don't set to Git.config.timeout here since it is mutable
+      env: {},
+      raise_on_failure: true
     }.freeze
 
     STATIC_GLOBAL_OPTS = %w[
@@ -1816,6 +1847,82 @@ module Git
       { keys: [:between], type: :custom, builder: ->(value) { "#{value[0]}..#{value[1]}" if value } }
     ].freeze
 
+    # Runs a git command and returns the result
+    #
+    # By default, raises {Git::FailedError} if the command exits with a non-zero
+    # status. Pass `raise_on_failure: false` to suppress this behavior.
+    #
+    # @overload command(*args, **options_hash)
+    #   Runs a git command and returns the result
+    #
+    #   Args should exclude the 'git' command itself and global options.
+    #   Remember to splat the arguments if given as an array.
+    #
+    #   @example Run git log
+    #     result = command('log', '--pretty=oneline')
+    #     result.stdout #=> "abc123 First commit\ndef456 Second commit\n"
+    #
+    #   @example Using an array of arguments
+    #     args = ['log', '--pretty=oneline']
+    #     result = command(*args)
+    #
+    #   @example Suppress raising on failure
+    #     result = command('show', 'nonexistent', raise_on_failure: false)
+    #     result.status.success? #=> false
+    #
+    #   @param args [Array<String>] the command and its arguments
+    #   @param options_hash [Hash] the options to pass to the command
+    #
+    # @option options_hash [IO, String, #write, nil] :out the destination for captured stdout
+    # @option options_hash [IO, String, #write, nil] :err the destination for captured stderr
+    # @option options_hash [Boolean] :normalize true to normalize the output encoding to UTF-8
+    # @option options_hash [Boolean] :chomp true to remove trailing newlines from the output
+    # @option options_hash [Boolean] :merge true to merge stdout and stderr into a single output
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    # @option options_hash [Hash] :env additional environment variable overrides for this command
+    # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is nil, the global timeout from {Git::Config} is used.
+    #
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
+    #
+    # @see Git::CommandLine#run
+    #
+    # @return [Git::CommandLineResult] the result of the command
+    #
+    # @raise [ArgumentError] if an unknown option is passed
+    #
+    # @raise [Git::FailedError] if the command failed (when raise_on_failure is true)
+    #
+    # @raise [Git::SignaledError] if the command was signaled
+    #
+    # @raise [Git::TimeoutError] if the command times out
+    #
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
+    #
+    #   The exception's `result` attribute is a {Git::CommandLineResult} which will
+    #   contain the result of the command including the exit status, stdout, and
+    #   stderr.
+    #
+    # @api private
+    #
+    def command(*, **options_hash)
+      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
+      options_hash[:timeout] ||= Git.config.timeout
+
+      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      env_overrides = options_hash.delete(:env)
+      raise_on_failure = options_hash.delete(:raise_on_failure)
+      command_line.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+    end
+
     private
 
     # Translate legacy merge option names to new interface
@@ -1839,7 +1946,7 @@ module Git
     end
 
     def parse_diff_path_status(args)
-      command_lines('diff', *args).each_with_object({}) do |line, memo|
+      command('diff', *args).stdout.split("\n").each_with_object({}) do |line, memo|
         status, path = split_status_line(line)
         memo[path] = status
       end
@@ -1887,7 +1994,7 @@ module Git
     end
 
     def execute_grep_command(args)
-      command_lines('grep', *args)
+      command('grep', *args).stdout.split("\n")
     rescue Git::FailedError => e
       # `git grep` returns 1 when no lines are selected.
       raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
@@ -2076,19 +2183,6 @@ module Git
       Zlib::GzipWriter.open(file) { |gz| gz.write(file_content) }
     end
 
-    def command_lines(cmd, *opts, chdir: nil)
-      cmd_op = command(cmd, *opts, chdir: chdir)
-      op = if cmd_op.encoding.name == 'UTF-8'
-             cmd_op
-           else
-             cmd_op.encode('UTF-8', 'binary', invalid: :replace, undef: :replace)
-           end
-      op.split("\n")
-    end
-
-    # Make command_lines public for use by Git::Commands classes
-    public :command_lines
-
     # Returns a hash of environment variable overrides for git commands
     #
     # This method builds a hash of environment variables that control git's behavior,
@@ -2161,107 +2255,6 @@ module Git
         Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
     end
 
-    # Returns a command line instance without GIT_INDEX_FILE for worktree commands
-    #
-    # Git worktrees manage their own index files and setting GIT_INDEX_FILE
-    # causes corruption of both the main worktree and new worktree indexes.
-    #
-    # @return [Git::CommandLine]
-    # @api private
-    #
-    def worktree_command_line
-      @worktree_command_line ||=
-        Git::CommandLine.new(env_overrides('GIT_INDEX_FILE' => nil), Git::Base.config.binary_path, global_opts,
-                             @logger)
-    end
-
-    # @overload worktree_command(*args, **options_hash)
-    #   Runs a git worktree command and returns the output
-    #
-    #   This method is similar to #command but uses a command line instance
-    #   that excludes GIT_INDEX_FILE from the environment to prevent index corruption.
-    #
-    #   @param args [Array<String>] the command arguments
-    #   @param options_hash [Hash] the options to pass to the command
-    #
-    #   @return [String] the command's stdout
-    #
-    # @see #command
-    #
-    # @api private
-    #
-    def worktree_command(*, **options_hash)
-      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
-      options_hash[:timeout] ||= Git.config.timeout
-
-      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
-      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
-
-      result = worktree_command_line.run(*, **options_hash)
-      result.stdout
-    end
-
-    # Runs a git command and returns the output
-    #
-    # Additional args are passed to the command line. They should exclude the 'git'
-    # command itself and global options. Remember to splat the the arguments if given
-    # as an array.
-    #
-    # For example, to run `git log --pretty=oneline`, you would create the array
-    # `args = ['log', '--pretty=oneline']` and call `command(*args)`.
-    #
-    # @param options_hash [Hash] the options to pass to the command
-    # @option options_hash [IO, String, #write, nil] :out the destination for captured stdout
-    # @option options_hash [IO, String, #write, nil] :err the destination for captured stderr
-    # @option options_hash [Boolean] :normalize true to normalize the output encoding to UTF-8
-    # @option options_hash [Boolean] :chomp true to remove trailing newlines from the output
-    # @option options_hash [Boolean] :merge true to merge stdout and stderr into a single output
-    # @option options_hash [String, nil] :chdir the directory to run the command in
-    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
-    #
-    #   If timeout is nil, the global timeout from {Git::Config} is used.
-    #
-    #   If timeout is zero, the timeout will not be enforced.
-    #
-    #   If the command times out, it is killed via a `SIGKILL` signal and `Git::TimeoutError` is raised.
-    #
-    #   If the command does not respond to SIGKILL, it will hang this method.
-    #
-    # @see Git::CommandLine#run
-    #
-    # @return [String] the command's stdout (or merged stdout and stderr if `merge`
-    # is true)
-    #
-    # @raise [ArgumentError] if an unknown option is passed
-    #
-    # @raise [Git::FailedError] if the command failed
-    #
-    # @raise [Git::SignaledError] if the command was signaled
-    #
-    # @raise [Git::TimeoutError] if the command times out
-    #
-    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
-    #
-    #   The exception's `result` attribute is a {Git::CommandLineResult} which will
-    #   contain the result of the command including the exit status, stdout, and
-    #   stderr.
-    #
-    # @api private
-    #
-    def command(*, **options_hash)
-      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
-      options_hash[:timeout] ||= Git.config.timeout
-
-      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
-      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
-
-      result = command_line.run(*, **options_hash)
-      result.stdout
-    end
-
-    # Make command public for use by Git::Commands classes
-    public :command
-
     # Takes the diff command line output (as Array) and parse it into a Hash
     #
     # @param [String] diff_command the diff commadn to be used
@@ -2270,7 +2263,7 @@ module Git
     def diff_as_hash(diff_command, opts = [])
       # update index before diffing to avoid spurious diffs
       command('status')
-      command_lines(diff_command, *opts).each_with_object({}) do |line, memo|
+      command(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
         info, file = split_status_line(line)
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 

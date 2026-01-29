@@ -18,7 +18,7 @@ class TestGitClone < Test::Unit::TestCase
           Git.clone('repository.git', 'temp2', timeout: nil)
         end
 
-        assert_equal(true, error.result.status.timeout?)
+        assert_equal(true, error.result.status.timed_out?)
       end
     ensure
       Git.config.timeout = saved_timeout
@@ -52,7 +52,7 @@ class TestGitClone < Test::Unit::TestCase
           Git.clone('repository.git', 'temp2', timeout: timeout_value)
         end
 
-        assert_equal(true, error.result.status.timeout?)
+        assert_equal(true, error.result.status.timed_out?)
       end
     end
   end
@@ -95,7 +95,7 @@ class TestGitClone < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('.')
 
-      # Mock the Git::Lib#command method to capture the actual command line args
+      # Mock the Git::Lib#command! method to capture the actual command line args
       git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end
@@ -118,7 +118,7 @@ class TestGitClone < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('.')
 
-      # Mock the Git::Lib#command method to capture the actual command line args
+      # Mock the Git::Lib#command! method to capture the actual command line args
       git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end
@@ -145,7 +145,7 @@ class TestGitClone < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('.')
 
-      # Mock the Git::Lib#command method to capture the actual command line args
+      # Mock the Git::Lib#command! method to capture the actual command line args
       git.lib.define_singleton_method(:command) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
       end

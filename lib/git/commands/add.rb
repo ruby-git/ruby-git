@@ -47,7 +47,7 @@ module Git
       #
       #   @option options [Boolean] :force (nil) Allow adding otherwise ignored files
       #
-      # @return [String] the command output (typically empty on success)
+      # @return [Git::CommandLineResult] the result of the command
       #
       def call(*, **)
         args = ARGS.build(*, **)

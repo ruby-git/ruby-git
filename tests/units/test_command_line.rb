@@ -86,7 +86,7 @@ class TestCommamndLine < Test::Unit::TestCase
         command_line.run(*args, out: out_writer, err: err_writer, normalize: normalize, chomp: chomp, merge: merge,
                                 timeout: 0.01)
       rescue Git::Error => e
-        assert_equal(true, e.result.status.timeout?)
+        assert_equal(true, e.result.status.timed_out?)
       end
     end
   end

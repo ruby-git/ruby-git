@@ -64,7 +64,9 @@ class TestDiffPathStatus < Test::Unit::TestCase
   end
 
   def test_path_status_with_empty_path_array
-    @git.lib.expects(:command_lines).with('diff', '--name-status', 'gitsearch1', 'v2.5').returns([])
+    status = Struct.new(:success?).new(true)
+    result = Git::CommandLineResult.new(%w[git diff], status, '', '')
+    @git.lib.expects(:command).with('diff', '--name-status', 'gitsearch1', 'v2.5').returns(result)
 
     status_hash = Git::DiffPathStatus.new(@git, 'gitsearch1', 'v2.5', []).to_h
     assert_equal({}, status_hash)

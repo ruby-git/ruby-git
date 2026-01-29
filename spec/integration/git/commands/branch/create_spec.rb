@@ -56,7 +56,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
         write_file('file1.txt', 'content1')
         repo.add('file1.txt')
         repo.commit('First commit')
-        execution_context.command('rev-parse', 'HEAD').strip
+        execution_context.command('rev-parse', 'HEAD').stdout.strip
       end
 
       before do
@@ -73,7 +73,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
         expect(result.refname).to eq('old-branch')
 
         # Verify the branch points to the first commit
-        branch_sha = execution_context.command('rev-parse', 'old-branch').strip
+        branch_sha = execution_context.command('rev-parse', 'old-branch').stdout.strip
         expect(branch_sha).to eq(first_commit_sha)
       end
 
@@ -113,7 +113,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
         write_file('file1.txt', 'content1')
         repo.add('file1.txt')
         repo.commit('First commit')
-        execution_context.command('rev-parse', 'HEAD').strip
+        execution_context.command('rev-parse', 'HEAD').stdout.strip
       end
 
       before do
@@ -133,7 +133,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
         expect(result.refname).to eq('existing-branch')
 
         # Verify the branch now points to the first commit
-        branch_sha = execution_context.command('rev-parse', 'existing-branch').strip
+        branch_sha = execution_context.command('rev-parse', 'existing-branch').stdout.strip
         expect(branch_sha).to eq(first_commit_sha)
       end
     end

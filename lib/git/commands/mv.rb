@@ -59,7 +59,7 @@ module Git
       #
       #   @option options [Boolean] :skip_errors (nil) Skip move or rename actions which would lead to an error
       #
-      # @return [String] the command output
+      # @return [Git::CommandLineResult] the result of the command
       #
       def call(*, **)
         args = ARGS.build(*, **)

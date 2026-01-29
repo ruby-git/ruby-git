@@ -124,7 +124,7 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          lines = @execution_context.command_lines(*args)
+          lines = @execution_context.command(*args, raise_on_failure: false).stdout.split("\n")
           parse_tags(lines)
         end
 

@@ -65,7 +65,7 @@ module Git
         #     in progress. Leave the index and working tree as-is. If an
         #     autostash entry is present, save it to the stash list.
         #
-        # @return [String] the command output
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [Git::FailedError] if the command fails (e.g., no merge in progress,
         #   unresolved conflicts for continue)

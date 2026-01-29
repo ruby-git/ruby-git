@@ -32,13 +32,22 @@ RSpec.describe Git::Commands::Stash::List do
     ].join("\x1f")
   end
 
+  # Helper to expect command call - verifies the command is called with specific arguments
+  def expect_command(*args, stdout: '')
+    expect(execution_context).to receive(:command).with(*args, any_args).and_return(command_result(stdout))
+  end
+
+  # Helper to stub command call for parsing tests where other expectations do the verification
+  def allow_command(*args, stdout: '')
+    allow(execution_context).to receive(:command).with(*args, any_args).and_return(command_result(stdout))
+  end
+
   describe '#call' do
     let(:format_arg) { "--format=#{described_class::STASH_FORMAT}" }
 
     context 'with no stashes' do
       it 'returns an empty array' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return([])
+        expect_command('stash', 'list', format_arg)
         result = command.call
         expect(result).to eq([])
       end
@@ -65,12 +74,11 @@ RSpec.describe Git::Commands::Stash::List do
                        reflog: 'stash@{2}',
                        message: 'WIP on bugfix: 9876543 Fix bug'
                      ))
-        ]
+        ].join("\n")
       end
 
       it 'returns an array of StashInfo objects' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result).to be_an(Array)
@@ -79,8 +87,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses stash index correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].index).to eq(0)
@@ -89,8 +96,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses stash name correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].name).to eq('stash@{0}')
@@ -99,8 +105,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses SHA correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].oid).to eq('abc1234567890abcdef1234567890abcdef123456')
@@ -110,8 +115,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses branch name correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].branch).to eq('main')
@@ -120,8 +124,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses message correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].message).to eq('WIP on main: abc1234 Initial commit')
@@ -130,8 +133,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses author information correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].author_name).to eq('Test Author')
@@ -140,8 +142,7 @@ RSpec.describe Git::Commands::Stash::List do
       end
 
       it 'parses committer information correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].committer_name).to eq('Test Committer')
@@ -152,17 +153,14 @@ RSpec.describe Git::Commands::Stash::List do
 
     context 'with custom stash message' do
       let(:stash_output) do
-        [
-          stash_line(default_stash_attrs.merge(
-                       reflog: 'stash@{0}',
-                       message: 'On main: My custom message'
-                     ))
-        ]
+        stash_line(default_stash_attrs.merge(
+                     reflog: 'stash@{0}',
+                     message: 'On main: My custom message'
+                   ))
       end
 
       it 'parses custom messages correctly' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].branch).to eq('main')
@@ -172,17 +170,14 @@ RSpec.describe Git::Commands::Stash::List do
 
     context 'with message containing colons' do
       let(:stash_output) do
-        [
-          stash_line(default_stash_attrs.merge(
-                       reflog: 'stash@{0}',
-                       message: 'WIP on main: abc123 Fix: something: important'
-                     ))
-        ]
+        stash_line(default_stash_attrs.merge(
+                     reflog: 'stash@{0}',
+                     message: 'WIP on main: abc123 Fix: something: important'
+                   ))
       end
 
       it 'preserves colons in the message' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].message).to eq('WIP on main: abc123 Fix: something: important')
@@ -191,17 +186,14 @@ RSpec.describe Git::Commands::Stash::List do
 
     context 'with custom stash message (via git stash store)' do
       let(:stash_output) do
-        [
-          stash_line(default_stash_attrs.merge(
-                       reflog: 'stash@{0}',
-                       message: 'custom message'
-                     ))
-        ]
+        stash_line(default_stash_attrs.merge(
+                     reflog: 'stash@{0}',
+                     message: 'custom message'
+                   ))
       end
 
       it 'parses custom messages without branch info' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result.size).to eq(1)
@@ -214,17 +206,14 @@ RSpec.describe Git::Commands::Stash::List do
 
     context 'with custom stash message containing colon' do
       let(:stash_output) do
-        [
-          stash_line(default_stash_attrs.merge(
-                       reflog: 'stash@{0}',
-                       message: 'testing: custom message'
-                     ))
-        ]
+        stash_line(default_stash_attrs.merge(
+                     reflog: 'stash@{0}',
+                     message: 'testing: custom message'
+                   ))
       end
 
       it 'parses full custom message with colons' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].branch).to be_nil
@@ -234,23 +223,20 @@ RSpec.describe Git::Commands::Stash::List do
 
     context 'with different author and committer' do
       let(:stash_output) do
-        [
-          stash_line(default_stash_attrs.merge(
-                       reflog: 'stash@{0}',
-                       message: 'WIP on main: abc1234 Test commit',
-                       author_name: 'Alice Author',
-                       author_email: 'alice@example.com',
-                       author_date: '2026-01-20T09:00:00-08:00',
-                       committer_name: 'Bob Committer',
-                       committer_email: 'bob@example.com',
-                       committer_date: '2026-01-24T15:30:00-08:00'
-                     ))
-        ]
+        stash_line(default_stash_attrs.merge(
+                     reflog: 'stash@{0}',
+                     message: 'WIP on main: abc1234 Test commit',
+                     author_name: 'Alice Author',
+                     author_email: 'alice@example.com',
+                     author_date: '2026-01-20T09:00:00-08:00',
+                     committer_name: 'Bob Committer',
+                     committer_email: 'bob@example.com',
+                     committer_date: '2026-01-24T15:30:00-08:00'
+                   ))
       end
 
       it 'correctly distinguishes author and committer' do
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return(stash_output)
+        allow_command('stash', 'list', format_arg, stdout: stash_output)
         result = command.call
 
         expect(result[0].author_name).to eq('Alice Author')
@@ -266,8 +252,7 @@ RSpec.describe Git::Commands::Stash::List do
       it 'raises UnexpectedResultError when field count is wrong' do
         # Malformed line with only 5 fields instead of 10
         malformed_line = %w[oid short_oid reflog message author_name].join("\x1f")
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return([malformed_line])
+        allow_command('stash', 'list', format_arg, stdout: malformed_line)
 
         expect { command.call }.to raise_error(
           Git::UnexpectedResultError,
@@ -279,8 +264,7 @@ RSpec.describe Git::Commands::Stash::List do
         valid_line = stash_line(default_stash_attrs.merge(reflog: 'stash@{0}'))
         # Second line is malformed
         malformed_line = 'incomplete data'
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return([valid_line, malformed_line])
+        allow_command('stash', 'list', format_arg, stdout: "#{valid_line}\n#{malformed_line}")
 
         expect { command.call }.to raise_error(
           Git::UnexpectedResultError,
@@ -290,8 +274,7 @@ RSpec.describe Git::Commands::Stash::List do
 
       it 'includes the full output and problematic line in error message' do
         malformed_line = 'not-enough-fields'
-        expect(execution_context).to receive(:command_lines)
-          .with('stash', 'list', format_arg).and_return([malformed_line])
+        allow_command('stash', 'list', format_arg, stdout: malformed_line)
 
         expect { command.call }.to raise_error(Git::UnexpectedResultError) do |error|
           expect(error.message).to include('Full output:')

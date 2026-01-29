@@ -63,7 +63,7 @@ module Git
         #
         #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
         #
-        # @return [String] the command output
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [ArgumentError] if set_upstream_to is not provided
         # @raise [ArgumentError] if unsupported options are provided
