@@ -149,22 +149,32 @@ module Test
       #
       # @return [void]
       #
-      def assert_command_line_eq(expected_command_line, method: :command, mocked_output: '', include_env: false)
+      def assert_command_line_eq(expected_command_line, _method: :command, mocked_output: '', include_env: false)
         actual_command_line = nil
+
+        # Internal options that should not be included in command line comparisons
+        internal_opts = %i[raise_on_failure env]
 
         command_output = ''
 
         in_temp_dir do |_path|
           git = Git.init('test_project')
 
-          git.lib.define_singleton_method(method) do |*cmd, **opts|
+          # Create a mock for the command method
+          mock_command = lambda do |*cmd, **opts|
+            # Filter out internal options for comparison
+            external_opts = opts.except(*internal_opts)
             actual_command_line = if include_env
-                                    [env_overrides, *cmd, opts]
+                                    [env_overrides, *cmd, external_opts]
                                   else
-                                    [*cmd, opts]
+                                    [*cmd, external_opts]
                                   end
-            mocked_output
+            # Return a CommandLineResult with mocked_output as stdout
+            status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
+            Git::CommandLineResult.new(['git', *cmd], status, mocked_output, '')
           end
+
+          git.lib.define_singleton_method(:command, &mock_command)
 
           Dir.chdir 'test_project' do
             yield(git) if block_given?

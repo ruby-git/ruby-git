@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
       end
 
       it 'tags the current HEAD by default' do
-        commit_sha = execution_context.command('rev-parse', 'HEAD').strip
+        commit_sha = execution_context.command('rev-parse', 'HEAD').stdout.strip
 
         result = command.call('v1.0.0')
 
@@ -114,7 +114,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
         write_file('file1.txt', 'content1')
         repo.add('file1.txt')
         repo.commit('First commit')
-        execution_context.command('rev-parse', 'HEAD').strip
+        execution_context.command('rev-parse', 'HEAD').stdout.strip
       end
 
       before do
@@ -156,7 +156,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
       end
 
       it 'replaces the existing tag' do
-        new_commit_sha = execution_context.command('rev-parse', 'HEAD').strip
+        new_commit_sha = execution_context.command('rev-parse', 'HEAD').stdout.strip
 
         result = command.call('v1.0.0', force: true)
 

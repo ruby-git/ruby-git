@@ -43,14 +43,16 @@ RSpec.describe Git::Commands::Tag::Delete do
         end
 
         it 'calls git tag -d with the tag name' do
-          expect(execution_context).to receive(:command).with('tag', '-d', 'v1.0.0')
-                                                        .and_return("Deleted tag 'v1.0.0' (was abc123)\n")
+          delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
+          expect(execution_context).to receive(:command)
+            .with('tag', '-d', 'v1.0.0', any_args).and_return(delete_result)
           command.call('v1.0.0')
         end
 
         it 'returns TagDeleteResult with the deleted tag' do
-          allow(execution_context).to receive(:command).with('tag', '-d', 'v1.0.0')
-                                                       .and_return("Deleted tag 'v1.0.0' (was abc123)\n")
+          delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
+          allow(execution_context).to receive(:command)
+            .with('tag', '-d', 'v1.0.0', any_args).and_return(delete_result)
 
           result = command.call('v1.0.0')
 
@@ -63,9 +65,11 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       context 'with multiple tag names' do
         let(:delete_output) do
-          "Deleted tag 'v1.0.0' (was abc123)\n" \
+          command_result(
+            "Deleted tag 'v1.0.0' (was abc123)\n" \
             "Deleted tag 'v2.0.0' (was def456)\n" \
             "Deleted tag 'v3.0.0' (was ghi789)\n"
+          )
         end
 
         before do
@@ -74,14 +78,14 @@ RSpec.describe Git::Commands::Tag::Delete do
 
         it 'deletes all specified tags in one command' do
           expect(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0')
+            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
             .and_return(delete_output)
           command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
         end
 
         it 'returns TagDeleteResult with all deleted tags' do
           allow(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0')
+            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
             .and_return(delete_output)
 
           result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
@@ -94,13 +98,12 @@ RSpec.describe Git::Commands::Tag::Delete do
     end
 
     context 'when some tags do not exist (partial failure)' do
-      let(:failed_error) do
-        result = double('CommandLineResult',
-                        git_cmd: %w[git tag -d v1.0.0 nonexistent v2.0.0],
-                        status: double('Status', exitstatus: 1),
-                        stderr: "error: tag 'nonexistent' not found.",
-                        stdout: "Deleted tag 'v1.0.0' (was abc123)\nDeleted tag 'v2.0.0' (was def456)\n")
-        Git::FailedError.new(result)
+      let(:partial_failure_result) do
+        command_result(
+          "Deleted tag 'v1.0.0' (was abc123)\nDeleted tag 'v2.0.0' (was def456)\n",
+          stderr: "error: tag 'nonexistent' not found.",
+          exitstatus: 1
+        )
       end
 
       before do
@@ -108,8 +111,9 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'returns TagDeleteResult with deleted and not_deleted tags' do
-        expect(execution_context).to receive(:command).with('tag', '-d', 'v1.0.0', 'nonexistent', 'v2.0.0')
-                                                      .and_raise(failed_error)
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'v1.0.0', 'nonexistent', 'v2.0.0', any_args)
+          .and_return(partial_failure_result)
 
         result = command.call('v1.0.0', 'nonexistent', 'v2.0.0')
 
@@ -122,13 +126,12 @@ RSpec.describe Git::Commands::Tag::Delete do
     end
 
     context 'when all tags fail to delete' do
-      let(:failed_error) do
-        result = double('CommandLineResult',
-                        git_cmd: %w[git tag -d nonexistent1 nonexistent2],
-                        status: double('Status', exitstatus: 1),
-                        stderr: "error: tag 'nonexistent1' not found.\nerror: tag 'nonexistent2' not found.",
-                        stdout: '')
-        Git::FailedError.new(result)
+      let(:all_fail_result) do
+        command_result(
+          '',
+          stderr: "error: tag 'nonexistent1' not found.\nerror: tag 'nonexistent2' not found.",
+          exitstatus: 1
+        )
       end
 
       before do
@@ -136,8 +139,9 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'returns TagDeleteResult with all tags in not_deleted' do
-        expect(execution_context).to receive(:command).with('tag', '-d', 'nonexistent1', 'nonexistent2')
-                                                      .and_raise(failed_error)
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'nonexistent1', 'nonexistent2', any_args)
+          .and_return(all_fail_result)
 
         result = command.call('nonexistent1', 'nonexistent2')
 
@@ -148,13 +152,12 @@ RSpec.describe Git::Commands::Tag::Delete do
     end
 
     context 'when a non-partial-failure error occurs' do
-      let(:other_error) do
-        result = double('CommandLineResult',
-                        git_cmd: %w[git tag -d v1.0.0],
-                        status: double('Status', exitstatus: 128),
-                        stderr: 'fatal: some unexpected error',
-                        stdout: '')
-        Git::FailedError.new(result)
+      let(:fatal_result) do
+        command_result(
+          '',
+          stderr: 'fatal: some unexpected error',
+          exitstatus: 128
+        )
       end
 
       before do
@@ -162,8 +165,9 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 're-raises the error' do
-        expect(execution_context).to receive(:command).with('tag', '-d', 'v1.0.0')
-                                                      .and_raise(other_error)
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'v1.0.0', any_args)
+          .and_return(fatal_result)
 
         expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
       end
@@ -181,9 +185,9 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 'handles semver tags' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('v1.2.3')])
-        expect(execution_context).to receive(:command)
-          .with('tag', '-d', 'v1.2.3')
-          .and_return("Deleted tag 'v1.2.3' (was abc)\n")
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'v1.2.3', any_args)
+          .and_return(command_result("Deleted tag 'v1.2.3' (was abc)\n"))
 
         result = command.call('v1.2.3')
         expect(result.deleted.first.name).to eq('v1.2.3')
@@ -191,9 +195,9 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 'handles tags with slashes' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('release/v1.0')])
-        expect(execution_context).to receive(:command)
-          .with('tag', '-d', 'release/v1.0')
-          .and_return("Deleted tag 'release/v1.0' (was abc)\n")
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'release/v1.0', any_args)
+          .and_return(command_result("Deleted tag 'release/v1.0' (was abc)\n"))
 
         result = command.call('release/v1.0')
         expect(result.deleted.first.name).to eq('release/v1.0')
@@ -201,9 +205,9 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 'handles tags with hyphens and underscores' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('my-tag_name')])
-        expect(execution_context).to receive(:command)
-          .with('tag', '-d', 'my-tag_name')
-          .and_return("Deleted tag 'my-tag_name' (was abc)\n")
+        allow(execution_context).to receive(:command)
+          .with('tag', '-d', 'my-tag_name', any_args)
+          .and_return(command_result("Deleted tag 'my-tag_name' (was abc)\n"))
 
         result = command.call('my-tag_name')
         expect(result.deleted.first.name).to eq('my-tag_name')

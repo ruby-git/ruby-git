@@ -66,7 +66,7 @@ module Git
       #
       # @raise [ArgumentError] if more than one of :hard, :soft, or :mixed is specified
       #
-      # @return [String] the command output (typically empty on success)
+      # @return [Git::CommandLineResult] the result of the command
       #
       def call(*, **)
         args = ARGS.build(*, **)

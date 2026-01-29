@@ -62,7 +62,7 @@ module Git
       #
       #   @option options [Boolean] :x (nil) Don't use the standard ignore rules
       #
-      # @return [String] the command output (typically empty on success)
+      # @return [Git::CommandLineResult] the result of the command
       #
       def call(*, **)
         args = ARGS.build(*, **)

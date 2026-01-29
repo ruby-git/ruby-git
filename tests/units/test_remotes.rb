@@ -148,13 +148,13 @@ class TestRemotes < Test::Unit::TestCase
       local.remote_set_branches('origin', upstream.current_branch, add: true)
       local.remote_set_branches('origin', 'feature/*', add: true)
 
-      fetch_refspecs_before = local.lib.send(:command_lines, 'config', '--get-all', 'remote.origin.fetch')
+      fetch_refspecs_before = local.lib.command('config', '--get-all', 'remote.origin.fetch').stdout.split("\n")
       assert(fetch_refspecs_before.size > 1)
       assert_equal(1, fetch_refspecs_before.count('+refs/heads/feature/*:refs/remotes/origin/feature/*'))
 
       local.remote_set_branches('origin', 'feature/*')
 
-      fetch_refspecs_after = local.lib.send(:command_lines, 'config', '--get-all', 'remote.origin.fetch')
+      fetch_refspecs_after = local.lib.command('config', '--get-all', 'remote.origin.fetch').stdout.split("\n")
       assert_equal(['+refs/heads/feature/*:refs/remotes/origin/feature/*'], fetch_refspecs_after)
     end
   end

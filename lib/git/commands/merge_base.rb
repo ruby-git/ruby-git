@@ -81,7 +81,7 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
-        output = @execution_context.command(*args)
+        output = @execution_context.command(*args).stdout
         parse_output(output)
       end
 

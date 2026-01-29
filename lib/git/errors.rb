@@ -146,7 +146,7 @@ module Git
   # The git command executed, status, stdout, and stderr, and the timeout duration
   # are available from this object.
   #
-  # result.status.timeout? will be `true`
+  # result.status.timed_out? will be `true`
   #
   # @api public
   #

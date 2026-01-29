@@ -28,12 +28,6 @@ module Git
       @status = status
       @stdout = stdout
       @stderr = stderr
-
-      # ProcessExecuter::ResultWithCapture changed the timeout? method to timed_out?
-      # in version 4.x. This is a compatibility layer to maintain the old method name
-      # for backward compatibility.
-      #
-      status.define_singleton_method(:timeout?) { timed_out? }
     end
 
     # @attribute [r] git_cmd

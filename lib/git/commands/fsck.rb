@@ -96,19 +96,14 @@ module Git
       #
       def call(*, **)
         args = ARGS.build(*, **)
+        result = @execution_context.command(*args, raise_on_failure: false)
 
         # fsck returns non-zero exit status when issues are found:
         # 1 = errors found, 2 = missing objects, 4 = warnings
-        # We still want to parse the output in these cases
-        output = begin
-          @execution_context.command(*args)
-        rescue Git::FailedError => e
-          raise unless [1, 2, 4].include?(e.result.status.exitstatus)
+        # These are bit flags that can be combined (0-7 are valid)
+        raise Git::FailedError, result if result.status.exitstatus > 7
 
-          e.result.stdout
-        end
-
-        parse_output(output)
+        parse_output(result.stdout)
       end
 
       private

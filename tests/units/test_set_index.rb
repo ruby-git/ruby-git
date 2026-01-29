@@ -123,9 +123,9 @@ class SetIndexTest < Test::Unit::TestCase
       file.write(new_content)
       file.rewind
       # Use `git hash-object -w` to write the blob to the object database and get its SHA
-      repo.lib.send(:command, 'hash-object', '-w', file.path)
+      repo.lib.command('hash-object', '-w', file.path).stdout
     end
-    repo.lib.send(:command, 'update-index', '--add', '--cacheinfo', "100644,#{blob_sha},new_file.txt")
+    repo.lib.command('update-index', '--add', '--cacheinfo', "100644,#{blob_sha},new_file.txt").stdout
 
     # 6. Write the state of the custom index to a new tree object in the Git database.
     new_tree_sha = repo.write_tree

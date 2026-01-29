@@ -34,7 +34,8 @@ class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
     lib.define_singleton_method(:command) do |cmd, *opts, &_block|
       test_case.assert_equal('ls-remote', cmd)
       test_case.assert_equal(['--symref', '--', repository, 'HEAD'], opts.flatten)
-      response
+      status = Struct.new(:success?).new(true)
+      Git::CommandLineResult.new(['git', cmd, *opts.flatten], status, response, '')
     end
   end
 

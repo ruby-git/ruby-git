@@ -44,7 +44,9 @@ class TestDiffStats < Test::Unit::TestCase
   end
 
   def test_diff_stats_with_empty_path_array
-    @git.lib.expects(:command_lines).with('diff', '--numstat', 'gitsearch1', 'v2.5').returns([])
+    status = Struct.new(:success?).new(true)
+    result = Git::CommandLineResult.new(%w[git diff], status, '', '')
+    @git.lib.expects(:command).with('diff', '--numstat', 'gitsearch1', 'v2.5').returns(result)
 
     stats = @git.diff_stats('gitsearch1', 'v2.5', path_limiter: [])
     assert_equal(0, stats.total[:files])

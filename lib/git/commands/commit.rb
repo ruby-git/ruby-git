@@ -84,7 +84,7 @@ module Git
       #     default key. When a string, uses the specified key ID. When false, adds --no-gpg-sign
       #     to override any commit.gpgsign configuration.
       #
-      # @return [String] the command output
+      # @return [Git::CommandLineResult] the result of the command
       #
       # @raise [ArgumentError] if unsupported options are provided
       # @raise [ArgumentError] if :date is not a String

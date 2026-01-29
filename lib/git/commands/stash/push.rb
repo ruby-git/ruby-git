@@ -85,10 +85,10 @@ module Git
         # @return [Git::StashInfo, nil] the newly created stash info, or nil if nothing was stashed
         #
         def call(*, **)
-          output = @execution_context.command(*ARGS.build(*, **))
+          result = @execution_context.command(*ARGS.build(*, **))
 
           # No stash created if there were no local changes
-          return nil if output&.include?('No local changes to save')
+          return nil if result.stdout.include?('No local changes to save')
 
           # New stash is always at index 0
           stash_list.first

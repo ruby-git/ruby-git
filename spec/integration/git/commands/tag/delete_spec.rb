@@ -89,7 +89,8 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         expect(result.deleted.map(&:name)).to contain_exactly('v1.0.0', 'v2.0.0')
         expect(result.not_deleted.size).to eq(1)
         expect(result.not_deleted.first.name).to eq('nonexistent')
-        expect(result.not_deleted.first.error_message).to include("tag 'nonexistent' not found")
+        expect(result.not_deleted.first.error_message)
+          .to match(/tag 'nonexistent'.*not found|tag 'nonexistent' could not be deleted/)
       end
 
       it 'removes only the existing tags' do
@@ -119,7 +120,8 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         result = command.call('nonexistent1', 'nonexistent2')
 
         result.not_deleted.each do |failure|
-          expect(failure.error_message).to include("tag '#{failure.name}' not found")
+          expect(failure.error_message)
+            .to match(/tag '#{failure.name}'.*not found|tag '#{failure.name}' could not be deleted/)
         end
       end
     end

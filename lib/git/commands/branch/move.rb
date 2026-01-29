@@ -75,7 +75,7 @@ module Git
         #
         #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists
         #
-        # @return [String] the command output
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)

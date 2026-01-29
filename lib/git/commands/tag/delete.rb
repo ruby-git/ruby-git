@@ -100,31 +100,22 @@ module Git
 
         # Execute git tag -d and capture output
         #
+        # Exit code 1 indicates some tags couldn't be deleted (e.g., not found).
+        # This is git's standard behavior for partial failures in batch delete operations.
+        # Other exit codes indicate fatal errors (e.g., not a git repository).
+        #
         # @param tag_names [Array<String>] tag names to delete
         # @return [Array<String, String>] [stdout, stderr]
+        # @raise [Git::FailedError] for fatal errors (exit code > 1)
         #
         def execute_delete(tag_names, **)
           args = ARGS.build(*tag_names, **)
-          stdout = @execution_context.command(*args)
-          [stdout, '']
-        rescue Git::FailedError => e
-          # Exit code 1 is expected when some tags don't exist; re-raise fatal errors
-          raise if fatal_error?(e)
+          result = @execution_context.command(*args, raise_on_failure: false)
 
-          [e.result.stdout, e.result.stderr]
-        end
+          # Exit code > 1 indicates fatal error; exit 1 is partial failure (expected)
+          raise Git::FailedError, result if result.status.exitstatus > 1
 
-        # Check if this is a fatal error (not just "tag not found")
-        #
-        # Exit code 1 indicates some tags couldn't be deleted (e.g., not found).
-        # This is git's standard behavior for partial failures in batch delete operations.
-        # Other exit codes indicate fatal errors (e.g., not a git repository, invalid tag name).
-        #
-        # @param error [Git::FailedError] the error to check
-        # @return [Boolean] true if this is a fatal error that should be re-raised
-        #
-        def fatal_error?(error)
-          error.result.status.exitstatus != 1
+          [result.stdout, result.stderr]
         end
 
         # Parse deleted tag names from stdout

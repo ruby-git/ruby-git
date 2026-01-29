@@ -150,7 +150,7 @@ module Git
         #   @option options [Boolean] :log (nil) Include one-line descriptions
         #     from commits in merge message. true for --log, false for --no-log
         #
-        # @return [String] the command output
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [Git::FailedError] if the merge fails (e.g., conflicts)
         #

@@ -110,7 +110,7 @@ module Git
         #   @option options [Boolean] :recurse_submodules (nil) Update submodules.
         #     true for --recurse-submodules, false for --no-recurse-submodules
         #
-        # @return [String] the command output (typically empty on success)
+        # @return [Git::CommandLineResult] the result of the command
         #
         # @raise [Git::FailedError] if the checkout fails
         #
