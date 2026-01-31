@@ -32,14 +32,14 @@ module Git
         ARGS = Arguments.define do
           static 'stash'
           static 'push'
-          flag %i[patch p], args: '--patch'
-          flag %i[staged S], args: '--staged'
-          negatable_flag %i[keep_index k], args: '--keep-index'
-          flag %i[include_untracked u], args: '--include-untracked'
-          flag %i[all a], args: '--all'
-          inline_value %i[message m], args: '--message'
-          inline_value :pathspec_from_file, args: '--pathspec-from-file'
-          flag :pathspec_file_nul, args: '--pathspec-file-nul'
+          flag %i[patch p]
+          flag %i[staged S]
+          negatable_flag %i[keep_index k]
+          flag %i[include_untracked u]
+          flag %i[all a]
+          inline_value %i[message m]
+          inline_value :pathspec_from_file
+          flag :pathspec_file_nul
           positional :pathspecs, variadic: true, separator: '--'
         end.freeze
 

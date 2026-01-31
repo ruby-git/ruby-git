@@ -26,11 +26,17 @@ require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
 require_relative 'commands/stash/apply'
+require_relative 'commands/stash/branch'
 require_relative 'commands/stash/clear'
+require_relative 'commands/stash/create'
 require_relative 'commands/stash/drop'
 require_relative 'commands/stash/list'
 require_relative 'commands/stash/pop'
 require_relative 'commands/stash/push'
+require_relative 'commands/stash/show_numstat'
+require_relative 'commands/stash/show_patch'
+require_relative 'commands/stash/show_raw'
+require_relative 'commands/stash/store'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1220,9 +1226,7 @@ module Git
     #
     # @return [Boolean] true if stash was created, false otherwise
     #
-    # rubocop:disable Naming/PredicateMethod
-    def stash_save(message = nil, options = {})
-      # rubocop:enable Naming/PredicateMethod
+    def stash_save(message = nil, options = {}) # rubocop:disable Naming/PredicateMethod
       opts = message ? options.merge(message: message) : options
       stash_info = Git::Commands::Stash::Push.new(self).call(**opts)
 
