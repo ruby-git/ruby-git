@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (19/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (23/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `merge` command** → `Git::Commands::Merge`
+**Migrate the `tag` command** → `Git::Commands::Tag`
 
 #### Workflow
 
@@ -675,6 +675,10 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `stash_drop` | `Git::Commands::Stash::Drop` | `spec/unit/git/commands/stash/drop_spec.rb` | `git stash drop` |
 | `stash_clear` | `Git::Commands::Stash::Clear` | `spec/unit/git/commands/stash/clear_spec.rb` | `git stash clear` |
 | `checkout` / `checkout_file` | `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` | `spec/unit/git/commands/checkout/branch_spec.rb` / `spec/unit/git/commands/checkout/files_spec.rb` | `git checkout` (branch) / `git checkout` (files) |
+| `merge` | `Git::Commands::Merge::Start` | `spec/unit/git/commands/merge/start_spec.rb` | `git merge` |
+| `merge_abort` | `Git::Commands::Merge::Abort` | `spec/unit/git/commands/merge/abort_spec.rb` | `git merge --abort` |
+| `merge_continue` | `Git::Commands::Merge::Continue` | `spec/unit/git/commands/merge/continue_spec.rb` | `git merge --continue` |
+| `merge_quit` | `Git::Commands::Merge::Quit` | `spec/unit/git/commands/merge/quit_spec.rb` | `git merge --quit` |
 | N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
 | N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
 | N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
@@ -702,7 +706,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
 - [x] `branch_move` → `Git::Commands::Branch::Move` — `git branch --move`
 - [x] `checkout` / `checkout_file` → `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` — `git checkout`
-- [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
+- [x] `merge` / `merge_abort` / `merge_continue` / `merge_quit` → `Git::Commands::Merge::*` — `git merge` (Start, Abort, Continue, Quit)
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
 - [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
 

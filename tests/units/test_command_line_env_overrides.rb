@@ -14,6 +14,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       assert_command_line_eq(expected_command_line_proc, include_env: true) do |git|
         expected_env = {
           'GIT_DIR' => git.lib.git_dir,
+          'GIT_EDITOR' => 'true',
           'GIT_INDEX_FILE' => git.lib.git_index_file,
           'GIT_SSH' => 'ssh -i /path/to/key',
           'GIT_WORK_TREE' => git.lib.git_work_dir,

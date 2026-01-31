@@ -17,7 +17,9 @@ require_relative 'commands/commit'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
 require_relative 'commands/merge/start'
-require_relative 'commands/merge/resolve'
+require_relative 'commands/merge/abort'
+require_relative 'commands/merge/continue'
+require_relative 'commands/merge/quit'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/reset'
@@ -1453,7 +1455,7 @@ module Git
     # @raise [Git::FailedError] if no merge is in progress
     #
     def merge_abort
-      Git::Commands::Merge::Resolve.new(self).call(abort: true).stdout
+      Git::Commands::Merge::Abort.new(self).call.stdout
     end
 
     # Continue a merge after conflict resolution
@@ -1465,7 +1467,7 @@ module Git
     # @raise [Git::FailedError] if conflicts remain unresolved
     #
     def merge_continue
-      Git::Commands::Merge::Resolve.new(self).call(continue: true).stdout
+      Git::Commands::Merge::Continue.new(self).call.stdout
     end
 
     # Quit the current merge, leaving working tree as-is
@@ -1476,10 +1478,11 @@ module Git
     #
     # @return [String] the command output
     #
-    # @raise [Git::FailedError] if no merge is in progress
+    # @raise [Git::FailedError] if the underlying git command exits non-zero
+    #   (for example, on Git versions before 2.35 when no merge is in progress)
     #
     def merge_quit
-      Git::Commands::Merge::Resolve.new(self).call(quit: true).stdout
+      Git::Commands::Merge::Quit.new(self).call.stdout
     end
 
     # Find common ancestor commit(s) for merge
@@ -2227,6 +2230,7 @@ module Git
         'GIT_WORK_TREE' => @git_work_dir,
         'GIT_INDEX_FILE' => @git_index_file,
         'GIT_SSH' => resolved_git_ssh,
+        'GIT_EDITOR' => 'true', # Use a no-op editor so Git skips interactive editing but continues
         'LC_ALL' => 'en_US.UTF-8'
       }.merge(additional_overrides)
     end
