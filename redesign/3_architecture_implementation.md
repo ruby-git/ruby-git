@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (12/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (15/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `checkout` command** → `Git::Commands::Checkout`
+**Migrate the `stash` commands** → `Git::Commands::Stash::Show`, `Git::Commands::Stash::Branch`, `Git::Commands::Stash::Create`, `Git::Commands::Stash::Store`
 
 #### Workflow
 
@@ -83,7 +83,10 @@ risk and allows for a gradual, controlled migration to the new architecture.
    **Important**: The `@overload` signature must use `options = {}` (not keyword
    arguments) for `@option` tags to render in generated documentation.
 
-5. **Delegate**: Update `Git::Lib#branch_new` and `Git::Lib#branch_delete` to delegate to the new class:
+   **Important**: Keep empty comments between each yard tag
+
+5. **Delegate**: Update related methods in `Git::Lib` to delegate to the new class(es).
+   Here is an example for the branch functionality in `Git::Lib`:
 
    ```ruby
    def branch_new(branch_name, options = {})
@@ -99,8 +102,12 @@ risk and allows for a gradual, controlled migration to the new architecture.
    but they must convert it to keyword arguments when calling the command class
    using `**options`.
 
+   Note: `Git::Lib` methods must remain backward compatible. These `Git::Lib` methods
+   may need to translate the output from the newly implement comment to the legacy return
+   value of the `Git::Lib` method.
+
 6. **Verify**:
-   - `bundle exec rspec spec/git/commands/branch_spec.rb` — new tests pass
+   - `bundle exec rspec spec/git/commands/branch_spec.rb` — new tests pass (branch example)
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -109,7 +116,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
    exec bin/test test_branch`)
 
-7. **Update Checklist**: Move `branch` from "Commands To Migrate" to "Migrated
+7. **Update Checklist**: Move the command from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
    the next command in the list.
 
@@ -663,6 +670,9 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
 | `branch_delete` | `Git::Commands::Branch::Delete` | `spec/git/commands/branch/delete_spec.rb` | `git branch --delete` |
 | `branch_move` | `Git::Commands::Branch::Move` | `spec/git/commands/branch/move_spec.rb` | `git branch --move` |
+| `diff_full` | `Git::Commands::Diff::Patch` | `spec/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
+| `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
+| `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/git/commands/diff/raw_spec.rb` | `git diff --raw` |
 
 #### ⏳ Commands To Migrate
 
@@ -690,8 +700,8 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Inspection & Comparison:**
 
 - [ ] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
-- [ ] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
-  `Git::Commands::Diff` — `git diff`
+- [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
+  `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
 - [ ] `show` → `Git::Commands::Show` — `git show`
 - [ ] `describe` → `Git::Commands::Describe` — `git describe`
 - [ ] `grep` → `Git::Commands::Grep` — `git grep`
