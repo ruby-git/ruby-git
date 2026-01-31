@@ -72,14 +72,11 @@ RSpec.describe Git::Stashes do
   describe '#all_legacy' do
     subject(:stashes) { described_class.new(base) }
 
-    it 'returns an array of [index, message] pairs' do
-      result = stashes.all_legacy
+    it 'returns an array of [index, message] pairs and emits a deprecation warning' do
+      result = nil
+      expect { result = stashes.all_legacy }.to output(/DEPRECATION/).to_stderr
       expect(result).to be_an(Array)
       expect(result).to eq(stash_legacy_data)
-    end
-
-    it 'emits a deprecation warning' do
-      expect { stashes.all_legacy }.to output(/DEPRECATION/).to_stderr
     end
   end
 

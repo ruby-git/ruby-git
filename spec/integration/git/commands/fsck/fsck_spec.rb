@@ -77,7 +77,8 @@ RSpec.describe Git::Commands::Fsck, :integration do
         # Create another root commit by creating an orphan branch
         repo.branch('orphan-branch').checkout
         # Create the orphan via low-level git command
-        `cd #{repo_dir} && git checkout --orphan another-root && git commit --allow-empty -m "Another root"`
+        `cd #{repo_dir} && git checkout --orphan another-root >/dev/null 2>&1 && \
+git commit --allow-empty -m "Another root" >/dev/null 2>&1`
       end
 
       it 'reports root commits' do
