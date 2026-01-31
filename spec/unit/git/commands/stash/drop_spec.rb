@@ -90,5 +90,20 @@ RSpec.describe Git::Commands::Stash::Drop do
         )
       end
     end
+
+    context 'when no stashes exist' do
+      before do
+        allow(list_command).to receive(:call).and_return([])
+      end
+
+      it 'raises UnexpectedResultError with helpful message' do
+        expect do
+          command.call
+        end.to raise_error(
+          Git::UnexpectedResultError,
+          'No stash entries found. Run `git stash` to create one.'
+        )
+      end
+    end
   end
 end
