@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (15/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (17/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `stash` commands** → `Git::Commands::Stash::Show`, `Git::Commands::Stash::Branch`, `Git::Commands::Stash::Create`, `Git::Commands::Stash::Store`
+**Migrate the `checkout` command** → `Git::Commands::Checkout::Branch`, `Git::Commands::Checkout::Files`
 
 #### Workflow
 
@@ -56,12 +56,10 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
    **YARD Documentation Format for `#call` methods:**
 
-   Use `@overload` with `options = {}` to make `@option` tags render correctly:
-
    ```ruby
    # Execute the git example command
    #
-   # @overload call(positional_arg, *variadic_args, options = {})
+   # @overload call(positional_arg, *variadic_args, **options)
    #
    #   @param positional_arg [String] Description of the positional argument
    #
@@ -79,9 +77,6 @@ risk and allows for a gradual, controlled migration to the new architecture.
    #
    def call(*, **)
    ```
-
-   **Important**: The `@overload` signature must use `options = {}` (not keyword
-   arguments) for `@option` tags to render in generated documentation.
 
    **Important**: Keep empty comments between each yard tag
 
@@ -673,6 +668,18 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `diff_full` | `Git::Commands::Diff::Patch` | `spec/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
 | `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
 | `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/git/commands/diff/raw_spec.rb` | `git diff --raw` |
+| `stashes_list` | `Git::Commands::Stash::List` | `spec/unit/git/commands/stash/list_spec.rb` | `git stash list` |
+| `stash_save` | `Git::Commands::Stash::Push` | `spec/unit/git/commands/stash/push_spec.rb` | `git stash push` |
+| `stash_pop` | `Git::Commands::Stash::Pop` | `spec/unit/git/commands/stash/pop_spec.rb` | `git stash pop` |
+| `stash_apply` | `Git::Commands::Stash::Apply` | `spec/unit/git/commands/stash/apply_spec.rb` | `git stash apply` |
+| `stash_drop` | `Git::Commands::Stash::Drop` | `spec/unit/git/commands/stash/drop_spec.rb` | `git stash drop` |
+| `stash_clear` | `Git::Commands::Stash::Clear` | `spec/unit/git/commands/stash/clear_spec.rb` | `git stash clear` |
+| N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
+| N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
+| N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
+| N/A (new) | `Git::Commands::Stash::ShowNumstat` | `spec/unit/git/commands/stash/show_numstat_spec.rb` | `git stash show --numstat` |
+| N/A (new) | `Git::Commands::Stash::ShowPatch` | `spec/unit/git/commands/stash/show_patch_spec.rb` | `git stash show --patch` |
+| N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
 
 #### ⏳ Commands To Migrate
 
@@ -692,10 +699,11 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
 - [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
 - [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
+- [x] `branch_move` → `Git::Commands::Branch::Move` — `git branch --move`
 - [ ] `checkout` / `checkout_file` → `Git::Commands::Checkout` — `git checkout`
 - [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
-- [ ] `stash_save` / `stash_apply` → `Git::Commands::Stash` — `git stash`
+- [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
 
 **Inspection & Comparison:**
 

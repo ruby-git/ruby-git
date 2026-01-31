@@ -18,7 +18,7 @@ module Git
       #   Git::Commands::Stash::Pop.new(execution_context).call
       #
       # @example Pop a specific stash
-      #   Git::Commands::Stash::Pop.new(execution_context).call('stash@{2}')
+      #   Git::Commands::Stash::Pop.new(execution_context).call('stash@\\{2}')
       #
       # @example Pop and restore index state
       #   Git::Commands::Stash::Pop.new(execution_context).call(index: true)
@@ -54,7 +54,7 @@ module Git
         #
         #   Pop a specific stash
         #
-        #   @param stash [String, nil] stash reference (e.g., 'stash@\\{0}', '0');
+        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
         #   @param options [Hash] command options
         #
@@ -100,7 +100,7 @@ module Git
         # Normalize stash reference to canonical name format
         #
         # @param stash [String, Integer] stash reference
-        # @return [String] canonical name (e.g., 'stash@{0}')
+        # @return [String] canonical name (e.g., 'stash@\\{0}')
         #
         def normalize_stash_name(stash)
           name = stash.to_s

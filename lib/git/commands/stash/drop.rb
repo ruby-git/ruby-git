@@ -18,7 +18,7 @@ module Git
       #   Git::Commands::Stash::Drop.new(execution_context).call
       #
       # @example Drop a specific stash
-      #   Git::Commands::Stash::Drop.new(execution_context).call('stash@{2}')
+      #   Git::Commands::Stash::Drop.new(execution_context).call('stash@\\{2}')
       #
       class Drop
         # Arguments DSL for building command-line arguments
@@ -38,11 +38,11 @@ module Git
 
         # Drop a stash entry
         #
-        # @overload call(**options)
+        # @overload call()
         #
         #   Drop the latest stash
         #
-        # @overload call(stash, **options)
+        # @overload call(stash)
         #
         #   Drop a specific stash
         #
@@ -88,7 +88,7 @@ module Git
         # Normalize stash reference to canonical name format
         #
         # @param stash [String, Integer] stash reference
-        # @return [String] canonical name (e.g., 'stash@{0}')
+        # @return [String] canonical name (e.g., 'stash@\\{0}')
         #
         def normalize_stash_name(stash)
           name = stash.to_s

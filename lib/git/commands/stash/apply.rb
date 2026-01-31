@@ -18,7 +18,7 @@ module Git
       #   Git::Commands::Stash::Apply.new(execution_context).call
       #
       # @example Apply a specific stash
-      #   Git::Commands::Stash::Apply.new(execution_context).call('stash@{2}')
+      #   Git::Commands::Stash::Apply.new(execution_context).call('stash@\\{2}')
       #
       # @example Apply and restore index state
       #   Git::Commands::Stash::Apply.new(execution_context).call(index: true)
@@ -100,7 +100,7 @@ module Git
         # Normalize stash reference to canonical name format
         #
         # @param stash [String, Integer] stash reference
-        # @return [String] canonical name (e.g., 'stash@{0}')
+        # @return [String] canonical name (e.g., 'stash@\\{0}')
         #
         def normalize_stash_name(stash)
           name = stash.to_s
