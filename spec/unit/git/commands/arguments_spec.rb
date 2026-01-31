@@ -2397,5 +2397,236 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
     end
+
+    context 'with value_to_positional options' do
+      context 'with multi_valued: false (default)' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :path
+          end
+        end
+
+        it 'outputs the value as a positional argument' do
+          expect(args.build(path: 'file.txt')).to eq(['file.txt'])
+        end
+
+        it 'outputs nothing when value is nil' do
+          expect(args.build(path: nil)).to eq([])
+        end
+
+        it 'outputs nothing when option is not provided' do
+          expect(args.build).to eq([])
+        end
+
+        it 'raises an error when value is an array' do
+          expect { args.build(path: %w[file1.txt file2.txt]) }.to raise_error(
+            ArgumentError,
+            /value_to_positional :path requires multi_valued: true to accept an array/
+          )
+        end
+      end
+
+      context 'with multi_valued: true' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :paths, multi_valued: true
+          end
+        end
+
+        it 'outputs each array element as a positional argument' do
+          expect(args.build(paths: %w[file1.txt file2.txt])).to eq(%w[file1.txt file2.txt])
+        end
+
+        it 'outputs a single value as a positional argument' do
+          expect(args.build(paths: 'file.txt')).to eq(['file.txt'])
+        end
+
+        it 'outputs nothing when value is nil' do
+          expect(args.build(paths: nil)).to eq([])
+        end
+
+        it 'outputs nothing when value is empty array' do
+          expect(args.build(paths: [])).to eq([])
+        end
+
+        it 'raises an error when array contains nil' do
+          expect { args.build(paths: ['file1.txt', nil, 'file2.txt']) }.to raise_error(
+            ArgumentError,
+            /nil values are not allowed in value_to_positional :paths/
+          )
+        end
+
+        it 'allows empty strings in array' do
+          expect(args.build(paths: ['file1.txt', '', 'file2.txt'])).to eq(['file1.txt', '', 'file2.txt'])
+        end
+      end
+
+      context 'with separator' do
+        let(:args) do
+          described_class.define do
+            flag :force
+            value_to_positional :paths, multi_valued: true, separator: '--'
+          end
+        end
+
+        it 'outputs separator before positional values' do
+          expect(args.build(paths: %w[file1.txt file2.txt], force: true)).to eq(
+            ['--force', '--', 'file1.txt', 'file2.txt']
+          )
+        end
+
+        it 'outputs separator before single value' do
+          expect(args.build(paths: 'file.txt', force: true)).to eq(['--force', '--', 'file.txt'])
+        end
+
+        it 'omits separator when value is nil' do
+          expect(args.build(paths: nil, force: true)).to eq(['--force'])
+        end
+
+        it 'omits separator when value is empty array' do
+          expect(args.build(paths: [], force: true)).to eq(['--force'])
+        end
+      end
+
+      context 'with allow_empty: false (default)' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :path
+          end
+        end
+
+        it 'outputs nothing when value is empty string' do
+          expect(args.build(path: '')).to eq([])
+        end
+      end
+
+      context 'with allow_empty: true' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :path, allow_empty: true
+          end
+        end
+
+        it 'outputs empty string when value is empty string' do
+          expect(args.build(path: '')).to eq([''])
+        end
+
+        context 'with separator' do
+          let(:args) do
+            described_class.define do
+              value_to_positional :path, allow_empty: true, separator: '--'
+            end
+          end
+
+          it 'outputs separator before empty string' do
+            expect(args.build(path: '')).to eq(['--', ''])
+          end
+        end
+
+        context 'with multi_valued: true' do
+          let(:args) do
+            described_class.define do
+              value_to_positional :paths, allow_empty: true, multi_valued: true, separator: '--'
+            end
+          end
+
+          it 'still omits separator when value is empty array' do
+            # allow_empty applies to empty strings, not empty arrays
+            # An empty array means "no values" and should produce no output
+            expect(args.build(paths: [])).to eq([])
+          end
+
+          it 'outputs separator and empty string when array contains empty string' do
+            expect(args.build(paths: [''])).to eq(['--', ''])
+          end
+        end
+      end
+
+      context 'definition order' do
+        it 'renders value_to_positional in definition order with other options' do
+          args = described_class.define do
+            flag :force
+            positional :commit, required: true
+            value_to_positional :paths, multi_valued: true, separator: '--'
+          end
+
+          result = args.build('HEAD', paths: %w[file1.txt file2.txt], force: true)
+          expect(result).to eq(['--force', 'HEAD', '--', 'file1.txt', 'file2.txt'])
+        end
+
+        it 'can appear before positional arguments' do
+          args = described_class.define do
+            value_to_positional :excludes, multi_valued: true, separator: '--exclude'
+            positional :paths, variadic: true
+          end
+
+          result = args.build('file1.txt', 'file2.txt', excludes: %w[.git node_modules])
+          expect(result).to eq(['--exclude', '.git', 'node_modules', 'file1.txt', 'file2.txt'])
+        end
+      end
+
+      context 'with required: true' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :paths, required: true
+          end
+        end
+
+        it 'raises an error when option is not provided' do
+          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :paths/)
+        end
+
+        it 'allows nil when allow_nil: true (default)' do
+          expect(args.build(paths: nil)).to eq([])
+        end
+      end
+
+      context 'with required: true and allow_nil: false' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :paths, required: true, allow_nil: false
+          end
+        end
+
+        it 'raises an error when value is nil' do
+          expect { args.build(paths: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :paths/)
+        end
+      end
+
+      context 'with type validation' do
+        let(:args) do
+          described_class.define do
+            value_to_positional :path, type: String
+          end
+        end
+
+        it 'validates type of provided value' do
+          expect { args.build(path: 123) }.to raise_error(
+            ArgumentError,
+            /The :path option must be a String, but was a Integer/
+          )
+        end
+
+        it 'accepts valid type' do
+          expect(args.build(path: 'file.txt')).to eq(['file.txt'])
+        end
+      end
+
+      context 'with aliases' do
+        let(:args) do
+          described_class.define do
+            value_to_positional %i[paths pathspecs], multi_valued: true, separator: '--'
+          end
+        end
+
+        it 'accepts primary name' do
+          expect(args.build(paths: %w[file.txt])).to eq(['--', 'file.txt'])
+        end
+
+        it 'accepts alias' do
+          expect(args.build(pathspecs: %w[file.txt])).to eq(['--', 'file.txt'])
+        end
+      end
+    end
   end
 end

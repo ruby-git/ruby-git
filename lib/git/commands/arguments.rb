@@ -70,14 +70,17 @@ module Git
     # - {#negatable_flag} - Boolean flag with negation (--flag or --no-flag)
     # - {#value} - Valued option (--flag value as separate arguments)
     # - {#inline_value} - Inline valued option (--flag=value as single argument)
+    # - {#value_to_positional} - Value(s) output as positional arguments
     # - {#flag_or_inline_value} - Flag or inline value (--flag or --flag=value)
     # - {#negatable_flag_or_inline_value} - Negatable flag or inline value
     # - {#static} - Static flag always included
     # - {#custom} - Custom option with builder block
     # - {#metadata} - Validation-only option (not included in command output)
     #
-    # Both {#value} and {#inline_value} support a `multi_valued: true` parameter
-    # that allows the option to accept an array of values, repeating the flag for each:
+    # Both {#value}, {#inline_value}, and {#value_to_positional} support a
+    # `multi_valued: true` parameter that allows the option to accept an array
+    # of values. For {#value} and {#inline_value}, this repeats the flag for each value.
+    # For {#value_to_positional}, each value is output as a separate positional argument:
     #
     # @example Multi-valued options
     #   value :config, multi_valued: true
@@ -85,6 +88,9 @@ module Git
     #
     #   inline_value :sort, multi_valued: true
     #   # sort: ['refname', '-committerdate'] => ['--sort=refname', '--sort=-committerdate']
+    #
+    #   value_to_positional :pathspecs, separator: '--', multi_valued: true
+    #   # pathspecs: ['file1.txt', 'file2.txt'] => ['--', 'file1.txt', 'file2.txt']
     #
     # == Common Option Parameters
     #
@@ -94,14 +100,16 @@ module Git
     # - +required:+ - When true, the option key must be present in the provided opts.
     #   Raises ArgumentError if the key is missing.
     #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
-    #   {#flag_or_inline_value}, {#negatable_flag_or_inline_value}, {#custom}.
+    #   {#value_to_positional}, {#flag_or_inline_value},
+    #   {#negatable_flag_or_inline_value}, {#custom}.
     # - +allow_nil:+ - When false (with required: true), the value cannot be nil.
     #   Raises ArgumentError if a nil value is provided. Defaults to true.
     #   Supported by: same as +required:+.
     # - +type:+ - Validates the value is an instance of the specified class(es).
     #   Raises ArgumentError if type doesn't match.
     #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
-    #   {#flag_or_inline_value}, {#negatable_flag_or_inline_value}.
+    #   {#value_to_positional}, {#flag_or_inline_value},
+    #   {#negatable_flag_or_inline_value}.
     #
     # Note: {#static} and {#metadata} do not support these validation parameters.
     #
@@ -359,6 +367,56 @@ module Git
                        allow_nil: true)
         register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty,
                                multi_valued: multi_valued, required: required, allow_nil: allow_nil)
+      end
+
+      # Define a value option that outputs as positional arguments
+      #
+      # Maps a keyword argument's value to positional arguments in the output.
+      # This is useful when a git command has multiple variadic arguments and
+      # one of them must be provided as a keyword option.
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      # @param separator [String, nil] separator string to insert before values (e.g., '--')
+      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
+      #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      # @param allow_empty [Boolean] whether to include output when value is an empty string.
+      #   When false (default), empty strings are skipped entirely.
+      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
+      #   of values and outputs each as a positional argument. When false (default), only a single
+      #   string value is accepted; passing an array raises ArgumentError.
+      # @param required [Boolean] when true, the option key must be present in the provided options hash.
+      #   Raises ArgumentError if the key is missing. Defaults to false.
+      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
+      #   Raises ArgumentError if a nil value is provided. Defaults to true.
+      # @return [void]
+      #
+      # @example Basic usage
+      #   value_to_positional :path
+      #   # path: 'file.txt' => ['file.txt']
+      #   # path: nil        => []
+      #
+      # @example With multi_valued
+      #   value_to_positional :paths, multi_valued: true
+      #   # paths: 'file.txt'           => ['file.txt']
+      #   # paths: ['f1.txt', 'f2.txt'] => ['f1.txt', 'f2.txt']
+      #   # paths: nil                  => []
+      #   # paths: []                   => []
+      #
+      # @example With separator (pathspec pattern)
+      #   value_to_positional :paths, multi_valued: true, separator: '--'
+      #   # paths: ['f1.txt', 'f2.txt'] => ['--', 'f1.txt', 'f2.txt']
+      #   # paths: nil                  => []
+      #
+      # @example Combined with positional arguments
+      #   positional :commit, required: true
+      #   value_to_positional :paths, multi_valued: true, separator: '--'
+      #   # build('HEAD', paths: ['file.txt']) => ['HEAD', '--', 'file.txt']
+      #
+      def value_to_positional(names, separator: nil, type: nil, allow_empty: false, multi_valued: false,
+                              required: false, allow_nil: true)
+        register_option(names, type: :value_to_positional, separator: separator, expected_type: type,
+                               allow_empty: allow_empty, multi_valued: multi_valued, required: required,
+                               allow_nil: allow_nil)
       end
 
       # Define a flag or inline value option (--flag when true, --flag=value when string)
@@ -787,6 +845,29 @@ module Git
                   else "#{arg_spec}=#{value}"
                   end
         end,
+        value_to_positional: lambda do |args, _, value, definition|
+          # Validate array usage when multi_valued is false
+          if value.is_a?(Array) && !definition[:multi_valued]
+            raise ArgumentError,
+                  "value_to_positional :#{definition[:aliases].first} requires multi_valued: true to accept an array"
+          end
+
+          # Validate no nil values in array
+          if definition[:multi_valued] && value.is_a?(Array) && value.any?(&:nil?)
+            raise ArgumentError,
+                  "nil values are not allowed in value_to_positional :#{definition[:aliases].first}"
+          end
+
+          # Add separator if present
+          args << definition[:separator] if definition[:separator]
+
+          # Add values as positional arguments
+          if definition[:multi_valued]
+            Array(value).each { |v| args << v.to_s }
+          else
+            args << value.to_s
+          end
+        end,
         custom: lambda do |args, _, value, definition|
           result = definition[:builder]&.call(value)
           result.is_a?(Array) ? args.concat(result) : (args << result if result)
@@ -805,8 +886,17 @@ module Git
       def should_skip_option?(value, definition)
         return true if value.nil?
         return true if value == false && definition[:type] == :flag_or_inline_value
+        return skip_value_to_positional_array?(value, definition) if value.is_a?(Array)
 
         value.respond_to?(:empty?) && value.empty? && !definition[:allow_empty]
+      end
+
+      # For value_to_positional, empty arrays always skip regardless of allow_empty
+      # (allow_empty only applies to empty strings, not empty arrays)
+      def skip_value_to_positional_array?(value, definition)
+        return value.empty? if definition[:type] == :value_to_positional
+
+        value.empty? && !definition[:allow_empty]
       end
 
       def normalize_positionals(positionals)
