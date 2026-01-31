@@ -22,18 +22,18 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (17/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (19/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `checkout` command** → `Git::Commands::Checkout::Branch`, `Git::Commands::Checkout::Files`
+**Migrate the `merge` command** → `Git::Commands::Merge`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   checkout`). Understand all options and edge cases.
+   merge`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -117,8 +117,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 #### Reference Files
 
-- Pattern to follow: `lib/git/commands/add.rb` + `spec/git/commands/add_spec.rb`
-- Output parsing example: `lib/git/commands/fsck.rb`
+- Pattern to follow: `lib/git/commands/commit.rb` + `spec/git/commands/commit_spec.rb`
+- Namespace example: `lib/git/commands/checkout/branch.rb`
 - Complex options example: `lib/git/commands/clone.rb`
 - Contributing guide: `CONTRIBUTING.md` (see "Wrapping a git command")
 
@@ -674,6 +674,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `stash_apply` | `Git::Commands::Stash::Apply` | `spec/unit/git/commands/stash/apply_spec.rb` | `git stash apply` |
 | `stash_drop` | `Git::Commands::Stash::Drop` | `spec/unit/git/commands/stash/drop_spec.rb` | `git stash drop` |
 | `stash_clear` | `Git::Commands::Stash::Clear` | `spec/unit/git/commands/stash/clear_spec.rb` | `git stash clear` |
+| `checkout` / `checkout_file` | `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` | `spec/unit/git/commands/checkout/branch_spec.rb` / `spec/unit/git/commands/checkout/files_spec.rb` | `git checkout` (branch) / `git checkout` (files) |
 | N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
 | N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
 | N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
@@ -700,7 +701,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
 - [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
 - [x] `branch_move` → `Git::Commands::Branch::Move` — `git branch --move`
-- [ ] `checkout` / `checkout_file` → `Git::Commands::Checkout` — `git checkout`
+- [x] `checkout` / `checkout_file` → `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` — `git checkout`
 - [ ] `merge` / `merge_base` → `Git::Commands::Merge` — `git merge`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
 - [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
