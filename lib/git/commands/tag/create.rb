@@ -39,14 +39,15 @@ module Git
         #
         ARGS = Arguments.define do
           static 'tag'
-          flag %i[annotate a], args: '-a'
-          flag %i[sign s], args: '-s'
-          flag :no_sign
+          flag %i[annotate a]
+          flag %i[sign s], negatable: true
           value %i[local_user u], inline: true
-          flag %i[force f], args: '-f'
+          flag %i[force f]
           flag :create_reflog
           value %i[message m], inline: true
           value %i[file F], inline: true
+          key_value :trailer, key_separator: ': '
+          value :cleanup, inline: true
           positional :tag_name, required: true
           positional :commit
         end.freeze
@@ -76,9 +77,7 @@ module Git
         #
         #   @option options [Boolean] :sign (nil) Create a GPG-signed tag using the default
         #     signing key. Requires a message via `:message` or `:file`. Alias: `:s`
-        #
-        #   @option options [Boolean] :no_sign (nil) Override `tag.gpgSign` configuration
-        #     variable that is set to force each and every tag to be signed.
+        #     Set to `false` to override `tag.gpgSign` config (outputs `--no-sign`).
         #
         #   @option options [String] :local_user (nil) Create a GPG-signed tag using the
         #     specified key. Requires a message via `:message` or `:file`. Alias: `:u`
@@ -95,6 +94,15 @@ module Git
         #   @option options [String] :file (nil) Take the tag message from the given file.
         #     Use `-` to read from standard input.
         #     Implies `-a` if none of `-a`, `-s`, or `-u` is given. Alias: `:F`
+        #
+        #   @option options [Hash, Array<Array>] :trailer (nil) Add trailers to the tag message.
+        #     Can be a Hash `{ 'Key' => 'value' }` or Array of pairs `[['Key', 'value']]`.
+        #     Multiple trailers can be specified. The trailers can be extracted using
+        #     `--format="%(trailers)"` in `git tag --list`.
+        #
+        #   @option options [String] :cleanup (nil) Set how the tag message is cleaned up.
+        #     Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
+        #     whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
         #
         # @return [Git::TagInfo] the info for the tag that was created
         #
