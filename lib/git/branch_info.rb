@@ -130,6 +130,12 @@ module Git
   #     the upstream's target_oid may be nil
   #
   BranchInfo = Data.define(:refname, :target_oid, :current, :worktree, :symref, :upstream) do
+    # @return [Boolean] always false for BranchInfo (see DetachedHeadInfo for detached state)
+    def detached? = false
+
+    # @return [Boolean] true if this is an unborn branch (no commits yet)
+    def unborn? = target_oid.nil?
+
     # @return [Boolean] true if this is the currently checked out branch
     def current? = current
 

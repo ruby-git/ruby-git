@@ -59,31 +59,58 @@ RSpec.describe Git::Commands::Branch::List do
       end
     end
 
+    context 'with :ignore_case option' do
+      it 'adds --ignore-case flag' do
+        expect_command(*expected_args('--ignore-case'))
+        command.call(ignore_case: true)
+      end
+    end
+
     context 'with :contains option' do
-      it 'adds --contains <commit>' do
+      it 'adds --contains <commit> with string value' do
         expect_command(*expected_args('--contains', 'abc123'))
         command.call(contains: 'abc123')
+      end
+
+      it 'adds --contains flag with true (defaults to HEAD)' do
+        expect_command(*expected_args('--contains'))
+        command.call(contains: true)
       end
     end
 
     context 'with :no_contains option' do
-      it 'adds --no-contains <commit>' do
+      it 'adds --no-contains <commit> with string value' do
         expect_command(*expected_args('--no-contains', 'abc123'))
         command.call(no_contains: 'abc123')
+      end
+
+      it 'adds --no-contains flag with true (defaults to HEAD)' do
+        expect_command(*expected_args('--no-contains'))
+        command.call(no_contains: true)
       end
     end
 
     context 'with :merged option' do
-      it 'adds --merged <commit>' do
+      it 'adds --merged <commit> with string value' do
         expect_command(*expected_args('--merged', 'main'))
         command.call(merged: 'main')
+      end
+
+      it 'adds --merged flag with true (defaults to HEAD)' do
+        expect_command(*expected_args('--merged'))
+        command.call(merged: true)
       end
     end
 
     context 'with :no_merged option' do
-      it 'adds --no-merged <commit>' do
+      it 'adds --no-merged <commit> with string value' do
         expect_command(*expected_args('--no-merged', 'main'))
         command.call(no_merged: 'main')
+      end
+
+      it 'adds --no-merged flag with true (defaults to HEAD)' do
+        expect_command(*expected_args('--no-merged'))
+        command.call(no_merged: true)
       end
     end
 

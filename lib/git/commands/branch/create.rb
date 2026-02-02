@@ -40,10 +40,10 @@ module Git
         #
         ARGS = Arguments.define do
           static 'branch'
-          flag :force
-          flag :create_reflog
+          flag %i[force f]
+          flag :create_reflog, negatable: true
           flag :recurse_submodules
-          flag_or_value :track, negatable: true, inline: true
+          flag_or_value %i[track t], negatable: true, inline: true
           positional :branch_name, required: true
           positional :start_point
         end.freeze

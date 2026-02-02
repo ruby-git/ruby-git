@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -31,7 +32,7 @@ module Git
         #
         ARGS = Arguments.define do
           static 'branch'
-          value :set_upstream_to, inline: true, required: true, allow_nil: false
+          value %i[set_upstream_to u], inline: true, required: true, allow_nil: false
           positional :branch_name
         end.freeze
 
@@ -63,15 +64,29 @@ module Git
         #
         #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
         #
-        # @return [Git::CommandLineResult] the result of the command
+        # @return [Git::BranchInfo] branch info for the configured branch with upstream set
         #
         # @raise [ArgumentError] if set_upstream_to is not provided
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch or upstream doesn't exist
         #
-        def call(*, **)
-          args = ARGS.build(*, **)
+        def call(branch_name = nil, **)
+          args = ARGS.build(branch_name, **)
           @execution_context.command(*args)
+          fetch_branch_info(branch_name)
+        end
+
+        private
+
+        # Fetch branch info for the specified or current branch
+        #
+        # @param branch_name [String, nil] the branch name, or nil for current branch
+        # @return [Git::BranchInfo] the branch info
+        #
+        def fetch_branch_info(branch_name)
+          list = List.new(@execution_context)
+          branches = list.call(branch_name)
+          branches.find { |b| branch_name.nil? ? b.current : b.refname == branch_name }
         end
       end
     end

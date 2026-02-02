@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -38,7 +39,7 @@ module Git
         ARGS = Arguments.define do
           static 'branch'
           static '--move'
-          flag :force
+          flag %i[force f]
           positional :old_branch
           positional :new_branch, required: true
         end.freeze
@@ -75,14 +76,18 @@ module Git
         #
         #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists
         #
-        # @return [Git::CommandLineResult] the result of the command
+        # @return [Git::BranchInfo] the info for the renamed branch
         #
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
         #
-        def call(*, **)
-          args = ARGS.build(*, **)
+        def call(*positionals, **)
+          args = ARGS.build(*positionals, **)
           @execution_context.command(*args)
+
+          # Get branch info for the renamed branch (always the last positional)
+          new_branch_name = positionals.last
+          Git::Commands::Branch::List.new(@execution_context).call(new_branch_name).first
         end
       end
     end
