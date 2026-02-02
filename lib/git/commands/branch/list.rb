@@ -11,6 +11,10 @@ module Git
       # This command lists existing branches with optional filtering and formatting.
       # Uses `--format` to retrieve structured data including target OID and upstream.
       #
+      # Note: git may emit non-branch entries (e.g., "(HEAD detached at <ref>)" or
+      # "(not a branch)") in list output. These entries are filtered out and are not
+      # returned as {Git::BranchInfo} objects.
+      #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
       # @api private
@@ -56,14 +60,15 @@ module Git
         ARGS = Arguments.define do
           static 'branch'
           static '--list'
-          value :format, inline: true
+          static "--format=#{FORMAT_STRING}"
           flag :all, args: '-a'
           flag :remotes, args: '-r'
+          flag :ignore_case
           value :sort, inline: true, multi_valued: true
-          value :contains
-          value :no_contains
-          value :merged
-          value :no_merged
+          flag_or_value :contains
+          flag_or_value :no_contains
+          flag_or_value :merged
+          flag_or_value :no_merged
           value :points_at
           positional :patterns, variadic: true
         end.freeze
@@ -77,6 +82,9 @@ module Git
         end
 
         # Execute the git branch --list command
+        #
+        # @note Detached HEAD and non-branch list entries are filtered out and will
+        #   not appear in the returned array.
         #
         # @overload call(*patterns, **options)
         #
@@ -93,23 +101,30 @@ module Git
         #   @option options [Boolean] :remotes (nil) List only remote-tracking
         #   branches (adds -r flag)
         #
+        #   @option options [Boolean] :ignore_case (nil) Sort and filter branches
+        #   case insensitively (adds --ignore-case flag)
+        #
         #   @option options [String, Array<String>] :sort (nil) Sort branches by the
         #   specified key(s)
         #
         #     Give an array to add multiple --sort options. Prefix each key with '-' for
         #     descending order. For example, sort: ['refname', '-committerdate']).
         #
-        #   @option options [String] :contains (nil) List only branches that contain
-        #     the specified commit
+        #   @option options [Boolean, String] :contains (nil) List only branches that
+        #     contain the specified commit. Pass `true` to default to HEAD or a commit
+        #     ref string to filter by that commit.
         #
-        #   @option options [String] :no_contains (nil) List only branches that don't
-        #     contain the specified commit
+        #   @option options [Boolean, String] :no_contains (nil) List only branches
+        #     that don't contain the specified commit. Pass `true` to default to HEAD
+        #     or a commit ref string to filter by that commit.
         #
-        #   @option options [String] :merged (nil) List only branches merged into the
-        #     specified commit
+        #   @option options [Boolean, String] :merged (nil) List only branches merged
+        #     into the specified commit. Pass `true` to default to HEAD or a commit
+        #     ref string to filter by that commit.
         #
-        #   @option options [String] :no_merged (nil) List only branches not merged
-        #     into the specified commit
+        #   @option options [Boolean, String] :no_merged (nil) List only branches not
+        #     merged into the specified commit. Pass `true` to default to HEAD or a
+        #     commit ref string to filter by that commit.
         #
         #   @option options [String] :points_at (nil) List only branches that point
         #     at the specified object
@@ -119,7 +134,7 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         #
         def call(*, **)
-          args = ARGS.build(*, format: FORMAT_STRING, **)
+          args = ARGS.build(*, **)
           lines = @execution_context.command(*args, raise_on_failure: false).stdout.split("\n")
           parse_branches(lines)
         end

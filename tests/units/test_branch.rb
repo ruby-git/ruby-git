@@ -260,7 +260,7 @@ class TestBranch < Test::Unit::TestCase
       assert(git.status.untracked.assoc('test-file1'))
       assert(!git.status.added.assoc('test-file1'))
 
-      assert_raise Git::FailedError do
+      assert_raise Git::Error do
         git.branch('new_branch').delete
       end
       assert_equal(1, git.branches.select { |b| b.name == 'new_branch' }.size)

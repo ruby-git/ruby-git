@@ -89,6 +89,31 @@ RSpec.describe Git::BranchInfo do
     end
   end
 
+  describe '#detached?' do
+    it 'always returns false' do
+      branch_info = described_class.new(
+        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+      )
+      expect(branch_info.detached?).to be false
+    end
+  end
+
+  describe '#unborn?' do
+    it 'returns true when target_oid is nil' do
+      branch_info = described_class.new(
+        refname: 'main', target_oid: nil, current: true, worktree: false, symref: nil, upstream: nil
+      )
+      expect(branch_info.unborn?).to be true
+    end
+
+    it 'returns false when target_oid is present' do
+      branch_info = described_class.new(
+        refname: 'main', target_oid: 'abc123', current: false, worktree: false, symref: nil, upstream: nil
+      )
+      expect(branch_info.unborn?).to be false
+    end
+  end
+
   describe '#remote?' do
     context 'with local branch' do
       it 'returns false for simple branch name' do

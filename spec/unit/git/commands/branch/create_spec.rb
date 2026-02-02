@@ -90,6 +90,14 @@ RSpec.describe Git::Commands::Branch::Create do
       end
     end
 
+    context 'with :f short option alias' do
+      it 'adds --force flag' do
+        expected_branch_info = expect_create_and_list(['branch', '--force', 'feature-branch'])
+        result = command.call('feature-branch', f: true)
+        expect(result).to eq(expected_branch_info)
+      end
+    end
+
     context 'with :create_reflog option' do
       it 'adds --create-reflog flag' do
         expected_branch_info = expect_create_and_list(['branch', '--create-reflog', 'feature-branch'])
@@ -97,8 +105,8 @@ RSpec.describe Git::Commands::Branch::Create do
         expect(result).to eq(expected_branch_info)
       end
 
-      it 'does not add flag when false' do
-        expected_branch_info = expect_create_and_list(%w[branch feature-branch])
+      it 'adds --no-create-reflog flag when false' do
+        expected_branch_info = expect_create_and_list(['branch', '--no-create-reflog', 'feature-branch'])
         result = command.call('feature-branch', create_reflog: false)
         expect(result).to eq(expected_branch_info)
       end
@@ -153,6 +161,22 @@ RSpec.describe Git::Commands::Branch::Create do
           result = command.call('feature-branch', 'origin/main', track: 'inherit')
           expect(result).to eq(expected_branch_info)
         end
+      end
+    end
+
+    context 'with :t short option alias' do
+      it 'adds --track flag when true' do
+        expected_branch_info = expect_create_and_list(['branch', '--track', 'feature-branch', 'origin/main'])
+        result = command.call('feature-branch', 'origin/main', t: true)
+        expect(result).to eq(expected_branch_info)
+      end
+
+      it 'adds --track=inherit when string value' do
+        expected_branch_info = expect_create_and_list(
+          ['branch', '--track=inherit', 'feature-branch', 'origin/main']
+        )
+        result = command.call('feature-branch', 'origin/main', t: 'inherit')
+        expect(result).to eq(expected_branch_info)
       end
     end
 
