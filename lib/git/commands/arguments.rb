@@ -386,6 +386,66 @@ module Git
                                required: required, allow_nil: allow_nil)
       end
 
+      # Define a key-value option that can be specified multiple times
+      #
+      # This is useful for git options like --trailer that take key=value pairs
+      # and can be repeated. Accepts Hash or Array of arrays for flexible input.
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      # @param args [String, nil] custom flag string (e.g., '--trailer')
+      # @param key_separator [String] separator between key and value (default: '=')
+      # @param inline [Boolean] when true, outputs --flag=key=value instead of --flag key=value
+      # @param required [Boolean] whether the option must be provided (key must exist in opts).
+      #   Note: empty hash/array is considered "present" and produces no output without error.
+      # @param allow_nil [Boolean] whether nil is allowed when required is true
+      # @return [void]
+      # @raise [ArgumentError] if array input is not a [key, value] pair or array of pairs
+      # @raise [ArgumentError] if a sub-array has more than 2 elements
+      # @raise [ArgumentError] if a key is nil, empty, or contains the separator
+      # @raise [ArgumentError] if a value is a Hash or Array (non-scalar)
+      #
+      # @example Basic key-value (like --trailer)
+      #   key_value :trailers, args: '--trailer'
+      #   # trailers: { 'Signed-off-by' => 'John' }
+      #   #   => ['--trailer', 'Signed-off-by=John']
+      #
+      # @example Hash with array values (multiple values for same key)
+      #   key_value :trailers, args: '--trailer'
+      #   # trailers: { 'Signed-off-by' => ['John', 'Jane'] }
+      #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
+      #
+      # @example Array of arrays (full ordering control)
+      #   key_value :trailers, args: '--trailer'
+      #   # trailers: [['Signed-off-by', 'John'], ['Acked-by', 'Bob']]
+      #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
+      #
+      # @example Key without value (nil value omits separator)
+      #   key_value :trailers, args: '--trailer'
+      #   # trailers: [['Acked-by', nil]]
+      #   #   => ['--trailer', 'Acked-by']
+      #
+      # @example Nil in array values produces key-only entries
+      #   key_value :trailers, args: '--trailer'
+      #   # trailers: { 'Key' => ['Value1', nil, 'Value2'] }
+      #   #   => ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
+      #
+      # @example With custom separator
+      #   key_value :trailers, args: '--trailer', key_separator: ': '
+      #   # trailers: { 'Signed-off-by' => 'John' }
+      #   #   => ['--trailer', 'Signed-off-by: John']
+      #
+      # @example Empty values produce no output
+      #   key_value :trailers, args: '--trailer', required: true
+      #   # trailers: {}  => []  (no error, empty output)
+      #   # trailers: []  => []  (no error, empty output)
+      #   # trailers: nil => []  (no error, empty output)
+      #
+      def key_value(names, args: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
+        option_type = inline ? :inline_key_value : :key_value
+        register_option(names, type: option_type, args: args, key_separator: key_separator,
+                               required: required, allow_nil: allow_nil)
+      end
+
       # Define a static flag that is always included in the output
       #
       # Static flags are output at their definition position (not grouped at the start).
@@ -859,6 +919,8 @@ module Git
             args << value.to_s
           end
         end,
+        key_value: :build_key_value,
+        inline_key_value: :build_inline_key_value,
         custom: lambda do |args, _, value, definition|
           result = definition[:builder]&.call(value)
           result.is_a?(Array) ? args.concat(result) : (args << result if result)
@@ -871,7 +933,36 @@ module Git
         return if should_skip_option?(value, definition)
 
         arg_spec = definition[:args] || "--#{name.to_s.tr('_', '-')}"
-        BUILDERS[definition[:type]]&.call(args, arg_spec, value, definition)
+        builder = BUILDERS[definition[:type]]
+        if builder.is_a?(Symbol)
+          send(builder, args, arg_spec, value, definition)
+        else
+          builder&.call(args, arg_spec, value, definition)
+        end
+      end
+
+      def build_key_value(args, arg_spec, value, definition)
+        sep = definition[:key_separator] || '='
+        option_name = definition[:aliases].first
+        normalize_key_value_pairs(value).each do |pair|
+          validate_key_value_pair_size!(pair, option_name)
+          k, v = pair
+          validate_key_value_key!(k, sep, option_name)
+          validate_key_value_value!(v, option_name)
+          args << arg_spec << (v.nil? ? k.to_s : "#{k}#{sep}#{v}")
+        end
+      end
+
+      def build_inline_key_value(args, arg_spec, value, definition)
+        sep = definition[:key_separator] || '='
+        option_name = definition[:aliases].first
+        normalize_key_value_pairs(value).each do |pair|
+          validate_key_value_pair_size!(pair, option_name)
+          k, v = pair
+          validate_key_value_key!(k, sep, option_name)
+          validate_key_value_value!(v, option_name)
+          args << "#{arg_spec}=#{v.nil? ? k.to_s : "#{k}#{sep}#{v}"}"
+        end
       end
 
       def should_skip_option?(value, definition)
@@ -888,6 +979,89 @@ module Git
         return value.empty? if definition[:type] == :value_to_positional
 
         value.empty? && !definition[:allow_empty]
+      end
+
+      # Normalize key-value input to an array of [key, value] pairs
+      #
+      # Accepts:
+      # - Hash: { 'key' => 'value' } or { 'key' => ['v1', 'v2'] }
+      # - Array of arrays: [['key', 'value'], ['key2', 'value2']]
+      # - Single array pair: ['key', 'value']
+      #
+      # @param value [Hash, Array] the input value
+      # @return [Array<Array>] array of [key, value] pairs
+      #
+      def normalize_key_value_pairs(value)
+        case value
+        when Hash then normalize_hash_to_pairs(value)
+        when Array then normalize_array_to_pairs(value)
+        else
+          raise ArgumentError,
+                "key_value option must be a Hash or Array, got #{value.class}"
+        end
+      end
+
+      def normalize_hash_to_pairs(hash)
+        hash.flat_map do |k, v|
+          v.is_a?(Array) ? v.map { |val| [k, val] } : [[k, v]]
+        end
+      end
+
+      def normalize_array_to_pairs(array)
+        # Check if it's a single [key, value] pair or array of pairs
+        if array.size == 2 && !array.first.is_a?(Array)
+          [array]
+        elsif array.any? { |e| !e.is_a?(Array) }
+          # Flat array with non-pair elements (e.g., ['a', 'b', 'c'])
+          raise ArgumentError, 'key_value array input must be a [key, value] pair or array of pairs'
+        else
+          array
+        end
+      end
+
+      # Validate that a key-value pair array has at most 2 elements
+      #
+      # @param pair [Array] the pair to validate
+      # @param option_name [Symbol] the option name for error messages
+      # @raise [ArgumentError] if pair has more than 2 elements
+      #
+      def validate_key_value_pair_size!(pair, option_name)
+        return unless pair.is_a?(Array) && pair.size > 2
+
+        raise ArgumentError,
+              "key_value :#{option_name} pair #{pair.inspect} has too many elements (expected [key, value])"
+      end
+
+      # Validate a key for key_value options
+      #
+      # @param key [Object] the key to validate
+      # @param separator [String] the key-value separator
+      # @param option_name [Symbol] the option name for error messages
+      # @raise [ArgumentError] if key is nil, empty, or contains the separator
+      #
+      def validate_key_value_key!(key, separator, option_name)
+        key_str = key.to_s
+        raise ArgumentError, "key_value :#{option_name} requires a non-empty key" if key.nil? || key_str.empty?
+
+        return unless key_str.include?(separator)
+
+        raise ArgumentError,
+              "key_value :#{option_name} key #{key_str.inspect} cannot contain the separator #{separator.inspect}"
+      end
+
+      # Validate a value for key_value options
+      #
+      # @param value [Object] the value to validate
+      # @param option_name [Symbol] the option name for error messages
+      # @raise [ArgumentError] if value is a Hash or Array (non-scalar)
+      #
+      def validate_key_value_value!(value, option_name)
+        return if value.nil?
+        return unless value.is_a?(Hash) || value.is_a?(Array)
+
+        raise ArgumentError,
+              "key_value :#{option_name} value must be a scalar (String, Symbol, Numeric, nil), " \
+              "got #{value.class}: #{value.inspect}"
       end
 
       def normalize_positionals(positionals)
