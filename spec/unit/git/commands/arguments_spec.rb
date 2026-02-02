@@ -2468,5 +2468,337 @@ RSpec.describe Git::Commands::Arguments do
     end
 
     # =======================================================================
+    # key_value options
+    # =======================================================================
+
+    context 'with key_value options' do
+      context 'basic Hash input' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'outputs --flag key=value for single hash entry' do
+          expect(args.build(trailers: { 'Signed-off-by' => 'John Doe' })).to eq(
+            ['--trailer', 'Signed-off-by=John Doe']
+          )
+        end
+
+        it 'outputs multiple --flag key=value for multiple hash entries' do
+          expect(args.build(trailers: { 'Signed-off-by' => 'John', 'Acked-by' => 'Jane' })).to eq(
+            ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Jane']
+          )
+        end
+      end
+
+      context 'Hash with array values' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'outputs multiple entries for same key when value is array' do
+          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane] })).to eq(
+            ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
+          )
+        end
+
+        it 'handles mixed single and array values' do
+          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane], 'Acked-by' => 'Bob' })).to eq(
+            ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane', '--trailer', 'Acked-by=Bob']
+          )
+        end
+      end
+
+      context 'Array of arrays input' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'outputs entries in order for array of arrays' do
+          expect(args.build(trailers: [%w[Signed-off-by John], %w[Acked-by Bob]])).to eq(
+            ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
+          )
+        end
+
+        it 'allows duplicate keys with array of arrays' do
+          expect(args.build(trailers: [%w[Signed-off-by John], %w[Signed-off-by Jane]])).to eq(
+            ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
+          )
+        end
+
+        it 'handles single [key, value] pair' do
+          expect(args.build(trailers: %w[Signed-off-by John])).to eq(
+            ['--trailer', 'Signed-off-by=John']
+          )
+        end
+      end
+
+      context 'nil and empty value handling' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'outputs nothing when option is nil' do
+          expect(args.build(trailers: nil)).to eq([])
+        end
+
+        it 'outputs nothing when option is empty hash' do
+          expect(args.build(trailers: {})).to eq([])
+        end
+
+        it 'outputs nothing when option is empty array' do
+          expect(args.build(trailers: [])).to eq([])
+        end
+
+        it 'outputs nothing when option is not provided' do
+          expect(args.build).to eq([])
+        end
+
+        it 'outputs key only when value is nil (no separator)' do
+          expect(args.build(trailers: [['Acked-by', nil]])).to eq(
+            ['--trailer', 'Acked-by']
+          )
+        end
+
+        it 'outputs key with separator when value is empty string' do
+          expect(args.build(trailers: [['Acked-by', '']])).to eq(
+            ['--trailer', 'Acked-by=']
+          )
+        end
+
+        it 'handles Hash with nil value' do
+          expect(args.build(trailers: { 'Acked-by' => nil })).to eq(
+            ['--trailer', 'Acked-by']
+          )
+        end
+
+        it 'handles Hash with array value containing nil (key-only entry)' do
+          expect(args.build(trailers: { 'Key' => ['Value1', nil, 'Value2'] })).to eq(
+            ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
+          )
+        end
+      end
+
+      context 'with inline: true' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer', inline: true
+          end
+        end
+
+        it 'outputs --flag=key=value format' do
+          expect(args.build(trailers: { 'Signed-off-by' => 'John' })).to eq(
+            ['--trailer=Signed-off-by=John']
+          )
+        end
+
+        it 'handles multiple entries' do
+          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane] })).to eq(
+            ['--trailer=Signed-off-by=John', '--trailer=Signed-off-by=Jane']
+          )
+        end
+
+        it 'handles nil value (key only)' do
+          expect(args.build(trailers: [['Acked-by', nil]])).to eq(
+            ['--trailer=Acked-by']
+          )
+        end
+      end
+
+      context 'key validation' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'raises ArgumentError when key is nil' do
+          expect { args.build(trailers: [[nil, 'value']]) }.to raise_error(
+            ArgumentError, /key_value :trailers requires a non-empty key/
+          )
+        end
+
+        it 'raises ArgumentError when key is empty string' do
+          expect { args.build(trailers: [['', 'value']]) }.to raise_error(
+            ArgumentError, /key_value :trailers requires a non-empty key/
+          )
+        end
+
+        it 'raises ArgumentError when key contains the separator' do
+          expect { args.build(trailers: { 'Signed=off' => 'John' }) }.to raise_error(
+            ArgumentError, /key_value :trailers key "Signed=off" cannot contain the separator "="/
+          )
+        end
+
+        context 'with custom separator' do
+          let(:args) do
+            described_class.define do
+              key_value :trailers, args: '--trailer', key_separator: ': '
+            end
+          end
+
+          it 'raises ArgumentError when key contains the custom separator' do
+            expect { args.build(trailers: { 'Signed: off' => 'John' }) }.to raise_error(
+              ArgumentError, /key_value :trailers key "Signed: off" cannot contain the separator ": "/
+            )
+          end
+
+          it 'allows key with default separator when using custom separator' do
+            expect(args.build(trailers: { 'Signed=off' => 'John' })).to eq(
+              ['--trailer', 'Signed=off: John']
+            )
+          end
+        end
+
+        context 'with malformed array input' do
+          it 'raises ArgumentError for flat array with 3+ elements' do
+            expect { args.build(trailers: %w[a b c]) }.to raise_error(
+              ArgumentError, /key_value array input must be a \[key, value\] pair or array of pairs/
+            )
+          end
+
+          it 'raises ArgumentError for sub-array with 3+ elements' do
+            expect { args.build(trailers: [%w[a b c]]) }.to raise_error(
+              ArgumentError, /key_value :trailers pair \["a", "b", "c"\] has too many elements/
+            )
+          end
+
+          it 'raises ArgumentError for mixed valid and invalid sub-arrays' do
+            expect { args.build(trailers: [%w[k1 v1], %w[a b c]]) }.to raise_error(
+              ArgumentError, /key_value :trailers pair \["a", "b", "c"\] has too many elements/
+            )
+          end
+        end
+
+        context 'with invalid input type' do
+          it 'raises ArgumentError for String input' do
+            expect { args.build(trailers: 'some-string') }.to raise_error(
+              ArgumentError, /key_value option must be a Hash or Array, got String/
+            )
+          end
+
+          it 'raises ArgumentError for Integer input' do
+            expect { args.build(trailers: 123) }.to raise_error(
+              ArgumentError, /key_value option must be a Hash or Array, got Integer/
+            )
+          end
+
+          it 'raises ArgumentError for Symbol input' do
+            expect { args.build(trailers: :some_symbol) }.to raise_error(
+              ArgumentError, /key_value option must be a Hash or Array, got Symbol/
+            )
+          end
+        end
+
+        context 'with non-scalar value in pair' do
+          it 'raises ArgumentError for Hash value' do
+            expect { args.build(trailers: { 'Key' => { nested: true } }) }.to raise_error(
+              ArgumentError, /key_value :trailers value must be a scalar.*got Hash/
+            )
+          end
+
+          it 'raises ArgumentError for Array value' do
+            expect { args.build(trailers: [['Key', %w[nested array]]]) }.to raise_error(
+              ArgumentError, /key_value :trailers value must be a scalar.*got Array/
+            )
+          end
+
+          it 'raises ArgumentError for Hash value in array of values' do
+            expect { args.build(trailers: { 'Key' => ['valid', { nested: true }] }) }.to raise_error(
+              ArgumentError, /key_value :trailers value must be a scalar.*got Hash/
+            )
+          end
+        end
+      end
+
+      context 'with custom key_separator' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer', key_separator: ': '
+          end
+        end
+
+        it 'uses the custom separator' do
+          expect(args.build(trailers: { 'Signed-off-by' => 'John' })).to eq(
+            ['--trailer', 'Signed-off-by: John']
+          )
+        end
+      end
+
+      context 'with required: true' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer', required: true
+          end
+        end
+
+        it 'raises ArgumentError when option is not provided' do
+          expect { args.build }.to raise_error(
+            ArgumentError, /Required options not provided: :trailers/
+          )
+        end
+
+        it 'does not raise when option is provided' do
+          expect(args.build(trailers: { 'A' => 'B' })).to eq(['--trailer', 'A=B'])
+        end
+
+        it 'does not raise when option is nil (key present)' do
+          expect(args.build(trailers: nil)).to eq([])
+        end
+
+        it 'does not raise when option is empty hash (key present, produces no output)' do
+          expect(args.build(trailers: {})).to eq([])
+        end
+
+        it 'does not raise when option is empty array (key present, produces no output)' do
+          expect(args.build(trailers: [])).to eq([])
+        end
+      end
+
+      context 'with required: true and allow_nil: false' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer', required: true, allow_nil: false
+          end
+        end
+
+        it 'raises ArgumentError when option is nil' do
+          expect { args.build(trailers: nil) }.to raise_error(
+            ArgumentError, /Required options cannot be nil: :trailers/
+          )
+        end
+
+        it 'does not raise when option is provided with value' do
+          expect(args.build(trailers: { 'A' => 'B' })).to eq(['--trailer', 'A=B'])
+        end
+      end
+
+      context 'with symbol keys and values' do
+        let(:args) do
+          described_class.define do
+            key_value :trailers, args: '--trailer'
+          end
+        end
+
+        it 'converts symbol keys to strings' do
+          expect(args.build(trailers: { signed_off_by: 'John' })).to eq(
+            ['--trailer', 'signed_off_by=John']
+          )
+        end
+
+        it 'converts symbol values to strings' do
+          expect(args.build(trailers: { 'Type' => :feature })).to eq(
+            ['--trailer', 'Type=feature']
+          )
+        end
+      end
+    end
   end
 end
