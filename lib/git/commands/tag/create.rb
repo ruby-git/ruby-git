@@ -42,11 +42,11 @@ module Git
           flag %i[annotate a], args: '-a'
           flag %i[sign s], args: '-s'
           flag :no_sign
-          inline_value %i[local_user u]
+          value %i[local_user u], inline: true
           flag %i[force f], args: '-f'
           flag :create_reflog
-          inline_value %i[message m]
-          inline_value %i[file F]
+          value %i[message m], inline: true
+          value %i[file F], inline: true
           positional :tag_name, required: true
           positional :commit
         end.freeze

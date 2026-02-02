@@ -44,18 +44,18 @@ module Git
           flag %i[detach d], args: '--detach'
 
           # Branch creation options (mutually exclusive)
-          # These use `value` (not `inline_value`) because git expects: -b <branch>, not -b=<branch>
+          # These use `value` (not `value :name, inline: true`) because git expects: -b <branch>, not -b=<branch>
           value %i[new_branch b], args: '-b'
           value %i[new_branch_force B], args: '-B'
           value :orphan, args: '--orphan'
 
           # Tracking options
-          negatable_flag_or_inline_value :track
+          flag_or_value :track, negatable: true, inline: true
 
           # Other options
-          negatable_flag :guess
+          flag :guess, negatable: true
           flag :ignore_other_worktrees, args: '--ignore-other-worktrees'
-          negatable_flag :recurse_submodules
+          flag :recurse_submodules, negatable: true
 
           # Positional arguments
           positional :branch

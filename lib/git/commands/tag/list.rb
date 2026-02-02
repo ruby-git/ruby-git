@@ -72,7 +72,7 @@ module Git
           static 'tag'
           static '--list'
           static "--format=#{FORMAT_STRING}"
-          inline_value :sort, multi_valued: true
+          value :sort, inline: true, multi_valued: true
           value :contains
           value :no_contains
           value :merged

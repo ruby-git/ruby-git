@@ -26,10 +26,10 @@ module Git
           flag %i[cached staged]
           flag :merge_base
           flag :no_index
-          flag_or_inline_value :dirstat
+          flag_or_value :dirstat, inline: true
           positional :commit1
           positional :commit2
-          value_to_positional :pathspecs, separator: '--', multi_valued: true
+          value :pathspecs, positional: true, separator: '--', multi_valued: true
         end.freeze
 
         # Creates a new Numstat command instance

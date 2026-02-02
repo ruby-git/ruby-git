@@ -38,10 +38,10 @@ module Git
         flag :cache
         flag :no_reflogs
         flag :lost_found
-        negatable_flag :dangling
-        negatable_flag :full
-        negatable_flag :name_objects
-        negatable_flag :references
+        flag :dangling, negatable: true
+        flag :full, negatable: true
+        flag :name_objects, negatable: true
+        flag :references, negatable: true
         positional :objects, variadic: true
       end.freeze
 

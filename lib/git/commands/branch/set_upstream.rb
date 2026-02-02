@@ -31,7 +31,7 @@ module Git
         #
         ARGS = Arguments.define do
           static 'branch'
-          inline_value :set_upstream_to, required: true, allow_nil: false
+          value :set_upstream_to, inline: true, required: true, allow_nil: false
           positional :branch_name
         end.freeze
 
