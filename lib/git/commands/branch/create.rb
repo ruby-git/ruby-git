@@ -43,7 +43,7 @@ module Git
           flag :force
           flag :create_reflog
           flag :recurse_submodules
-          negatable_flag_or_inline_value :track
+          flag_or_value :track, negatable: true, inline: true
           positional :branch_name, required: true
           positional :start_point
         end.freeze

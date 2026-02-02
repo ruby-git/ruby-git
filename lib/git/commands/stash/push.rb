@@ -34,11 +34,11 @@ module Git
           static 'push'
           flag %i[patch p]
           flag %i[staged S]
-          negatable_flag %i[keep_index k]
+          flag %i[keep_index k], negatable: true
           flag %i[include_untracked u]
           flag %i[all a]
-          inline_value %i[message m]
-          inline_value :pathspec_from_file
+          value %i[message m], inline: true
+          value :pathspec_from_file, inline: true
           flag :pathspec_file_nul
           positional :pathspecs, variadic: true, separator: '--'
         end.freeze

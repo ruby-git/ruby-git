@@ -30,7 +30,7 @@ module Git
         ARGS = Arguments.define do
           static 'stash'
           static 'store'
-          inline_value %i[message m]
+          value %i[message m], inline: true
           flag %i[quiet q]
           positional :commit, required: true
         end.freeze

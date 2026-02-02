@@ -38,11 +38,11 @@ module Git
         flag :allow_empty
         flag :no_verify
         flag :allow_empty_message
-        inline_value :author
-        inline_value :message, allow_empty: true
-        inline_value :date, type: String
+        value :author, inline: true
+        value :message, inline: true, allow_empty: true
+        value :date, inline: true, type: String
         flag :amend, args: ['--amend', '--no-edit']
-        negatable_flag_or_inline_value :gpg_sign
+        flag_or_value :gpg_sign, negatable: true, inline: true
       end.freeze
 
       # Initialize the Commit command

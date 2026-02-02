@@ -30,9 +30,9 @@ module Git
           static '--numstat'
           static '--shortstat'
           static '-M'
-          negatable_flag %i[include_untracked u]
+          flag %i[include_untracked u], negatable: true
           flag :only_untracked
-          flag_or_inline_value :dirstat
+          flag_or_value :dirstat, inline: true
           positional :stash
         end.freeze
 

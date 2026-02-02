@@ -46,9 +46,9 @@ module Git
           flag :ours, args: '--ours'
           flag :theirs, args: '--theirs'
           flag %i[merge m], args: '--merge'
-          inline_value :conflict, args: '--conflict'
-          negatable_flag :overlay
-          inline_value :pathspec_from_file, args: '--pathspec-from-file'
+          value :conflict, inline: true, args: '--conflict'
+          flag :overlay, negatable: true
+          value :pathspec_from_file, inline: true, args: '--pathspec-from-file'
           flag :pathspec_file_nul, args: '--pathspec-file-nul'
 
           positional :tree_ish, required: true, allow_nil: true

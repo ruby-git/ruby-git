@@ -27,8 +27,8 @@ module Git
       ARGS = Arguments.define do
         static 'init'
         flag :bare
-        inline_value :initial_branch
-        inline_value :repository, args: '--separate-git-dir'
+        value :initial_branch, inline: true
+        value :repository, inline: true, args: '--separate-git-dir'
         positional :directory, default: '.'
       end.freeze
 

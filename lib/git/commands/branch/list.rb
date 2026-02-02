@@ -56,10 +56,10 @@ module Git
         ARGS = Arguments.define do
           static 'branch'
           static '--list'
-          inline_value :format
+          value :format, inline: true
           flag :all, args: '-a'
           flag :remotes, args: '-r'
-          inline_value :sort, multi_valued: true
+          value :sort, inline: true, multi_valued: true
           value :contains
           value :no_contains
           value :merged

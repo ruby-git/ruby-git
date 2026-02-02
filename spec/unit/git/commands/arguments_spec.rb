@@ -31,33 +31,6 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with negatable_flag options' do
-      let(:args) do
-        described_class.define do
-          negatable_flag :full
-        end
-      end
-
-      it 'outputs --flag when value is true' do
-        expect(args.build(full: true)).to eq(['--full'])
-      end
-
-      it 'outputs --no-flag when value is false' do
-        expect(args.build(full: false)).to eq(['--no-full'])
-      end
-
-      it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
-      end
-
-      it 'raises an error when value is not a boolean' do
-        expect { args.build(full: 'true') }.to raise_error(
-          ArgumentError,
-          /negatable_flag expects a boolean value, got "true"/
-        )
-      end
-    end
-
     context 'with value options' do
       let(:args) do
         described_class.define do
@@ -75,88 +48,6 @@ RSpec.describe Git::Commands::Arguments do
 
       it 'outputs nothing when option is not provided' do
         expect(args.build).to eq([])
-      end
-    end
-
-    context 'with inline_value options' do
-      let(:args) do
-        described_class.define do
-          inline_value :abbrev
-        end
-      end
-
-      it 'outputs --flag=value as single argument' do
-        expect(args.build(abbrev: '7')).to eq(['--abbrev=7'])
-      end
-
-      it 'outputs nothing when value is nil' do
-        expect(args.build(abbrev: nil)).to eq([])
-      end
-
-      it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
-      end
-    end
-
-    context 'with flag_or_inline_value options' do
-      let(:args) do
-        described_class.define do
-          flag_or_inline_value :gpg_sign
-        end
-      end
-
-      it 'outputs --flag when value is true' do
-        expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
-      end
-
-      it 'outputs nothing when value is false' do
-        expect(args.build(gpg_sign: false)).to eq([])
-      end
-
-      it 'outputs --flag=value when value is a string' do
-        expect(args.build(gpg_sign: 'key-id')).to eq(['--gpg-sign=key-id'])
-      end
-
-      it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
-      end
-
-      it 'raises an error when value is not true, false, or a String' do
-        expect { args.build(gpg_sign: 1) }.to raise_error(
-          ArgumentError,
-          /Invalid value for flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
-        )
-      end
-    end
-
-    context 'with negatable_flag_or_inline_value options' do
-      let(:args) do
-        described_class.define do
-          negatable_flag_or_inline_value :sign
-        end
-      end
-
-      it 'outputs --flag when value is true' do
-        expect(args.build(sign: true)).to eq(['--sign'])
-      end
-
-      it 'outputs --no-flag when value is false' do
-        expect(args.build(sign: false)).to eq(['--no-sign'])
-      end
-
-      it 'outputs --flag=value when value is a string' do
-        expect(args.build(sign: 'key-id')).to eq(['--sign=key-id'])
-      end
-
-      it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
-      end
-
-      it 'raises an error when value is not true, false, or a String' do
-        expect { args.build(sign: 1) }.to raise_error(
-          ArgumentError,
-          /Invalid value for negatable_flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
-        )
       end
     end
 
@@ -204,72 +95,6 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'outputs flag with empty value for single empty string' do
           expect(args.build(config: '')).to eq(['--config', ''])
-        end
-      end
-    end
-
-    context 'with inline_value multi_valued: true' do
-      let(:args) do
-        described_class.define do
-          inline_value :sort, multi_valued: true
-        end
-      end
-
-      it 'outputs --flag=value for each array element' do
-        expect(args.build(sort: %w[refname -committerdate])).to eq(['--sort=refname', '--sort=-committerdate'])
-      end
-
-      it 'outputs --flag=value for single value' do
-        expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
-      end
-
-      it 'outputs nothing when value is nil' do
-        expect(args.build(sort: nil)).to eq([])
-      end
-
-      it 'outputs nothing when value is empty array' do
-        expect(args.build(sort: [])).to eq([])
-      end
-
-      it 'includes empty strings in array even with allow_empty: false (default)' do
-        expect(args.build(sort: ['', 'refname'])).to eq(['--sort=', '--sort=refname'])
-      end
-
-      it 'outputs nothing for single empty string with allow_empty: false (default)' do
-        expect(args.build(sort: '')).to eq([])
-      end
-
-      context 'with allow_empty: true' do
-        let(:args) do
-          described_class.define do
-            inline_value :sort, multi_valued: true, allow_empty: true
-          end
-        end
-
-        it 'includes empty strings in the array' do
-          expect(args.build(sort: ['', 'refname'])).to eq(['--sort=', '--sort=refname'])
-        end
-
-        it 'outputs flag with empty value for single empty string' do
-          expect(args.build(sort: '')).to eq(['--sort='])
-        end
-      end
-
-      context 'with type: validation' do
-        let(:args) do
-          described_class.define do
-            inline_value :sort, multi_valued: true, type: String
-          end
-        end
-
-        it 'validates type against the provided value (not array elements)' do
-          # Type validation applies to the entire value, not individual elements
-          # Arrays pass String validation because type check happens before Array() normalization
-          expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
-        end
-
-        it 'rejects values that do not match the type' do
-          expect { args.build(sort: 123) }.to raise_error(ArgumentError, /must be a String/)
         end
       end
     end
@@ -1316,28 +1141,24 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with validator on negatable_flag' do
+    context 'with validator on flag' do
       let(:args) do
         described_class.define do
-          negatable_flag :single_branch, validator: ->(v) { [nil, true, false].include?(v) }
+          flag :force, validator: ->(v) { [true, false].include?(v) }
         end
       end
 
       it 'allows valid true value' do
-        expect(args.build(single_branch: true)).to eq(['--single-branch'])
+        expect(args.build(force: true)).to eq(['--force'])
       end
 
       it 'allows valid false value' do
-        expect(args.build(single_branch: false)).to eq(['--no-single-branch'])
-      end
-
-      it 'allows valid nil value' do
-        expect(args.build(single_branch: nil)).to eq([])
+        expect(args.build(force: false)).to eq([])
       end
 
       it 'raises ArgumentError for invalid values' do
-        expect { args.build(single_branch: 'yes') }.to(
-          raise_error(ArgumentError, /Invalid value for option: single_branch/)
+        expect { args.build(force: 'yes') }.to(
+          raise_error(ArgumentError, /Invalid value for option: force/)
         )
       end
     end
@@ -1408,9 +1229,9 @@ RSpec.describe Git::Commands::Arguments do
         expect(args.build(amend: true)).to eq(['--amend', '--no-edit'])
       end
 
-      it 'supports arrays for negatable_flag type' do
+      it 'supports arrays for flag negatable: true type' do
         args = described_class.define do
-          negatable_flag :verbose, args: ['--verbose', '--all']
+          flag :verbose, negatable: true, args: ['--verbose', '--all']
         end
         expect(args.build(verbose: true)).to eq(['--verbose', '--all'])
         expect(args.build(verbose: false)).to eq(['--no-verbose', '--no-all'])
@@ -1424,26 +1245,26 @@ RSpec.describe Git::Commands::Arguments do
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
 
-      it 'rejects arrays for inline_value type' do
+      it 'rejects arrays for value inline: true type' do
         expect do
           described_class.define do
-            inline_value :message, args: ['--message', '--edit']
+            value :message, inline: true, args: ['--message', '--edit']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
 
-      it 'rejects arrays for flag_or_inline_value type' do
+      it 'rejects arrays for flag_or_value inline: true type' do
         expect do
           described_class.define do
-            flag_or_inline_value :gpg_sign, args: ['--gpg-sign', '--verify']
+            flag_or_value :gpg_sign, inline: true, args: ['--gpg-sign', '--verify']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
 
-      it 'rejects arrays for negatable_flag_or_inline_value type' do
+      it 'rejects arrays for flag_or_value negatable: true, inline: true type' do
         expect do
           described_class.define do
-            negatable_flag_or_inline_value :sign, args: ['--sign', '--verify']
+            flag_or_value :sign, negatable: true, inline: true, args: ['--sign', '--verify']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
@@ -1477,16 +1298,16 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'for inline_value types' do
+      context 'for value inline: true types' do
         let(:args_without_allow_empty) do
           described_class.define do
-            inline_value :abbrev
+            value :abbrev, inline: true
           end
         end
 
         let(:args_with_allow_empty) do
           described_class.define do
-            inline_value :abbrev, allow_empty: true
+            value :abbrev, inline: true, allow_empty: true
           end
         end
 
@@ -1599,7 +1420,7 @@ RSpec.describe Git::Commands::Arguments do
         it 'raises an error at definition time' do
           expect do
             described_class.define do
-              negatable_flag :single_branch, type: String, validator: ->(v) { [true, false].include?(v) }
+              flag :single_branch, negatable: true, type: String, validator: ->(v) { [true, false].include?(v) }
             end
           end.to raise_error(ArgumentError, /cannot specify both type: and validator: for :single_branch/)
         end
@@ -1867,10 +1688,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true on inline_value' do
+      context 'with required: true on value inline: true' do
         let(:args) do
           described_class.define do
-            inline_value :upstream, required: true
+            value :upstream, inline: true, required: true
           end
         end
 
@@ -1887,10 +1708,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true on negatable_flag' do
+      context 'with required: true on flag negatable: true' do
         let(:args) do
           described_class.define do
-            negatable_flag :verify, required: true
+            flag :verify, negatable: true, required: true
           end
         end
 
@@ -1907,10 +1728,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true on flag_or_inline_value' do
+      context 'with required: true on flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_inline_value :gpg_sign, required: true
+            flag_or_value :gpg_sign, inline: true, required: true
           end
         end
 
@@ -1927,10 +1748,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true on negatable_flag_or_inline_value' do
+      context 'with required: true on flag_or_value negatable: true, inline: true' do
         let(:args) do
           described_class.define do
-            negatable_flag_or_inline_value :gpg_sign, required: true
+            flag_or_value :gpg_sign, negatable: true, inline: true, required: true
           end
         end
 
@@ -1972,7 +1793,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple required options' do
         let(:args) do
           described_class.define do
-            inline_value :upstream, required: true
+            value :upstream, inline: true, required: true
             value :message, required: true
           end
         end
@@ -2034,10 +1855,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true and allow_nil: false on inline_value' do
+      context 'with required: true and allow_nil: false on value inline: true' do
         let(:args) do
           described_class.define do
-            inline_value :upstream, required: true, allow_nil: false
+            value :upstream, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -2059,7 +1880,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple required options and allow_nil: false' do
         let(:args) do
           described_class.define do
-            inline_value :upstream, required: true, allow_nil: false
+            value :upstream, inline: true, required: true, allow_nil: false
             value :message, required: true, allow_nil: false
           end
         end
@@ -2119,10 +1940,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true and allow_nil: false on negatable_flag' do
+      context 'with required: true and allow_nil: false on flag negatable: true' do
         let(:args) do
           described_class.define do
-            negatable_flag :verify, required: true, allow_nil: false
+            flag :verify, negatable: true, required: true, allow_nil: false
           end
         end
 
@@ -2143,10 +1964,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true and allow_nil: false on flag_or_inline_value' do
+      context 'with required: true and allow_nil: false on flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+            flag_or_value :gpg_sign, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -2173,10 +1994,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with required: true and allow_nil: false on negatable_flag_or_inline_value' do
+      context 'with required: true and allow_nil: false on flag_or_value negatable: true, inline: true' do
         let(:args) do
           described_class.define do
-            negatable_flag_or_inline_value :gpg_sign, required: true, allow_nil: false
+            flag_or_value :gpg_sign, negatable: true, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -2351,58 +2172,92 @@ RSpec.describe Git::Commands::Arguments do
           expect(result).to eq(['--delete', '--force', '--remotes', 'feature', 'bugfix'])
         end
       end
-
-      context 'with inline_value and value types' do
-        it 'renders valued options in definition order' do
-          args = described_class.define do
-            value :branch
-            positional :commit, required: true
-            inline_value :date
-          end
-
-          result = args.build('HEAD', branch: 'main', date: '2024-01-01')
-          expect(result).to eq(['--branch', 'main', 'HEAD', '--date=2024-01-01'])
-        end
-      end
-
-      context 'with custom options' do
-        it 'renders custom options in definition order' do
-          args = described_class.define do
-            positional :source, required: true
-            custom :mode do |value|
-              "--mode=#{value}" if value
-            end
-            static '--'
-            positional :dest, required: true
-          end
-
-          result = args.build('src', 'dst', mode: 'fast')
-          expect(result).to eq(['src', '--mode=fast', '--', 'dst'])
-        end
-      end
-
-      context 'with negatable flags' do
-        it 'renders negatable flags in definition order' do
-          args = described_class.define do
-            positional :path, required: true
-            negatable_flag :gpg_sign
-            static '--'
-          end
-
-          result_true = args.build('commit.txt', gpg_sign: true)
-          expect(result_true).to eq(['commit.txt', '--gpg-sign', '--'])
-
-          result_false = args.build('commit.txt', gpg_sign: false)
-          expect(result_false).to eq(['commit.txt', '--no-gpg-sign', '--'])
-        end
-      end
     end
 
-    context 'with value_to_positional options' do
-      context 'with multi_valued: false (default)' do
+    # =======================================================================
+    # Issue #982: Consolidated DSL with orthogonal modifiers
+    # =======================================================================
+
+    describe 'orthogonal modifiers' do
+      context 'with flag negatable: true' do
         let(:args) do
           described_class.define do
-            value_to_positional :path
+            flag :full, negatable: true
+          end
+        end
+
+        it 'outputs --flag when value is true' do
+          expect(args.build(full: true)).to eq(['--full'])
+        end
+
+        it 'outputs --no-flag when value is false' do
+          expect(args.build(full: false)).to eq(['--no-full'])
+        end
+
+        it 'outputs nothing when option is not provided' do
+          expect(args.build).to eq([])
+        end
+
+        it 'raises an error when value is not a boolean' do
+          expect { args.build(full: 'true') }.to raise_error(
+            ArgumentError,
+            /negatable_flag expects a boolean value, got "true"/
+          )
+        end
+      end
+
+      context 'with value inline: true' do
+        let(:args) do
+          described_class.define do
+            value :abbrev, inline: true
+          end
+        end
+
+        it 'outputs --flag=value as single argument' do
+          expect(args.build(abbrev: '7')).to eq(['--abbrev=7'])
+        end
+
+        it 'outputs nothing when value is nil' do
+          expect(args.build(abbrev: nil)).to eq([])
+        end
+
+        it 'outputs nothing when option is not provided' do
+          expect(args.build).to eq([])
+        end
+      end
+
+      context 'with value inline: true and multi_valued: true' do
+        let(:args) do
+          described_class.define do
+            value :sort, inline: true, multi_valued: true
+          end
+        end
+
+        it 'outputs --flag=value for each array element' do
+          expect(args.build(sort: %w[refname -committerdate])).to eq(['--sort=refname', '--sort=-committerdate'])
+        end
+
+        it 'outputs --flag=value for single value' do
+          expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
+        end
+      end
+
+      context 'with value inline: true and allow_empty: true' do
+        let(:args) do
+          described_class.define do
+            value :message, inline: true, allow_empty: true
+          end
+        end
+
+        it 'outputs --flag= when value is empty string' do
+          expect(args.build(message: '')).to eq(['--message='])
+        end
+      end
+
+      context 'with value positional: true' do
+        let(:args) do
+          described_class.define do
+            value :path, positional: true
           end
         end
 
@@ -2418,7 +2273,7 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.build).to eq([])
         end
 
-        it 'raises an error when value is an array' do
+        it 'raises an error when value is an array without multi_valued' do
           expect { args.build(path: %w[file1.txt file2.txt]) }.to raise_error(
             ArgumentError,
             /value_to_positional :path requires multi_valued: true to accept an array/
@@ -2426,10 +2281,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with multi_valued: true' do
+      context 'with value positional: true and multi_valued: true' do
         let(:args) do
           described_class.define do
-            value_to_positional :paths, multi_valued: true
+            value :paths, positional: true, multi_valued: true
           end
         end
 
@@ -2455,17 +2310,13 @@ RSpec.describe Git::Commands::Arguments do
             /nil values are not allowed in value_to_positional :paths/
           )
         end
-
-        it 'allows empty strings in array' do
-          expect(args.build(paths: ['file1.txt', '', 'file2.txt'])).to eq(['file1.txt', '', 'file2.txt'])
-        end
       end
 
-      context 'with separator' do
+      context 'with value positional: true and separator:' do
         let(:args) do
           described_class.define do
             flag :force
-            value_to_positional :paths, multi_valued: true, separator: '--'
+            value :paths, positional: true, multi_valued: true, separator: '--'
           end
         end
 
@@ -2475,158 +2326,147 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
 
-        it 'outputs separator before single value' do
-          expect(args.build(paths: 'file.txt', force: true)).to eq(['--force', '--', 'file.txt'])
-        end
-
         it 'omits separator when value is nil' do
           expect(args.build(paths: nil, force: true)).to eq(['--force'])
         end
-
-        it 'omits separator when value is empty array' do
-          expect(args.build(paths: [], force: true)).to eq(['--force'])
-        end
       end
 
-      context 'with allow_empty: false (default)' do
-        let(:args) do
-          described_class.define do
-            value_to_positional :path
-          end
-        end
-
-        it 'outputs nothing when value is empty string' do
-          expect(args.build(path: '')).to eq([])
-        end
-      end
-
-      context 'with allow_empty: true' do
-        let(:args) do
-          described_class.define do
-            value_to_positional :path, allow_empty: true
-          end
-        end
-
-        it 'outputs empty string when value is empty string' do
-          expect(args.build(path: '')).to eq([''])
-        end
-
-        context 'with separator' do
-          let(:args) do
+      context 'with invalid value modifier combinations' do
+        it 'raises when inline: and positional: are both true' do
+          expect do
             described_class.define do
-              value_to_positional :path, allow_empty: true, separator: '--'
+              value :path, inline: true, positional: true
             end
-          end
-
-          it 'outputs separator before empty string' do
-            expect(args.build(path: '')).to eq(['--', ''])
-          end
+          end.to raise_error(ArgumentError, /inline: and positional: cannot both be true for :path/)
         end
 
-        context 'with multi_valued: true' do
-          let(:args) do
+        it 'raises when separator: is provided without positional: true' do
+          expect do
             described_class.define do
-              value_to_positional :paths, allow_empty: true, multi_valued: true, separator: '--'
+              value :path, separator: '--'
             end
-          end
-
-          it 'still omits separator when value is empty array' do
-            # allow_empty applies to empty strings, not empty arrays
-            # An empty array means "no values" and should produce no output
-            expect(args.build(paths: [])).to eq([])
-          end
-
-          it 'outputs separator and empty string when array contains empty string' do
-            expect(args.build(paths: [''])).to eq(['--', ''])
-          end
+          end.to raise_error(ArgumentError, /separator: is only valid with positional: true for :path/)
         end
       end
 
-      context 'definition order' do
-        it 'renders value_to_positional in definition order with other options' do
-          args = described_class.define do
-            flag :force
-            positional :commit, required: true
-            value_to_positional :paths, multi_valued: true, separator: '--'
-          end
+      # =====================================================================
+      # flag_or_value - new base type that enables previously impossible
+      # combinations (flag OR separated value)
+      # =====================================================================
 
-          result = args.build('HEAD', paths: %w[file1.txt file2.txt], force: true)
-          expect(result).to eq(['--force', 'HEAD', '--', 'file1.txt', 'file2.txt'])
-        end
-
-        it 'can appear before positional arguments' do
-          args = described_class.define do
-            value_to_positional :excludes, multi_valued: true, separator: '--exclude'
-            positional :paths, variadic: true
-          end
-
-          result = args.build('file1.txt', 'file2.txt', excludes: %w[.git node_modules])
-          expect(result).to eq(['--exclude', '.git', 'node_modules', 'file1.txt', 'file2.txt'])
-        end
-      end
-
-      context 'with required: true' do
+      context 'with flag_or_value' do
         let(:args) do
           described_class.define do
-            value_to_positional :paths, required: true
+            flag_or_value :contains
           end
         end
 
-        it 'raises an error when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :paths/)
+        it 'outputs --flag when value is true' do
+          expect(args.build(contains: true)).to eq(['--contains'])
         end
 
-        it 'allows nil when allow_nil: true (default)' do
-          expect(args.build(paths: nil)).to eq([])
-        end
-      end
-
-      context 'with required: true and allow_nil: false' do
-        let(:args) do
-          described_class.define do
-            value_to_positional :paths, required: true, allow_nil: false
-          end
+        it 'outputs nothing when value is false' do
+          expect(args.build(contains: false)).to eq([])
         end
 
-        it 'raises an error when value is nil' do
-          expect { args.build(paths: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :paths/)
-        end
-      end
-
-      context 'with type validation' do
-        let(:args) do
-          described_class.define do
-            value_to_positional :path, type: String
-          end
+        it 'outputs --flag value as separate arguments when value is a string' do
+          expect(args.build(contains: 'abc123')).to eq(['--contains', 'abc123'])
         end
 
-        it 'validates type of provided value' do
-          expect { args.build(path: 123) }.to raise_error(
+        it 'outputs nothing when option is not provided' do
+          expect(args.build).to eq([])
+        end
+
+        it 'raises an error when value is not true, false, or a String' do
+          expect { args.build(contains: 1) }.to raise_error(
             ArgumentError,
-            /The :path option must be a String, but was a Integer/
+            /Invalid value for flag_or_value: 1 \(Integer\); expected true, false, or a String/
           )
         end
-
-        it 'accepts valid type' do
-          expect(args.build(path: 'file.txt')).to eq(['file.txt'])
-        end
       end
 
-      context 'with aliases' do
+      context 'with flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            value_to_positional %i[paths pathspecs], multi_valued: true, separator: '--'
+            flag_or_value :gpg_sign, inline: true
           end
         end
 
-        it 'accepts primary name' do
-          expect(args.build(paths: %w[file.txt])).to eq(['--', 'file.txt'])
+        it 'outputs --flag when value is true' do
+          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
         end
 
-        it 'accepts alias' do
-          expect(args.build(pathspecs: %w[file.txt])).to eq(['--', 'file.txt'])
+        it 'outputs nothing when value is false' do
+          expect(args.build(gpg_sign: false)).to eq([])
+        end
+
+        it 'outputs --flag=value when value is a string' do
+          expect(args.build(gpg_sign: 'key-id')).to eq(['--gpg-sign=key-id'])
+        end
+
+        it 'raises an error when value is not true, false, or a String' do
+          expect { args.build(gpg_sign: 1) }.to raise_error(
+            ArgumentError,
+            /Invalid value for flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
+          )
+        end
+      end
+
+      context 'with flag_or_value negatable: true' do
+        let(:args) do
+          described_class.define do
+            flag_or_value :verify, negatable: true
+          end
+        end
+
+        it 'outputs --flag when value is true' do
+          expect(args.build(verify: true)).to eq(['--verify'])
+        end
+
+        it 'outputs --no-flag when value is false' do
+          expect(args.build(verify: false)).to eq(['--no-verify'])
+        end
+
+        it 'outputs --flag value as separate arguments when value is a string' do
+          expect(args.build(verify: 'KEYID')).to eq(['--verify', 'KEYID'])
+        end
+
+        it 'raises an error when value is not true, false, or a String' do
+          expect { args.build(verify: 1) }.to raise_error(
+            ArgumentError,
+            /Invalid value for negatable_flag_or_value: 1 \(Integer\); expected true, false, or a String/
+          )
+        end
+      end
+
+      context 'with flag_or_value negatable: true and inline: true' do
+        let(:args) do
+          described_class.define do
+            flag_or_value :sign, negatable: true, inline: true
+          end
+        end
+
+        it 'outputs --flag when value is true' do
+          expect(args.build(sign: true)).to eq(['--sign'])
+        end
+
+        it 'outputs --no-flag when value is false' do
+          expect(args.build(sign: false)).to eq(['--no-sign'])
+        end
+
+        it 'outputs --flag=value when value is a string' do
+          expect(args.build(sign: 'key-id')).to eq(['--sign=key-id'])
+        end
+
+        it 'raises an error when value is not true, false, or a String' do
+          expect { args.build(sign: 1) }.to raise_error(
+            ArgumentError,
+            /Invalid value for negatable_flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
+          )
         end
       end
     end
+
+    # =======================================================================
   end
 end

@@ -42,35 +42,35 @@ module Git
           static '--no-edit'
 
           # Commit behavior
-          negatable_flag :commit
+          flag :commit, negatable: true
           flag :squash, args: '--squash'
 
           # Fast-forward behavior
-          negatable_flag :ff
+          flag :ff, negatable: true
           flag :ff_only, args: '--ff-only'
 
           # Message options
           value %i[message m], args: '-m'
           value %i[file F], args: '-F'
-          inline_value :into_name, args: '--into-name'
+          value :into_name, inline: true, args: '--into-name'
 
           # Strategy options
           value %i[strategy s], args: '-s'
           value %i[strategy_option X], args: '-X', multi_valued: true
 
           # Verification
-          negatable_flag :verify
-          negatable_flag :verify_signatures
-          negatable_flag :gpg_sign
+          flag :verify, negatable: true
+          flag :verify_signatures, negatable: true
+          flag :gpg_sign, negatable: true
 
           # History
-          negatable_flag :allow_unrelated_histories
-          negatable_flag :rerere_autoupdate
+          flag :allow_unrelated_histories, negatable: true
+          flag :rerere_autoupdate, negatable: true
 
           # Other
-          negatable_flag :autostash
-          negatable_flag :signoff
-          negatable_flag :log
+          flag :autostash, negatable: true
+          flag :signoff, negatable: true
+          flag :log, negatable: true
 
           # Positional: commits to merge (variadic, required)
           positional :commits, variadic: true, required: true

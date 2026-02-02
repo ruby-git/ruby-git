@@ -64,33 +64,35 @@ module Git
     #
     # == Option Types
     #
-    # The DSL supports several option types:
+    # The DSL supports several option types with orthogonal modifiers:
     #
-    # - {#flag} - Boolean flag (--flag when true)
-    # - {#negatable_flag} - Boolean flag with negation (--flag or --no-flag)
-    # - {#value} - Valued option (--flag value as separate arguments)
-    # - {#inline_value} - Inline valued option (--flag=value as single argument)
-    # - {#value_to_positional} - Value(s) output as positional arguments
-    # - {#flag_or_inline_value} - Flag or inline value (--flag or --flag=value)
-    # - {#negatable_flag_or_inline_value} - Negatable flag or inline value
+    # === Primary Option Types
+    # - {#flag} - Boolean flag (--flag when true, with `negatable: true` for --no-flag)
+    # - {#value} - Valued option (--flag value, with `inline: true` for --flag=value,
+    #   or `positional: true` for positional arguments)
+    # - {#flag_or_value} - Flag or value (--flag when true, --flag value when string,
+    #   with `inline: true` and/or `negatable: true` modifiers)
     # - {#static} - Static flag always included
     # - {#custom} - Custom option with builder block
     # - {#metadata} - Validation-only option (not included in command output)
     #
-    # Both {#value}, {#inline_value}, and {#value_to_positional} support a
-    # `multi_valued: true` parameter that allows the option to accept an array
-    # of values. For {#value} and {#inline_value}, this repeats the flag for each value.
-    # For {#value_to_positional}, each value is output as a separate positional argument:
+    # {#value} supports a `multi_valued: true` parameter that allows the option to accept
+    # an array of values. This repeats the flag for each value (or outputs each as a
+    # positional argument when using `positional: true`):
     #
     # @example Multi-valued options
     #   value :config, multi_valued: true
     #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
     #
-    #   inline_value :sort, multi_valued: true
+    #   value :sort, inline: true, multi_valued: true
     #   # sort: ['refname', '-committerdate'] => ['--sort=refname', '--sort=-committerdate']
     #
-    #   value_to_positional :pathspecs, separator: '--', multi_valued: true
+    #   value :pathspecs, positional: true, separator: '--', multi_valued: true
     #   # pathspecs: ['file1.txt', 'file2.txt'] => ['--', 'file1.txt', 'file2.txt']
+
+    # @note For {#value}, `inline: true` and `positional: true` are mutually exclusive and
+    #   will raise ArgumentError if used together. The `separator:` option is only valid
+    #   with `positional: true` and raises ArgumentError otherwise.
     #
     # == Common Option Parameters
     #
@@ -99,34 +101,30 @@ module Git
     #
     # - +required:+ - When true, the option key must be present in the provided opts.
     #   Raises ArgumentError if the key is missing.
-    #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
-    #   {#value_to_positional}, {#flag_or_inline_value},
-    #   {#negatable_flag_or_inline_value}, {#custom}.
+    #   Supported by: {#flag}, {#value}, {#flag_or_value}, {#custom}.
     # - +allow_nil:+ - When false (with required: true), the value cannot be nil.
     #   Raises ArgumentError if a nil value is provided. Defaults to true.
     #   Supported by: same as +required:+.
     # - +type:+ - Validates the value is an instance of the specified class(es).
     #   Raises ArgumentError if type doesn't match.
-    #   Supported by: {#flag}, {#negatable_flag}, {#value}, {#inline_value},
-    #   {#value_to_positional}, {#flag_or_inline_value},
-    #   {#negatable_flag_or_inline_value}.
+    #   Supported by: {#flag}, {#value}, {#flag_or_value}.
     #
     # Note: {#static} and {#metadata} do not support these validation parameters.
     #
     # These parameters affect **output generation** (what CLI arguments are produced):
     #
     # - +args:+ - Custom flag string(s) to output instead of deriving from name.
-    # - +allow_empty:+ - ({#value}/{#inline_value} only) Include flag even for empty strings.
-    # - +multi_valued:+ - ({#value}/{#inline_value} only) Repeat flag for each array element.
+    # - +allow_empty:+ - ({#value} only) Include flag even for empty strings.
+    # - +multi_valued:+ - ({#value} only) Repeat flag for each array element.
     #
     # @example Required option with non-nil value
-    #   inline_value :upstream, required: true, allow_nil: false
+    #   value :upstream, inline: true, required: true, allow_nil: false
     #   # build()                    => ArgumentError: Required options not provided: :upstream
     #   # build(upstream: nil)       => ArgumentError: Required options cannot be nil: :upstream
     #   # build(upstream: 'origin')  => ['--upstream=origin']
     #
     # @example Required option allowing nil (default)
-    #   inline_value :branch, required: true
+    #   value :branch, inline: true, required: true
     #   # build()                => ArgumentError: Required options not provided: :branch
     #   # build(branch: nil)     => []  (key present, nil value produces no output)
     #   # build(branch: 'main')  => ['--branch=main']
@@ -172,13 +170,13 @@ module Git
     # When validation fails, an ArgumentError is raised with a descriptive message.
     #
     # @example Single type validation
-    #   inline_value :date, type: String
+    #   value :date, type: String, inline: true
     #   # Valid: date: "2024-01-01"
     #   # Invalid: date: 12345
     #   #   => ArgumentError: The :date option must be a String, but was a Integer
     #
     # @example Multiple type validation (allows any of the specified types)
-    #   inline_value :timeout, type: [Integer, Float]
+    #   value :timeout, type: [Integer, Float], inline: true
     #   # Valid: timeout: 30 or timeout: 30.5
     #   # Invalid: timeout: "30"
     #   #   => ArgumentError: The :timeout option must be a Integer or Float, but was a String
@@ -228,10 +226,24 @@ module Git
       # @param args [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      # @param validator [Proc, nil] optional validator block (cannot be combined with type:)
+      # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
       # @return [void]
+      # @raise [ArgumentError] if inline: and positional: are both true
+      # @raise [ArgumentError] if separator: is provided without positional: true
+      #
+      # @example Basic flag
+      #   flag :force
+      #   # true  => --force
+      #   # false => (nothing)
+      #
+      # @example Negatable flag
+      #   flag :full, negatable: true
+      #   # true  => --full
+      #   # false => --no-full
       #
       # @example With type validation
       #   flag :force, type: [TrueClass, FalseClass]
@@ -240,25 +252,9 @@ module Git
       #   flag :force, required: true, allow_nil: false
       #   # Raises ArgumentError if nil or not provided
       #
-      def flag(names, args: nil, type: nil, required: false, allow_nil: true)
-        register_option(names, type: :flag, args: args, expected_type: type, required: required,
-                               allow_nil: allow_nil)
-      end
-
-      # Define a negatable boolean flag option (--flag when true, --no-flag when false)
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, Array<String>, nil] custom argument(s) to output (arrays only for flag types)
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
-      # @param validator [Proc, nil] optional validator block (cannot be combined with type:)
-      # @param required [Boolean] whether the option must be provided (key must exist in opts)
-      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
-      #   When false with required: true, raises ArgumentError if value is nil.
-      # @return [void]
-      #
-      def negatable_flag(names, args: nil, type: nil, validator: nil, required: false, allow_nil: true)
-        register_option(names, type: :negatable_flag, args: args, expected_type: type, validator: validator,
+      def flag(names, args: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
+        option_type = negatable ? :negatable_flag : :flag
+        register_option(names, type: option_type, args: args, expected_type: type, validator: validator,
                                required: required, allow_nil: allow_nil)
       end
 
@@ -268,6 +264,12 @@ module Git
       # @param args [String, nil] custom flag string (arrays not supported for value types)
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
+      #   --flag value as separate arguments (default: false). Cannot be combined with positional:.
+      # @param positional [Boolean] when true, outputs value as positional argument without flag
+      #   (default: false). Cannot be combined with inline:.
+      # @param separator [String, nil] separator string to insert before values when positional: true
+      #   (e.g., '--' for pathspec separator). Only valid with positional: true.
       # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
       #   When false (default), empty strings are skipped entirely. When true, the flag and empty
       #   value are included in the output.
@@ -279,6 +281,18 @@ module Git
       # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
       #   Raises ArgumentError if a nil value is provided. Defaults to true.
       # @return [void]
+      #
+      # @example Basic value
+      #   value :branch
+      #   # branch: 'main' => ['--branch', 'main']
+      #
+      # @example Inline value
+      #   value :format, inline: true
+      #   # format: 'short' => ['--format=short']
+      #
+      # @example Positional value
+      #   value :paths, positional: true, multi_valued: true, separator: '--'
+      #   # paths: ['file.txt'] => ['--', 'file.txt']
       #
       # @example With type validation
       #   value :branch, type: String
@@ -309,169 +323,66 @@ module Git
       #   # Raises ArgumentError if nil: build(message: nil)
       #   # Raises ArgumentError if not provided: build()
       #
-      def value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
-                allow_nil: true)
-        register_option(names, type: :value, args: args, expected_type: type, allow_empty: allow_empty,
-                               multi_valued: multi_valued, required: required, allow_nil: allow_nil)
-      end
+      def value(names, args: nil, type: nil, inline: false, positional: false, separator: nil,
+                allow_empty: false, multi_valued: false, required: false, allow_nil: true)
+        validate_value_modifiers!(names, inline, positional, separator)
 
-      # Define an inline valued option (--flag=value as single argument)
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (arrays not supported for value types)
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
-      # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
-      #   When false (default), empty strings are skipped entirely. When true, the flag with empty
-      #   value is included in the output (e.g., --message=).
-      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
-      #   of values and repeats the flag for each (e.g., --flag=v1 --flag=v2). A single value or nil
-      #   is also accepted.
-      # @param required [Boolean] when true, the option key must be present in the provided options hash.
-      #   Raises ArgumentError if the key is missing. Defaults to false.
-      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
-      #   Raises ArgumentError if a nil value is provided. Defaults to true.
-      # @return [void]
-      #
-      # @example With type validation
-      #   inline_value :date, type: String
-      #   inline_value :timeout, type: [Integer, Float]
-      #
-      # @example With allow_empty
-      #   inline_value :message, allow_empty: true
-      #   # message: ""     => ['--message=']
-      #   # message: "text" => ['--message=text']
-      #
-      #   inline_value :message  # allow_empty defaults to false
-      #   # message: ""     => [] (skipped)
-      #   # message: "text" => ['--message=text']
-      #
-      # @example With multi_valued
-      #   inline_value :sort, multi_valued: true
-      #   # sort: 'refname'                  => ['--sort=refname']
-      #   # sort: ['refname', 'committerdate'] => ['--sort=refname', '--sort=committerdate']
-      #   # sort: nil                         => []
-      #
-      # @example With required
-      #   inline_value :upstream, required: true
-      #   # Must be provided: build(upstream: 'origin/main') or build(upstream: nil)
-      #   # Raises ArgumentError if not provided: build()
-      #
-      # @example With required and allow_nil: false
-      #   inline_value :upstream, required: true, allow_nil: false
-      #   # Must be provided with non-nil value: build(upstream: 'origin/main')
-      #   # Raises ArgumentError if nil: build(upstream: nil)
-      #   # Raises ArgumentError if not provided: build()
-      #
-      def inline_value(names, args: nil, type: nil, allow_empty: false, multi_valued: false, required: false,
-                       allow_nil: true)
-        register_option(names, type: :inline_value, args: args, expected_type: type, allow_empty: allow_empty,
-                               multi_valued: multi_valued, required: required, allow_nil: allow_nil)
-      end
-
-      # Define a value option that outputs as positional arguments
-      #
-      # Maps a keyword argument's value to positional arguments in the output.
-      # This is useful when a git command has multiple variadic arguments and
-      # one of them must be provided as a keyword option.
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param separator [String, nil] separator string to insert before values (e.g., '--')
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
-      # @param allow_empty [Boolean] whether to include output when value is an empty string.
-      #   When false (default), empty strings are skipped entirely.
-      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
-      #   of values and outputs each as a positional argument. When false (default), only a single
-      #   string value is accepted; passing an array raises ArgumentError.
-      # @param required [Boolean] when true, the option key must be present in the provided options hash.
-      #   Raises ArgumentError if the key is missing. Defaults to false.
-      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
-      #   Raises ArgumentError if a nil value is provided. Defaults to true.
-      # @return [void]
-      #
-      # @example Basic usage
-      #   value_to_positional :path
-      #   # path: 'file.txt' => ['file.txt']
-      #   # path: nil        => []
-      #
-      # @example With multi_valued
-      #   value_to_positional :paths, multi_valued: true
-      #   # paths: 'file.txt'           => ['file.txt']
-      #   # paths: ['f1.txt', 'f2.txt'] => ['f1.txt', 'f2.txt']
-      #   # paths: nil                  => []
-      #   # paths: []                   => []
-      #
-      # @example With separator (pathspec pattern)
-      #   value_to_positional :paths, multi_valued: true, separator: '--'
-      #   # paths: ['f1.txt', 'f2.txt'] => ['--', 'f1.txt', 'f2.txt']
-      #   # paths: nil                  => []
-      #
-      # @example Combined with positional arguments
-      #   positional :commit, required: true
-      #   value_to_positional :paths, multi_valued: true, separator: '--'
-      #   # build('HEAD', paths: ['file.txt']) => ['HEAD', '--', 'file.txt']
-      #
-      def value_to_positional(names, separator: nil, type: nil, allow_empty: false, multi_valued: false,
-                              required: false, allow_nil: true)
-        register_option(names, type: :value_to_positional, separator: separator, expected_type: type,
+        option_type = determine_value_option_type(inline, positional)
+        register_option(names, type: option_type, args: args, expected_type: type, separator: separator,
                                allow_empty: allow_empty, multi_valued: multi_valued, required: required,
                                allow_nil: allow_nil)
       end
 
-      # Define a flag or inline value option (--flag when true, --flag=value when string)
+      # Define a flag or value option
       #
-      # When the value is true, outputs just the flag (e.g., --gpg-sign)
-      # When the value is a string, outputs flag with inline value (e.g., --gpg-sign=<key-id>)
-      # When the value is nil/false, outputs nothing
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (arrays not supported for value types)
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
-      # @return [void]
-      #
-      # @example
-      #   flag_or_inline_value :gpg_sign
-      #   # true  => --gpg-sign
-      #   # "KEY" => --gpg-sign=KEY
-      #   # nil   => (nothing)
-      #
-      # @example With required and allow_nil: false
-      #   flag_or_inline_value :gpg_sign, required: true, allow_nil: false
-      #   # Raises ArgumentError if nil or not provided
-      #
-      def flag_or_inline_value(names, args: nil, type: nil, required: false, allow_nil: true)
-        register_option(names, type: :flag_or_inline_value, args: args, expected_type: type, required: required,
-                               allow_nil: allow_nil)
-      end
-
-      # Define a negatable flag or inline value option
-      #
-      # When the value is true, outputs just the flag (e.g., --gpg-sign)
-      # When the value is false, outputs negated flag (e.g., --no-gpg-sign)
-      # When the value is a string, outputs flag with inline value (e.g., --gpg-sign=<key-id>)
-      # When the value is nil, outputs nothing
+      # This is a flexible option type that outputs:
+      # - Just the flag (--flag) when value is true
+      # - Nothing when value is false (or --no-flag if negatable: true)
+      # - Flag with value when value is a string (--flag value or --flag=value if inline: true)
+      # - Nothing when value is nil
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (arrays not supported for value types)
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      # @param args [String, nil] custom flag string
+      # @param type [Class, Array<Class>, nil] expected type(s) for validation
+      # @param negatable [Boolean] when true, outputs --no-flag for false values (default: false)
+      # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
+      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       # @return [void]
+      # @raise [ArgumentError] if value is not true, false, or a String
       #
-      # @example
-      #   negatable_flag_or_inline_value :gpg_sign
-      #   # true  => --gpg-sign
-      #   # false => --no-gpg-sign
-      #   # "KEY" => --gpg-sign=KEY
-      #   # nil   => (nothing)
+      # @example Basic flag or value (new capability - not possible with old DSL)
+      #   flag_or_value :contains
+      #   # true       => --contains
+      #   # false      => (nothing)
+      #   # "abc123"   => --contains abc123 (separate arguments)
+      #   # nil        => (nothing)
       #
-      # @example With required and allow_nil: false
-      #   negatable_flag_or_inline_value :gpg_sign, required: true, allow_nil: false
-      #   # Raises ArgumentError if nil or not provided
+      # @example With inline: true
+      #   flag_or_value :gpg_sign, inline: true
+      #   # true       => --gpg-sign
+      #   # false      => (nothing)
+      #   # "KEY"      => --gpg-sign=KEY (inline)
+      #   # nil        => (nothing)
       #
-      def negatable_flag_or_inline_value(names, args: nil, type: nil, required: false, allow_nil: true)
-        register_option(names, type: :negatable_flag_or_inline_value, args: args, expected_type: type,
+      # @example With negatable: true (flag or value with negation)
+      #   flag_or_value :verify, negatable: true
+      #   # true       => --verify
+      #   # false      => --no-verify
+      #   # "KEYID"    => --verify KEYID (separate arguments)
+      #   # nil        => (nothing)
+      #
+      # @example With negatable: true and inline: true
+      #   flag_or_value :sign, negatable: true, inline: true
+      #   # true       => --sign
+      #   # false      => --no-sign
+      #   # "KEY"      => --sign=KEY (inline)
+      #   # nil        => (nothing)
+      #
+      def flag_or_value(names, args: nil, type: nil, negatable: false, inline: false,
+                        required: false, allow_nil: true)
+        option_type = determine_flag_or_value_option_type(negatable, inline)
+        register_option(names, type: option_type, args: args, expected_type: type,
                                required: required, allow_nil: allow_nil)
       end
 
@@ -680,6 +591,57 @@ module Git
 
       private
 
+      # Determine the internal option type based on inline and positional modifiers
+      #
+      # @param inline [Boolean] whether to use inline format (--flag=value)
+      # @param positional [Boolean] whether to output as positional argument
+      # @return [Symbol] the internal option type
+      #
+      def determine_value_option_type(inline, positional)
+        if positional
+          :value_to_positional
+        elsif inline
+          :inline_value
+        else
+          :value
+        end
+      end
+
+      # Validate value modifier combinations
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s)
+      # @param inline [Boolean] whether inline: true was specified
+      # @param positional [Boolean] whether positional: true was specified
+      # @param separator [String, nil] separator string if specified
+      # @raise [ArgumentError] if invalid modifier combination is used
+      #
+      def validate_value_modifiers!(names, inline, positional, separator)
+        primary = Array(names).first
+        raise ArgumentError, "inline: and positional: cannot both be true for :#{primary}" if inline && positional
+
+        return unless separator && !positional
+
+        raise ArgumentError, "separator: is only valid with positional: true for :#{primary}"
+      end
+
+      # Determine the internal option type for flag_or_value based on negatable and inline modifiers
+      #
+      # @param negatable [Boolean] whether to negate false values
+      # @param inline [Boolean] whether to use inline format (--flag=value)
+      # @return [Symbol] the internal option type
+      #
+      def determine_flag_or_value_option_type(negatable, inline)
+        if negatable && inline
+          :negatable_flag_or_inline_value
+        elsif negatable
+          :negatable_flag_or_value
+        elsif inline
+          :flag_or_inline_value
+        else
+          :flag_or_value
+        end
+      end
+
       # Register an option with optional aliases
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
@@ -845,6 +807,35 @@ module Git
                   else "#{arg_spec}=#{value}"
                   end
         end,
+        flag_or_value: lambda do |args, arg_spec, value, _|
+          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
+            raise ArgumentError,
+                  "Invalid value for flag_or_value: #{value.inspect} (#{value.class}); " \
+                  'expected true, false, or a String'
+          end
+          return if value == false
+
+          if value == true
+            args << arg_spec
+          else
+            args << arg_spec << value.to_s
+          end
+        end,
+        negatable_flag_or_value: lambda do |args, arg_spec, value, _|
+          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
+            raise ArgumentError,
+                  "Invalid value for negatable_flag_or_value: #{value.inspect} (#{value.class}); " \
+                  'expected true, false, or a String'
+          end
+          case value
+          when true
+            args << arg_spec
+          when false
+            args << arg_spec.sub(/\A--/, '--no-')
+          else
+            args << arg_spec << value.to_s
+          end
+        end,
         value_to_positional: lambda do |args, _, value, definition|
           # Validate array usage when multi_valued is false
           if value.is_a?(Array) && !definition[:multi_valued]
@@ -885,7 +876,7 @@ module Git
 
       def should_skip_option?(value, definition)
         return true if value.nil?
-        return true if value == false && definition[:type] == :flag_or_inline_value
+        return true if value == false && %i[flag_or_inline_value flag_or_value].include?(definition[:type])
         return skip_value_to_positional_array?(value, definition) if value.is_a?(Array)
 
         value.respond_to?(:empty?) && value.empty? && !definition[:allow_empty]
