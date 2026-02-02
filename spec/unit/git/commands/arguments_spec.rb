@@ -1229,12 +1229,12 @@ RSpec.describe Git::Commands::Arguments do
         expect(args.build(amend: true)).to eq(['--amend', '--no-edit'])
       end
 
-      it 'supports arrays for flag negatable: true type' do
-        args = described_class.define do
-          flag :verbose, negatable: true, args: ['--verbose', '--all']
-        end
-        expect(args.build(verbose: true)).to eq(['--verbose', '--all'])
-        expect(args.build(verbose: false)).to eq(['--no-verbose', '--no-all'])
+      it 'rejects arrays for flag negatable: true type' do
+        expect do
+          described_class.define do
+            flag :verbose, negatable: true, args: ['--verbose', '--all']
+          end
+        end.to raise_error(ArgumentError, /arrays for args: parameter cannot be combined with negatable: true/)
       end
 
       it 'rejects arrays for value type' do
@@ -2797,6 +2797,204 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.build(trailers: { 'Type' => :feature })).to eq(
             ['--trailer', 'Type=feature']
           )
+        end
+      end
+    end
+
+    describe 'short option detection' do
+      context 'with single-character flag' do
+        subject(:args) { described_class.define { flag :f } }
+
+        it 'uses single-dash prefix' do
+          expect(args.build(f: true)).to eq(['-f'])
+        end
+      end
+
+      context 'with multi-character flag' do
+        subject(:args) { described_class.define { flag :force } }
+
+        it 'uses double-dash prefix' do
+          expect(args.build(force: true)).to eq(['--force'])
+        end
+      end
+
+      context 'with single-character negatable flag' do
+        subject(:args) { described_class.define { flag :f, negatable: true } }
+
+        it 'uses single-dash prefix when true' do
+          expect(args.build(f: true)).to eq(['-f'])
+        end
+
+        it 'uses double-dash --no- prefix when false' do
+          expect(args.build(f: false)).to eq(['--no-f'])
+        end
+      end
+
+      context 'with single-character value' do
+        subject(:args) { described_class.define { value :n } }
+
+        it 'uses single-dash prefix with separate value' do
+          expect(args.build(n: '3')).to eq(['-n', '3'])
+        end
+      end
+
+      context 'with multi-character value' do
+        subject(:args) { described_class.define { value :name } }
+
+        it 'uses double-dash prefix with separate value' do
+          expect(args.build(name: 'test')).to eq(['--name', 'test'])
+        end
+      end
+
+      context 'with single-character inline value' do
+        subject(:args) { described_class.define { value :n, inline: true } }
+
+        it 'uses no separator' do
+          expect(args.build(n: 3)).to eq(['-n3'])
+        end
+      end
+
+      context 'with multi-character inline value' do
+        subject(:args) { described_class.define { value :name, inline: true } }
+
+        it 'uses = separator' do
+          expect(args.build(name: 'test')).to eq(['--name=test'])
+        end
+      end
+
+      context 'with single-character inline value multi_valued: true' do
+        subject(:args) { described_class.define { value :n, inline: true, multi_valued: true } }
+
+        it 'uses no separator for each value' do
+          expect(args.build(n: [3, 5])).to eq(['-n3', '-n5'])
+        end
+      end
+
+      context 'with single-character flag_or_value' do
+        subject(:args) { described_class.define { flag_or_value :n } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(n: true)).to eq(['-n'])
+        end
+
+        it 'outputs nothing when false' do
+          expect(args.build(n: false)).to eq([])
+        end
+
+        it 'outputs value as separate argument when given a string' do
+          expect(args.build(n: '5')).to eq(['-n', '5'])
+        end
+      end
+
+      context 'with single-character flag_or_value inline: true' do
+        subject(:args) { described_class.define { flag_or_value :n, inline: true } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(n: true)).to eq(['-n'])
+        end
+
+        it 'outputs nothing when false' do
+          expect(args.build(n: false)).to eq([])
+        end
+
+        it 'outputs value with no separator when given a string' do
+          expect(args.build(n: '5')).to eq(['-n5'])
+        end
+      end
+
+      context 'with single-character negatable flag_or_value inline: true' do
+        subject(:args) { described_class.define { flag_or_value :n, negatable: true, inline: true } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(n: true)).to eq(['-n'])
+        end
+
+        it 'outputs --no-n when false' do
+          expect(args.build(n: false)).to eq(['--no-n'])
+        end
+
+        it 'outputs value with no separator when given a string' do
+          expect(args.build(n: '5')).to eq(['-n5'])
+        end
+      end
+
+      context 'with single-character negatable flag_or_value (non-inline)' do
+        subject(:args) { described_class.define { flag_or_value :n, negatable: true } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(n: true)).to eq(['-n'])
+        end
+
+        it 'outputs --no-n when false' do
+          expect(args.build(n: false)).to eq(['--no-n'])
+        end
+
+        it 'outputs value as separate argument when given a string' do
+          expect(args.build(n: '5')).to eq(['-n', '5'])
+        end
+      end
+
+      context 'with multi-character negatable flag_or_value inline: true' do
+        subject(:args) { described_class.define { flag_or_value :name, negatable: true, inline: true } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(name: true)).to eq(['--name'])
+        end
+
+        it 'outputs --no-name when false' do
+          expect(args.build(name: false)).to eq(['--no-name'])
+        end
+
+        it 'outputs value with = separator when given a string' do
+          expect(args.build(name: 'test')).to eq(['--name=test'])
+        end
+      end
+
+      context 'with multi-character negatable flag_or_value (non-inline)' do
+        subject(:args) { described_class.define { flag_or_value :name, negatable: true } }
+
+        it 'outputs flag only when true' do
+          expect(args.build(name: true)).to eq(['--name'])
+        end
+
+        it 'outputs --no-name when false' do
+          expect(args.build(name: false)).to eq(['--no-name'])
+        end
+
+        it 'outputs value as separate argument when given a string' do
+          expect(args.build(name: 'test')).to eq(['--name', 'test'])
+        end
+      end
+
+      context 'with underscore in multi-character option name' do
+        subject(:args) { described_class.define { flag :dry_run } }
+
+        it 'converts underscores to dashes' do
+          expect(args.build(dry_run: true)).to eq(['--dry-run'])
+        end
+      end
+
+      context 'with explicit args: override' do
+        subject(:args) { described_class.define { flag :f, args: '--force' } }
+
+        it 'uses the explicit args even for single-character name' do
+          expect(args.build(f: true)).to eq(['--force'])
+        end
+      end
+
+      context 'with multi-character name and explicit short args: override' do
+        subject(:args) { described_class.define { flag :all, args: '-a' } }
+
+        it 'uses the explicit short args instead of deriving from name' do
+          expect(args.build(all: true)).to eq(['-a'])
+        end
+      end
+
+      context 'with multi-character name and explicit short args: for inline value' do
+        subject(:args) { described_class.define { value :number, inline: true, args: '-n' } }
+
+        it 'uses no separator for explicitly short args' do
+          expect(args.build(number: 5)).to eq(['-n5'])
         end
       end
     end
