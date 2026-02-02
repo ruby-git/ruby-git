@@ -38,6 +38,12 @@ module Git
         # safe to pass through Process.spawn and shell argument boundaries.
         FIELD_DELIMITER = "\x1f"
 
+        # Delimiter for separating records (tags) in output
+        # Using the ASCII record separator (RS, 0x1E / "\x1e") to delimit complete tag records.
+        # This allows multi-line messages (which contain newlines) to be parsed correctly
+        # since we split by record separator first, then by field delimiter.
+        RECORD_DELIMITER = "\x1e"
+
         # Number of fields expected in the parsed output
         FIELD_COUNT = 8
 
@@ -51,7 +57,9 @@ module Git
         # - %(taggername) - tagger name (empty for lightweight tags)
         # - %(taggeremail) - tagger email (empty for lightweight tags)
         # - %(taggerdate:iso8601-strict) - tagger date in strict ISO 8601 format
-        # - %(contents:subject) - first line of tag message
+        # - %(contents) - full tag message (can be multi-line)
+        #
+        # Each tag record is terminated by the RECORD_DELIMITER to allow multi-line messages.
         FORMAT_STRING = [
           '%(refname:short)',
           '%(objectname)',
@@ -60,8 +68,8 @@ module Git
           '%(taggername)',
           '%(taggeremail)',
           '%(taggerdate:iso8601-strict)',
-          '%(contents:subject)'
-        ].join(FIELD_DELIMITER)
+          '%(contents)'
+        ].join(FIELD_DELIMITER) + RECORD_DELIMITER
 
         # Arguments DSL for building command-line arguments
         #
@@ -73,11 +81,12 @@ module Git
           static '--list'
           static "--format=#{FORMAT_STRING}"
           value :sort, inline: true, multi_valued: true
-          value :contains
-          value :no_contains
-          value :merged
-          value :no_merged
-          value :points_at
+          flag_or_value :contains, inline: true
+          flag_or_value :no_contains, inline: true
+          flag_or_value :merged, inline: true
+          flag_or_value :no_merged, inline: true
+          flag_or_value :points_at, inline: true
+          flag %i[ignore_case i]
           positional :patterns, variadic: true
         end.freeze
 
@@ -103,20 +112,23 @@ module Git
         #     '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
         #     version sorting).
         #
-        #   @option options [String] :contains (nil) List only tags that contain the
-        #     specified commit.
+        #   @option options [Boolean, String] :contains (nil) List only tags that contain the
+        #     specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [String] :no_contains (nil) List only tags that don't contain
-        #     the specified commit.
+        #   @option options [Boolean, String] :no_contains (nil) List only tags that don't contain
+        #     the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [String] :merged (nil) List only tags whose commits are
-        #     reachable from the specified commit.
+        #   @option options [Boolean, String] :merged (nil) List only tags whose commits are
+        #     reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [String] :no_merged (nil) List only tags whose commits are
-        #     not reachable from the specified commit.
+        #   @option options [Boolean, String] :no_merged (nil) List only tags whose commits are
+        #     not reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [String] :points_at (nil) List only tags that point at the
-        #     specified object.
+        #   @option options [Boolean, String] :points_at (nil) List only tags that point at the
+        #     specified object. Pass `true` to use HEAD, or an object reference string.
+        #
+        #   @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
+        #     case insensitive. Alias: `:i`
         #
         # @return [Array<Git::TagInfo>] array of tag info objects
         #
@@ -124,44 +136,48 @@ module Git
         #
         def call(*, **)
           args = ARGS.build(*, **)
-          lines = @execution_context.command(*args, raise_on_failure: false).stdout.split("\n")
-          parse_tags(lines)
+          output = @execution_context.command(*args, raise_on_failure: false).stdout
+          # Split by record separator
+          # Each record may have a leading newline from the previous record's %(contents) output
+          # Use lstrip to remove leading whitespace (which includes the newline) from each record
+          records = output.split(RECORD_DELIMITER).map(&:lstrip).reject(&:empty?)
+          parse_tags(records)
         end
 
         private
 
-        # Parse the output lines from git tag --format
+        # Parse the tag records from git tag --format output
         #
-        # @param lines [Array<String>] output lines from git tag command
+        # @param records [Array<String>] tag records from git tag command (split by record separator)
         # @return [Array<Git::TagInfo>] parsed tag data
         #
-        # @raise [Git::UnexpectedResultError] if any line has unexpected format
+        # @raise [Git::UnexpectedResultError] if any record has unexpected format
         #
-        def parse_tags(lines)
-          lines.map.with_index { |line, index| parse_tag_line(line, index, lines) }
+        def parse_tags(records)
+          records.map.with_index { |record, index| parse_tag_record(record, index, records) }
         end
 
-        # Parse a single formatted tag line
+        # Parse a single formatted tag record
         #
-        # The line format is:
-        #   name<FS>sha<FS>objecttype<FS>tagger_name<FS>tagger_email<FS>tagger_date<FS>message
+        # The record format is:
+        #   name<FS>sha<FS>deref<FS>objecttype<FS>tagger_name<FS>tagger_email<FS>tagger_date<FS>message
         # where <FS> is the unit separator character ("\x1f").
         #
         # For lightweight tags, Git emits empty strings for the tagger fields and message;
         # these are converted to nil by {#parse_optional_field} and {#parse_message}.
         #
-        # @param line [String] a single line from git tag --format output
-        # @param index [Integer] line index for error reporting
-        # @param all_lines [Array<String>] all output lines for error messages
+        # @param record [String] a single tag record from git tag --format output
+        # @param index [Integer] record index for error reporting
+        # @param all_records [Array<String>] all output records for error messages
         # @return [Git::TagInfo] tag info with all fields populated
         #
-        # @raise [Git::UnexpectedResultError] if line format is unexpected
+        # @raise [Git::UnexpectedResultError] if record format is unexpected
         #
-        def parse_tag_line(line, index, all_lines)
-          parts = line.split(FIELD_DELIMITER, FIELD_COUNT)
+        def parse_tag_record(record, index, all_records)
+          parts = record.split(FIELD_DELIMITER, FIELD_COUNT)
 
           unless parts.length == FIELD_COUNT
-            raise Git::UnexpectedResultError, unexpected_tag_line_error(all_lines, line, index)
+            raise Git::UnexpectedResultError, unexpected_tag_record_error(all_records, record, index)
           end
 
           build_tag_info(parts)
@@ -213,29 +229,31 @@ module Git
         end
 
         # Parse message field, returning nil for lightweight tags or empty messages
+        # Strips trailing newlines that git adds to %(contents) output
         def parse_message(objecttype, message)
-          objecttype == 'tag' && !message.empty? ? message : nil
+          stripped = message.chomp
+          objecttype == 'tag' && !stripped.empty? ? stripped : nil
         end
 
-        # Generate error message for unexpected tag line format
+        # Generate error message for unexpected tag record format
         #
-        # @param lines [Array<String>] all output lines
-        # @param line [String] the problematic line
-        # @param index [Integer] the line index
+        # @param records [Array<String>] all output records
+        # @param record [String] the problematic record
+        # @param index [Integer] the record index
         # @return [String] formatted error message
         #
-        def unexpected_tag_line_error(lines, line, index)
-          format_str = FORMAT_STRING.gsub(FIELD_DELIMITER, '<FS>')
+        def unexpected_tag_record_error(records, record, index)
+          format_str = FORMAT_STRING.gsub(FIELD_DELIMITER, '<FS>').gsub(RECORD_DELIMITER, '<RS>')
           <<~ERROR
-            Unexpected line in output from `git tag --list --format=#{format_str}`, at index #{index}
+            Unexpected record in output from `git tag --list --format=#{format_str}`, at index #{index}
 
-            Expected #{FIELD_COUNT} fields separated by '\\x1f' (unit separator), got #{line.split(FIELD_DELIMITER, -1).length}
+            Expected #{FIELD_COUNT} fields separated by '\\x1f' (unit separator), got #{record.split(FIELD_DELIMITER, -1).length}
 
             Full output:
-              #{lines.join("\n  ")}
+              #{records.join("\n  ")}
 
-            Line at index #{index}:
-              "#{line}"
+            Record at index #{index}:
+              "#{record}"
           ERROR
         end
       end

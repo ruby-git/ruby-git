@@ -45,14 +45,14 @@ RSpec.describe Git::Commands::Tag::Delete do
         it 'calls git tag -d with the tag name' do
           delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
           expect(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', any_args).and_return(delete_result)
+            .with('tag', '--delete', 'v1.0.0', any_args).and_return(delete_result)
           command.call('v1.0.0')
         end
 
         it 'returns TagDeleteResult with the deleted tag' do
           delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
           allow(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', any_args).and_return(delete_result)
+            .with('tag', '--delete', 'v1.0.0', any_args).and_return(delete_result)
 
           result = command.call('v1.0.0')
 
@@ -78,14 +78,14 @@ RSpec.describe Git::Commands::Tag::Delete do
 
         it 'deletes all specified tags in one command' do
           expect(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
+            .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
             .and_return(delete_output)
           command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
         end
 
         it 'returns TagDeleteResult with all deleted tags' do
           allow(execution_context).to receive(:command)
-            .with('tag', '-d', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
+            .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
             .and_return(delete_output)
 
           result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
@@ -112,7 +112,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 'returns TagDeleteResult with deleted and not_deleted tags' do
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'v1.0.0', 'nonexistent', 'v2.0.0', any_args)
+          .with('tag', '--delete', 'v1.0.0', 'nonexistent', 'v2.0.0', any_args)
           .and_return(partial_failure_result)
 
         result = command.call('v1.0.0', 'nonexistent', 'v2.0.0')
@@ -140,7 +140,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 'returns TagDeleteResult with all tags in not_deleted' do
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'nonexistent1', 'nonexistent2', any_args)
+          .with('tag', '--delete', 'nonexistent1', 'nonexistent2', any_args)
           .and_return(all_fail_result)
 
         result = command.call('nonexistent1', 'nonexistent2')
@@ -166,7 +166,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
       it 're-raises the error' do
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'v1.0.0', any_args)
+          .with('tag', '--delete', 'v1.0.0', any_args)
           .and_return(fatal_result)
 
         expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
@@ -186,7 +186,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       it 'handles semver tags' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('v1.2.3')])
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'v1.2.3', any_args)
+          .with('tag', '--delete', 'v1.2.3', any_args)
           .and_return(command_result("Deleted tag 'v1.2.3' (was abc)\n"))
 
         result = command.call('v1.2.3')
@@ -196,7 +196,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       it 'handles tags with slashes' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('release/v1.0')])
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'release/v1.0', any_args)
+          .with('tag', '--delete', 'release/v1.0', any_args)
           .and_return(command_result("Deleted tag 'release/v1.0' (was abc)\n"))
 
         result = command.call('release/v1.0')
@@ -206,7 +206,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       it 'handles tags with hyphens and underscores' do
         allow(list_command).to receive(:call).and_return([lightweight_tag.call('my-tag_name')])
         allow(execution_context).to receive(:command)
-          .with('tag', '-d', 'my-tag_name', any_args)
+          .with('tag', '--delete', 'my-tag_name', any_args)
           .and_return(command_result("Deleted tag 'my-tag_name' (was abc)\n"))
 
         result = command.call('my-tag_name')

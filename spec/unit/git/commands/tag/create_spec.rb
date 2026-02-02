@@ -60,14 +60,14 @@ RSpec.describe Git::Commands::Tag::Create do
     end
 
     context 'with :annotate option' do
-      it 'adds -a flag' do
-        expect(execution_context).to receive(:command).with('tag', '-a', '--message=Release', 'v1.0.0')
+      it 'adds --annotate flag' do
+        expect(execution_context).to receive(:command).with('tag', '--annotate', '--message=Release', 'v1.0.0')
         result = command.call('v1.0.0', annotate: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
       end
 
       it 'accepts :a alias' do
-        expect(execution_context).to receive(:command).with('tag', '-a', '--message=Release', 'v1.0.0')
+        expect(execution_context).to receive(:command).with('tag', '--annotate', '--message=Release', 'v1.0.0')
         result = command.call('v1.0.0', a: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
       end
@@ -80,29 +80,21 @@ RSpec.describe Git::Commands::Tag::Create do
     end
 
     context 'with :sign option' do
-      it 'adds -s flag' do
-        expect(execution_context).to receive(:command).with('tag', '-s', '--message=Release', 'v1.0.0')
+      it 'adds --sign flag' do
+        expect(execution_context).to receive(:command).with('tag', '--sign', '--message=Release', 'v1.0.0')
         result = command.call('v1.0.0', sign: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
       end
 
       it 'accepts :s alias' do
-        expect(execution_context).to receive(:command).with('tag', '-s', '--message=Release', 'v1.0.0')
+        expect(execution_context).to receive(:command).with('tag', '--sign', '--message=Release', 'v1.0.0')
         result = command.call('v1.0.0', s: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
       end
 
-      it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0')
-        result = command.call('v1.0.0', sign: false)
-        expect(result).to be_a(Git::TagInfo)
-      end
-    end
-
-    context 'with :no_sign option' do
-      it 'adds --no-sign flag to override tag.gpgSign config' do
+      it 'adds --no-sign flag when false to override tag.gpgSign config' do
         expect(execution_context).to receive(:command).with('tag', '--no-sign', 'v1.0.0')
-        result = command.call('v1.0.0', no_sign: true)
+        result = command.call('v1.0.0', sign: false)
         expect(result).to be_a(Git::TagInfo)
       end
     end
@@ -126,14 +118,14 @@ RSpec.describe Git::Commands::Tag::Create do
     end
 
     context 'with :force option' do
-      it 'adds -f flag to replace existing tag' do
-        expect(execution_context).to receive(:command).with('tag', '-f', 'v1.0.0')
+      it 'adds --force flag to replace existing tag' do
+        expect(execution_context).to receive(:command).with('tag', '--force', 'v1.0.0')
         result = command.call('v1.0.0', force: true)
         expect(result).to be_a(Git::TagInfo)
       end
 
       it 'accepts :f alias' do
-        expect(execution_context).to receive(:command).with('tag', '-f', 'v1.0.0')
+        expect(execution_context).to receive(:command).with('tag', '--force', 'v1.0.0')
         result = command.call('v1.0.0', f: true)
         expect(result).to be_a(Git::TagInfo)
       end
@@ -202,7 +194,7 @@ RSpec.describe Git::Commands::Tag::Create do
     context 'with multiple options combined' do
       it 'creates an annotated tag with message and force' do
         expect(execution_context).to receive(:command).with(
-          'tag', '-a', '-f', '--message=Release', 'v1.0.0'
+          'tag', '--annotate', '--force', '--message=Release', 'v1.0.0'
         )
         result = command.call('v1.0.0', annotate: true, force: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
@@ -210,7 +202,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
       it 'creates a signed tag at specific commit' do
         expect(execution_context).to receive(:command).with(
-          'tag', '-s', '--message=Signed release', 'v1.0.0', 'abc123'
+          'tag', '--sign', '--message=Signed release', 'v1.0.0', 'abc123'
         )
         result = command.call('v1.0.0', 'abc123', sign: true, message: 'Signed release')
         expect(result).to be_a(Git::TagInfo)
@@ -226,7 +218,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
       it 'combines create_reflog with annotated tag' do
         expect(execution_context).to receive(:command).with(
-          'tag', '-a', '--create-reflog', '--message=Release', 'v1.0.0'
+          'tag', '--annotate', '--create-reflog', '--message=Release', 'v1.0.0'
         )
         result = command.call('v1.0.0', annotate: true, create_reflog: true, message: 'Release')
         expect(result).to be_a(Git::TagInfo)
@@ -234,9 +226,73 @@ RSpec.describe Git::Commands::Tag::Create do
 
       it 'allows annotate with file instead of message' do
         expect(execution_context).to receive(:command).with(
-          'tag', '-a', '--file=/path/to/msg.txt', 'v1.0.0'
+          'tag', '--annotate', '--file=/path/to/msg.txt', 'v1.0.0'
         )
         result = command.call('v1.0.0', annotate: true, file: '/path/to/msg.txt')
+        expect(result).to be_a(Git::TagInfo)
+      end
+    end
+
+    context 'with :trailer option' do
+      it 'adds single trailer with Hash input' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release', '--trailer', 'Signed-off-by: John Doe', 'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', trailer: { 'Signed-off-by' => 'John Doe' })
+        expect(result).to be_a(Git::TagInfo)
+      end
+
+      it 'adds multiple trailers with Hash input' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release',
+          '--trailer', 'Signed-off-by: John Doe',
+          '--trailer', 'Reviewed-by: Jane Smith',
+          'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', trailer: {
+                                'Signed-off-by' => 'John Doe',
+                                'Reviewed-by' => 'Jane Smith'
+                              })
+        expect(result).to be_a(Git::TagInfo)
+      end
+
+      it 'adds trailers with Array of pairs input' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release',
+          '--trailer', 'Co-authored-by: Alice',
+          '--trailer', 'Co-authored-by: Bob',
+          'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', trailer: [
+                                %w[Co-authored-by Alice],
+                                %w[Co-authored-by Bob]
+                              ])
+        expect(result).to be_a(Git::TagInfo)
+      end
+    end
+
+    context 'with :cleanup option' do
+      it 'adds --cleanup=strip' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release', '--cleanup=strip', 'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', cleanup: 'strip')
+        expect(result).to be_a(Git::TagInfo)
+      end
+
+      it 'adds --cleanup=verbatim' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release', '--cleanup=verbatim', 'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', cleanup: 'verbatim')
+        expect(result).to be_a(Git::TagInfo)
+      end
+
+      it 'adds --cleanup=whitespace' do
+        expect(execution_context).to receive(:command).with(
+          'tag', '--message=Release', '--cleanup=whitespace', 'v1.0.0'
+        )
+        result = command.call('v1.0.0', message: 'Release', cleanup: 'whitespace')
         expect(result).to be_a(Git::TagInfo)
       end
     end

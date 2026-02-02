@@ -35,7 +35,7 @@ module Git
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
           static 'tag'
-          static '-d'
+          static '--delete'
           positional :tag_names, variadic: true, required: true
         end.freeze
 
