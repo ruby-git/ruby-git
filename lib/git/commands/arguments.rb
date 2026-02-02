@@ -62,6 +62,33 @@ module Git
     #   end
     #   args.build('HEAD', 'file.txt')  # => ['HEAD', '--', 'file.txt']
     #
+    # == Short Option Detection
+    #
+    # Option names are automatically formatted using POSIX conventions:
+    #
+    # - **Single-character names** use single-dash prefix: `:f` → `-f`
+    # - **Multi-character names** use double-dash prefix: `:force` → `--force`
+    #
+    # For inline values (`inline: true`), the separator also follows POSIX conventions:
+    #
+    # - **Short options** use no separator: `-n3`
+    # - **Long options** use `=` separator: `--name=value`
+    #
+    # Negated flags always use double-dash format (e.g., `-f` → `--no-f` when false).
+    #
+    # The `args:` parameter can override this automatic detection when needed.
+    #
+    # @example Short option detection
+    #   flag :f                          # true → '-f'
+    #   flag :force                      # true → '--force'
+    #   value :n, inline: true           # 3 → '-n3'
+    #   value :name, inline: true        # 'test' → '--name=test'
+    #   flag :f, negatable: true         # false → '--no-f'
+    #   flag_or_value :n, inline: true   # true → '-n', '5' → '-n5'
+    #
+    # @example Explicit override with args:
+    #   flag :f, args: '--force'         # true → '--force' (override short detection)
+    #
     # == Option Types
     #
     # The DSL supports several option types with orthogonal modifiers:
@@ -729,7 +756,13 @@ module Git
 
       def validate_args_parameter!(definition, option_name)
         return unless definition[:args].is_a?(Array)
-        return if %i[flag negatable_flag].include?(definition[:type])
+
+        if definition[:type] == :negatable_flag
+          raise ArgumentError,
+                "arrays for args: parameter cannot be combined with negatable: true (option :#{option_name})"
+        end
+
+        return if definition[:type] == :flag
 
         type = definition[:type]
         raise ArgumentError,
@@ -819,18 +852,7 @@ module Git
 
           arg_spec.is_a?(Array) ? args.concat(arg_spec) : args << arg_spec
         end,
-        negatable_flag: lambda do |args, arg_spec, value, _|
-          unless [true, false].include?(value)
-            raise ArgumentError,
-                  "negatable_flag expects a boolean value, got #{value.inspect} (#{value.class})"
-          end
-
-          if arg_spec.is_a?(Array)
-            arg_spec.each { |spec| args << (value ? spec : spec.sub(/\A--/, '--no-')) }
-          else
-            args << (value ? arg_spec : arg_spec.sub(/\A--/, '--no-'))
-          end
-        end,
+        negatable_flag: :build_negatable_flag,
         value: lambda do |args, arg_spec, value, definition|
           if definition[:multi_valued]
             Array(value).each { |v| args << arg_spec << v.to_s }
@@ -838,35 +860,9 @@ module Git
             args << arg_spec << value.to_s
           end
         end,
-        inline_value: lambda do |args, arg_spec, value, definition|
-          if definition[:multi_valued]
-            Array(value).each { |v| args << "#{arg_spec}=#{v}" }
-          else
-            args << "#{arg_spec}=#{value}"
-          end
-        end,
-        flag_or_inline_value: lambda do |args, arg_spec, value, _|
-          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
-            raise ArgumentError,
-                  "Invalid value for flag_or_inline_value: #{value.inspect} (#{value.class}); " \
-                  'expected true, false, or a String'
-          end
-          return if value == false
-
-          args << (value == true ? arg_spec : "#{arg_spec}=#{value}")
-        end,
-        negatable_flag_or_inline_value: lambda do |args, arg_spec, value, _|
-          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
-            raise ArgumentError,
-                  "Invalid value for negatable_flag_or_inline_value: #{value.inspect} (#{value.class}); " \
-                  'expected true, false, or a String'
-          end
-          args << case value
-                  when true then arg_spec
-                  when false then arg_spec.sub(/\A--/, '--no-')
-                  else "#{arg_spec}=#{value}"
-                  end
-        end,
+        inline_value: :build_inline_value,
+        flag_or_inline_value: :build_flag_or_inline_value,
+        negatable_flag_or_inline_value: :build_negatable_flag_or_inline_value,
         flag_or_value: lambda do |args, arg_spec, value, _|
           unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
             raise ArgumentError,
@@ -881,21 +877,7 @@ module Git
             args << arg_spec << value.to_s
           end
         end,
-        negatable_flag_or_value: lambda do |args, arg_spec, value, _|
-          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
-            raise ArgumentError,
-                  "Invalid value for negatable_flag_or_value: #{value.inspect} (#{value.class}); " \
-                  'expected true, false, or a String'
-          end
-          case value
-          when true
-            args << arg_spec
-          when false
-            args << arg_spec.sub(/\A--/, '--no-')
-          else
-            args << arg_spec << value.to_s
-          end
-        end,
+        negatable_flag_or_value: :build_negatable_flag_or_value,
         value_to_positional: lambda do |args, _, value, definition|
           # Validate array usage when multi_valued is false
           if value.is_a?(Array) && !definition[:multi_valued]
@@ -932,13 +914,35 @@ module Git
       def build_option(args, name, definition, value)
         return if should_skip_option?(value, definition)
 
-        arg_spec = definition[:args] || "--#{name.to_s.tr('_', '-')}"
+        arg_spec = definition[:args] || default_arg_spec(name)
         builder = BUILDERS[definition[:type]]
         if builder.is_a?(Symbol)
           send(builder, args, arg_spec, value, definition)
         else
           builder&.call(args, arg_spec, value, definition)
         end
+      end
+
+      # Generate the default argument specification based on option name length
+      #
+      # POSIX convention: single-character options use single dash (-f),
+      # multi-character options use double dash (--force)
+      #
+      # @param name [Symbol] the option name
+      # @return [String] the argument specification (e.g., '-f' or '--force')
+      #
+      def default_arg_spec(name)
+        name_str = name.to_s.tr('_', '-')
+        name_str.length == 1 ? "-#{name_str}" : "--#{name_str}"
+      end
+
+      # Check if an argument specification is for a short (single-character) option
+      #
+      # @param arg_spec [String] the argument specification
+      # @return [Boolean] true if this is a short option (single dash, single char)
+      #
+      def short_option?(arg_spec)
+        arg_spec.is_a?(String) && arg_spec.match?(/\A-[^-]\z/)
       end
 
       def build_key_value(args, arg_spec, value, definition)
@@ -962,6 +966,110 @@ module Git
           validate_key_value_key!(k, sep, option_name)
           validate_key_value_value!(v, option_name)
           args << "#{arg_spec}=#{v.nil? ? k.to_s : "#{k}#{sep}#{v}"}"
+        end
+      end
+
+      # Build inline value option with POSIX-compliant formatting
+      #
+      # Short options (single-char) use no separator: -n3
+      # Long options (multi-char) use = separator: --name=value
+      #
+      def build_inline_value(args, arg_spec, value, definition)
+        sep = inline_value_separator(arg_spec)
+        if definition[:multi_valued]
+          Array(value).each { |v| args << "#{arg_spec}#{sep}#{v}" }
+        else
+          args << "#{arg_spec}#{sep}#{value}"
+        end
+      end
+
+      # Build flag or inline value option with POSIX-compliant formatting
+      #
+      def build_flag_or_inline_value(args, arg_spec, value, _definition)
+        validate_flag_or_value_type!(value, 'flag_or_inline_value')
+        return if value == false
+
+        args << (value == true ? arg_spec : "#{arg_spec}#{inline_value_separator(arg_spec)}#{value}")
+      end
+
+      # Build negatable flag or inline value option with POSIX-compliant formatting
+      #
+      def build_negatable_flag_or_inline_value(args, arg_spec, value, _definition)
+        validate_flag_or_value_type!(value, 'negatable_flag_or_inline_value')
+        args << case value
+                when true then arg_spec
+                when false then negate_flag(arg_spec)
+                else "#{arg_spec}#{inline_value_separator(arg_spec)}#{value}"
+                end
+      end
+
+      # Build negatable flag or value option with proper negation format for short options
+      #
+      def build_negatable_flag_or_value(args, arg_spec, value, _definition)
+        validate_flag_or_value_type!(value, 'negatable_flag_or_value')
+        case value
+        when true
+          args << arg_spec
+        when false
+          args << negate_flag(arg_spec)
+        else
+          args << arg_spec << value.to_s
+        end
+      end
+
+      # Validate that a value is a valid flag_or_value type (true, false, or String)
+      #
+      def validate_flag_or_value_type!(value, option_type)
+        return if value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
+
+        raise ArgumentError,
+              "Invalid value for #{option_type}: #{value.inspect} (#{value.class}); " \
+              'expected true, false, or a String'
+      end
+
+      # Determine the separator to use for inline values based on option type
+      #
+      # POSIX convention:
+      # - Short options (single dash, single char like -n): no separator (-n3)
+      # - Long options (double dash like --name): = separator (--name=value)
+      #
+      # @param arg_spec [String] the argument specification
+      # @return [String] empty string ('') for short options, '=' for long options;
+      #   never returns nil, safe to concatenate directly
+      #
+      def inline_value_separator(arg_spec)
+        short_option?(arg_spec) ? '' : '='
+      end
+
+      # Build negatable flag with proper negation format
+      #
+      # For negation, always use double-dash format (--no-x) even for short options,
+      # as this is the POSIX convention.
+      #
+      def build_negatable_flag(args, arg_spec, value, _definition)
+        unless [true, false].include?(value)
+          raise ArgumentError,
+                "negatable_flag expects a boolean value, got #{value.inspect} (#{value.class})"
+        end
+
+        args << (value ? arg_spec : negate_flag(arg_spec))
+      end
+
+      # Negate a flag by adding --no- prefix
+      #
+      # For short options (-f), expands to --no-f
+      # For long options (--force), transforms to --no-force
+      #
+      # @param arg_spec [String] the argument specification
+      # @return [String] the negated flag
+      #
+      def negate_flag(arg_spec)
+        if short_option?(arg_spec)
+          # -f => --no-f
+          "--no-#{arg_spec[1]}"
+        else
+          # --force => --no-force
+          arg_spec.sub(/\A--/, '--no-')
         end
       end
 
