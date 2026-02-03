@@ -13,12 +13,6 @@ RSpec.describe Git::Commands::Fsck do
                                                                                     exitstatus: exitstatus))
   end
 
-  def expect_command(*args, stdout: '', stderr: '', exitstatus: 0)
-    expect(execution_context).to receive(:command).with(*args, any_args)
-                                                  .and_return(command_result(stdout, stderr: stderr,
-                                                                                     exitstatus: exitstatus))
-  end
-
   describe '#call' do
     context 'with default arguments' do
       it 'runs fsck with --no-progress' do

@@ -19,15 +19,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'outputs --flag when value is true' do
-        expect(args.build(force: true)).to eq(['--force'])
+        expect(args.bind(force: true).to_ary).to eq(['--force'])
       end
 
       it 'outputs nothing when value is false' do
-        expect(args.build(force: false)).to eq([])
+        expect(args.bind(force: false).to_ary).to eq([])
       end
 
       it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
+        expect(args.bind.to_ary).to eq([])
       end
     end
 
@@ -39,15 +39,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'outputs --flag value as separate arguments' do
-        expect(args.build(branch: 'main')).to eq(['--branch', 'main'])
+        expect(args.bind(branch: 'main').to_ary).to eq(['--branch', 'main'])
       end
 
       it 'outputs nothing when value is nil' do
-        expect(args.build(branch: nil)).to eq([])
+        expect(args.bind(branch: nil).to_ary).to eq([])
       end
 
       it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
+        expect(args.bind.to_ary).to eq([])
       end
     end
 
@@ -59,27 +59,27 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'outputs --flag value for each array element' do
-        expect(args.build(config: %w[a b])).to eq(['--config', 'a', '--config', 'b'])
+        expect(args.bind(config: %w[a b]).to_ary).to eq(['--config', 'a', '--config', 'b'])
       end
 
       it 'outputs --flag value for single value' do
-        expect(args.build(config: 'single')).to eq(['--config', 'single'])
+        expect(args.bind(config: 'single').to_ary).to eq(['--config', 'single'])
       end
 
       it 'outputs nothing when value is nil' do
-        expect(args.build(config: nil)).to eq([])
+        expect(args.bind(config: nil).to_ary).to eq([])
       end
 
       it 'outputs nothing when value is empty array' do
-        expect(args.build(config: [])).to eq([])
+        expect(args.bind(config: []).to_ary).to eq([])
       end
 
       it 'includes empty strings in array even with allow_empty: false (default)' do
-        expect(args.build(config: ['', 'value'])).to eq(['--config', '', '--config', 'value'])
+        expect(args.bind(config: ['', 'value']).to_ary).to eq(['--config', '', '--config', 'value'])
       end
 
       it 'outputs nothing for single empty string with allow_empty: false (default)' do
-        expect(args.build(config: '')).to eq([])
+        expect(args.bind(config: '').to_ary).to eq([])
       end
 
       context 'with allow_empty: true' do
@@ -90,11 +90,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'includes empty strings in the array' do
-          expect(args.build(config: ['', 'value'])).to eq(['--config', '', '--config', 'value'])
+          expect(args.bind(config: ['', 'value']).to_ary).to eq(['--config', '', '--config', 'value'])
         end
 
         it 'outputs flag with empty value for single empty string' do
-          expect(args.build(config: '')).to eq(['--config', ''])
+          expect(args.bind(config: '').to_ary).to eq(['--config', ''])
         end
       end
     end
@@ -107,7 +107,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'always outputs the static flag' do
-        expect(args.build).to eq(['--no-progress'])
+        expect(args.bind.to_ary).to eq(['--no-progress'])
       end
 
       it 'outputs static flag even with other options' do
@@ -115,7 +115,7 @@ RSpec.describe Git::Commands::Arguments do
           static '-p'
           flag :force
         end
-        expect(args_with_flag.build(force: true)).to eq(['-p', '--force'])
+        expect(args_with_flag.bind(force: true).to_ary).to eq(['-p', '--force'])
       end
     end
 
@@ -133,19 +133,19 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'uses custom builder when value is true' do
-        expect(args.build(dirty: true)).to eq(['--dirty'])
+        expect(args.bind(dirty: true).to_ary).to eq(['--dirty'])
       end
 
       it 'uses custom builder when value is a string' do
-        expect(args.build(dirty: '*')).to eq(['--dirty=*'])
+        expect(args.bind(dirty: '*').to_ary).to eq(['--dirty=*'])
       end
 
       it 'outputs nothing when custom builder returns nil' do
-        expect(args.build(dirty: false)).to eq([])
+        expect(args.bind(dirty: false).to_ary).to eq([])
       end
 
       it 'outputs nothing when option is not provided' do
-        expect(args.build).to eq([])
+        expect(args.bind.to_ary).to eq([])
       end
     end
 
@@ -158,12 +158,12 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'does not output anything for metadata options' do
-        expect(args.build(object: 'HEAD', path_limiter: 'src/')).to eq([])
+        expect(args.bind(object: 'HEAD', path_limiter: 'src/').to_ary).to eq([])
       end
 
       it 'allows validation of metadata presence' do
         # metadata options are just for validation, not command building
-        expect(args.build).to eq([])
+        expect(args.bind.to_ary).to eq([])
       end
     end
 
@@ -175,15 +175,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'includes positional argument in output' do
-        expect(args.build('https://github.com/user/repo')).to eq(['https://github.com/user/repo'])
+        expect(args.bind('https://github.com/user/repo').to_ary).to eq(['https://github.com/user/repo'])
       end
 
       it 'raises error when required positional is missing' do
-        expect { args.build }.to raise_error(ArgumentError, /repository is required/)
+        expect { args.bind }.to raise_error(ArgumentError, /repository is required/)
       end
 
       it 'accepts empty string as valid value for required positional' do
-        expect(args.build('')).to eq([''])
+        expect(args.bind('').to_ary).to eq([''])
       end
     end
 
@@ -196,11 +196,11 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'includes optional positional when provided' do
-        expect(args.build('https://example.com', 'my-dir')).to eq(%w[https://example.com my-dir])
+        expect(args.bind('https://example.com', 'my-dir').to_ary).to eq(%w[https://example.com my-dir])
       end
 
       it 'excludes optional positional when not provided' do
-        expect(args.build('https://example.com')).to eq(['https://example.com'])
+        expect(args.bind('https://example.com').to_ary).to eq(['https://example.com'])
       end
     end
 
@@ -212,15 +212,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'accepts multiple positional arguments' do
-        expect(args.build('file1.rb', 'file2.rb')).to eq(%w[file1.rb file2.rb])
+        expect(args.bind('file1.rb', 'file2.rb').to_ary).to eq(%w[file1.rb file2.rb])
       end
 
       it 'accepts array of arguments' do
-        expect(args.build(%w[file1.rb file2.rb])).to eq(%w[file1.rb file2.rb])
+        expect(args.bind(%w[file1.rb file2.rb]).to_ary).to eq(%w[file1.rb file2.rb])
       end
 
       it 'outputs nothing when no paths provided' do
-        expect(args.build).to eq([])
+        expect(args.bind.to_ary).to eq([])
       end
     end
 
@@ -232,23 +232,23 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'accepts multiple positional arguments' do
-        expect(args.build('file1.rb', 'file2.rb')).to eq(%w[file1.rb file2.rb])
+        expect(args.bind('file1.rb', 'file2.rb').to_ary).to eq(%w[file1.rb file2.rb])
       end
 
       it 'accepts single positional argument' do
-        expect(args.build('file.rb')).to eq(['file.rb'])
+        expect(args.bind('file.rb').to_ary).to eq(['file.rb'])
       end
 
       it 'raises ArgumentError when no paths provided' do
-        expect { args.build }.to raise_error(ArgumentError, /at least one value is required for paths/)
+        expect { args.bind }.to raise_error(ArgumentError, /at least one value is required for paths/)
       end
 
       it 'raises ArgumentError when empty array provided' do
-        expect { args.build([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
+        expect { args.bind([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
       end
 
       it 'accepts empty string as valid value in variadic positional' do
-        expect(args.build('', 'file.rb')).to eq(['', 'file.rb'])
+        expect(args.bind('', 'file.rb').to_ary).to eq(['', 'file.rb'])
       end
     end
 
@@ -260,11 +260,11 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'uses default when no value provided' do
-        expect(args.build).to eq(['.'])
+        expect(args.bind.to_ary).to eq(['.'])
       end
 
       it 'overrides default when value provided' do
-        expect(args.build('src/')).to eq(['src/'])
+        expect(args.bind('src/').to_ary).to eq(['src/'])
       end
     end
 
@@ -277,11 +277,11 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'includes separator before positional arguments' do
-        expect(args.build('file.rb', force: true)).to eq(['--force', '--', 'file.rb'])
+        expect(args.bind('file.rb', force: true).to_ary).to eq(['--force', '--', 'file.rb'])
       end
 
       it 'omits separator when no positional arguments' do
-        expect(args.build(force: true)).to eq(['--force'])
+        expect(args.bind(force: true).to_ary).to eq(['--force'])
       end
     end
 
@@ -296,7 +296,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'outputs options before positionals' do
-        result = args.build('https://example.com', 'my-dir', bare: true, branch: 'main')
+        result = args.bind('https://example.com', 'my-dir', bare: true, branch: 'main').to_ary
         expect(result).to eq(['--bare', '--branch', 'main', 'https://example.com', 'my-dir'])
       end
     end
@@ -310,25 +310,25 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError for single unexpected positional' do
-          expect { args.build('unexpected') }.to raise_error(
+          expect { args.bind('unexpected') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
         end
 
         it 'raises ArgumentError for multiple unexpected positionals' do
-          expect { args.build('arg1', 'arg2', 'arg3') }.to raise_error(
+          expect { args.bind('arg1', 'arg2', 'arg3') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: arg1, arg2, arg3/
           )
         end
 
         it 'does not raise for nil positional arguments' do
-          expect(args.build(nil)).to eq([])
+          expect(args.bind(nil).to_ary).to eq([])
         end
 
         it 'does not raise for multiple nil positional arguments' do
-          expect(args.build(nil, nil)).to eq([])
+          expect(args.bind(nil, nil).to_ary).to eq([])
         end
       end
 
@@ -340,33 +340,33 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts expected positional' do
-          expect(args.build('HEAD~1')).to eq(['HEAD~1'])
+          expect(args.bind('HEAD~1').to_ary).to eq(['HEAD~1'])
         end
 
         it 'accepts nil as the positional (treated as not provided)' do
-          expect(args.build(nil)).to eq([])
+          expect(args.bind(nil).to_ary).to eq([])
         end
 
         it 'raises ArgumentError for extra positional beyond defined ones' do
-          expect { args.build('HEAD~1', 'unexpected') }.to raise_error(
+          expect { args.bind('HEAD~1', 'unexpected') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
         end
 
         it 'raises ArgumentError for multiple extra positionals' do
-          expect { args.build('HEAD~1', 'extra1', 'extra2') }.to raise_error(
+          expect { args.bind('HEAD~1', 'extra1', 'extra2') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: extra1, extra2/
           )
         end
 
         it 'does not count trailing nils as unexpected' do
-          expect(args.build('HEAD~1', nil, nil)).to eq(['HEAD~1'])
+          expect(args.bind('HEAD~1', nil, nil).to_ary).to eq(['HEAD~1'])
         end
 
         it 'raises for non-nil unexpected arguments even with trailing nils' do
-          expect { args.build('HEAD~1', 'unexpected', nil) }.to raise_error(
+          expect { args.bind('HEAD~1', 'unexpected', nil) }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
@@ -381,11 +381,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts the required positional' do
-          expect(args.build('https://example.com')).to eq(['https://example.com'])
+          expect(args.bind('https://example.com').to_ary).to eq(['https://example.com'])
         end
 
         it 'raises ArgumentError for extra positional beyond required one' do
-          expect { args.build('https://example.com', 'unexpected') }.to raise_error(
+          expect { args.bind('https://example.com', 'unexpected') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
@@ -401,22 +401,22 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts both defined positionals' do
-          expect(args.build('https://example.com', 'my-dir')).to eq(['https://example.com', 'my-dir'])
+          expect(args.bind('https://example.com', 'my-dir').to_ary).to eq(['https://example.com', 'my-dir'])
         end
 
         it 'accepts only the required positional' do
-          expect(args.build('https://example.com')).to eq(['https://example.com'])
+          expect(args.bind('https://example.com').to_ary).to eq(['https://example.com'])
         end
 
         it 'raises ArgumentError for extra positionals beyond defined ones' do
-          expect { args.build('https://example.com', 'my-dir', 'unexpected') }.to raise_error(
+          expect { args.bind('https://example.com', 'my-dir', 'unexpected') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
         end
 
         it 'raises ArgumentError for multiple extra positionals' do
-          expect { args.build('repo', 'dir', 'extra1', 'extra2', 'extra3') }.to raise_error(
+          expect { args.bind('repo', 'dir', 'extra1', 'extra2', 'extra3') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: extra1, extra2, extra3/
           )
@@ -431,12 +431,12 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts any number of positionals (no unexpected arguments)' do
-          expect(args.build('file1.rb', 'file2.rb', 'file3.rb')).to eq(['file1.rb', 'file2.rb', 'file3.rb'])
+          expect(args.bind('file1.rb', 'file2.rb', 'file3.rb').to_ary).to eq(['file1.rb', 'file2.rb', 'file3.rb'])
         end
 
         it 'accepts many positionals without raising' do
           many_files = (1..10).map { |i| "file#{i}.rb" }
-          expect(args.build(*many_files)).to eq(many_files)
+          expect(args.bind(*many_files).to_ary).to eq(many_files)
         end
       end
 
@@ -449,11 +449,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts command with variadic args (no unexpected arguments)' do
-          expect(args.build('run', '--verbose', '--debug')).to eq(['run', '--verbose', '--debug'])
+          expect(args.bind('run', '--verbose', '--debug').to_ary).to eq(['run', '--verbose', '--debug'])
         end
 
         it 'accepts just the required command' do
-          expect(args.build('run')).to eq(['run'])
+          expect(args.bind('run').to_ary).to eq(['run'])
         end
       end
 
@@ -465,23 +465,23 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'passes through empty string as a valid positional value' do
-          expect(args.build('')).to eq([''])
+          expect(args.bind('').to_ary).to eq([''])
         end
 
         it 'treats nil as not provided' do
-          expect(args.build(nil)).to eq([])
+          expect(args.bind(nil).to_ary).to eq([])
         end
 
         it 'raises for unexpected positional after empty string' do
-          expect { args.build('', 'unexpected') }.to raise_error(
+          expect { args.bind('', 'unexpected') }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
         end
 
         it 'does not count nil as unexpected' do
-          expect { args.build('valid', nil) }.to_not raise_error
-          expect(args.build('valid', nil)).to eq(['valid'])
+          expect { args.bind('valid', nil) }.to_not raise_error
+          expect(args.bind('valid', nil).to_ary).to eq(['valid'])
         end
       end
 
@@ -493,15 +493,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'treats empty array as not provided (equivalent to nil)' do
-          expect(args.build([])).to eq([])
+          expect(args.bind([]).to_ary).to eq([])
         end
 
         it 'treats nil as not provided' do
-          expect(args.build(nil)).to eq([])
+          expect(args.bind(nil).to_ary).to eq([])
         end
 
         it 'accepts non-empty array' do
-          expect(args.build(['file1.rb', 'file2.rb'])).to eq(['file1.rb', 'file2.rb'])
+          expect(args.bind(['file1.rb', 'file2.rb']).to_ary).to eq(['file1.rb', 'file2.rb'])
         end
 
         context 'with separator' do
@@ -513,15 +513,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'omits separator when empty array provided' do
-            expect(args.build([], force: true)).to eq(['--force'])
+            expect(args.bind([], force: true).to_ary).to eq(['--force'])
           end
 
           it 'omits separator when nil provided' do
-            expect(args.build(nil, force: true)).to eq(['--force'])
+            expect(args.bind(nil, force: true).to_ary).to eq(['--force'])
           end
 
           it 'includes separator when non-empty array provided' do
-            expect(args.build(['file.rb'], force: true)).to eq(['--force', '--', 'file.rb'])
+            expect(args.bind(['file.rb'], force: true).to_ary).to eq(['--force', '--', 'file.rb'])
           end
         end
 
@@ -533,22 +533,22 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'uses default when empty array provided' do
-            expect(args.build([])).to eq(['.'])
+            expect(args.bind([]).to_ary).to eq(['.'])
           end
 
           it 'uses default when nil provided' do
-            expect(args.build(nil)).to eq(['.'])
+            expect(args.bind(nil).to_ary).to eq(['.'])
           end
 
           it 'overrides default when non-empty array provided' do
-            expect(args.build(['src/'])).to eq(['src/'])
+            expect(args.bind(['src/']).to_ary).to eq(['src/'])
           end
 
           it 'accepts value identical to the default (no false positive unexpected)' do
             # This is a regression test: passing a value that equals the default
             # should not be treated as unexpected
-            expect(args.build(['.'])).to eq(['.'])
-            expect(args.build('.')).to eq(['.'])
+            expect(args.bind(['.']).to_ary).to eq(['.'])
+            expect(args.bind('.').to_ary).to eq(['.'])
           end
         end
       end
@@ -577,14 +577,14 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises for unexpected positional even when options are present' do
-          expect { args.build('expected', 'unexpected', force: true) }.to raise_error(
+          expect { args.bind('expected', 'unexpected', force: true) }.to raise_error(
             ArgumentError,
             /Unexpected positional arguments: unexpected/
           )
         end
 
         it 'allows expected positional with options' do
-          expect(args.build('expected', force: true)).to eq(['--force', 'expected'])
+          expect(args.bind('expected', force: true).to_ary).to eq(['--force', 'expected'])
         end
       end
 
@@ -617,11 +617,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps the argument correctly' do
-            expect(args.build('value1')).to eq(['value1'])
+            expect(args.bind('value1').to_ary).to eq(['value1'])
           end
 
           it 'raises when not provided' do
-            expect { args.build }.to raise_error(ArgumentError, /arg1 is required/)
+            expect { args.bind }.to raise_error(ArgumentError, /arg1 is required/)
           end
         end
 
@@ -634,11 +634,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'uses provided value' do
-            expect(args.build('provided')).to eq(['provided'])
+            expect(args.bind('provided').to_ary).to eq(['provided'])
           end
 
           it 'uses default when not provided' do
-            expect(args.build).to eq(['default_value'])
+            expect(args.bind.to_ary).to eq(['default_value'])
           end
         end
 
@@ -652,11 +652,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps arguments in order' do
-            expect(args.build('value1', 'value2')).to eq(%w[value1 value2])
+            expect(args.bind('value1', 'value2').to_ary).to eq(%w[value1 value2])
           end
 
           it 'raises when second is missing' do
-            expect { args.build('value1') }.to raise_error(ArgumentError, /arg2 is required/)
+            expect { args.bind('value1') }.to raise_error(ArgumentError, /arg2 is required/)
           end
         end
 
@@ -670,11 +670,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps both when both provided' do
-            expect(args.build('val1', 'val2')).to eq(%w[val1 val2])
+            expect(args.bind('val1', 'val2').to_ary).to eq(%w[val1 val2])
           end
 
           it 'uses default for second when only first provided' do
-            expect(args.build('val1')).to eq(%w[val1 default2])
+            expect(args.bind('val1').to_ary).to eq(%w[val1 default2])
           end
         end
 
@@ -689,16 +689,16 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps both when both provided' do
-            expect(args.build('val1', 'val2')).to eq(%w[val1 val2])
+            expect(args.bind('val1', 'val2').to_ary).to eq(%w[val1 val2])
           end
 
           it 'uses default for first when only one arg provided (Ruby semantics)' do
             # Ruby: def foo(a = 1, b); foo(2) => a=1, b=2
-            expect(args.build('val2')).to eq(%w[default1 val2])
+            expect(args.bind('val2').to_ary).to eq(%w[default1 val2])
           end
 
           it 'raises when no arguments provided' do
-            expect { args.build }.to raise_error(ArgumentError, /arg2 is required/)
+            expect { args.bind }.to raise_error(ArgumentError, /arg2 is required/)
           end
         end
 
@@ -713,16 +713,16 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps all when all provided' do
-            expect(args.build('val1', 'val2', 'val3')).to eq(%w[val1 val2 val3])
+            expect(args.bind('val1', 'val2', 'val3').to_ary).to eq(%w[val1 val2 val3])
           end
 
           it 'uses both defaults when only required provided' do
-            expect(args.build('val3')).to eq(%w[default1 default2 val3])
+            expect(args.bind('val3').to_ary).to eq(%w[default1 default2 val3])
           end
 
           it 'fills first optional when two args provided' do
             # Ruby: def foo(a = 1, b = 2, c); foo('x', 'y') => a='x', b=2, c='y'
-            expect(args.build('val1', 'val3')).to eq(%w[val1 default2 val3])
+            expect(args.bind('val1', 'val3').to_ary).to eq(%w[val1 default2 val3])
           end
         end
 
@@ -737,16 +737,16 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps all when all provided' do
-            expect(args.build('val1', 'val2', 'val3')).to eq(%w[val1 val2 val3])
+            expect(args.bind('val1', 'val2', 'val3').to_ary).to eq(%w[val1 val2 val3])
           end
 
           it 'uses default for middle when only two args provided' do
             # Ruby: def foo(a, b = 2, c); foo('x', 'y') => a='x', b=2, c='y'
-            expect(args.build('val1', 'val3')).to eq(%w[val1 default2 val3])
+            expect(args.bind('val1', 'val3').to_ary).to eq(%w[val1 default2 val3])
           end
 
           it 'raises when only one argument provided' do
-            expect { args.build('val1') }.to raise_error(ArgumentError, /is required/)
+            expect { args.bind('val1') }.to raise_error(ArgumentError, /is required/)
           end
         end
 
@@ -759,15 +759,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'accepts no arguments' do
-            expect(args.build).to eq([])
+            expect(args.bind.to_ary).to eq([])
           end
 
           it 'accepts one argument' do
-            expect(args.build('file1')).to eq(['file1'])
+            expect(args.bind('file1').to_ary).to eq(['file1'])
           end
 
           it 'accepts many arguments' do
-            expect(args.build('f1', 'f2', 'f3', 'f4')).to eq(%w[f1 f2 f3 f4])
+            expect(args.bind('f1', 'f2', 'f3', 'f4').to_ary).to eq(%w[f1 f2 f3 f4])
           end
         end
 
@@ -781,15 +781,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps first to required, rest to variadic' do
-            expect(args.build('cmd', 'arg1', 'arg2')).to eq(%w[cmd arg1 arg2])
+            expect(args.bind('cmd', 'arg1', 'arg2').to_ary).to eq(%w[cmd arg1 arg2])
           end
 
           it 'maps only required when variadic is empty' do
-            expect(args.build('cmd')).to eq(['cmd'])
+            expect(args.bind('cmd').to_ary).to eq(['cmd'])
           end
 
           it 'raises when required is missing' do
-            expect { args.build }.to raise_error(ArgumentError, /command is required/)
+            expect { args.bind }.to raise_error(ArgumentError, /command is required/)
           end
         end
 
@@ -803,26 +803,26 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps last to destination, rest to sources' do
-            expect(args.build('src1', 'src2', 'dest')).to eq(%w[src1 src2 dest])
+            expect(args.bind('src1', 'src2', 'dest').to_ary).to eq(%w[src1 src2 dest])
           end
 
           it 'handles single source and destination' do
-            expect(args.build('src', 'dest')).to eq(%w[src dest])
+            expect(args.bind('src', 'dest').to_ary).to eq(%w[src dest])
           end
 
           it 'handles many sources' do
-            expect(args.build('s1', 's2', 's3', 's4', 'dest')).to eq(%w[s1 s2 s3 s4 dest])
+            expect(args.bind('s1', 's2', 's3', 's4', 'dest').to_ary).to eq(%w[s1 s2 s3 s4 dest])
           end
 
           it 'raises when only destination provided (sources required)' do
-            expect { args.build('dest') }.to raise_error(
+            expect { args.bind('dest') }.to raise_error(
               ArgumentError,
               /at least one value is required for sources/
             )
           end
 
           it 'raises when nothing provided' do
-            expect { args.build }.to raise_error(ArgumentError)
+            expect { args.bind }.to raise_error(ArgumentError)
           end
         end
 
@@ -837,21 +837,21 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps first and last, middle gets the rest' do
-            expect(args.build('a', 'b', 'c', 'd', 'e')).to eq(%w[a b c d e])
+            expect(args.bind('a', 'b', 'c', 'd', 'e').to_ary).to eq(%w[a b c d e])
           end
 
           it 'handles empty middle' do
-            expect(args.build('first', 'last')).to eq(%w[first last])
+            expect(args.bind('first', 'last').to_ary).to eq(%w[first last])
           end
 
           it 'handles single middle value' do
-            expect(args.build('first', 'mid', 'last')).to eq(%w[first mid last])
+            expect(args.bind('first', 'mid', 'last').to_ary).to eq(%w[first mid last])
           end
 
           it 'raises when only one argument (need at least 2)' do
             # With Ruby-like allocation, post-variadic required are reserved first,
             # so pre-variadic required fails when not enough values remain
-            expect { args.build('only') }.to raise_error(ArgumentError, /first is required/)
+            expect { args.bind('only') }.to raise_error(ArgumentError, /first is required/)
           end
         end
 
@@ -868,21 +868,21 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'maps with empty middle' do
-            expect(args.build('1', '2', '3', '4')).to eq(%w[1 2 3 4])
+            expect(args.bind('1', '2', '3', '4').to_ary).to eq(%w[1 2 3 4])
           end
 
           it 'maps with one middle value' do
-            expect(args.build('1', '2', 'm1', '3', '4')).to eq(%w[1 2 m1 3 4])
+            expect(args.bind('1', '2', 'm1', '3', '4').to_ary).to eq(%w[1 2 m1 3 4])
           end
 
           it 'maps with multiple middle values' do
-            expect(args.build('1', '2', 'm1', 'm2', 'm3', '3', '4')).to eq(%w[1 2 m1 m2 m3 3 4])
+            expect(args.bind('1', '2', 'm1', 'm2', 'm3', '3', '4').to_ary).to eq(%w[1 2 m1 m2 m3 3 4])
           end
 
           it 'raises when not enough arguments' do
             # With Ruby-like allocation, post-variadic required are reserved first,
             # so pre-variadic required fails when not enough values remain
-            expect { args.build('1', '2', '3') }.to raise_error(ArgumentError, /b is required/)
+            expect { args.bind('1', '2', '3') }.to raise_error(ArgumentError, /b is required/)
           end
         end
 
@@ -897,15 +897,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'uses default for c when only a provided' do
-            expect(args.build('val_a')).to eq(%w[val_a default_c])
+            expect(args.bind('val_a').to_ary).to eq(%w[val_a default_c])
           end
 
           it 'maps a and c, middle empty' do
-            expect(args.build('val_a', 'val_c')).to eq(%w[val_a val_c])
+            expect(args.bind('val_a', 'val_c').to_ary).to eq(%w[val_a val_c])
           end
 
           it 'maps all three parts' do
-            expect(args.build('val_a', 'm1', 'm2', 'val_c')).to eq(%w[val_a m1 m2 val_c])
+            expect(args.bind('val_a', 'm1', 'm2', 'val_c').to_ary).to eq(%w[val_a m1 m2 val_c])
           end
         end
 
@@ -922,15 +922,15 @@ RSpec.describe Git::Commands::Arguments do
 
           # Ruby: foo('x') => a='default_a', middle=[], b='x'
           it 'follows Ruby semantics - optional gets default when only required is provided' do
-            expect(args.build('only_one')).to eq(%w[default_a only_one])
+            expect(args.bind('only_one').to_ary).to eq(%w[default_a only_one])
           end
 
           it 'fills optional when enough arguments provided' do
-            expect(args.build('val_a', 'val_b')).to eq(%w[val_a val_b])
+            expect(args.bind('val_a', 'val_b').to_ary).to eq(%w[val_a val_b])
           end
 
           it 'fills variadic with middle values' do
-            expect(args.build('val_a', 'm1', 'm2', 'val_b')).to eq(%w[val_a m1 m2 val_b])
+            expect(args.bind('val_a', 'm1', 'm2', 'val_b').to_ary).to eq(%w[val_a m1 m2 val_b])
           end
         end
 
@@ -944,15 +944,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'uses default when no arguments' do
-            expect(args.build).to eq(['default_a'])
+            expect(args.bind.to_ary).to eq(['default_a'])
           end
 
           it 'fills optional first, then variadic' do
-            expect(args.build('val_a')).to eq(['val_a'])
+            expect(args.bind('val_a').to_ary).to eq(['val_a'])
           end
 
           it 'fills variadic with remaining arguments' do
-            expect(args.build('val_a', 'r1', 'r2')).to eq(%w[val_a r1 r2])
+            expect(args.bind('val_a', 'r1', 'r2').to_ary).to eq(%w[val_a r1 r2])
           end
         end
 
@@ -967,19 +967,19 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'uses default for optional when only required provided' do
-            expect(args.build('val_a')).to eq(%w[val_a default_b])
+            expect(args.bind('val_a').to_ary).to eq(%w[val_a default_b])
           end
 
           it 'fills optional when enough arguments' do
-            expect(args.build('val_a', 'val_b')).to eq(%w[val_a val_b])
+            expect(args.bind('val_a', 'val_b').to_ary).to eq(%w[val_a val_b])
           end
 
           it 'fills variadic with remaining arguments' do
-            expect(args.build('val_a', 'val_b', 'r1', 'r2')).to eq(%w[val_a val_b r1 r2])
+            expect(args.bind('val_a', 'val_b', 'r1', 'r2').to_ary).to eq(%w[val_a val_b r1 r2])
           end
 
           it 'raises when required is missing' do
-            expect { args.build }.to raise_error(ArgumentError, /a is required/)
+            expect { args.bind }.to raise_error(ArgumentError, /a is required/)
           end
         end
 
@@ -996,25 +996,25 @@ RSpec.describe Git::Commands::Arguments do
 
           it 'uses default for optional when minimum arguments provided' do
             # 2 args: a and c get values, b gets default, middle is empty
-            expect(args.build('val_a', 'val_c')).to eq(%w[val_a default_b val_c])
+            expect(args.bind('val_a', 'val_c').to_ary).to eq(%w[val_a default_b val_c])
           end
 
           it 'fills optional when enough arguments' do
             # 3 args: a, b, c all get values, middle is empty
-            expect(args.build('val_a', 'val_b', 'val_c')).to eq(%w[val_a val_b val_c])
+            expect(args.bind('val_a', 'val_b', 'val_c').to_ary).to eq(%w[val_a val_b val_c])
           end
 
           it 'fills variadic with middle arguments' do
             # 4+ args: middle gets the extras
-            expect(args.build('val_a', 'val_b', 'm1', 'val_c')).to eq(%w[val_a val_b m1 val_c])
+            expect(args.bind('val_a', 'val_b', 'm1', 'val_c').to_ary).to eq(%w[val_a val_b m1 val_c])
           end
 
           it 'fills variadic with multiple middle arguments' do
-            expect(args.build('val_a', 'val_b', 'm1', 'm2', 'val_c')).to eq(%w[val_a val_b m1 m2 val_c])
+            expect(args.bind('val_a', 'val_b', 'm1', 'm2', 'val_c').to_ary).to eq(%w[val_a val_b m1 m2 val_c])
           end
 
           it 'raises when not enough arguments for required params' do
-            expect { args.build('only_one') }.to raise_error(ArgumentError, /a is required/)
+            expect { args.bind('only_one') }.to raise_error(ArgumentError, /a is required/)
           end
         end
       end
@@ -1038,15 +1038,15 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'nil means not provided - skipped in output' do
-            expect(args.build(nil, 'value2')).to eq(['value2'])
+            expect(args.bind(nil, 'value2').to_ary).to eq(['value2'])
           end
 
           it 'skips nil at end' do
-            expect(args.build('value1', nil)).to eq(['value1'])
+            expect(args.bind('value1', nil).to_ary).to eq(['value1'])
           end
 
           it 'skips all nils' do
-            expect(args.build(nil, nil)).to eq([])
+            expect(args.bind(nil, nil).to_ary).to eq([])
           end
         end
 
@@ -1059,11 +1059,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'nil for first means not provided' do
-            expect(args.build(nil, 'a', 'b')).to eq(%w[a b])
+            expect(args.bind(nil, 'a', 'b').to_ary).to eq(%w[a b])
           end
 
           it 'rejects nil mixed within variadic values' do
-            expect { args.build('first', 'a', nil, 'b') }.to raise_error(
+            expect { args.bind('first', 'a', nil, 'b') }.to raise_error(
               ArgumentError,
               /nil values are not allowed in variadic positional argument: rest/
             )
@@ -1079,7 +1079,7 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'rejects nil within variadic' do
-            expect { args.build('s1', nil, 's2', 'dest') }.to raise_error(
+            expect { args.bind('s1', nil, 's2', 'dest') }.to raise_error(
               ArgumentError,
               /nil values are not allowed in variadic positional argument: sources/
             )
@@ -1097,11 +1097,11 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'uses custom flag name for flags' do
-        expect(args.build(recursive: true)).to eq(['-r'])
+        expect(args.bind(recursive: true).to_ary).to eq(['-r'])
       end
 
       it 'uses custom flag name for valued options' do
-        expect(args.build(skip: 'file.txt')).to eq(['--skip-worktree', 'file.txt'])
+        expect(args.bind(skip: 'file.txt').to_ary).to eq(['--skip-worktree', 'file.txt'])
       end
     end
 
@@ -1113,13 +1113,13 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'raises ArgumentError for unknown options' do
-        expect { args.build(invalid: true) }.to(
+        expect { args.bind(invalid: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid/)
         )
       end
 
       it 'raises ArgumentError listing all unknown options' do
-        expect { args.build(foo: true, bar: true) }.to(
+        expect { args.bind(foo: true, bar: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :foo, :bar/)
         )
       end
@@ -1133,11 +1133,11 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'concatenates array results' do
-        expect(args.build(depth: 5)).to eq(['--depth', 5])
+        expect(args.bind(depth: 5).to_ary).to eq(['--depth', 5])
       end
 
       it 'handles string values converted to integers' do
-        expect(args.build(depth: '10')).to eq(['--depth', 10])
+        expect(args.bind(depth: '10').to_ary).to eq(['--depth', 10])
       end
     end
 
@@ -1149,15 +1149,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'allows valid true value' do
-        expect(args.build(force: true)).to eq(['--force'])
+        expect(args.bind(force: true).to_ary).to eq(['--force'])
       end
 
       it 'allows valid false value' do
-        expect(args.build(force: false)).to eq([])
+        expect(args.bind(force: false).to_ary).to eq([])
       end
 
       it 'raises ArgumentError for invalid values' do
-        expect { args.build(force: 'yes') }.to(
+        expect { args.bind(force: 'yes') }.to(
           raise_error(ArgumentError, /Invalid value for option: force/)
         )
       end
@@ -1171,27 +1171,27 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'accepts the primary key' do
-        expect(args.build(origin: 'upstream')).to eq(['--origin', 'upstream'])
+        expect(args.bind(origin: 'upstream').to_ary).to eq(['--origin', 'upstream'])
       end
 
       it 'accepts the alias key' do
-        expect(args.build(remote: 'upstream')).to eq(['--origin', 'upstream'])
+        expect(args.bind(remote: 'upstream').to_ary).to eq(['--origin', 'upstream'])
       end
 
       it 'uses first key for flag name by default' do
         args = described_class.define { flag %i[verbose v] }
-        expect(args.build(verbose: true)).to eq(['--verbose'])
-        expect(args.build(v: true)).to eq(['--verbose'])
+        expect(args.bind(verbose: true).to_ary).to eq(['--verbose'])
+        expect(args.bind(v: true).to_ary).to eq(['--verbose'])
       end
 
       it 'allows custom flag with aliases' do
         args = described_class.define { flag %i[recursive r], args: '-R' }
-        expect(args.build(recursive: true)).to eq(['-R'])
-        expect(args.build(r: true)).to eq(['-R'])
+        expect(args.bind(recursive: true).to_ary).to eq(['-R'])
+        expect(args.bind(r: true).to_ary).to eq(['-R'])
       end
 
       it 'raises error if both alias and primary provided' do
-        expect { args.build(origin: 'one', remote: 'two') }.to(
+        expect { args.bind(origin: 'one', remote: 'two') }.to(
           raise_error(ArgumentError, /Conflicting options.*origin.*remote/)
         )
       end
@@ -1205,19 +1205,19 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'rejects nil values with clear ArgumentError' do
-        expect { args.build('file1.rb', nil, 'file2.rb') }.to(
+        expect { args.bind('file1.rb', nil, 'file2.rb') }.to(
           raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
         )
       end
 
       it 'rejects array containing nil values' do
-        expect { args.build(['file1.rb', nil, 'file2.rb']) }.to(
+        expect { args.bind(['file1.rb', nil, 'file2.rb']) }.to(
           raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
         )
       end
 
       it 'accepts all valid values' do
-        expect(args.build('file1.rb', 'file2.rb')).to eq(%w[file1.rb file2.rb])
+        expect(args.bind('file1.rb', 'file2.rb').to_ary).to eq(%w[file1.rb file2.rb])
       end
     end
 
@@ -1226,7 +1226,7 @@ RSpec.describe Git::Commands::Arguments do
         args = described_class.define do
           flag :amend, args: ['--amend', '--no-edit']
         end
-        expect(args.build(amend: true)).to eq(['--amend', '--no-edit'])
+        expect(args.bind(amend: true).to_ary).to eq(['--amend', '--no-edit'])
       end
 
       it 'rejects arrays for flag negatable: true type' do
@@ -1285,16 +1285,16 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'skips empty string by default' do
-          expect(args_without_allow_empty.build(message: '')).to eq([])
+          expect(args_without_allow_empty.bind(message: '').to_ary).to eq([])
         end
 
         it 'includes empty string when allow_empty is true' do
-          expect(args_with_allow_empty.build(message: '')).to eq(['--message', ''])
+          expect(args_with_allow_empty.bind(message: '').to_ary).to eq(['--message', ''])
         end
 
         it 'includes non-empty string regardless of allow_empty' do
-          expect(args_without_allow_empty.build(message: 'hello')).to eq(['--message', 'hello'])
-          expect(args_with_allow_empty.build(message: 'hello')).to eq(['--message', 'hello'])
+          expect(args_without_allow_empty.bind(message: 'hello').to_ary).to eq(['--message', 'hello'])
+          expect(args_with_allow_empty.bind(message: 'hello').to_ary).to eq(['--message', 'hello'])
         end
       end
 
@@ -1312,16 +1312,16 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'skips empty string by default' do
-          expect(args_without_allow_empty.build(abbrev: '')).to eq([])
+          expect(args_without_allow_empty.bind(abbrev: '').to_ary).to eq([])
         end
 
         it 'includes empty string when allow_empty is true' do
-          expect(args_with_allow_empty.build(abbrev: '')).to eq(['--abbrev='])
+          expect(args_with_allow_empty.bind(abbrev: '').to_ary).to eq(['--abbrev='])
         end
 
         it 'includes non-empty string regardless of allow_empty' do
-          expect(args_without_allow_empty.build(abbrev: '7')).to eq(['--abbrev=7'])
-          expect(args_with_allow_empty.build(abbrev: '7')).to eq(['--abbrev=7'])
+          expect(args_without_allow_empty.bind(abbrev: '7').to_ary).to eq(['--abbrev=7'])
+          expect(args_with_allow_empty.bind(abbrev: '7').to_ary).to eq(['--abbrev=7'])
         end
       end
     end
@@ -1335,15 +1335,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts String values' do
-          expect(args.build(message: 'hello')).to eq(['--message', 'hello'])
+          expect(args.bind(message: 'hello').to_ary).to eq(['--message', 'hello'])
         end
 
         it 'accepts nil values (skips validation and output)' do
-          expect(args.build(message: nil)).to eq([])
+          expect(args.bind(message: nil).to_ary).to eq([])
         end
 
         it 'raises descriptive error for non-String values' do
-          expect { args.build(message: 123) }.to raise_error(
+          expect { args.bind(message: 123) }.to raise_error(
             ArgumentError,
             /The :message option must be a String, but was a Integer/
           )
@@ -1358,15 +1358,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts Integer values' do
-          expect(args.build(depth: 42)).to eq(['--depth', '42'])
+          expect(args.bind(depth: 42).to_ary).to eq(['--depth', '42'])
         end
 
         it 'accepts nil values (skips validation and output)' do
-          expect(args.build(depth: nil)).to eq([])
+          expect(args.bind(depth: nil).to_ary).to eq([])
         end
 
         it 'raises descriptive error for non-Integer values' do
-          expect { args.build(depth: 'not a number') }.to raise_error(
+          expect { args.bind(depth: 'not a number') }.to raise_error(
             ArgumentError,
             /The :depth option must be a Integer, but was a String/
           )
@@ -1382,11 +1382,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'validates all typed options independently' do
-          expect(args.build(message: 'hello', depth: 5)).to eq(['--message', 'hello', '--depth', '5'])
+          expect(args.bind(message: 'hello', depth: 5).to_ary).to eq(['--message', 'hello', '--depth', '5'])
         end
 
         it 'raises error for first invalid option encountered' do
-          expect { args.build(message: 123, depth: 'invalid') }.to raise_error(
+          expect { args.bind(message: 123, depth: 'invalid') }.to raise_error(
             ArgumentError,
             /The :message option must be a String, but was a Integer/
           )
@@ -1401,15 +1401,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts first type' do
-          expect(args.build(timeout: 30)).to eq(['--timeout', '30'])
+          expect(args.bind(timeout: 30).to_ary).to eq(['--timeout', '30'])
         end
 
         it 'accepts second type' do
-          expect(args.build(timeout: 30.5)).to eq(['--timeout', '30.5'])
+          expect(args.bind(timeout: 30.5).to_ary).to eq(['--timeout', '30.5'])
         end
 
         it 'raises descriptive error for invalid type' do
-          expect { args.build(timeout: 'thirty') }.to raise_error(
+          expect { args.bind(timeout: 'thirty') }.to raise_error(
             ArgumentError,
             /The :timeout option must be a Integer or Float, but was a String/
           )
@@ -1438,31 +1438,31 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'allows using neither option' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
 
         it 'allows using only first option' do
-          expect(args.build(patch: true)).to eq(['--patch'])
+          expect(args.bind(patch: true).to_ary).to eq(['--patch'])
         end
 
         it 'allows using only second option' do
-          expect(args.build(stat: true)).to eq(['--stat'])
+          expect(args.bind(stat: true).to_ary).to eq(['--stat'])
         end
 
         it 'raises error when both options are provided' do
-          expect { args.build(patch: true, stat: true) }.to raise_error(
+          expect { args.bind(patch: true, stat: true) }.to raise_error(
             ArgumentError,
             /cannot specify :patch and :stat/
           )
         end
 
         it 'allows false values (does not trigger conflict)' do
-          expect(args.build(patch: true, stat: false)).to eq(['--patch'])
-          expect(args.build(patch: false, stat: true)).to eq(['--stat'])
+          expect(args.bind(patch: true, stat: false).to_ary).to eq(['--patch'])
+          expect(args.bind(patch: false, stat: true).to_ary).to eq(['--stat'])
         end
 
         it 'allows nil values (does not trigger conflict)' do
-          expect(args.build(patch: true, stat: nil)).to eq(['--patch'])
+          expect(args.bind(patch: true, stat: nil).to_ary).to eq(['--patch'])
         end
       end
 
@@ -1477,22 +1477,22 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises error when any two options are provided' do
-          expect { args.build(patch: true, stat: true) }.to raise_error(
+          expect { args.bind(patch: true, stat: true) }.to raise_error(
             ArgumentError,
             /cannot specify :patch and :stat/
           )
-          expect { args.build(patch: true, summary: true) }.to raise_error(
+          expect { args.bind(patch: true, summary: true) }.to raise_error(
             ArgumentError,
             /cannot specify :patch and :summary/
           )
-          expect { args.build(stat: true, summary: true) }.to raise_error(
+          expect { args.bind(stat: true, summary: true) }.to raise_error(
             ArgumentError,
             /cannot specify :stat and :summary/
           )
         end
 
         it 'raises error when all three options are provided' do
-          expect { args.build(patch: true, stat: true, summary: true) }.to raise_error(
+          expect { args.bind(patch: true, stat: true, summary: true) }.to raise_error(
             ArgumentError,
             /cannot specify :patch and :stat/
           )
@@ -1513,20 +1513,20 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'validates each conflict group independently' do
           # Allowed: patch with verbose
-          expect(args.build(patch: true, verbose: true)).to eq(['--patch', '--verbose'])
+          expect(args.bind(patch: true, verbose: true).to_ary).to eq(['--patch', '--verbose'])
           # Allowed: stat with quiet
-          expect(args.build(stat: true, quiet: true)).to eq(['--stat', '--quiet'])
+          expect(args.bind(stat: true, quiet: true).to_ary).to eq(['--stat', '--quiet'])
         end
 
         it 'raises error when first conflict group violated' do
-          expect { args.build(patch: true, stat: true, verbose: true) }.to raise_error(
+          expect { args.bind(patch: true, stat: true, verbose: true) }.to raise_error(
             ArgumentError,
             /cannot specify :patch and :stat/
           )
         end
 
         it 'raises error when second conflict group violated' do
-          expect { args.build(patch: true, quiet: true, verbose: true) }.to raise_error(
+          expect { args.bind(patch: true, quiet: true, verbose: true) }.to raise_error(
             ArgumentError,
             /cannot specify :quiet and :verbose/
           )
@@ -1543,15 +1543,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises error when both valued options provided' do
-          expect { args.build(branch: 'main', tag: 'v1.0') }.to raise_error(
+          expect { args.bind(branch: 'main', tag: 'v1.0') }.to raise_error(
             ArgumentError,
             /cannot specify :branch and :tag/
           )
         end
 
         it 'allows one valued option' do
-          expect(args.build(branch: 'main')).to eq(['--branch', 'main'])
-          expect(args.build(tag: 'v1.0')).to eq(['--tag', 'v1.0'])
+          expect(args.bind(branch: 'main').to_ary).to eq(['--branch', 'main'])
+          expect(args.bind(tag: 'v1.0').to_ary).to eq(['--tag', 'v1.0'])
         end
       end
 
@@ -1565,15 +1565,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises error when flag and value both provided' do
-          expect { args.build(all: true, since: '2020-01-01') }.to raise_error(
+          expect { args.bind(all: true, since: '2020-01-01') }.to raise_error(
             ArgumentError,
             /cannot specify :all and :since/
           )
         end
 
         it 'allows either option alone' do
-          expect(args.build(all: true)).to eq(['--all'])
-          expect(args.build(since: '2020-01-01')).to eq(['--since', '2020-01-01'])
+          expect(args.bind(all: true).to_ary).to eq(['--all'])
+          expect(args.bind(since: '2020-01-01').to_ary).to eq(['--since', '2020-01-01'])
         end
       end
     end
@@ -1588,24 +1588,24 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts non-nil value and outputs it' do
-          expect(args.build('HEAD', 'file.txt')).to eq(['HEAD', '--', 'file.txt'])
+          expect(args.bind('HEAD', 'file.txt').to_ary).to eq(['HEAD', '--', 'file.txt'])
         end
 
         it 'accepts nil and omits it from output' do
-          expect(args.build(nil, 'file.txt')).to eq(['--', 'file.txt'])
+          expect(args.bind(nil, 'file.txt').to_ary).to eq(['--', 'file.txt'])
         end
 
         it 'consumes nil as the positional slot' do
           # nil takes the tree_ish slot, 'file.txt' goes to paths
-          expect(args.build(nil, 'file.txt', 'file2.txt')).to eq(['--', 'file.txt', 'file2.txt'])
+          expect(args.bind(nil, 'file.txt', 'file2.txt').to_ary).to eq(['--', 'file.txt', 'file2.txt'])
         end
 
         it 'works when only nil is provided with no paths' do
-          expect(args.build(nil)).to eq([])
+          expect(args.bind(nil).to_ary).to eq([])
         end
 
         it 'works when tree_ish is provided with no paths' do
-          expect(args.build('HEAD')).to eq(['HEAD'])
+          expect(args.bind('HEAD').to_ary).to eq(['HEAD'])
         end
       end
 
@@ -1618,15 +1618,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'accepts non-nil value and outputs it' do
-          expect(args.build('HEAD', 'file.txt')).to eq(['HEAD', '--', 'file.txt'])
+          expect(args.bind('HEAD', 'file.txt').to_ary).to eq(['HEAD', '--', 'file.txt'])
         end
 
         it 'accepts nil and omits it from output' do
-          expect(args.build(nil, 'file.txt')).to eq(['--', 'file.txt'])
+          expect(args.bind(nil, 'file.txt').to_ary).to eq(['--', 'file.txt'])
         end
 
         it 'works with no arguments' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
       end
 
@@ -1638,7 +1638,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises error when nil is passed' do
-          expect { args.build(nil) }.to raise_error(ArgumentError, /tree_ish is required/)
+          expect { args.bind(nil) }.to raise_error(ArgumentError, /tree_ish is required/)
         end
       end
     end
@@ -1652,19 +1652,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :force/)
         end
 
         it 'accepts true value' do
-          expect(args.build(force: true)).to eq(['--force'])
+          expect(args.bind(force: true).to_ary).to eq(['--force'])
         end
 
         it 'accepts false value (key present but falsy)' do
-          expect(args.build(force: false)).to eq([])
+          expect(args.bind(force: false).to_ary).to eq([])
         end
 
         it 'accepts nil value (key present but nil)' do
-          expect(args.build(force: nil)).to eq([])
+          expect(args.bind(force: nil).to_ary).to eq([])
         end
       end
 
@@ -1676,15 +1676,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :message/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :message/)
         end
 
         it 'accepts string value' do
-          expect(args.build(message: 'hello')).to eq(['--message', 'hello'])
+          expect(args.bind(message: 'hello').to_ary).to eq(['--message', 'hello'])
         end
 
         it 'accepts nil value (key present but nil)' do
-          expect(args.build(message: nil)).to eq([])
+          expect(args.bind(message: nil).to_ary).to eq([])
         end
       end
 
@@ -1696,15 +1696,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
         end
 
         it 'accepts string value' do
-          expect(args.build(upstream: 'origin/main')).to eq(['--upstream=origin/main'])
+          expect(args.bind(upstream: 'origin/main').to_ary).to eq(['--upstream=origin/main'])
         end
 
         it 'accepts nil value (key present but nil)' do
-          expect(args.build(upstream: nil)).to eq([])
+          expect(args.bind(upstream: nil).to_ary).to eq([])
         end
       end
 
@@ -1716,15 +1716,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :verify/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :verify/)
         end
 
         it 'accepts true value' do
-          expect(args.build(verify: true)).to eq(['--verify'])
+          expect(args.bind(verify: true).to_ary).to eq(['--verify'])
         end
 
         it 'accepts false value' do
-          expect(args.build(verify: false)).to eq(['--no-verify'])
+          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
         end
       end
 
@@ -1736,15 +1736,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
         end
 
         it 'accepts true value' do
-          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
         it 'accepts string value' do
-          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+          expect(args.bind(gpg_sign: 'KEYID').to_ary).to eq(['--gpg-sign=KEYID'])
         end
       end
 
@@ -1756,19 +1756,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
         end
 
         it 'accepts true value' do
-          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
         it 'accepts false value' do
-          expect(args.build(gpg_sign: false)).to eq(['--no-gpg-sign'])
+          expect(args.bind(gpg_sign: false).to_ary).to eq(['--no-gpg-sign'])
         end
 
         it 'accepts string value' do
-          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+          expect(args.bind(gpg_sign: 'KEYID').to_ary).to eq(['--gpg-sign=KEYID'])
         end
       end
 
@@ -1782,11 +1782,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :special/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :special/)
         end
 
         it 'accepts value' do
-          expect(args.build(special: 'foo')).to eq(['--special=foo'])
+          expect(args.bind(special: 'foo').to_ary).to eq(['--special=foo'])
         end
       end
 
@@ -1799,19 +1799,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError listing all missing required options' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream, :message/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :upstream, :message/)
         end
 
         it 'raises ArgumentError when only some required options provided' do
           expect do
-            args.build(upstream: 'origin/main')
+            args.bind(upstream: 'origin/main')
           end.to raise_error(ArgumentError, /Required options not provided: :message/)
         end
 
         it 'succeeds when all required options provided' do
-          expect(args.build(upstream: 'origin/main',
-                            message: 'hello')).to eq(['--upstream=origin/main',
-                                                      '--message', 'hello'])
+          expect(args.bind(upstream: 'origin/main',
+                           message: 'hello').to_ary).to eq(['--upstream=origin/main',
+                                                            '--message', 'hello'])
         end
       end
 
@@ -1823,15 +1823,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when required option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :force/)
         end
 
         it 'accepts primary name' do
-          expect(args.build(force: true)).to eq(['--force'])
+          expect(args.bind(force: true).to_ary).to eq(['--force'])
         end
 
         it 'accepts alias name' do
-          expect(args.build(f: true)).to eq(['--force'])
+          expect(args.bind(f: true).to_ary).to eq(['--force'])
         end
       end
 
@@ -1843,15 +1843,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :message/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :message/)
         end
 
         it 'raises ArgumentError when value is nil' do
-          expect { args.build(message: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :message/)
+          expect { args.bind(message: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :message/)
         end
 
         it 'accepts non-nil value' do
-          expect(args.build(message: 'hello')).to eq(['--message', 'hello'])
+          expect(args.bind(message: 'hello').to_ary).to eq(['--message', 'hello'])
         end
       end
 
@@ -1863,17 +1863,17 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :upstream/)
         end
 
         it 'raises ArgumentError when value is nil' do
           expect do
-            args.build(upstream: nil)
+            args.bind(upstream: nil)
           end.to raise_error(ArgumentError, /Required options cannot be nil: :upstream/)
         end
 
         it 'accepts non-nil value' do
-          expect(args.build(upstream: 'origin/main')).to eq(['--upstream=origin/main'])
+          expect(args.bind(upstream: 'origin/main').to_ary).to eq(['--upstream=origin/main'])
         end
       end
 
@@ -1886,19 +1886,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError listing all nil values' do
-          expect { args.build(upstream: nil, message: nil) }.to raise_error(
+          expect { args.bind(upstream: nil, message: nil) }.to raise_error(
             ArgumentError, /Required options cannot be nil: :upstream, :message/
           )
         end
 
         it 'raises ArgumentError for single nil value' do
-          expect { args.build(upstream: 'origin/main', message: nil) }.to raise_error(
+          expect { args.bind(upstream: 'origin/main', message: nil) }.to raise_error(
             ArgumentError, /Required options cannot be nil: :message/
           )
         end
 
         it 'succeeds when all values are non-nil' do
-          expect(args.build(upstream: 'origin/main', message: 'hello')).to eq(
+          expect(args.bind(upstream: 'origin/main', message: 'hello').to_ary).to eq(
             ['--upstream=origin/main', '--message', 'hello']
           )
         end
@@ -1912,7 +1912,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'allows nil value when allow_nil defaults to true' do
-          expect(args.build(message: nil)).to eq([])
+          expect(args.bind(message: nil).to_ary).to eq([])
         end
       end
 
@@ -1924,19 +1924,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :force/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :force/)
         end
 
         it 'raises ArgumentError when value is nil' do
-          expect { args.build(force: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :force/)
+          expect { args.bind(force: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :force/)
         end
 
         it 'accepts true value' do
-          expect(args.build(force: true)).to eq(['--force'])
+          expect(args.bind(force: true).to_ary).to eq(['--force'])
         end
 
         it 'accepts false value' do
-          expect(args.build(force: false)).to eq([])
+          expect(args.bind(force: false).to_ary).to eq([])
         end
       end
 
@@ -1948,19 +1948,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :verify/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :verify/)
         end
 
         it 'raises ArgumentError when value is nil' do
-          expect { args.build(verify: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :verify/)
+          expect { args.bind(verify: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :verify/)
         end
 
         it 'accepts true value' do
-          expect(args.build(verify: true)).to eq(['--verify'])
+          expect(args.bind(verify: true).to_ary).to eq(['--verify'])
         end
 
         it 'accepts false value' do
-          expect(args.build(verify: false)).to eq(['--no-verify'])
+          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
         end
       end
 
@@ -1972,25 +1972,25 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
         end
 
         it 'raises ArgumentError when value is nil' do
           expect do
-            args.build(gpg_sign: nil)
+            args.bind(gpg_sign: nil)
           end.to raise_error(ArgumentError, /Required options cannot be nil: :gpg_sign/)
         end
 
         it 'accepts true value' do
-          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
         it 'accepts false value' do
-          expect(args.build(gpg_sign: false)).to eq([])
+          expect(args.bind(gpg_sign: false).to_ary).to eq([])
         end
 
         it 'accepts string value' do
-          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+          expect(args.bind(gpg_sign: 'KEYID').to_ary).to eq(['--gpg-sign=KEYID'])
         end
       end
 
@@ -2002,25 +2002,25 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
         end
 
         it 'raises ArgumentError when value is nil' do
           expect do
-            args.build(gpg_sign: nil)
+            args.bind(gpg_sign: nil)
           end.to raise_error(ArgumentError, /Required options cannot be nil: :gpg_sign/)
         end
 
         it 'accepts true value' do
-          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
         it 'accepts false value' do
-          expect(args.build(gpg_sign: false)).to eq(['--no-gpg-sign'])
+          expect(args.bind(gpg_sign: false).to_ary).to eq(['--no-gpg-sign'])
         end
 
         it 'accepts string value' do
-          expect(args.build(gpg_sign: 'KEYID')).to eq(['--gpg-sign=KEYID'])
+          expect(args.bind(gpg_sign: 'KEYID').to_ary).to eq(['--gpg-sign=KEYID'])
         end
       end
 
@@ -2034,15 +2034,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(ArgumentError, /Required options not provided: :special/)
+          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :special/)
         end
 
         it 'raises ArgumentError when value is nil' do
-          expect { args.build(special: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :special/)
+          expect { args.bind(special: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :special/)
         end
 
         it 'accepts non-nil value' do
-          expect(args.build(special: 'foo')).to eq(['--special=foo'])
+          expect(args.bind(special: 'foo').to_ary).to eq(['--special=foo'])
         end
       end
     end
@@ -2057,7 +2057,7 @@ RSpec.describe Git::Commands::Arguments do
             positional :paths, variadic: true
           end
 
-          result = args.build('status', 'file1.txt', 'file2.txt', verbose: true)
+          result = args.bind('status', 'file1.txt', 'file2.txt', verbose: true).to_ary
           expect(result).to eq(['--verbose', 'status', '--', 'file1.txt', 'file2.txt'])
         end
 
@@ -2068,7 +2068,7 @@ RSpec.describe Git::Commands::Arguments do
             positional :path, required: true
           end
 
-          result = args.build('HEAD', 'file.txt')
+          result = args.bind('HEAD', 'file.txt').to_ary
           expect(result).to eq(['HEAD', '--', 'file.txt'])
         end
 
@@ -2079,7 +2079,7 @@ RSpec.describe Git::Commands::Arguments do
             static '--'
           end
 
-          result = args.build('file.txt', force: true)
+          result = args.bind('file.txt', force: true).to_ary
           expect(result).to eq(['file.txt', '--force', '--'])
         end
 
@@ -2093,7 +2093,7 @@ RSpec.describe Git::Commands::Arguments do
             positional :extra
           end
 
-          result = args.build('src.txt', 'dst.txt', 'extra.txt', verbose: true, force: true)
+          result = args.bind('src.txt', 'dst.txt', 'extra.txt', verbose: true, force: true).to_ary
           expect(result).to eq(['--verbose', 'src.txt', '--force', 'dst.txt', '--', 'extra.txt'])
         end
 
@@ -2105,7 +2105,7 @@ RSpec.describe Git::Commands::Arguments do
             positional :dest, required: true
           end
 
-          result = args.build('src.txt', 'dst.txt', force: true)
+          result = args.bind('src.txt', 'dst.txt', force: true).to_ary
           expect(result).to eq(['src.txt', '--force', 'dst.txt'])
         end
 
@@ -2118,7 +2118,7 @@ RSpec.describe Git::Commands::Arguments do
             static '-c'
           end
 
-          result = args.build('file.txt', force: true)
+          result = args.bind('file.txt', force: true).to_ary
           expect(result).to eq(['-a', '--force', '-b', 'file.txt', '-c'])
         end
 
@@ -2132,11 +2132,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           # git checkout HEAD -- file1 file2
-          result = args.build('HEAD', 'file1.txt', 'file2.txt', force: true)
+          result = args.bind('HEAD', 'file1.txt', 'file2.txt', force: true).to_ary
           expect(result).to eq(['--force', 'HEAD', '--', 'file1.txt', 'file2.txt'])
 
           # git checkout -- file1 (no tree-ish)
-          result_no_treeish = args.build(nil, 'file1.txt')
+          result_no_treeish = args.bind(nil, 'file1.txt').to_ary
           expect(result_no_treeish).to eq(['--', 'file1.txt'])
         end
 
@@ -2150,11 +2150,11 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           # git diff --stat HEAD~1 HEAD -- file.rb
-          result = args.build('HEAD~1', 'HEAD', 'file.rb', stat: true)
+          result = args.bind('HEAD~1', 'HEAD', 'file.rb', stat: true).to_ary
           expect(result).to eq(['--stat', 'HEAD~1', 'HEAD', '--', 'file.rb'])
 
           # git diff HEAD~1 -- (no commit2 or paths)
-          result_single = args.build('HEAD~1', nil)
+          result_single = args.bind('HEAD~1', nil).to_ary
           expect(result_single).to eq(['HEAD~1', '--'])
         end
       end
@@ -2168,7 +2168,7 @@ RSpec.describe Git::Commands::Arguments do
             positional :branch_names, variadic: true, required: true
           end
 
-          result = args.build('feature', 'bugfix', force: true, remotes: true)
+          result = args.bind('feature', 'bugfix', force: true, remotes: true).to_ary
           expect(result).to eq(['--delete', '--force', '--remotes', 'feature', 'bugfix'])
         end
       end
@@ -2187,19 +2187,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag when value is true' do
-          expect(args.build(full: true)).to eq(['--full'])
+          expect(args.bind(full: true).to_ary).to eq(['--full'])
         end
 
         it 'outputs --no-flag when value is false' do
-          expect(args.build(full: false)).to eq(['--no-full'])
+          expect(args.bind(full: false).to_ary).to eq(['--no-full'])
         end
 
         it 'outputs nothing when option is not provided' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
 
         it 'raises an error when value is not a boolean' do
-          expect { args.build(full: 'true') }.to raise_error(
+          expect { args.bind(full: 'true') }.to raise_error(
             ArgumentError,
             /negatable_flag expects a boolean value, got "true"/
           )
@@ -2214,15 +2214,15 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag=value as single argument' do
-          expect(args.build(abbrev: '7')).to eq(['--abbrev=7'])
+          expect(args.bind(abbrev: '7').to_ary).to eq(['--abbrev=7'])
         end
 
         it 'outputs nothing when value is nil' do
-          expect(args.build(abbrev: nil)).to eq([])
+          expect(args.bind(abbrev: nil).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is not provided' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
       end
 
@@ -2234,11 +2234,11 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag=value for each array element' do
-          expect(args.build(sort: %w[refname -committerdate])).to eq(['--sort=refname', '--sort=-committerdate'])
+          expect(args.bind(sort: %w[refname -committerdate]).to_ary).to eq(['--sort=refname', '--sort=-committerdate'])
         end
 
         it 'outputs --flag=value for single value' do
-          expect(args.build(sort: 'refname')).to eq(['--sort=refname'])
+          expect(args.bind(sort: 'refname').to_ary).to eq(['--sort=refname'])
         end
       end
 
@@ -2250,7 +2250,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag= when value is empty string' do
-          expect(args.build(message: '')).to eq(['--message='])
+          expect(args.bind(message: '').to_ary).to eq(['--message='])
         end
       end
 
@@ -2262,19 +2262,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs the value as a positional argument' do
-          expect(args.build(path: 'file.txt')).to eq(['file.txt'])
+          expect(args.bind(path: 'file.txt').to_ary).to eq(['file.txt'])
         end
 
         it 'outputs nothing when value is nil' do
-          expect(args.build(path: nil)).to eq([])
+          expect(args.bind(path: nil).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is not provided' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
 
         it 'raises an error when value is an array without multi_valued' do
-          expect { args.build(path: %w[file1.txt file2.txt]) }.to raise_error(
+          expect { args.bind(path: %w[file1.txt file2.txt]) }.to raise_error(
             ArgumentError,
             /value_to_positional :path requires multi_valued: true to accept an array/
           )
@@ -2289,23 +2289,23 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs each array element as a positional argument' do
-          expect(args.build(paths: %w[file1.txt file2.txt])).to eq(%w[file1.txt file2.txt])
+          expect(args.bind(paths: %w[file1.txt file2.txt]).to_ary).to eq(%w[file1.txt file2.txt])
         end
 
         it 'outputs a single value as a positional argument' do
-          expect(args.build(paths: 'file.txt')).to eq(['file.txt'])
+          expect(args.bind(paths: 'file.txt').to_ary).to eq(['file.txt'])
         end
 
         it 'outputs nothing when value is nil' do
-          expect(args.build(paths: nil)).to eq([])
+          expect(args.bind(paths: nil).to_ary).to eq([])
         end
 
         it 'outputs nothing when value is empty array' do
-          expect(args.build(paths: [])).to eq([])
+          expect(args.bind(paths: []).to_ary).to eq([])
         end
 
         it 'raises an error when array contains nil' do
-          expect { args.build(paths: ['file1.txt', nil, 'file2.txt']) }.to raise_error(
+          expect { args.bind(paths: ['file1.txt', nil, 'file2.txt']) }.to raise_error(
             ArgumentError,
             /nil values are not allowed in value_to_positional :paths/
           )
@@ -2321,13 +2321,13 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs separator before positional values' do
-          expect(args.build(paths: %w[file1.txt file2.txt], force: true)).to eq(
+          expect(args.bind(paths: %w[file1.txt file2.txt], force: true).to_ary).to eq(
             ['--force', '--', 'file1.txt', 'file2.txt']
           )
         end
 
         it 'omits separator when value is nil' do
-          expect(args.build(paths: nil, force: true)).to eq(['--force'])
+          expect(args.bind(paths: nil, force: true).to_ary).to eq(['--force'])
         end
       end
 
@@ -2362,23 +2362,23 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag when value is true' do
-          expect(args.build(contains: true)).to eq(['--contains'])
+          expect(args.bind(contains: true).to_ary).to eq(['--contains'])
         end
 
         it 'outputs nothing when value is false' do
-          expect(args.build(contains: false)).to eq([])
+          expect(args.bind(contains: false).to_ary).to eq([])
         end
 
         it 'outputs --flag value as separate arguments when value is a string' do
-          expect(args.build(contains: 'abc123')).to eq(['--contains', 'abc123'])
+          expect(args.bind(contains: 'abc123').to_ary).to eq(['--contains', 'abc123'])
         end
 
         it 'outputs nothing when option is not provided' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
 
         it 'raises an error when value is not true, false, or a String' do
-          expect { args.build(contains: 1) }.to raise_error(
+          expect { args.bind(contains: 1) }.to raise_error(
             ArgumentError,
             /Invalid value for flag_or_value: 1 \(Integer\); expected true, false, or a String/
           )
@@ -2393,19 +2393,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag when value is true' do
-          expect(args.build(gpg_sign: true)).to eq(['--gpg-sign'])
+          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
         it 'outputs nothing when value is false' do
-          expect(args.build(gpg_sign: false)).to eq([])
+          expect(args.bind(gpg_sign: false).to_ary).to eq([])
         end
 
         it 'outputs --flag=value when value is a string' do
-          expect(args.build(gpg_sign: 'key-id')).to eq(['--gpg-sign=key-id'])
+          expect(args.bind(gpg_sign: 'key-id').to_ary).to eq(['--gpg-sign=key-id'])
         end
 
         it 'raises an error when value is not true, false, or a String' do
-          expect { args.build(gpg_sign: 1) }.to raise_error(
+          expect { args.bind(gpg_sign: 1) }.to raise_error(
             ArgumentError,
             /Invalid value for flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
           )
@@ -2420,19 +2420,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag when value is true' do
-          expect(args.build(verify: true)).to eq(['--verify'])
+          expect(args.bind(verify: true).to_ary).to eq(['--verify'])
         end
 
         it 'outputs --no-flag when value is false' do
-          expect(args.build(verify: false)).to eq(['--no-verify'])
+          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
         end
 
         it 'outputs --flag value as separate arguments when value is a string' do
-          expect(args.build(verify: 'KEYID')).to eq(['--verify', 'KEYID'])
+          expect(args.bind(verify: 'KEYID').to_ary).to eq(['--verify', 'KEYID'])
         end
 
         it 'raises an error when value is not true, false, or a String' do
-          expect { args.build(verify: 1) }.to raise_error(
+          expect { args.bind(verify: 1) }.to raise_error(
             ArgumentError,
             /Invalid value for negatable_flag_or_value: 1 \(Integer\); expected true, false, or a String/
           )
@@ -2447,19 +2447,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag when value is true' do
-          expect(args.build(sign: true)).to eq(['--sign'])
+          expect(args.bind(sign: true).to_ary).to eq(['--sign'])
         end
 
         it 'outputs --no-flag when value is false' do
-          expect(args.build(sign: false)).to eq(['--no-sign'])
+          expect(args.bind(sign: false).to_ary).to eq(['--no-sign'])
         end
 
         it 'outputs --flag=value when value is a string' do
-          expect(args.build(sign: 'key-id')).to eq(['--sign=key-id'])
+          expect(args.bind(sign: 'key-id').to_ary).to eq(['--sign=key-id'])
         end
 
         it 'raises an error when value is not true, false, or a String' do
-          expect { args.build(sign: 1) }.to raise_error(
+          expect { args.bind(sign: 1) }.to raise_error(
             ArgumentError,
             /Invalid value for negatable_flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
           )
@@ -2480,13 +2480,13 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag key=value for single hash entry' do
-          expect(args.build(trailers: { 'Signed-off-by' => 'John Doe' })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => 'John Doe' }).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John Doe']
           )
         end
 
         it 'outputs multiple --flag key=value for multiple hash entries' do
-          expect(args.build(trailers: { 'Signed-off-by' => 'John', 'Acked-by' => 'Jane' })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => 'John', 'Acked-by' => 'Jane' }).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Jane']
           )
         end
@@ -2500,13 +2500,13 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs multiple entries for same key when value is array' do
-          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane] })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => %w[John Jane] }).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
           )
         end
 
         it 'handles mixed single and array values' do
-          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane], 'Acked-by' => 'Bob' })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => %w[John Jane], 'Acked-by' => 'Bob' }).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane', '--trailer', 'Acked-by=Bob']
           )
         end
@@ -2520,19 +2520,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs entries in order for array of arrays' do
-          expect(args.build(trailers: [%w[Signed-off-by John], %w[Acked-by Bob]])).to eq(
+          expect(args.bind(trailers: [%w[Signed-off-by John], %w[Acked-by Bob]]).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
           )
         end
 
         it 'allows duplicate keys with array of arrays' do
-          expect(args.build(trailers: [%w[Signed-off-by John], %w[Signed-off-by Jane]])).to eq(
+          expect(args.bind(trailers: [%w[Signed-off-by John], %w[Signed-off-by Jane]]).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
           )
         end
 
         it 'handles single [key, value] pair' do
-          expect(args.build(trailers: %w[Signed-off-by John])).to eq(
+          expect(args.bind(trailers: %w[Signed-off-by John]).to_ary).to eq(
             ['--trailer', 'Signed-off-by=John']
           )
         end
@@ -2546,41 +2546,41 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs nothing when option is nil' do
-          expect(args.build(trailers: nil)).to eq([])
+          expect(args.bind(trailers: nil).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is empty hash' do
-          expect(args.build(trailers: {})).to eq([])
+          expect(args.bind(trailers: {}).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is empty array' do
-          expect(args.build(trailers: [])).to eq([])
+          expect(args.bind(trailers: []).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is not provided' do
-          expect(args.build).to eq([])
+          expect(args.bind.to_ary).to eq([])
         end
 
         it 'outputs key only when value is nil (no separator)' do
-          expect(args.build(trailers: [['Acked-by', nil]])).to eq(
+          expect(args.bind(trailers: [['Acked-by', nil]]).to_ary).to eq(
             ['--trailer', 'Acked-by']
           )
         end
 
         it 'outputs key with separator when value is empty string' do
-          expect(args.build(trailers: [['Acked-by', '']])).to eq(
+          expect(args.bind(trailers: [['Acked-by', '']]).to_ary).to eq(
             ['--trailer', 'Acked-by=']
           )
         end
 
         it 'handles Hash with nil value' do
-          expect(args.build(trailers: { 'Acked-by' => nil })).to eq(
+          expect(args.bind(trailers: { 'Acked-by' => nil }).to_ary).to eq(
             ['--trailer', 'Acked-by']
           )
         end
 
         it 'handles Hash with array value containing nil (key-only entry)' do
-          expect(args.build(trailers: { 'Key' => ['Value1', nil, 'Value2'] })).to eq(
+          expect(args.bind(trailers: { 'Key' => ['Value1', nil, 'Value2'] }).to_ary).to eq(
             ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
           )
         end
@@ -2594,19 +2594,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'outputs --flag=key=value format' do
-          expect(args.build(trailers: { 'Signed-off-by' => 'John' })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => 'John' }).to_ary).to eq(
             ['--trailer=Signed-off-by=John']
           )
         end
 
         it 'handles multiple entries' do
-          expect(args.build(trailers: { 'Signed-off-by' => %w[John Jane] })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => %w[John Jane] }).to_ary).to eq(
             ['--trailer=Signed-off-by=John', '--trailer=Signed-off-by=Jane']
           )
         end
 
         it 'handles nil value (key only)' do
-          expect(args.build(trailers: [['Acked-by', nil]])).to eq(
+          expect(args.bind(trailers: [['Acked-by', nil]]).to_ary).to eq(
             ['--trailer=Acked-by']
           )
         end
@@ -2620,19 +2620,19 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when key is nil' do
-          expect { args.build(trailers: [[nil, 'value']]) }.to raise_error(
+          expect { args.bind(trailers: [[nil, 'value']]) }.to raise_error(
             ArgumentError, /key_value :trailers requires a non-empty key/
           )
         end
 
         it 'raises ArgumentError when key is empty string' do
-          expect { args.build(trailers: [['', 'value']]) }.to raise_error(
+          expect { args.bind(trailers: [['', 'value']]) }.to raise_error(
             ArgumentError, /key_value :trailers requires a non-empty key/
           )
         end
 
         it 'raises ArgumentError when key contains the separator' do
-          expect { args.build(trailers: { 'Signed=off' => 'John' }) }.to raise_error(
+          expect { args.bind(trailers: { 'Signed=off' => 'John' }) }.to raise_error(
             ArgumentError, /key_value :trailers key "Signed=off" cannot contain the separator "="/
           )
         end
@@ -2645,13 +2645,13 @@ RSpec.describe Git::Commands::Arguments do
           end
 
           it 'raises ArgumentError when key contains the custom separator' do
-            expect { args.build(trailers: { 'Signed: off' => 'John' }) }.to raise_error(
+            expect { args.bind(trailers: { 'Signed: off' => 'John' }) }.to raise_error(
               ArgumentError, /key_value :trailers key "Signed: off" cannot contain the separator ": "/
             )
           end
 
           it 'allows key with default separator when using custom separator' do
-            expect(args.build(trailers: { 'Signed=off' => 'John' })).to eq(
+            expect(args.bind(trailers: { 'Signed=off' => 'John' }).to_ary).to eq(
               ['--trailer', 'Signed=off: John']
             )
           end
@@ -2659,19 +2659,19 @@ RSpec.describe Git::Commands::Arguments do
 
         context 'with malformed array input' do
           it 'raises ArgumentError for flat array with 3+ elements' do
-            expect { args.build(trailers: %w[a b c]) }.to raise_error(
+            expect { args.bind(trailers: %w[a b c]) }.to raise_error(
               ArgumentError, /key_value array input must be a \[key, value\] pair or array of pairs/
             )
           end
 
           it 'raises ArgumentError for sub-array with 3+ elements' do
-            expect { args.build(trailers: [%w[a b c]]) }.to raise_error(
+            expect { args.bind(trailers: [%w[a b c]]) }.to raise_error(
               ArgumentError, /key_value :trailers pair \["a", "b", "c"\] has too many elements/
             )
           end
 
           it 'raises ArgumentError for mixed valid and invalid sub-arrays' do
-            expect { args.build(trailers: [%w[k1 v1], %w[a b c]]) }.to raise_error(
+            expect { args.bind(trailers: [%w[k1 v1], %w[a b c]]) }.to raise_error(
               ArgumentError, /key_value :trailers pair \["a", "b", "c"\] has too many elements/
             )
           end
@@ -2679,19 +2679,19 @@ RSpec.describe Git::Commands::Arguments do
 
         context 'with invalid input type' do
           it 'raises ArgumentError for String input' do
-            expect { args.build(trailers: 'some-string') }.to raise_error(
+            expect { args.bind(trailers: 'some-string') }.to raise_error(
               ArgumentError, /key_value option must be a Hash or Array, got String/
             )
           end
 
           it 'raises ArgumentError for Integer input' do
-            expect { args.build(trailers: 123) }.to raise_error(
+            expect { args.bind(trailers: 123) }.to raise_error(
               ArgumentError, /key_value option must be a Hash or Array, got Integer/
             )
           end
 
           it 'raises ArgumentError for Symbol input' do
-            expect { args.build(trailers: :some_symbol) }.to raise_error(
+            expect { args.bind(trailers: :some_symbol) }.to raise_error(
               ArgumentError, /key_value option must be a Hash or Array, got Symbol/
             )
           end
@@ -2699,19 +2699,19 @@ RSpec.describe Git::Commands::Arguments do
 
         context 'with non-scalar value in pair' do
           it 'raises ArgumentError for Hash value' do
-            expect { args.build(trailers: { 'Key' => { nested: true } }) }.to raise_error(
+            expect { args.bind(trailers: { 'Key' => { nested: true } }) }.to raise_error(
               ArgumentError, /key_value :trailers value must be a scalar.*got Hash/
             )
           end
 
           it 'raises ArgumentError for Array value' do
-            expect { args.build(trailers: [['Key', %w[nested array]]]) }.to raise_error(
+            expect { args.bind(trailers: [['Key', %w[nested array]]]) }.to raise_error(
               ArgumentError, /key_value :trailers value must be a scalar.*got Array/
             )
           end
 
           it 'raises ArgumentError for Hash value in array of values' do
-            expect { args.build(trailers: { 'Key' => ['valid', { nested: true }] }) }.to raise_error(
+            expect { args.bind(trailers: { 'Key' => ['valid', { nested: true }] }) }.to raise_error(
               ArgumentError, /key_value :trailers value must be a scalar.*got Hash/
             )
           end
@@ -2726,7 +2726,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'uses the custom separator' do
-          expect(args.build(trailers: { 'Signed-off-by' => 'John' })).to eq(
+          expect(args.bind(trailers: { 'Signed-off-by' => 'John' }).to_ary).to eq(
             ['--trailer', 'Signed-off-by: John']
           )
         end
@@ -2740,25 +2740,25 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is not provided' do
-          expect { args.build }.to raise_error(
+          expect { args.bind }.to raise_error(
             ArgumentError, /Required options not provided: :trailers/
           )
         end
 
         it 'does not raise when option is provided' do
-          expect(args.build(trailers: { 'A' => 'B' })).to eq(['--trailer', 'A=B'])
+          expect(args.bind(trailers: { 'A' => 'B' }).to_ary).to eq(['--trailer', 'A=B'])
         end
 
         it 'does not raise when option is nil (key present)' do
-          expect(args.build(trailers: nil)).to eq([])
+          expect(args.bind(trailers: nil).to_ary).to eq([])
         end
 
         it 'does not raise when option is empty hash (key present, produces no output)' do
-          expect(args.build(trailers: {})).to eq([])
+          expect(args.bind(trailers: {}).to_ary).to eq([])
         end
 
         it 'does not raise when option is empty array (key present, produces no output)' do
-          expect(args.build(trailers: [])).to eq([])
+          expect(args.bind(trailers: []).to_ary).to eq([])
         end
       end
 
@@ -2770,13 +2770,13 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'raises ArgumentError when option is nil' do
-          expect { args.build(trailers: nil) }.to raise_error(
+          expect { args.bind(trailers: nil) }.to raise_error(
             ArgumentError, /Required options cannot be nil: :trailers/
           )
         end
 
         it 'does not raise when option is provided with value' do
-          expect(args.build(trailers: { 'A' => 'B' })).to eq(['--trailer', 'A=B'])
+          expect(args.bind(trailers: { 'A' => 'B' }).to_ary).to eq(['--trailer', 'A=B'])
         end
       end
 
@@ -2788,13 +2788,13 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         it 'converts symbol keys to strings' do
-          expect(args.build(trailers: { signed_off_by: 'John' })).to eq(
+          expect(args.bind(trailers: { signed_off_by: 'John' }).to_ary).to eq(
             ['--trailer', 'signed_off_by=John']
           )
         end
 
         it 'converts symbol values to strings' do
-          expect(args.build(trailers: { 'Type' => :feature })).to eq(
+          expect(args.bind(trailers: { 'Type' => :feature }).to_ary).to eq(
             ['--trailer', 'Type=feature']
           )
         end
@@ -2806,7 +2806,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :f } }
 
         it 'uses single-dash prefix' do
-          expect(args.build(f: true)).to eq(['-f'])
+          expect(args.bind(f: true).to_ary).to eq(['-f'])
         end
       end
 
@@ -2814,7 +2814,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :force } }
 
         it 'uses double-dash prefix' do
-          expect(args.build(force: true)).to eq(['--force'])
+          expect(args.bind(force: true).to_ary).to eq(['--force'])
         end
       end
 
@@ -2822,11 +2822,11 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :f, negatable: true } }
 
         it 'uses single-dash prefix when true' do
-          expect(args.build(f: true)).to eq(['-f'])
+          expect(args.bind(f: true).to_ary).to eq(['-f'])
         end
 
         it 'uses double-dash --no- prefix when false' do
-          expect(args.build(f: false)).to eq(['--no-f'])
+          expect(args.bind(f: false).to_ary).to eq(['--no-f'])
         end
       end
 
@@ -2834,7 +2834,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :n } }
 
         it 'uses single-dash prefix with separate value' do
-          expect(args.build(n: '3')).to eq(['-n', '3'])
+          expect(args.bind(n: '3').to_ary).to eq(['-n', '3'])
         end
       end
 
@@ -2842,7 +2842,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :name } }
 
         it 'uses double-dash prefix with separate value' do
-          expect(args.build(name: 'test')).to eq(['--name', 'test'])
+          expect(args.bind(name: 'test').to_ary).to eq(['--name', 'test'])
         end
       end
 
@@ -2850,7 +2850,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :n, inline: true } }
 
         it 'uses no separator' do
-          expect(args.build(n: 3)).to eq(['-n3'])
+          expect(args.bind(n: 3).to_ary).to eq(['-n3'])
         end
       end
 
@@ -2858,7 +2858,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :name, inline: true } }
 
         it 'uses = separator' do
-          expect(args.build(name: 'test')).to eq(['--name=test'])
+          expect(args.bind(name: 'test').to_ary).to eq(['--name=test'])
         end
       end
 
@@ -2866,7 +2866,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :n, inline: true, multi_valued: true } }
 
         it 'uses no separator for each value' do
-          expect(args.build(n: [3, 5])).to eq(['-n3', '-n5'])
+          expect(args.bind(n: [3, 5]).to_ary).to eq(['-n3', '-n5'])
         end
       end
 
@@ -2874,15 +2874,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :n } }
 
         it 'outputs flag only when true' do
-          expect(args.build(n: true)).to eq(['-n'])
+          expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
         it 'outputs nothing when false' do
-          expect(args.build(n: false)).to eq([])
+          expect(args.bind(n: false).to_ary).to eq([])
         end
 
         it 'outputs value as separate argument when given a string' do
-          expect(args.build(n: '5')).to eq(['-n', '5'])
+          expect(args.bind(n: '5').to_ary).to eq(['-n', '5'])
         end
       end
 
@@ -2890,15 +2890,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :n, inline: true } }
 
         it 'outputs flag only when true' do
-          expect(args.build(n: true)).to eq(['-n'])
+          expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
         it 'outputs nothing when false' do
-          expect(args.build(n: false)).to eq([])
+          expect(args.bind(n: false).to_ary).to eq([])
         end
 
         it 'outputs value with no separator when given a string' do
-          expect(args.build(n: '5')).to eq(['-n5'])
+          expect(args.bind(n: '5').to_ary).to eq(['-n5'])
         end
       end
 
@@ -2906,15 +2906,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :n, negatable: true, inline: true } }
 
         it 'outputs flag only when true' do
-          expect(args.build(n: true)).to eq(['-n'])
+          expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
         it 'outputs --no-n when false' do
-          expect(args.build(n: false)).to eq(['--no-n'])
+          expect(args.bind(n: false).to_ary).to eq(['--no-n'])
         end
 
         it 'outputs value with no separator when given a string' do
-          expect(args.build(n: '5')).to eq(['-n5'])
+          expect(args.bind(n: '5').to_ary).to eq(['-n5'])
         end
       end
 
@@ -2922,15 +2922,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :n, negatable: true } }
 
         it 'outputs flag only when true' do
-          expect(args.build(n: true)).to eq(['-n'])
+          expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
         it 'outputs --no-n when false' do
-          expect(args.build(n: false)).to eq(['--no-n'])
+          expect(args.bind(n: false).to_ary).to eq(['--no-n'])
         end
 
         it 'outputs value as separate argument when given a string' do
-          expect(args.build(n: '5')).to eq(['-n', '5'])
+          expect(args.bind(n: '5').to_ary).to eq(['-n', '5'])
         end
       end
 
@@ -2938,15 +2938,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :name, negatable: true, inline: true } }
 
         it 'outputs flag only when true' do
-          expect(args.build(name: true)).to eq(['--name'])
+          expect(args.bind(name: true).to_ary).to eq(['--name'])
         end
 
         it 'outputs --no-name when false' do
-          expect(args.build(name: false)).to eq(['--no-name'])
+          expect(args.bind(name: false).to_ary).to eq(['--no-name'])
         end
 
         it 'outputs value with = separator when given a string' do
-          expect(args.build(name: 'test')).to eq(['--name=test'])
+          expect(args.bind(name: 'test').to_ary).to eq(['--name=test'])
         end
       end
 
@@ -2954,15 +2954,15 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag_or_value :name, negatable: true } }
 
         it 'outputs flag only when true' do
-          expect(args.build(name: true)).to eq(['--name'])
+          expect(args.bind(name: true).to_ary).to eq(['--name'])
         end
 
         it 'outputs --no-name when false' do
-          expect(args.build(name: false)).to eq(['--no-name'])
+          expect(args.bind(name: false).to_ary).to eq(['--no-name'])
         end
 
         it 'outputs value as separate argument when given a string' do
-          expect(args.build(name: 'test')).to eq(['--name', 'test'])
+          expect(args.bind(name: 'test').to_ary).to eq(['--name', 'test'])
         end
       end
 
@@ -2970,7 +2970,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :dry_run } }
 
         it 'converts underscores to dashes' do
-          expect(args.build(dry_run: true)).to eq(['--dry-run'])
+          expect(args.bind(dry_run: true).to_ary).to eq(['--dry-run'])
         end
       end
 
@@ -2978,7 +2978,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :f, args: '--force' } }
 
         it 'uses the explicit args even for single-character name' do
-          expect(args.build(f: true)).to eq(['--force'])
+          expect(args.bind(f: true).to_ary).to eq(['--force'])
         end
       end
 
@@ -2986,7 +2986,7 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { flag :all, args: '-a' } }
 
         it 'uses the explicit short args instead of deriving from name' do
-          expect(args.build(all: true)).to eq(['-a'])
+          expect(args.bind(all: true).to_ary).to eq(['-a'])
         end
       end
 
@@ -2994,8 +2994,265 @@ RSpec.describe Git::Commands::Arguments do
         subject(:args) { described_class.define { value :number, inline: true, args: '-n' } }
 
         it 'uses no separator for explicitly short args' do
-          expect(args.build(number: 5)).to eq(['-n5'])
+          expect(args.bind(number: 5).to_ary).to eq(['-n5'])
         end
+      end
+    end
+  end
+
+  describe '#bind' do
+    context 'with flag options' do
+      let(:args) do
+        described_class.define do
+          flag :force
+        end
+      end
+
+      it 'returns an Arguments::Bound object' do
+        bound = args.bind(force: true)
+        expect(bound).to be_a(Git::Commands::Arguments::Bound)
+      end
+
+      it 'provides accessor for the option' do
+        bound = args.bind(force: true)
+        expect(bound.force).to be true
+      end
+
+      it 'returns false when flag is not provided' do
+        bound = args.bind
+        expect(bound.force).to be false
+      end
+    end
+
+    context 'with option aliases' do
+      let(:args) do
+        described_class.define do
+          flag %i[remotes r]
+          flag %i[force f]
+        end
+      end
+
+      it 'normalizes aliases to canonical names' do
+        bound = args.bind(r: true, f: true)
+        expect(bound.remotes).to be true
+        expect(bound.force).to be true
+      end
+
+      it 'provides accessor only for canonical name' do
+        bound = args.bind(r: true)
+        expect(bound.remotes).to be true
+        expect { bound.r }.to raise_error(NoMethodError)
+      end
+
+      it 'allows hash-style access with alias key' do
+        bound = args.bind(r: true)
+        expect(bound[:remotes]).to be true
+        # NOTE: accessing via alias key returns nil because the internal hash
+        # only stores canonical names
+      end
+    end
+
+    context 'with positional arguments' do
+      let(:args) do
+        described_class.define do
+          positional :branch_names, variadic: true, required: true
+        end
+      end
+
+      it 'provides accessor for positional arguments' do
+        bound = args.bind('branch1', 'branch2')
+        expect(bound.branch_names).to eq(%w[branch1 branch2])
+      end
+    end
+
+    context 'with mixed options and positionals' do
+      let(:args) do
+        described_class.define do
+          flag %i[force f]
+          flag %i[remotes r]
+          positional :branch_names, variadic: true, required: true
+        end
+      end
+
+      it 'provides accessors for all options and positionals' do
+        bound = args.bind('feature', 'bugfix', force: true, r: true)
+        expect(bound.force).to be true
+        expect(bound.remotes).to be true
+        expect(bound.branch_names).to eq(%w[feature bugfix])
+      end
+    end
+
+    context 'with to_ary for splatting' do
+      let(:args) do
+        described_class.define do
+          flag :force
+          positional :branch_names, variadic: true
+        end
+      end
+
+      it 'returns the CLI args array via to_ary' do
+        bound = args.bind('branch1', force: true)
+        expect(bound.to_ary).to eq(['--force', 'branch1'])
+      end
+
+      it 'enables direct splatting' do
+        bound = args.bind('branch1', force: true)
+        result = ['git', 'branch', *bound]
+        expect(result).to eq(['git', 'branch', '--force', 'branch1'])
+      end
+    end
+
+    context 'with hash-style access via []' do
+      let(:args) do
+        described_class.define do
+          flag :force
+          positional :path
+        end
+      end
+
+      it 'allows hash-style access to options' do
+        bound = args.bind('file.txt', force: true)
+        expect(bound[:force]).to be true
+      end
+
+      it 'allows hash-style access to positionals' do
+        bound = args.bind('file.txt', force: true)
+        expect(bound[:path]).to eq('file.txt')
+      end
+
+      it 'returns nil for undefined keys' do
+        bound = args.bind('file.txt')
+        expect(bound[:undefined_key]).to be_nil
+      end
+    end
+
+    context 'with reserved names' do
+      let(:args) do
+        described_class.define do
+          flag :hash
+          flag :class
+          flag :freeze
+          flag :force # not reserved
+        end
+      end
+
+      it 'does not create accessor methods for reserved names' do
+        bound = args.bind(hash: true, class: true, freeze: true, force: true)
+        # Reserved names should not have accessors
+        expect { bound.hash }.not_to raise_error # hash is an Object method, but returns object hash
+        expect(bound.hash).to be_a(Integer) # Object#hash returns an integer
+      end
+
+      it 'allows hash-style access for reserved names' do
+        bound = args.bind(hash: true, class: true)
+        expect(bound[:hash]).to be true
+        expect(bound[:class]).to be true
+      end
+
+      it 'creates accessor for non-reserved names' do
+        bound = args.bind(force: true)
+        expect(bound.force).to be true
+      end
+    end
+
+    context 'with immutability' do
+      let(:args) do
+        described_class.define do
+          flag :force
+        end
+      end
+
+      it 'freezes the bound object' do
+        bound = args.bind(force: true)
+        expect(bound).to be_frozen
+      end
+    end
+
+    context 'with undefined accessor calls' do
+      let(:args) do
+        described_class.define do
+          flag :force
+        end
+      end
+
+      it 'raises NoMethodError for undefined names' do
+        bound = args.bind(force: true)
+        expect { bound.undefined_option }.to raise_error(NoMethodError)
+      end
+    end
+
+    context 'with value options' do
+      let(:args) do
+        described_class.define do
+          value :branch
+          value :message, inline: true
+        end
+      end
+
+      it 'provides accessor for value options' do
+        bound = args.bind(branch: 'main', message: 'test')
+        expect(bound.branch).to eq('main')
+        expect(bound.message).to eq('test')
+      end
+
+      it 'returns nil for unprovided value options' do
+        bound = args.bind
+        expect(bound.branch).to be_nil
+        expect(bound.message).to be_nil
+      end
+    end
+
+    context 'with default values for positionals' do
+      let(:args) do
+        described_class.define do
+          positional :commit, default: 'HEAD'
+        end
+      end
+
+      it 'uses default when not provided' do
+        bound = args.bind
+        expect(bound.commit).to eq('HEAD')
+      end
+
+      it 'uses provided value over default' do
+        bound = args.bind('main')
+        expect(bound.commit).to eq('main')
+      end
+    end
+
+    context 'with same validation as build' do
+      let(:args) do
+        described_class.define do
+          flag :force
+          positional :path, required: true
+        end
+      end
+
+      it 'raises ArgumentError for missing required positional' do
+        expect { args.bind(force: true) }.to raise_error(ArgumentError, /path is required/)
+      end
+
+      it 'raises ArgumentError for unsupported options' do
+        expect { args.bind('file.txt', invalid: true) }.to raise_error(ArgumentError, /Unsupported options/)
+      end
+    end
+  end
+
+  describe Git::Commands::Arguments::Bound do
+    describe 'RESERVED_NAMES' do
+      it 'includes Object instance methods' do
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to include(:hash)
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to include(:class)
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to include(:freeze)
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to include(:object_id)
+      end
+
+      it 'includes :to_ary' do
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to include(:to_ary)
+      end
+
+      it 'is frozen' do
+        expect(Git::Commands::Arguments::Bound::RESERVED_NAMES).to be_frozen
       end
     end
   end

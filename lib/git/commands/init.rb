@@ -29,7 +29,7 @@ module Git
         flag :bare
         value :initial_branch, inline: true
         value :repository, inline: true, args: '--separate-git-dir'
-        positional :directory, default: '.'
+        positional :directory
       end.freeze
 
       # Initialize the Init command
@@ -42,7 +42,7 @@ module Git
 
       # Execute the git init command
       #
-      # @overload call(directory = '.', **options)
+      # @overload call(directory = nil, **options)
       #
       #   @param directory [String] the directory to initialize (default: '.')
       #     If :bare is false, creates the repository in +<directory>/.git+.
@@ -56,14 +56,12 @@ module Git
       #
       #   @option options [String] :repository (nil) Path to put the .git directory (uses --separate-git-dir)
       #
-      # @return [void]
+      # @return [Git::CommandLineResult] the result of the command
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      def call(directory = '.', **)
-        path = File.expand_path(directory)
-        args = ARGS.build(path, **)
-        @execution_context.command(*args)
+      def call(*, **)
+        @execution_context.command(*ARGS.bind(*, **))
       end
     end
   end

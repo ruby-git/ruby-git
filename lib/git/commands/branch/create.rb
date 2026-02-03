@@ -119,12 +119,12 @@ module Git
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
-        def call(branch_name, *, **)
-          command_args = ARGS.build(branch_name, *, **)
-          @execution_context.command(*command_args)
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
+          @execution_context.command(*bound_args)
 
           # Get branch info for the newly created branch
-          Git::Commands::Branch::List.new(@execution_context).call(branch_name).first
+          Git::Commands::Branch::List.new(@execution_context).call(bound_args.branch_name).first
         end
       end
     end

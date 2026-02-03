@@ -24,8 +24,8 @@ module Git
     #     positional :repository, required: true
     #   end
     #
-    # @example Building command-line arguments
-    #   ARGS.build('https://github.com/user/repo', force: true, branch: 'main')
+    # @example Binding and building command-line arguments
+    #   ARGS.bind('https://github.com/user/repo', force: true, branch: 'main').to_ary
     #   # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
     #
     # == Design
@@ -35,8 +35,8 @@ module Git
     # 1. **Definition phase**: DSL methods ({#flag}, {#value}, {#positional}, etc.)
     #    record argument definitions in internal data structures.
     #
-    # 2. **Build phase**: {#build} transforms Ruby values into a CLI argument array
-    #    by iterating over definitions in the exact order they were defined.
+    # 2. **Bind phase**: {#bind} transforms Ruby values into a {Bound} object
+    #    containing accessor methods and CLI arguments in definition order.
     #
     # Key internal components:
     #
@@ -60,7 +60,7 @@ module Git
     #     static '--'
     #     positional :path
     #   end
-    #   args.build('HEAD', 'file.txt')  # => ['HEAD', '--', 'file.txt']
+    #   args.bind('HEAD', 'file.txt').to_ary  # => ['HEAD', '--', 'file.txt']
     #
     # == Short Option Detection
     #
@@ -655,28 +655,78 @@ module Git
         @ordered_definitions << { kind: :positional, name: name }
       end
 
-      # Build command-line arguments from the given positionals and options
+      # Bind positionals and options, returning a Bound object with accessor methods
       #
-      # Arguments are rendered in the exact order they were defined in the DSL block,
-      # regardless of type. This is important for git commands where argument order
-      # matters, such as when using `--` to separate options from pathspecs.
+      # Unlike the internal build method which returns a raw Array, this method
+      # returns a {Bound} object that:
+      # - Provides accessor methods for all defined options and positional arguments
+      # - Automatically normalizes option aliases to their canonical names
+      # - Supports splatting via `to_ary` for seamless use with `command(*bound)`
       #
       # @param positionals [Array] positional argument values
-      # @param opts [Hash] the keyword options to build arguments from
-      # @return [Array<String>] the command-line arguments
+      # @param opts [Hash] the keyword options
+      # @return [Bound] a frozen object with accessor methods for all arguments
       # @raise [ArgumentError] if unsupported options are provided or validation fails
       #
-      def build(*positionals, **opts)
+      # @example Simple splatting (same behavior as build)
+      #   def call(*, **)
+      #     @execution_context.command(*ARGS.bind(*, **))
+      #   end
+      #
+      # @example Inspecting options before command execution
+      #   def call(*, **)
+      #     bound_args = ARGS.bind(*, **)
+      #     bound_args.force          # => true (if provided)
+      #     bound_args.remotes        # => true (normalized from :r or :remotes)
+      #     bound_args.branch_names   # => ['branch1', 'branch2']
+      #     @execution_context.command(*bound_args)
+      #   end
+      #
+      # @example Hash-style access for reserved names
+      #   bound_args[:hash]  # Required for reserved names like :hash, :class
+      #
+      def bind(*positionals, **opts)
         validate_unsupported_options!(opts)
         validate_conflicting_aliases!(opts)
         normalized_opts = normalize_aliases(opts)
         validate_required_options!(normalized_opts)
         validate_option_values!(normalized_opts)
         validate_conflicts!(normalized_opts)
-        build_ordered_arguments(positionals, normalized_opts)
+
+        args_array = build_ordered_arguments(positionals, normalized_opts)
+        allocated_positionals = allocate_and_validate_positionals(positionals)
+
+        # Build options hash with normalized values (including defaults for flags)
+        options_hash = build_options_hash(normalized_opts)
+
+        Bound.new(args_array, options_hash, allocated_positionals)
       end
 
       private
+
+      # Build a hash of all option values for the Bound object
+      #
+      # @param normalized_opts [Hash] the normalized options
+      # @return [Hash{Symbol => Object}] option values with defaults applied
+      def build_options_hash(normalized_opts)
+        result = {}
+        @option_definitions.each_key do |name|
+          result[name] = normalized_opts.key?(name) ? normalized_opts[name] : default_option_value(name)
+        end
+        result
+      end
+
+      # Get the default value for an option when not provided
+      #
+      # @param name [Symbol] the option name
+      # @return [Object] the default value (false for flags, nil for values)
+      def default_option_value(name)
+        definition = @option_definitions[name]
+        case definition[:type]
+        when :flag, :negatable_flag
+          false
+        end
+      end
 
       # Determine the internal option type based on inline and positional modifiers
       #
@@ -1336,6 +1386,90 @@ module Git
 
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
+        end
+      end
+
+      # Bound arguments object returned by {Arguments#bind}
+      #
+      # Provides accessor methods for all defined options and positional arguments,
+      # with automatic normalization of aliases to their canonical names.
+      #
+      # @api private
+      #
+      # @example Accessing bound arguments
+      #   bound = ARGS.bind('branch1', 'branch2', force: true, r: true)
+      #   bound.force          # => true
+      #   bound.remotes        # => true (normalized from :r alias)
+      #   bound.branch_names   # => ['branch1', 'branch2']
+      #
+      # @example Splatting for command execution
+      #   @execution_context.command(*bound)  # Uses to_ary
+      #
+      # @example Hash-style access for reserved names
+      #   bound[:hash]  # Required for reserved names like :hash, :class, etc.
+      #
+      class Bound
+        # Names that cannot have accessor methods defined (would override Object methods)
+        RESERVED_NAMES = (Object.instance_methods + [:to_ary]).freeze
+
+        # @param args_array [Array<String>] the CLI argument array (frozen)
+        # @param options [Hash{Symbol => Object}] normalized options hash (frozen)
+        # @param positionals [Hash{Symbol => Object}] positional arguments hash (frozen)
+        def initialize(args_array, options, positionals)
+          @args_array = args_array.freeze
+          @options = options.freeze
+          @positionals = positionals.freeze
+
+          # Define accessor methods (skip reserved names)
+          @options.each_key { |name| define_accessor(name, @options) }
+          @positionals.each_key { |name| define_accessor(name, @positionals) }
+
+          freeze
+        end
+
+        # Returns the CLI arguments array for splatting
+        #
+        # This enables direct splatting: `command(*bound_args)`
+        #
+        # @return [Array<String>] the CLI arguments
+        def to_ary
+          @args_array
+        end
+
+        # Returns the CLI arguments array for splatting
+        #
+        # Ruby's splat operator in array literals uses `to_a` for expansion.
+        # This enables: `['git', 'branch', *bound_args]`
+        #
+        # @return [Array<String>] the CLI arguments
+        def to_a
+          @args_array
+        end
+
+        # Hash-style access to option and positional values
+        #
+        # Use this for reserved names (like :hash, :class) that cannot have
+        # accessor methods defined.
+        #
+        # @param key [Symbol] the option or positional name
+        # @return [Object, nil] the value, or nil if not found
+        def [](key)
+          return @options[key] if @options.key?(key)
+          return @positionals[key] if @positionals.key?(key)
+
+          nil
+        end
+
+        private
+
+        # Define an accessor method for the given name
+        #
+        # @param name [Symbol] the option or positional name
+        # @param source [Hash] the hash to read from (@options or @positionals)
+        def define_accessor(name, source)
+          return if RESERVED_NAMES.include?(name)
+
+          define_singleton_method(name) { source[name] }
         end
       end
     end

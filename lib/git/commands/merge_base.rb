@@ -80,7 +80,7 @@ module Git
       # @raise [Git::FailedError] if the command fails
       #
       def call(*, **)
-        args = ARGS.build(*, **)
+        args = ARGS.bind(*, **)
         output = @execution_context.command(*args).stdout
         parse_output(output)
       end

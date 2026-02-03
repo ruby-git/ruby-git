@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Merge::Quit do
 
   describe '::ARGS' do
     it 'builds correct command arguments' do
-      args = described_class::ARGS.build
+      args = described_class::ARGS.bind.to_ary
       expect(args).to eq(['merge', '--quit'])
     end
   end

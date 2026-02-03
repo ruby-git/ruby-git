@@ -55,8 +55,8 @@ module Git
         # @return [String, nil] the SHA of the created stash commit, or nil if
         #   there were no local changes to stash
         #
-        def call(message = nil)
-          result = @execution_context.command(*ARGS.build(message))
+        def call(*, **)
+          result = @execution_context.command(*ARGS.bind(*, **))
 
           # Returns empty output if there were no local changes
           sha = result.stdout.strip

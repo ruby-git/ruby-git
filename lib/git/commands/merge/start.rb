@@ -155,7 +155,7 @@ module Git
         # @raise [Git::FailedError] if the merge fails (e.g., conflicts)
         #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.bind(*, **)
           @execution_context.command(*args)
         end
       end

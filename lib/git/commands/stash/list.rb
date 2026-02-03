@@ -98,7 +98,7 @@ module Git
         # @raise [Git::UnexpectedResultError] if stash output cannot be parsed
         #
         def call
-          lines = @execution_context.command(*ARGS.build(format: STASH_FORMAT)).stdout.split("\n")
+          lines = @execution_context.command(*ARGS.bind(format: STASH_FORMAT)).stdout.split("\n")
           lines.each_with_index.map { |line, idx| parse_stash_line(line, idx, lines) }
         end
 

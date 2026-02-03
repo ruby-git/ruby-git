@@ -78,9 +78,10 @@ module Git
         #
         # @return [Git::DiffResult] diff result with per-file and total statistics
         #
-        def call(stash = nil, dirstat: nil, **)
-          output = @execution_context.command(*ARGS.build(stash, dirstat: dirstat, **)).stdout
-          DiffParser::Numstat.parse(output, include_dirstat: !dirstat.nil?)
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
+          output = @execution_context.command(*bound_args).stdout
+          DiffParser::Numstat.parse(output, include_dirstat: !bound_args.dirstat.nil?)
         end
       end
     end

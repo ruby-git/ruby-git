@@ -35,7 +35,7 @@ module Git
         # @return [Git::CommandLineResult] the result of the command
         #
         def call
-          @execution_context.command(*ARGS.build)
+          @execution_context.command(*ARGS.bind)
         end
       end
     end

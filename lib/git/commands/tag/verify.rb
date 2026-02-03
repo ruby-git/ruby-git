@@ -68,7 +68,7 @@ module Git
         # @raise [ArgumentError] if no tag names are provided
         #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.bind(*, **)
           @execution_context.command(*args)
         end
       end

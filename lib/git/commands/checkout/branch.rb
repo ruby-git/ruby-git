@@ -115,7 +115,7 @@ module Git
         # @raise [Git::FailedError] if the checkout fails
         #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.bind(*, **)
           @execution_context.command(*args)
         end
       end

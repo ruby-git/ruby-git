@@ -109,13 +109,12 @@ module Git
         # @raise [Git::FailedError] if the tag already exists (without force) or if
         #   an annotated tag is requested without a message
         #
-        def call(*args, **)
-          command_args = ARGS.build(*args, **)
-          @execution_context.command(*command_args)
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
+          @execution_context.command(*bound_args)
 
           # Get tag info for the newly created tag
-          tag_name = args[0]
-          Git::Commands::Tag::List.new(@execution_context).call(tag_name).first
+          Git::Commands::Tag::List.new(@execution_context).call(bound_args.tag_name).first
         end
       end
     end

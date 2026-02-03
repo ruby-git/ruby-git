@@ -81,12 +81,13 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
         #
-        def call(*positionals, **)
-          args = ARGS.build(*positionals, **)
+        def call(*, **)
+          args = ARGS.bind(*, **)
+
           @execution_context.command(*args)
 
           # Get branch info for the newly created branch (always the last positional)
-          new_branch_name = positionals.last
+          new_branch_name = args.new_branch
           Git::Commands::Branch::List.new(@execution_context).call(new_branch_name).first
         end
       end

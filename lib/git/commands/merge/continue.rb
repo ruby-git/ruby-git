@@ -40,7 +40,7 @@ module Git
         # @raise [Git::FailedError] if no merge is in progress or conflicts remain unresolved
         #
         def call
-          args = ARGS.build
+          args = ARGS.bind
           @execution_context.command(*args)
         end
       end

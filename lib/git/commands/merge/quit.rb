@@ -42,7 +42,7 @@ module Git
         #   (for example, on Git versions before 2.35 when no merge is in progress)
         #
         def call
-          args = ARGS.build
+          args = ARGS.bind
           @execution_context.command(*args)
         end
       end

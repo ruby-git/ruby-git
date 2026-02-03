@@ -9,8 +9,7 @@ RSpec.describe Git::Commands::Init do
   describe '#call' do
     context 'with default arguments' do
       it 'runs git init in the current directory' do
-        current_dir = File.expand_path('.')
-        expect(execution_context).to receive(:command).with('init', current_dir)
+        expect(execution_context).to receive(:command).with('init')
 
         command.call
       end
@@ -18,8 +17,7 @@ RSpec.describe Git::Commands::Init do
 
     context 'with a directory argument' do
       it 'initializes in the specified directory' do
-        dir = File.expand_path('my-repo')
-        expect(execution_context).to receive(:command).with('init', dir)
+        expect(execution_context).to receive(:command).with('init', 'my-repo')
 
         command.call('my-repo')
       end
@@ -27,15 +25,13 @@ RSpec.describe Git::Commands::Init do
 
     context 'with the :bare option' do
       it 'includes the --bare flag when true' do
-        dir = File.expand_path('my-repo.git')
-        expect(execution_context).to receive(:command).with('init', '--bare', dir)
+        expect(execution_context).to receive(:command).with('init', '--bare', 'my-repo.git')
 
         command.call('my-repo.git', bare: true)
       end
 
       it 'does not include the flag when false' do
-        dir = File.expand_path('my-repo')
-        expect(execution_context).to receive(:command).with('init', dir)
+        expect(execution_context).to receive(:command).with('init', 'my-repo')
 
         command.call('my-repo', bare: false)
       end
@@ -43,15 +39,14 @@ RSpec.describe Git::Commands::Init do
 
     context 'with the :initial_branch option' do
       it 'includes the --initial-branch flag with the specified value' do
-        dir = File.expand_path('my-repo')
-        expect(execution_context).to receive(:command).with('init', '--initial-branch=main', dir)
+        expect(execution_context).to receive(:command).with('init', '--initial-branch=main', 'my-repo')
 
         command.call('my-repo', initial_branch: 'main')
       end
 
       it 'handles branch names with special characters' do
-        dir = File.expand_path('my-repo')
-        expect(execution_context).to receive(:command).with('init', '--initial-branch=feature/my-branch', dir)
+        expect(execution_context).to receive(:command).with('init', '--initial-branch=feature/my-branch',
+                                                            'my-repo')
 
         command.call('my-repo', initial_branch: 'feature/my-branch')
       end
@@ -59,9 +54,8 @@ RSpec.describe Git::Commands::Init do
 
     context 'with the :repository option' do
       it 'uses --separate-git-dir for the repository path' do
-        work_dir = File.expand_path('work')
         # The repository path is passed through as-is (not expanded by the command)
-        expect(execution_context).to receive(:command).with('init', '--separate-git-dir=repo.git', work_dir)
+        expect(execution_context).to receive(:command).with('init', '--separate-git-dir=repo.git', 'work')
 
         command.call('work', repository: 'repo.git')
       end
@@ -69,8 +63,8 @@ RSpec.describe Git::Commands::Init do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        dir = File.expand_path('bare.git')
-        expect(execution_context).to receive(:command).with('init', '--bare', '--initial-branch=develop', dir)
+        expect(execution_context).to receive(:command).with('init', '--bare', '--initial-branch=develop',
+                                                            'bare.git')
 
         command.call('bare.git', bare: true, initial_branch: 'develop')
       end

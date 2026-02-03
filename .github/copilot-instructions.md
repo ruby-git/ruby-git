@@ -2245,10 +2245,9 @@ classes using a "Strangler Fig" pattern.
            @execution_context = execution_context
          end
 
-         # Preferred: anonymous forwarding when just passing to ARGS.build
+         # Preferred: anonymous forwarding with ARGS.bind
          def call(*, **)
-           args = ARGS.build(*, **)
-           @execution_context.command('<git-subcommand>', *args)
+           @execution_context.command('<git-subcommand>', *ARGS.bind(*, **))
          end
        end
      end
@@ -2256,15 +2255,16 @@ classes using a "Strangler Fig" pattern.
    ```
 
    **Method Signature Convention:**
-   - **SHOULD** use anonymous `def call(*, **)` when just forwarding to `ARGS.build`
-   - **MAY** name args when needed to inspect or manipulate them before passing to `ARGS.build`
-   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.build`
+   - **SHOULD** use anonymous `def call(*, **)` and splat `ARGS.bind(*, **)` directly
+   - **MAY** assign `bound_args = ARGS.bind(*, **)` when you need to access argument values (e.g., `bound_args.dirstat`)
+   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.bind`
 
    **Return Value Convention:**
    - `#call` **SHOULD** return meaningful value objects (e.g., `StashInfo`, `BranchInfo`)
      rather than raw strings or booleans
    - This enables method chaining and provides richer APIs for consumers
-   - Commands with no meaningful output (e.g., `git add`) **MAY** return `nil` or raw output
+   - Commands with no meaningful output (e.g., `git add`) **SHOULD** return the
+     `Git::CommandLineResult` from `@execution_context.command`
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
 

@@ -61,8 +61,8 @@ module Git
         #
         # @raise [Git::FailedError] if the commit is not a valid stash commit
         #
-        def call(commit, **)
-          @execution_context.command(*ARGS.build(commit, **))
+        def call(*, **)
+          @execution_context.command(*ARGS.bind(*, **))
         end
       end
     end

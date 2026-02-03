@@ -70,10 +70,10 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         # @raise [Git::FailedError] if the branch or upstream doesn't exist
         #
-        def call(branch_name = nil, **)
-          args = ARGS.build(branch_name, **)
+        def call(*, **)
+          args = ARGS.bind(*, **)
           @execution_context.command(*args)
-          fetch_branch_info(branch_name)
+          fetch_branch_info(args.branch_name)
         end
 
         private

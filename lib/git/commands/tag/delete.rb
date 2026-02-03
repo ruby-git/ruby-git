@@ -71,12 +71,15 @@ module Git
         # @raise [ArgumentError] if no tag names are provided
         # @raise [Git::FailedError] for unexpected errors (not partial deletion failures)
         #
-        def call(*tag_names, **)
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
+          tag_names = bound_args.tag_names
+
           # Capture tag info BEFORE deletion for tags that exist
           existing_tags = lookup_existing_tags(tag_names)
 
           # Execute the delete command
-          stdout, stderr = execute_delete(tag_names, **)
+          stdout, stderr = execute_delete(bound_args)
 
           # Parse results
           deleted_names = parse_deleted_tags(stdout)
@@ -104,13 +107,12 @@ module Git
         # This is git's standard behavior for partial failures in batch delete operations.
         # Other exit codes indicate fatal errors (e.g., not a git repository).
         #
-        # @param tag_names [Array<String>] tag names to delete
+        # @param bound_args [Arguments::Bound] bound arguments
         # @return [Array<String, String>] [stdout, stderr]
         # @raise [Git::FailedError] for fatal errors (exit code > 1)
         #
-        def execute_delete(tag_names, **)
-          args = ARGS.build(*tag_names, **)
-          result = @execution_context.command(*args, raise_on_failure: false)
+        def execute_delete(bound_args)
+          result = @execution_context.command(*bound_args, raise_on_failure: false)
 
           # Exit code > 1 indicates fatal error; exit 1 is partial failure (expected)
           raise Git::FailedError, result if result.status.exitstatus > 1

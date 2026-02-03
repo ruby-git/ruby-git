@@ -64,11 +64,13 @@ module Git
         #
         # @raise [Git::UnexpectedResultError] if the specified stash does not exist
         #
-        def call(stash = nil, **)
-          # Capture stash info before applying (stash still exists after apply)
-          info = find_stash_info(stash)
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
 
-          @execution_context.command(*ARGS.build(stash, **))
+          # Capture stash info before applying (stash still exists after apply)
+          info = find_stash_info(bound_args.stash)
+
+          @execution_context.command(*bound_args)
 
           info
         end

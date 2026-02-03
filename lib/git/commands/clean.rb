@@ -65,7 +65,7 @@ module Git
       # @return [Git::CommandLineResult] the result of the command
       #
       def call(*, **)
-        args = ARGS.build(*, **)
+        args = ARGS.bind(*, **)
         @execution_context.command(*args)
       end
     end
