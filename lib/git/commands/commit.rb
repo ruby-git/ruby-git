@@ -90,7 +90,7 @@ module Git
       # @raise [ArgumentError] if :date is not a String
       #
       def call(*, **)
-        args = ARGS.build(*, **)
+        args = ARGS.bind(*, **)
         @execution_context.command(*args)
       end
     end

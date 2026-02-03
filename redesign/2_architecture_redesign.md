@@ -164,14 +164,13 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     **Interface Convention**: The `#call` signature SHOULD use anonymous variadic
     arguments when possible. Arguments MAY be named when needed to inspect or manipulate
     them. Note that defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
-    are applied automatically by `ARGS.build`, so manual default checking is usually
+    are applied automatically by `ARGS.bind`, so manual default checking is usually
     unnecessary:
 
     ```ruby
     # Preferred: anonymous forwarding (DSL handles defaults)
     def call(*, **)
-      args = ARGS.build(*, **)
-      @execution_context.command('add', *args)
+      @execution_context.command('add', *ARGS.bind(*, **))
     end
 
     # Acceptable: explicit args when manipulation needed
@@ -192,8 +191,8 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
       callers to immediately access the stash's SHA, message, index, etc.
     - `Git::Commands::Branch::Create#call` returns a `BranchInfo` object with
       the branch name and commit SHA.
-    - Commands that produce no meaningful output (e.g., `git add`) MAY return `nil`
-      or the raw output string.
+    - Commands that produce no meaningful output (e.g., `git add`) SHOULD return
+      the `Git::CommandLineResult` from `@execution_context.command`.
 
     This convention ensures the command layer produces value objects that can be
     consumed directly or wrapped by domain objects in the facade layer.

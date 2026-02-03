@@ -439,8 +439,7 @@ module Git
       # @return [String] the command output
       #
       def call(*, **)
-        args = ARGS.build(*, **)
-        @execution_context.command('add', *args)
+        @execution_context.command('add', *ARGS.bind(*, **))
       end
     end
   end
@@ -452,28 +451,27 @@ anonymous variadic arguments for both positional and keyword arguments:
 
 ```ruby
 def call(*, **)
-  args = ARGS.build(*, **)
-  @execution_context.command('add', *args)
+  @execution_context.command('add', *ARGS.bind(*, **))
 end
 ```
 
-The `#call` method MAY name arguments when needed to inspect or manipulate them
-before passing to `ARGS.build`. Note that default values defined in the DSL
-(e.g., `positional :paths, default: ['.']`) are applied automatically by
-`ARGS.build`, so manual default checking is usually unnecessary.
+The `#call` method MAY assign `bound_args = ARGS.bind(*, **)` when you need to
+access argument values (e.g., `bound_args.dirstat`). Note that default values
+defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied
+automatically by `ARGS.bind`, so manual default checking is usually unnecessary.
 
 Specific arguments MAY be extracted when the command needs to inspect or manipulate
-them before passing to `ARGS.build`:
+them:
 
 ```ruby
-def call(repository_url, directory = nil, **options)
-  directory ||= derive_directory_from(repository_url)
-  args = ARGS.build(repository_url, directory, **options)
-  @execution_context.command('clone', *args)
+def call(*, **)
+  bound_args = ARGS.bind(*, **)
+  output = @execution_context.command('diff', *bound_args).stdout
+  DiffParser.parse(output, include_dirstat: !bound_args.dirstat.nil?)
 end
 ```
 
-Validation of supported options is handled by the `Arguments` DSL via `ARGS.build`,
+Validation of supported options is handled by the `Arguments` DSL via `ARGS.bind`,
 which raises `ArgumentError` for unsupported keywords. The public API in `Git::Lib`
 handles the translation from single values or arrays to the splat format.
 

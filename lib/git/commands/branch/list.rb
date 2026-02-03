@@ -134,7 +134,7 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.bind(*, **)
           lines = @execution_context.command(*args, raise_on_failure: false).stdout.split("\n")
           parse_branches(lines)
         end

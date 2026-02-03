@@ -78,7 +78,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    def call(*, **)
    ```
 
-   **Important**: Keep empty comments between each yard tag
+   **Important**: Keep empty comment lines between each yard tag
 
 5. **Delegate**: Update related methods in `Git::Lib` to delegate to the new class(es).
    Here is an example for the branch functionality in `Git::Lib`:
@@ -253,25 +253,23 @@ obscuring what's actually happening underneath.
 anonymous variadic arguments for both positional and keyword arguments:
 
 ```ruby
-# ✅ Preferred: anonymous forwarding when just passing to ARGS.build
+# ✅ Preferred: anonymous forwarding with ARGS.bind
 # Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
-# are applied automatically by ARGS.build
+# are applied automatically by ARGS.bind
 def call(*, **)
-  args = ARGS.build(*, **)
-  @execution_context.command('add', *args)
+  @execution_context.command('add', *ARGS.bind(*, **))
 end
 
-# ✅ Acceptable: explicit positional args when command needs to manipulate them
-def call(repository_url, directory = nil, **options)
-  directory ||= derive_directory_from(repository_url)
-  args = ARGS.build(repository_url, directory, **options)
-  @execution_context.command('clone', *args)
+# ✅ Acceptable: assign bound_args when you need to access argument values
+def call(*, **)
+  bound_args = ARGS.bind(*, **)
+  output = @execution_context.command('diff', *bound_args).stdout
+  DiffParser.parse(output, include_dirstat: !bound_args.dirstat.nil?)
 end
 
 # ❌ Incorrect: options hash parameter
 def call(paths = '.', options = {})
-  args = ARGS.build(*Array(paths), **options)
-  @execution_context.command('add', *args)
+  @execution_context.command('add', *ARGS.bind(*Array(paths), **options))
 end
 ```
 
@@ -279,7 +277,7 @@ This convention provides:
 
 - **Better IDE support**: Editors can autocomplete and validate keyword arguments
 - **Clearer method signatures**: The `#call` signature documents available options
-- **Centralized validation**: `ARGS.build` enforces allowed options and raises errors for unknown or invalid keywords
+- **Centralized validation**: `ARGS.bind` enforces allowed options and raises errors for unknown or invalid keywords
 - **Consistency**: All command classes follow the same pattern
 
 The facade layer (`Git::Lib`, `Git::Base`) may accept either keyword arguments or an
@@ -440,8 +438,7 @@ future work:
     ```ruby
     # Command class supports multiple branches
     def call(*, **)  # variadic positional
-      args = ARGS.build(*, **)
-      @execution_context.command('branch', *args)
+      @execution_context.command('branch', *ARGS.bind(*, **))
     end
 
     # ❌ Adapter only accepts single branch
@@ -462,7 +459,7 @@ future work:
 
     When using the Arguments DSL with patterns where optional positionals precede
     required ones (matching Ruby's parameter binding semantics), prefer the
-    catch-all signature `def call(*, **)` and let `ARGS.build(*, **)` handle
+    catch-all signature `def call(*, **)` and let `ARGS.bind(*, **)` handle
     all validation:
 
     ```ruby
@@ -474,10 +471,9 @@ future work:
       positional :new_branch, required: true  # required
     end.freeze
 
-    # ✅ Preferred: let ARGS.build handle validation
+    # ✅ Preferred: let ARGS.bind handle validation
     def call(*, **)
-      args = ARGS.build(*, **)
-      @execution_context.command('branch', *args)
+      @execution_context.command('branch', *ARGS.bind(*, **))
     end
 
     # ❌ Avoid: explicit params trigger RuboCop Style/OptionalArguments
@@ -504,10 +500,10 @@ future work:
     positional :old_branch                  # optional
     positional :new_branch, required: true  # required
 
-    # Single value: ARGS.build('new-name')
+    # Single value: ARGS.bind('new-name')
     # → old_branch=nil, new_branch='new-name'
 
-    # Two values: ARGS.build('old-name', 'new-name')
+    # Two values: ARGS.bind('old-name', 'new-name')
     # → old_branch='old-name', new_branch='new-name'
     ```
 
@@ -531,9 +527,8 @@ future work:
         positional :branch_name
       end
 
-      def call(branch_name = nil, set_upstream_to:)
-        args = ARGS.build(branch_name, set_upstream_to: set_upstream_to)
-        @execution_context.command('branch', *args)
+      def call(*, **)
+        @execution_context.command('branch', *ARGS.bind(*, **))
       end
     end
 
@@ -565,11 +560,11 @@ future work:
     end
 
     # Restore from index (tree_ish intentionally nil)
-    ARGS.build(nil, 'file.txt')
+    ARGS.bind(nil, 'file.txt')
     # → ['--', 'file.txt']
 
     # Restore from commit
-    ARGS.build('HEAD', 'file.txt')
+    ARGS.bind('HEAD', 'file.txt')
     # → ['HEAD', '--', 'file.txt']
     ```
 

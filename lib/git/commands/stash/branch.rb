@@ -63,11 +63,12 @@ module Git
         #
         # @raise [Git::FailedError] if the branch already exists or stash doesn't exist
         #
-        def call(branchname, stash = nil)
-          @execution_context.command(*ARGS.build(branchname, stash))
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
+          @execution_context.command(*bound_args)
 
           # Return info for the newly created branch
-          Git::Commands::Branch::List.new(@execution_context).call(branchname).first
+          Git::Commands::Branch::List.new(@execution_context).call(bound_args.branchname).first
         end
       end
     end

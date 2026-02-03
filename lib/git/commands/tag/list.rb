@@ -135,7 +135,7 @@ module Git
         # @raise [ArgumentError] if unsupported options are provided
         #
         def call(*, **)
-          args = ARGS.build(*, **)
+          args = ARGS.bind(*, **)
           output = @execution_context.command(*args, raise_on_failure: false).stdout
           # Split by record separator
           # Each record may have a leading newline from the previous record's %(contents) output

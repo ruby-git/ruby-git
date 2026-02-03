@@ -95,12 +95,16 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided, if :single_branch is not true, false, or nil,
       #   or if any option fails validation
       #
-      def call(repository_url, directory = nil, **options)
+      def call(*, **options)
         options = options.dup
-        directory = options.delete(:path) if options[:path]
-        directory ||= Git::URL.clone_to(repository_url, bare: options[:bare], mirror: options[:mirror])
+        bound_args = ARGS.bind(*, **options)
 
-        args = ARGS.build(repository_url, directory, **options)
+        directory = options.delete(:path) || bound_args.directory
+        directory ||= Git::URL.clone_to(
+          bound_args.repository_url, bare: options[:bare], mirror: options[:mirror]
+        )
+
+        args = ARGS.bind(bound_args.repository_url, directory, **options)
 
         @execution_context.command(*args, timeout: options[:timeout])
 

@@ -128,10 +128,7 @@ module Git
     # @return [String] the command output
     #
     def init(opts = {})
-      args = []
-      args << '--bare' if opts[:bare]
-      args << "--initial-branch=#{opts[:initial_branch]}" if opts[:initial_branch]
-      command('init', *args)
+      Git::Commands::Init.new(self).call(**opts).stdout
     end
 
     # Clones a repository into a newly created directory

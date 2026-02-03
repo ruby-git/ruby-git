@@ -131,15 +131,14 @@ module Git
         #
         # @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
         #
-        def call(*, dirstat: nil, pathspecs: nil, **)
-          args = ARGS.build(*, dirstat: dirstat, **)
-          args.push('--', *pathspecs) if pathspecs&.any?
+        def call(*, **)
+          bound_args = ARGS.bind(*, **)
 
           # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
-          result = @execution_context.command(*args, raise_on_failure: false)
+          result = @execution_context.command(*bound_args, raise_on_failure: false)
           raise Git::FailedError, result if result.status.exitstatus >= 2
 
-          DiffParser::Raw.parse(result.stdout, include_dirstat: !dirstat.nil?)
+          DiffParser::Raw.parse(result.stdout, include_dirstat: !bound_args.dirstat.nil?)
         end
       end
     end

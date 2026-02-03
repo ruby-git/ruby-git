@@ -93,35 +93,34 @@ module Git
         # @raise [ArgumentError] if no branch names are provided
         # @raise [Git::FailedError] for unexpected errors (not partial deletion failures)
         #
-        def call(*branch_names, **)
+        def call(*, **)
+          args = ARGS.bind(*, **)
+
           # Capture branch info BEFORE deletion for branches that exist
-          existing_branches = lookup_existing_branches(branch_names, **)
+          existing_branches = lookup_existing_branches(args)
 
           # Execute the delete command
-          stdout, stderr = execute_delete(branch_names, **)
+          stdout, stderr = execute_delete(args)
 
           # Parse results
           deleted_names = parse_deleted_branches(stdout)
           error_map = parse_error_messages(stderr)
 
           # Build result
-          build_result(branch_names, existing_branches, deleted_names, error_map)
+          build_result(args.branch_names, existing_branches, deleted_names, error_map)
         end
 
         private
 
         # Look up BranchInfo for branches that exist
         #
-        # @param branch_names [Array<String>] branch names to look up
-        # @param options [Hash] options to pass to List (e.g., remotes: true)
+        # @param args [Arguments::Bound] bound arguments
         # @return [Hash<String, Git::BranchInfo>] map of branch name to BranchInfo
         #
-        def lookup_existing_branches(branch_names, **options)
-          # Normalize the remotes option (handle :r alias)
-          remotes = options[:remotes] || options[:r]
-          list_options = remotes ? { remotes: true } : {}
+        def lookup_existing_branches(args)
+          list_options = args.remotes ? { remotes: true } : {}
 
-          branch_names.each_with_object({}) do |name, hash|
+          args.branch_names.each_with_object({}) do |name, hash|
             branch_info = Git::Commands::Branch::List.new(@execution_context).call(name, **list_options).first
             hash[name] = branch_info if branch_info
           end
@@ -133,12 +132,11 @@ module Git
         # This is git's standard behavior for partial failures in batch delete operations.
         # Other exit codes indicate fatal errors (e.g., not a git repository).
         #
-        # @param branch_names [Array<String>] branch names to delete
+        # @param args [Arguments::Bound] bound arguments
         # @return [Array<String, String>] [stdout, stderr]
         # @raise [Git::FailedError] for fatal errors (exit code > 1)
         #
-        def execute_delete(branch_names, **)
-          args = ARGS.build(*branch_names, **)
+        def execute_delete(args)
           result = @execution_context.command(*args, raise_on_failure: false)
 
           # Exit code > 1 indicates fatal error; exit 1 is partial failure (expected)

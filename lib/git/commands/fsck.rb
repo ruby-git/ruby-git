@@ -95,7 +95,7 @@ module Git
       # @return [Git::FsckResult] the structured result containing categorized objects
       #
       def call(*, **)
-        args = ARGS.build(*, **)
+        args = ARGS.bind(*, **)
         result = @execution_context.command(*args, raise_on_failure: false)
 
         # fsck returns non-zero exit status when issues are found:
