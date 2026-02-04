@@ -81,7 +81,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     This separation means the facade's role is to *wire things together* (which
     component to call, in what order, with what inputs) rather than *implement
-    behavior* (how to parse output, which are arguments are valid). This keeps each
+    behavior* (how to parse output, which arguments are valid). This keeps each
     component focused, independently testable, and reusable.
 
     **Scalability**: To prevent this class from growing too large, its methods will
@@ -150,10 +150,14 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     **Note**: Parsing output and building rich response objects is **not** a command
     responsibility. That work belongs in separate Parser classes (e.g., `DiffParser`)
-    and Result class factory methods, orchestrated by the Facade layer.
+    and Result class factory methods, orchestrated by the Facade layer. See
+    [issue #997](https://github.com/ruby-git/ruby-git/issues/997) for the work to
+    migrate existing commands that currently parse output.
 
-    **Commands::Base Pattern**: To standardize command implementation, all command
-    classes inherit from a common base class:
+    **Commands::Base Pattern (Planned)**: To standardize command implementation,
+    all command classes will inherit from a common base class. (Note: This pattern
+    is not yet implemented. Current commands use the Arguments DSL inline. See
+    [issue #996](https://github.com/ruby-git/ruby-git/issues/996) for migration details.)
 
     ```ruby
     module Git
@@ -199,8 +203,9 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
       argument defined in the DSL (e.g., `args.directory`, `args.force`)
     - `#call` → Returns `Git::CommandLineResult` (stdout, stderr, status)
 
-    **Bind/Call Pattern for Facade Access**: The facade layer can access bound
-    arguments for orchestration and result building:
+    **Bind/Call Pattern for Facade Access (Planned)**: Once the `Commands::Base`
+    pattern is implemented, the facade layer will be able to access bound arguments
+    for orchestration and result building:
 
     ```ruby
     # Command defines its arguments
@@ -217,6 +222,9 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     result = cmd.call
     cmd.args.directory  # => dir (accessible for result building)
     ```
+
+    Note: Current commands use `ARGS.bind(*, **)` internally within the `call()`
+    method. The `bind`/`call` separation is planned architecture.
 
     **Migration Strategy: Git::Lib as Adapter Layer**
 

@@ -87,41 +87,53 @@ risk and allows for a gradual, controlled migration to the new architecture.
 4a. **Create Parser Classes** (when output needs transformation):
 
    If the command produces output that needs to be parsed into structured data,
-   create a Parser class in `lib/git/` following existing patterns:
+   create a Parser class or module in `lib/git/` following existing patterns.
+   For example, see `Git::DiffParser` which uses nested classes for different
+   output formats:
 
    ```ruby
-   # lib/git/stash_list_parser.rb
-   class Git::StashListParser
-     def self.parse(output)
-       output.lines.map { |line| parse_line(line) }
-     end
+   # lib/git/diff_parser.rb (existing pattern)
+   module Git
+     module DiffParser
+       # Nested parser for --numstat format
+       class Numstat
+         def self.parse(output)
+           output.lines.map { |line| parse_line(line) }
+         end
+       end
 
-     def self.parse_line(line)
-       # Parse line into StashInfo value object
+       # Nested parser for --raw format
+       class Raw
+         def self.parse(output)
+           # Parse into DiffFileRawInfo value objects
+         end
+       end
      end
    end
    ```
 
-   Parser classes should:
-   - Be stateless (class methods only)
-   - Return value objects (e.g., `StashInfo`, `BranchInfo`)
+   Parser classes/modules should:
+   - Be stateless (class methods or module methods)
+   - Return value objects (e.g., `DiffFileNumstatInfo`, `BranchInfo`)
    - Be independently testable
    - Live outside the Commands namespace (they're reusable utilities)
 
 5. **Delegate**: Update related methods in `Git::Lib` to delegate to the new class(es).
-   Here is an example for the branch functionality in `Git::Lib`:
+   Here is an example pattern for facade methods in `Git::Lib`:
 
    ```ruby
+   # Example pattern (aspirational - specific classes/methods may vary)
    def branch_new(branch_name, options = {})
      result = Git::Commands::Branch::Create.new(self).call(branch_name, **options)
      # Facade builds rich return value from CommandLineResult
-     BranchInfo.from_create_output(result.stdout, branch_name)
+     # Using a Result factory method or Parser class
+     result.stdout  # Or parse into a value object as needed
    end
 
    def branch_delete(branch_name, options = {})
      result = Git::Commands::Branch::Delete.new(self).call(branch_name, **options)
-     # Facade parses output into result object
-     BranchDeleteResult.parse(result.stdout)
+     # Facade parses output into result object using existing parser
+     Git::BranchDeleteResult.parse(result.stdout)
    end
    ```
 
