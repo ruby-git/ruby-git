@@ -399,20 +399,25 @@ specific responsibilities:
    - Manages working directory, index, and repository references
    - Returns domain objects (Branch, Status, Diff, Log, etc.)
 
-2. **Git::Lib**: Low-level command execution
+2. **Git::Lib**: Low-level command execution (Facade/Adapter layer during migration)
    - Executes Git commands via `Git::CommandLine`
-   - Delegates to `Git::Commands::*` classes for argument building
-   - Parses Git command output
-   - Being incrementally migrated to delegate to `Git::Commands::*`
+   - Delegates to `Git::Commands::*` classes for command execution
+   - **Builds rich response objects** from `CommandLineResult` using Parser classes
+   - Responsible for pre-processing arguments and orchestrating command calls
+   - Being incrementally migrated; will eventually become `Git::Repository`
 
 3. **Git::Commands::*** (New Architecture): Command-specific logic
    - Each command class handles argument building via Arguments DSL
    - Translates Ruby options to git command-line flags
    - `#call` methods use keyword arguments (`**`) not options hashes
-   - `#call` SHOULD return meaningful value objects (e.g., `StashInfo`, `BranchInfo`)
-     rather than raw strings or booleans, enabling method chaining and richer APIs
+   - `#call` returns `Git::CommandLineResult` by default (not rich objects)
    - Located in `lib/git/commands/`
    - Unit tested with RSpec in `spec/git/commands/`
+
+   **Layer Responsibilities Summary**:
+   - **Commands**: Define git CLI API, bind arguments, execute command → return `CommandLineResult`
+   - **Parsers**: Transform stdout/stderr to structured data (e.g., `DiffParser`, `StashListParser`)
+   - **Facade (Git::Lib)**: Pre-process args, call commands, build rich objects using Parsers
 
 4. **Git::CommandLine**: Command execution layer
    - Builds Git command arrays with proper escaping
@@ -2260,11 +2265,18 @@ classes using a "Strangler Fig" pattern.
    - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.bind`
 
    **Return Value Convention:**
-   - `#call` **SHOULD** return meaningful value objects (e.g., `StashInfo`, `BranchInfo`)
-     rather than raw strings or booleans
-   - This enables method chaining and provides richer APIs for consumers
-   - Commands with no meaningful output (e.g., `git add`) **SHOULD** return the
-     `Git::CommandLineResult` from `@execution_context.command`
+   - `#call` **SHOULD** return `Git::CommandLineResult` by default
+   - Rich objects (e.g., `StashInfo`, `BranchInfo`, `BranchDeleteResult`) are built
+     by the **Facade layer** (`Git::Lib`), not by commands
+   - Commands simply execute and return the raw result; parsing and object building
+     is handled by Parser classes and Result factories in the facade
+
+   **When to Create Parser Classes:**
+   - Create a Parser class when command output needs to be transformed into
+     structured data (e.g., `DiffParser`, `StashListParser`)
+   - Parsers are stateless (class methods), return value objects, and live in
+     `lib/git/` (outside Commands namespace)
+   - Inline parsing is acceptable for trivial output (e.g., single line, simple split)
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
 
@@ -2275,10 +2287,25 @@ classes using a "Strangler Fig" pattern.
    ```ruby
    # Git::Lib may accept an options hash for backward compatibility
    def <command_name>(paths = '.', options = {})
-     # Convert to splat + keyword arguments when calling the command class
-     Git::Commands::<CommandName>.new(self).call(*Array(paths), **options)
+     # Execute command - returns CommandLineResult
+     result = Git::Commands::<CommandName>.new(self).call(*Array(paths), **options)
+
+     # Facade builds rich response object if needed
+     # Option A: Use Parser class for complex output
+     <CommandName>Parser.parse(result.stdout)
+
+     # Option B: Use Result factory method
+     <CommandName>Result.from(result)
+
+     # Option C: Return raw result for simple commands
+     result
    end
    ```
+
+   **Key Principle**: The facade layer (`Git::Lib`) is responsible for:
+   - Calling the command (which returns `CommandLineResult`)
+   - Building rich response objects using Parser classes or Result factories
+   - Maintaining backward compatibility with the legacy interface
 
 2. **Add the require statement** at the top of `lib/git/lib.rb`:
 

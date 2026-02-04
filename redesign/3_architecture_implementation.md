@@ -80,16 +80,48 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
    **Important**: Keep empty comment lines between each yard tag
 
+   **Note on Return Types**: Commands return `Git::CommandLineResult` by default.
+   If the command output needs to be parsed into structured data, create a Parser
+   class (see step 4a below).
+
+4a. **Create Parser Classes** (when output needs transformation):
+
+   If the command produces output that needs to be parsed into structured data,
+   create a Parser class in `lib/git/` following existing patterns:
+
+   ```ruby
+   # lib/git/stash_list_parser.rb
+   class Git::StashListParser
+     def self.parse(output)
+       output.lines.map { |line| parse_line(line) }
+     end
+
+     def self.parse_line(line)
+       # Parse line into StashInfo value object
+     end
+   end
+   ```
+
+   Parser classes should:
+   - Be stateless (class methods only)
+   - Return value objects (e.g., `StashInfo`, `BranchInfo`)
+   - Be independently testable
+   - Live outside the Commands namespace (they're reusable utilities)
+
 5. **Delegate**: Update related methods in `Git::Lib` to delegate to the new class(es).
    Here is an example for the branch functionality in `Git::Lib`:
 
    ```ruby
    def branch_new(branch_name, options = {})
-     Git::Commands::Branch.new(self).call(branch_name, **options)
+     result = Git::Commands::Branch::Create.new(self).call(branch_name, **options)
+     # Facade builds rich return value from CommandLineResult
+     BranchInfo.from_create_output(result.stdout, branch_name)
    end
 
    def branch_delete(branch_name, options = {})
-     Git::Commands::Branch.new(self).call(branch_name, delete: true, **options)
+     result = Git::Commands::Branch::Delete.new(self).call(branch_name, **options)
+     # Facade parses output into result object
+     BranchDeleteResult.parse(result.stdout)
    end
    ```
 
@@ -97,9 +129,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
    but they must convert it to keyword arguments when calling the command class
    using `**options`.
 
-   Note: `Git::Lib` methods must remain backward compatible. These `Git::Lib` methods
-   may need to translate the output from the newly implement comment to the legacy return
-   value of the `Git::Lib` method.
+   Note: `Git::Lib` methods must remain backward compatible. The facade layer is
+   responsible for building rich response objects from `CommandLineResult` using
+   Parser classes and Result factories.
 
 6. **Verify**:
    - `bundle exec rspec spec/git/commands/branch_spec.rb` — new tests pass (branch example)
