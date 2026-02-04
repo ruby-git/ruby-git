@@ -53,9 +53,36 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     **Renaming**: `Git::Base` will be renamed to `Git::Repository`. This name is more
     descriptive and intuitive.
 
-    **Responsibility**: It will serve as a clean, high-level facade for all common
-    git operations. Its methods will be simple, one-line calls that delegate the
-    actual work to an appropriate command object.
+    **Responsibility**: The facade layer is responsible for:
+
+    1. **Managing the Execution Context**: Holding and providing access to the
+       configured execution context for command execution.
+
+    2. **Pre-processing Arguments**: Transforming user-provided arguments to fit the
+       command API (e.g., path expansion, Ruby-idiomatic defaults).
+
+    3. **Collecting Data**: Gathering additional information before or after command
+       execution that may be needed for building response objects.
+
+    4. **Calling Commands**: Invoking one or more `Git::Commands::*` classes as
+       needed to fulfill the user's request.
+
+    5. **Building Rich Response Objects**: Using Parser classes (e.g., `DiffParser`)
+       and Result class factory methods (e.g., `BranchDeleteResult.from(...)`) to
+       assemble meaningful return values from raw command output.
+
+    **Facade as Orchestration Layer**: The facade layer acts as glue and orchestration
+    code. It coordinates the flow between components but contains minimal domain logic
+    itself. The actual implementation work is delegated to specialized components:
+
+    - **Commands** → handle argument building and execution, return `CommandLineResult`
+    - **Parsers** → transform stdout/stderr into structured data
+    - **Result classes** → assemble final objects via factory methods
+
+    This separation means the facade's role is to *wire things together* (which
+    component to call, in what order, with what inputs) rather than *implement
+    behavior* (how to parse output, which are arguments are valid). This keeps each
+    component focused, independently testable, and reusable.
 
     **Scalability**: To prevent this class from growing too large, its methods will
     be organized into logical modules (e.g., `Git::Repository::Branching`,
@@ -68,8 +95,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     This is the low-level, private engine for running commands.
 
-    **Renaming**: `Git::Lib` will be renamed to `Git::ExecutionContext` (as an
-    abstract base class).
+    **Renaming**: `Git::Lib` will be renamed to `Git::ExecutionContext`.
 
     **Responsibility**: Its purpose is to provide a configured `command` method for
     executing git commands. This method wraps `Git::CommandLine` with essential
@@ -98,24 +124,99 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     implement environment-specific configuration (paths, environment variables) to
     create properly configured command execution contexts.
 
-3. The Logic Layer: Git::Commands
+3. The Command Layer: Git::Commands
 
-    This is where all the command-specific implementation details will live.
+    This layer provides a structured interface to individual git commands.
 
     **New Classes**: For each git operation, a new command class will be created
     within the `Git::Commands` namespace (e.g., `Git::Commands::Commit`,
     `Git::Commands::Diff`).
 
-    **Dual Responsibility**: Each command class will be responsible for:
+    **Command Responsibilities**: Each command class is responsible for:
 
-    1. **Building Arguments**: Translating Ruby options into the specific
-       command-line flags and arguments that git expects. Command parameters should
-       generally match the underlying git command's interface to keep this layer thin
-       and transparent.
+    1. **Defining the Git CLI API**: Using `Arguments.define` to declaratively
+       specify the command's accepted arguments. Command parameters should generally
+       match the underlying git command's interface to keep this layer thin and
+       transparent.
 
-    2. **Parsing Output**: Taking the raw string output from
-       `ExecutionContext#command` and converting it into rich, structured Ruby
-       objects.
+    2. **Binding Arguments**: Exposing bound arguments publicly via the `#bind`
+       method, allowing the facade layer to access argument values when needed for
+       orchestration or result building.
+
+    3. **Executing the Command**: Running the git command via the execution context
+       with any special setup/tweaking for expected results (e.g.,
+       `raise_on_failure: false` for partial failures), returning a
+       `Git::CommandLineResult`.
+
+    **Note**: Parsing output and building rich response objects is **not** a command
+    responsibility. That work belongs in separate Parser classes (e.g., `DiffParser`)
+    and Result class factory methods, orchestrated by the Facade layer.
+
+    **Commands::Base Pattern**: To standardize command implementation, all command
+    classes inherit from a common base class:
+
+    ```ruby
+    module Git
+      module Commands
+        class Base
+          class << self
+            attr_reader :args_definition
+            def arguments(&block)
+              @args_definition = Arguments.define(&block).freeze
+            end
+          end
+
+          attr_reader :args
+
+          def initialize(execution_context)
+            @execution_context = execution_context
+          end
+
+          def bind(*, **)
+            @args = self.class.args_definition.bind(*, **)
+            self
+          end
+
+          def call
+            @execution_context.command(*@args)
+          end
+        end
+      end
+    end
+    ```
+
+    This pattern provides:
+
+    - Declarative argument definition via the class-level `arguments` DSL
+    - Consistent `bind`/`call` interface across all commands
+    - Customizable execution via `call` override (e.g., suppressing errors for
+      commands where non-zero exit codes are expected, like `git diff`)
+
+    **Method Return Values**:
+
+    - `#bind(*, **)` → Returns `self` for method chaining
+    - `#args` → Returns the bound arguments object with accessor methods for each
+      argument defined in the DSL (e.g., `args.directory`, `args.force`)
+    - `#call` → Returns `Git::CommandLineResult` (stdout, stderr, status)
+
+    **Bind/Call Pattern for Facade Access**: The facade layer can access bound
+    arguments for orchestration and result building:
+
+    ```ruby
+    # Command defines its arguments
+    class Clone < Base
+      arguments do
+        positional :url
+        positional :directory
+        flag :bare
+      end
+    end
+
+    # Facade usage - second positional maps to args.directory
+    cmd = Git::Commands::Clone.new(ctx).bind(url, dir, bare: true)
+    result = cmd.call
+    cmd.args.directory  # => dir (accessible for result building)
+    ```
 
     **Migration Strategy: Git::Lib as Adapter Layer**
 
@@ -138,6 +239,10 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     - **Clean Command Classes**: `Git::Commands::*` classes remain free of legacy
       baggage with a consistent, modern API.
 
+    - **Result Building**: The adapter layer is responsible for transforming
+      `CommandLineResult` into rich response objects using Parser classes and Result
+      factories. Commands return raw results; adapters build domain objects.
+
     Once all commands are migrated and deprecation periods end, the adapter logic can
     be simplified or moved to the new facade layer (`Git::Repository`).
 
@@ -150,16 +255,16 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
       flag :force                    # --force when true
       flag :all                      # --all when true
       value :branch                  # --branch <value>
-      multi_value :config            # --config <v1> --config <v2>
-      negatable_flag :single_branch  # --single-branch / --no-single-branch
+      value :config, multi_valued: true  # --config <v1> --config <v2>
+      flag :single_branch, negatable: true  # --single-branch / --no-single-branch
       custom(:depth) { |v| ['--depth', v.to_i] }
       positional :paths, variadic: true, separator: '--'
     end
     ```
 
-    The DSL supports flags, values, multi-values, negatable flags, custom
-    transformations, static flags, metadata (options not passed to git), and
-    positional arguments with optional separators.
+    The DSL supports several option types (`flag`, `value`, `flag_or_value`, `static`,
+    `custom`, `metadata`) and positional arguments, each with various modifiers. See
+    [Git::Commands::Arguments](../lib/git/commands/arguments.rb) for full documentation.
 
     **Interface Convention**: The `#call` signature SHOULD use anonymous variadic
     arguments when possible. Arguments MAY be named when needed to inspect or manipulate
@@ -183,19 +288,36 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     The facade layer (`Git::Base`, `Git::Lib`) handles translation from the public API
     (which may accept single values or arrays) using `*Array(paths)`.
 
-    **Return Value Convention**: The `#call` method SHOULD return meaningful,
-    structured objects rather than raw strings or booleans. This enables method
-    chaining and provides richer APIs for consumers. For example:
+    **Return Value Convention**: The `#call` method returns `Git::CommandLineResult`
+    by default. This is the standard return type for commands, containing stdout,
+    stderr, and status information.
 
-    - `Git::Commands::Stash::Push#call` returns a `StashInfo` object, allowing
-      callers to immediately access the stash's SHA, message, index, etc.
-    - `Git::Commands::Branch::Create#call` returns a `BranchInfo` object with
-      the branch name and commit SHA.
-    - Commands that produce no meaningful output (e.g., `git add`) SHOULD return
-      the `Git::CommandLineResult` from `@execution_context.command`.
+    **Important**: Rich objects (`StashInfo`, `BranchInfo`, `BranchDeleteResult`,
+    etc.) are built by the **Facade layer** (currently `Git::Lib`, eventually
+    `Git::Repository`), not by commands. The facade layer uses:
 
-    This convention ensures the command layer produces value objects that can be
-    consumed directly or wrapped by domain objects in the facade layer.
+    - **Parser classes** (e.g., `DiffParser`, `StashListParser`) to transform raw
+      stdout/stderr into structured data
+    - **Result class factory methods** (e.g., `BranchDeleteResult.from(...)`) to
+      assemble final objects from parsed data
+
+    This separation keeps commands focused on execution and the facade responsible
+    for building meaningful return values:
+
+    ```ruby
+    # Command layer: returns CommandLineResult
+    class Git::Commands::Stash::List
+      def call(*, **)
+        @execution_context.command('stash', 'list', *ARGS.bind(*, **))
+      end
+    end
+
+    # Facade layer: builds rich objects
+    def stashes
+      result = Git::Commands::Stash::List.new(self).call
+      StashListParser.parse(result.stdout).map { |info| Stash.new(self, info) }
+    end
+    ```
 
     **Naming Convention for Return Types**: Use the `-Info` suffix for data objects
     representing git entities (e.g., `TagInfo`, `BranchInfo`, `StashInfo`), and use
