@@ -2243,7 +2243,8 @@ classes using a "Strangler Fig" pattern.
        class <CommandName>
          ARGS = Arguments.define do
            # Define arguments using the DSL
-           # For variadic positional: positional :paths, variadic: true
+           # For repeatable operand:
+           operand :paths, repeatable: true
          end.freeze
 
          def initialize(execution_context)
@@ -2262,7 +2263,7 @@ classes using a "Strangler Fig" pattern.
    **Method Signature Convention:**
    - **SHOULD** use anonymous `def call(*, **)` and splat `ARGS.bind(*, **)` directly
    - **MAY** assign `bound_args = ARGS.bind(*, **)` when you need to access argument values (e.g., `bound_args.dirstat`)
-   - Note: defaults defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied automatically by `ARGS.bind`
+   - Note: defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied automatically by `ARGS.bind`
 
    **Return Value Convention:**
    - `#call` **SHOULD** return `Git::CommandLineResult` by default

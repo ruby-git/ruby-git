@@ -417,9 +417,9 @@ module Git
     class Add
       # Define arguments using the Arguments DSL
       ARGS = Arguments.define do
-        flag :all
-        flag :force
-        positional :paths, variadic: true, default: ['.'], separator: '--'
+        flag_option :all
+        flag_option :force
+        operand :paths, repeatable: true, default: ['.'], separator: '--'
       end
 
       def initialize(execution_context)
@@ -447,7 +447,7 @@ end
 ```
 
 **Method Signature Convention**: The `#call` signature SHOULD, if possible, use
-anonymous variadic arguments for both positional and keyword arguments:
+anonymous repeatable arguments for both positional and keyword arguments:
 
 ```ruby
 def call(*, **)
@@ -457,7 +457,7 @@ end
 
 The `#call` method MAY assign `bound_args = ARGS.bind(*, **)` when you need to
 access argument values (e.g., `bound_args.dirstat`). Note that default values
-defined in the DSL (e.g., `positional :paths, default: ['.']`) are applied
+defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
 automatically by `ARGS.bind`, so manual default checking is usually unnecessary.
 
 Specific arguments MAY be extracted when the command needs to inspect or manipulate

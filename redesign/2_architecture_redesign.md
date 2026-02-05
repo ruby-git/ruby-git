@@ -263,10 +263,10 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
       flag :force                    # --force when true
       flag :all                      # --all when true
       value :branch                  # --branch <value>
-      value :config, multi_valued: true  # --config <v1> --config <v2>
+      value :config, repeatable: true  # --config <v1> --config <v2>
       flag :single_branch, negatable: true  # --single-branch / --no-single-branch
       custom(:depth) { |v| ['--depth', v.to_i] }
-      positional :paths, variadic: true, separator: '--'
+      positional :paths, repeatable: true, separator: '--'
     end
     ```
 
@@ -274,7 +274,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     `custom`, `metadata`) and positional arguments, each with various modifiers. See
     [Git::Commands::Arguments](../lib/git/commands/arguments.rb) for full documentation.
 
-    **Interface Convention**: The `#call` signature SHOULD use anonymous variadic
+    **Interface Convention**: The `#call` signature SHOULD use anonymous repeatable
     arguments when possible. Arguments MAY be named when needed to inspect or manipulate
     them. Note that defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
     are applied automatically by `ARGS.bind`, so manual default checking is usually
