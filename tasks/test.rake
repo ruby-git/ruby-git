@@ -13,7 +13,4 @@ task :test do
 end
 
 desc 'Run all tests (TestUnit and RSpec)'
-task :test_all do
-  Rake::Task[:test].invoke
-  Rake::Task[:spec].invoke if Rake::Task.task_defined?(:spec)
-end
+task test_all: %i[test spec]
