@@ -38,27 +38,27 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'checkout'
-          flag %i[force f], args: '--force'
-          flag %i[merge m], args: '--merge'
-          flag %i[detach d], args: '--detach'
+          literal 'checkout'
+          flag_option %i[force f], args: '--force'
+          flag_option %i[merge m], args: '--merge'
+          flag_option %i[detach d], args: '--detach'
 
           # Branch creation options (mutually exclusive)
           # These use `value` (not `value :name, inline: true`) because git expects: -b <branch>, not -b=<branch>
-          value %i[new_branch b], args: '-b'
-          value %i[new_branch_force B], args: '-B'
-          value :orphan, args: '--orphan'
+          value_option %i[new_branch b], args: '-b'
+          value_option %i[new_branch_force B], args: '-B'
+          value_option :orphan, args: '--orphan'
 
           # Tracking options
-          flag_or_value :track, negatable: true, inline: true
+          flag_or_value_option :track, negatable: true, inline: true
 
           # Other options
-          flag :guess, negatable: true
-          flag :ignore_other_worktrees, args: '--ignore-other-worktrees'
-          flag :recurse_submodules, negatable: true
+          flag_option :guess, negatable: true
+          flag_option :ignore_other_worktrees, args: '--ignore-other-worktrees'
+          flag_option :recurse_submodules, negatable: true
 
           # Positional arguments
-          positional :branch
+          operand :branch
         end.freeze
 
         # Initialize the Branch command

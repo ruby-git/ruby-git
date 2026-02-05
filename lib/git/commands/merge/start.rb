@@ -37,43 +37,43 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'merge'
+          literal 'merge'
           # Always suppress editor (non-interactive use)
-          static '--no-edit'
+          literal '--no-edit'
 
           # Commit behavior
-          flag :commit, negatable: true
-          flag :squash, args: '--squash'
+          flag_option :commit, negatable: true
+          flag_option :squash, args: '--squash'
 
           # Fast-forward behavior
-          flag :ff, negatable: true
-          flag :ff_only, args: '--ff-only'
+          flag_option :ff, negatable: true
+          flag_option :ff_only, args: '--ff-only'
 
           # Message options
-          value %i[message m], args: '-m'
-          value %i[file F], args: '-F'
-          value :into_name, inline: true, args: '--into-name'
+          value_option %i[message m], args: '-m'
+          value_option %i[file F], args: '-F'
+          value_option :into_name, inline: true, args: '--into-name'
 
           # Strategy options
-          value %i[strategy s], args: '-s'
-          value %i[strategy_option X], args: '-X', multi_valued: true
+          value_option %i[strategy s], args: '-s'
+          value_option %i[strategy_option X], args: '-X', repeatable: true
 
           # Verification
-          flag :verify, negatable: true
-          flag :verify_signatures, negatable: true
-          flag :gpg_sign, negatable: true
+          flag_option :verify, negatable: true
+          flag_option :verify_signatures, negatable: true
+          flag_option :gpg_sign, negatable: true
 
           # History
-          flag :allow_unrelated_histories, negatable: true
-          flag :rerere_autoupdate, negatable: true
+          flag_option :allow_unrelated_histories, negatable: true
+          flag_option :rerere_autoupdate, negatable: true
 
           # Other
-          flag :autostash, negatable: true
-          flag :signoff, negatable: true
-          flag :log, negatable: true
+          flag_option :autostash, negatable: true
+          flag_option :signoff, negatable: true
+          flag_option :log, negatable: true
 
           # Positional: commits to merge (variadic, required)
-          positional :commits, variadic: true, required: true
+          operand :commits, repeatable: true, required: true
         end.freeze
 
         # Initialize the Merge::Start command

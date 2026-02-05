@@ -38,18 +38,18 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'tag'
-          flag %i[annotate a]
-          flag %i[sign s], negatable: true
-          value %i[local_user u], inline: true
-          flag %i[force f]
-          flag :create_reflog
-          value %i[message m], inline: true
-          value %i[file F], inline: true
-          key_value :trailer, key_separator: ': '
-          value :cleanup, inline: true
-          positional :tag_name, required: true
-          positional :commit
+          literal 'tag'
+          flag_option %i[annotate a]
+          flag_option %i[sign s], negatable: true
+          value_option %i[local_user u], inline: true
+          flag_option %i[force f]
+          flag_option :create_reflog
+          value_option %i[message m], inline: true
+          value_option %i[file F], inline: true
+          key_value_option :trailer, key_separator: ': '
+          value_option :cleanup, inline: true
+          operand :tag_name, required: true
+          operand :commit
         end.freeze
 
         # Initialize the Create command

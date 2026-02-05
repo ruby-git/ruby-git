@@ -18,19 +18,19 @@ module Git
       class Raw
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'diff'
-          static '--raw'
-          static '--numstat'
-          static '--shortstat'
-          static '-M'
-          flag %i[cached staged]
-          flag :merge_base
-          flag :no_index
-          flag :find_copies, args: '-C'
-          flag_or_value :dirstat, inline: true
-          positional :commit1
-          positional :commit2
-          value :pathspecs, positional: true, separator: '--', multi_valued: true
+          literal 'diff'
+          literal '--raw'
+          literal '--numstat'
+          literal '--shortstat'
+          literal '-M'
+          flag_option %i[cached staged]
+          flag_option :merge_base
+          flag_option :no_index
+          flag_option :find_copies, args: '-C'
+          flag_or_value_option :dirstat, inline: true
+          operand :commit1
+          operand :commit2
+          value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
         end.freeze
 
         # Creates a new Raw command instance

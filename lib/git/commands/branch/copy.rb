@@ -37,11 +37,11 @@ module Git
         # This matches the git CLI: `git branch -c [<old-branch>] <new-branch>`
         #
         ARGS = Arguments.define do
-          static 'branch'
-          static '--copy'
-          flag %i[force f]
-          positional :old_branch
-          positional :new_branch, required: true
+          literal 'branch'
+          literal '--copy'
+          flag_option %i[force f]
+          operand :old_branch
+          operand :new_branch, required: true
         end.freeze
 
         # Initialize the Copy command

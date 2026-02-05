@@ -23,9 +23,9 @@ module Git
       class Drop
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'drop'
-          positional :stash
+          literal 'stash'
+          literal 'drop'
+          operand :stash
         end.freeze
 
         # Creates a new Drop command instance

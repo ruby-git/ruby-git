@@ -42,11 +42,11 @@ module Git
       class Delete
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'branch'
-          static '--delete'
-          flag %i[force f], args: '--force'
-          flag %i[remotes r], args: '--remotes'
-          positional :branch_names, variadic: true, required: true
+          literal 'branch'
+          literal '--delete'
+          flag_option %i[force f], args: '--force'
+          flag_option %i[remotes r], args: '--remotes'
+          operand :branch_names, repeatable: true, required: true
         end.freeze
 
         # Regex to parse successful deletion lines from stdout

@@ -286,8 +286,6 @@ module Git
                                required: required, allow_nil: allow_nil)
       end
 
-      alias flag flag_option
-
       # Define a valued option (--flag value as separate arguments)
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
@@ -298,7 +296,6 @@ module Git
       #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
       # @param as_operand [Boolean] when true, outputs value as operand (positional argument) without flag
       #   (default: false). Cannot be combined with inline:.
-      # @param positional [Boolean] DEPRECATED: Use as_operand: instead. Alias for as_operand:.
       # @param separator [String, nil] separator string to insert before values when as_operand: true
       #   (e.g., '--' for pathspec separator). Only valid with as_operand: true.
       # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
@@ -307,7 +304,6 @@ module Git
       # @param repeatable [Boolean] whether to allow multiple values. When true, accepts an array
       #   of values and repeats the flag for each (e.g., --flag v1 --flag v2). A single value or nil
       #   is also accepted.
-      # @param multi_valued [Boolean] DEPRECATED: Use repeatable: instead. Alias for repeatable:.
       # @param required [Boolean] when true, the option key must be present in the provided options hash.
       #   Raises ArgumentError if the key is missing. Defaults to false.
       # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
@@ -355,21 +351,15 @@ module Git
       #   # Raises ArgumentError if nil: build(message: nil)
       #   # Raises ArgumentError if not provided: build()
       #
-      def value_option(names, args: nil, type: nil, inline: false, as_operand: false, positional: nil, separator: nil,
-                       allow_empty: false, repeatable: false, multi_valued: nil, required: false, allow_nil: true)
-        # Support both as_operand: and positional: (deprecated) for backward compatibility
-        effective_as_operand = as_operand || positional || false
-        # Support both repeatable: and multi_valued: (deprecated) for backward compatibility
-        effective_repeatable = repeatable || multi_valued || false
-        validate_value_modifiers!(names, inline, effective_as_operand, separator)
+      def value_option(names, args: nil, type: nil, inline: false, as_operand: false, separator: nil,
+                       allow_empty: false, repeatable: false, required: false, allow_nil: true)
+        validate_value_modifiers!(names, inline, as_operand, separator)
 
-        option_type = determine_value_option_type(inline, effective_as_operand)
+        option_type = determine_value_option_type(inline, as_operand)
         register_option(names, type: option_type, args: args, expected_type: type, separator: separator,
-                               allow_empty: allow_empty, repeatable: effective_repeatable, required: required,
+                               allow_empty: allow_empty, repeatable: repeatable, required: required,
                                allow_nil: allow_nil)
       end
-
-      alias value value_option
 
       # Define a flag or value option
       #
@@ -423,8 +413,6 @@ module Git
         register_option(names, type: option_type, args: args, expected_type: type,
                                required: required, allow_nil: allow_nil)
       end
-
-      alias flag_or_value flag_or_value_option
 
       # Define a key-value option that can be specified multiple times
       #
@@ -486,8 +474,6 @@ module Git
                                required: required, allow_nil: allow_nil)
       end
 
-      alias key_value key_value_option
-
       # Define a literal string that is always included in the output
       #
       # Literals are output at their definition position (not grouped at the start).
@@ -515,8 +501,6 @@ module Git
         @ordered_definitions << { kind: :static, flag: flag_string }
       end
 
-      alias static literal
-
       # Define a custom option with a custom builder block
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
@@ -529,8 +513,6 @@ module Git
       def custom_option(names, required: false, allow_nil: true, &block)
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
       end
-
-      alias custom custom_option
 
       # Define a metadata option (for validation only, not included in command)
       #
@@ -577,9 +559,9 @@ module Git
       # Define an operand (positional argument in CLI terminology)
       #
       # Operands are mapped to values following Ruby method signature
-      # semantics. Required operands before a variadic are filled left-to-right,
-      # required operands after a variadic are filled from the end, and the
-      # variadic gets whatever remains in the middle.
+      # semantics. Required operands before a repeatable are filled left-to-right,
+      # required operands after a repeatable are filled from the end, and the
+      # repeatable gets whatever remains in the middle.
       #
       # @param name [Symbol] the operand name (used in error messages)
       # @param required [Boolean] whether the operand is required. For repeatable
@@ -588,7 +570,6 @@ module Git
       #   (can appear multiple times on the command line). Only one repeatable operand is
       #   allowed per definition; attempting to define a second will raise an
       #   ArgumentError.
-      # @param variadic [Boolean] DEPRECATED: Use repeatable: instead. Alias for repeatable:.
       # @param default [Object] the default value if not provided. For repeatable
       #   operands, this should be an array (e.g., `default: ['.']`).
       # @param separator [String, nil] separator string to insert before this
@@ -661,14 +642,10 @@ module Git
       #   # build(nil, 'file.rb')
       #   #   => ['--', 'file.rb']  (nil consumes slot but is omitted from output)
       #
-      def operand(name, required: false, repeatable: false, variadic: nil,
-                  default: nil, separator: nil, allow_nil: false)
-        effective_repeatable = repeatable || variadic || false
-        validate_single_repeatable!(name) if effective_repeatable
-        add_operand_definition(name, required, effective_repeatable, default, separator, allow_nil)
+      def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false)
+        validate_single_repeatable!(name) if repeatable
+        add_operand_definition(name, required, repeatable, default, separator, allow_nil)
       end
-
-      alias positional operand
 
       # Bind positionals and options, returning a Bound object with accessor methods
       #
@@ -763,17 +740,17 @@ module Git
       #
       # @param names [Symbol, Array<Symbol>] the option name(s)
       # @param inline [Boolean] whether inline: true was specified
-      # @param positional [Boolean] whether positional: true was specified
+      # @param as_operand [Boolean] whether as_operand: true was specified
       # @param separator [String, nil] separator string if specified
       # @raise [ArgumentError] if invalid modifier combination is used
       #
-      def validate_value_modifiers!(names, inline, positional, separator)
+      def validate_value_modifiers!(names, inline, as_operand, separator)
         primary = Array(names).first
-        raise ArgumentError, "inline: and positional: cannot both be true for :#{primary}" if inline && positional
+        raise ArgumentError, "inline: and as_operand: cannot both be true for :#{primary}" if inline && as_operand
 
-        return unless separator && !positional
+        return unless separator && !as_operand
 
-        raise ArgumentError, "separator: is only valid with positional: true for :#{primary}"
+        raise ArgumentError, "separator: is only valid with as_operand: true for :#{primary}"
       end
 
       # Determine the internal option type for flag_or_value based on negatable and inline modifiers
@@ -1697,10 +1674,6 @@ module Git
         end
       end
     end
-
-    # Backward compatibility alias for OperandAllocator
-    # @api private
-    PositionalAllocator = OperandAllocator
     # rubocop:enable Metrics/ParameterLists
   end
 end

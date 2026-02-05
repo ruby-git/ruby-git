@@ -41,18 +41,18 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'checkout'
-          flag %i[force f], args: '--force'
-          flag :ours, args: '--ours'
-          flag :theirs, args: '--theirs'
-          flag %i[merge m], args: '--merge'
-          value :conflict, inline: true, args: '--conflict'
-          flag :overlay, negatable: true
-          value :pathspec_from_file, inline: true, args: '--pathspec-from-file'
-          flag :pathspec_file_nul, args: '--pathspec-file-nul'
+          literal 'checkout'
+          flag_option %i[force f], args: '--force'
+          flag_option :ours, args: '--ours'
+          flag_option :theirs, args: '--theirs'
+          flag_option %i[merge m], args: '--merge'
+          value_option :conflict, inline: true, args: '--conflict'
+          flag_option :overlay, negatable: true
+          value_option :pathspec_from_file, inline: true, args: '--pathspec-from-file'
+          flag_option :pathspec_file_nul, args: '--pathspec-file-nul'
 
-          positional :tree_ish, required: true, allow_nil: true
-          positional :paths, variadic: true, separator: '--'
+          operand :tree_ish, required: true, allow_nil: true
+          operand :paths, repeatable: true, separator: '--'
         end.freeze
 
         # Initialize the Files command

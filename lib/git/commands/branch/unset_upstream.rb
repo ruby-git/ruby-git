@@ -30,9 +30,9 @@ module Git
         # The branch_name positional is optional; if omitted, git uses the current branch.
         #
         ARGS = Arguments.define do
-          static 'branch'
-          static '--unset-upstream'
-          positional :branch_name
+          literal 'branch'
+          literal '--unset-upstream'
+          operand :branch_name
         end.freeze
 
         # Initialize the UnsetUpstream command

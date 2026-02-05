@@ -26,10 +26,10 @@ module Git
       class Pop
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'pop'
-          flag :index
-          positional :stash
+          literal 'stash'
+          literal 'pop'
+          flag_option :index
+          operand :stash
         end.freeze
 
         # Creates a new Pop command instance

@@ -22,23 +22,23 @@ module Git
     class Clone
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'clone'
-        flag :bare
-        flag :recursive
-        flag :mirror
-        value :branch
-        value :filter
-        value %i[origin remote]
-        value :config, multi_valued: true
-        flag :single_branch, negatable: true, validator: ->(v) { [nil, true, false].include?(v) }
-        custom(:depth) { |v| ['--depth', v.to_i] }
+        literal 'clone'
+        flag_option :bare
+        flag_option :recursive
+        flag_option :mirror
+        value_option :branch
+        value_option :filter
+        value_option %i[origin remote]
+        value_option :config, repeatable: true
+        flag_option :single_branch, negatable: true, validator: ->(v) { [nil, true, false].include?(v) }
+        custom_option(:depth) { |v| ['--depth', v.to_i] }
         # Options handled by the command itself, not passed to git
         metadata :path
         metadata :timeout
         metadata :log
         metadata :git_ssh
-        positional :repository_url, required: true, separator: '--'
-        positional :directory
+        operand :repository_url, required: true, separator: '--'
+        operand :directory
       end.freeze
 
       # Initialize the Clone command

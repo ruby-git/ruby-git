@@ -21,8 +21,8 @@ module Git
       class Abort
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'merge'
-          static '--abort'
+          literal 'merge'
+          literal '--abort'
         end.freeze
 
         # Initialize the Merge::Abort command

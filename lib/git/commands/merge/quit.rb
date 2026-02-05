@@ -22,8 +22,8 @@ module Git
       class Quit
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'merge'
-          static '--quit'
+          literal 'merge'
+          literal '--quit'
         end.freeze
 
         # Initialize the Merge::Quit command

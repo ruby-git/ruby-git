@@ -36,14 +36,14 @@ module Git
       # in the final command line.
       #
       ARGS = Arguments.define do
-        static 'merge-base'
-        flag :octopus, args: '--octopus'
-        flag :independent, args: '--independent'
-        flag :fork_point, args: '--fork-point'
-        flag :all, args: '--all'
+        literal 'merge-base'
+        flag_option :octopus, args: '--octopus'
+        flag_option :independent, args: '--independent'
+        flag_option :fork_point, args: '--fork-point'
+        flag_option :all, args: '--all'
 
         # Positional: commits to find common ancestor(s) of
-        positional :commits, variadic: true, required: true
+        operand :commits, repeatable: true, required: true
       end.freeze
 
       # Initialize the MergeBase command

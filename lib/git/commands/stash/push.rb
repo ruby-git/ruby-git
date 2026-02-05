@@ -30,17 +30,17 @@ module Git
       class Push
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'push'
-          flag %i[patch p]
-          flag %i[staged S]
-          flag %i[keep_index k], negatable: true
-          flag %i[include_untracked u]
-          flag %i[all a]
-          value %i[message m], inline: true
-          value :pathspec_from_file, inline: true
-          flag :pathspec_file_nul
-          positional :pathspecs, variadic: true, separator: '--'
+          literal 'stash'
+          literal 'push'
+          flag_option %i[patch p]
+          flag_option %i[staged S]
+          flag_option %i[keep_index k], negatable: true
+          flag_option %i[include_untracked u]
+          flag_option %i[all a]
+          value_option %i[message m], inline: true
+          value_option :pathspec_from_file, inline: true
+          flag_option :pathspec_file_nul
+          operand :pathspecs, repeatable: true, separator: '--'
         end.freeze
 
         # Creates a new Push command instance

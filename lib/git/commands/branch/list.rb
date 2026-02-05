@@ -58,19 +58,19 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'branch'
-          static '--list'
-          static "--format=#{FORMAT_STRING}"
-          flag :all, args: '-a'
-          flag :remotes, args: '-r'
-          flag :ignore_case
-          value :sort, inline: true, multi_valued: true
-          flag_or_value :contains
-          flag_or_value :no_contains
-          flag_or_value :merged
-          flag_or_value :no_merged
-          value :points_at
-          positional :patterns, variadic: true
+          literal 'branch'
+          literal '--list'
+          literal "--format=#{FORMAT_STRING}"
+          flag_option :all, args: '-a'
+          flag_option :remotes, args: '-r'
+          flag_option :ignore_case
+          value_option :sort, inline: true, repeatable: true
+          flag_or_value_option :contains
+          flag_or_value_option :no_contains
+          flag_or_value_option :merged
+          flag_or_value_option :no_merged
+          value_option :points_at
+          operand :patterns, repeatable: true
         end.freeze
 
         # Initialize the List command

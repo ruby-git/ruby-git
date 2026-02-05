@@ -211,9 +211,9 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     # Command defines its arguments
     class Clone < Base
       arguments do
-        positional :url
-        positional :directory
-        flag :bare
+        operand :url
+        operand :directory
+        flag_option :bare
       end
     end
 
@@ -260,18 +260,18 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     ```ruby
     ARGS = Git::Commands::Arguments.define do
-      flag :force                    # --force when true
-      flag :all                      # --all when true
-      value :branch                  # --branch <value>
-      value :config, repeatable: true  # --config <v1> --config <v2>
-      flag :single_branch, negatable: true  # --single-branch / --no-single-branch
-      custom(:depth) { |v| ['--depth', v.to_i] }
-      positional :paths, repeatable: true, separator: '--'
+      flag_option :force                    # --force when true
+      flag_option :all                      # --all when true
+      value_option :branch                  # --branch <value>
+      value_option :config, repeatable: true  # --config <v1> --config <v2>
+      flag_option :single_branch, negatable: true  # --single-branch / --no-single-branch
+      custom_option(:depth) { |v| ['--depth', v.to_i] }
+      operand :paths, repeatable: true, separator: '--'
     end
     ```
 
-    The DSL supports several option types (`flag`, `value`, `flag_or_value`, `static`,
-    `custom`, `metadata`) and positional arguments, each with various modifiers. See
+    The DSL supports several option types (`flag_option`, `value_option`, `flag_or_value_option`, `literal`,
+    `custom_option`, `metadata`) and positional arguments, each with various modifiers. See
     [Git::Commands::Arguments](../lib/git/commands/arguments.rb) for full documentation.
 
     **Interface Convention**: The `#call` signature SHOULD use anonymous repeatable

@@ -33,16 +33,16 @@ module Git
       # for backward compatibility with existing tests.
       #
       ARGS = Arguments.define do
-        static 'commit'
-        flag %i[all add_all]
-        flag :allow_empty
-        flag :no_verify
-        flag :allow_empty_message
-        value :author, inline: true
-        value :message, inline: true, allow_empty: true
-        value :date, inline: true, type: String
-        flag :amend, args: ['--amend', '--no-edit']
-        flag_or_value :gpg_sign, negatable: true, inline: true
+        literal 'commit'
+        flag_option %i[all add_all]
+        flag_option :allow_empty
+        flag_option :no_verify
+        flag_option :allow_empty_message
+        value_option :author, inline: true
+        value_option :message, inline: true, allow_empty: true
+        value_option :date, inline: true, type: String
+        flag_option :amend, args: ['--amend', '--no-edit']
+        flag_or_value_option :gpg_sign, negatable: true, inline: true
       end.freeze
 
       # Initialize the Commit command

@@ -28,21 +28,21 @@ module Git
     class Fsck
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'fsck'
-        static '--no-progress'
-        flag :unreachable
-        flag :strict
-        flag :connectivity_only
-        flag :root
-        flag :tags
-        flag :cache
-        flag :no_reflogs
-        flag :lost_found
-        flag :dangling, negatable: true
-        flag :full, negatable: true
-        flag :name_objects, negatable: true
-        flag :references, negatable: true
-        positional :objects, variadic: true
+        literal 'fsck'
+        literal '--no-progress'
+        flag_option :unreachable
+        flag_option :strict
+        flag_option :connectivity_only
+        flag_option :root
+        flag_option :tags
+        flag_option :cache
+        flag_option :no_reflogs
+        flag_option :lost_found
+        flag_option :dangling, negatable: true
+        flag_option :full, negatable: true
+        flag_option :name_objects, negatable: true
+        flag_option :references, negatable: true
+        operand :objects, repeatable: true
       end.freeze
 
       # Pattern matchers for parsing fsck output
