@@ -5,9 +5,9 @@ require 'rake/clean'
 # Load all .rake files from tasks and its subdirectories.
 Dir.glob('tasks/**/*.rake').each { |r| load r }
 
-default_tasks  = %i[test spec:unit spec:integration rubocop]
-default_tasks += %i[yard yardstick:coverage yard:doctest] if Rake::Task.task_defined?(:yard)
-default_tasks += %i[build]
+default_tasks = %i[test spec:unit spec:integration rubocop]
+default_tasks << :yard if Rake::Task.task_defined?(:yard)
+default_tasks << :build
 
 task default: default_tasks
 
