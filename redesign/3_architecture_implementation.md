@@ -59,11 +59,11 @@ risk and allows for a gradual, controlled migration to the new architecture.
    ```ruby
    # Execute the git example command
    #
-   # @overload call(positional_arg, *variadic_args, **options)
+   # @overload call(operand_arg, *repeatable_args, **options)
    #
-   #   @param positional_arg [String] Description of the positional argument
+   #   @param operand_arg [String] Description of the operand (positional argument)
    #
-   #   @param variadic_args [Array<String>] Description of variadic arguments
+   #   @param repeatable_args [Array<String>] Description of repeatable arguments
    #
    #   @param options [Hash] command options
    #
@@ -294,7 +294,7 @@ easier testing. Allow the public API to diverge when it adds real value, but wit
 obscuring what's actually happening underneath.
 
 **Method Signature Convention**: The `#call` signature SHOULD, if possible, use
-anonymous variadic arguments for both positional and keyword arguments:
+anonymous repeatable arguments for both positional and keyword arguments:
 
 ```ruby
 # ✅ Preferred: anonymous forwarding with ARGS.bind
@@ -446,7 +446,7 @@ future work:
      flag :force
      positional :tree_ish
      static '--'
-     positional :paths, variadic: true
+     positional :paths, repeatable: true
    end
    # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
 
@@ -454,7 +454,7 @@ future work:
    ARGS = Arguments.define do
      static '--delete'
      flag %i[force f], args: '--force'
-     positional :branch_names, variadic: true, required: true
+     positional :branch_names, repeatable: true, required: true
    end
    # build('feature', force: true) => ['--delete', '--force', 'feature']
    ```
@@ -473,15 +473,15 @@ future work:
    The first symbol becomes the primary name used in documentation and error
    messages; subsequent symbols are aliases.
 
-10. **Consider variadic support in adapter methods when command supports it**
+10. **Consider repeatable support in adapter methods when command supports it**
 
-    When a command class supports variadic positional arguments (e.g., deleting
+    When a command class supports repeatable positional arguments (e.g., deleting
     multiple branches), consider whether the `Git::Lib` adapter should expose this
     capability:
 
     ```ruby
     # Command class supports multiple branches
-    def call(*, **)  # variadic positional
+    def call(*, **)  # repeatable positional
       @execution_context.command('branch', *ARGS.bind(*, **))
     end
 
@@ -490,7 +490,7 @@ future work:
       Git::Commands::Branch::Delete.new(self).call(branch, **options)
     end
 
-    # ✅ Adapter exposes variadic capability
+    # ✅ Adapter exposes repeatable capability
     def branch_delete(*branches, **options)
       options = { force: true }.merge(options)
       Git::Commands::Branch::Delete.new(self).call(*branches, **options)
@@ -600,7 +600,7 @@ future work:
     ```ruby
     ARGS = Arguments.define do
       positional :tree_ish, required: true, allow_nil: true
-      positional :paths, variadic: true, separator: '--'
+      positional :paths, repeatable: true, separator: '--'
     end
 
     # Restore from index (tree_ish intentionally nil)

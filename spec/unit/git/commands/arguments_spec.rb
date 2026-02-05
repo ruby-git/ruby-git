@@ -563,7 +563,7 @@ RSpec.describe Git::Commands::Arguments do
             end
           end.to raise_error(
             ArgumentError,
-            /only one variadic positional is allowed.*:sources is already variadic.*cannot add :paths/
+            /only one repeatable operand is allowed.*:sources is already repeatable.*cannot add :paths/
           )
         end
       end
@@ -1065,7 +1065,7 @@ RSpec.describe Git::Commands::Arguments do
           it 'rejects nil mixed within variadic values' do
             expect { args.bind('first', 'a', nil, 'b') }.to raise_error(
               ArgumentError,
-              /nil values are not allowed in variadic positional argument: rest/
+              /nil values are not allowed in repeatable positional argument: rest/
             )
           end
         end
@@ -1081,7 +1081,7 @@ RSpec.describe Git::Commands::Arguments do
           it 'rejects nil within variadic' do
             expect { args.bind('s1', nil, 's2', 'dest') }.to raise_error(
               ArgumentError,
-              /nil values are not allowed in variadic positional argument: sources/
+              /nil values are not allowed in repeatable positional argument: sources/
             )
           end
         end
@@ -1206,13 +1206,13 @@ RSpec.describe Git::Commands::Arguments do
 
       it 'rejects nil values with clear ArgumentError' do
         expect { args.bind('file1.rb', nil, 'file2.rb') }.to(
-          raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
+          raise_error(ArgumentError, /nil values are not allowed in repeatable positional argument: paths/)
         )
       end
 
       it 'rejects array containing nil values' do
         expect { args.bind(['file1.rb', nil, 'file2.rb']) }.to(
-          raise_error(ArgumentError, /nil values are not allowed in variadic positional argument: paths/)
+          raise_error(ArgumentError, /nil values are not allowed in repeatable positional argument: paths/)
         )
       end
 
@@ -2276,7 +2276,7 @@ RSpec.describe Git::Commands::Arguments do
         it 'raises an error when value is an array without multi_valued' do
           expect { args.bind(path: %w[file1.txt file2.txt]) }.to raise_error(
             ArgumentError,
-            /value_to_positional :path requires multi_valued: true to accept an array/
+            /value_to_positional :path requires repeatable: true to accept an array/
           )
         end
       end

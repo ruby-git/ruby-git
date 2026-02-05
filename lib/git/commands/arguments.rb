@@ -13,15 +13,15 @@ module Git
     #
     # This class enables declarative definition of git command arguments, handling:
     # - Option flags (boolean, valued, inline-valued)
-    # - Positional arguments (required, optional, variadic)
+    # - Operands (positional arguments: required, optional, repeatable)
     # - Validation (type checking, required options, conflicts)
     # - Argument building (converting Ruby values to CLI argument arrays)
     #
     # @example Defining arguments for a command
     #   ARGS = Git::Commands::Arguments.define do
-    #     flag :force
-    #     value :branch
-    #     positional :repository, required: true
+    #     flag_option :force
+    #     value_option :branch
+    #     operand :repository, required: true
     #   end
     #
     # @example Binding and building command-line arguments
@@ -32,7 +32,7 @@ module Git
     #
     # The class uses a two-phase approach:
     #
-    # 1. **Definition phase**: DSL methods ({#flag}, {#value}, {#positional}, etc.)
+    # 1. **Definition phase**: DSL methods ({#flag_option}, {#value_option}, {#operand}, etc.)
     #    record argument definitions in internal data structures.
     #
     # 2. **Bind phase**: {#bind} transforms Ruby values into a {Bound} object
@@ -42,10 +42,10 @@ module Git
     #
     # - +@ordered_definitions+: Array tracking all definitions in definition order
     # - +@option_definitions+: Hash mapping option names to their definitions
-    # - +@positional_definitions+: Array of positional argument definitions
+    # - +@operand_definitions+: Array of operand (positional argument) definitions
     # - +@alias_map+: Maps option aliases to their primary names
     # - +BUILDERS+: Hash of lambdas that convert values to CLI arguments by type
-    # - {PositionalAllocator}: Handles Ruby-like positional argument allocation
+    # - {OperandAllocator}: Handles Ruby-like operand allocation
     #
     # == Argument Ordering
     #
@@ -56,9 +56,9 @@ module Git
     #
     # @example Ordering example
     #   args = Arguments.define do
-    #     positional :ref
-    #     static '--'
-    #     positional :path
+    #     operand :ref
+    #     literal '--'
+    #     operand :path
     #   end
     #   args.bind('HEAD', 'file.txt').to_ary  # => ['HEAD', '--', 'file.txt']
     #
@@ -79,47 +79,48 @@ module Git
     # The `args:` parameter can override this automatic detection when needed.
     #
     # @example Short option detection
-    #   flag :f                          # true → '-f'
-    #   flag :force                      # true → '--force'
-    #   value :n, inline: true           # 3 → '-n3'
-    #   value :name, inline: true        # 'test' → '--name=test'
-    #   flag :f, negatable: true         # false → '--no-f'
-    #   flag_or_value :n, inline: true   # true → '-n', '5' → '-n5'
+    #   flag_option :f                          # true → '-f'
+    #   flag_option :force                      # true → '--force'
+    #   value_option :n, inline: true           # 3 → '-n3'
+    #   value_option :name, inline: true        # 'test' → '--name=test'
+    #   flag_option :f, negatable: true         # false → '--no-f'
+    #   flag_or_value_option :n, inline: true   # true → '-n', '5' → '-n5'
     #
     # @example Explicit override with args:
-    #   flag :f, args: '--force'         # true → '--force' (override short detection)
+    #   flag_option :f, args: '--force'         # true → '--force' (override short detection)
     #
     # == Option Types
     #
     # The DSL supports several option types with orthogonal modifiers:
     #
     # === Primary Option Types
-    # - {#flag} - Boolean flag (--flag when true, with `negatable: true` for --no-flag)
-    # - {#value} - Valued option (--flag value, with `inline: true` for --flag=value,
-    #   or `positional: true` for positional arguments)
-    # - {#flag_or_value} - Flag or value (--flag when true, --flag value when string,
+    # - {#flag_option} - Boolean flag (--flag when true, with `negatable: true` for --no-flag)
+    # - {#value_option} - Valued option (--flag value, with `inline: true` for --flag=value,
+    #   or `as_operand: true` for operands)
+    # - {#flag_or_value_option} - Flag or value (--flag when true, --flag value when string,
     #   with `inline: true` and/or `negatable: true` modifiers)
-    # - {#static} - Static flag always included
-    # - {#custom} - Custom option with builder block
+    # - {#key_value_option} - Key-value option that can be repeated (--trailer key=value)
+    # - {#literal} - Literal string always included in output
+    # - {#custom_option} - Custom option with builder block
     # - {#metadata} - Validation-only option (not included in command output)
     #
-    # {#value} supports a `multi_valued: true` parameter that allows the option to accept
-    # an array of values. This repeats the flag for each value (or outputs each as a
-    # positional argument when using `positional: true`):
+    # {#value_option} supports a `repeatable: true` parameter that allows the option to accept
+    # an array of values. This repeats the flag for each value (or outputs each as an
+    # operand when using `as_operand: true`):
     #
-    # @example Multi-valued options
-    #   value :config, multi_valued: true
+    # @example Repeatable options
+    #   value_option :config, repeatable: true
     #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
     #
-    #   value :sort, inline: true, multi_valued: true
+    #   value_option :sort, inline: true, repeatable: true
     #   # sort: ['refname', '-committerdate'] => ['--sort=refname', '--sort=-committerdate']
     #
-    #   value :pathspecs, positional: true, separator: '--', multi_valued: true
+    #   value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
     #   # pathspecs: ['file1.txt', 'file2.txt'] => ['--', 'file1.txt', 'file2.txt']
 
-    # @note For {#value}, `inline: true` and `positional: true` are mutually exclusive and
+    # @note For {#value_option}, `inline: true` and `as_operand: true` are mutually exclusive and
     #   will raise ArgumentError if used together. The `separator:` option is only valid
-    #   with `positional: true` and raises ArgumentError otherwise.
+    #   with `as_operand: true` and raises ArgumentError otherwise.
     #
     # == Common Option Parameters
     #
@@ -128,67 +129,67 @@ module Git
     #
     # - +required:+ - When true, the option key must be present in the provided opts.
     #   Raises ArgumentError if the key is missing.
-    #   Supported by: {#flag}, {#value}, {#flag_or_value}, {#custom}.
+    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#custom_option}.
     # - +allow_nil:+ - When false (with required: true), the value cannot be nil.
     #   Raises ArgumentError if a nil value is provided. Defaults to true.
     #   Supported by: same as +required:+.
     # - +type:+ - Validates the value is an instance of the specified class(es).
     #   Raises ArgumentError if type doesn't match.
-    #   Supported by: {#flag}, {#value}, {#flag_or_value}.
+    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
-    # Note: {#static} and {#metadata} do not support these validation parameters.
+    # Note: {#literal} and {#metadata} do not support these validation parameters.
     #
     # These parameters affect **output generation** (what CLI arguments are produced):
     #
     # - +args:+ - Custom flag string(s) to output instead of deriving from name.
-    # - +allow_empty:+ - ({#value} only) Include flag even for empty strings.
-    # - +multi_valued:+ - ({#value} only) Repeat flag for each array element.
+    # - +allow_empty:+ - ({#value_option} only) Include flag even for empty strings.
+    # - +repeatable:+ - ({#value_option} only) Repeat flag for each array element.
     #
     # @example Required option with non-nil value
-    #   value :upstream, inline: true, required: true, allow_nil: false
+    #   value_option :upstream, inline: true, required: true, allow_nil: false
     #   # build()                    => ArgumentError: Required options not provided: :upstream
     #   # build(upstream: nil)       => ArgumentError: Required options cannot be nil: :upstream
     #   # build(upstream: 'origin')  => ['--upstream=origin']
     #
     # @example Required option allowing nil (default)
-    #   value :branch, inline: true, required: true
+    #   value_option :branch, inline: true, required: true
     #   # build()                => ArgumentError: Required options not provided: :branch
     #   # build(branch: nil)     => []  (key present, nil value produces no output)
     #   # build(branch: 'main')  => ['--branch=main']
     #
-    # == Positional Arguments
+    # == Operands (Positional Arguments)
     #
-    # Positional arguments are mapped using Ruby-like semantics:
+    # Operands are mapped using Ruby-like semantics:
     #
-    # 1. Post-variadic required positionals are reserved first (from the end)
-    # 2. Pre-variadic positionals are filled with remaining values (required first, then optional)
-    # 3. Optional positionals (with defaults) get values only if extras are available
-    # 4. Variadic positional gets whatever is left in the middle
+    # 1. Post-repeatable required operands are reserved first (from the end)
+    # 2. Pre-repeatable operands are filled with remaining values (required first, then optional)
+    # 3. Optional operands (with defaults) get values only if extras are available
+    # 4. Repeatable operand gets whatever is left in the middle
     #
     # This matches Ruby's parameter binding behavior, including patterns like
     # `def foo(a = default, *rest, b)` where the required `b` is filled before optional `a`.
     #
-    # @example Simple positional (like `def foo(repo)`)
-    #   positional :repository, required: true
+    # @example Simple operand (like `def foo(repo)`)
+    #   operand :repository, required: true
     #
-    # @example Variadic positional (like `def foo(*paths)`)
-    #   positional :paths, variadic: true
+    # @example Repeatable operand (like `def foo(*paths)`)
+    #   operand :paths, repeatable: true
     #
     # @example git mv pattern (like `def mv(*sources, destination)`)
-    #   positional :sources, variadic: true, required: true
-    #   positional :destination, required: true
+    #   operand :sources, repeatable: true, required: true
+    #   operand :destination, required: true
     #   # build('src1', 'src2', 'dest') => ['src1', 'src2', 'dest']
     #
-    # == Nil Handling for Positionals
+    # == Nil Handling for Operands
     #
-    # Nil values have special meaning for positional arguments:
+    # Nil values have special meaning for operands:
     #
-    # - For non-variadic positionals: nil means "not provided" and is skipped
-    # - For variadic positionals: nil within the values is an error
+    # - For non-repeatable operands: nil means "not provided" and is skipped
+    # - For repeatable operands: nil within the values is an error
     # - Empty strings are valid and passed through to git
     #
-    # @example Skipping optional positional with nil
-    #   # positional :commit; positional :paths, variadic: true
+    # @example Skipping optional operand with nil
+    #   # operand :commit; operand :paths, repeatable: true
     #   build(nil, 'file1', 'file2')  # => ['file1', 'file2']
     #
     # == Type Validation
@@ -197,13 +198,13 @@ module Git
     # When validation fails, an ArgumentError is raised with a descriptive message.
     #
     # @example Single type validation
-    #   value :date, type: String, inline: true
+    #   value_option :date, type: String, inline: true
     #   # Valid: date: "2024-01-01"
     #   # Invalid: date: 12345
     #   #   => ArgumentError: The :date option must be a String, but was a Integer
     #
     # @example Multiple type validation (allows any of the specified types)
-    #   value :timeout, type: [Integer, Float], inline: true
+    #   value_option :timeout, type: [Integer, Float], inline: true
     #   # Valid: timeout: 30 or timeout: 30.5
     #   # Invalid: timeout: "30"
     #   #   => ArgumentError: The :timeout option must be a Integer or Float, but was a String
@@ -242,7 +243,7 @@ module Git
         @option_definitions = {}
         @alias_map = {} # Maps alias keys to primary keys
         @static_flags = []
-        @positional_definitions = []
+        @operand_definitions = []
         @conflicts = [] # Array of conflicting option pairs/groups
         @ordered_definitions = [] # Tracks all definitions in definition order
       end
@@ -262,28 +263,30 @@ module Git
       # @raise [ArgumentError] if inline: and positional: are both true
       # @raise [ArgumentError] if separator: is provided without positional: true
       #
-      # @example Basic flag
-      #   flag :force
+      # @example Basic flag option
+      #   flag_option :force
       #   # true  => --force
       #   # false => (nothing)
       #
-      # @example Negatable flag
-      #   flag :full, negatable: true
+      # @example Negatable flag option
+      #   flag_option :full, negatable: true
       #   # true  => --full
       #   # false => --no-full
       #
       # @example With type validation
-      #   flag :force, type: [TrueClass, FalseClass]
+      #   flag_option :force, type: [TrueClass, FalseClass]
       #
       # @example With required and allow_nil: false
-      #   flag :force, required: true, allow_nil: false
+      #   flag_option :force, required: true, allow_nil: false
       #   # Raises ArgumentError if nil or not provided
       #
-      def flag(names, args: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
+      def flag_option(names, args: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
         option_type = negatable ? :negatable_flag : :flag
         register_option(names, type: option_type, args: args, expected_type: type, validator: validator,
                                required: required, allow_nil: allow_nil)
       end
+
+      alias flag flag_option
 
       # Define a valued option (--flag value as separate arguments)
       #
@@ -292,73 +295,81 @@ module Git
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
       # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
-      #   --flag value as separate arguments (default: false). Cannot be combined with positional:.
-      # @param positional [Boolean] when true, outputs value as positional argument without flag
+      #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
+      # @param as_operand [Boolean] when true, outputs value as operand (positional argument) without flag
       #   (default: false). Cannot be combined with inline:.
-      # @param separator [String, nil] separator string to insert before values when positional: true
-      #   (e.g., '--' for pathspec separator). Only valid with positional: true.
+      # @param positional [Boolean] DEPRECATED: Use as_operand: instead. Alias for as_operand:.
+      # @param separator [String, nil] separator string to insert before values when as_operand: true
+      #   (e.g., '--' for pathspec separator). Only valid with as_operand: true.
       # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
       #   When false (default), empty strings are skipped entirely. When true, the flag and empty
       #   value are included in the output.
-      # @param multi_valued [Boolean] whether to allow multiple values. When true, accepts an array
+      # @param repeatable [Boolean] whether to allow multiple values. When true, accepts an array
       #   of values and repeats the flag for each (e.g., --flag v1 --flag v2). A single value or nil
       #   is also accepted.
+      # @param multi_valued [Boolean] DEPRECATED: Use repeatable: instead. Alias for repeatable:.
       # @param required [Boolean] when true, the option key must be present in the provided options hash.
       #   Raises ArgumentError if the key is missing. Defaults to false.
       # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
       #   Raises ArgumentError if a nil value is provided. Defaults to true.
       # @return [void]
       #
-      # @example Basic value
-      #   value :branch
+      # @example Basic value option
+      #   value_option :branch
       #   # branch: 'main' => ['--branch', 'main']
       #
-      # @example Inline value
-      #   value :format, inline: true
+      # @example Inline value option
+      #   value_option :format, inline: true
       #   # format: 'short' => ['--format=short']
       #
-      # @example Positional value
-      #   value :paths, positional: true, multi_valued: true, separator: '--'
+      # @example Operand value (outputs as positional argument)
+      #   value_option :paths, as_operand: true, repeatable: true, separator: '--'
       #   # paths: ['file.txt'] => ['--', 'file.txt']
       #
       # @example With type validation
-      #   value :branch, type: String
+      #   value_option :branch, type: String
       #
       # @example With allow_empty
-      #   value :message, allow_empty: true
+      #   value_option :message, allow_empty: true
       #   # message: ""     => ['--message', '']
       #   # message: "text" => ['--message', 'text']
       #
-      #   value :message  # allow_empty defaults to false
+      #   value_option :message  # allow_empty defaults to false
       #   # message: ""     => [] (skipped)
       #   # message: "text" => ['--message', 'text']
       #
-      # @example With multi_valued
-      #   value :config, multi_valued: true
+      # @example With repeatable
+      #   value_option :config, repeatable: true
       #   # config: 'a=b'          => ['--config', 'a=b']
       #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
       #   # config: nil            => []
       #
       # @example With required
-      #   value :message, required: true
+      #   value_option :message, required: true
       #   # Must be provided: build(message: 'text') or build(message: nil)
       #   # Raises ArgumentError if not provided: build()
       #
       # @example With required and allow_nil: false
-      #   value :message, required: true, allow_nil: false
+      #   value_option :message, required: true, allow_nil: false
       #   # Must be provided with non-nil value: build(message: 'text')
       #   # Raises ArgumentError if nil: build(message: nil)
       #   # Raises ArgumentError if not provided: build()
       #
-      def value(names, args: nil, type: nil, inline: false, positional: false, separator: nil,
-                allow_empty: false, multi_valued: false, required: false, allow_nil: true)
-        validate_value_modifiers!(names, inline, positional, separator)
+      def value_option(names, args: nil, type: nil, inline: false, as_operand: false, positional: nil, separator: nil,
+                       allow_empty: false, repeatable: false, multi_valued: nil, required: false, allow_nil: true)
+        # Support both as_operand: and positional: (deprecated) for backward compatibility
+        effective_as_operand = as_operand || positional || false
+        # Support both repeatable: and multi_valued: (deprecated) for backward compatibility
+        effective_repeatable = repeatable || multi_valued || false
+        validate_value_modifiers!(names, inline, effective_as_operand, separator)
 
-        option_type = determine_value_option_type(inline, positional)
+        option_type = determine_value_option_type(inline, effective_as_operand)
         register_option(names, type: option_type, args: args, expected_type: type, separator: separator,
-                               allow_empty: allow_empty, multi_valued: multi_valued, required: required,
+                               allow_empty: allow_empty, repeatable: effective_repeatable, required: required,
                                allow_nil: allow_nil)
       end
+
+      alias value value_option
 
       # Define a flag or value option
       #
@@ -378,40 +389,42 @@ module Git
       # @return [void]
       # @raise [ArgumentError] if value is not true, false, or a String
       #
-      # @example Basic flag or value (new capability - not possible with old DSL)
-      #   flag_or_value :contains
+      # @example Basic flag or value option (new capability - not possible with old DSL)
+      #   flag_or_value_option :contains
       #   # true       => --contains
       #   # false      => (nothing)
       #   # "abc123"   => --contains abc123 (separate arguments)
       #   # nil        => (nothing)
       #
       # @example With inline: true
-      #   flag_or_value :gpg_sign, inline: true
+      #   flag_or_value_option :gpg_sign, inline: true
       #   # true       => --gpg-sign
       #   # false      => (nothing)
       #   # "KEY"      => --gpg-sign=KEY (inline)
       #   # nil        => (nothing)
       #
       # @example With negatable: true (flag or value with negation)
-      #   flag_or_value :verify, negatable: true
+      #   flag_or_value_option :verify, negatable: true
       #   # true       => --verify
       #   # false      => --no-verify
       #   # "KEYID"    => --verify KEYID (separate arguments)
       #   # nil        => (nothing)
       #
       # @example With negatable: true and inline: true
-      #   flag_or_value :sign, negatable: true, inline: true
+      #   flag_or_value_option :sign, negatable: true, inline: true
       #   # true       => --sign
       #   # false      => --no-sign
       #   # "KEY"      => --sign=KEY (inline)
       #   # nil        => (nothing)
       #
-      def flag_or_value(names, args: nil, type: nil, negatable: false, inline: false,
-                        required: false, allow_nil: true)
+      def flag_or_value_option(names, args: nil, type: nil, negatable: false, inline: false,
+                               required: false, allow_nil: true)
         option_type = determine_flag_or_value_option_type(negatable, inline)
         register_option(names, type: option_type, args: args, expected_type: type,
                                required: required, allow_nil: allow_nil)
       end
+
+      alias flag_or_value flag_or_value_option
 
       # Define a key-value option that can be specified multiple times
       #
@@ -431,74 +444,78 @@ module Git
       # @raise [ArgumentError] if a key is nil, empty, or contains the separator
       # @raise [ArgumentError] if a value is a Hash or Array (non-scalar)
       #
-      # @example Basic key-value (like --trailer)
-      #   key_value :trailers, args: '--trailer'
+      # @example Basic key-value option (like --trailer)
+      #   key_value_option :trailers, args: '--trailer'
       #   # trailers: { 'Signed-off-by' => 'John' }
       #   #   => ['--trailer', 'Signed-off-by=John']
       #
       # @example Hash with array values (multiple values for same key)
-      #   key_value :trailers, args: '--trailer'
+      #   key_value_option :trailers, args: '--trailer'
       #   # trailers: { 'Signed-off-by' => ['John', 'Jane'] }
       #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
       #
       # @example Array of arrays (full ordering control)
-      #   key_value :trailers, args: '--trailer'
+      #   key_value_option :trailers, args: '--trailer'
       #   # trailers: [['Signed-off-by', 'John'], ['Acked-by', 'Bob']]
       #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
       #
       # @example Key without value (nil value omits separator)
-      #   key_value :trailers, args: '--trailer'
+      #   key_value_option :trailers, args: '--trailer'
       #   # trailers: [['Acked-by', nil]]
       #   #   => ['--trailer', 'Acked-by']
       #
       # @example Nil in array values produces key-only entries
-      #   key_value :trailers, args: '--trailer'
+      #   key_value_option :trailers, args: '--trailer'
       #   # trailers: { 'Key' => ['Value1', nil, 'Value2'] }
       #   #   => ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
       #
       # @example With custom separator
-      #   key_value :trailers, args: '--trailer', key_separator: ': '
+      #   key_value_option :trailers, args: '--trailer', key_separator: ': '
       #   # trailers: { 'Signed-off-by' => 'John' }
       #   #   => ['--trailer', 'Signed-off-by: John']
       #
       # @example Empty values produce no output
-      #   key_value :trailers, args: '--trailer', required: true
+      #   key_value_option :trailers, args: '--trailer', required: true
       #   # trailers: {}  => []  (no error, empty output)
       #   # trailers: []  => []  (no error, empty output)
       #   # trailers: nil => []  (no error, empty output)
       #
-      def key_value(names, args: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
+      def key_value_option(names, args: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
         option_type = inline ? :inline_key_value : :key_value
         register_option(names, type: option_type, args: args, key_separator: key_separator,
                                required: required, allow_nil: allow_nil)
       end
 
-      # Define a static flag that is always included in the output
+      alias key_value key_value_option
+
+      # Define a literal string that is always included in the output
       #
-      # Static flags are output at their definition position (not grouped at the start).
+      # Literals are output at their definition position (not grouped at the start).
       # This allows precise control over argument ordering, which is important for
       # git commands where argument position matters.
       #
-      # @param flag_string [String] the static flag string (e.g., '--', '--no-progress')
+      # @param flag_string [String] the literal string (e.g., '--', '--no-progress')
       # @return [void]
       #
-      # @example Static flag for subcommand mode
-      #   static '--delete'
-      #   flag :force
-      #   positional :branches, variadic: true
+      # @example Literal for subcommand mode
+      #   literal '--delete'
+      #   flag_option :force
+      #   operand :branches, repeatable: true
       #   # build('feature', force: true) => ['--delete', '--force', 'feature']
       #
-      # @example Static separator between options and pathspecs
-      #   flag :force
-      #   positional :tree_ish
-      #   static '--'
-      #   positional :paths, variadic: true
+      # @example Literal separator between options and pathspecs
+      #   flag_option :force
+      #   operand :tree_ish
+      #   literal '--'
+      #   operand :paths, repeatable: true
       #   # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
       #
-      def static(flag_string)
+      def literal(flag_string)
         @static_flags << flag_string
         @ordered_definitions << { kind: :static, flag: flag_string }
       end
+
+      alias static literal
 
       # Define a custom option with a custom builder block
       #
@@ -509,9 +526,11 @@ module Git
       # @yield [value] block that receives the option value and returns the argument string
       # @return [void]
       #
-      def custom(names, required: false, allow_nil: true, &block)
+      def custom_option(names, required: false, allow_nil: true, &block)
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
       end
+
+      alias custom custom_option
 
       # Define a metadata option (for validation only, not included in command)
       #
@@ -555,77 +574,78 @@ module Git
         @conflicts << option_names.map(&:to_sym)
       end
 
-      # Define a positional argument
+      # Define an operand (positional argument in CLI terminology)
       #
-      # Positional arguments are mapped to values following Ruby method signature
-      # semantics. Required positionals before a variadic are filled left-to-right,
-      # required positionals after a variadic are filled from the end, and the
+      # Operands are mapped to values following Ruby method signature
+      # semantics. Required operands before a variadic are filled left-to-right,
+      # required operands after a variadic are filled from the end, and the
       # variadic gets whatever remains in the middle.
       #
-      # @param name [Symbol] the positional argument name (used in error messages)
-      # @param required [Boolean] whether the argument is required. For variadic
-      #   positionals, this means at least one value must be provided.
-      # @param variadic [Boolean] whether the argument accepts multiple values
-      #   (like Ruby's splat operator *args). Only one variadic positional is
+      # @param name [Symbol] the operand name (used in error messages)
+      # @param required [Boolean] whether the operand is required. For repeatable
+      #   operands, this means at least one value must be provided.
+      # @param repeatable [Boolean] whether the operand accepts multiple values
+      #   (can appear multiple times on the command line). Only one repeatable operand is
       #   allowed per definition; attempting to define a second will raise an
       #   ArgumentError.
-      # @param default [Object] the default value if not provided. For variadic
-      #   positionals, this should be an array (e.g., `default: ['.']`).
+      # @param variadic [Boolean] DEPRECATED: Use repeatable: instead. Alias for repeatable:.
+      # @param default [Object] the default value if not provided. For repeatable
+      #   operands, this should be an array (e.g., `default: ['.']`).
       # @param separator [String, nil] separator string to insert before this
-      #   positional in the output (e.g., '--' for the common pathspec separator)
+      #   operand in the output (e.g., '--' for the common pathspec separator)
       # @param allow_nil [Boolean] whether nil is a valid value for a required
-      #   positional. When true, nil consumes the positional slot but is omitted
+      #   operand. When true, nil consumes the operand slot but is omitted
       #   from output. This is useful for commands like `git checkout` where
       #   the tree-ish is required to consume a slot but may be nil to restore
       #   from the index. Defaults to false.
       # @return [void]
       #
-      # @example Required positional (like `def clone(repository)`)
-      #   positional :repository, required: true
+      # @example Required operand (like `def clone(repository)`)
+      #   operand :repository, required: true
       #   # build('https://github.com/user/repo')
       #   #   => ['https://github.com/user/repo']
       #
-      # @example Optional positional with default (like `def log(commit = 'HEAD')`)
-      #   positional :commit, default: 'HEAD'
+      # @example Optional operand with default (like `def log(commit = 'HEAD')`)
+      #   operand :commit, default: 'HEAD'
       #   # build()        => ['HEAD']
       #   # build('main')  => ['main']
       #
-      # @example Variadic positional (like `def add(*paths)`)
-      #   positional :paths, variadic: true
+      # @example Repeatable operand (like multiple file arguments)
+      #   operand :paths, repeatable: true
       #   # build('file1', 'file2', 'file3')
       #   #   => ['file1', 'file2', 'file3']
       #
-      # @example Required variadic with at least one value (like `def rm(*paths)` with validation)
-      #   positional :paths, variadic: true, required: true
+      # @example Required repeatable with at least one value
+      #   operand :paths, repeatable: true, required: true
       #   # build()         => raises ArgumentError
       #   # build('file1')  => ['file1']
       #
-      # @example git mv pattern (like `def mv(*sources, destination)`)
-      #   positional :sources, variadic: true, required: true
-      #   positional :destination, required: true
+      # @example git mv pattern (sources... destination)
+      #   operand :sources, repeatable: true, required: true
+      #   operand :destination, required: true
       #   # build('src1', 'src2', 'dest')
       #   #   => ['src1', 'src2', 'dest']
       #   # build('src', 'dest')
       #   #   => ['src', 'dest']
       #
-      # @example Optional before variadic with required after (like `def foo(a = 'default', *middle, b)`)
-      #   positional :a, default: 'default_a'
-      #   positional :middle, variadic: true
-      #   positional :b, required: true
+      # @example Optional before repeatable with required after
+      #   operand :a, default: 'default_a'
+      #   operand :middle, repeatable: true
+      #   operand :b, required: true
       #   # build('x')           => ['default_a', 'x']  (a=default, middle=[], b='x')
       #   # build('x', 'y')      => ['x', 'y']          (a='x', middle=[], b='y')
       #   # build('x', 'm', 'y') => ['x', 'm', 'y']     (a='x', middle=['m'], b='y')
       #
-      # @example Positional with separator (pathspec after --)
-      #   flag :force
-      #   positional :paths, variadic: true, separator: '--'
+      # @example Operand with separator (pathspec after --)
+      #   flag_option :force
+      #   operand :paths, repeatable: true, separator: '--'
       #   # build('file1', 'file2', force: true)
       #   #   => ['--force', '--', 'file1', 'file2']
       #
-      # @example Complex pattern (like `def diff(commit1, commit2 = nil, *paths)`)
-      #   positional :commit1, required: true
-      #   positional :commit2
-      #   positional :paths, variadic: true, separator: '--'
+      # @example Complex pattern (commit1, optional commit2, repeatable paths)
+      #   operand :commit1, required: true
+      #   operand :commit2
+      #   operand :paths, repeatable: true, separator: '--'
       #   # build('HEAD~1')
       #   #   => ['HEAD~1']
       #   # build('HEAD~1', 'HEAD')
@@ -633,27 +653,22 @@ module Git
       #   # build('HEAD~1', 'HEAD', 'file.rb')
       #   #   => ['HEAD~1', 'HEAD', '--', 'file.rb']
       #
-      # @example Required positional that allows nil (like `git checkout [tree-ish] -- paths`)
-      #   positional :tree_ish, required: true, allow_nil: true
-      #   positional :paths, variadic: true, separator: '--'
+      # @example Required operand that allows nil (like `git checkout [tree-ish] -- paths`)
+      #   operand :tree_ish, required: true, allow_nil: true
+      #   operand :paths, repeatable: true, separator: '--'
       #   # build('HEAD', 'file.rb')
       #   #   => ['HEAD', '--', 'file.rb']
       #   # build(nil, 'file.rb')
       #   #   => ['--', 'file.rb']  (nil consumes slot but is omitted from output)
       #
-      def positional(name, required: false, variadic: false, default: nil, separator: nil, allow_nil: false)
-        validate_single_variadic!(name) if variadic
-
-        @positional_definitions << {
-          name: name,
-          required: required,
-          variadic: variadic,
-          default: default,
-          separator: separator,
-          allow_nil: allow_nil
-        }
-        @ordered_definitions << { kind: :positional, name: name }
+      def operand(name, required: false, repeatable: false, variadic: nil,
+                  default: nil, separator: nil, allow_nil: false)
+        effective_repeatable = repeatable || variadic || false
+        validate_single_repeatable!(name) if effective_repeatable
+        add_operand_definition(name, required, effective_repeatable, default, separator, allow_nil)
       end
+
+      alias positional operand
 
       # Bind positionals and options, returning a Bound object with accessor methods
       #
@@ -850,7 +865,7 @@ module Git
           args << entry[:flag]
         when :option
           build_option(args, entry[:name], @option_definitions[entry[:name]], normalized_opts[entry[:name]])
-        when :positional
+        when :operand
           build_single_positional(args, entry[:name], allocated_positionals)
         end
       end
@@ -864,7 +879,7 @@ module Git
         positionals = normalize_positionals(positionals)
         allocation, consumed_count = allocate_positionals(positionals)
 
-        @positional_definitions.each do |definition|
+        @operand_definitions.each do |definition|
           value = allocation[definition[:name]]
           validate_required_positional(value, definition)
           validate_no_nil_values!(value, definition)
@@ -882,18 +897,26 @@ module Git
       # @return [void]
       #
       def build_single_positional(args, name, allocation)
-        definition = @positional_definitions.find { |d| d[:name] == name }
+        definition = @operand_definitions.find { |d| d[:name] == name }
         value = allocation[name]
         append_positional_to_args(args, value, definition)
       end
 
-      def validate_single_variadic!(name)
-        existing_variadic = @positional_definitions.find { |d| d[:variadic] }
-        return unless existing_variadic
+      def validate_single_repeatable!(name)
+        existing_repeatable = @operand_definitions.find { |d| d[:repeatable] }
+        return unless existing_repeatable
 
         raise ArgumentError,
-              "only one variadic positional is allowed; :#{existing_variadic[:name]} is already variadic, " \
-              "cannot add :#{name} as variadic"
+              "only one repeatable operand is allowed; :#{existing_repeatable[:name]} is already repeatable, " \
+              "cannot add :#{name} as repeatable"
+      end
+
+      def add_operand_definition(name, required, repeatable, default, separator, allow_nil)
+        @operand_definitions << {
+          name: name, required: required, repeatable: repeatable,
+          default: default, separator: separator, allow_nil: allow_nil
+        }
+        @ordered_definitions << { kind: :operand, name: name }
       end
 
       BUILDERS = {
@@ -904,7 +927,7 @@ module Git
         end,
         negatable_flag: :build_negatable_flag,
         value: lambda do |args, arg_spec, value, definition|
-          if definition[:multi_valued]
+          if definition[:repeatable]
             Array(value).each { |v| args << arg_spec << v.to_s }
           else
             args << arg_spec << value.to_s
@@ -929,14 +952,14 @@ module Git
         end,
         negatable_flag_or_value: :build_negatable_flag_or_value,
         value_to_positional: lambda do |args, _, value, definition|
-          # Validate array usage when multi_valued is false
-          if value.is_a?(Array) && !definition[:multi_valued]
+          # Validate array usage when repeatable is false
+          if value.is_a?(Array) && !definition[:repeatable]
             raise ArgumentError,
-                  "value_to_positional :#{definition[:aliases].first} requires multi_valued: true to accept an array"
+                  "value_to_positional :#{definition[:aliases].first} requires repeatable: true to accept an array"
           end
 
           # Validate no nil values in array
-          if definition[:multi_valued] && value.is_a?(Array) && value.any?(&:nil?)
+          if definition[:repeatable] && value.is_a?(Array) && value.any?(&:nil?)
             raise ArgumentError,
                   "nil values are not allowed in value_to_positional :#{definition[:aliases].first}"
           end
@@ -945,7 +968,7 @@ module Git
           args << definition[:separator] if definition[:separator]
 
           # Add values as positional arguments
-          if definition[:multi_valued]
+          if definition[:repeatable]
             Array(value).each { |v| args << v.to_s }
           else
             args << value.to_s
@@ -1026,7 +1049,7 @@ module Git
       #
       def build_inline_value(args, arg_spec, value, definition)
         sep = inline_value_separator(arg_spec)
-        if definition[:multi_valued]
+        if definition[:repeatable]
           Array(value).each { |v| args << "#{arg_spec}#{sep}#{v}" }
         else
           args << "#{arg_spec}#{sep}#{value}"
@@ -1232,24 +1255,24 @@ module Git
       # Returns [allocation_hash, consumed_count] where consumed_count is the
       # number of non-nil positionals that were consumed by definitions.
       def allocate_positionals(positionals)
-        PositionalAllocator.new(@positional_definitions).allocate(positionals)
+        OperandAllocator.new(@operand_definitions).allocate(positionals)
       end
 
       def append_positional_to_args(args, value, definition)
         return if positional_value_empty?(value, definition)
 
         args << definition[:separator] if definition[:separator]
-        append_positional_value(args, value, definition[:variadic])
+        append_positional_value(args, value, definition[:repeatable])
       end
 
       def positional_value_empty?(value, definition)
         return true if value.nil?
 
-        definition[:variadic] && value.respond_to?(:empty?) && value.empty?
+        definition[:repeatable] && value.respond_to?(:empty?) && value.empty?
       end
 
-      def append_positional_value(args, value, variadic)
-        if variadic
+      def append_positional_value(args, value, repeatable)
+        if repeatable
           args.concat(Array(value).map(&:to_s))
         else
           args << value.to_s
@@ -1271,20 +1294,20 @@ module Git
         return if definition[:allow_nil] && value.nil?
         return unless value_empty?(value)
 
-        raise ArgumentError, "at least one value is required for #{definition[:name]}" if definition[:variadic]
+        raise ArgumentError, "at least one value is required for #{definition[:name]}" if definition[:repeatable]
 
         raise ArgumentError, "#{definition[:name]} is required"
       end
 
       def validate_no_nil_values!(value, definition)
-        return unless definition[:variadic]
+        return unless definition[:repeatable]
         return if value.nil? # Allow nil as "not provided"
 
-        # For variadic positionals, check if array contains any nil values
+        # For repeatable positionals, check if array contains any nil values
         values = Array(value)
         return unless values.any?(&:nil?)
 
-        raise ArgumentError, "nil values are not allowed in variadic positional argument: #{definition[:name]}"
+        raise ArgumentError, "nil values are not allowed in repeatable positional argument: #{definition[:name]}"
       end
 
       # Check if a positional value is empty (not provided)
@@ -1474,14 +1497,14 @@ module Git
       end
     end
 
-    # Allocates positional argument values to definitions following Ruby semantics.
+    # Allocates operand (positional argument) values to definitions following Ruby semantics.
     #
     # This class handles the complex logic of mapping positional values to their
-    # definitions, supporting required, optional, and variadic positionals.
+    # definitions, supporting required, optional, and repeatable operands.
     #
     # @api private
-    class PositionalAllocator
-      # @param definitions [Array<Hash>] positional argument definitions
+    class OperandAllocator
+      # @param definitions [Array<Hash>] operand definitions
       def initialize(definitions)
         @definitions = definitions
       end
@@ -1491,12 +1514,12 @@ module Git
       # @return [Array(Hash, Integer)] [allocation_hash, consumed_count]
       def allocate(values)
         allocation = {}
-        variadic_index = @definitions.find_index { |d| d[:variadic] }
+        repeatable_index = @definitions.find_index { |d| d[:repeatable] }
 
-        consumed = if variadic_index.nil?
-                     allocate_without_variadic(values, allocation)
+        consumed = if repeatable_index.nil?
+                     allocate_without_repeatable(values, allocation)
                    else
-                     allocate_with_variadic(values, allocation, variadic_index)
+                     allocate_with_repeatable(values, allocation, repeatable_index)
                    end
 
         [allocation, consumed]
@@ -1504,11 +1527,11 @@ module Git
 
       private
 
-      # Allocate when there's no variadic positional, following Ruby semantics:
+      # Allocate when there's no repeatable positional, following Ruby semantics:
       # - Required positionals at the END are reserved first
       # - Leading positionals get remaining values left-to-right
       # - Optional positionals are skipped when there aren't enough values
-      def allocate_without_variadic(values, allocation)
+      def allocate_without_repeatable(values, allocation)
         trailing = count_trailing_required
         leading_defs = @definitions[0...(@definitions.size - trailing)]
         trailing_defs = @definitions[(@definitions.size - trailing)..]
@@ -1553,20 +1576,20 @@ module Git
         consumed
       end
 
-      def allocate_with_variadic(values, allocation, variadic_index)
-        parts = split_around_variadic(variadic_index)
-        slices = calculate_variadic_slices(values, parts)
+      def allocate_with_repeatable(values, allocation, repeatable_index)
+        parts = split_around_repeatable(repeatable_index)
+        slices = calculate_repeatable_slices(values, parts)
 
-        pre_consumed = allocate_pre_variadic_smart(allocation, parts[:pre], slices[:pre_values])
-        variadic_consumed = allocate_variadic(
-          allocation, parts[:variadic], values, slices[:var_start], slices[:var_end]
+        pre_consumed = allocate_pre_repeatable_smart(allocation, parts[:pre], slices[:pre_values])
+        repeatable_consumed = allocate_repeatable(
+          allocation, parts[:repeatable], values, slices[:var_start], slices[:var_end]
         )
-        post_consumed = allocate_post_variadic(allocation, parts[:post], values, slices[:post_start])
+        post_consumed = allocate_post_repeatable(allocation, parts[:post], values, slices[:post_start])
 
-        pre_consumed + variadic_consumed + post_consumed
+        pre_consumed + repeatable_consumed + post_consumed
       end
 
-      def calculate_variadic_slices(values, parts)
+      def calculate_repeatable_slices(values, parts)
         post_required_count = count_required(parts[:post])
         pre_available = [values.size - post_required_count, 0].max
         pre_end = [pre_available, parts[:pre].size].min
@@ -1584,35 +1607,35 @@ module Git
         definitions.count { |d| required?(d) }
       end
 
-      def split_around_variadic(variadic_index)
+      def split_around_repeatable(repeatable_index)
         {
-          pre: @definitions[0...variadic_index],
-          variadic: @definitions[variadic_index],
-          post: @definitions[(variadic_index + 1)..]
+          pre: @definitions[0...repeatable_index],
+          repeatable: @definitions[repeatable_index],
+          post: @definitions[(repeatable_index + 1)..]
         }
       end
 
-      # Allocate pre-variadic positionals with Ruby-like semantics
+      # Allocate pre-repeatable positionals with Ruby-like semantics
       # (required get values first, optional only if extra values available)
-      def allocate_pre_variadic_smart(allocation, definitions, values)
+      def allocate_pre_repeatable_smart(allocation, definitions, values)
         return 0 if definitions.empty?
 
         state = LeadingAllocationState.new(definitions, values, method(:required?))
         state.allocate(allocation)
       end
 
-      def allocate_variadic(allocation, definition, values, start_idx, end_idx)
-        variadic_values = values[start_idx...end_idx] || []
+      def allocate_repeatable(allocation, definition, values, start_idx, end_idx)
+        repeatable_values = values[start_idx...end_idx] || []
         allocation[definition[:name]] =
-          if variadic_values.empty? || variadic_values.all?(&:nil?)
+          if repeatable_values.empty? || repeatable_values.all?(&:nil?)
             definition[:default]
           else
-            variadic_values
+            repeatable_values
           end
-        variadic_values.compact.size
+        repeatable_values.compact.size
       end
 
-      def allocate_post_variadic(allocation, definitions, values, post_start)
+      def allocate_post_repeatable(allocation, definitions, values, post_start)
         consumed = 0
         definitions.each_with_index do |definition, offset|
           pos_index = post_start + offset
@@ -1674,6 +1697,10 @@ module Git
         end
       end
     end
+
+    # Backward compatibility alias for OperandAllocator
+    # @api private
+    PositionalAllocator = OperandAllocator
     # rubocop:enable Metrics/ParameterLists
   end
 end
