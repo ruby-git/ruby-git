@@ -63,7 +63,7 @@ end
 SimpleCov::RSpec.start(
   coverage_threshold: 100,
   fail_on_low_coverage: false,
-  list_uncovered_lines: ci_build?
+  list_uncovered_lines: false
 )
 
 require 'git'

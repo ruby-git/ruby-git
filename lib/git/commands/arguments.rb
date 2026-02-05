@@ -4,39 +4,133 @@ module Git
   module Commands
     # rubocop:disable Metrics/ParameterLists
 
-    # Git::Commands::Arguments provides a DSL for defining command-line arguments
-    # (both options and positional arguments) for Git commands.
+    # This class provides a DSL for mapping Ruby method arguments to git command-line
+    # arguments.
     #
-    # @api private
+    # ## Overview
     #
-    # == Overview
+    # This class provides a DSL for defining how arguments passed to {#bind} should
+    # be mapped to git CLI argument arrays. The process follows four phases:
     #
-    # This class enables declarative definition of git command arguments, handling:
-    # - Option flags (boolean, valued, inline-valued)
-    # - Operands (positional arguments: required, optional, repeatable)
-    # - Validation (type checking, required options, conflicts)
-    # - Argument building (converting Ruby values to CLI argument arrays)
+    # 1. **Definition** of expected CLI arguments and their constraints
+    # 2. **Binding** of method arguments to the definition
+    # 3. **Validation** of values against argument constraints
+    # 4. **Building** of the CLI argument array
     #
-    # @example Defining arguments for a command
-    #   ARGS = Git::Commands::Arguments.define do
-    #     flag_option :force
-    #     value_option :branch
-    #     operand :repository, required: true
-    #   end
+    # See {Git::Commands::Init} for a usage example.
     #
-    # @example Binding and building command-line arguments
-    #   ARGS.bind('https://github.com/user/repo', force: true, branch: 'main').to_ary
-    #   # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
+    # Example: Defining arguments for a command
     #
-    # == Design
+    # ```ruby
+    # # 1. Definition of expected CLI arguments and their constraints
+    # args_def = Arguments.define do
+    #   flag_option :force
+    #   value_option :branch
+    #   operand :repository, required: true
+    # end
     #
-    # The class uses a two-phase approach:
+    # # 2. Binding of method arguments to the definition
+    # # 3. Validation of values against argument constraints
+    # args = args_def.bind('https://github.com/user/repo', force: true, branch: 'main')
     #
-    # 1. **Definition phase**: DSL methods ({#flag_option}, {#value_option}, {#operand}, etc.)
+    # # 4. Building of the CLI argument array
+    # args.to_a # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
+    #
+    # # Bonus: accessing bound values
+    # args.force       # => true
+    # args.branch      # => 'main'
+    # args.repository  # => 'https://github.com/user/repo'
+    # ```
+    #
+    # ## Terminology
+    #
+    # This class bridges CLI and Ruby interfaces. While both use the term "arguments"
+    # for values passed to commands/methods, they differ in terminology for specific
+    # argument types:
+    #
+    # | CLI (POSIX)            | Ruby Interface         | Description                                         |
+    # |------------------------|------------------------|-----------------------------------------------------|
+    # | argument specification | DSL definition         | Declared command inputs and constraints             |
+    # | arguments              | arguments              | Values passed when calling a command/method         |
+    # | operands               | positional arguments   | Arguments identified by position                    |
+    # | options                | keyword arguments      | Arguments identified by name (`--force` / `force:`) |
+    #
+    # The following sections explain each interface in detail.
+    #
+    # ### CLI Interface (POSIX)
+    #
+    # An **argument specification** declares what command inputs are accepted and
+    # their constraints.
+    #
+    # Example:
+    #
+    # ```text
+    # git branch (--set-upstream-to=<upstream>|-u <upstream>) [<branch-name>]
+    # ```
+    #
+    # When a command is invoked, **arguments** are the values passed to it:
+    # - **Arguments**: Values passed when calling the command (everything after the
+    #   command name)
+    # - **Operands**: Arguments identified by position
+    # - **Options**: Arguments identified by name (prefixed with `-` or `--`)
+    #
+    # Example:
+    #
+    # ```shell
+    # git branch --set-upstream-to=origin/main main
+    # ```
+    #
+    # - Operands: `main`
+    # - Options: `--set-upstream-to=origin/main`
+    #
+    # ### Ruby Interface
+    #
+    # A **DSL definition** declares what arguments the {#bind} method accepts and how
+    # they map to CLI arguments.
+    #
+    # Example:
+    #
+    # ```ruby
+    # Arguments.define do
+    #   literal 'branch'
+    #   value_option %i[set_upstream_to u], inline: true  # primary name with short alias :u
+    #   operand :branch_name
+    # end
+    # ```
+    #
+    # When {#bind} is called, **arguments** are the values passed to it:
+    # - **Arguments**: Values passed to {#bind}
+    # - **Positional arguments**: Arguments identified by position
+    # - **Keyword arguments**: Arguments identified by name
+    #
+    # Example:
+    #
+    # ```ruby
+    # args_def.bind('main', set_upstream_to: 'origin/main')
+    # ```
+    #
+    # - Positional argument: `'main'`
+    # - Keyword argument: `set_upstream_to: 'origin/main'`
+    #
+    # Calling {Bound#to_a} on the bound result produces the CLI argument array:
+    #
+    # ```ruby
+    # args_def.bind('main', set_upstream_to: 'origin/main').to_a
+    # # => ['branch', '--set-upstream-to=origin/main', 'main']
+    # ```
+    #
+    # ## Design
+    #
+    # The class operates in two stages:
+    #
+    # 1. **Definition stage**: DSL methods ({#flag_option}, {#value_option}, {#operand}, etc.)
     #    record argument definitions in internal data structures.
     #
-    # 2. **Bind phase**: {#bind} transforms Ruby values into a {Bound} object
-    #    containing accessor methods and CLI arguments in definition order.
+    # 2. **Bind stage**: {#bind} binds Ruby values and validates them against constraints,
+    #    returning a {Bound} object.
+    #
+    # The returned {Bound} object provides accessor methods for the bound values and handles
+    # the building phase, converting bound values to CLI arguments via {Bound#to_a}.
     #
     # Key internal components:
     #
@@ -47,29 +141,30 @@ module Git
     # - +BUILDERS+: Hash of lambdas that convert values to CLI arguments by type
     # - {OperandAllocator}: Handles Ruby-like operand allocation
     #
-    # == Argument Ordering
+    # ## Argument Ordering
     #
     # Arguments are rendered in the exact order they are defined in the DSL block,
-    # regardless of type (options, positionals, or static flags). This is important
+    # regardless of type (options, operands, or static flags). This is important
     # for git commands where argument order matters, such as when using `--` to
     # separate options from pathspecs.
     #
     # @example Ordering example
-    #   args = Arguments.define do
+    #   args_def = Arguments.define do
     #     operand :ref
     #     literal '--'
     #     operand :path
     #   end
-    #   args.bind('HEAD', 'file.txt').to_ary  # => ['HEAD', '--', 'file.txt']
+    #   args_def.bind('HEAD', 'file.txt').to_a  # => ['HEAD', '--', 'file.txt']
     #
-    # == Short Option Detection
+    # ## Short Option Detection
     #
     # Option names are automatically formatted using POSIX conventions:
     #
     # - **Single-character names** use single-dash prefix: `:f` → `-f`
     # - **Multi-character names** use double-dash prefix: `:force` → `--force`
     #
-    # For inline values (`inline: true`), the separator also follows POSIX conventions:
+    # For inline values (`inline: true`), the separator also follows POSIX
+    # conventions:
     #
     # - **Short options** use no separator: `-n3`
     # - **Long options** use `=` separator: `--name=value`
@@ -79,21 +174,27 @@ module Git
     # The `args:` parameter can override this automatic detection when needed.
     #
     # @example Short option detection
-    #   flag_option :f                          # true → '-f'
-    #   flag_option :force                      # true → '--force'
-    #   value_option :n, inline: true           # 3 → '-n3'
-    #   value_option :name, inline: true        # 'test' → '--name=test'
-    #   flag_option :f, negatable: true         # false → '--no-f'
-    #   flag_or_value_option :n, inline: true   # true → '-n', '5' → '-n5'
+    #   args_def = Arguments.define do
+    #     flag_option :f                          # true → '-f'
+    #     flag_option :force                      # true → '--force'
+    #     value_option :n, inline: true           # 3 → '-n3'
+    #     value_option :name, inline: true        # 'test' → '--name=test'
+    #   end
     #
-    # @example Explicit override with args:
-    #   flag_option :f, args: '--force'         # true → '--force' (override short detection)
+    #   args_def.bind(f: true, force: true, n: 3, name: 'test').to_a
+    #   # => ['-f', '--force', '-n3', '--name=test']
     #
-    # == Option Types
+    # @example Explicit override with `args:`
+    #   args_def = Arguments.define do
+    #     flag_option :f, args: '--force'
+    #   end
+    #   args_def.bind(f: true).to_a  # => ['--force']
     #
-    # The DSL supports several option types with orthogonal modifiers:
+    # ## Option Types
     #
-    # === Primary Option Types
+    # The DSL supports several option types with modifiers:
+    #
+    # ### Primary Option Types
     # - {#flag_option} - Boolean flag (--flag when true, with `negatable: true` for --no-flag)
     # - {#value_option} - Valued option (--flag value, with `inline: true` for --flag=value,
     #   or `as_operand: true` for operands)
@@ -108,7 +209,8 @@ module Git
     # an array of values. This repeats the flag for each value (or outputs each as an
     # operand when using `as_operand: true`):
     #
-    # @example Repeatable options
+    # Repeatable options:
+    #
     #   value_option :config, repeatable: true
     #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
     #
@@ -117,47 +219,54 @@ module Git
     #
     #   value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
     #   # pathspecs: ['file1.txt', 'file2.txt'] => ['--', 'file1.txt', 'file2.txt']
-
-    # @note For {#value_option}, `inline: true` and `as_operand: true` are mutually exclusive and
-    #   will raise ArgumentError if used together. The `separator:` option is only valid
-    #   with `as_operand: true` and raises ArgumentError otherwise.
     #
-    # == Common Option Parameters
+    # ## Common Option Parameters
     #
-    # Most option types support parameters that affect **input validation**
-    # (checking the provided values before building):
+    # Most option types support parameters that affect **input validation** (checked
+    # during {#bind}):
     #
-    # - +required:+ - When true, the option key must be present in the provided opts.
-    #   Raises ArgumentError if the key is missing.
-    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#custom_option}.
-    # - +allow_nil:+ - When false (with required: true), the value cannot be nil.
-    #   Raises ArgumentError if a nil value is provided. Defaults to true.
-    #   Supported by: same as +required:+.
-    # - +type:+ - Validates the value is an instance of the specified class(es).
-    #   Raises ArgumentError if type doesn't match.
+    # - **required:** - When true, the option key must be present in the provided
+    #   opts. Raises ArgumentError if the key is missing. Defaults to false.
+    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#custom_option}, {#operand}.
+    # - **allow_nil:** - When false (with required: true), the value cannot be nil.
+    #   Raises ArgumentError if a nil value is provided. Defaults to true for
+    #   options, false for operands. Supported by: same as **required:**.
+    # - **type:** - Validates the value is an instance of the specified class(es).
+    #   Accepts a single class or an array of classes. Raises ArgumentError if type
+    #   doesn't match. This parameter only performs type checking during validation;
+    #   conversion of values to CLI argument strings happens later during the build
+    #   phase (for example, via #to_s in {Bound#to_a}). Defaults to nil (no validation).
     #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
     # Note: {#literal} and {#metadata} do not support these validation parameters.
     #
-    # These parameters affect **output generation** (what CLI arguments are produced):
+    # These parameters affect **output generation** (what CLI arguments are
+    # produced):
     #
-    # - +args:+ - Custom flag string(s) to output instead of deriving from name.
-    # - +allow_empty:+ - ({#value_option} only) Include flag even for empty strings.
-    # - +repeatable:+ - ({#value_option} only) Repeat flag for each array element.
+    # - **args:** - Override the CLI argument(s) derived from the option name
+    #   Can be a String or an Array. Default is nil (derives from name).
+    # - **allow_empty:** - ({#value_option} only) When true, output the option
+    #   even if the value is an empty string. Default is false (empty strings skipped).
+    # - **repeatable:** - ({#value_option} and {#operand} only) Output an option or
+    #   operand for each array element. Default is false.
     #
     # @example Required option with non-nil value
-    #   value_option :upstream, inline: true, required: true, allow_nil: false
-    #   # build()                    => ArgumentError: Required options not provided: :upstream
-    #   # build(upstream: nil)       => ArgumentError: Required options cannot be nil: :upstream
-    #   # build(upstream: 'origin')  => ['--upstream=origin']
+    #   args_def = Arguments.define do
+    #     value_option :upstream, inline: true, required: true, allow_nil: false
+    #   end
+    #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :upstream"
+    #   args_def.bind(upstream: nil) #=> raise ArgumentError, "Required options cannot be nil: :upstream"
+    #   args_def.bind(upstream: 'origin').to_a  # => ['--upstream=origin']
     #
     # @example Required option allowing nil (default)
-    #   value_option :branch, inline: true, required: true
-    #   # build()                => ArgumentError: Required options not provided: :branch
-    #   # build(branch: nil)     => []  (key present, nil value produces no output)
-    #   # build(branch: 'main')  => ['--branch=main']
+    #   args_def = Arguments.define do
+    #     value_option :branch, inline: true, required: true
+    #   end
+    #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :branch"
+    #   args_def.bind(branch: nil).to_a  # => []
+    #   args_def.bind(branch: 'main').to_a  # => ['--branch=main']
     #
-    # == Operands (Positional Arguments)
+    # ## Operands (Positional Arguments)
     #
     # Operands are mapped using Ruby-like semantics:
     #
@@ -166,72 +275,105 @@ module Git
     # 3. Optional operands (with defaults) get values only if extras are available
     # 4. Repeatable operand gets whatever is left in the middle
     #
-    # This matches Ruby's parameter binding behavior, including patterns like
-    # `def foo(a = default, *rest, b)` where the required `b` is filled before optional `a`.
+    # This matches Ruby's parameter binding behavior, including patterns like `def
+    # foo(a = default, *rest, b)` where the required `b` is filled before optional
+    # `a`.
     #
-    # @example Simple operand (like `def foo(repo)`)
-    #   operand :repository, required: true
+    # @example Simple operand (like `git clone <repository>`)
+    #   args_def = Arguments.define do
+    #     literal 'clone'
+    #     operand :repository, required: true
+    #   end
+    #   args_def.bind('https://github.com/user/repo').to_a
+    #   # => ['clone', 'https://github.com/user/repo']
     #
-    # @example Repeatable operand (like `def foo(*paths)`)
-    #   operand :paths, repeatable: true
+    # @example Repeatable operand (like `git add <paths>...`)
+    #   args_def = Arguments.define do
+    #     literal 'add'
+    #     operand :paths, repeatable: true
+    #   end
+    #   args_def.bind('file1', 'file2', 'file3').to_a
+    #   # => ['add', 'file1', 'file2', 'file3']
     #
-    # @example git mv pattern (like `def mv(*sources, destination)`)
-    #   operand :sources, repeatable: true, required: true
-    #   operand :destination, required: true
-    #   # build('src1', 'src2', 'dest') => ['src1', 'src2', 'dest']
+    # @example git mv pattern (like `git mv <sources>... <destination>`)
+    #   args_def = Arguments.define do
+    #     literal 'mv'
+    #     operand :sources, repeatable: true, required: true
+    #     operand :destination, required: true
+    #   end
+    #   args_def.bind('src1', 'src2', 'dest').to_a  # => ['mv', 'src1', 'src2', 'dest']
     #
-    # == Nil Handling for Operands
+    # ## Nil Handling for Operands
     #
-    # Nil values have special meaning for operands:
+    # When nil values are allowed (see `required:` and `allow_nil:` above), they have
+    # special output behavior:
     #
-    # - For non-repeatable operands: nil means "not provided" and is skipped
-    # - For repeatable operands: nil within the values is an error
-    # - Empty strings are valid and passed through to git
+    # - For non-repeating operands: nil values consume an operand slot during
+    #   binding but are omitted from the resulting command-line arguments array
+    # - For repeatable operands: nil values within the array raise an error
     #
-    # @example Skipping optional operand with nil
-    #   # operand :commit; operand :paths, repeatable: true
-    #   build(nil, 'file1', 'file2')  # => ['file1', 'file2']
+    # @example Nil value omitted from output
+    #   args = Arguments.define do
+    #     operand :tree_ish, required: true, allow_nil: true
+    #     operand :paths, repeatable: true
+    #   end.bind(nil, 'file1', 'file2')
+    #   args.to_a     # => ['file1', 'file2']
+    #   args.tree_ish # => nil
+    #   args.paths    # => ['file1', 'file2']
     #
-    # == Type Validation
+    # ## Type Validation
     #
     # The `type:` parameter provides declarative type validation for option values.
     # When validation fails, an ArgumentError is raised with a descriptive message.
     #
     # @example Single type validation
-    #   value_option :date, type: String, inline: true
-    #   # Valid: date: "2024-01-01"
-    #   # Invalid: date: 12345
-    #   #   => ArgumentError: The :date option must be a String, but was a Integer
+    #   args_def = Arguments.define do
+    #     value_option :date, type: String, inline: true
+    #   end
+    #   args_def.bind(date: "2024-01-01").to_a  # => ['--date=2024-01-01']
+    #   args_def.bind(date: 12345) #=> raise ArgumentError, "The :date option must be a String, but was a Integer"
     #
     # @example Multiple type validation (allows any of the specified types)
-    #   value_option :timeout, type: [Integer, Float], inline: true
-    #   # Valid: timeout: 30 or timeout: 30.5
-    #   # Invalid: timeout: "30"
-    #   #   => ArgumentError: The :timeout option must be a Integer or Float, but was a String
+    #   args_def = Arguments.define do
+    #     value_option :timeout, type: [Integer, Float], inline: true
+    #   end
+    #   args_def.bind(timeout: 30).to_a    # => ['--timeout=30']
+    #   args_def.bind(timeout: 30.5).to_a  # => ['--timeout=30.5']
+    #   args_def.bind(timeout: "30")
+    #   #=> raise ArgumentError, "The :timeout option must be a Integer or Float, but was a String"
     #
-    # @note The `type:` parameter cannot be combined with a custom `validator:` parameter.
-    #   Attempting to use both will raise an ArgumentError during definition.
+    # @note The `type:` parameter cannot be combined with a custom `validator:`
+    #   parameter. Attempting to use both will raise an ArgumentError during
+    #   definition.
     #
-    # == Conflict Detection
+    # ## Conflict Detection
     #
-    # Use {#conflicts} to declare mutually exclusive options. When building arguments,
-    # if more than one option in a conflict group is provided, an ArgumentError is raised.
+    # Use {#conflicts} to declare mutually exclusive options. When building
+    # arguments, if more than one option in a conflict group is provided, an
+    # ArgumentError is raised.
     #
     # @example
-    #   conflicts :force, :force_force
-    #   # build(force: true, force_force: true)
-    #   #   => ArgumentError: cannot specify :force and :force_force
+    #   args_def = Arguments.define do
+    #     flag_option :force
+    #     flag_option :force_force
+    #     conflicts :force, :force_force
+    #   end
+    #   args_def.bind(force: true, force_force: true) #=> raise ArgumentError, "cannot specify :force and :force_force"
+    #
+    # @api private
     #
     class Arguments
       # Define a new Arguments instance using the DSL
       #
       # @yield The block where arguments are defined using DSL methods
+      #
       # @return [Arguments] The configured Arguments instance
       #
-      # @example
-      #   args = Git::Commands::Arguments.define do
-      #     flag :verbose
+      # @example Basic flag
+      #   args_def = Arguments.define do
+      #     flag_option :verbose
       #   end
+      #   args_def.bind(verbose: true).to_a  # => ['--verbose']
       #
       def self.define(&block)
         args = new
@@ -251,34 +393,53 @@ module Git
       # Define a boolean flag option (--flag when true)
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
       # @param args [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
+      #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      #
       # @param validator [Proc, nil] optional validator block (cannot be combined with type:)
+      #
       # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
+      #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
+      #
       # @return [void]
-      # @raise [ArgumentError] if inline: and positional: are both true
-      # @raise [ArgumentError] if separator: is provided without positional: true
       #
-      # @example Basic flag option
-      #   flag_option :force
-      #   # true  => --force
-      #   # false => (nothing)
+      # @raise [ArgumentError] if inline: and as_operand: are both true
       #
-      # @example Negatable flag option
-      #   flag_option :full, negatable: true
-      #   # true  => --full
-      #   # false => --no-full
+      # @raise [ArgumentError] if separator: is provided without as_operand: true
+      #
+      # @example Basic flag
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #   end
+      #   args_def.bind(force: true).to_a   # => ['--force']
+      #   args_def.bind(force: false).to_a  # => []
+      #
+      # @example Negatable flag
+      #   args_def = Arguments.define do
+      #     flag_option :full, negatable: true
+      #   end
+      #   args_def.bind(full: true).to_a   # => ['--full']
+      #   args_def.bind(full: false).to_a  # => ['--no-full']
       #
       # @example With type validation
-      #   flag_option :force, type: [TrueClass, FalseClass]
+      #   args_def = Arguments.define do
+      #     flag_option :force, type: [TrueClass, FalseClass]
+      #   end
+      #   args_def.bind(force: true).to_a  # => ['--force']
       #
       # @example With required and allow_nil: false
-      #   flag_option :force, required: true, allow_nil: false
-      #   # Raises ArgumentError if nil or not provided
+      #   args_def = Arguments.define do
+      #     flag_option :force, required: true, allow_nil: false
+      #   end
+      #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :force"
+      #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
       def flag_option(names, args: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
         option_type = negatable ? :negatable_flag : :flag
@@ -288,68 +449,128 @@ module Git
 
       # Define a valued option (--flag value as separate arguments)
       #
+      # This option type supports three output modes controlled by `inline:` and `as_operand:`:
+      #
+      # - **Default**: `--flag value` (flag and value as separate arguments)
+      # - **Inline**: `--flag=value` (single argument with `inline: true`)
+      # - **Operand**: `value` (no flag, just the value with `as_operand: true`)
+      #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (arrays not supported for value types)
+      #
+      # @param args [String, nil] custom option string (arrays not supported for value types)
+      #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      #
       # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
       #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
-      # @param as_operand [Boolean] when true, outputs value as operand (positional argument) without flag
+      #
+      # @param as_operand [Boolean] when true, outputs value as operand without flag
       #   (default: false). Cannot be combined with inline:.
+      #
       # @param separator [String, nil] separator string to insert before values when as_operand: true
       #   (e.g., '--' for pathspec separator). Only valid with as_operand: true.
-      # @param allow_empty [Boolean] whether to include the flag even when value is an empty string.
-      #   When false (default), empty strings are skipped entirely. When true, the flag and empty
+      #
+      # @param allow_empty [Boolean] whether to include the option even when value is an empty string.
+      #   When false (default), empty strings are skipped entirely. When true, the option and empty
       #   value are included in the output.
+      #
       # @param repeatable [Boolean] whether to allow multiple values. When true, accepts an array
-      #   of values and repeats the flag for each (e.g., --flag v1 --flag v2). A single value or nil
-      #   is also accepted.
+      #   of values and repeats the option for each value. A single value or nil is also accepted.
+      #   Behavior varies by output mode (see examples below).
+      #
       # @param required [Boolean] when true, the option key must be present in the provided options hash.
       #   Raises ArgumentError if the key is missing. Defaults to false.
+      #
       # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
       #   Raises ArgumentError if a nil value is provided. Defaults to true.
+      #
       # @return [void]
       #
-      # @example Basic value option
-      #   value_option :branch
-      #   # branch: 'main' => ['--branch', 'main']
+      # @raise [ArgumentError] if inline: and as_operand: are both true
       #
-      # @example Inline value option
-      #   value_option :format, inline: true
-      #   # format: 'short' => ['--format=short']
+      # @raise [ArgumentError] if separator: is provided without as_operand: true
       #
-      # @example Operand value (outputs as positional argument)
-      #   value_option :paths, as_operand: true, repeatable: true, separator: '--'
-      #   # paths: ['file.txt'] => ['--', 'file.txt']
+      # @example Basic value (default mode)
+      #   args_def = Arguments.define do
+      #     value_option :branch
+      #   end
+      #   args_def.bind(branch: 'main').to_a  # => ['--branch', 'main']
+      #
+      # @example Inline value
+      #   args_def = Arguments.define do
+      #     value_option :format, inline: true
+      #   end
+      #   args_def.bind(format: 'short').to_a  # => ['--format=short']
+      #
+      # @example Operand value (no flag output)
+      #   args_def = Arguments.define do
+      #     value_option :ref, as_operand: true
+      #   end
+      #   args_def.bind(ref: 'HEAD').to_a  # => ['HEAD']
+      #
+      # @example Operand with separator
+      #   args_def = Arguments.define do
+      #     value_option :paths, as_operand: true, separator: '--'
+      #   end
+      #   args_def.bind(paths: 'file.txt').to_a  # => ['--', 'file.txt']
+      #
+      # @example Multi-valued (default mode) - repeats option for each value
+      #   args_def = Arguments.define do
+      #     value_option :config, repeatable: true
+      #   end
+      #   args_def.bind(config: 'a=b').to_a  # => ['--config', 'a=b']
+      #   args_def.bind(config: ['a=b', 'c=d']).to_a  # => ['--config', 'a=b', '--config', 'c=d']
+      #   args_def.bind(config: nil).to_a  # => []
+      #
+      # @example Multi-valued with inline - repeats inline option for each value
+      #   args_def = Arguments.define do
+      #     value_option :sort, inline: true, repeatable: true
+      #   end
+      #   args_def.bind(sort: ['refname', '-committerdate']).to_a
+      #   # => ['--sort=refname', '--sort=-committerdate']
+      #
+      # @example Multi-valued with operand - outputs values without flags
+      #   args_def = Arguments.define do
+      #     value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+      #   end
+      #   args_def.bind(pathspecs: ['file1.txt', 'file2.txt']).to_a
+      #   # => ['--', 'file1.txt', 'file2.txt']
       #
       # @example With type validation
-      #   value_option :branch, type: String
+      #   args_def = Arguments.define do
+      #     value_option :branch, type: String
+      #   end
+      #   args_def.bind(branch: 'main').to_a  # => ['--branch', 'main']
       #
       # @example With allow_empty
-      #   value_option :message, allow_empty: true
-      #   # message: ""     => ['--message', '']
-      #   # message: "text" => ['--message', 'text']
+      #   args_def = Arguments.define do
+      #     value_option :message, allow_empty: true
+      #   end
+      #   args_def.bind(message: "").to_a     # => ['--message', '']
+      #   args_def.bind(message: "text").to_a  # => ['--message', 'text']
       #
-      #   value_option :message  # allow_empty defaults to false
-      #   # message: ""     => [] (skipped)
-      #   # message: "text" => ['--message', 'text']
-      #
-      # @example With repeatable
-      #   value_option :config, repeatable: true
-      #   # config: 'a=b'          => ['--config', 'a=b']
-      #   # config: ['a=b', 'c=d'] => ['--config', 'a=b', '--config', 'c=d']
-      #   # config: nil            => []
+      #   args_def2 = Arguments.define do
+      #     value_option :message  # allow_empty defaults to false
+      #   end
+      #   args_def2.bind(message: "").to_a     # => []
+      #   args_def2.bind(message: "text").to_a  # => ['--message', 'text']
       #
       # @example With required
-      #   value_option :message, required: true
-      #   # Must be provided: build(message: 'text') or build(message: nil)
-      #   # Raises ArgumentError if not provided: build()
+      #   args_def = Arguments.define do
+      #     value_option :message, required: true
+      #   end
+      #   args_def.bind(message: 'text').to_a  # => ['--message', 'text']
+      #   args_def.bind(message: nil).to_a  # => []
+      #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :message"
       #
       # @example With required and allow_nil: false
-      #   value_option :message, required: true, allow_nil: false
-      #   # Must be provided with non-nil value: build(message: 'text')
-      #   # Raises ArgumentError if nil: build(message: nil)
-      #   # Raises ArgumentError if not provided: build()
+      #   args_def = Arguments.define do
+      #     value_option :message, required: true, allow_nil: false
+      #   end
+      #   args_def.bind(message: 'text').to_a  # => ['--message', 'text']
+      #   args_def.bind(message: nil) #=> raise ArgumentError, "Required options cannot be nil: :message"
+      #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :message"
       #
       def value_option(names, args: nil, type: nil, inline: false, as_operand: false, separator: nil,
                        allow_empty: false, repeatable: false, required: false, allow_nil: true)
@@ -370,42 +591,58 @@ module Git
       # - Nothing when value is nil
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string
+      #
+      # @param args [String, nil] custom option string
+      #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation
+      #
       # @param negatable [Boolean] when true, outputs --no-flag for false values (default: false)
+      #
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
+      #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #
       # @return [void]
+      #
       # @raise [ArgumentError] if value is not true, false, or a String
       #
-      # @example Basic flag or value option (new capability - not possible with old DSL)
-      #   flag_or_value_option :contains
-      #   # true       => --contains
-      #   # false      => (nothing)
-      #   # "abc123"   => --contains abc123 (separate arguments)
-      #   # nil        => (nothing)
+      # @example Basic flag or value (new capability - not possible with old DSL)
+      #   args_def = Arguments.define do
+      #     flag_or_value_option :contains
+      #   end
+      #   args_def.bind(contains: true).to_a       # => ['--contains']
+      #   args_def.bind(contains: false).to_a      # => []
+      #   args_def.bind(contains: "abc123").to_a   # => ['--contains', 'abc123']
+      #   args_def.bind(contains: nil).to_a        # => []
       #
       # @example With inline: true
-      #   flag_or_value_option :gpg_sign, inline: true
-      #   # true       => --gpg-sign
-      #   # false      => (nothing)
-      #   # "KEY"      => --gpg-sign=KEY (inline)
-      #   # nil        => (nothing)
+      #   args_def = Arguments.define do
+      #     flag_or_value_option :gpg_sign, inline: true
+      #   end
+      #   args_def.bind(gpg_sign: true).to_a    # => ['--gpg-sign']
+      #   args_def.bind(gpg_sign: false).to_a   # => []
+      #   args_def.bind(gpg_sign: "KEY").to_a   # => ['--gpg-sign=KEY']
+      #   args_def.bind(gpg_sign: nil).to_a     # => []
       #
       # @example With negatable: true (flag or value with negation)
-      #   flag_or_value_option :verify, negatable: true
-      #   # true       => --verify
-      #   # false      => --no-verify
-      #   # "KEYID"    => --verify KEYID (separate arguments)
-      #   # nil        => (nothing)
+      #   args_def = Arguments.define do
+      #     flag_or_value_option :verify, negatable: true
+      #   end
+      #   args_def.bind(verify: true).to_a      # => ['--verify']
+      #   args_def.bind(verify: false).to_a     # => ['--no-verify']
+      #   args_def.bind(verify: "KEYID").to_a   # => ['--verify', 'KEYID']
+      #   args_def.bind(verify: nil).to_a       # => []
       #
       # @example With negatable: true and inline: true
-      #   flag_or_value_option :sign, negatable: true, inline: true
-      #   # true       => --sign
-      #   # false      => --no-sign
-      #   # "KEY"      => --sign=KEY (inline)
-      #   # nil        => (nothing)
+      #   args_def = Arguments.define do
+      #     flag_or_value_option :sign, negatable: true, inline: true
+      #   end
+      #   args_def.bind(sign: true).to_a    # => ['--sign']
+      #   args_def.bind(sign: false).to_a   # => ['--no-sign']
+      #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
+      #   args_def.bind(sign: nil).to_a     # => []
       #
       def flag_or_value_option(names, args: nil, type: nil, negatable: false, inline: false,
                                required: false, allow_nil: true)
@@ -420,53 +657,77 @@ module Git
       # and can be repeated. Accepts Hash or Array of arrays for flexible input.
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      # @param args [String, nil] custom flag string (e.g., '--trailer')
+      #
+      # @param args [String, nil] custom option string (e.g., '--trailer')
+      #
       # @param key_separator [String] separator between key and value (default: '=')
+      #
       # @param inline [Boolean] when true, outputs --flag=key=value instead of --flag key=value
+      #
       # @param required [Boolean] whether the option must be provided (key must exist in opts).
       #   Note: empty hash/array is considered "present" and produces no output without error.
+      #
       # @param allow_nil [Boolean] whether nil is allowed when required is true
+      #
       # @return [void]
+      #
       # @raise [ArgumentError] if array input is not a [key, value] pair or array of pairs
+      #
       # @raise [ArgumentError] if a sub-array has more than 2 elements
+      #
       # @raise [ArgumentError] if a key is nil, empty, or contains the separator
+      #
       # @raise [ArgumentError] if a value is a Hash or Array (non-scalar)
       #
-      # @example Basic key-value option (like --trailer)
-      #   key_value_option :trailers, args: '--trailer'
-      #   # trailers: { 'Signed-off-by' => 'John' }
-      #   #   => ['--trailer', 'Signed-off-by=John']
+      # @example Basic key-value (like --trailer)
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer'
+      #   end
+      #   args_def.bind(trailers: { 'Signed-off-by' => 'John' }).to_a
+      #   # => ['--trailer', 'Signed-off-by=John']
       #
       # @example Hash with array values (multiple values for same key)
-      #   key_value_option :trailers, args: '--trailer'
-      #   # trailers: { 'Signed-off-by' => ['John', 'Jane'] }
-      #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer'
+      #   end
+      #   args_def.bind(trailers: { 'Signed-off-by' => ['John', 'Jane'] }).to_a
+      #   # => ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
       #
       # @example Array of arrays (full ordering control)
-      #   key_value_option :trailers, args: '--trailer'
-      #   # trailers: [['Signed-off-by', 'John'], ['Acked-by', 'Bob']]
-      #   #   => ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer'
+      #   end
+      #   args_def.bind(trailers: [['Signed-off-by', 'John'], ['Acked-by', 'Bob']]).to_a
+      #   # => ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
       #
       # @example Key without value (nil value omits separator)
-      #   key_value_option :trailers, args: '--trailer'
-      #   # trailers: [['Acked-by', nil]]
-      #   #   => ['--trailer', 'Acked-by']
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer'
+      #   end
+      #   args_def.bind(trailers: [['Acked-by', nil]]).to_a
+      #   # => ['--trailer', 'Acked-by']
       #
       # @example Nil in array values produces key-only entries
-      #   key_value_option :trailers, args: '--trailer'
-      #   # trailers: { 'Key' => ['Value1', nil, 'Value2'] }
-      #   #   => ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer'
+      #   end
+      #   args_def.bind(trailers: { 'Key' => ['Value1', nil, 'Value2'] }).to_a
+      #   # => ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
       #
       # @example With custom separator
-      #   key_value_option :trailers, args: '--trailer', key_separator: ': '
-      #   # trailers: { 'Signed-off-by' => 'John' }
-      #   #   => ['--trailer', 'Signed-off-by: John']
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer', key_separator: ': '
+      #   end
+      #   args_def.bind(trailers: { 'Signed-off-by' => 'John' }).to_a
+      #   # => ['--trailer', 'Signed-off-by: John']
       #
       # @example Empty values produce no output
-      #   key_value_option :trailers, args: '--trailer', required: true
-      #   # trailers: {}  => []  (no error, empty output)
-      #   # trailers: []  => []  (no error, empty output)
-      #   # trailers: nil => []  (no error, empty output)
+      #   args_def = Arguments.define do
+      #     key_value_option :trailers, args: '--trailer', required: true
+      #   end
+      #   args_def.bind(trailers: {}).to_a   # => []
+      #   args_def.bind(trailers: []).to_a   # => []
+      #   args_def.bind(trailers: nil).to_a  # => []
       #
       def key_value_option(names, args: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
         option_type = inline ? :inline_key_value : :key_value
@@ -480,21 +741,27 @@ module Git
       # This allows precise control over argument ordering, which is important for
       # git commands where argument position matters.
       #
-      # @param flag_string [String] the literal string (e.g., '--', '--no-progress')
+      # @param flag_string [String] the static flag string (e.g., '--', '--no-progress')
+      #
       # @return [void]
       #
-      # @example Literal for subcommand mode
-      #   literal '--delete'
-      #   flag_option :force
-      #   operand :branches, repeatable: true
-      #   # build('feature', force: true) => ['--delete', '--force', 'feature']
+      # @example Static flag for subcommand mode
+      #   args_def = Arguments.define do
+      #     literal '--delete'
+      #     flag_option :force
+      #     operand :branches, repeatable: true
+      #   end
+      #   args_def.bind('feature', force: true).to_a  # => ['--delete', '--force', 'feature']
       #
-      # @example Literal separator between options and pathspecs
-      #   flag_option :force
-      #   operand :tree_ish
-      #   literal '--'
-      #   operand :paths, repeatable: true
-      #   # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
+      # @example Static separator between options and pathspecs
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #     operand :tree_ish
+      #     literal '--'
+      #     operand :paths, repeatable: true
+      #   end
+      #   args_def.bind('HEAD', 'file.txt', force: true).to_a
+      #   # => ['--force', 'HEAD', '--', 'file.txt']
       #
       def literal(flag_string)
         @static_flags << flag_string
@@ -504,10 +771,14 @@ module Git
       # Define a custom option with a custom builder block
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
+      #
       # @yield [value] block that receives the option value and returns the argument string
+      #
       # @return [void]
       #
       def custom_option(names, required: false, allow_nil: true, &block)
@@ -517,6 +788,7 @@ module Git
       # Define a metadata option (for validation only, not included in command)
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
       # @return [void]
       #
       def metadata(names)
@@ -540,23 +812,28 @@ module Git
       #
       # @param option_names [Array<Symbol>] the option names that conflict within
       #   this group
+      #
       # @return [void]
       #
       # @raise [ArgumentError] if more than one option in the same conflict group
       #   is provided with a truthy value when building arguments
       #
-      # @example Simple conflict group
-      #   conflicts :gpg_sign, :no_gpg_sign
-      #
       # @example Multiple independent conflict groups
-      #   conflicts :gpg_sign, :no_gpg_sign
-      #   conflicts :force, :no_force
+      #   args_def = Arguments.define do
+      #     flag_option :gpg_sign
+      #     flag_option :no_gpg_sign
+      #     flag_option :force
+      #     flag_option :no_force
+      #     conflicts :gpg_sign, :no_gpg_sign
+      #     conflicts :force, :no_force
+      #   end
+      #   args_def.bind(gpg_sign: true).to_a  # => ['--gpg-sign']
       #
       def conflicts(*option_names)
         @conflicts << option_names.map(&:to_sym)
       end
 
-      # Define an operand (positional argument in CLI terminology)
+      # Define an operand (positional argument in Ruby terminology)
       #
       # Operands are mapped to values following Ruby method signature
       # semantics. Required operands before a repeatable are filled left-to-right,
@@ -564,83 +841,105 @@ module Git
       # repeatable gets whatever remains in the middle.
       #
       # @param name [Symbol] the operand name (used in error messages)
-      # @param required [Boolean] whether the operand is required. For repeatable
+      #
+      # @param required [Boolean] whether the argument is required. For repeatable
       #   operands, this means at least one value must be provided.
-      # @param repeatable [Boolean] whether the operand accepts multiple values
-      #   (can appear multiple times on the command line). Only one repeatable operand is
+      #
+      # @param repeatable [Boolean] whether the argument accepts multiple values
+      #   (like Ruby's splat operator *args). Only one repeatable operand is
       #   allowed per definition; attempting to define a second will raise an
       #   ArgumentError.
+      #
       # @param default [Object] the default value if not provided. For repeatable
       #   operands, this should be an array (e.g., `default: ['.']`).
+      #
       # @param separator [String, nil] separator string to insert before this
       #   operand in the output (e.g., '--' for the common pathspec separator)
+      #
       # @param allow_nil [Boolean] whether nil is a valid value for a required
       #   operand. When true, nil consumes the operand slot but is omitted
       #   from output. This is useful for commands like `git checkout` where
       #   the tree-ish is required to consume a slot but may be nil to restore
       #   from the index. Defaults to false.
+      #
       # @return [void]
       #
       # @example Required operand (like `def clone(repository)`)
-      #   operand :repository, required: true
-      #   # build('https://github.com/user/repo')
-      #   #   => ['https://github.com/user/repo']
+      #   args_def = Arguments.define do
+      #     operand :repository, required: true
+      #   end
+      #   args_def.bind('https://github.com/user/repo').to_a
+      #   # => ['https://github.com/user/repo']
       #
       # @example Optional operand with default (like `def log(commit = 'HEAD')`)
-      #   operand :commit, default: 'HEAD'
-      #   # build()        => ['HEAD']
-      #   # build('main')  => ['main']
+      #   args_def = Arguments.define do
+      #     operand :commit, default: 'HEAD'
+      #   end
+      #   args_def.bind().to_a        # => ['HEAD']
+      #   args_def.bind('main').to_a  # => ['main']
       #
-      # @example Repeatable operand (like multiple file arguments)
-      #   operand :paths, repeatable: true
-      #   # build('file1', 'file2', 'file3')
-      #   #   => ['file1', 'file2', 'file3']
+      # @example Repeatable operand (like `def add(*paths)`)
+      #   args_def = Arguments.define do
+      #     operand :paths, repeatable: true
+      #   end
+      #   args_def.bind('file1', 'file2', 'file3').to_a
+      #   # => ['file1', 'file2', 'file3']
       #
-      # @example Required repeatable with at least one value
-      #   operand :paths, repeatable: true, required: true
-      #   # build()         => raises ArgumentError
-      #   # build('file1')  => ['file1']
+      # @example Required repeatable with at least one value (like `def rm(*paths)` with validation)
+      #   args_def = Arguments.define do
+      #     operand :paths, repeatable: true, required: true
+      #   end
+      #   args_def.bind() #=> raise ArgumentError, "at least one value is required for paths"
+      #   args_def.bind('file1').to_a  # => ['file1']
       #
-      # @example git mv pattern (sources... destination)
-      #   operand :sources, repeatable: true, required: true
-      #   operand :destination, required: true
-      #   # build('src1', 'src2', 'dest')
-      #   #   => ['src1', 'src2', 'dest']
-      #   # build('src', 'dest')
-      #   #   => ['src', 'dest']
+      # @example git mv pattern (like `def mv(*sources, destination)`)
+      #   args_def = Arguments.define do
+      #     operand :sources, repeatable: true, required: true
+      #     operand :destination, required: true
+      #   end
+      #   args_def.bind('src1', 'src2', 'dest').to_a  # => ['src1', 'src2', 'dest']
+      #   args_def.bind('src', 'dest').to_a           # => ['src', 'dest']
       #
-      # @example Optional before repeatable with required after
-      #   operand :a, default: 'default_a'
-      #   operand :middle, repeatable: true
-      #   operand :b, required: true
-      #   # build('x')           => ['default_a', 'x']  (a=default, middle=[], b='x')
-      #   # build('x', 'y')      => ['x', 'y']          (a='x', middle=[], b='y')
-      #   # build('x', 'm', 'y') => ['x', 'm', 'y']     (a='x', middle=['m'], b='y')
+      # @example Optional before variadic with required after (like `def foo(a = 'default', *middle, b)`)
+      #   args_def = Arguments.define do
+      #     operand :a, default: 'default_a'
+      #     operand :middle, repeatable: true
+      #     operand :b, required: true
+      #   end
+      #   args_def.bind('x').to_a           # => ['default_a', 'x']
+      #   args_def.bind('x', 'y').to_a      # => ['x', 'y']
+      #   args_def.bind('x', 'm', 'y').to_a # => ['x', 'm', 'y']
       #
       # @example Operand with separator (pathspec after --)
-      #   flag_option :force
-      #   operand :paths, repeatable: true, separator: '--'
-      #   # build('file1', 'file2', force: true)
-      #   #   => ['--force', '--', 'file1', 'file2']
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #     operand :paths, repeatable: true, separator: '--'
+      #   end
+      #   args_def.bind('file1', 'file2', force: true).to_a
+      #   # => ['--force', '--', 'file1', 'file2']
       #
-      # @example Complex pattern (commit1, optional commit2, repeatable paths)
-      #   operand :commit1, required: true
-      #   operand :commit2
-      #   operand :paths, repeatable: true, separator: '--'
-      #   # build('HEAD~1')
-      #   #   => ['HEAD~1']
-      #   # build('HEAD~1', 'HEAD')
-      #   #   => ['HEAD~1', 'HEAD']
-      #   # build('HEAD~1', 'HEAD', 'file.rb')
-      #   #   => ['HEAD~1', 'HEAD', '--', 'file.rb']
+      # @example Complex pattern (like `def diff(commit1, commit2 = nil, *paths)`)
+      #   args_def = Arguments.define do
+      #     operand :commit1, required: true
+      #     operand :commit2
+      #     operand :paths, repeatable: true, separator: '--'
+      #   end
+      #   args_def.bind('HEAD~1').to_a  # => ['HEAD~1']
+      #   args_def.bind('HEAD~1', 'HEAD').to_a  # => ['HEAD~1', 'HEAD']
+      #   args_def.bind('HEAD~1', 'HEAD', 'file.rb').to_a
+      #   # => ['HEAD~1', 'HEAD', '--', 'file.rb']
       #
       # @example Required operand that allows nil (like `git checkout [tree-ish] -- paths`)
-      #   operand :tree_ish, required: true, allow_nil: true
-      #   operand :paths, repeatable: true, separator: '--'
-      #   # build('HEAD', 'file.rb')
-      #   #   => ['HEAD', '--', 'file.rb']
-      #   # build(nil, 'file.rb')
-      #   #   => ['--', 'file.rb']  (nil consumes slot but is omitted from output)
+      #   args_def = Arguments.define do
+      #     operand :tree_ish, required: true, allow_nil: true
+      #     operand :paths, repeatable: true, separator: '--'
+      #   end
+      #   args_def.bind(nil, 'file1.txt', 'file2.txt').to_a
+      #   # => ['--', 'file1.txt', 'file2.txt']
+      #   args_def.bind('HEAD', 'file.rb').to_a
+      #   # => ['HEAD', '--', 'file.rb']
+      #   args_def.bind(nil, 'file.rb').to_a
+      #   # => ['--', 'file.rb']
       #
       def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false)
         validate_single_repeatable!(name) if repeatable
@@ -656,8 +955,11 @@ module Git
       # - Supports splatting via `to_ary` for seamless use with `command(*bound)`
       #
       # @param positionals [Array] positional argument values
+      #
       # @param opts [Hash] the keyword options
+      #
       # @return [Bound] a frozen object with accessor methods for all arguments
+      #
       # @raise [ArgumentError] if unsupported options are provided or validation fails
       #
       # @example Simple splatting (same behavior as build)
@@ -666,16 +968,22 @@ module Git
       #   end
       #
       # @example Inspecting options before command execution
-      #   def call(*, **)
-      #     bound_args = ARGS.bind(*, **)
-      #     bound_args.force          # => true (if provided)
-      #     bound_args.remotes        # => true (normalized from :r or :remotes)
-      #     bound_args.branch_names   # => ['branch1', 'branch2']
-      #     @execution_context.command(*bound_args)
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #     flag_option :remotes, args: ['-r', '--remotes']
+      #     operand :branch_names, repeatable: true
       #   end
+      #   bound_args = args_def.bind('branch1', 'branch2', force: true, remotes: true)
+      #   bound_args.force          # => true
+      #   bound_args.remotes        # => true
+      #   bound_args.branch_names   # => ['branch1', 'branch2']
       #
       # @example Hash-style access for reserved names
-      #   bound_args[:hash]  # Required for reserved names like :hash, :class
+      #   args_def = Arguments.define do
+      #     value_option :hash
+      #   end
+      #   bound_args = args_def.bind(hash: 'abc123')
+      #   bound_args[:hash]  # => 'abc123'
       #
       def bind(*positionals, **opts)
         validate_unsupported_options!(opts)
@@ -720,15 +1028,15 @@ module Git
         end
       end
 
-      # Determine the internal option type based on inline and positional modifiers
+      # Determine the internal option type based on inline and as_operand modifiers
       #
       # @param inline [Boolean] whether to use inline format (--flag=value)
-      # @param positional [Boolean] whether to output as positional argument
+      # @param as_operand [Boolean] whether to output as operand (positional argument)
       # @return [Symbol] the internal option type
       #
-      def determine_value_option_type(inline, positional)
-        if positional
-          :value_to_positional
+      def determine_value_option_type(inline, as_operand)
+        if as_operand
+          :value_as_operand
         elsif inline
           :inline_value
         else
@@ -791,7 +1099,10 @@ module Git
       def apply_type_validator!(definition, option_name)
         return unless definition[:expected_type]
 
-        raise ArgumentError, "cannot specify both type: and validator: for :#{option_name}" if definition[:validator]
+        if definition[:validator]
+          raise ArgumentError,
+                "cannot specify both type: and validator: for :#{option_name}"
+        end
 
         definition[:validator] = create_type_validator(option_name, definition[:expected_type])
       end
@@ -928,17 +1239,17 @@ module Git
           end
         end,
         negatable_flag_or_value: :build_negatable_flag_or_value,
-        value_to_positional: lambda do |args, _, value, definition|
+        value_as_operand: lambda do |args, _, value, definition|
           # Validate array usage when repeatable is false
           if value.is_a?(Array) && !definition[:repeatable]
             raise ArgumentError,
-                  "value_to_positional :#{definition[:aliases].first} requires repeatable: true to accept an array"
+                  "value_as_operand :#{definition[:aliases].first} requires repeatable: true to accept an array"
           end
 
           # Validate no nil values in array
           if definition[:repeatable] && value.is_a?(Array) && value.any?(&:nil?)
             raise ArgumentError,
-                  "nil values are not allowed in value_to_positional :#{definition[:aliases].first}"
+                  "nil values are not allowed in value_as_operand :#{definition[:aliases].first}"
           end
 
           # Add separator if present
@@ -1126,15 +1437,15 @@ module Git
       def should_skip_option?(value, definition)
         return true if value.nil?
         return true if value == false && %i[flag_or_inline_value flag_or_value].include?(definition[:type])
-        return skip_value_to_positional_array?(value, definition) if value.is_a?(Array)
+        return skip_value_as_operand_array?(value, definition) if value.is_a?(Array)
 
         value.respond_to?(:empty?) && value.empty? && !definition[:allow_empty]
       end
 
-      # For value_to_positional, empty arrays always skip regardless of allow_empty
+      # For value_as_operand, empty arrays always skip regardless of allow_empty
       # (allow_empty only applies to empty strings, not empty arrays)
-      def skip_value_to_positional_array?(value, definition)
-        return value.empty? if definition[:type] == :value_to_positional
+      def skip_value_as_operand_array?(value, definition)
+        return value.empty? if definition[:type] == :value_as_operand
 
         value.empty? && !definition[:allow_empty]
       end
@@ -1397,16 +1708,30 @@ module Git
       # @api private
       #
       # @example Accessing bound arguments
-      #   bound = ARGS.bind('branch1', 'branch2', force: true, r: true)
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #     flag_option :remotes, args: ['-r', '--remotes']
+      #     operand :branch_names, repeatable: true
+      #   end
+      #   bound = args_def.bind('branch1', 'branch2', force: true, remotes: true)
       #   bound.force          # => true
-      #   bound.remotes        # => true (normalized from :r alias)
+      #   bound.remotes        # => true
       #   bound.branch_names   # => ['branch1', 'branch2']
       #
       # @example Splatting for command execution
-      #   @execution_context.command(*bound)  # Uses to_ary
+      #   args_def = Arguments.define do
+      #     flag_option :force
+      #     operand :file
+      #   end
+      #   bound = args_def.bind('test.txt', force: true)
+      #   bound.to_a  # => ['--force', 'test.txt']
       #
       # @example Hash-style access for reserved names
-      #   bound[:hash]  # Required for reserved names like :hash, :class, etc.
+      #   args_def = Arguments.define do
+      #     value_option :hash
+      #   end
+      #   bound = args_def.bind(hash: 'abc123')
+      #   bound[:hash]  # => 'abc123'
       #
       class Bound
         # Names that cannot have accessor methods defined (would override Object methods)
