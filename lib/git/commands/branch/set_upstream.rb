@@ -31,9 +31,9 @@ module Git
         # The set_upstream_to keyword is required by the Ruby method signature, not the DSL.
         #
         ARGS = Arguments.define do
-          static 'branch'
-          value %i[set_upstream_to u], inline: true, required: true, allow_nil: false
-          positional :branch_name
+          literal 'branch'
+          value_option %i[set_upstream_to u], inline: true, required: true, allow_nil: false
+          operand :branch_name
         end.freeze
 
         # Initialize the SetUpstream command

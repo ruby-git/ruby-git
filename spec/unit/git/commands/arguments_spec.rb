@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with flag options' do
       let(:args) do
         described_class.define do
-          flag :force
+          flag_option :force
         end
       end
 
@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with value options' do
       let(:args) do
         described_class.define do
-          value :branch
+          value_option :branch
         end
       end
 
@@ -51,10 +51,10 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with value multi_valued: true' do
+    context 'with value repeatable: true' do
       let(:args) do
         described_class.define do
-          value :config, multi_valued: true
+          value_option :config, repeatable: true
         end
       end
 
@@ -85,7 +85,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with allow_empty: true' do
         let(:args) do
           described_class.define do
-            value :config, multi_valued: true, allow_empty: true
+            value_option :config, repeatable: true, allow_empty: true
           end
         end
 
@@ -102,7 +102,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with static options' do
       let(:args) do
         described_class.define do
-          static '--no-progress'
+          literal '--no-progress'
         end
       end
 
@@ -112,8 +112,8 @@ RSpec.describe Git::Commands::Arguments do
 
       it 'outputs static flag even with other options' do
         args_with_flag = described_class.define do
-          static '-p'
-          flag :force
+          literal '-p'
+          flag_option :force
         end
         expect(args_with_flag.bind(force: true).to_ary).to eq(['-p', '--force'])
       end
@@ -122,7 +122,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with custom options' do
       let(:args) do
         described_class.define do
-          custom :dirty do |value|
+          custom_option :dirty do |value|
             if value == true
               '--dirty'
             elsif value.is_a?(String)
@@ -170,7 +170,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with required positional arguments' do
       let(:args) do
         described_class.define do
-          positional :repository, required: true
+          operand :repository, required: true
         end
       end
 
@@ -190,8 +190,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with optional positional arguments' do
       let(:args) do
         described_class.define do
-          positional :repository, required: true
-          positional :directory
+          operand :repository, required: true
+          operand :directory
         end
       end
 
@@ -207,7 +207,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with variadic positional arguments' do
       let(:args) do
         described_class.define do
-          positional :paths, variadic: true
+          operand :paths, repeatable: true
         end
       end
 
@@ -227,7 +227,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with required variadic positional arguments' do
       let(:args) do
         described_class.define do
-          positional :paths, variadic: true, required: true
+          operand :paths, repeatable: true, required: true
         end
       end
 
@@ -255,7 +255,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with positional arguments with default values' do
       let(:args) do
         described_class.define do
-          positional :paths, variadic: true, default: ['.']
+          operand :paths, repeatable: true, default: ['.']
         end
       end
 
@@ -271,8 +271,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with positional arguments with separator' do
       let(:args) do
         described_class.define do
-          flag :force
-          positional :paths, variadic: true, separator: '--'
+          flag_option :force
+          operand :paths, repeatable: true, separator: '--'
         end
       end
 
@@ -288,10 +288,10 @@ RSpec.describe Git::Commands::Arguments do
     context 'with mixed positionals and keyword options' do
       let(:args) do
         described_class.define do
-          flag :bare
-          value :branch
-          positional :repository, required: true
-          positional :directory
+          flag_option :bare
+          value_option :branch
+          operand :repository, required: true
+          operand :directory
         end
       end
 
@@ -305,7 +305,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'when no positionals are defined' do
         let(:args) do
           described_class.define do
-            flag :force
+            flag_option :force
           end
         end
 
@@ -335,7 +335,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'when optional positional is defined' do
         let(:args) do
           described_class.define do
-            positional :commit, required: false
+            operand :commit, required: false
           end
         end
 
@@ -376,7 +376,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'when required positional is defined' do
         let(:args) do
           described_class.define do
-            positional :repository, required: true
+            operand :repository, required: true
           end
         end
 
@@ -395,8 +395,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'when multiple positionals are defined' do
         let(:args) do
           described_class.define do
-            positional :repository, required: true
-            positional :directory, required: false
+            operand :repository, required: true
+            operand :directory, required: false
           end
         end
 
@@ -426,7 +426,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'when variadic positional is defined' do
         let(:args) do
           described_class.define do
-            positional :paths, variadic: true
+            operand :paths, repeatable: true
           end
         end
 
@@ -443,8 +443,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'when variadic positional comes after regular positional' do
         let(:args) do
           described_class.define do
-            positional :command, required: true
-            positional :args, variadic: true
+            operand :command, required: true
+            operand :args, repeatable: true
           end
         end
 
@@ -460,7 +460,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'edge case: empty strings vs nil for positionals' do
         let(:args) do
           described_class.define do
-            positional :commit, required: false
+            operand :commit, required: false
           end
         end
 
@@ -488,7 +488,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'edge case: empty arrays for variadic positionals' do
         let(:args) do
           described_class.define do
-            positional :paths, variadic: true
+            operand :paths, repeatable: true
           end
         end
 
@@ -507,8 +507,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'with separator' do
           let(:args) do
             described_class.define do
-              flag :force
-              positional :paths, variadic: true, separator: '--'
+              flag_option :force
+              operand :paths, repeatable: true, separator: '--'
             end
           end
 
@@ -528,7 +528,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'with default value' do
           let(:args) do
             described_class.define do
-              positional :paths, variadic: true, default: ['.']
+              operand :paths, repeatable: true, default: ['.']
             end
           end
 
@@ -557,9 +557,9 @@ RSpec.describe Git::Commands::Arguments do
         it 'raises ArgumentError when defining a second variadic positional' do
           expect do
             described_class.define do
-              positional :sources, variadic: true
-              positional :middle
-              positional :paths, variadic: true
+              operand :sources, repeatable: true
+              operand :middle
+              operand :paths, repeatable: true
             end
           end.to raise_error(
             ArgumentError,
@@ -571,8 +571,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with mixed options and unexpected positionals' do
         let(:args) do
           described_class.define do
-            flag :force
-            positional :path, required: false
+            flag_option :force
+            operand :path, required: false
           end
         end
 
@@ -612,7 +612,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'single required positional' do
           let(:args) do
             described_class.define do
-              positional :arg1, required: true
+              operand :arg1, required: true
             end
           end
 
@@ -629,7 +629,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'single optional positional with default' do
           let(:args) do
             described_class.define do
-              positional :arg1, default: 'default_value'
+              operand :arg1, default: 'default_value'
             end
           end
 
@@ -646,8 +646,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'two required positionals' do
           let(:args) do
             described_class.define do
-              positional :arg1, required: true
-              positional :arg2, required: true
+              operand :arg1, required: true
+              operand :arg2, required: true
             end
           end
 
@@ -664,8 +664,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'required followed by optional' do
           let(:args) do
             described_class.define do
-              positional :arg1, required: true
-              positional :arg2, default: 'default2'
+              operand :arg1, required: true
+              operand :arg2, default: 'default2'
             end
           end
 
@@ -683,8 +683,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'optional followed by required' do
           let(:args) do
             described_class.define do
-              positional :arg1, default: 'default1'
-              positional :arg2, required: true
+              operand :arg1, default: 'default1'
+              operand :arg2, required: true
             end
           end
 
@@ -706,9 +706,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'two optionals followed by required' do
           let(:args) do
             described_class.define do
-              positional :arg1, default: 'default1'
-              positional :arg2, default: 'default2'
-              positional :arg3, required: true
+              operand :arg1, default: 'default1'
+              operand :arg2, default: 'default2'
+              operand :arg3, required: true
             end
           end
 
@@ -730,9 +730,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'required, optional, required' do
           let(:args) do
             described_class.define do
-              positional :arg1, required: true
-              positional :arg2, default: 'default2'
-              positional :arg3, required: true
+              operand :arg1, required: true
+              operand :arg2, default: 'default2'
+              operand :arg3, required: true
             end
           end
 
@@ -754,7 +754,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'variadic only' do
           let(:args) do
             described_class.define do
-              positional :paths, variadic: true
+              operand :paths, repeatable: true
             end
           end
 
@@ -775,8 +775,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'required followed by variadic' do
           let(:args) do
             described_class.define do
-              positional :command, required: true
-              positional :args, variadic: true
+              operand :command, required: true
+              operand :args, repeatable: true
             end
           end
 
@@ -797,8 +797,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'variadic followed by required (git mv pattern)' do
           let(:args) do
             described_class.define do
-              positional :sources, variadic: true, required: true
-              positional :destination, required: true
+              operand :sources, repeatable: true, required: true
+              operand :destination, required: true
             end
           end
 
@@ -830,9 +830,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'required, variadic, required' do
           let(:args) do
             described_class.define do
-              positional :first, required: true
-              positional :middle, variadic: true
-              positional :last, required: true
+              operand :first, required: true
+              operand :middle, repeatable: true
+              operand :last, required: true
             end
           end
 
@@ -859,11 +859,11 @@ RSpec.describe Git::Commands::Arguments do
         context 'two required, variadic, two required' do
           let(:args) do
             described_class.define do
-              positional :a, required: true
-              positional :b, required: true
-              positional :middle, variadic: true
-              positional :c, required: true
-              positional :d, required: true
+              operand :a, required: true
+              operand :b, required: true
+              operand :middle, repeatable: true
+              operand :c, required: true
+              operand :d, required: true
             end
           end
 
@@ -890,9 +890,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'required, variadic, optional' do
           let(:args) do
             described_class.define do
-              positional :a, required: true
-              positional :middle, variadic: true
-              positional :c, default: 'default_c'
+              operand :a, required: true
+              operand :middle, repeatable: true
+              operand :c, default: 'default_c'
             end
           end
 
@@ -914,9 +914,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'optional, variadic, required (Ruby semantics)' do
           let(:args) do
             described_class.define do
-              positional :a, default: 'default_a'
-              positional :middle, variadic: true
-              positional :b, required: true
+              operand :a, default: 'default_a'
+              operand :middle, repeatable: true
+              operand :b, required: true
             end
           end
 
@@ -938,8 +938,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'optional followed by variadic (no post)' do
           let(:args) do
             described_class.define do
-              positional :a, default: 'default_a'
-              positional :rest, variadic: true
+              operand :a, default: 'default_a'
+              operand :rest, repeatable: true
             end
           end
 
@@ -960,9 +960,9 @@ RSpec.describe Git::Commands::Arguments do
         context 'required, optional, variadic (no post)' do
           let(:args) do
             described_class.define do
-              positional :a, required: true
-              positional :b, default: 'default_b'
-              positional :rest, variadic: true
+              operand :a, required: true
+              operand :b, default: 'default_b'
+              operand :rest, repeatable: true
             end
           end
 
@@ -987,10 +987,10 @@ RSpec.describe Git::Commands::Arguments do
         context 'required, optional, variadic, required' do
           let(:args) do
             described_class.define do
-              positional :a, required: true
-              positional :b, default: 'default_b'
-              positional :middle, variadic: true
-              positional :c, required: true
+              operand :a, required: true
+              operand :b, default: 'default_b'
+              operand :middle, repeatable: true
+              operand :c, required: true
             end
           end
 
@@ -1032,8 +1032,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'with non-variadic positionals' do
           let(:args) do
             described_class.define do
-              positional :arg1
-              positional :arg2
+              operand :arg1
+              operand :arg2
             end
           end
 
@@ -1053,8 +1053,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'with variadic positional at end' do
           let(:args) do
             described_class.define do
-              positional :first
-              positional :rest, variadic: true
+              operand :first
+              operand :rest, repeatable: true
             end
           end
 
@@ -1073,8 +1073,8 @@ RSpec.describe Git::Commands::Arguments do
         context 'with variadic followed by required' do
           let(:args) do
             described_class.define do
-              positional :sources, variadic: true, required: true
-              positional :destination, required: true
+              operand :sources, repeatable: true, required: true
+              operand :destination, required: true
             end
           end
 
@@ -1091,8 +1091,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with custom flag names' do
       let(:args) do
         described_class.define do
-          flag :recursive, args: '-r'
-          value :skip, args: '--skip-worktree'
+          flag_option :recursive, args: '-r'
+          value_option :skip, args: '--skip-worktree'
         end
       end
 
@@ -1108,7 +1108,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with unsupported options' do
       let(:args) do
         described_class.define do
-          flag :force
+          flag_option :force
         end
       end
 
@@ -1128,7 +1128,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with custom options returning arrays' do
       let(:args) do
         described_class.define do
-          custom(:depth) { |v| ['--depth', v.to_i] }
+          custom_option(:depth) { |v| ['--depth', v.to_i] }
         end
       end
 
@@ -1144,7 +1144,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with validator on flag' do
       let(:args) do
         described_class.define do
-          flag :force, validator: ->(v) { [true, false].include?(v) }
+          flag_option :force, validator: ->(v) { [true, false].include?(v) }
         end
       end
 
@@ -1166,7 +1166,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with option aliases' do
       let(:args) do
         described_class.define do
-          value %i[origin remote]
+          value_option %i[origin remote]
         end
       end
 
@@ -1179,13 +1179,13 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'uses first key for flag name by default' do
-        args = described_class.define { flag %i[verbose v] }
+        args = described_class.define { flag_option %i[verbose v] }
         expect(args.bind(verbose: true).to_ary).to eq(['--verbose'])
         expect(args.bind(v: true).to_ary).to eq(['--verbose'])
       end
 
       it 'allows custom flag with aliases' do
-        args = described_class.define { flag %i[recursive r], args: '-R' }
+        args = described_class.define { flag_option %i[recursive r], args: '-R' }
         expect(args.bind(recursive: true).to_ary).to eq(['-R'])
         expect(args.bind(r: true).to_ary).to eq(['-R'])
       end
@@ -1200,7 +1200,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with variadic positional arguments containing nil values' do
       let(:args) do
         described_class.define do
-          positional :paths, variadic: true
+          operand :paths, repeatable: true
         end
       end
 
@@ -1224,7 +1224,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with args: parameter arrays' do
       it 'supports arrays for flag type' do
         args = described_class.define do
-          flag :amend, args: ['--amend', '--no-edit']
+          flag_option :amend, args: ['--amend', '--no-edit']
         end
         expect(args.bind(amend: true).to_ary).to eq(['--amend', '--no-edit'])
       end
@@ -1232,7 +1232,7 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for flag negatable: true type' do
         expect do
           described_class.define do
-            flag :verbose, negatable: true, args: ['--verbose', '--all']
+            flag_option :verbose, negatable: true, args: ['--verbose', '--all']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter cannot be combined with negatable: true/)
       end
@@ -1240,7 +1240,7 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for value type' do
         expect do
           described_class.define do
-            value :branch, args: ['--branch', '--set-upstream']
+            value_option :branch, args: ['--branch', '--set-upstream']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
@@ -1248,7 +1248,7 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for value inline: true type' do
         expect do
           described_class.define do
-            value :message, inline: true, args: ['--message', '--edit']
+            value_option :message, inline: true, args: ['--message', '--edit']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
@@ -1256,7 +1256,7 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for flag_or_value inline: true type' do
         expect do
           described_class.define do
-            flag_or_value :gpg_sign, inline: true, args: ['--gpg-sign', '--verify']
+            flag_or_value_option :gpg_sign, inline: true, args: ['--gpg-sign', '--verify']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
@@ -1264,7 +1264,7 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for flag_or_value negatable: true, inline: true type' do
         expect do
           described_class.define do
-            flag_or_value :sign, negatable: true, inline: true, args: ['--sign', '--verify']
+            flag_or_value_option :sign, negatable: true, inline: true, args: ['--sign', '--verify']
           end
         end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
       end
@@ -1274,13 +1274,13 @@ RSpec.describe Git::Commands::Arguments do
       context 'for value types' do
         let(:args_without_allow_empty) do
           described_class.define do
-            value :message
+            value_option :message
           end
         end
 
         let(:args_with_allow_empty) do
           described_class.define do
-            value :message, allow_empty: true
+            value_option :message, allow_empty: true
           end
         end
 
@@ -1301,13 +1301,13 @@ RSpec.describe Git::Commands::Arguments do
       context 'for value inline: true types' do
         let(:args_without_allow_empty) do
           described_class.define do
-            value :abbrev, inline: true
+            value_option :abbrev, inline: true
           end
         end
 
         let(:args_with_allow_empty) do
           described_class.define do
-            value :abbrev, inline: true, allow_empty: true
+            value_option :abbrev, inline: true, allow_empty: true
           end
         end
 
@@ -1330,7 +1330,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with String type' do
         let(:args) do
           described_class.define do
-            value :message, type: String
+            value_option :message, type: String
           end
         end
 
@@ -1353,7 +1353,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with Integer type' do
         let(:args) do
           described_class.define do
-            value :depth, type: Integer
+            value_option :depth, type: Integer
           end
         end
 
@@ -1376,8 +1376,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple options having type validation' do
         let(:args) do
           described_class.define do
-            value :message, type: String
-            value :depth, type: Integer
+            value_option :message, type: String
+            value_option :depth, type: Integer
           end
         end
 
@@ -1396,7 +1396,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple allowed types' do
         let(:args) do
           described_class.define do
-            value :timeout, type: [Integer, Float]
+            value_option :timeout, type: [Integer, Float]
           end
         end
 
@@ -1420,7 +1420,7 @@ RSpec.describe Git::Commands::Arguments do
         it 'raises an error at definition time' do
           expect do
             described_class.define do
-              flag :single_branch, negatable: true, type: String, validator: ->(v) { [true, false].include?(v) }
+              flag_option :single_branch, negatable: true, type: String, validator: ->(v) { [true, false].include?(v) }
             end
           end.to raise_error(ArgumentError, /cannot specify both type: and validator: for :single_branch/)
         end
@@ -1431,8 +1431,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with two conflicting options' do
         let(:args) do
           described_class.define do
-            flag :patch
-            flag :stat
+            flag_option :patch
+            flag_option :stat
             conflicts :patch, :stat
           end
         end
@@ -1469,9 +1469,9 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple conflicting options' do
         let(:args) do
           described_class.define do
-            flag :patch
-            flag :stat
-            flag :summary
+            flag_option :patch
+            flag_option :stat
+            flag_option :summary
             conflicts :patch, :stat, :summary
           end
         end
@@ -1502,10 +1502,10 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple conflict groups' do
         let(:args) do
           described_class.define do
-            flag :patch
-            flag :stat
-            flag :quiet
-            flag :verbose
+            flag_option :patch
+            flag_option :stat
+            flag_option :quiet
+            flag_option :verbose
             conflicts :patch, :stat
             conflicts :quiet, :verbose
           end
@@ -1536,8 +1536,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with conflicts on valued options' do
         let(:args) do
           described_class.define do
-            value :branch
-            value :tag
+            value_option :branch
+            value_option :tag
             conflicts :branch, :tag
           end
         end
@@ -1558,8 +1558,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with conflicts on mixed option types' do
         let(:args) do
           described_class.define do
-            flag :all
-            value :since
+            flag_option :all
+            value_option :since
             conflicts :all, :since
           end
         end
@@ -1582,8 +1582,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'when required with allow_nil' do
         let(:args) do
           described_class.define do
-            positional :tree_ish, required: true, allow_nil: true
-            positional :paths, variadic: true, separator: '--'
+            operand :tree_ish, required: true, allow_nil: true
+            operand :paths, repeatable: true, separator: '--'
           end
         end
 
@@ -1612,8 +1612,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'when not required with allow_nil (optional positional)' do
         let(:args) do
           described_class.define do
-            positional :tree_ish, allow_nil: true
-            positional :paths, variadic: true, separator: '--'
+            operand :tree_ish, allow_nil: true
+            operand :paths, repeatable: true, separator: '--'
           end
         end
 
@@ -1633,7 +1633,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'allow_nil defaults to false for required positional' do
         let(:args) do
           described_class.define do
-            positional :tree_ish, required: true
+            operand :tree_ish, required: true
           end
         end
 
@@ -1647,7 +1647,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on flag' do
         let(:args) do
           described_class.define do
-            flag :force, required: true
+            flag_option :force, required: true
           end
         end
 
@@ -1671,7 +1671,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on value' do
         let(:args) do
           described_class.define do
-            value :message, required: true
+            value_option :message, required: true
           end
         end
 
@@ -1691,7 +1691,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on value inline: true' do
         let(:args) do
           described_class.define do
-            value :upstream, inline: true, required: true
+            value_option :upstream, inline: true, required: true
           end
         end
 
@@ -1711,7 +1711,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on flag negatable: true' do
         let(:args) do
           described_class.define do
-            flag :verify, negatable: true, required: true
+            flag_option :verify, negatable: true, required: true
           end
         end
 
@@ -1731,7 +1731,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :gpg_sign, inline: true, required: true
+            flag_or_value_option :gpg_sign, inline: true, required: true
           end
         end
 
@@ -1751,7 +1751,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on flag_or_value negatable: true, inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :gpg_sign, negatable: true, inline: true, required: true
+            flag_or_value_option :gpg_sign, negatable: true, inline: true, required: true
           end
         end
 
@@ -1775,7 +1775,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true on custom' do
         let(:args) do
           described_class.define do
-            custom :special, required: true do |value|
+            custom_option :special, required: true do |value|
               value ? "--special=#{value}" : nil
             end
           end
@@ -1793,8 +1793,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple required options' do
         let(:args) do
           described_class.define do
-            value :upstream, inline: true, required: true
-            value :message, required: true
+            value_option :upstream, inline: true, required: true
+            value_option :message, required: true
           end
         end
 
@@ -1818,7 +1818,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required option and aliases' do
         let(:args) do
           described_class.define do
-            flag %i[force f], required: true
+            flag_option %i[force f], required: true
           end
         end
 
@@ -1838,7 +1838,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on value' do
         let(:args) do
           described_class.define do
-            value :message, required: true, allow_nil: false
+            value_option :message, required: true, allow_nil: false
           end
         end
 
@@ -1858,7 +1858,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on value inline: true' do
         let(:args) do
           described_class.define do
-            value :upstream, inline: true, required: true, allow_nil: false
+            value_option :upstream, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -1880,8 +1880,8 @@ RSpec.describe Git::Commands::Arguments do
       context 'with multiple required options and allow_nil: false' do
         let(:args) do
           described_class.define do
-            value :upstream, inline: true, required: true, allow_nil: false
-            value :message, required: true, allow_nil: false
+            value_option :upstream, inline: true, required: true, allow_nil: false
+            value_option :message, required: true, allow_nil: false
           end
         end
 
@@ -1907,7 +1907,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and default allow_nil (true)' do
         let(:args) do
           described_class.define do
-            value :message, required: true
+            value_option :message, required: true
           end
         end
 
@@ -1919,7 +1919,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on flag' do
         let(:args) do
           described_class.define do
-            flag :force, required: true, allow_nil: false
+            flag_option :force, required: true, allow_nil: false
           end
         end
 
@@ -1943,7 +1943,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on flag negatable: true' do
         let(:args) do
           described_class.define do
-            flag :verify, negatable: true, required: true, allow_nil: false
+            flag_option :verify, negatable: true, required: true, allow_nil: false
           end
         end
 
@@ -1967,7 +1967,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :gpg_sign, inline: true, required: true, allow_nil: false
+            flag_or_value_option :gpg_sign, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -1997,7 +1997,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on flag_or_value negatable: true, inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :gpg_sign, negatable: true, inline: true, required: true, allow_nil: false
+            flag_or_value_option :gpg_sign, negatable: true, inline: true, required: true, allow_nil: false
           end
         end
 
@@ -2027,7 +2027,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false on custom' do
         let(:args) do
           described_class.define do
-            custom :special, required: true, allow_nil: false do |value|
+            custom_option :special, required: true, allow_nil: false do |value|
               value ? "--special=#{value}" : nil
             end
           end
@@ -2051,10 +2051,10 @@ RSpec.describe Git::Commands::Arguments do
       context 'when arguments are rendered in definition order across types' do
         it 'renders arguments in definition order for flag, positional, static pattern' do
           args = described_class.define do
-            flag :verbose
-            positional :command, required: true
-            static '--'
-            positional :paths, variadic: true
+            flag_option :verbose
+            operand :command, required: true
+            literal '--'
+            operand :paths, repeatable: true
           end
 
           result = args.bind('status', 'file1.txt', 'file2.txt', verbose: true).to_ary
@@ -2063,9 +2063,9 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'renders static flags in definition position (not first)' do
           args = described_class.define do
-            positional :ref, required: true
-            static '--'
-            positional :path, required: true
+            operand :ref, required: true
+            literal '--'
+            operand :path, required: true
           end
 
           result = args.bind('HEAD', 'file.txt').to_ary
@@ -2074,9 +2074,9 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'renders positional before flag when positional is defined first' do
           args = described_class.define do
-            positional :file, required: true
-            flag :force
-            static '--'
+            operand :file, required: true
+            flag_option :force
+            literal '--'
           end
 
           result = args.bind('file.txt', force: true).to_ary
@@ -2085,12 +2085,12 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'renders interleaved options and positionals in definition order' do
           args = described_class.define do
-            flag :verbose
-            positional :source, required: true
-            flag :force
-            positional :dest, required: true
-            static '--'
-            positional :extra
+            flag_option :verbose
+            operand :source, required: true
+            flag_option :force
+            operand :dest, required: true
+            literal '--'
+            operand :extra
           end
 
           result = args.bind('src.txt', 'dst.txt', 'extra.txt', verbose: true, force: true).to_ary
@@ -2099,10 +2099,10 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'skips omitted options while preserving order' do
           args = described_class.define do
-            flag :verbose
-            positional :source, required: true
-            flag :force
-            positional :dest, required: true
+            flag_option :verbose
+            operand :source, required: true
+            flag_option :force
+            operand :dest, required: true
           end
 
           result = args.bind('src.txt', 'dst.txt', force: true).to_ary
@@ -2111,11 +2111,11 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'handles multiple static flags in definition order' do
           args = described_class.define do
-            static '-a'
-            flag :force
-            static '-b'
-            positional :file, required: true
-            static '-c'
+            literal '-a'
+            flag_option :force
+            literal '-b'
+            operand :file, required: true
+            literal '-c'
           end
 
           result = args.bind('file.txt', force: true).to_ary
@@ -2124,11 +2124,11 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'handles complex git checkout pattern: [tree-ish] -- paths' do
           args = described_class.define do
-            flag :force
-            flag :quiet
-            positional :tree_ish
-            static '--'
-            positional :paths, variadic: true
+            flag_option :force
+            flag_option :quiet
+            operand :tree_ish
+            literal '--'
+            operand :paths, repeatable: true
           end
 
           # git checkout HEAD -- file1 file2
@@ -2142,11 +2142,11 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'handles git diff pattern: commit1 commit2 -- paths' do
           args = described_class.define do
-            flag :stat
-            positional :commit1
-            positional :commit2
-            static '--'
-            positional :paths, variadic: true
+            flag_option :stat
+            operand :commit1
+            operand :commit2
+            literal '--'
+            operand :paths, repeatable: true
           end
 
           # git diff --stat HEAD~1 HEAD -- file.rb
@@ -2162,10 +2162,10 @@ RSpec.describe Git::Commands::Arguments do
       context 'when static flags are defined first (matching common git patterns)' do
         it 'renders static before options when static is defined first' do
           args = described_class.define do
-            static '--delete'
-            flag :force
-            flag :remotes
-            positional :branch_names, variadic: true, required: true
+            literal '--delete'
+            flag_option :force
+            flag_option :remotes
+            operand :branch_names, repeatable: true, required: true
           end
 
           result = args.bind('feature', 'bugfix', force: true, remotes: true).to_ary
@@ -2182,7 +2182,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with flag negatable: true' do
         let(:args) do
           described_class.define do
-            flag :full, negatable: true
+            flag_option :full, negatable: true
           end
         end
 
@@ -2209,7 +2209,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with value inline: true' do
         let(:args) do
           described_class.define do
-            value :abbrev, inline: true
+            value_option :abbrev, inline: true
           end
         end
 
@@ -2226,10 +2226,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with value inline: true and multi_valued: true' do
+      context 'with value inline: true and repeatable: true' do
         let(:args) do
           described_class.define do
-            value :sort, inline: true, multi_valued: true
+            value_option :sort, inline: true, repeatable: true
           end
         end
 
@@ -2245,7 +2245,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with value inline: true and allow_empty: true' do
         let(:args) do
           described_class.define do
-            value :message, inline: true, allow_empty: true
+            value_option :message, inline: true, allow_empty: true
           end
         end
 
@@ -2254,10 +2254,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with value positional: true' do
+      context 'with value as_operand: true' do
         let(:args) do
           described_class.define do
-            value :path, positional: true
+            value_option :path, as_operand: true
           end
         end
 
@@ -2281,10 +2281,10 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with value positional: true and multi_valued: true' do
+      context 'with value as_operand: true and repeatable: true' do
         let(:args) do
           described_class.define do
-            value :paths, positional: true, multi_valued: true
+            value_option :paths, as_operand: true, repeatable: true
           end
         end
 
@@ -2312,11 +2312,11 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with value positional: true and separator:' do
+      context 'with value as_operand: true and separator:' do
         let(:args) do
           described_class.define do
-            flag :force
-            value :paths, positional: true, multi_valued: true, separator: '--'
+            flag_option :force
+            value_option :paths, as_operand: true, repeatable: true, separator: '--'
           end
         end
 
@@ -2332,20 +2332,20 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with invalid value modifier combinations' do
-        it 'raises when inline: and positional: are both true' do
+        it 'raises when inline: and as_operand: are both true' do
           expect do
             described_class.define do
-              value :path, inline: true, positional: true
+              value_option :path, inline: true, as_operand: true
             end
-          end.to raise_error(ArgumentError, /inline: and positional: cannot both be true for :path/)
+          end.to raise_error(ArgumentError, /inline: and as_operand: cannot both be true for :path/)
         end
 
-        it 'raises when separator: is provided without positional: true' do
+        it 'raises when separator: is provided without as_operand: true' do
           expect do
             described_class.define do
-              value :path, separator: '--'
+              value_option :path, separator: '--'
             end
-          end.to raise_error(ArgumentError, /separator: is only valid with positional: true for :path/)
+          end.to raise_error(ArgumentError, /separator: is only valid with as_operand: true for :path/)
         end
       end
 
@@ -2357,7 +2357,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with flag_or_value' do
         let(:args) do
           described_class.define do
-            flag_or_value :contains
+            flag_or_value_option :contains
           end
         end
 
@@ -2388,7 +2388,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with flag_or_value inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :gpg_sign, inline: true
+            flag_or_value_option :gpg_sign, inline: true
           end
         end
 
@@ -2415,7 +2415,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with flag_or_value negatable: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :verify, negatable: true
+            flag_or_value_option :verify, negatable: true
           end
         end
 
@@ -2442,7 +2442,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with flag_or_value negatable: true and inline: true' do
         let(:args) do
           described_class.define do
-            flag_or_value :sign, negatable: true, inline: true
+            flag_or_value_option :sign, negatable: true, inline: true
           end
         end
 
@@ -2475,7 +2475,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'basic Hash input' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2495,7 +2495,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'Hash with array values' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2515,7 +2515,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'Array of arrays input' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2541,7 +2541,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'nil and empty value handling' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2589,7 +2589,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with inline: true' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer', inline: true
+            key_value_option :trailers, args: '--trailer', inline: true
           end
         end
 
@@ -2615,7 +2615,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'key validation' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2640,7 +2640,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'with custom separator' do
           let(:args) do
             described_class.define do
-              key_value :trailers, args: '--trailer', key_separator: ': '
+              key_value_option :trailers, args: '--trailer', key_separator: ': '
             end
           end
 
@@ -2721,7 +2721,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with custom key_separator' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer', key_separator: ': '
+            key_value_option :trailers, args: '--trailer', key_separator: ': '
           end
         end
 
@@ -2735,7 +2735,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer', required: true
+            key_value_option :trailers, args: '--trailer', required: true
           end
         end
 
@@ -2765,7 +2765,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer', required: true, allow_nil: false
+            key_value_option :trailers, args: '--trailer', required: true, allow_nil: false
           end
         end
 
@@ -2783,7 +2783,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with symbol keys and values' do
         let(:args) do
           described_class.define do
-            key_value :trailers, args: '--trailer'
+            key_value_option :trailers, args: '--trailer'
           end
         end
 
@@ -2803,7 +2803,7 @@ RSpec.describe Git::Commands::Arguments do
 
     describe 'short option detection' do
       context 'with single-character flag' do
-        subject(:args) { described_class.define { flag :f } }
+        subject(:args) { described_class.define { flag_option :f } }
 
         it 'uses single-dash prefix' do
           expect(args.bind(f: true).to_ary).to eq(['-f'])
@@ -2811,7 +2811,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character flag' do
-        subject(:args) { described_class.define { flag :force } }
+        subject(:args) { described_class.define { flag_option :force } }
 
         it 'uses double-dash prefix' do
           expect(args.bind(force: true).to_ary).to eq(['--force'])
@@ -2819,7 +2819,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character negatable flag' do
-        subject(:args) { described_class.define { flag :f, negatable: true } }
+        subject(:args) { described_class.define { flag_option :f, negatable: true } }
 
         it 'uses single-dash prefix when true' do
           expect(args.bind(f: true).to_ary).to eq(['-f'])
@@ -2831,7 +2831,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character value' do
-        subject(:args) { described_class.define { value :n } }
+        subject(:args) { described_class.define { value_option :n } }
 
         it 'uses single-dash prefix with separate value' do
           expect(args.bind(n: '3').to_ary).to eq(['-n', '3'])
@@ -2839,7 +2839,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character value' do
-        subject(:args) { described_class.define { value :name } }
+        subject(:args) { described_class.define { value_option :name } }
 
         it 'uses double-dash prefix with separate value' do
           expect(args.bind(name: 'test').to_ary).to eq(['--name', 'test'])
@@ -2847,7 +2847,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character inline value' do
-        subject(:args) { described_class.define { value :n, inline: true } }
+        subject(:args) { described_class.define { value_option :n, inline: true } }
 
         it 'uses no separator' do
           expect(args.bind(n: 3).to_ary).to eq(['-n3'])
@@ -2855,15 +2855,15 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character inline value' do
-        subject(:args) { described_class.define { value :name, inline: true } }
+        subject(:args) { described_class.define { value_option :name, inline: true } }
 
         it 'uses = separator' do
           expect(args.bind(name: 'test').to_ary).to eq(['--name=test'])
         end
       end
 
-      context 'with single-character inline value multi_valued: true' do
-        subject(:args) { described_class.define { value :n, inline: true, multi_valued: true } }
+      context 'with single-character inline value repeatable: true' do
+        subject(:args) { described_class.define { value_option :n, inline: true, repeatable: true } }
 
         it 'uses no separator for each value' do
           expect(args.bind(n: [3, 5]).to_ary).to eq(['-n3', '-n5'])
@@ -2871,7 +2871,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character flag_or_value' do
-        subject(:args) { described_class.define { flag_or_value :n } }
+        subject(:args) { described_class.define { flag_or_value_option :n } }
 
         it 'outputs flag only when true' do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
@@ -2887,7 +2887,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character flag_or_value inline: true' do
-        subject(:args) { described_class.define { flag_or_value :n, inline: true } }
+        subject(:args) { described_class.define { flag_or_value_option :n, inline: true } }
 
         it 'outputs flag only when true' do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
@@ -2903,7 +2903,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character negatable flag_or_value inline: true' do
-        subject(:args) { described_class.define { flag_or_value :n, negatable: true, inline: true } }
+        subject(:args) { described_class.define { flag_or_value_option :n, negatable: true, inline: true } }
 
         it 'outputs flag only when true' do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
@@ -2919,7 +2919,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with single-character negatable flag_or_value (non-inline)' do
-        subject(:args) { described_class.define { flag_or_value :n, negatable: true } }
+        subject(:args) { described_class.define { flag_or_value_option :n, negatable: true } }
 
         it 'outputs flag only when true' do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
@@ -2935,7 +2935,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character negatable flag_or_value inline: true' do
-        subject(:args) { described_class.define { flag_or_value :name, negatable: true, inline: true } }
+        subject(:args) { described_class.define { flag_or_value_option :name, negatable: true, inline: true } }
 
         it 'outputs flag only when true' do
           expect(args.bind(name: true).to_ary).to eq(['--name'])
@@ -2951,7 +2951,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character negatable flag_or_value (non-inline)' do
-        subject(:args) { described_class.define { flag_or_value :name, negatable: true } }
+        subject(:args) { described_class.define { flag_or_value_option :name, negatable: true } }
 
         it 'outputs flag only when true' do
           expect(args.bind(name: true).to_ary).to eq(['--name'])
@@ -2967,7 +2967,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with underscore in multi-character option name' do
-        subject(:args) { described_class.define { flag :dry_run } }
+        subject(:args) { described_class.define { flag_option :dry_run } }
 
         it 'converts underscores to dashes' do
           expect(args.bind(dry_run: true).to_ary).to eq(['--dry-run'])
@@ -2975,7 +2975,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with explicit args: override' do
-        subject(:args) { described_class.define { flag :f, args: '--force' } }
+        subject(:args) { described_class.define { flag_option :f, args: '--force' } }
 
         it 'uses the explicit args even for single-character name' do
           expect(args.bind(f: true).to_ary).to eq(['--force'])
@@ -2983,7 +2983,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character name and explicit short args: override' do
-        subject(:args) { described_class.define { flag :all, args: '-a' } }
+        subject(:args) { described_class.define { flag_option :all, args: '-a' } }
 
         it 'uses the explicit short args instead of deriving from name' do
           expect(args.bind(all: true).to_ary).to eq(['-a'])
@@ -2991,7 +2991,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with multi-character name and explicit short args: for inline value' do
-        subject(:args) { described_class.define { value :number, inline: true, args: '-n' } }
+        subject(:args) { described_class.define { value_option :number, inline: true, args: '-n' } }
 
         it 'uses no separator for explicitly short args' do
           expect(args.bind(number: 5).to_ary).to eq(['-n5'])
@@ -3004,7 +3004,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with flag options' do
       let(:args) do
         described_class.define do
-          flag :force
+          flag_option :force
         end
       end
 
@@ -3027,8 +3027,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with option aliases' do
       let(:args) do
         described_class.define do
-          flag %i[remotes r]
-          flag %i[force f]
+          flag_option %i[remotes r]
+          flag_option %i[force f]
         end
       end
 
@@ -3055,7 +3055,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with positional arguments' do
       let(:args) do
         described_class.define do
-          positional :branch_names, variadic: true, required: true
+          operand :branch_names, repeatable: true, required: true
         end
       end
 
@@ -3068,9 +3068,9 @@ RSpec.describe Git::Commands::Arguments do
     context 'with mixed options and positionals' do
       let(:args) do
         described_class.define do
-          flag %i[force f]
-          flag %i[remotes r]
-          positional :branch_names, variadic: true, required: true
+          flag_option %i[force f]
+          flag_option %i[remotes r]
+          operand :branch_names, repeatable: true, required: true
         end
       end
 
@@ -3085,8 +3085,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with to_ary for splatting' do
       let(:args) do
         described_class.define do
-          flag :force
-          positional :branch_names, variadic: true
+          flag_option :force
+          operand :branch_names, repeatable: true
         end
       end
 
@@ -3105,8 +3105,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with hash-style access via []' do
       let(:args) do
         described_class.define do
-          flag :force
-          positional :path
+          flag_option :force
+          operand :path
         end
       end
 
@@ -3129,10 +3129,10 @@ RSpec.describe Git::Commands::Arguments do
     context 'with reserved names' do
       let(:args) do
         described_class.define do
-          flag :hash
-          flag :class
-          flag :freeze
-          flag :force # not reserved
+          flag_option :hash
+          flag_option :class
+          flag_option :freeze
+          flag_option :force # not reserved
         end
       end
 
@@ -3158,7 +3158,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with immutability' do
       let(:args) do
         described_class.define do
-          flag :force
+          flag_option :force
         end
       end
 
@@ -3171,7 +3171,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with undefined accessor calls' do
       let(:args) do
         described_class.define do
-          flag :force
+          flag_option :force
         end
       end
 
@@ -3184,8 +3184,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with value options' do
       let(:args) do
         described_class.define do
-          value :branch
-          value :message, inline: true
+          value_option :branch
+          value_option :message, inline: true
         end
       end
 
@@ -3205,7 +3205,7 @@ RSpec.describe Git::Commands::Arguments do
     context 'with default values for positionals' do
       let(:args) do
         described_class.define do
-          positional :commit, default: 'HEAD'
+          operand :commit, default: 'HEAD'
         end
       end
 
@@ -3223,8 +3223,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with same validation as build' do
       let(:args) do
         described_class.define do
-          flag :force
-          positional :path, required: true
+          flag_option :force
+          operand :path, required: true
         end
       end
 

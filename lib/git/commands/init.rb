@@ -25,11 +25,11 @@ module Git
     class Init
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'init'
-        flag :bare
-        value :initial_branch, inline: true
-        value :repository, inline: true, args: '--separate-git-dir'
-        positional :directory
+        literal 'init'
+        flag_option :bare
+        value_option :initial_branch, inline: true
+        value_option :repository, inline: true, args: '--separate-git-dir'
+        operand :directory
       end.freeze
 
       # Initialize the Init command

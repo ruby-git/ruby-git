@@ -18,8 +18,8 @@ module Git
       class Clear
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'clear'
+          literal 'stash'
+          literal 'clear'
         end.freeze
 
         # Creates a new Clear command instance

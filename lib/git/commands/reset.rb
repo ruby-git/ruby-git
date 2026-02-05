@@ -31,12 +31,12 @@ module Git
     class Reset
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'reset'
-        flag :hard
-        flag :soft
-        flag :mixed
+        literal 'reset'
+        flag_option :hard
+        flag_option :soft
+        flag_option :mixed
         conflicts :hard, :soft, :mixed
-        positional :commit, required: false
+        operand :commit, required: false
       end.freeze
 
       # Initialize the Reset command

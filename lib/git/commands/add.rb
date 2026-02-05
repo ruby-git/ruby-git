@@ -20,10 +20,10 @@ module Git
     class Add
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'add'
-        flag :all
-        flag :force
-        positional :paths, variadic: true, default: [], separator: '--'
+        literal 'add'
+        flag_option :all
+        flag_option :force
+        operand :paths, repeatable: true, default: [], separator: '--'
       end.freeze
 
       # Initialize the Add command

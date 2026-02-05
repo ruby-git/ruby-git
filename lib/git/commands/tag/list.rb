@@ -77,17 +77,17 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'tag'
-          static '--list'
-          static "--format=#{FORMAT_STRING}"
-          value :sort, inline: true, multi_valued: true
-          flag_or_value :contains, inline: true
-          flag_or_value :no_contains, inline: true
-          flag_or_value :merged, inline: true
-          flag_or_value :no_merged, inline: true
-          flag_or_value :points_at, inline: true
-          flag %i[ignore_case i]
-          positional :patterns, variadic: true
+          literal 'tag'
+          literal '--list'
+          literal "--format=#{FORMAT_STRING}"
+          value_option :sort, inline: true, repeatable: true
+          flag_or_value_option :contains, inline: true
+          flag_or_value_option :no_contains, inline: true
+          flag_or_value_option :merged, inline: true
+          flag_or_value_option :no_merged, inline: true
+          flag_or_value_option :points_at, inline: true
+          flag_option %i[ignore_case i]
+          operand :patterns, repeatable: true
         end.freeze
 
         # Initialize the List command

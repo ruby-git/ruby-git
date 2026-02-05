@@ -27,9 +27,9 @@ module Git
       class Create
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'create'
-          positional :message
+          literal 'stash'
+          literal 'create'
+          operand :message
         end.freeze
 
         # Creates a new Create command instance

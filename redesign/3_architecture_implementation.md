@@ -399,15 +399,15 @@ future work:
 
    ```ruby
    # ✅ Preferred: single definition handles all forms
-   negatable_flag_or_inline_value :track
+   negatable_flag_or_inline_value_option :track
    # track: nil     → (omitted)
    # track: true    → --track
    # track: false   → --no-track
    # track: 'inherit' → --track=inherit
 
    # ❌ Avoid: separate definitions require conflict management
-   flag :track
-   flag :no_track
+   flag_option :track
+   flag_option :no_track
    conflicts :track, :no_track
    ```
 
@@ -443,18 +443,18 @@ future work:
    ```ruby
    # Arguments render in definition order
    ARGS = Arguments.define do
-     flag :force
-     positional :tree_ish
-     static '--'
-     positional :paths, repeatable: true
+     flag_option :force
+     operand :tree_ish
+     literal '--'
+     operand :paths, repeatable: true
    end
    # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
 
    # Common pattern: static flags first for subcommands like branch --delete
    ARGS = Arguments.define do
-     static '--delete'
-     flag %i[force f], args: '--force'
-     positional :branch_names, repeatable: true, required: true
+     literal '--delete'
+     flag_option %i[force f], args: '--force'
+     operand :branch_names, repeatable: true, required: true
    end
    # build('feature', force: true) => ['--delete', '--force', 'feature']
    ```
@@ -465,9 +465,9 @@ future work:
    the long (canonical) name first. This provides a clean, consistent pattern:
 
    ```ruby
-   flag %i[force f], args: '--force'      # force: true OR f: true
-   flag %i[remotes r], args: '--remotes'  # remotes: true OR r: true
-   flag %i[quiet q], args: '--quiet'      # quiet: true OR q: true
+   flag_option %i[force f], args: '--force'      # force: true OR f: true
+   flag_option %i[remotes r], args: '--remotes'  # remotes: true OR r: true
+   flag_option %i[quiet q], args: '--quiet'      # quiet: true OR q: true
    ```
 
    The first symbol becomes the primary name used in documentation and error
@@ -509,10 +509,10 @@ future work:
     ```ruby
     # git branch -m [<old-branch>] <new-branch>
     ARGS = Arguments.define do
-      static '--move'
-      flag :force
-      positional :old_branch                  # optional (no required: true)
-      positional :new_branch, required: true  # required
+      literal '--move'
+      flag_option :force
+      operand :old_branch                  # optional (no required: true)
+      operand :new_branch, required: true  # required
     end.freeze
 
     # ✅ Preferred: let ARGS.bind handle validation
@@ -541,8 +541,8 @@ future work:
     # foo('value') → a='default', b='value' (required b filled first)
 
     # Arguments DSL equivalent:
-    positional :old_branch                  # optional
-    positional :new_branch, required: true  # required
+    operand :old_branch                  # optional
+    operand :new_branch, required: true  # required
 
     # Single value: ARGS.bind('new-name')
     # → old_branch=nil, new_branch='new-name'
@@ -567,8 +567,8 @@ future work:
     # ✅ Commands layer: strict CLI mapping
     class SetUpstream
       ARGS = Arguments.define do
-        inline_value :set_upstream_to  # keyword, not positional
-        positional :branch_name
+        value_option :set_upstream_to, inline: true  # keyword, not positional
+        operand :branch_name
       end
 
       def call(*, **)
@@ -599,8 +599,8 @@ future work:
 
     ```ruby
     ARGS = Arguments.define do
-      positional :tree_ish, required: true, allow_nil: true
-      positional :paths, repeatable: true, separator: '--'
+      operand :tree_ish, required: true, allow_nil: true
+      operand :paths, repeatable: true, separator: '--'
     end
 
     # Restore from index (tree_ish intentionally nil)

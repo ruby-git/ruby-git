@@ -24,13 +24,13 @@ module Git
     class Mv
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'mv'
-        flag :force, args: '--force'
-        flag :dry_run, args: '--dry-run'
-        flag :verbose, args: '--verbose'
-        flag :skip_errors, args: '-k'
-        positional :source, variadic: true, required: true, separator: '--'
-        positional :destination, required: true
+        literal 'mv'
+        flag_option :force, args: '--force'
+        flag_option :dry_run, args: '--dry-run'
+        flag_option :verbose, args: '--verbose'
+        flag_option :skip_errors, args: '-k'
+        operand :source, repeatable: true, required: true, separator: '--'
+        operand :destination, required: true
       end.freeze
 
       # Initialize the Mv command

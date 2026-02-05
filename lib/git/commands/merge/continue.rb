@@ -21,8 +21,8 @@ module Git
       class Continue
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'merge'
-          static '--continue'
+          literal 'merge'
+          literal '--continue'
         end.freeze
 
         # Initialize the Merge::Continue command

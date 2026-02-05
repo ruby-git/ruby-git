@@ -27,11 +27,11 @@ module Git
     class Clean
       # Arguments DSL for building command-line arguments
       ARGS = Arguments.define do
-        static 'clean'
-        flag :force
-        flag :force_force, args: '-ff'
-        flag :d, args: '-d'
-        flag :x, args: '-x'
+        literal 'clean'
+        flag_option :force
+        flag_option :force_force, args: '-ff'
+        flag_option :d, args: '-d'
+        flag_option :x, args: '-x'
         conflicts :force, :force_force
       end.freeze
 

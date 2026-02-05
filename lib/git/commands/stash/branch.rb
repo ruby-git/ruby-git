@@ -29,10 +29,10 @@ module Git
       class Branch
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'branch'
-          positional :branchname, required: true
-          positional :stash
+          literal 'stash'
+          literal 'branch'
+          operand :branchname, required: true
+          operand :stash
         end.freeze
 
         # Creates a new Branch command instance

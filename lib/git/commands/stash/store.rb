@@ -28,11 +28,11 @@ module Git
       class Store
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'store'
-          value %i[message m], inline: true
-          flag %i[quiet q]
-          positional :commit, required: true
+          literal 'stash'
+          literal 'store'
+          value_option %i[message m], inline: true
+          flag_option %i[quiet q]
+          operand :commit, required: true
         end.freeze
 
         # Creates a new Store command instance

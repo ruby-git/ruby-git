@@ -28,17 +28,17 @@ module Git
       class ShowRaw
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'show'
-          static '--raw'
-          static '--numstat'
-          static '--shortstat'
-          static '-M'
-          flag %i[include_untracked u], negatable: true
-          flag :only_untracked
-          flag :find_copies, args: '-C'
-          flag_or_value :dirstat, inline: true
-          positional :stash
+          literal 'stash'
+          literal 'show'
+          literal '--raw'
+          literal '--numstat'
+          literal '--shortstat'
+          literal '-M'
+          flag_option %i[include_untracked u], negatable: true
+          flag_option :only_untracked
+          flag_option :find_copies, args: '-C'
+          flag_or_value_option :dirstat, inline: true
+          operand :stash
         end.freeze
 
         # Creates a new ShowRaw command instance

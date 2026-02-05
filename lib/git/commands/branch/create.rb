@@ -39,13 +39,13 @@ module Git
         # Arguments DSL for building command-line arguments
         #
         ARGS = Arguments.define do
-          static 'branch'
-          flag %i[force f]
-          flag :create_reflog, negatable: true
-          flag :recurse_submodules
-          flag_or_value %i[track t], negatable: true, inline: true
-          positional :branch_name, required: true
-          positional :start_point
+          literal 'branch'
+          flag_option %i[force f]
+          flag_option :create_reflog, negatable: true
+          flag_option :recurse_submodules
+          flag_or_value_option %i[track t], negatable: true, inline: true
+          operand :branch_name, required: true
+          operand :start_point
         end.freeze
 
         # Initialize the Create command

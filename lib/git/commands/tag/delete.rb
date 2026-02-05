@@ -34,9 +34,9 @@ module Git
       class Delete
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'tag'
-          static '--delete'
-          positional :tag_names, variadic: true, required: true
+          literal 'tag'
+          literal '--delete'
+          operand :tag_names, repeatable: true, required: true
         end.freeze
 
         # Regex to parse successful deletion lines from stdout

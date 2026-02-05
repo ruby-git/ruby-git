@@ -34,10 +34,10 @@ module Git
         # in the final command line.
         #
         ARGS = Arguments.define do
-          static 'tag'
-          static '--verify'
-          value :format, inline: true
-          positional :tag_names, variadic: true, required: true
+          literal 'tag'
+          literal '--verify'
+          value_option :format, inline: true
+          operand :tag_names, repeatable: true, required: true
         end.freeze
 
         # Initialize the Verify command

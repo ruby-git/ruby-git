@@ -25,9 +25,9 @@ module Git
       class List
         # Arguments DSL for building command-line arguments
         ARGS = Arguments.define do
-          static 'stash'
-          static 'list'
-          custom :format do |v|
+          literal 'stash'
+          literal 'list'
+          custom_option :format do |v|
             "--format=#{v}"
           end
         end.freeze
