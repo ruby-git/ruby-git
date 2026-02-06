@@ -9,10 +9,11 @@ module Git
       # Show raw diff output for differences
       #
       # Returns file metadata including modes, SHAs, and status letters.
-      # Uses rename detection (-M) by default.
       #
       # @see Git::Commands::Diff Git::Commands::Diff for usage examples
+      #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
+      #
       # @api private
       #
       class Raw
@@ -54,7 +55,7 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
-        #   @option options [Boolean] :find_copies (nil) detect copies as well as renames
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
         #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
         #     Pass true for default, or a string like 'lines,cumulative' for options.
         #
@@ -70,6 +71,10 @@ module Git
         #   @param no_index [Boolean] must be true
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
+        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #
         # @overload call(commit = nil, cached:, **options)
         #   Compare the index to HEAD or the named commit
         #
@@ -84,6 +89,11 @@ module Git
         #
         #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
+        #
+        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #
         # @overload call(commit, **options)
         #   Compare the working tree to the named commit
         #
@@ -96,6 +106,11 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
+        #
+        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #     Pass true for default, or a string like 'lines,cumulative' for options.
         #
         # @overload call(commit1, commit2, **options)
         #   Compare two commits
@@ -114,6 +129,14 @@ module Git
         #
         #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
+        #   @option options [Boolean] :merge_base (false) use merge base of commits
+        #     (alternative to three-dot syntax)
+        #
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
+        #
+        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #
         # @overload call(merge_commit, range, **options)
         #   Show changes introduced by a merge commit beyond the merged branches
         #
@@ -127,7 +150,12 @@ module Git
         #
         #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        # @return [Git::DiffResult] diff result with per-file raw info
+        #   @option options [Boolean] :find_copies (false) detect copies as well as renames (adds `-C`)
+        #
+        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #
+        # @return [Git::CommandLineResult] the result of calling `git diff --raw`
         #
         # @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
         #
@@ -135,10 +163,9 @@ module Git
           bound_args = ARGS.bind(*, **)
 
           # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
-          result = @execution_context.command(*bound_args, raise_on_failure: false)
-          raise Git::FailedError, result if result.status.exitstatus >= 2
-
-          Parsers::Diff::Raw.parse(result.stdout, include_dirstat: !bound_args.dirstat.nil?)
+          @execution_context.command(*bound_args, raise_on_failure: false).tap do |result|
+            raise Git::FailedError, result if result.status.exitstatus >= 2
+          end
         end
       end
     end
