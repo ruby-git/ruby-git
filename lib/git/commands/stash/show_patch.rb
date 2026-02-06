@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/diff_parser'
+require 'git/parsers/diff'
 
 module Git
   module Commands
@@ -84,7 +84,7 @@ module Git
         def call(*, **)
           bound_args = ARGS.bind(*, **)
           output = @execution_context.command(*bound_args).stdout
-          DiffParser::Patch.parse(output, include_dirstat: !bound_args.dirstat.nil?)
+          Parsers::Diff::Patch.parse(output, include_dirstat: !bound_args.dirstat.nil?)
         end
       end
     end

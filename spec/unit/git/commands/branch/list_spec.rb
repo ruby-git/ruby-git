@@ -2,13 +2,14 @@
 
 require 'spec_helper'
 require 'git/commands/branch/list'
+require 'git/parsers/branch'
 
 RSpec.describe Git::Commands::Branch::List do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
-  # Format string used by the command
-  let(:format_string) { described_class::FORMAT_STRING }
+  # Format string used by the command (now defined in BranchParser)
+  let(:format_string) { Git::Parsers::Branch::FORMAT_STRING }
 
   # Helper to build expected command arguments
   def expected_args(*extra_args)

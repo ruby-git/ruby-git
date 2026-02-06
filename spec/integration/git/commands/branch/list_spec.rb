@@ -3,6 +3,11 @@
 require 'spec_helper'
 require 'git/commands/branch/list'
 
+# Integration tests for Git::Commands::Branch::List
+#
+# These tests verify the command's execution behavior. Parsing logic is
+# tested separately in spec/integration/git/branch_parser_spec.rb.
+#
 RSpec.describe Git::Commands::Branch::List, :integration do
   include_context 'in an empty repository'
 
@@ -24,116 +29,90 @@ RSpec.describe Git::Commands::Branch::List, :integration do
         repo.branch('feature-branch').create
       end
 
-      it 'loads all branches' do
+      it 'loads all branches as BranchInfo objects' do
         result = command.call
+        expect(result).to all(be_a(Git::BranchInfo))
         expect(result.map(&:refname)).to contain_exactly('main', 'feature-branch')
       end
-
-      it 'identifies the current branch' do
-        result = command.call
-        expect(result.find(&:current).refname).to eq('main')
-      end
-
-      it 'returns BranchInfo objects with all expected attributes' do
-        result = command.call
-        main_branch = result.find { |b| b.refname == 'main' }
-
-        # Verify all BranchInfo attributes are present
-        expect(main_branch).to respond_to(:refname)
-        expect(main_branch).to respond_to(:target_oid)
-        expect(main_branch).to respond_to(:current)
-        expect(main_branch).to respond_to(:worktree)
-        expect(main_branch).to respond_to(:symref)
-        expect(main_branch).to respond_to(:upstream)
-
-        # Verify current values
-        expect(main_branch.current).to be true
-        expect(main_branch.worktree).to be false
-        expect(main_branch.symref).to be_nil
-
-        # target_oid is populated from format output
-        expect(main_branch.target_oid).to match(/\A[0-9a-f]{40}\z/)
-
-        # upstream is nil because no upstream is configured in this test
-        expect(main_branch.upstream).to be_nil
-      end
     end
 
-    context 'with branch names containing special characters' do
-      before do
-        write_file('file.txt')
-        repo.add('file.txt')
-        repo.commit('Initial commit')
-        repo.branch('feature/with-slash').create
-        repo.branch('feature/日本語').create
-      end
-
-      it 'parses branch names with slashes' do
-        result = command.call
-        expect(result.map(&:refname)).to include('feature/with-slash')
-      end
-
-      it 'parses branch names with unicode' do
-        result = command.call
-        expect(result.map(&:refname)).to include('feature/日本語')
-      end
-    end
-
-    context 'with upstream tracking' do
+    context 'with :all option' do
       let(:bare_dir) { Dir.mktmpdir('bare_repo') }
 
-      after do
-        FileUtils.rm_rf(bare_dir)
-      end
+      after { FileUtils.rm_rf(bare_dir) }
 
       before do
-        # Create initial content in the test repo
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
 
-        # Create a bare repo and add as remote
         Git.init(bare_dir, bare: true)
         repo.add_remote('origin', bare_dir)
         repo.push('origin', 'main')
-
-        # Set upstream tracking
-        repo.lib.command('branch', '-u', 'origin/main', 'main')
+        repo.fetch('origin')
       end
 
-      it 'populates upstream as BranchInfo with refname' do
-        result = command.call
-        main_branch = result.find { |b| b.refname == 'main' }
-
-        expect(main_branch.upstream).to be_a(Git::BranchInfo)
-        expect(main_branch.upstream.refname).to eq('remotes/origin/main')
-        expect(main_branch.upstream.target_oid).to be_nil # Upstream OID not available from format
-        expect(main_branch.upstream.current).to be false
-        expect(main_branch.upstream.worktree).to be false
+      it 'includes both local and remote branches' do
+        result = command.call(all: true)
+        refnames = result.map(&:refname)
+        expect(refnames).to include('main')
+        expect(refnames).to include('remotes/origin/main')
       end
     end
 
-    context 'with detached HEAD' do
+    context 'with :remotes option' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
       before do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.add_tag('v1.0.0')
-        write_file('file2.txt')
-        repo.add('file2.txt')
-        repo.commit('Second commit')
 
-        # Detach HEAD by checking out the tag
-        repo.checkout('v1.0.0')
+        Git.init(bare_dir, bare: true)
+        repo.add_remote('origin', bare_dir)
+        repo.push('origin', 'main')
+        repo.fetch('origin')
       end
 
-      it 'filters out detached HEAD entry and only returns real branches' do
-        result = command.call
+      it 'lists only remote branches' do
+        result = command.call(remotes: true)
+        expect(result.map(&:refname)).to all(include('origin/'))
+      end
+    end
 
-        # Should only have the main branch, not the detached HEAD
-        expect(result.size).to eq(1)
-        expect(result.first.refname).to eq('main')
-        expect(result.none? { |b| b.refname.include?('detached') }).to be true
+    context 'with :sort option' do
+      before do
+        write_file('file.txt')
+        repo.add('file.txt')
+        repo.commit('Initial commit')
+        repo.branch('alpha').create
+        repo.branch('beta').create
+      end
+
+      it 'returns branches in sorted order' do
+        result = command.call(sort: 'refname')
+        expect(result.map(&:refname)).to eq(%w[alpha beta main])
+      end
+    end
+
+    context 'with :contains option' do
+      before do
+        write_file('file.txt')
+        repo.add('file.txt')
+        repo.commit('Initial commit')
+        repo.branch('feature').create
+        # Add a new commit only to main (feature doesn't have this)
+        write_file('main-only.txt')
+        repo.add('main-only.txt')
+        repo.commit('Main only commit')
+      end
+
+      it 'filters branches containing the commit' do
+        head_sha = repo.lib.command('rev-parse', 'HEAD').stdout.strip
+        result = command.call(contains: head_sha)
+        expect(result.map(&:refname)).to contain_exactly('main')
       end
     end
   end

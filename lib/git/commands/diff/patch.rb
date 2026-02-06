@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/diff_parser'
+require 'git/parsers/diff'
 
 module Git
   module Commands
@@ -138,7 +138,7 @@ module Git
           result = @execution_context.command(*bound_args, raise_on_failure: false)
           raise Git::FailedError, result if result.status.exitstatus >= 2
 
-          DiffParser::Patch.parse(result.stdout, include_dirstat: !bound_args.dirstat.nil?)
+          Parsers::Diff::Patch.parse(result.stdout, include_dirstat: !bound_args.dirstat.nil?)
         end
       end
     end

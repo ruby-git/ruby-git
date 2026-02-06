@@ -32,8 +32,8 @@ RSpec.describe Git::Commands::Branch::Delete do
   def stub_list_commands(existing_branches)
     list_command = instance_double(Git::Commands::Branch::List)
     allow(Git::Commands::Branch::List).to receive(:new).with(execution_context).and_return(list_command)
-    allow(list_command).to receive(:call) do |name|
-      existing_branches.key?(name) ? [existing_branches[name]].compact : []
+    allow(list_command).to receive(:call) do |*names, **_options|
+      names.filter_map { |name| existing_branches[name] }
     end
   end
 
@@ -104,6 +104,35 @@ RSpec.describe Git::Commands::Branch::Delete do
         expect(delete_result.not_deleted.size).to eq(1)
         expect(delete_result.not_deleted.first.name).to eq('nonexistent')
         expect(delete_result.not_deleted.first.error_message).to include('nonexistent')
+      end
+    end
+
+    context 'with branch names containing special characters' do
+      it 'handles branch names with spaces' do
+        branch_info = build_branch_info('my branch')
+        stub_list_commands('my branch' => branch_info)
+        result = build_result(stdout: "Deleted branch my branch (was abc1234).\n", exitstatus: 0)
+        expect(execution_context).to receive(:command)
+          .with('branch', '--delete', 'my branch', raise_on_failure: false)
+          .and_return(result)
+
+        delete_result = command.call('my branch')
+        expect(delete_result.success?).to be true
+        expect(delete_result.deleted.first.refname).to eq('my branch')
+      end
+
+      it 'handles local branches named remotes/*' do
+        # Edge case: local branch literally named 'remotes/foo'
+        branch_info = build_branch_info('remotes/foo')
+        stub_list_commands('remotes/foo' => branch_info)
+        result = build_result(stdout: "Deleted branch remotes/foo (was abc1234).\n", exitstatus: 0)
+        expect(execution_context).to receive(:command)
+          .with('branch', '--delete', 'remotes/foo', raise_on_failure: false)
+          .and_return(result)
+
+        delete_result = command.call('remotes/foo')
+        expect(delete_result.success?).to be true
+        expect(delete_result.deleted.first.refname).to eq('remotes/foo')
       end
     end
 
@@ -195,7 +224,7 @@ RSpec.describe Git::Commands::Branch::Delete do
         list_command = instance_double(Git::Commands::Branch::List)
         allow(Git::Commands::Branch::List).to receive(:new).with(execution_context).and_return(list_command)
 
-        # Expect the call to include remotes: true
+        # Expect the call to include remotes: true with all branch names
         expect(list_command).to receive(:call).with('origin/feature', remotes: true).and_return([])
 
         result = build_result(stdout: '', stderr: "error: branch 'origin/feature' not found.\n", exitstatus: 1)

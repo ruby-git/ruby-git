@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'git/commands/stash/list'
+require 'git/parsers/stash'
 
 RSpec.describe Git::Commands::Stash::List do
   let(:execution_context) { double('ExecutionContext') }
@@ -43,7 +44,7 @@ RSpec.describe Git::Commands::Stash::List do
   end
 
   describe '#call' do
-    let(:format_arg) { "--format=#{described_class::STASH_FORMAT}" }
+    let(:format_arg) { "--format=#{Git::Parsers::Stash::STASH_FORMAT}" }
 
     context 'with no stashes' do
       it 'returns an empty array' do

@@ -87,25 +87,27 @@ risk and allows for a gradual, controlled migration to the new architecture.
 4a. **Create Parser Classes** (when output needs transformation):
 
    If the command produces output that needs to be parsed into structured data,
-   create a Parser class or module in `lib/git/` following existing patterns.
-   For example, see `Git::DiffParser` which uses nested classes for different
+   create a Parser class or module in `lib/git/parsers/` following existing patterns.
+   For example, see `Git::Parsers::Diff` which uses nested classes for different
    output formats:
 
    ```ruby
-   # lib/git/diff_parser.rb (existing pattern)
+   # lib/git/parsers/diff.rb (existing pattern)
    module Git
-     module DiffParser
-       # Nested parser for --numstat format
-       class Numstat
-         def self.parse(output)
-           output.lines.map { |line| parse_line(line) }
+     module Parsers
+       module Diff
+         # Nested parser for --numstat format
+         class Numstat
+           def self.parse(output)
+             output.lines.map { |line| parse_line(line) }
+           end
          end
-       end
 
-       # Nested parser for --raw format
-       class Raw
-         def self.parse(output)
-           # Parse into DiffFileRawInfo value objects
+         # Nested parser for --raw format
+         class Raw
+           def self.parse(output)
+             # Parse into DiffFileRawInfo value objects
+           end
          end
        end
      end
@@ -308,7 +310,7 @@ end
 def call(*, **)
   bound_args = ARGS.bind(*, **)
   output = @execution_context.command('diff', *bound_args).stdout
-  DiffParser.parse(output, include_dirstat: !bound_args.dirstat.nil?)
+  Parsers::Diff.parse(output, include_dirstat: !bound_args.dirstat.nil?)
 end
 
 # ❌ Incorrect: options hash parameter

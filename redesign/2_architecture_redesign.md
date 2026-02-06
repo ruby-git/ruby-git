@@ -67,7 +67,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     4. **Calling Commands**: Invoking one or more `Git::Commands::*` classes as
        needed to fulfill the user's request.
 
-    5. **Building Rich Response Objects**: Using Parser classes (e.g., `DiffParser`)
+    5. **Building Rich Response Objects**: Using Parser classes (e.g., `Git::Parsers::Diff`)
        and Result class factory methods (e.g., `BranchDeleteResult.from(...)`) to
        assemble meaningful return values from raw command output.
 
@@ -149,7 +149,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
        `Git::CommandLineResult`.
 
     **Note**: Parsing output and building rich response objects is **not** a command
-    responsibility. That work belongs in separate Parser classes (e.g., `DiffParser`)
+    responsibility. That work belongs in separate Parser classes (e.g., `Git::Parsers::Diff`)
     and Result class factory methods, orchestrated by the Facade layer. See
     [issue #997](https://github.com/ruby-git/ruby-git/issues/997) for the work to
     migrate existing commands that currently parse output.
@@ -304,7 +304,7 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     etc.) are built by the **Facade layer** (currently `Git::Lib`, eventually
     `Git::Repository`), not by commands. The facade layer uses:
 
-    - **Parser classes** (e.g., `DiffParser`, `StashListParser`) to transform raw
+    - **Parser classes** (e.g., `Git::Parsers::Diff`, `Git::Parsers::Stash`) to transform raw
       stdout/stderr into structured data
     - **Result class factory methods** (e.g., `BranchDeleteResult.from(...)`) to
       assemble final objects from parsed data
