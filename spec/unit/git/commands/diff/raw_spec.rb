@@ -19,57 +19,52 @@ RSpec.describe Git::Commands::Diff::Raw do
 
   describe '#call' do
     context 'with no arguments (working tree vs index)' do
-      it 'calls git diff --raw --numstat --shortstat -M' do
+      it 'runs diff with --raw, --numstat, --shortstat, and -M flags' do
         expect(execution_context).to receive(:command)
-          .with('diff', '--raw', '--numstat', '--shortstat', '-M', raise_on_failure: false)
-          .and_return(command_result(raw_output))
-
-        command.call
-      end
-
-      it 'returns DiffResult with raw file info' do
-        allow(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
         result = command.call
 
-        expect(result).to be_a(Git::DiffResult)
-        expect(result.files_changed).to eq(2)
-        expect(result.total_insertions).to eq(8)
-        expect(result.total_deletions).to eq(3)
-        expect(result.files.size).to eq(2)
-        expect(result.files[0]).to be_a(Git::DiffFileRawInfo)
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to eq(raw_output)
+        expect(result.stdout).to match(/^:100644/)
       end
     end
 
     context 'with single commit' do
-      it 'passes commit reference to command' do
+      it 'passes the commit as an operand' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', 'abc123', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('abc123')
+        result = command.call('abc123')
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with two commits' do
-      it 'passes both commit references to command' do
+      it 'passes both commits as operands' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', 'abc123', 'def456', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('abc123', 'def456')
+        result = command.call('abc123', 'def456')
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with :cached option' do
-      it 'adds --cached flag' do
+      it 'includes the --cached flag' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--cached', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call(cached: true)
+        result = command.call(cached: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'accepts :staged alias' do
@@ -77,65 +72,79 @@ RSpec.describe Git::Commands::Diff::Raw do
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--cached', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call(staged: true)
+        result = command.call(staged: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with :find_copies option' do
-      it 'adds -C flag' do
+      it 'includes the -C flag' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '-C', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call(find_copies: true)
+        result = command.call(find_copies: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with :merge_base option' do
-      it 'adds --merge-base flag' do
+      it 'includes the --merge-base flag' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--merge-base', 'feature', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('feature', merge_base: true)
+        result = command.call('feature', merge_base: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'works with two commits' do
+      it 'includes --merge-base with two commits' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--merge-base', 'main', 'feature',
                 raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('main', 'feature', merge_base: true)
+        result = command.call('main', 'feature', merge_base: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with :no_index option' do
-      it 'adds --no-index flag' do
+      it 'includes the --no-index flag' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--no-index', '/path/a', '/path/b',
                 raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('/path/a', '/path/b', no_index: true)
+        result = command.call('/path/a', '/path/b', no_index: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     context 'with pathspec limiting' do
-      it 'adds pathspecs after -- separator' do
+      it 'adds pathspecs after the -- separator' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--', 'lib/', 'spec/', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call(pathspecs: ['lib/', 'spec/'])
+        result = command.call(pathspecs: ['lib/', 'spec/'])
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'works with commit and pathspecs' do
+      it 'combines commit with pathspecs' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', 'HEAD~3', '--', 'lib/', raise_on_failure: false)
           .and_return(command_result(raw_output))
 
-        command.call('HEAD~3', pathspecs: ['lib/'])
+        result = command.call('HEAD~3', pathspecs: ['lib/'])
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
@@ -149,12 +158,15 @@ RSpec.describe Git::Commands::Diff::Raw do
         OUTPUT
       end
 
-      it 'adds --dirstat flag when true' do
+      it 'includes the --dirstat flag when true' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', '--dirstat', raise_on_failure: false)
           .and_return(command_result(dirstat_output))
 
-        command.call(dirstat: true)
+        result = command.call(dirstat: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to include('100.0% lib/')
       end
 
       it 'passes dirstat options when string' do
@@ -163,31 +175,35 @@ RSpec.describe Git::Commands::Diff::Raw do
                 raise_on_failure: false)
           .and_return(command_result(dirstat_output))
 
-        command.call(dirstat: 'lines,cumulative')
+        result = command.call(dirstat: 'lines,cumulative')
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
 
     describe 'exit code handling' do
-      it 'succeeds with exit code 0 (no differences)' do
+      it 'returns successfully with exit code 0 when no differences' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', raise_on_failure: false)
           .and_return(command_result('', exitstatus: 0))
 
         result = command.call
 
-        expect(result).to be_a(Git::DiffResult)
-        expect(result.files).to be_empty
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(0)
+        expect(result.stdout).to be_empty
       end
 
-      it 'succeeds with exit code 1 (differences found)' do
+      it 'returns successfully with exit code 1 when differences found' do
         expect(execution_context).to receive(:command)
           .with('diff', '--raw', '--numstat', '--shortstat', '-M', raise_on_failure: false)
           .and_return(command_result(raw_output, exitstatus: 1))
 
         result = command.call
 
-        expect(result).to be_a(Git::DiffResult)
-        expect(result.files.size).to eq(2)
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(1)
+        expect(result.stdout).to eq(raw_output)
       end
 
       it 'raises FailedError with exit code 2 (error)' do
