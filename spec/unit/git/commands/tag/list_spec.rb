@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'git/commands/tag/list'
+require 'git/parsers/tag'
 
 RSpec.describe Git::Commands::Tag::List do
   let(:execution_context) { double('ExecutionContext') }
@@ -18,7 +19,7 @@ RSpec.describe Git::Commands::Tag::List do
   end
 
   describe '#call' do
-    let(:format_arg) { "--format=#{described_class::FORMAT_STRING}" }
+    let(:format_arg) { "--format=#{Git::Parsers::Tag::FORMAT_STRING}" }
 
     context 'with no options (basic list)' do
       it 'calls git tag --list with format string' do

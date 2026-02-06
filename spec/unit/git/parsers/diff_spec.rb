@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'git/diff_parser'
+require 'git/parsers/diff'
 
-RSpec.describe Git::DiffParser do
+RSpec.describe Git::Parsers::Diff do
   describe '.parse_shortstat' do
     it 'parses a complete shortstat line' do
       line = ' 3 files changed, 10 insertions(+), 5 deletions(-)'
@@ -151,7 +151,7 @@ RSpec.describe Git::DiffParser do
   end
 end
 
-RSpec.describe Git::DiffParser::Numstat do
+RSpec.describe Git::Parsers::Diff::Numstat do
   describe '.parse' do
     it 'returns empty result for empty output' do
       result = described_class.parse('')
@@ -286,7 +286,7 @@ RSpec.describe Git::DiffParser::Numstat do
   end
 end
 
-RSpec.describe Git::DiffParser::Raw do
+RSpec.describe Git::Parsers::Diff::Raw do
   describe '.parse' do
     it 'returns empty result for empty output' do
       result = described_class.parse('')
@@ -477,7 +477,7 @@ RSpec.describe Git::DiffParser::Raw do
   end
 end
 
-RSpec.describe Git::DiffParser::Patch do
+RSpec.describe Git::Parsers::Diff::Patch do
   describe '.parse' do
     it 'returns empty result for empty output' do
       result = described_class.parse('')

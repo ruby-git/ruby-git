@@ -9,7 +9,7 @@ require 'git/commands/stash/show_raw'
 #
 # These tests verify that the commands work correctly with real git repositories.
 # Parsing edge cases (binary files, renames, special characters, etc.) are already
-# covered by Diff::* integration tests since both use DiffParser.
+# covered by Diff::* integration tests since both use Git::Parsers::Diff.
 #
 # Focus here is on stash-specific behavior:
 # - Basic stash show works

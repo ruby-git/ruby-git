@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
+require 'git/parsers/fsck'
 
 module Git
   module Commands
@@ -44,12 +45,6 @@ module Git
         flag_option :references, negatable: true
         operand :objects, repeatable: true
       end.freeze
-
-      # Pattern matchers for parsing fsck output
-      OBJECT_PATTERN = /\A(dangling|missing|unreachable) (\w+) ([0-9a-f]{40})(?: \((.+)\))?\z/
-      WARNING_PATTERN = /\Awarning in (\w+) ([0-9a-f]{40}): (.+)\z/
-      ROOT_PATTERN = /\Aroot ([0-9a-f]{40})\z/
-      TAGGED_PATTERN = /\Atagged (\w+) ([0-9a-f]{40}) \((.+)\) in ([0-9a-f]{40})\z/
 
       # Initialize the Fsck command
       #
@@ -103,81 +98,7 @@ module Git
         # These are bit flags that can be combined (0-7 are valid)
         raise Git::FailedError, result if result.status.exitstatus > 7
 
-        parse_output(result.stdout)
-      end
-
-      private
-
-      # Parse the output from git fsck into a structured result
-      #
-      # @param output [String] the command output
-      # @return [Git::FsckResult] the parsed result
-      #
-      def parse_output(output)
-        result = { dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [] }
-        output.each_line { |line| parse_line(line.strip, result) }
-        Git::FsckResult.new(**result)
-      end
-
-      # Parse a single line of fsck output
-      #
-      # @param line [String] a line of output
-      # @param result [Hash] the result hash to populate
-      # @return [Boolean] true if the line was parsed
-      #
-      def parse_line(line, result)
-        parse_object_line(line, result) ||
-          parse_warning_line(line, result) ||
-          parse_root_line(line, result) ||
-          parse_tagged_line(line, result)
-      end
-
-      # Parse a dangling/missing/unreachable object line
-      #
-      # @param line [String] a line of output
-      # @param result [Hash] the result hash to populate
-      # @return [Boolean] true if the line was parsed
-      #
-      def parse_object_line(line, result)
-        return unless (match = OBJECT_PATTERN.match(line))
-
-        result[match[1].to_sym] << Git::FsckObject.new(type: match[2].to_sym, oid: match[3], name: match[4])
-      end
-
-      # Parse a warning line
-      #
-      # @param line [String] a line of output
-      # @param result [Hash] the result hash to populate
-      # @return [Boolean] true if the line was parsed
-      #
-      def parse_warning_line(line, result)
-        return unless (match = WARNING_PATTERN.match(line))
-
-        result[:warnings] << Git::FsckObject.new(type: match[1].to_sym, oid: match[2], message: match[3])
-      end
-
-      # Parse a root line
-      #
-      # @param line [String] a line of output
-      # @param result [Hash] the result hash to populate
-      # @return [Boolean] true if the line was parsed
-      #
-      def parse_root_line(line, result)
-        return unless (match = ROOT_PATTERN.match(line))
-
-        result[:root] << Git::FsckObject.new(type: :commit, oid: match[1])
-      end
-
-      # Parse a tagged line
-      #
-      # @param line [String] a line of output
-      # @param result [Hash] the result hash to populate
-      # @return [Boolean] true if the line was parsed
-      #
-      def parse_tagged_line(line, result)
-        return unless (match = TAGGED_PATTERN.match(line))
-
-        result[:tagged] << Git::FsckObject.new(type: match[1].to_sym, oid: match[2], name: match[3])
+        Git::Parsers::Fsck.parse(result.stdout)
       end
     end
   end

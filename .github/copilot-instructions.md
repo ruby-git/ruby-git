@@ -416,7 +416,7 @@ specific responsibilities:
 
    **Layer Responsibilities Summary**:
    - **Commands**: Define git CLI API, bind arguments, execute command → return `CommandLineResult`
-   - **Parsers**: Transform stdout/stderr to structured data (e.g., `DiffParser`, `StashListParser`)
+   - **Parsers**: Transform stdout/stderr to structured data (e.g., `Git::Parsers::Diff`, `Git::Parsers::Stash`)
    - **Facade (Git::Lib)**: Pre-process args, call commands, build rich objects using Parsers
 
 4. **Git::CommandLine**: Command execution layer
@@ -2274,9 +2274,9 @@ classes using a "Strangler Fig" pattern.
 
    **When to Create Parser Classes:**
    - Create a Parser class when command output needs to be transformed into
-     structured data (e.g., `DiffParser`, `StashListParser`)
+     structured data (e.g., `Git::Parsers::Diff`, `Git::Parsers::Stash`)
    - Parsers are stateless (class methods), return value objects, and live in
-     `lib/git/` (outside Commands namespace)
+     `lib/git/parsers/` namespace
    - Inline parsing is acceptable for trivial output (e.g., single line, simple split)
 
 3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`

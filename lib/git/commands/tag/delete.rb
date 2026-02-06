@@ -4,6 +4,7 @@ require 'git/commands/arguments'
 require 'git/commands/tag/list'
 require 'git/tag_delete_result'
 require 'git/tag_delete_failure'
+require 'git/parsers/tag'
 
 module Git
   module Commands
@@ -39,14 +40,6 @@ module Git
           operand :tag_names, repeatable: true, required: true
         end.freeze
 
-        # Regex to parse successful deletion lines from stdout
-        # Matches: Deleted tag 'tagname' (was abc123)
-        DELETED_TAG_REGEX = /^Deleted tag '([^']+)'/
-
-        # Regex to parse error messages from stderr
-        # Matches: error: tag 'tagname' not found.
-        ERROR_TAG_REGEX = /^error: tag '([^']+)'(.*)$/
-
         # Initialize the Delete command
         #
         # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
@@ -81,12 +74,12 @@ module Git
           # Execute the delete command
           stdout, stderr = execute_delete(bound_args)
 
-          # Parse results
-          deleted_names = parse_deleted_tags(stdout)
-          error_map = parse_error_messages(stderr)
+          # Parse results using TagParser
+          deleted_names = Git::Parsers::Tag.parse_deleted_tags(stdout)
+          error_map = Git::Parsers::Tag.parse_error_messages(stderr)
 
           # Build result
-          build_result(tag_names, existing_tags, deleted_names, error_map)
+          Git::Parsers::Tag.build_delete_result(tag_names, existing_tags, deleted_names, error_map)
         end
 
         private
@@ -118,46 +111,6 @@ module Git
           raise Git::FailedError, result if result.status.exitstatus > 1
 
           [result.stdout, result.stderr]
-        end
-
-        # Parse deleted tag names from stdout
-        #
-        # @param stdout [String] command stdout
-        # @return [Array<String>] names of successfully deleted tags
-        #
-        def parse_deleted_tags(stdout)
-          stdout.scan(DELETED_TAG_REGEX).flatten
-        end
-
-        # Parse error messages from stderr into a map
-        #
-        # @param stderr [String] command stderr
-        # @return [Hash<String, String>] map of tag name to error message
-        #
-        def parse_error_messages(stderr)
-          stderr.each_line.with_object({}) do |line, hash|
-            match = line.match(ERROR_TAG_REGEX)
-            hash[match[1]] = line.strip if match
-          end
-        end
-
-        # Build the TagDeleteResult from parsed data
-        #
-        # @param requested_names [Array<String>] originally requested tag names
-        # @param existing_tags [Hash<String, Git::TagInfo>] tags that existed before delete
-        # @param deleted_names [Array<String>] names confirmed deleted in stdout
-        # @param error_map [Hash<String, String>] map of tag name to error message
-        # @return [Git::TagDeleteResult] the result object
-        #
-        def build_result(requested_names, existing_tags, deleted_names, error_map)
-          deleted = deleted_names.filter_map { |name| existing_tags[name] }
-
-          not_deleted = (requested_names - deleted_names).map do |name|
-            error_message = error_map[name] || "tag '#{name}' could not be deleted"
-            Git::TagDeleteFailure.new(name: name, error_message: error_message)
-          end
-
-          Git::TagDeleteResult.new(deleted: deleted, not_deleted: not_deleted)
         end
       end
     end

@@ -2,6 +2,7 @@
 
 require 'git/commands/arguments'
 require 'git/commands/branch/list'
+require 'git/parsers/branch'
 require 'git/branch_delete_result'
 require 'git/branch_delete_failure'
 
@@ -49,15 +50,6 @@ module Git
           operand :branch_names, repeatable: true, required: true
         end.freeze
 
-        # Regex to parse successful deletion lines from stdout
-        # Matches: Deleted branch branchname (was abc123).
-        # Matches: Deleted remote-tracking branch origin/branchname (was abc123).
-        DELETED_BRANCH_REGEX = /^Deleted (?:remote-tracking )?branch ([^ ]+)/
-
-        # Regex to parse error messages from stderr
-        # Matches: error: branch 'branchname' not found.
-        ERROR_BRANCH_REGEX = /^error: branch '([^']+)'(.*)$/
-
         # Initialize the Delete command
         #
         # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
@@ -102,12 +94,11 @@ module Git
           # Execute the delete command
           stdout, stderr = execute_delete(args)
 
-          # Parse results
-          deleted_names = parse_deleted_branches(stdout)
-          error_map = parse_error_messages(stderr)
+          # Parse results and build result using BranchParser
+          deleted_names = Git::Parsers::Branch.parse_deleted_branches(stdout)
+          error_map = Git::Parsers::Branch.parse_error_messages(stderr)
 
-          # Build result
-          build_result(args.branch_names, existing_branches, deleted_names, error_map)
+          Git::Parsers::Branch.build_delete_result(args.branch_names, existing_branches, deleted_names, error_map)
         end
 
         private
@@ -119,10 +110,13 @@ module Git
         #
         def lookup_existing_branches(args)
           list_options = args.remotes ? { remotes: true } : {}
-
-          args.branch_names.each_with_object({}) do |name, hash|
-            branch_info = Git::Commands::Branch::List.new(@execution_context).call(name, **list_options).first
-            hash[name] = branch_info if branch_info
+          branches = Git::Commands::Branch::List.new(@execution_context).call(*args.branch_names, **list_options)
+          branches.each_with_object({}) do |info, hash|
+            # For remote branches, strip 'remotes/' prefix to match user input
+            # e.g., 'remotes/origin/main' -> 'origin/main'
+            # For local branches, keep the name as-is (including if literally named 'remotes/...')
+            key = args.remotes ? info.refname.sub(%r{^remotes/}, '') : info.refname
+            hash[key] = info
           end
         end
 
@@ -143,46 +137,6 @@ module Git
           raise Git::FailedError, result if result.status.exitstatus > 1
 
           [result.stdout, result.stderr]
-        end
-
-        # Parse deleted branch names from stdout
-        #
-        # @param stdout [String] command stdout
-        # @return [Array<String>] names of successfully deleted branches
-        #
-        def parse_deleted_branches(stdout)
-          stdout.scan(DELETED_BRANCH_REGEX).flatten
-        end
-
-        # Parse error messages from stderr into a map
-        #
-        # @param stderr [String] command stderr
-        # @return [Hash<String, String>] map of branch name to error message
-        #
-        def parse_error_messages(stderr)
-          stderr.each_line.with_object({}) do |line, hash|
-            match = line.match(ERROR_BRANCH_REGEX)
-            hash[match[1]] = line.strip if match
-          end
-        end
-
-        # Build the BranchDeleteResult from parsed data
-        #
-        # @param requested_names [Array<String>] originally requested branch names
-        # @param existing_branches [Hash<String, Git::BranchInfo>] branches that existed before delete
-        # @param deleted_names [Array<String>] names confirmed deleted in stdout
-        # @param error_map [Hash<String, String>] map of branch name to error message
-        # @return [Git::BranchDeleteResult] the result object
-        #
-        def build_result(requested_names, existing_branches, deleted_names, error_map)
-          deleted = deleted_names.filter_map { |name| existing_branches[name] }
-
-          not_deleted = (requested_names - deleted_names).map do |name|
-            error_message = error_map[name] || "branch '#{name}' could not be deleted"
-            Git::BranchDeleteFailure.new(name: name, error_message: error_message)
-          end
-
-          Git::BranchDeleteResult.new(deleted: deleted, not_deleted: not_deleted)
         end
       end
     end

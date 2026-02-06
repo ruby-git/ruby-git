@@ -467,7 +467,7 @@ them:
 def call(*, **)
   bound_args = ARGS.bind(*, **)
   output = @execution_context.command('diff', *bound_args).stdout
-  DiffParser.parse(output, include_dirstat: !bound_args.dirstat.nil?)
+  Parsers::Diff.parse(output, include_dirstat: !bound_args.dirstat.nil?)
 end
 ```
 
