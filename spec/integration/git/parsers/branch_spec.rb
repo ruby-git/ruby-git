@@ -58,8 +58,8 @@ RSpec.describe Git::Parsers::Branch, :integration do
       # Field 2: HEAD - should be '*' for current branch or empty
       expect(fields[2]).to eq('*').or eq('')
 
-      # Field 3: worktreepath - should be empty or a path
-      expect(fields[3]).to match(%r{\A(|/[^|]*)\z})
+      # Field 3: worktreepath - should be empty or an absolute path (Unix: /path or Windows: C:/path)
+      expect(fields[3]).to match(%r{\A(|[A-Za-z]:/.*|/.+)\z})
 
       # Field 4: symref - should be empty or a ref
       expect(fields[4]).to match(%r{\A(|refs/.*)\z})
