@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -52,7 +51,9 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main').
+        #
+        #     Alias: :u
         #
         # @overload call(branch_name, **options)
         #
@@ -62,31 +63,22 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #   @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main').
         #
-        # @return [Git::BranchInfo] branch info for the configured branch with upstream set
+        #     Alias: :u
+        #
+        # @return [Git::CommandLineResult] the result of calling `git branch --set-upstream-to`
         #
         # @raise [ArgumentError] if set_upstream_to is not provided
+        #
         # @raise [ArgumentError] if unsupported options are provided
+        #
         # @raise [Git::FailedError] if the branch or upstream doesn't exist
         #
         def call(*, **)
-          args = ARGS.bind(*, **)
-          @execution_context.command(*args)
-          fetch_branch_info(args.branch_name)
-        end
+          bound_args = ARGS.bind(*, **)
 
-        private
-
-        # Fetch branch info for the specified or current branch
-        #
-        # @param branch_name [String, nil] the branch name, or nil for current branch
-        # @return [Git::BranchInfo] the branch info
-        #
-        def fetch_branch_info(branch_name)
-          list = List.new(@execution_context)
-          branches = list.call(branch_name)
-          branches.find { |b| branch_name.nil? ? b.current : b.refname == branch_name }
+          @execution_context.command(*bound_args)
         end
       end
     end

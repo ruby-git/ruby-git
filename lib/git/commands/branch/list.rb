@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/branch_info'
 require 'git/parsers/branch'
 require 'git/commands/arguments'
 
@@ -8,13 +7,6 @@ module Git
   module Commands
     module Branch
       # Implements the `git branch --list` command
-      #
-      # This command lists existing branches with optional filtering and formatting.
-      # Uses `--format` to retrieve structured data including target OID and upstream.
-      #
-      # Note: git may emit non-branch entries (e.g., "(HEAD detached at <ref>)" or
-      # "(not a branch)") in list output. These entries are filtered out and are not
-      # returned as {Git::BranchInfo} objects.
       #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
@@ -46,9 +38,9 @@ module Git
           literal 'branch'
           literal '--list'
           literal "--format=#{Git::Parsers::Branch::FORMAT_STRING}"
-          flag_option :all, args: '-a'
-          flag_option :remotes, args: '-r'
-          flag_option :ignore_case
+          flag_option %i[all a]
+          flag_option %i[remotes r]
+          flag_option %i[ignore_case i]
           value_option :sort, inline: true, repeatable: true
           flag_or_value_option :contains
           flag_or_value_option :no_contains
@@ -68,9 +60,6 @@ module Git
 
         # Execute the git branch --list command
         #
-        # @note Detached HEAD and non-branch list entries are filtered out and will
-        #   not appear in the returned array.
-        #
         # @overload call(*patterns, **options)
         #
         #   @param patterns [Array<String>] Shell wildcard patterns to filter
@@ -80,20 +69,25 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :all (nil) List both local and remote branches
-        #   (adds -a flag)
+        #   @option options [Boolean] :all (nil) List both local and remote branches.
+        #
+        #     Alias: :a
         #
         #   @option options [Boolean] :remotes (nil) List only remote-tracking
-        #   branches (adds -r flag)
+        #     branches.
+        #
+        #     Alias: :r
         #
         #   @option options [Boolean] :ignore_case (nil) Sort and filter branches
-        #   case insensitively (adds --ignore-case flag)
+        #     case insensitively.
+        #
+        #     Alias: :i
         #
         #   @option options [String, Array<String>] :sort (nil) Sort branches by the
-        #   specified key(s)
+        #     specified key(s).
         #
         #     Give an array to add multiple --sort options. Prefix each key with '-' for
-        #     descending order. For example, sort: ['refname', '-committerdate']).
+        #     descending order. For example, sort: ['refname', '-committerdate'].
         #
         #   @option options [Boolean, String] :contains (nil) List only branches that
         #     contain the specified commit. Pass `true` to default to HEAD or a commit
@@ -114,14 +108,16 @@ module Git
         #   @option options [String] :points_at (nil) List only branches that point
         #     at the specified object
         #
-        # @return [Array<Git::BranchInfo>] array of branch info objects
+        # @return [Git::CommandLineResult] the result of calling `git branch --list`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
+        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #
         def call(*, **)
-          args = ARGS.bind(*, **)
-          stdout = @execution_context.command(*args, raise_on_failure: false).stdout
-          Git::Parsers::Branch.parse_list(stdout)
+          bound_args = ARGS.bind(*, **)
+
+          @execution_context.command(*bound_args)
         end
       end
     end

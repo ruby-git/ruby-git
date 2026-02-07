@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -70,6 +69,8 @@ module Git
         #     Without this, git branch refuses to change an existing branch.
         #     Adds `--force` flag.
         #
+        #     Alias: :f
+        #
         #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
         #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
         #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
@@ -84,6 +85,8 @@ module Git
         #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
         #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
         #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #
+        #     Alias: :t
         #
         # @overload call(branch_name, start_point, **options)
         #
@@ -100,6 +103,8 @@ module Git
         #     Without this, git branch refuses to change an existing branch.
         #     Adds `--force` flag.
         #
+        #     Alias: :f
+        #
         #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
         #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
         #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
@@ -115,16 +120,18 @@ module Git
         #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
         #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        # @return [Git::BranchInfo] the info for the branch that was created
+        #     Alias: :t
+        #
+        # @return [Git::CommandLineResult] the result of calling `git branch`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
+        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #
         def call(*, **)
           bound_args = ARGS.bind(*, **)
-          @execution_context.command(*bound_args)
 
-          # Get branch info for the newly created branch
-          Git::Commands::Branch::List.new(@execution_context).call(bound_args.branch_name).first
+          @execution_context.command(*bound_args)
         end
       end
     end

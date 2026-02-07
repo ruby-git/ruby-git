@@ -44,6 +44,7 @@ require_relative 'commands/stash/store'
 
 require 'git/command_line'
 require 'git/errors'
+require 'git/parsers/branch'
 require 'logger'
 require 'pathname'
 require 'pp'
@@ -689,7 +690,8 @@ module Git
     end
 
     def branches_all
-      Git::Commands::Branch::List.new(self).call(all: true)
+      result = Git::Commands::Branch::List.new(self).call(all: true)
+      Git::Parsers::Branch.parse_list(result.stdout)
     end
 
     def worktrees_all
@@ -773,7 +775,9 @@ module Git
     end
 
     def branch_current
-      Git::Commands::Branch::ShowCurrent.new(self).call.short_name
+      result = Git::Commands::Branch::ShowCurrent.new(self).call
+      name = result.stdout.strip
+      name.empty? ? 'HEAD' : name
     end
 
     def branch_contains(commit, branch_name = '')
@@ -1289,8 +1293,11 @@ module Git
     # @param start_point [String, nil] the commit, branch, or tag to start the new branch from
     # @param options [Hash] command options (see {Git::Commands::Branch::Create#call})
     #
+    # @return [nil]
+    #
     def branch_new(branch, start_point = nil, options = {})
       Git::Commands::Branch::Create.new(self).call(branch, start_point, **options)
+      nil
     end
 
     # Delete one or more branches
@@ -1304,23 +1311,13 @@ module Git
     #
     # @raise [Git::Error] if any branch fails to delete
     #
-    # @note For best-effort semantics (partial success/failure), use
-    #   {Git::Commands::Branch::Delete} directly.
-    #
     def branch_delete(*branches, **options)
       options = { force: true }.merge(options)
       result = Git::Commands::Branch::Delete.new(self).call(*branches, **options)
 
-      # Raise error if any branch failed to delete (backward compatibility)
-      unless result.success?
-        messages = result.not_deleted.map(&:error_message).join("\n")
-        raise Git::Error, messages
-      end
+      raise Git::Error, result.stderr.strip unless result.status.success?
 
-      result.deleted.map do |branch_info|
-        sha = branch_info.target_oid ? branch_info.target_oid[0, 7] : 'unknown'
-        "Deleted branch #{branch_info.short_name} (was #{sha})."
-      end.join("\n")
+      result.stdout.strip
     end
 
     # Move/rename a branch
@@ -1340,11 +1337,9 @@ module Git
     #
     # @return [String] the name of the renamed branch
     #
-    # @note For structured results with branch info, use
-    #   {Git::Commands::Branch::Move} directly.
-    #
-    def branch_move(*, **)
-      Git::Commands::Branch::Move.new(self).call(*, **).short_name
+    def branch_move(*args, **)
+      Git::Commands::Branch::Move.new(self).call(*args, **)
+      args.compact.last
     end
 
     # Copy a branch, along with its config and reflog
@@ -1364,11 +1359,9 @@ module Git
     #
     # @return [String] the name of the copied branch
     #
-    # @note For structured results with branch info, use
-    #   {Git::Commands::Branch::Copy} directly.
-    #
-    def branch_copy(*, **)
-      Git::Commands::Branch::Copy.new(self).call(*, **).short_name
+    def branch_copy(*args, **)
+      Git::Commands::Branch::Copy.new(self).call(*args, **)
+      args.compact.last
     end
 
     # Set upstream tracking information for a branch
@@ -1378,11 +1371,9 @@ module Git
     #
     # @return [String] the name of the configured branch
     #
-    # @note For structured results with branch info, use
-    #   {Git::Commands::Branch::SetUpstream} directly.
-    #
     def branch_set_upstream(upstream, branch_name = nil)
-      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream).short_name
+      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
+      branch_name || branch_current
     end
 
     # Remove upstream tracking information for a branch
@@ -1391,11 +1382,9 @@ module Git
     #
     # @return [String] the name of the configured branch
     #
-    # @note For structured results with branch info, use
-    #   {Git::Commands::Branch::UnsetUpstream} directly.
-    #
     def branch_unset_upstream(branch_name = nil)
-      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name).short_name
+      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
+      branch_name || branch_current
     end
 
     # Runs checkout command to checkout or create branch

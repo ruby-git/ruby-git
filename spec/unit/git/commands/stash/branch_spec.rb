@@ -8,21 +8,13 @@ require 'git/branch_info'
 RSpec.describe Git::Commands::Stash::Branch do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
-  let(:branch_info) do
-    Git::BranchInfo.new(
-      refname: 'my-feature',
-      target_oid: 'abc123def456789012345678901234567890abcd',
-      current: true,
-      worktree: false,
-      symref: nil,
-      upstream: nil
-    )
-  end
+  let(:list_output) { "refs/heads/my-feature|abc123def456789012345678901234567890abcd|*|||\n" }
+  let(:list_result) { command_result(list_output) }
   let(:list_command) { instance_double(Git::Commands::Branch::List) }
 
   before do
     allow(Git::Commands::Branch::List).to receive(:new).with(execution_context).and_return(list_command)
-    allow(list_command).to receive(:call).and_return([branch_info])
+    allow(list_command).to receive(:call).and_return(list_result)
   end
 
   describe '#call' do
@@ -49,7 +41,7 @@ RSpec.describe Git::Commands::Stash::Branch do
       it 'queries Branch::List for the new branch info' do
         allow(execution_context).to receive(:command).and_return(command_result(''))
 
-        expect(list_command).to receive(:call).with('my-feature').and_return([branch_info])
+        expect(list_command).to receive(:call).with('my-feature').and_return(list_result)
 
         command.call('my-feature')
       end
@@ -75,15 +67,10 @@ RSpec.describe Git::Commands::Stash::Branch do
 
     context 'with special branch names' do
       it 'handles branch names with slashes' do
-        slashed_branch_info = Git::BranchInfo.new(
-          refname: 'feature/new-thing',
-          target_oid: 'abc123def456789012345678901234567890abcd',
-          current: true,
-          worktree: false,
-          symref: nil,
-          upstream: nil
+        slashed_list_result = command_result(
+          "refs/heads/feature/new-thing|abc123def456789012345678901234567890abcd|*|||\n"
         )
-        allow(list_command).to receive(:call).with('feature/new-thing').and_return([slashed_branch_info])
+        allow(list_command).to receive(:call).with('feature/new-thing').and_return(slashed_list_result)
 
         expect(execution_context).to receive(:command)
           .with('stash', 'branch', 'feature/new-thing')

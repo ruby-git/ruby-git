@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/commands/branch/list'
 
 module Git
   module Commands
@@ -62,7 +61,9 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists
+        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
+        #
+        #     Alias: :f
         #
         # @overload call(old_branch, new_branch, **options)
         #
@@ -74,21 +75,20 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists
+        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
         #
-        # @return [Git::BranchInfo] the info for the branch that was created
+        #     Alias: :f
+        #
+        # @return [Git::CommandLineResult] the result of calling `git branch --copy`
         #
         # @raise [ArgumentError] if unsupported options are provided
+        #
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
         #
         def call(*, **)
-          args = ARGS.bind(*, **)
+          bound_args = ARGS.bind(*, **)
 
-          @execution_context.command(*args)
-
-          # Get branch info for the newly created branch (always the last positional)
-          new_branch_name = args.new_branch
-          Git::Commands::Branch::List.new(@execution_context).call(new_branch_name).first
+          @execution_context.command(*bound_args)
         end
       end
     end

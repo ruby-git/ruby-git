@@ -2,6 +2,7 @@
 
 require 'git/commands/arguments'
 require 'git/commands/branch/list'
+require 'git/parsers/branch'
 
 module Git
   module Commands
@@ -68,7 +69,8 @@ module Git
           @execution_context.command(*bound_args)
 
           # Return info for the newly created branch
-          Git::Commands::Branch::List.new(@execution_context).call(bound_args.branchname).first
+          list_result = Git::Commands::Branch::List.new(@execution_context).call(bound_args.branchname)
+          Git::Parsers::Branch.parse_list(list_result.stdout).first
         end
       end
     end
