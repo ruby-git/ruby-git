@@ -2,215 +2,117 @@
 
 require 'spec_helper'
 require 'git/commands/tag/delete'
-require 'git/commands/tag/list'
-require 'git/tag_info'
-require 'git/tag_delete_result'
-require 'git/tag_delete_failure'
 
 RSpec.describe Git::Commands::Tag::Delete do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
-  let(:list_command) { instance_double(Git::Commands::Tag::List) }
-
-  let(:tag_v1) do
-    Git::TagInfo.new(
-      name: 'v1.0.0', oid: nil, target_oid: 'abc123', objecttype: 'commit',
-      tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
-    )
-  end
-  let(:tag_v2) do
-    Git::TagInfo.new(
-      name: 'v2.0.0', oid: nil, target_oid: 'def456', objecttype: 'commit',
-      tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
-    )
-  end
-  let(:tag_v3) do
-    Git::TagInfo.new(
-      name: 'v3.0.0', oid: nil, target_oid: 'ghi789', objecttype: 'commit',
-      tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
-    )
-  end
-
-  before do
-    allow(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
-  end
 
   describe '#call' do
-    context 'when all tags are successfully deleted' do
-      context 'with single tag name' do
-        before do
-          allow(list_command).to receive(:call).and_return([tag_v1])
-        end
+    let(:delete_output) { "Deleted tag 'v1.0.0' (was abc123)\n" }
 
-        it 'calls git tag -d with the tag name' do
-          delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
-          expect(execution_context).to receive(:command)
-            .with('tag', '--delete', 'v1.0.0', any_args).and_return(delete_result)
-          command.call('v1.0.0')
-        end
+    context 'with single tag name' do
+      it 'deletes the tag' do
+        expect(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
+          .and_return(command_result(delete_output))
 
-        it 'returns TagDeleteResult with the deleted tag' do
-          delete_result = command_result("Deleted tag 'v1.0.0' (was abc123)\n")
-          allow(execution_context).to receive(:command)
-            .with('tag', '--delete', 'v1.0.0', any_args).and_return(delete_result)
+        result = command.call('v1.0.0')
 
-          result = command.call('v1.0.0')
-
-          expect(result).to be_a(Git::TagDeleteResult)
-          expect(result.deleted.map(&:name)).to eq(['v1.0.0'])
-          expect(result.not_deleted).to be_empty
-          expect(result.success?).to be true
-        end
-      end
-
-      context 'with multiple tag names' do
-        let(:delete_output) do
-          command_result(
-            "Deleted tag 'v1.0.0' (was abc123)\n" \
-            "Deleted tag 'v2.0.0' (was def456)\n" \
-            "Deleted tag 'v3.0.0' (was ghi789)\n"
-          )
-        end
-
-        before do
-          allow(list_command).to receive(:call).and_return([tag_v1, tag_v2, tag_v3])
-        end
-
-        it 'deletes all specified tags in one command' do
-          expect(execution_context).to receive(:command)
-            .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
-            .and_return(delete_output)
-          command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
-        end
-
-        it 'returns TagDeleteResult with all deleted tags' do
-          allow(execution_context).to receive(:command)
-            .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', any_args)
-            .and_return(delete_output)
-
-          result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
-
-          expect(result.deleted.map(&:name)).to eq(%w[v1.0.0 v2.0.0 v3.0.0])
-          expect(result.not_deleted).to be_empty
-          expect(result.success?).to be true
-        end
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to eq(delete_output)
       end
     end
 
-    context 'when some tags do not exist (partial failure)' do
-      let(:partial_failure_result) do
-        command_result(
-          "Deleted tag 'v1.0.0' (was abc123)\nDeleted tag 'v2.0.0' (was def456)\n",
-          stderr: "error: tag 'nonexistent' not found.",
-          exitstatus: 1
-        )
+    context 'with multiple tag names' do
+      let(:multi_delete_output) do
+        "Deleted tag 'v1.0.0' (was abc123)\n" \
+          "Deleted tag 'v2.0.0' (was def456)\n" \
+          "Deleted tag 'v3.0.0' (was ghi789)\n"
       end
 
-      before do
-        allow(list_command).to receive(:call).and_return([tag_v1, tag_v2])
-      end
+      it 'deletes all specified tags in one command' do
+        expect(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', raise_on_failure: false)
+          .and_return(command_result(multi_delete_output))
 
-      it 'returns TagDeleteResult with deleted and not_deleted tags' do
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.0.0', 'nonexistent', 'v2.0.0', any_args)
-          .and_return(partial_failure_result)
+        result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
 
-        result = command.call('v1.0.0', 'nonexistent', 'v2.0.0')
-
-        expect(result.deleted.map(&:name)).to eq(['v1.0.0', 'v2.0.0'])
-        expect(result.not_deleted.size).to eq(1)
-        expect(result.not_deleted.first.name).to eq('nonexistent')
-        expect(result.not_deleted.first.error_message).to include("tag 'nonexistent' not found")
-        expect(result.success?).to be false
-      end
-    end
-
-    context 'when all tags fail to delete' do
-      let(:all_fail_result) do
-        command_result(
-          '',
-          stderr: "error: tag 'nonexistent1' not found.\nerror: tag 'nonexistent2' not found.",
-          exitstatus: 1
-        )
-      end
-
-      before do
-        allow(list_command).to receive(:call).and_return([])
-      end
-
-      it 'returns TagDeleteResult with all tags in not_deleted' do
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'nonexistent1', 'nonexistent2', any_args)
-          .and_return(all_fail_result)
-
-        result = command.call('nonexistent1', 'nonexistent2')
-
-        expect(result.deleted).to be_empty
-        expect(result.not_deleted.map(&:name)).to eq(%w[nonexistent1 nonexistent2])
-        expect(result.success?).to be false
-      end
-    end
-
-    context 'when a non-partial-failure error occurs' do
-      let(:fatal_result) do
-        command_result(
-          '',
-          stderr: 'fatal: some unexpected error',
-          exitstatus: 128
-        )
-      end
-
-      before do
-        allow(list_command).to receive(:call).and_return([tag_v1])
-      end
-
-      it 're-raises the error' do
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.0.0', any_args)
-          .and_return(fatal_result)
-
-        expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to eq(multi_delete_output)
       end
     end
 
     context 'with various tag name formats' do
-      let(:lightweight_tag) do
-        lambda do |name|
-          Git::TagInfo.new(
-            name: name, oid: nil, target_oid: 'abc', objecttype: 'commit',
-            tagger_name: nil, tagger_email: nil, tagger_date: nil, message: nil
-          )
-        end
-      end
-
       it 'handles semver tags' do
-        allow(list_command).to receive(:call).and_return([lightweight_tag.call('v1.2.3')])
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.2.3', any_args)
+        expect(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.2.3', raise_on_failure: false)
           .and_return(command_result("Deleted tag 'v1.2.3' (was abc)\n"))
 
         result = command.call('v1.2.3')
-        expect(result.deleted.first.name).to eq('v1.2.3')
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles tags with slashes' do
-        allow(list_command).to receive(:call).and_return([lightweight_tag.call('release/v1.0')])
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'release/v1.0', any_args)
+        expect(execution_context).to receive(:command)
+          .with('tag', '--delete', 'release/v1.0', raise_on_failure: false)
           .and_return(command_result("Deleted tag 'release/v1.0' (was abc)\n"))
 
         result = command.call('release/v1.0')
-        expect(result.deleted.first.name).to eq('release/v1.0')
+
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles tags with hyphens and underscores' do
-        allow(list_command).to receive(:call).and_return([lightweight_tag.call('my-tag_name')])
-        allow(execution_context).to receive(:command)
-          .with('tag', '--delete', 'my-tag_name', any_args)
+        expect(execution_context).to receive(:command)
+          .with('tag', '--delete', 'my-tag_name', raise_on_failure: false)
           .and_return(command_result("Deleted tag 'my-tag_name' (was abc)\n"))
 
         result = command.call('my-tag_name')
-        expect(result.deleted.first.name).to eq('my-tag_name')
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
+    context 'exit code handling' do
+      it 'returns result for exit code 0 (all deleted)' do
+        allow(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
+          .and_return(command_result(delete_output))
+
+        result = command.call('v1.0.0')
+
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(0)
+      end
+
+      it 'returns result for exit code 1 (partial failure)' do
+        partial_result = command_result(
+          "Deleted tag 'v1.0.0' (was abc123)\n",
+          stderr: "error: tag 'nonexistent' not found.",
+          exitstatus: 1
+        )
+        allow(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.0.0', 'nonexistent', raise_on_failure: false)
+          .and_return(partial_result)
+
+        result = command.call('v1.0.0', 'nonexistent')
+
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(1)
+      end
+
+      it 'raises FailedError for exit code > 1 (fatal error)' do
+        fatal_result = command_result(
+          '',
+          stderr: 'fatal: some unexpected error',
+          exitstatus: 128
+        )
+        allow(execution_context).to receive(:command)
+          .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
+          .and_return(fatal_result)
+
+        expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
       end
     end
   end

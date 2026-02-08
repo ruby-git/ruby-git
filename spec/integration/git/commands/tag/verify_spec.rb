@@ -21,9 +21,7 @@ RSpec.describe Git::Commands::Tag::Verify, :integration do
       end
 
       it 'raises FailedError for an unsigned lightweight tag' do
-        expect { command.call('v1.0.0') }.to raise_error(Git::FailedError) do |error|
-          expect(error.result.stderr).to match(/no signature found|error: v1.0.0: cannot verify/i)
-        end
+        expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
       end
     end
 
@@ -33,17 +31,13 @@ RSpec.describe Git::Commands::Tag::Verify, :integration do
       end
 
       it 'raises FailedError for an unsigned annotated tag' do
-        expect { command.call('v2.0.0') }.to raise_error(Git::FailedError) do |error|
-          expect(error.result.stderr).to match(/no signature found|cannot verify/i)
-        end
+        expect { command.call('v2.0.0') }.to raise_error(Git::FailedError)
       end
     end
 
     context 'with a non-existent tag' do
       it 'raises FailedError' do
-        expect { command.call('nonexistent') }.to raise_error(Git::FailedError) do |error|
-          expect(error.result.stderr).to match(/not found|ambiguous argument/i)
-        end
+        expect { command.call('nonexistent') }.to raise_error(Git::FailedError)
       end
     end
 

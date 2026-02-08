@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/commands/tag/list'
 
 module Git
   module Commands
@@ -10,6 +9,8 @@ module Git
       #
       # This command creates a new tag reference pointing at the current HEAD
       # or a specified commit/object.
+      #
+      # @see Git::Commands::Tag
       #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
@@ -50,6 +51,9 @@ module Git
           value_option :cleanup, inline: true
           operand :tag_name, required: true
           operand :commit
+
+          conflicts :annotate, :sign, :local_user
+          conflicts :message, :file
         end.freeze
 
         # Initialize the Create command
@@ -73,48 +77,45 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean] :annotate (nil) Create an unsigned, annotated tag object.
-        #     Requires a message via `:message` or `:file`. Alias: `:a`
+        #     Requires a message via `:message` or `:file`. Also available as `:a`.
         #
         #   @option options [Boolean] :sign (nil) Create a GPG-signed tag using the default
-        #     signing key. Requires a message via `:message` or `:file`. Alias: `:s`
-        #     Set to `false` to override `tag.gpgSign` config (outputs `--no-sign`).
+        #     signing key. Requires a message via `:message` or `:file`. Set to `false` to
+        #     override `tag.gpgSign` config. Also available as `:s`.
         #
         #   @option options [String] :local_user (nil) Create a GPG-signed tag using the
-        #     specified key. Requires a message via `:message` or `:file`. Alias: `:u`
+        #     specified key. Requires a message via `:message` or `:file`. Also available as `:u`.
         #
         #   @option options [Boolean] :force (nil) Replace an existing tag with the given
-        #     name (instead of failing). Alias: `:f`
+        #     name (instead of failing). Also available as `:f`.
         #
         #   @option options [Boolean] :create_reflog (nil) Create a reflog for the tag,
         #     enabling date-based sha1 expressions such as `tag@{yesterday}`.
         #
         #   @option options [String] :message (nil) Use the given message as the tag message.
-        #     Implies `-a` if none of `-a`, `-s`, or `-u` is given. Alias: `:m`
+        #     Implies `-a` if none of `-a`, `-s`, or `-u` is given. Also available as `:m`.
         #
         #   @option options [String] :file (nil) Take the tag message from the given file.
-        #     Use `-` to read from standard input.
-        #     Implies `-a` if none of `-a`, `-s`, or `-u` is given. Alias: `:F`
+        #     Use `-` to read from standard input. Implies `-a` if none of `-a`, `-s`, or `-u`
+        #     is given. Also available as `:F`.
         #
         #   @option options [Hash, Array<Array>] :trailer (nil) Add trailers to the tag message.
         #     Can be a Hash `{ 'Key' => 'value' }` or Array of pairs `[['Key', 'value']]`.
-        #     Multiple trailers can be specified. The trailers can be extracted using
-        #     `--format="%(trailers)"` in `git tag --list`.
+        #     Multiple trailers can be specified.
         #
         #   @option options [String] :cleanup (nil) Set how the tag message is cleaned up.
         #     Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
         #     whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
         #
-        # @return [Git::TagInfo] the info for the tag that was created
+        # @return [Git::CommandLineResult] the result of calling `git tag`
         #
         # @raise [Git::FailedError] if the tag already exists (without force) or if
         #   an annotated tag is requested without a message
         #
         def call(*, **)
           bound_args = ARGS.bind(*, **)
-          @execution_context.command(*bound_args)
 
-          # Get tag info for the newly created tag
-          Git::Commands::Tag::List.new(@execution_context).call(bound_args.tag_name).first
+          @execution_context.command(*bound_args)
         end
       end
     end

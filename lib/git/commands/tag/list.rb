@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/tag_info'
 require 'git/parsers/tag'
 
 module Git
@@ -10,6 +9,8 @@ module Git
       # Implements the `git tag --list` command
       #
       # This command lists existing tags with optional filtering and sorting.
+      #
+      # @see Git::Commands::Tag
       #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
@@ -89,16 +90,16 @@ module Git
         #     specified object. Pass `true` to use HEAD, or an object reference string.
         #
         #   @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
-        #     case insensitive. Alias: `:i`
+        #     case insensitive. Also available as `:i`.
         #
-        # @return [Array<Git::TagInfo>] array of tag info objects
+        # @return [Git::CommandLineResult] the result of calling `git tag --list`
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git returns a non-zero exit code
         #
         def call(*, **)
-          args = ARGS.bind(*, **)
-          stdout = @execution_context.command(*args, raise_on_failure: false).stdout
-          Git::Parsers::Tag.parse_list(stdout)
+          bound_args = ARGS.bind(*, **)
+
+          @execution_context.command(*bound_args)
         end
       end
     end
