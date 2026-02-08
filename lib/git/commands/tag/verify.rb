@@ -11,6 +11,8 @@ module Git
       # It requires that the tags were signed with GPG or another supported
       # signing backend.
       #
+      # @see Git::Commands::Tag
+      #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
       # @api private
@@ -61,7 +63,7 @@ module Git
         #     `%(fieldname)` from the tag ref being shown and the object it points at.
         #     The format is the same as that of git-for-each-ref.
         #
-        # @return [Git::CommandLineResult] the command result containing verification output
+        # @return [Git::CommandLineResult] the result of calling `git tag --verify`
         #
         # @raise [Git::FailedError] if the tag does not exist or signature verification fails
         #

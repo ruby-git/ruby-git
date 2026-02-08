@@ -45,6 +45,7 @@ require_relative 'commands/stash/store'
 require 'git/command_line'
 require 'git/errors'
 require 'git/parsers/branch'
+require 'git/parsers/tag'
 require 'logger'
 require 'pathname'
 require 'pp'
@@ -1590,7 +1591,8 @@ module Git
     # @return [Array<String>] array of tag names
     #
     def tags
-      Git::Commands::Tag::List.new(self).call.map(&:name)
+      result = Git::Commands::Tag::List.new(self).call
+      Git::Parsers::Tag.parse_list(result.stdout).map(&:name)
     end
 
     # Create or delete a tag
@@ -1605,11 +1607,28 @@ module Git
       target = args.first
 
       if opts[:d] || opts[:delete]
-        tag_names = [name, *args].compact
-        Git::Commands::Tag::Delete.new(self).call(*tag_names)
+        delete_tags(name, *args)
       else
-        Git::Commands::Tag::Create.new(self).call(name, target, **opts)
+        create_tag(name, target, opts)
       end
+    end
+
+    def delete_tags(name, *other_names)
+      tag_names = [name, *other_names].compact
+      existing_list = Git::Commands::Tag::List.new(self).call(*tag_names)
+      existing_tags = Git::Parsers::Tag.parse_list(existing_list.stdout).to_h { |t| [t.name, t] }
+      result = Git::Commands::Tag::Delete.new(self).call(*tag_names)
+      Git::Parsers::Tag.build_delete_result(
+        tag_names, existing_tags, Git::Parsers::Tag.parse_deleted_tags(result.stdout),
+        Git::Parsers::Tag.parse_error_messages(result.stderr)
+      )
+    end
+
+    def create_tag(name, target, opts)
+      Git::Commands::Tag::Create.new(self).call(name, target, **opts)
+
+      list_result = Git::Commands::Tag::List.new(self).call(name)
+      Git::Parsers::Tag.parse_list(list_result.stdout).first
     end
 
     FETCH_OPTION_MAP = [
