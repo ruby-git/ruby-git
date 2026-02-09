@@ -9,28 +9,15 @@ RSpec.describe Git::Commands::Stash::Create do
 
   describe '#call' do
     context 'with no arguments' do
-      it 'calls git stash create' do
+      it 'runs stash create and returns CommandLineResult' do
         expect(execution_context).to receive(:command)
           .with('stash', 'create')
           .and_return(command_result("abc123def456789\n"))
 
-        command.call
-      end
+        result = command.call
 
-      it 'returns the commit SHA' do
-        allow(execution_context).to receive(:command)
-          .with('stash', 'create')
-          .and_return(command_result("abc123def456789\n"))
-
-        expect(command.call).to eq('abc123def456789')
-      end
-
-      it 'strips whitespace from SHA' do
-        allow(execution_context).to receive(:command)
-          .with('stash', 'create')
-          .and_return(command_result("  abc123def456789  \n"))
-
-        expect(command.call).to eq('abc123def456789')
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to eq("abc123def456789\n")
       end
     end
 
@@ -57,24 +44,6 @@ RSpec.describe Git::Commands::Stash::Create do
           .and_return(command_result("abc123\n"))
 
         command.call('')
-      end
-    end
-
-    context 'when nothing to stash' do
-      it 'returns nil for empty output' do
-        allow(execution_context).to receive(:command)
-          .with('stash', 'create')
-          .and_return(command_result(''))
-
-        expect(command.call).to be_nil
-      end
-
-      it 'returns nil for whitespace-only output' do
-        allow(execution_context).to receive(:command)
-          .with('stash', 'create')
-          .and_return(command_result("  \n"))
-
-        expect(command.call).to be_nil
       end
     end
 

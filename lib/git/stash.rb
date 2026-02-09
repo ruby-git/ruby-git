@@ -3,10 +3,16 @@
 module Git
   # A stash in a Git repository
   class Stash
-    def initialize(base, message, save: false)
+    # Initialize a Stash object
+    #
+    # @param base [Git::Base] the git repository
+    # @param message [String] the stash message
+    # @param existing [Boolean] (false) if true, this is an existing stash (don't create)
+    #
+    def initialize(base, message, existing: false)
       @base = base
       @message = message
-      self.save unless save
+      save unless existing
     end
 
     def save

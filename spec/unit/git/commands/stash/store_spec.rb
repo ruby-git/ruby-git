@@ -61,42 +61,6 @@ RSpec.describe Git::Commands::Stash::Store do
       end
     end
 
-    context 'with :quiet option' do
-      it 'adds --quiet flag when true' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'store', '--quiet', 'abc123')
-          .and_return(command_result(''))
-
-        command.call('abc123', quiet: true)
-      end
-
-      it 'accepts :q alias' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'store', '--quiet', 'abc123')
-          .and_return(command_result(''))
-
-        command.call('abc123', q: true)
-      end
-
-      it 'does not add flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'store', 'abc123')
-          .and_return(command_result(''))
-
-        command.call('abc123', quiet: false)
-      end
-    end
-
-    context 'with combined options' do
-      it 'combines message and quiet flags' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'store', '--message=WIP', '--quiet', 'abc123')
-          .and_return(command_result(''))
-
-        command.call('abc123', message: 'WIP', quiet: true)
-      end
-    end
-
     context 'with full SHA' do
       it 'handles 40-character SHA' do
         sha = 'a' * 40

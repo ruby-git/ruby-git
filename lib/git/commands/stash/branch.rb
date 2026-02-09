@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/commands/branch/list'
-require 'git/parsers/branch'
 
 module Git
   module Commands
@@ -18,7 +16,10 @@ module Git
       # be created at the commit that was HEAD when the stash was created, so
       # applying the stash should succeed.
       #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
       # @api private
       #
       # @example Create branch from latest stash
@@ -60,17 +61,12 @@ module Git
         #
         #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        # @return [Git::BranchInfo] info for the newly created branch
+        # @return [Git::CommandLineResult] the result of calling `git stash branch`
         #
         # @raise [Git::FailedError] if the branch already exists or stash doesn't exist
         #
         def call(*, **)
-          bound_args = ARGS.bind(*, **)
-          @execution_context.command(*bound_args)
-
-          # Return info for the newly created branch
-          list_result = Git::Commands::Branch::List.new(@execution_context).call(bound_args.branchname)
-          Git::Parsers::Branch.parse_list(list_result.stdout).first
+          @execution_context.command(*ARGS.bind(*, **))
         end
       end
     end
