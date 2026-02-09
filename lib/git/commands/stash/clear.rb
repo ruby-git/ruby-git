@@ -9,7 +9,10 @@ module Git
       #
       # Removes all stash entries. Use with caution as this cannot be undone.
       #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
       # @api private
       #
       # @example Clear all stashes
@@ -32,7 +35,7 @@ module Git
 
         # Clear all stash entries
         #
-        # @return [Git::CommandLineResult] the result of the command
+        # @return [Git::CommandLineResult] the result of calling `git stash clear`
         #
         def call
           @execution_context.command(*ARGS.bind)

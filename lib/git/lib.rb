@@ -30,21 +30,14 @@ require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
 require_relative 'commands/tag/verify'
 require_relative 'commands/stash/apply'
-require_relative 'commands/stash/branch'
 require_relative 'commands/stash/clear'
-require_relative 'commands/stash/create'
-require_relative 'commands/stash/drop'
 require_relative 'commands/stash/list'
-require_relative 'commands/stash/pop'
 require_relative 'commands/stash/push'
-require_relative 'commands/stash/show_numstat'
-require_relative 'commands/stash/show_patch'
-require_relative 'commands/stash/show_raw'
-require_relative 'commands/stash/store'
 
 require 'git/command_line'
 require 'git/errors'
 require 'git/parsers/branch'
+require 'git/parsers/stash'
 require 'git/parsers/tag'
 require 'logger'
 require 'pathname'
@@ -1207,85 +1200,100 @@ module Git
       command('am', *arr_opts)
     end
 
-    # List all stash entries
+    # Returns all stash entries as an array of index and message pairs
     #
-    # @return [Array<Git::StashInfo>] array of stash info objects
+    # List all stash entries in the repository ordered from oldest to newest
     #
-    def stashes_list
-      Git::Commands::Stash::List.new(self).call
-    end
-
-    # List all stash entries (legacy format)
+    # The index is a sequential number starting from 0 for the oldest stash, and the
+    # message is the description of the stash entry.
     #
-    # @deprecated Use {#stashes_list} instead, which returns {Git::StashInfo} objects.
-    # @return [Array<Array(Integer, String)>] array of `[index, message]` pairs
+    # @example List all stashes (oldest first)
+    #   lib.stashes_all # => [[0, "Fix bug"], [1, "Add feature"]]
+    #
+    # @return [Array<Array(Integer, String)>] array of [index, message] pairs where
+    #   index is the sequential position (0 is oldest) and message is the stash description
+    #
+    # @see https://git-scm.com/docs/git-stash git-stash documentation
     #
     def stashes_all
-      stashes_list.map { |info| stash_info_to_legacy(info) }
+      result = Git::Commands::Stash::List.new(self).call
+      stashes = Git::Parsers::Stash.parse_list(result.stdout)
+      stashes.reverse.each_with_index.map { |info, i| stash_info_to_legacy(info, i) }
     end
 
-    # Push changes onto the stash
+    # Save the current working directory and index state to a new stash
     #
-    # @param message [String, nil] message for the stash entry
-    # @param options [Hash] command options (see {Git::Commands::Stash::Push#call})
+    # This method preserves v4.0.0 backward compatibility by returning a truthy/falsy
+    # value indicating whether a stash was created.
     #
-    # @return [Boolean] true if stash was created, false otherwise
+    # @param message [String] the stash message
     #
-    def stash_save(message = nil, options = {}) # rubocop:disable Naming/PredicateMethod
-      opts = message ? options.merge(message: message) : options
-      stash_info = Git::Commands::Stash::Push.new(self).call(**opts)
-
-      # Push returns nil if nothing was stashed, StashInfo otherwise
-      !stash_info.nil?
+    # @return [Boolean] true if changes were stashed, false if there were no local changes to save
+    #
+    # @example Save current changes
+    #   lib.stash_save('WIP: feature work')
+    #
+    # @see https://git-scm.com/docs/git-stash git-stash documentation
+    #
+    def stash_save(message) # rubocop:disable Naming/PredicateMethod
+      result = Git::Commands::Stash::Push.new(self).call(message: message)
+      !result.stdout.include?('No local changes to save')
     end
 
-    # Apply stashed changes
+    # Apply a stash to the working directory
     #
-    # @param id [String, nil] stash reference to apply
-    # @param options [Hash] command options (see {Git::Commands::Stash::Apply#call})
+    # This method preserves v4.0.0 backward compatibility by returning the command output.
     #
-    # @return [String] the name of the applied stash (e.g., +"stash@\\{0}"+)
+    # @param id [String, Integer, nil] the stash identifier (e.g., 'stash@\\{0}', 0) or nil for latest
     #
-    def stash_apply(id = nil, options = {})
-      stash_info = Git::Commands::Stash::Apply.new(self).call(id, **options)
-      stash_info.name
+    # @return [String] the output from the git stash apply command
+    #
+    # @example Apply the latest stash
+    #   lib.stash_apply
+    #
+    # @example Apply a specific stash
+    #   lib.stash_apply('stash@{1}')
+    #
+    # @see https://git-scm.com/docs/git-stash git-stash documentation
+    #
+    def stash_apply(id = nil)
+      result = Git::Commands::Stash::Apply.new(self).call(id)
+      result.stdout
     end
 
-    # Clear all stash entries
+    # Remove all stash entries
     #
-    # @return [String] the command output (empty on success)
+    # This method preserves v4.0.0 backward compatibility by returning the command output.
+    #
+    # @return [String] the output from the git stash clear command
+    #
+    # @example Clear all stashes
+    #   lib.stash_clear
+    #
+    # @see https://git-scm.com/docs/git-stash git-stash documentation
     #
     def stash_clear
-      Git::Commands::Stash::Clear.new(self).call.stdout
+      result = Git::Commands::Stash::Clear.new(self).call
+      result.stdout
     end
 
-    # Pop stashed changes
+    # List all stash entries in standard git stash list format
     #
-    # @param id [String, nil] stash reference to pop
-    # @param options [Hash] command options (see {Git::Commands::Stash::Pop#call})
+    # This method preserves v4.0.0 backward compatibility by returning a formatted
+    # string matching the output of `git stash list`.
     #
-    def stash_pop(id = nil, options = {})
-      Git::Commands::Stash::Pop.new(self).call(id, **options)
-    end
-
-    # Drop a stash entry
+    # @return [String] newline-separated list of stash entries in the format
+    #   "stash@\\{n}: <message>", or an empty string if no stashes exist
     #
-    # @param id [String, nil] stash reference to drop
-    # @param options [Hash] command options (see {Git::Commands::Stash::Drop#call})
+    # @example List all stashes
+    #   lib.stash_list # => "stash@\\{0}: On main: WIP\nstash@\\{1}: On feature: test"
     #
-    def stash_drop(id = nil, options = {})
-      Git::Commands::Stash::Drop.new(self).call(id, **options)
-    end
-
-    # List stash entries (raw output)
-    #
-    # @return [String] raw git stash list output
-    #
-    # @deprecated Use {#stashes_list} instead for parsed output
-    #   (or {#stashes_all} for the legacy [index, message] format)
+    # @see https://git-scm.com/docs/git-stash git-stash documentation
     #
     def stash_list
-      command('stash', 'list').stdout
+      result = Git::Commands::Stash::List.new(self).call
+      stashes = Git::Parsers::Stash.parse_list(result.stdout)
+      stashes.map { |info| "#{info.name}: #{info.message}" }.join("\n")
     end
 
     # Create a new branch
@@ -2119,32 +2127,6 @@ module Git
       [type, name, value]
     end
 
-    # @deprecated No longer used - stash parsing moved to Git::Commands::Stash::List
-    def stash_log_lines
-      path = File.join(@git_dir, 'logs/refs/stash')
-      return [] unless File.exist?(path)
-
-      File.readlines(path, chomp: true)
-    end
-
-    # Parse a stash log line into index and message
-    #
-    # @param line [String] a line from the stash reflog
-    # @param index [Integer] the stash index
-    # @return [Array(Integer, String)] `[index, message]` pair with prefix stripped
-    #
-    # @api private
-    #
-    # @deprecated No longer used - stash parsing moved to Git::Commands::Stash::List
-    #
-    def parse_stash_log_line(line, index)
-      full_message = line.split("\t", 2).last
-      match_data = full_message.match(/^[^:]+:(.*)$/)
-      message = match_data ? match_data[1] : full_message
-
-      [index, message.strip]
-    end
-
     # Convert a StashInfo to the legacy [index, message] format
     #
     # The legacy format strips the "WIP on <branch>:" or "On <branch>:" prefix
@@ -2155,12 +2137,12 @@ module Git
     #
     # @api private
     #
-    def stash_info_to_legacy(info)
+    def stash_info_to_legacy(info, index = info.index)
       full_message = info.message
       match_data = full_message.match(/^[^:]+:(.*)$/)
       message = match_data ? match_data[1] : full_message
 
-      [info.index, message.strip]
+      [index, message.strip]
     end
 
     # Writes the staged content of a conflicted file to an IO stream

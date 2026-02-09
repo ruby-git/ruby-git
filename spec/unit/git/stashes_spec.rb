@@ -5,13 +5,9 @@ require 'spec_helper'
 RSpec.describe Git::Stashes do
   let(:base) { double('Git::Base') }
   let(:lib) { double('Git::Lib') }
-  let(:stash_info_data) do
-    [
-      instance_double('Git::StashInfo', index: 0, message: 'abc1234 Test'),
-      instance_double('Git::StashInfo', index: 1, message: 'def5678 Work')
-    ]
-  end
-  let(:stash_legacy_data) do
+
+  # Git::Lib#stashes_all returns stashes in oldest-first order
+  let(:mocked_stashes_all_result) do
     [
       [0, 'abc1234 Test'],
       [1, 'def5678 Work']
@@ -20,8 +16,7 @@ RSpec.describe Git::Stashes do
 
   before do
     allow(base).to receive(:lib).and_return(lib)
-    allow(lib).to receive(:stashes_list).and_return(stash_info_data)
-    allow(lib).to receive(:stashes_all).and_return(stash_legacy_data)
+    allow(lib).to receive(:stashes_all).and_return(mocked_stashes_all_result)
   end
 
   describe '#initialize' do
@@ -36,47 +31,36 @@ RSpec.describe Git::Stashes do
 
       described_class.new(base)
 
-      expect(Git::Stash).to have_received(:new).with(base, 'abc1234 Test', save: true)
-      expect(Git::Stash).to have_received(:new).with(base, 'def5678 Work', save: true)
-    end
-
-    it 'maintains stash ordering where stashes[0] is stash@{0}' do
-      stashes = described_class.new(base)
-      # stash_info_data is [StashInfo(0, 'abc1234 Test'), StashInfo(1, 'def5678 Work')]
-      # stashes[0] should correspond to stash@{0} (the first/latest stash)
-      expect(stashes[0].message).to eq('abc1234 Test')
-      expect(stashes[1].message).to eq('def5678 Work')
+      expect(Git::Stash).to have_received(:new).with(base, 'abc1234 Test', existing: true)
+      expect(Git::Stash).to have_received(:new).with(base, 'def5678 Work', existing: true)
     end
   end
 
   describe '#all' do
     subject(:stashes) { described_class.new(base) }
 
-    it 'returns an array of StashInfo objects' do
+    it 'returns an array of [index, message] pairs' do
       result = stashes.all
       expect(result).to be_an(Array)
-      expect(result).to eq(stash_info_data)
+      expect(result).to eq(mocked_stashes_all_result)
+    end
+
+    it 'returns stashes in oldest-first order matching Git::Lib#stashes_all' do
+      result = stashes.all
+      # Index 0 should be the oldest stash (first in the reflog)
+      # Index 1 should be the newer stash
+      expect(result[0]).to eq([0, 'abc1234 Test'])
+      expect(result[1]).to eq([1, 'def5678 Work'])
     end
 
     it 'returns fresh data from the repository' do
       stashes
 
-      new_info = instance_double('Git::StashInfo', index: 0, message: 'new stash')
-      allow(lib).to receive(:stashes_list).and_return([new_info])
+      new_data = [[0, 'new stash']]
+      allow(lib).to receive(:stashes_all).and_return(new_data)
 
       result = stashes.all
-      expect(result).to eq([new_info])
-    end
-  end
-
-  describe '#all_legacy' do
-    subject(:stashes) { described_class.new(base) }
-
-    it 'returns an array of [index, message] pairs and emits a deprecation warning' do
-      result = nil
-      expect { result = stashes.all_legacy }.to output(/DEPRECATION/).to_stderr
-      expect(result).to be_an(Array)
-      expect(result).to eq(stash_legacy_data)
+      expect(result).to eq(new_data)
     end
   end
 
@@ -84,7 +68,7 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(base) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_opts|
+      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
         instance_double('Git::Stash', saved?: true, message: message)
       end
     end
@@ -96,6 +80,14 @@ RSpec.describe Git::Stashes do
       expect(yielded.size).to eq(2)
     end
 
+    it 'iterates stashes in newest-first order' do
+      yielded_messages = stashes.map(&:message)
+
+      # Should yield newest stash first (stash@{0}), then oldest
+      expect(yielded_messages[0]).to eq('def5678 Work')
+      expect(yielded_messages[1]).to eq('abc1234 Test')
+    end
+
     it 'returns an enumerator when no block given' do
       expect(stashes.each).to be_an(Enumerator)
     end
@@ -105,14 +97,14 @@ RSpec.describe Git::Stashes do
     subject(:stashes) { described_class.new(base) }
 
     before do
-      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_opts|
+      allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
         instance_double('Git::Stash', saved?: true, message: message)
       end
     end
 
-    it 'returns the stash at the given index' do
-      expect(stashes[0]).not_to be_nil
-      expect(stashes[1]).not_to be_nil
+    it 'returns stashes in newest-first order' do
+      expect(stashes[0].message).to eq('def5678 Work')
+      expect(stashes[1].message).to eq('abc1234 Test')
     end
 
     it 'returns nil for out of bounds index' do
@@ -120,7 +112,7 @@ RSpec.describe Git::Stashes do
     end
 
     it 'converts string index to integer' do
-      expect(stashes['0']).not_to be_nil
+      expect(stashes['0'].message).to eq('def5678 Work')
     end
   end
 

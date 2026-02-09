@@ -1,22 +1,20 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/parsers/diff'
 
 module Git
   module Commands
     module Stash
       # Show raw diff output for a stash entry
       #
-      # Uses --raw output format with rename detection (-M) enabled by default,
-      # combined with --numstat for line change counts and --shortstat for totals.
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
       # @api private
       #
       # @example Show raw diff for the latest stash
       #   Git::Commands::Stash::ShowRaw.new(execution_context).call
-      #   # => #<Git::DiffResult files: [...]>
       #
       # @example Show with copy detection
       #   Git::Commands::Stash::ShowRaw.new(execution_context).call(find_copies: true)
@@ -58,6 +56,7 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
@@ -76,6 +75,7 @@ module Git
         #   @param options [Hash] command options
         #
         #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
@@ -85,12 +85,10 @@ module Git
         #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
         #     Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        # @return [Git::DiffResult] diff result with per-file raw info
+        # @return [Git::CommandLineResult] the result of calling `git stash show --raw`
         #
         def call(*, **)
-          bound_args = ARGS.bind(*, **)
-          output = @execution_context.command(*bound_args).stdout
-          Parsers::Diff::Raw.parse(output, include_dirstat: !bound_args.dirstat.nil?)
+          @execution_context.command(*ARGS.bind(*, **))
         end
       end
     end

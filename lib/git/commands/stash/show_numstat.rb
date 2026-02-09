@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/parsers/diff'
 
 module Git
   module Commands
     module Stash
       # Show numstat (line counts) for changes recorded in a stash entry
       #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
       # @api private
       #
       # @example Show stats for the latest stash
       #   Git::Commands::Stash::ShowNumstat.new(execution_context).call
-      #   # => #<Git::DiffResult files_changed: 2, ...>
       #
       # @example Show stats for a specific stash
       #   Git::Commands::Stash::ShowNumstat.new(execution_context).call('stash@\\{2}')
@@ -52,7 +53,8 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :include_untracked (nil) include untracked files in diff.
+        #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
@@ -68,7 +70,8 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :include_untracked (nil) include untracked files in diff.
+        #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
@@ -76,12 +79,10 @@ module Git
         #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
         #     Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        # @return [Git::DiffResult] diff result with per-file and total statistics
+        # @return [Git::CommandLineResult] the result of calling `git stash show --numstat`
         #
         def call(*, **)
-          bound_args = ARGS.bind(*, **)
-          output = @execution_context.command(*bound_args).stdout
-          Parsers::Diff::Numstat.parse(output, include_dirstat: !bound_args.dirstat.nil?)
+          @execution_context.command(*ARGS.bind(*, **))
         end
       end
     end

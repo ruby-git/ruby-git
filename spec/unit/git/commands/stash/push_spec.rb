@@ -2,45 +2,20 @@
 
 require 'spec_helper'
 require 'git/commands/stash/push'
-require 'git/commands/stash/list'
-require 'git/stash_info'
 
 RSpec.describe Git::Commands::Stash::Push do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
-  let(:stash_info) do
-    Git::StashInfo.new(
-      index: 0, name: 'stash@{0}', oid: 'abc123', short_oid: 'abc123',
-      branch: 'main', message: 'WIP on main: test',
-      author_name: 'Test', author_email: 'test@example.com', author_date: '2024-01-01',
-      committer_name: 'Test', committer_email: 'test@example.com', committer_date: '2024-01-01'
-    )
-  end
-  let(:list_command) { instance_double(Git::Commands::Stash::List) }
-
-  before do
-    allow(Git::Commands::Stash::List).to receive(:new).with(execution_context).and_return(list_command)
-    allow(list_command).to receive(:call).and_return([stash_info])
-  end
 
   describe '#call' do
     context 'with no arguments' do
-      it 'calls git stash push' do
+      it 'runs stash push and returns CommandLineResult' do
         expect(execution_context).to receive(:command).with('stash', 'push').and_return(command_result(''))
-        command.call
-      end
 
-      it 'returns the new StashInfo' do
-        allow(execution_context).to receive(:command).with('stash', 'push').and_return(command_result(''))
-        expect(command.call).to eq(stash_info)
-      end
-    end
+        result = command.call
 
-    context 'when nothing to stash' do
-      it 'returns nil' do
-        allow(execution_context).to receive(:command).with('stash', 'push')
-                                                     .and_return(command_result('No local changes to save'))
-        expect(command.call).to be_nil
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to eq('')
       end
     end
 

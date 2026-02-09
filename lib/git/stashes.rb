@@ -14,38 +14,22 @@ module Git
       @stashes = []
       @base = base
 
-      @base.lib.stashes_all.each do |(_index, message)|
-        @stashes << Git::Stash.new(@base, message, save: true)
+      @base.lib.stashes_all.each do |stash|
+        message = stash[1]
+        @stashes.unshift(Git::Stash.new(@base, message, existing: true))
       end
-    end
-
-    # Returns all stash entries with full metadata
-    #
-    # @example Listing stashes with metadata
-    #   git.stashes.all.each do |info|
-    #     puts "#{info.short_oid} #{info.name}: #{info.message}"
-    #   end
-    #
-    # @return [Array<Git::StashInfo>] array of stash info objects
-    #
-    def all
-      @base.lib.stashes_list
     end
 
     # Returns a multi-dimensional Array of elements that have been stash saved
     #
-    # Array is based on position and name.
-    #
-    # @deprecated Use {#all} instead, which returns {Git::StashInfo} objects.
-    #   See the migration guide in the CHANGELOG for updating your code.
+    # Array is based on position and name (oldest-first order matching Git::Lib#stashes_all).
     #
     # @example Returns Array of items that have been stashed
-    #   git.stashes.all_legacy # => [[0, "testing-stash-all"]]
+    #   git.stashes.all # => [[0, "testing-stash-all"], [1, "another-stash"]]
     #
-    # @return [Array<Array(Integer, String)>] array of `[index, message]` pairs
+    # @return [Array<Array(Integer, String)>] array of [index, message] pairs
     #
-    def all_legacy
-      warn '[DEPRECATION] Git::Stashes#all_legacy is deprecated. Use #all instead which returns StashInfo objects.'
+    def all
       @base.lib.stashes_all
     end
 
@@ -85,11 +69,6 @@ module Git
       @stashes.size
     end
 
-    # Iterate over stash entries
-    #
-    # @yield [Git::Stash] each stash entry
-    # @return [Enumerator] if no block given
-    #
     def each(&)
       @stashes.each(&)
     end
