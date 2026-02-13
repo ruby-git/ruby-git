@@ -32,7 +32,7 @@ class TestTags < Test::Unit::TestCase
       assert(r2.tags.any? { |t| t.name == 'third' })
       assert(r2.tags.none? { |t| t.name == 'second' })
 
-      error = assert_raises Git::FailedError do
+      error = assert_raises ArgumentError do
         r2.add_tag('fourth', { a: true })
       end
 

@@ -8,15 +8,15 @@ This prompt guides the process of restoring backward compatibility for a specifi
 
 ## Objective
 
-For the specified git command(s), remove methods added to `Git::Lib` since v4.0.0 and ensure that remaining methods (which existed in v4.0.0) are backward compatible.
+For the specified git command(s), remove methods added to `Git::Lib` since v4.3.0 and ensure that remaining methods (which existed in v4.3.0) are backward compatible.
 
 ## Instructions
 
-### Step 1: Identify Methods Added Since v4.0.0
+### Step 1: Identify Methods Added Since v4.3.0
 
-1. Check out the v4.0.0 tag to examine the historical state:
+1. Check out the v4.3.0 tag to examine the historical state:
    ```bash
-   git checkout v4.0.0
+   git checkout v4.3.0
    ```
 
 2. Search `lib/git/lib.rb` for all methods related to the specified git command(s):
@@ -40,12 +40,12 @@ For the specified git command(s), remove methods added to `Git::Lib` since v4.0.
    ```
 
 6. Create two lists:
-   - **Legacy methods**: Methods that existed in v4.0.0 (must be preserved and made compatible)
-   - **New methods**: Methods that don't exist in v4.0.0 (should be removed)
+   - **Legacy methods**: Methods that existed in v4.3.0 (must be preserved and made compatible)
+   - **New methods**: Methods that don't exist in v4.3.0 (should be removed)
 
 ### Step 2: Remove New Methods
 
-1. Identify all new methods that were added after v4.0.0
+1. Identify all new methods that were added after v4.3.0
 2. Remove these methods entirely from `lib/git/lib.rb`
 3. Remove any `require` statements that are only used by the removed methods
 
@@ -57,8 +57,8 @@ For each legacy method that needs to be preserved:
    - Call the appropriate `Git::Commands::<Command>::*` class
    - Ensure all necessary command classes are required at the top of the file
 
-2. **Convert return values to match v4.0.0 exactly:**
-   - Compare the return type from the modern command with the v4.0.0 return type
+2. **Convert return values to match v4.3.0 exactly:**
+   - Compare the return type from the modern command with the v4.3.0 return type
    - If they differ, add conversion logic to transform the result
    - Modern commands typically return `CommandLineResult` objects with `.stdout`, `.stderr`, and `.status`
    - Legacy methods may have returned raw strings, arrays, or other types
@@ -106,7 +106,7 @@ For each legacy method that needs to be preserved:
 
 Here's how this process was applied to the `stash` commands:
 
-### Legacy Methods (v4.0.0)
+### Legacy Methods (v4.3.0)
 - `stashes_all` → returned `Array<[Integer, String]>` (index and message pairs)
 - `stash_save(message)` → returned regex match result (truthy/falsy)
 - `stash_apply(id)` → returned `String` (stdout)
@@ -169,7 +169,7 @@ end
 
 ## Key Principles
 
-1. **Maintain exact v4.0.0 return values**: Don't change return types even slightly
+1. **Maintain exact v4.3.0 return values**: Don't change return types even slightly
 2. **Use modern infrastructure internally**: Leverage `Git::Commands::*` classes for actual git operations
 3. **Remove all new methods**: Don't try to make new methods backward compatible - just remove them
 4. **Minimize changes**: Only modify what's necessary for backward compatibility
@@ -177,9 +177,9 @@ end
 
 ## Validation Checklist
 
-- [ ] Identified all methods for the command in v4.0.0
-- [ ] Documented v4.0.0 return values exactly
-- [ ] Removed all methods not present in v4.0.0
+- [ ] Identified all methods for the command in v4.3.0
+- [ ] Documented v4.3.0 return values exactly
+- [ ] Removed all methods not present in v4.3.0
 - [ ] Implemented legacy methods using modern command classes
 - [ ] Added conversion logic where return types differ
 - [ ] Created helper methods for complex conversions
@@ -191,6 +191,6 @@ end
 
 To apply this process, say:
 
-> Remove methods added to Git::Lib since v4.0.0 for `<command_name>` git command(s) and ensure the remaining methods are backward compatible.
+> Remove methods added to Git::Lib since v4.3.0 for `<command_name>` git command(s) and ensure the remaining methods are backward compatible.
 
 Replace `<command_name>` with the specific git command(s) you want to audit (e.g., `branch`, `merge`, `tag`, `reset`, etc.).
