@@ -28,7 +28,6 @@ require_relative 'commands/rm'
 require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
-require_relative 'commands/tag/verify'
 require_relative 'commands/stash/apply'
 require_relative 'commands/stash/clear'
 require_relative 'commands/stash/list'
@@ -1596,7 +1595,9 @@ module Git
 
     # List all tags in the repository
     #
-    # @return [Array<String>] array of tag names
+    # @see https://git-scm.com/docs/git-tag git-tag
+    #
+    # @return [Array<String>] tag names
     #
     def tags
       result = Git::Commands::Tag::List.new(self).call
@@ -1605,38 +1606,94 @@ module Git
 
     # Create or delete a tag
     #
-    # @param name [String] the tag name
-    # @param args [Array] optional commit/target and options hash
-    # @return [Git::TagInfo, Git::TagDeleteResult] TagInfo when creating a tag,
-    #   TagDeleteResult when deleting a tag
+    # When the `:d` or `:delete` option is set, deletes the named tag.
+    # Otherwise, creates a new tag pointing at HEAD or the specified target.
+    #
+    # @see https://git-scm.com/docs/git-tag git-tag
+    #
+    # @overload tag(name, target, opts = {})
+    #
+    #   Create a tag on the specified target
+    #
+    #   @param name [String] the tag name to create
+    #
+    #   @param target [String] the commit or object to tag
+    #
+    #   @param opts [Hash] options for creating the tag
+    #
+    #   @option opts [Boolean] :annotate (nil) create an unsigned, annotated tag object.
+    #     Requires `:message` or `:file`.
+    #
+    #     Alias: `:a`
+    #
+    #   @option opts [Boolean] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
+    #
+    #     Alias: `:s`
+    #
+    #   @option opts [Boolean] :force (nil) replace an existing tag with the given name.
+    #
+    #     Alias: `:f`
+    #
+    #   @option opts [String] :message (nil) use the given string as the tag message.
+    #     Implies annotated tag if none of `:annotate`, `:sign`, or `:local_user` is given.
+    #
+    #     Alias: `:m`
+    #
+    # @overload tag(name, opts = {})
+    #
+    #   Create a lightweight tag on HEAD
+    #
+    #   @param name [String] the tag name to create
+    #
+    #   @param opts [Hash] options for creating the tag
+    #
+    #   @option opts [Boolean] :annotate (nil) create an unsigned, annotated tag object.
+    #     Requires `:message` or `:file`.
+    #
+    #     Alias: `:a`
+    #
+    #   @option opts [Boolean] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
+    #
+    #     Alias: `:s`
+    #
+    #   @option opts [Boolean] :force (nil) replace an existing tag with the given name.
+    #
+    #     Alias: `:f`
+    #
+    #   @option opts [String] :message (nil) use the given string as the tag message.
+    #     Implies annotated tag if none of `:annotate`, `:sign`, or `:local_user` is given.
+    #
+    #     Alias: `:m`
+    #
+    # @overload tag(name, opts = {})
+    #
+    #   Delete the named tag
+    #
+    #   @param name [String] the tag name to delete
+    #
+    #   @param opts [Hash] options
+    #
+    #   @option opts [Boolean] :delete (nil) delete the named tag.
+    #
+    #     Alias: `:d`
+    #
+    # @return [String] command output
+    #
+    # @raise [ArgumentError] if creating an annotated or signed tag without a message
+    #
+    # @raise [Git::FailedError] if the tag already exists (without `:force`) or if
+    #   the tag to delete does not exist
     #
     def tag(name, *args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
       target = args.first
 
       if opts[:d] || opts[:delete]
-        delete_tags(name, *args)
+        delete_tag(name)
       else
+        validate_tag_options!(opts)
         create_tag(name, target, opts)
       end
-    end
-
-    def delete_tags(name, *other_names)
-      tag_names = [name, *other_names].compact
-      existing_list = Git::Commands::Tag::List.new(self).call(*tag_names)
-      existing_tags = Git::Parsers::Tag.parse_list(existing_list.stdout).to_h { |t| [t.name, t] }
-      result = Git::Commands::Tag::Delete.new(self).call(*tag_names)
-      Git::Parsers::Tag.build_delete_result(
-        tag_names, existing_tags, Git::Parsers::Tag.parse_deleted_tags(result.stdout),
-        Git::Parsers::Tag.parse_error_messages(result.stderr)
-      )
-    end
-
-    def create_tag(name, target, opts)
-      Git::Commands::Tag::Create.new(self).call(name, target, **opts)
-
-      list_result = Git::Commands::Tag::List.new(self).call(name)
-      Git::Parsers::Tag.parse_list(list_result.stdout).first
     end
 
     FETCH_OPTION_MAP = [
@@ -1704,6 +1761,15 @@ module Git
       command('pull', *flags, *positional_args).stdout
     end
 
+    # Return the SHA of a tag reference
+    #
+    # Looks up the tag first in the local refs directory, then falls back to
+    # `git show-ref`. Returns an empty string if the tag does not exist.
+    #
+    # @param tag_name [String] the tag name to look up
+    #
+    # @return [String] the SHA of the tag, or an empty string if not found
+    #
     def tag_sha(tag_name)
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
       return File.read(head).chomp if File.exist?(head)
@@ -2002,6 +2068,26 @@ module Git
 
     def build_args(opts, option_map)
       Git::ArgsBuilder.new(opts, option_map).build
+    end
+
+    def validate_tag_options!(opts)
+      needs_message = %i[a annotate s sign u local_user].any? { |k| opts[k] }
+      has_message = opts[:m] || opts[:message]
+
+      return unless needs_message && !has_message
+
+      raise ArgumentError, 'Cannot create an annotated or signed tag without a message.'
+    end
+
+    def delete_tag(name)
+      result = Git::Commands::Tag::Delete.new(self).call(name)
+      raise Git::FailedError, result if result.status.exitstatus.positive?
+
+      result.stdout
+    end
+
+    def create_tag(name, target, opts)
+      Git::Commands::Tag::Create.new(self).call(name, target, **opts).stdout
     end
 
     def initialize_from_base(base_object)
