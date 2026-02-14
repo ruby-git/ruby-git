@@ -20,21 +20,21 @@ RSpec.describe Git::Commands::Stash::Branch, :integration do
       repo.lib.stash_save('WIP changes')
     end
 
-    it 'returns a CommandLineResult with output' do
-      result = command.call('stash-branch')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult with output' do
+        result = command.call('stash-branch')
 
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).not_to be_empty
-    end
-
-    context 'with nonexistent stash' do
-      it 'raises FailedError' do
-        expect { command.call('new-branch', 'stash@{99}') }.to raise_error(Git::FailedError)
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
       end
     end
 
-    context 'with existing branch name' do
-      it 'raises FailedError' do
+    describe 'when the command fails' do
+      it 'raises FailedError with nonexistent stash' do
+        expect { command.call('new-branch', 'stash@{99}') }.to raise_error(Git::FailedError)
+      end
+
+      it 'raises FailedError with existing branch name' do
         repo.branch('existing-branch').create
 
         expect { command.call('existing-branch') }.to raise_error(Git::FailedError)

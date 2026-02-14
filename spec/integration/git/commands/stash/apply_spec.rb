@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Stash::Apply, :integration do
   end
 
   describe '#call' do
-    context 'with a stash' do
+    describe 'when the command succeeds' do
       before do
         write_file('file.txt', "modified content\n")
         repo.lib.stash_save('WIP')
@@ -30,8 +30,8 @@ RSpec.describe Git::Commands::Stash::Apply, :integration do
       end
     end
 
-    context 'with nonexistent stash' do
-      it 'raises FailedError' do
+    describe 'when the command fails' do
+      it 'raises FailedError with nonexistent stash' do
         expect { command.call('stash@{99}') }.to raise_error(Git::FailedError)
       end
     end

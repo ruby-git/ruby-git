@@ -16,25 +16,35 @@ RSpec.describe Git::Commands::Stash::Push, :integration do
   end
 
   describe '#call' do
-    context 'with changes to stash' do
-      before do
-        write_file('tracked.txt', "modified content\n")
+    describe 'when the command succeeds' do
+      context 'with changes to stash' do
+        before do
+          write_file('tracked.txt', "modified content\n")
+        end
+
+        it 'returns a CommandLineResult with output' do
+          result = command.call
+
+          expect(result).to be_a(Git::CommandLineResult)
+          expect(result.stdout).not_to be_empty
+        end
       end
 
-      it 'returns a CommandLineResult with output' do
-        result = command.call
+      context 'with no changes' do
+        it 'returns a CommandLineResult' do
+          result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).not_to be_empty
+          expect(result).to be_a(Git::CommandLineResult)
+          expect(result.stdout).not_to be_empty
+        end
       end
     end
 
-    context 'with no changes' do
-      it 'returns a CommandLineResult' do
-        result = command.call
+    describe 'when the command fails' do
+      before { write_file('tracked.txt', "modified content\n") }
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to include('No local changes to save')
+      it 'raises FailedError with a nonexistent pathspec' do
+        expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
       end
     end
   end
