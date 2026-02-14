@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Mv do
   describe '#call' do
     context 'with a single file to move' do
       it 'moves the file to the destination' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('mv', '--', 'old_name.rb', 'new_name.rb')
+                                                      .and_return(expected_result)
 
-        command.call('old_name.rb', 'new_name.rb')
+        result = command.call('old_name.rb', 'new_name.rb')
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -135,7 +139,7 @@ RSpec.describe Git::Commands::Mv do
       end
     end
 
-    context 'with missing arguments' do
+    context 'input validation' do
       it 'raises ArgumentError when no arguments provided' do
         expect { command.call }.to(
           raise_error(ArgumentError, /at least one value is required for source/)
@@ -147,9 +151,7 @@ RSpec.describe Git::Commands::Mv do
           raise_error(ArgumentError, /at least one value is required for source/)
         )
       end
-    end
 
-    context 'with unsupported options' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('source.rb', 'dest.rb', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

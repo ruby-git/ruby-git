@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Clean do
   describe '#call' do
     context 'with no arguments' do
       it 'runs git clean without any flags' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('clean')
+                                                      .and_return(expected_result)
 
-        command.call
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -40,12 +44,6 @@ RSpec.describe Git::Commands::Clean do
         expect(execution_context).to receive(:command).with('clean', '-ff')
         command.call(force_force: true, force: false)
       end
-
-      it 'raises an ArgumentError when both :force and :force_force are true' do
-        expect { command.call(force: true, force_force: true) }.to(
-          raise_error(ArgumentError, /cannot specify :force and :force_force/)
-        )
-      end
     end
 
     context 'with the :d argument' do
@@ -64,26 +62,30 @@ RSpec.describe Git::Commands::Clean do
       end
     end
 
-    context 'with an unexpected option' do
-      it 'raises an ArgumentError' do
-        expect { command.call(unexpected: true) }.to(
-          raise_error(ArgumentError, /Unsupported options: :unexpected/)
-        )
-      end
-    end
-
-    context 'with an unexpected positional argument' do
-      it 'raises an ArgumentError' do
-        expect { command.call('unexpected') }.to(
-          raise_error(ArgumentError, /Unexpected positional arguments: unexpected/)
-        )
-      end
-    end
-
     context 'with multiple options combined' do
       it 'includes all specified flags' do
         expect(execution_context).to receive(:command).with('clean', '--force', '-d', '-x')
         command.call(force: true, d: true, x: true)
+      end
+    end
+
+    context 'input validation' do
+      it 'raises an ArgumentError when both :force and :force_force are true' do
+        expect { command.call(force: true, force_force: true) }.to(
+          raise_error(ArgumentError, /cannot specify :force and :force_force/)
+        )
+      end
+
+      it 'raises an ArgumentError for unexpected options' do
+        expect { command.call(unexpected: true) }.to(
+          raise_error(ArgumentError, /Unsupported options: :unexpected/)
+        )
+      end
+
+      it 'raises an ArgumentError for unexpected positional arguments' do
+        expect { command.call('unexpected') }.to(
+          raise_error(ArgumentError, /Unexpected positional arguments: unexpected/)
+        )
       end
     end
   end

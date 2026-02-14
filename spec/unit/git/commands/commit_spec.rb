@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Commit do
   describe '#call' do
     context 'with a simple message' do
       it 'commits with the given message' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('commit', '--message=Initial commit')
+                                                      .and_return(expected_result)
 
-        command.call(message: 'Initial commit')
+        result = command.call(message: 'Initial commit')
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -81,12 +85,6 @@ RSpec.describe Git::Commands::Commit do
 
         command.call(message: 'Dated commit', date: '2023-01-15T10:30:00')
       end
-
-      it 'raises an error when date is not a string' do
-        expect { command.call(message: 'Commit', date: Time.now) }.to(
-          raise_error(ArgumentError, /The :date option must be a String, but was a Time/)
-        )
-      end
     end
 
     context 'with the :amend option' do
@@ -152,15 +150,19 @@ RSpec.describe Git::Commands::Commit do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
+      it 'raises ArgumentError when date is not a string' do
+        expect { command.call(message: 'Commit', date: Time.now) }.to(
+          raise_error(ArgumentError, /The :date option must be a String, but was a Time/)
+        )
+      end
+
       it 'raises ArgumentError for unsupported options' do
         expect { command.call(message: 'Commit', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)
         )
       end
-    end
 
-    context 'with conflicting aliases' do
       it 'raises ArgumentError when both :all and :add_all are provided' do
         expect { command.call(message: 'Commit', all: true, add_all: true) }.to(
           raise_error(ArgumentError, /Conflicting options/)

@@ -193,7 +193,7 @@ RSpec.describe Git::Commands::Diff::Patch do
       end
     end
 
-    describe 'exit code handling' do
+    context 'exit code handling' do
       it 'returns successfully with exit code 0 when no differences' do
         expect(execution_context).to receive(:command)
           .with(*static_args, raise_on_failure: false)

@@ -337,7 +337,7 @@ RSpec.describe Git::Commands::Fsck do
       end
     end
 
-    context 'error handling' do
+    context 'exit code handling' do
       it 'handles exit code 0 (no issues)' do
         mock_command('fsck', '--no-progress')
         result = command.call
@@ -417,7 +417,7 @@ RSpec.describe Git::Commands::Fsck do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call(invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

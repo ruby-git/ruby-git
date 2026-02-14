@@ -10,8 +10,13 @@ RSpec.describe Git::Commands::Checkout::Branch do
   describe '#call' do
     context 'with no arguments' do
       it 'calls git checkout with no arguments' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('checkout')
-        command.call
+                                                      .and_return(expected_result)
+
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 

@@ -57,17 +57,15 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
       end
     end
 
-    context 'with missing set_upstream_to' do
-      it 'raises ArgumentError' do
+    context 'input validation' do
+      it 'raises ArgumentError when set_upstream_to is missing' do
         expect { command.call }.to raise_error(ArgumentError)
       end
 
-      it 'raises ArgumentError even when branch_name is provided' do
+      it 'raises ArgumentError when set_upstream_to is missing even with branch_name' do
         expect { command.call('feature') }.to raise_error(ArgumentError)
       end
-    end
 
-    context 'with unsupported options' do
       it 'raises ArgumentError for unknown options' do
         expect do
           command.call(set_upstream_to: 'origin/main', unknown: true)

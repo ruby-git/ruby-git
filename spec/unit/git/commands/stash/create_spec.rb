@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Stash::Create do
 
   describe '#call' do
     context 'with no arguments' do
-      it 'runs stash create and returns CommandLineResult' do
+      it 'runs stash create' do
         expect(execution_context).to receive(:command)
           .with('stash', 'create')
           .and_return(command_result("abc123def456789\n"))

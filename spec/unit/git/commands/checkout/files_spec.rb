@@ -10,8 +10,13 @@ RSpec.describe Git::Commands::Checkout::Files do
   describe '#call' do
     context 'with nil tree_ish (restore from index)' do
       it 'omits tree_ish from command when nil' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('checkout', '--', 'file.txt')
-        command.call(nil, 'file.txt')
+                                                      .and_return(expected_result)
+
+        result = command.call(nil, 'file.txt')
+
+        expect(result).to eq(expected_result)
       end
 
       it 'restores multiple files from index' do

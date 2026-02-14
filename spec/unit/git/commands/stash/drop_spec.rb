@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Stash::Drop do
 
   describe '#call' do
     context 'with no arguments (drop latest stash)' do
-      it 'runs stash drop and returns CommandLineResult' do
+      it 'runs stash drop' do
         expect(execution_context).to receive(:command).with('stash', 'drop').and_return(command_result(''))
 
         result = command.call

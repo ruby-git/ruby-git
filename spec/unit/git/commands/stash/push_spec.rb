@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Stash::Push do
 
   describe '#call' do
     context 'with no arguments' do
-      it 'runs stash push and returns CommandLineResult' do
+      it 'runs stash push' do
         expect(execution_context).to receive(:command).with('stash', 'push').and_return(command_result(''))
 
         result = command.call
