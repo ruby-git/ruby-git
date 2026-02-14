@@ -254,8 +254,8 @@ RSpec.describe Git::Commands::Branch::List do
       end
     end
 
-    context 'with unsupported options' do
-      it 'raises ArgumentError' do
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
         expect { command.call(invalid_option: true) }.to raise_error(ArgumentError, /unsupported/i)
       end
     end

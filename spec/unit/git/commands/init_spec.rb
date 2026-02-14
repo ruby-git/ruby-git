@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Init do
   describe '#call' do
     context 'with default arguments' do
       it 'runs git init in the current directory' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('init')
+                                                      .and_return(expected_result)
 
-        command.call
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -70,7 +74,7 @@ RSpec.describe Git::Commands::Init do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('my-repo', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

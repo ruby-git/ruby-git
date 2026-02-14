@@ -18,21 +18,14 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
   describe '#call' do
     context 'with no arguments (latest stash)' do
       it 'calls git stash show --numstat --shortstat -M' do
+        expected_result = command_result(numstat_output)
         expect(execution_context).to receive(:command)
           .with('stash', 'show', '--numstat', '--shortstat', '-M')
-          .and_return(command_result(numstat_output))
-
-        command.call
-      end
-
-      it 'returns CommandLineResult' do
-        allow(execution_context).to receive(:command)
-          .with('stash', 'show', '--numstat', '--shortstat', '-M')
-          .and_return(command_result(numstat_output))
+          .and_return(expected_result)
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to eq(expected_result)
       end
     end
 

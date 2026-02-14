@@ -10,20 +10,14 @@ RSpec.describe Git::Commands::Stash::Store do
   describe '#call' do
     context 'with commit SHA only' do
       it 'calls git stash store with commit' do
+        expected_result = command_result('')
         expect(execution_context).to receive(:command)
           .with('stash', 'store', 'abc123def456789')
-          .and_return(command_result(''))
+          .and_return(expected_result)
 
-        command.call('abc123def456789')
-      end
+        result = command.call('abc123def456789')
 
-      it 'returns the command result' do
-        result = command_result('')
-        allow(execution_context).to receive(:command)
-          .with('stash', 'store', 'abc123def456789')
-          .and_return(result)
-
-        expect(command.call('abc123def456789')).to eq(result)
+        expect(result).to eq(expected_result)
       end
     end
 

@@ -10,8 +10,13 @@ RSpec.describe Git::Commands::Merge::Start do
   describe '#call' do
     context 'with single branch to merge' do
       it 'calls git merge with --no-edit and the branch name' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('merge', '--no-edit', 'feature')
-        command.call('feature')
+                                                      .and_return(expected_result)
+
+        result = command.call('feature')
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -315,8 +320,8 @@ RSpec.describe Git::Commands::Merge::Start do
       end
     end
 
-    context 'with no commits provided' do
-      it 'raises an error' do
+    context 'input validation' do
+      it 'raises an error when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
       end
     end

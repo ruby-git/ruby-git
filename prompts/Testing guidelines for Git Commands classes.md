@@ -14,10 +14,10 @@ message expectation on `execution_context.command` with the exact expected argum
 Unit tests should cover:
 
 - The base invocation with no options (verifies all literal flags are passed in the
-  correct order). This test should also assert `expect(result).to
-  be_a(Git::CommandLineResult)` to verify that `#call` returns what
-  `execution_context.command` returns. This assertion belongs only in the base
-  invocation test — do not repeat it in every test.
+  correct order). This test should also store the `.and_return` value in an
+  `expected_result` variable and assert `expect(result).to eq(expected_result)` to
+  verify that `#call` passes through what `execution_context.command` returns. This
+  assertion belongs only in the base invocation test — do not repeat it in every test.
 - Each positional operand variation (e.g., single value, multiple values)
 - Each flag option, including aliases (e.g., `:cached` and its `:staged` alias, or
   `:force` and its `:f` short alias)
@@ -50,8 +50,8 @@ Unit tests should exercise each **code path** through the command, not each poss
   options. The "no arguments" test already covers this path. (Negatable flags like
   `single_branch` are different: `false` produces `--no-single-branch`, which is a
   distinct code path worth testing.)
-- **Repeating the return type assertion.** The base invocation test asserts
-  `expect(result).to be_a(Git::CommandLineResult)` once as a contract check. Do not
+- **Repeating the return value assertion.** The base invocation test asserts
+  `expect(result).to eq(expected_result)` once as a contract check. Do not
   repeat this assertion in other tests — one check per file is sufficient.
 - **String-variant pass-through tests.** For pure pass-through commands (where
   `#call` only does `ARGS.bind` → `execution_context.command` → return result), do
@@ -102,11 +102,12 @@ RSpec.describe Git::Commands::Branch::Delete do
     # Argument building — flat contexts
     context 'with single branch name' do
       it 'passes the branch name' do
+        expected_result = command_result('Deleted branch feature.')
         expect(execution_context).to receive(:command)
           .with('branch', '-d', 'feature', raise_on_failure: false)
-          .and_return(command_result('Deleted branch feature.'))
+          .and_return(expected_result)
         result = command.call('feature')
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -299,7 +300,7 @@ end
 
 **Test descriptions must match assertions.** Every `it` block should assert what its
 description claims. A test described as "returns the branch name" that only asserts
-`be_a(Git::CommandLineResult)` is misleading — it passes without verifying the
+`eq(command_result)` is misleading — it passes without verifying the
 described behavior.
 
 **Require only the command under test.** Each integration spec should only `require`

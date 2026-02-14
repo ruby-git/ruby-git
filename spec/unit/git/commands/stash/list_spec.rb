@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Stash::List do
   end
 
   describe '#call' do
-    it 'runs stash list with format and returns CommandLineResult' do
+    it 'runs stash list with format' do
       format_arg = "--format=#{Git::Parsers::Stash::STASH_FORMAT}"
 
       expect(execution_context).to receive(:command)

@@ -96,8 +96,8 @@ RSpec.describe Git::Commands::MergeBase do
       end
     end
 
-    context 'with no commits provided' do
-      it 'raises an error' do
+    context 'input validation' do
+      it 'raises an error when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
       end
     end

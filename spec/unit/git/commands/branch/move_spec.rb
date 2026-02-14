@@ -87,7 +87,7 @@ RSpec.describe Git::Commands::Branch::Move do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
       it 'raises ArgumentError for unknown options' do
         expect { command.call('new-name', unknown: true) }.to raise_error(ArgumentError, /unknown/)
       end

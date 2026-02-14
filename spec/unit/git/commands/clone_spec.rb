@@ -206,11 +206,6 @@ RSpec.describe Git::Commands::Clone do
 
         command.call(repository_url, directory, single_branch: nil)
       end
-
-      it 'raises ArgumentError for invalid values' do
-        expect { command.call(repository_url, directory, single_branch: 'yes') }
-          .to raise_error(ArgumentError, /Invalid value for option/)
-      end
     end
 
     context 'with :depth option' do
@@ -324,6 +319,13 @@ RSpec.describe Git::Commands::Clone do
           .with('clone', '--', repository_url, dir, timeout: nil)
 
         command.call(repository_url, dir)
+      end
+    end
+
+    context 'input validation' do
+      it 'raises ArgumentError for invalid single_branch values' do
+        expect { command.call(repository_url, directory, single_branch: 'yes') }
+          .to raise_error(ArgumentError, /Invalid value for option/)
       end
     end
   end

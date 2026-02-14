@@ -7,30 +7,16 @@ RSpec.describe Git::Commands::Merge::Continue do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
-  describe '::ARGS' do
-    it 'builds correct command arguments' do
-      args = described_class::ARGS.bind.to_ary
-      expect(args).to eq(['merge', '--continue'])
-    end
-  end
-
-  describe '#initialize' do
-    it 'stores the execution context' do
-      expect(command.instance_variable_get(:@execution_context)).to eq(execution_context)
-    end
-  end
-
   describe '#call' do
     it 'calls git merge --continue' do
-      expect(execution_context).to receive(:command).with('merge', '--continue')
-      command.call
-    end
+      expected_result = command_result('')
+      expect(execution_context).to receive(:command)
+        .with('merge', '--continue')
+        .and_return(expected_result)
 
-    it 'returns the CommandLineResult' do
-      mock_result = command_result('[main abc123] Merge branch feature')
-      expect(execution_context).to receive(:command).with('merge', '--continue').and_return(mock_result)
       result = command.call
-      expect(result).to eq(mock_result)
+
+      expect(result).to eq(expected_result)
     end
   end
 end

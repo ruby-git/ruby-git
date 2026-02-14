@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Stash::Branch do
 
   describe '#call' do
     context 'with branch name only (latest stash)' do
-      it 'runs stash branch and returns CommandLineResult' do
+      it 'runs stash branch with the given branch name' do
         expect(execution_context).to receive(:command)
           .with('stash', 'branch', 'my-feature')
           .and_return(command_result("Switched to a new branch 'my-feature'\n"))

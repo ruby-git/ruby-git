@@ -358,7 +358,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
     end
 
-    context 'with conflicting options' do
+    context 'input validation' do
       it 'raises an error when both annotate and sign are provided' do
         expect { command.call('v1.0.0', annotate: true, sign: true, message: 'Release') }.to(
           raise_error(ArgumentError, /cannot specify :annotate and :sign/)

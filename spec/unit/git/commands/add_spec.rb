@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Add do
   describe '#call' do
     context 'with default arguments' do
       it 'adds nothing' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('add')
+                                                      .and_return(expected_result)
 
-        command.call
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -81,7 +85,7 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('.', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

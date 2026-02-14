@@ -9,9 +9,13 @@ RSpec.describe Git::Commands::Reset do
   describe '#call' do
     context 'with no arguments' do
       it 'runs git reset without a commit' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('reset')
+                                                      .and_return(expected_result)
 
-        command.call
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -95,7 +99,7 @@ RSpec.describe Git::Commands::Reset do
       end
     end
 
-    context 'with multiple mode options' do
+    context 'input validation' do
       it 'raises an error when both hard and soft are true' do
         expect { command.call(hard: true, soft: true) }.to(
           raise_error(ArgumentError, /cannot specify :hard and :soft/)
@@ -119,9 +123,7 @@ RSpec.describe Git::Commands::Reset do
           raise_error(ArgumentError, /cannot specify/)
         )
       end
-    end
 
-    context 'with unsupported options' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('HEAD', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

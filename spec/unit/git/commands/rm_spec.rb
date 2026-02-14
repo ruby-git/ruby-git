@@ -7,25 +7,15 @@ RSpec.describe Git::Commands::Rm do
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    context 'when no paths are provided' do
-      it 'raises ArgumentError for nil (treated as not provided)' do
-        expect { command.call(nil) }.to raise_error(ArgumentError, /at least one value is required/)
-      end
-
-      it 'raises ArgumentError for empty array' do
-        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
-      end
-
-      it 'raises ArgumentError for no arguments' do
-        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for paths/)
-      end
-    end
-
     context 'with a single file path' do
       it 'removes the specified file' do
+        expected_result = command_result
         expect(execution_context).to receive(:command).with('rm', '--', 'file.txt')
+                                                      .and_return(expected_result)
 
-        command.call('file.txt')
+        result = command.call('file.txt')
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -101,7 +91,19 @@ RSpec.describe Git::Commands::Rm do
       end
     end
 
-    context 'with unsupported options' do
+    context 'input validation' do
+      it 'raises ArgumentError for nil (treated as not provided)' do
+        expect { command.call(nil) }.to raise_error(ArgumentError, /at least one value is required/)
+      end
+
+      it 'raises ArgumentError for empty array' do
+        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
+      end
+
+      it 'raises ArgumentError for no arguments' do
+        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for paths/)
+      end
+
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('file.txt', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

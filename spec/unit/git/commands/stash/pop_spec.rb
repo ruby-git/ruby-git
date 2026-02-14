@@ -9,7 +9,7 @@ RSpec.describe Git::Commands::Stash::Pop do
 
   describe '#call' do
     context 'with no arguments (pop latest stash)' do
-      it 'runs stash pop and returns CommandLineResult' do
+      it 'runs stash pop' do
         expect(execution_context).to receive(:command).with('stash', 'pop').and_return(command_result(''))
 
         result = command.call
