@@ -2,14 +2,10 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
-require_relative 'commands/branch/copy'
 require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
-require_relative 'commands/branch/move'
-require_relative 'commands/branch/set_upstream'
 require_relative 'commands/branch/show_current'
-require_relative 'commands/branch/unset_upstream'
 require_relative 'commands/checkout/branch'
 require_relative 'commands/checkout/files'
 require_relative 'commands/clean'
@@ -18,9 +14,6 @@ require_relative 'commands/commit'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
 require_relative 'commands/merge/start'
-require_relative 'commands/merge/abort'
-require_relative 'commands/merge/continue'
-require_relative 'commands/merge/quit'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/reset'
@@ -1328,73 +1321,6 @@ module Git
       result.stdout.strip
     end
 
-    # Move/rename a branch
-    #
-    # @overload branch_move(new_branch, options = {})
-    #   Rename the current branch
-    #   @param new_branch [String] the new name for the current branch
-    #   @param options [Hash] command options
-    #
-    # @overload branch_move(old_branch, new_branch, options = {})
-    #   Rename a specific branch
-    #   @param old_branch [String] the branch to rename
-    #   @param new_branch [String] the new name for the branch
-    #   @param options [Hash] command options
-    #
-    # @option options [Boolean] :force allow renaming even if new_branch already exists
-    #
-    # @return [String] the name of the renamed branch
-    #
-    def branch_move(*args, **)
-      Git::Commands::Branch::Move.new(self).call(*args, **)
-      args.compact.last
-    end
-
-    # Copy a branch, along with its config and reflog
-    #
-    # @overload branch_copy(new_branch, options = {})
-    #   Copy the current branch
-    #   @param new_branch [String] the name for the new branch
-    #   @param options [Hash] command options
-    #
-    # @overload branch_copy(old_branch, new_branch, options = {})
-    #   Copy a specific branch
-    #   @param old_branch [String] the branch to copy
-    #   @param new_branch [String] the name for the new branch
-    #   @param options [Hash] command options
-    #
-    # @option options [Boolean] :force allow copying even if new_branch already exists
-    #
-    # @return [String] the name of the copied branch
-    #
-    def branch_copy(*args, **)
-      Git::Commands::Branch::Copy.new(self).call(*args, **)
-      args.compact.last
-    end
-
-    # Set upstream tracking information for a branch
-    #
-    # @param upstream [String] the upstream branch (e.g., 'origin/main')
-    # @param branch_name [String, nil] the branch to configure (defaults to current branch)
-    #
-    # @return [String] the name of the configured branch
-    #
-    def branch_set_upstream(upstream, branch_name = nil)
-      Git::Commands::Branch::SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
-      branch_name || branch_current
-    end
-
-    # Remove upstream tracking information for a branch
-    #
-    # @param branch_name [String, nil] the branch to configure (defaults to current branch)
-    #
-    # @return [String] the name of the configured branch
-    #
-    def branch_unset_upstream(branch_name = nil)
-      Git::Commands::Branch::UnsetUpstream.new(self).call(branch_name)
-      branch_name || branch_current
-    end
-
     # Runs checkout command to checkout or create branch
     #
     # accepts options:
@@ -1465,46 +1391,6 @@ module Git
       opts = translate_merge_options(opts)
 
       Git::Commands::Merge::Start.new(self).call(*Array(branch), **opts).stdout
-    end
-
-    # Abort the current merge in progress
-    #
-    # Reconstructs the pre-merge state. If an autostash entry is present,
-    # applies it to the worktree.
-    #
-    # @return [String] the command output
-    #
-    # @raise [Git::FailedError] if no merge is in progress
-    #
-    def merge_abort
-      Git::Commands::Merge::Abort.new(self).call.stdout
-    end
-
-    # Continue a merge after conflict resolution
-    #
-    # Completes the merge after conflicts have been resolved and staged.
-    #
-    # @return [String] the command output
-    #
-    # @raise [Git::FailedError] if conflicts remain unresolved
-    #
-    def merge_continue
-      Git::Commands::Merge::Continue.new(self).call.stdout
-    end
-
-    # Quit the current merge, leaving working tree as-is
-    #
-    # Forgets about the current merge in progress. Leaves the index and
-    # working tree as-is. If an autostash entry is present, saves it to
-    # the stash list.
-    #
-    # @return [String] the command output
-    #
-    # @raise [Git::FailedError] if the underlying git command exits non-zero
-    #   (for example, on Git versions before 2.35 when no merge is in progress)
-    #
-    def merge_quit
-      Git::Commands::Merge::Quit.new(self).call.stdout
     end
 
     # Find common ancestor commit(s) for merge
