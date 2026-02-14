@@ -578,16 +578,19 @@ future work:
       end
     end
 
-    # ✅ Git::Lib adapter: ergonomic Ruby API
+    # ✅ Higher-layer facade: ergonomic Ruby API (Phase 3)
+    # This wrapper belongs in Git::Repository or Git::Branch, NOT in Git::Lib.
+    # Git::Lib only adapts methods that existed in v4.3.0.
     def branch_set_upstream(upstream, branch_name = nil)
-      SetUpstream.new(self).call(branch_name, set_upstream_to: upstream)
+      SetUpstream.new(@execution_context).call(branch_name, set_upstream_to: upstream)
     end
     ```
 
     This separation keeps Commands classes predictable (they mirror git 1:1) while
-    allowing the adapter layer to provide intuitive Ruby interfaces. Ergonomic
+    allowing higher layers to provide intuitive Ruby interfaces. Ergonomic
     transformations—like reordering arguments or converting keywords to
-    positionals—belong in `Git::Lib` or higher layers (`Git::Base`, `Git::Branch`).
+    positionals—belong in higher layers (`Git::Repository`, `Git::Base`, `Git::Branch`),
+    not in `Git::Lib` (which only adapts pre-existing methods for backward compatibility).
 
 14. **Use `allow_nil: true` for positional arguments that can be intentionally omitted**
 
@@ -705,7 +708,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
 | `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
 | `branch_delete` | `Git::Commands::Branch::Delete` | `spec/git/commands/branch/delete_spec.rb` | `git branch --delete` |
-| `branch_move` | `Git::Commands::Branch::Move` | `spec/git/commands/branch/move_spec.rb` | `git branch --move` |
+| N/A (new) | `Git::Commands::Branch::Move` | `spec/git/commands/branch/move_spec.rb` | `git branch --move` |
 | `diff_full` | `Git::Commands::Diff::Patch` | `spec/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
 | `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
 | `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/git/commands/diff/raw_spec.rb` | `git diff --raw` |
@@ -717,9 +720,9 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `stash_clear` | `Git::Commands::Stash::Clear` | `spec/unit/git/commands/stash/clear_spec.rb` | `git stash clear` |
 | `checkout` / `checkout_file` | `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` | `spec/unit/git/commands/checkout/branch_spec.rb` / `spec/unit/git/commands/checkout/files_spec.rb` | `git checkout` (branch) / `git checkout` (files) |
 | `merge` | `Git::Commands::Merge::Start` | `spec/unit/git/commands/merge/start_spec.rb` | `git merge` |
-| `merge_abort` | `Git::Commands::Merge::Abort` | `spec/unit/git/commands/merge/abort_spec.rb` | `git merge --abort` |
-| `merge_continue` | `Git::Commands::Merge::Continue` | `spec/unit/git/commands/merge/continue_spec.rb` | `git merge --continue` |
-| `merge_quit` | `Git::Commands::Merge::Quit` | `spec/unit/git/commands/merge/quit_spec.rb` | `git merge --quit` |
+| N/A (new) | `Git::Commands::Merge::Abort` | `spec/unit/git/commands/merge/abort_spec.rb` | `git merge --abort` |
+| N/A (new) | `Git::Commands::Merge::Continue` | `spec/unit/git/commands/merge/continue_spec.rb` | `git merge --continue` |
+| N/A (new) | `Git::Commands::Merge::Quit` | `spec/unit/git/commands/merge/quit_spec.rb` | `git merge --quit` |
 | N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
 | N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
 | N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
@@ -745,9 +748,10 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
 - [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
 - [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
-- [x] `branch_move` → `Git::Commands::Branch::Move` — `git branch --move`
+- [x] N/A (new) → `Git::Commands::Branch::Move` — `git branch --move`
 - [x] `checkout` / `checkout_file` → `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` — `git checkout`
-- [x] `merge` / `merge_abort` / `merge_continue` / `merge_quit` → `Git::Commands::Merge::*` — `git merge` (Start, Abort, Continue, Quit)
+- [x] `merge` → `Git::Commands::Merge::Start` — `git merge`
+- [x] N/A (new) → `Git::Commands::Merge::Abort` / `Git::Commands::Merge::Continue` / `Git::Commands::Merge::Quit` — `git merge --abort/--continue/--quit`
 - [ ] `tag` → `Git::Commands::Tag` — `git tag`
 - [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
 
