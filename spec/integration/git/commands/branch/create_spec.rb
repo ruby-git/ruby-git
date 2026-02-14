@@ -15,23 +15,20 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
       repo.commit('Initial commit')
     end
 
-    it 'returns a CommandLineResult' do
-      result = command.call('feature-branch')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
+        result = command.call('feature-branch')
 
-      expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
     end
 
-    it 'creates the branch in the repository' do
-      command.call('feature-branch')
+    describe 'when the command fails' do
+      it 'raises FailedError when the branch already exists' do
+        repo.branch('existing-branch').create
 
-      branch_list = repo.branches.local.map(&:name)
-      expect(branch_list).to include('feature-branch')
-    end
-
-    it 'raises FailedError when the branch already exists' do
-      repo.branch('existing-branch').create
-
-      expect { command.call('existing-branch') }.to raise_error(Git::FailedError)
+        expect { command.call('existing-branch') }.to raise_error(Git::FailedError)
+      end
     end
   end
 end

@@ -26,20 +26,24 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream, :integration do
       execution_context.command('branch', '--set-upstream-to=origin/main', 'main')
     end
 
-    it 'returns a CommandLineResult' do
-      result = command.call
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
+        result = command.call
 
-      expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
     end
 
-    it 'raises FailedError when branch has no upstream' do
-      command.call # unset it first
+    describe 'when the command fails' do
+      it 'raises FailedError when branch has no upstream' do
+        command.call # unset it first
 
-      expect { command.call }.to raise_error(Git::FailedError)
-    end
+        expect { command.call }.to raise_error(Git::FailedError)
+      end
 
-    it 'raises FailedError when branch does not exist' do
-      expect { command.call('nonexistent') }.to raise_error(Git::FailedError)
+      it 'raises FailedError when branch does not exist' do
+        expect { command.call('nonexistent') }.to raise_error(Git::FailedError)
+      end
     end
   end
 end

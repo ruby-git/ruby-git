@@ -16,14 +16,14 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
       repo.add_tag('v1.0.0')
     end
 
-    it 'returns a CommandLineResult with output' do
-      result = command.call('v1.0.0')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult with output' do
+        result = command.call('v1.0.0')
 
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).not_to be_empty
-    end
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
+      end
 
-    describe 'exit code handling' do
       it 'returns exit code 0 when all tags are deleted' do
         result = command.call('v1.0.0')
 
@@ -38,7 +38,9 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         expect(result.status.exitstatus).to eq(1)
         expect(result.stdout).not_to be_empty
       end
+    end
 
+    describe 'when the command fails' do
       it 'raises FailedError for fatal errors' do
         # Exit code > 1 should raise (tested via unit tests for specific threshold)
         # Here we verify that completely invalid usage raises

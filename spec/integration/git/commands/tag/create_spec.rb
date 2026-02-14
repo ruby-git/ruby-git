@@ -15,21 +15,25 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
       repo.commit('Initial commit')
     end
 
-    it 'returns a CommandLineResult' do
-      result = command.call('v1.0.0')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
+        result = command.call('v1.0.0')
 
-      expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
     end
 
-    it 'raises Git::FailedError when the tag already exists' do
-      command.call('v1.0.0')
+    describe 'when the command fails' do
+      it 'raises FailedError when the tag already exists' do
+        command.call('v1.0.0')
 
-      expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
-    end
+        expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
+      end
 
-    it 'raises Git::FailedError when annotated tag is requested without a message' do
-      expect { command.call('v1.0.0', annotate: true) }
-        .to raise_error(Git::FailedError)
+      it 'raises FailedError when annotated tag is requested without a message' do
+        expect { command.call('v1.0.0', annotate: true) }
+          .to raise_error(Git::FailedError)
+      end
     end
   end
 end

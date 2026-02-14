@@ -9,27 +9,31 @@ RSpec.describe Git::Commands::Tag::List, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    it 'returns a CommandLineResult with output' do
-      write_file('file.txt', 'content')
-      repo.add('file.txt')
-      repo.commit('Initial commit')
-      repo.add_tag('v1.0.0')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult with output' do
+        write_file('file.txt', 'content')
+        repo.add('file.txt')
+        repo.commit('Initial commit')
+        repo.add_tag('v1.0.0')
 
-      result = command.call
+        result = command.call
 
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).not_to be_empty
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
+      end
+
+      it 'returns empty stdout when there are no tags' do
+        result = command.call
+
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).to be_empty
+      end
     end
 
-    it 'returns empty stdout when there are no tags' do
-      result = command.call
-
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).to be_empty
-    end
-
-    it 'raises FailedError for invalid options' do
-      expect { command.call(contains: 'nonexistent-ref') }.to raise_error(Git::FailedError)
+    describe 'when the command fails' do
+      it 'raises FailedError for invalid options' do
+        expect { command.call(contains: 'nonexistent-ref') }.to raise_error(Git::FailedError)
+      end
     end
   end
 end

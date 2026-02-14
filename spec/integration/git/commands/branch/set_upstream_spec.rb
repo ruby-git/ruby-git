@@ -25,19 +25,23 @@ RSpec.describe Git::Commands::Branch::SetUpstream, :integration do
       repo.push('origin', 'main')
     end
 
-    it 'returns a CommandLineResult with output' do
-      result = command.call(set_upstream_to: 'origin/main')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult with output' do
+        result = command.call(set_upstream_to: 'origin/main')
 
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).not_to be_empty
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
+      end
     end
 
-    it 'raises FailedError when upstream does not exist' do
-      expect { command.call(set_upstream_to: 'origin/nonexistent') }.to raise_error(Git::FailedError)
-    end
+    describe 'when the command fails' do
+      it 'raises FailedError when upstream does not exist' do
+        expect { command.call(set_upstream_to: 'origin/nonexistent') }.to raise_error(Git::FailedError)
+      end
 
-    it 'raises FailedError when branch does not exist' do
-      expect { command.call('nonexistent', set_upstream_to: 'origin/main') }.to raise_error(Git::FailedError)
+      it 'raises FailedError when branch does not exist' do
+        expect { command.call('nonexistent', set_upstream_to: 'origin/main') }.to raise_error(Git::FailedError)
+      end
     end
   end
 end

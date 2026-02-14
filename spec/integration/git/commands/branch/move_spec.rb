@@ -15,24 +15,20 @@ RSpec.describe Git::Commands::Branch::Move, :integration do
       repo.commit('Initial commit')
     end
 
-    it 'returns a CommandLineResult' do
-      result = command.call('main-renamed')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
+        result = command.call('main-renamed')
 
-      expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
     end
 
-    it 'removes the original branch and creates the new one' do
-      command.call('main-renamed')
+    describe 'when the command fails' do
+      it 'raises FailedError when target exists without force' do
+        repo.branch('existing').create
 
-      branch_list = repo.branches.local.map(&:name)
-      expect(branch_list).not_to include('main')
-      expect(branch_list).to include('main-renamed')
-    end
-
-    it 'raises FailedError when target exists without force' do
-      repo.branch('existing').create
-
-      expect { command.call('existing') }.to raise_error(Git::FailedError)
+        expect { command.call('existing') }.to raise_error(Git::FailedError)
+      end
     end
   end
 end

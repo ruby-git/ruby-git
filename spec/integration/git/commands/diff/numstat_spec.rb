@@ -9,14 +9,14 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    it 'returns a CommandLineResult with output' do
-      result = command.call('initial', 'after_modify')
+    describe 'when the command succeeds' do
+      it 'returns a CommandLineResult with output' do
+        result = command.call('initial', 'after_modify')
 
-      expect(result).to be_a(Git::CommandLineResult)
-      expect(result.stdout).not_to be_empty
-    end
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
+      end
 
-    describe 'exit code handling' do
       it 'returns exit code 0 with no differences' do
         result = command.call('initial', 'initial')
 
@@ -30,7 +30,9 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
         expect(result.status.exitstatus).to be <= 1
         expect(result.stdout).not_to be_empty
       end
+    end
 
+    describe 'when the command fails' do
       it 'raises FailedError for invalid revision' do
         expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
       end
