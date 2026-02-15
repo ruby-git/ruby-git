@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/url'
 
 module Git
   module Commands
@@ -32,13 +31,9 @@ module Git
         value_option :config, repeatable: true
         flag_option :single_branch, negatable: true, validator: ->(v) { [nil, true, false].include?(v) }
         custom_option(:depth) { |v| ['--depth', v.to_i] }
-        # Options handled by the command itself, not passed to git
-        metadata :path
-        metadata :timeout
-        metadata :log
-        metadata :git_ssh
         operand :repository_url, required: true, separator: '--'
         operand :directory
+        metadata :timeout
       end.freeze
 
       # Initialize the Clone command
@@ -56,7 +51,7 @@ module Git
       #   @param repository_url [String] the URL of the repository to clone
       #
       #   @param directory [String, nil] the directory to clone into.
-      #     If nil, the directory name is derived from the repository URL.
+      #     If nil, git derives the directory name from the repository URL.
       #
       #   @param options [Hash] command options
       #
@@ -70,15 +65,7 @@ module Git
       #
       #   @option options [String] :filter (nil) Specify partial clone (e.g., 'tree:0', 'blob:none')
       #
-      #   @option options [String, nil] :git_ssh (nil) SSH command or binary to use for git over SSH
-      #
-      #   @option options [Logger] :log (nil) Logger instance to use for git operations
-      #
-      #   @option options [Boolean] :mirror (nil) Set up a mirror of the source repository
-      #
       #   @option options [String] :origin (nil) Name of the remote (defaults to 'origin')
-      #
-      #   @option options [String] :path (nil) Prefix path for the clone directory
       #
       #   @option options [Boolean] :recursive (nil) Initialize submodules after cloning
       #
@@ -90,48 +77,14 @@ module Git
       #   @option options [Numeric, nil] :timeout (nil) The number of seconds to wait for
       #     the command to complete
       #
-      # @return [Hash] options to pass to Git::Base.new for creating the repository object
+      # @return [Git::CommandLineResult] the result of the git clone command
       #
       # @raise [ArgumentError] if unsupported options are provided, if :single_branch is not true, false, or nil,
       #   or if any option fails validation
       #
-      def call(*, **options)
-        options = options.dup
-        bound_args = ARGS.bind(*, **options)
-
-        directory = options.delete(:path) || bound_args.directory
-        directory ||= Git::URL.clone_to(
-          bound_args.repository_url, bare: options[:bare], mirror: options[:mirror]
-        )
-
-        args = ARGS.bind(bound_args.repository_url, directory, **options)
-
-        @execution_context.command(*args, timeout: options[:timeout])
-
-        build_result(directory, options)
-      end
-
-      private
-
-      # Build the result hash for creating a Git::Base instance
-      #
-      # @param clone_dir [String] the directory that was cloned to
-      # @param options [Hash] the options hash
-      # @return [Hash] options for Git::Base.new
-      #
-      def build_result(clone_dir, options)
-        result = {}
-
-        if options[:bare] || options[:mirror]
-          result[:repository] = clone_dir
-        else
-          result[:working_directory] = clone_dir
-        end
-
-        result[:log] = options[:log] if options[:log]
-        result[:git_ssh] = options[:git_ssh] if options.key?(:git_ssh)
-
-        result
+      def call(*, **)
+        args = ARGS.bind(*, **)
+        @execution_context.command(*args, timeout: args.timeout)
       end
     end
   end

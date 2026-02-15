@@ -31,6 +31,7 @@ require 'git/errors'
 require 'git/parsers/branch'
 require 'git/parsers/stash'
 require 'git/parsers/tag'
+require 'git/url'
 require 'logger'
 require 'pathname'
 require 'pp'
@@ -139,6 +140,10 @@ module Git
     #
     # @option opts [String] :filter specify partial clone
     #
+    # @option opts [String, nil] :git_ssh SSH command or binary to use for git over SSH
+    #
+    # @option opts [Logger] :log Logger instance to use for git operations
+    #
     # @option opts [String] :mirror set up a mirror of the source repository
     #
     # @option opts [String] :origin the name of the remote
@@ -160,7 +165,11 @@ module Git
     # @todo make this work with SSH password or auth_key
     #
     def clone(repository_url, directory = nil, opts = {})
-      Git::Commands::Clone.new(self).call(repository_url, directory, **opts)
+      opts = opts.dup
+      clone_dir = opts.delete(:path) || directory
+      execution_opts = extract_clone_execution_context_opts(opts)
+      command_line_result = Git::Commands::Clone.new(self).call(repository_url, clone_dir, **opts)
+      build_clone_result(command_line_result, execution_opts)
     end
 
     # Returns the name of the default branch of the given repository
@@ -1924,6 +1933,65 @@ module Git
     end
 
     private
+
+    # Build a result hash from clone options for Git::Base.new
+    #
+    # Parses the clone directory from the git command's stderr output, which
+    # contains either:
+    #   Cloning into '<directory>'...
+    #   Cloning into bare repository '<directory>'...
+    #
+    # @param command_line_result [Git::CommandLineResult] the result of the git clone command
+    #
+    # @param opts [Hash] execution context options (:log, :git_ssh)
+    #
+    # @return [Hash] result hash with directory, log, and git_ssh keys
+    #
+    def build_clone_result(command_line_result, opts)
+      clone_dir, bare = parse_clone_stderr(command_line_result.stderr)
+      result = bare ? { repository: clone_dir } : { working_directory: clone_dir }
+      result[:log] = opts[:log] if opts[:log]
+      result[:git_ssh] = opts[:git_ssh] if opts.key?(:git_ssh)
+      result
+    end
+
+    # Parse the clone directory and bare status from git clone's stderr output
+    #
+    # Git outputs the directory in an unencoded way (no `core.quotePath` or
+    # similar escaping applies to clone's stderr message). The message format
+    # is always:
+    #
+    #   Cloning into '<directory>'...
+    #   Cloning into bare repository '<directory>'...
+    #
+    # Because the directory name is not escaped, a name containing the
+    # literal sequence `'...` (single-quote followed by three dots) would
+    # be ambiguous. In practice this is extremely unlikely.
+    #
+    # @param stderr [String] stderr output from git clone
+    #
+    # @return [Array(String, Boolean)] the clone directory and whether it's a bare repository
+    #
+    # @raise [Git::UnexpectedResultError] if the stderr output cannot be parsed
+    #
+    def parse_clone_stderr(stderr)
+      match = stderr.match(/Cloning into (?:(bare repository) )?'(.+)'\.\.\./)
+      raise Git::UnexpectedResultError, "Unable to determine clone directory from: #{stderr}" unless match
+
+      [match[2], !match[1].nil?]
+    end
+
+    # Extract execution context options from clone options
+    #
+    # @param opts [Hash] clone options
+    # @return [Hash] hash with :log and :git_ssh keys if present
+    #
+    def extract_clone_execution_context_opts(opts)
+      result = {}
+      result[:log] = opts.delete(:log) if opts[:log]
+      result[:git_ssh] = opts.delete(:git_ssh) if opts.key?(:git_ssh)
+      result
+    end
 
     # Translate legacy merge option names to new interface
     #
