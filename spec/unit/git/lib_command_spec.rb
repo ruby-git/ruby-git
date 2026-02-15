@@ -249,4 +249,36 @@ RSpec.describe Git::Lib do
       end
     end
   end
+
+  describe '#fsck' do
+    let(:fsck_command) { instance_double(Git::Commands::Fsck) }
+
+    before do
+      allow(Git::Commands::Fsck).to receive(:new).with(lib).and_return(fsck_command)
+    end
+
+    it 'parses the command output into a FsckResult' do
+      fsck_output = "dangling blob 1234567890abcdef1234567890abcdef12345678\n"
+      allow(fsck_command).to receive(:call)
+        .and_return(command_result(fsck_output))
+
+      result = lib.fsck
+
+      expect(result).to be_a(Git::FsckResult)
+      expect(result.dangling.size).to eq(1)
+      expect(result.dangling.first.type).to eq(:blob)
+      expect(result.dangling.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
+    end
+
+    it 'forwards objects and options to the command' do
+      allow(fsck_command).to receive(:call)
+        .with('abc1234', strict: true)
+        .and_return(command_result(''))
+
+      result = lib.fsck('abc1234', strict: true)
+
+      expect(fsck_command).to have_received(:call).with('abc1234', strict: true)
+      expect(result).to be_a(Git::FsckResult)
+    end
+  end
 end

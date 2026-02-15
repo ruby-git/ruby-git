@@ -29,6 +29,7 @@ require_relative 'commands/stash/push'
 require 'git/command_line'
 require 'git/errors'
 require 'git/parsers/branch'
+require 'git/parsers/fsck'
 require 'git/parsers/stash'
 require 'git/parsers/tag'
 require 'git/url'
@@ -1695,7 +1696,8 @@ module Git
     #
     # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
-      Git::Commands::Fsck.new(self).call(*objects, **opts)
+      result = Git::Commands::Fsck.new(self).call(*objects, **opts)
+      Git::Parsers::Fsck.parse(result.stdout)
     end
     # rubocop:enable Style/ArgumentsForwarding
 

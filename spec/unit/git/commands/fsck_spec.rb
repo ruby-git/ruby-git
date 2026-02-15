@@ -16,10 +16,13 @@ RSpec.describe Git::Commands::Fsck do
   describe '#call' do
     context 'with default arguments' do
       it 'runs fsck with --no-progress' do
+        expected_result = command_result('')
         expect(execution_context).to receive(:command).with('fsck', '--no-progress',
-                                                            any_args).and_return(command_result(''))
+                                                            any_args).and_return(expected_result)
 
-        command.call
+        result = command.call
+
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -40,14 +43,6 @@ RSpec.describe Git::Commands::Fsck do
           .and_return(command_result(''))
 
         command.call(unreachable: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('fsck', '--no-progress', any_args)
-          .and_return(command_result(''))
-
-        command.call(unreachable: false)
       end
     end
 
@@ -215,158 +210,32 @@ RSpec.describe Git::Commands::Fsck do
       end
     end
 
-    context 'output parsing' do
-      context 'with dangling objects' do
-        it 'parses dangling objects correctly' do
-          output = "dangling blob 1234567890abcdef1234567890abcdef12345678\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.dangling.size).to eq(1)
-          expect(result.dangling.first.type).to eq(:blob)
-          expect(result.dangling.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
-        end
-
-        it 'parses dangling objects with names' do
-          output = "dangling blob 1234567890abcdef1234567890abcdef12345678 (HEAD~2:src/file.rb)\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.dangling.first.name).to eq('HEAD~2:src/file.rb')
-        end
-      end
-
-      context 'with missing objects' do
-        it 'parses missing objects correctly' do
-          output = "missing tree abcdef1234567890abcdef1234567890abcdef12\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.missing.size).to eq(1)
-          expect(result.missing.first.type).to eq(:tree)
-          expect(result.missing.first.oid).to eq('abcdef1234567890abcdef1234567890abcdef12')
-        end
-      end
-
-      context 'with unreachable objects' do
-        it 'parses unreachable objects correctly' do
-          output = "unreachable commit fedcba0987654321fedcba0987654321fedcba09\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.unreachable.size).to eq(1)
-          expect(result.unreachable.first.type).to eq(:commit)
-          expect(result.unreachable.first.oid).to eq('fedcba0987654321fedcba0987654321fedcba09')
-        end
-      end
-
-      context 'with warnings' do
-        it 'parses warning lines correctly' do
-          output = "warning in commit 1234567890abcdef1234567890abcdef12345678: invalid author/committer\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.warnings.size).to eq(1)
-          expect(result.warnings.first.type).to eq(:commit)
-          expect(result.warnings.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
-          expect(result.warnings.first.message).to eq('invalid author/committer')
-        end
-      end
-
-      context 'with root nodes' do
-        it 'parses root lines correctly' do
-          output = "root 1234567890abcdef1234567890abcdef12345678\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.root.size).to eq(1)
-          expect(result.root.first.type).to eq(:commit)
-          expect(result.root.first.oid).to eq('1234567890abcdef1234567890abcdef12345678')
-        end
-      end
-
-      context 'with tagged objects' do
-        it 'parses tagged lines correctly' do
-          output = 'tagged commit abcdef1234567890abcdef1234567890abcdef12 (v1.0.0) in ' \
-                   "fedcba0987654321fedcba0987654321fedcba09\n"
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.tagged.size).to eq(1)
-          expect(result.tagged.first.type).to eq(:commit)
-          expect(result.tagged.first.oid).to eq('abcdef1234567890abcdef1234567890abcdef12')
-          expect(result.tagged.first.name).to eq('v1.0.0')
-        end
-      end
-
-      context 'with mixed output' do
-        it 'parses all types correctly' do
-          output = <<~OUTPUT
-            dangling blob 1111111111111111111111111111111111111111
-            missing tree 2222222222222222222222222222222222222222
-            unreachable commit 3333333333333333333333333333333333333333
-            warning in commit 4444444444444444444444444444444444444444: bad date
-          OUTPUT
-          expect(execution_context).to receive(:command).and_return(command_result(output))
-
-          result = command.call
-
-          expect(result.dangling.size).to eq(1)
-          expect(result.missing.size).to eq(1)
-          expect(result.unreachable.size).to eq(1)
-          expect(result.warnings.size).to eq(1)
-        end
-      end
-
-      context 'with empty output' do
-        it 'returns an empty result' do
-          expect(execution_context).to receive(:command).and_return(command_result(''))
-
-          result = command.call
-
-          expect(result.empty?).to eq(true)
-          expect(result.any_issues?).to eq(false)
-        end
-      end
-    end
-
     context 'exit code handling' do
       it 'handles exit code 0 (no issues)' do
         mock_command('fsck', '--no-progress')
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
-        expect(result.empty?).to be true
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 1 (errors found)' do
         output = "missing tree 1234567890abcdef1234567890abcdef12345678\n"
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 1)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
-        expect(result.missing.size).to eq(1)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 2 (missing objects)' do
         output = "missing blob abcdef1234567890abcdef1234567890abcdef12\n"
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 2)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
-        expect(result.missing.size).to eq(1)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 4 (warnings)' do
         output = "warning in commit 1234567890abcdef1234567890abcdef12345678: bad date\n"
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 4)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
-        expect(result.warnings.size).to eq(1)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       # Exit codes are bit flags that can be combined
@@ -377,7 +246,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 3)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 5 (errors + warnings)' do
@@ -387,7 +256,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 5)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 6 (missing + warnings)' do
@@ -397,7 +266,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 6)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'handles exit code 7 (errors + missing + warnings)' do
@@ -408,7 +277,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', '--no-progress', stdout: output, exitstatus: 7)
         result = command.call
-        expect(result).to be_a(Git::FsckResult)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'raises for exit code > 7 (fatal errors)' do

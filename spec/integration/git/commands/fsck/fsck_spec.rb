@@ -21,17 +21,17 @@ RSpec.describe Git::Commands::Fsck, :integration do
     end
 
     describe 'when the command succeeds' do
-      it 'returns a FsckResult' do
+      it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::FsckResult)
+        expect(result).to be_a(Git::CommandLineResult)
       end
 
       context 'with options' do
         it 'accepts multiple options' do
           result = command.call(root: true, strict: true)
 
-          expect(result).to be_a(Git::FsckResult)
+          expect(result).to be_a(Git::CommandLineResult)
         end
       end
 
@@ -40,7 +40,7 @@ RSpec.describe Git::Commands::Fsck, :integration do
           head_sha = execution_context.command('rev-parse', 'HEAD').stdout.strip
           result = command.call(head_sha)
 
-          expect(result).to be_a(Git::FsckResult)
+          expect(result).to be_a(Git::CommandLineResult)
         end
       end
     end
