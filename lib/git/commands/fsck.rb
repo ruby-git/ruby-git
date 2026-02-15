@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/arguments'
-require 'git/parsers/fsck'
 
 module Git
   module Commands
@@ -11,12 +10,14 @@ module Git
     # It checks the integrity of the repository, reporting any dangling, missing, or
     # unreachable objects.
     #
+    # @see https://git-scm.com/docs/git-fsck git-fsck
+    #
     # @api private
     #
     # @example Basic usage
     #   fsck = Git::Commands::Fsck.new(execution_context)
     #   result = fsck.call
-    #   puts "Found #{result.count} issues" if result.any_issues?
+    #   result.stdout # => "dangling blob abc123...\n"
     #
     # @example With specific objects
     #   fsck = Git::Commands::Fsck.new(execution_context)
@@ -58,47 +59,65 @@ module Git
       #
       # @overload call(*objects, **options)
       #
+      #   @example Check repository integrity
+      #     # git fsck --no-progress
+      #     result = fsck.call
+      #
+      #   @example Check specific objects
+      #     # git fsck --no-progress abc1234 def5678
+      #     result = fsck.call('abc1234', 'def5678')
+      #
+      #   @example With options
+      #     # git fsck --no-progress --unreachable --strict
+      #     result = fsck.call(unreachable: true, strict: true)
+      #
       #   @param objects [Array<String>] optional object identifiers to check
       #
       #   @param options [Hash] command options
       #
-      #   @option options [Boolean] :unreachable Print out objects that exist but aren't
+      #   @option options [Boolean] :unreachable (nil) print out objects that exist but are not
       #     reachable from any of the reference nodes
       #
-      #   @option options [Boolean] :strict Enable more strict checking
+      #   @option options [Boolean] :strict (nil) enable more strict checking
       #
-      #   @option options [Boolean] :connectivity_only Check only the connectivity
+      #   @option options [Boolean] :connectivity_only (nil) check only the connectivity of objects
       #
-      #   @option options [Boolean] :root Report root nodes
+      #   @option options [Boolean] :root (nil) report root nodes
       #
-      #   @option options [Boolean] :tags Report tags
+      #   @option options [Boolean] :tags (nil) report tags
       #
-      #   @option options [Boolean] :cache Consider any object recorded in the index also as a head node
+      #   @option options [Boolean] :cache (nil) consider any object recorded in the index also
+      #     as a head node for reachability
       #
-      #   @option options [Boolean] :no_reflogs Don't check reflogs
+      #   @option options [Boolean] :no_reflogs (nil) do not consider commits referenced only by
+      #     reflogs to be reachable
       #
-      #   @option options [Boolean] :lost_found Write dangling objects into .git/lost-found
+      #   @option options [Boolean] :lost_found (nil) write dangling objects into .git/lost-found
       #
-      #   @option options [Boolean] :dangling Print out dangling objects (default true, set false to disable)
+      #   @option options [Boolean] :dangling (nil) report dangling objects. Pass false to suppress
+      #     dangling object reporting
       #
-      #   @option options [Boolean] :full Check all objects, not just reachable ones (default false, set true to enable)
+      #   @option options [Boolean] :full (nil) check all objects, not just reachable ones. Pass
+      #     false to explicitly disable
       #
-      #   @option options [Boolean] :name_objects Show name of each object from refs (default false, set true to enable)
+      #   @option options [Boolean] :name_objects (nil) show the name of each reachable object
+      #     alongside its identifier. Pass false to explicitly disable
       #
-      #   @option options [Boolean] :references Check reference objects (default true, set false to disable)
+      #   @option options [Boolean] :references (nil) check reference objects. Pass false to
+      #     explicitly disable reference checking
       #
-      # @return [Git::FsckResult] the structured result containing categorized objects
+      # @return [Git::CommandLineResult] the result of calling `git fsck`
+      #
+      # @raise [Git::FailedError] if git returns an exit code > 7
       #
       def call(*, **)
         args = ARGS.bind(*, **)
-        result = @execution_context.command(*args, raise_on_failure: false)
-
-        # fsck returns non-zero exit status when issues are found:
-        # 1 = errors found, 2 = missing objects, 4 = warnings
-        # These are bit flags that can be combined (0-7 are valid)
-        raise Git::FailedError, result if result.status.exitstatus > 7
-
-        Git::Parsers::Fsck.parse(result.stdout)
+        @execution_context.command(*args, raise_on_failure: false).tap do |result|
+          # fsck returns non-zero exit status when issues are found:
+          # 1 = errors found, 2 = missing objects, 4 = warnings
+          # These are bit flags that can be combined (0-7 are valid)
+          raise Git::FailedError, result if result.status.exitstatus > 7
+        end
       end
     end
   end
