@@ -11,6 +11,9 @@ require_relative 'commands/checkout/files'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
+require_relative 'commands/diff/numstat'
+require_relative 'commands/diff/patch'
+require_relative 'commands/diff/raw'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
 require_relative 'commands/merge/start'
@@ -857,7 +860,21 @@ module Git
       raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
     end
 
+    # Allowed option keys for {#diff_full}
+    DIFF_FULL_ALLOWED_OPTS = %i[path_limiter].freeze
+
+    # Allowed option keys for {#diff_stats}
+    DIFF_STATS_ALLOWED_OPTS = %i[path_limiter].freeze
+
+    # Allowed option keys for {#diff_path_status}
+    DIFF_PATH_STATUS_ALLOWED_OPTS = %i[path_limiter path].freeze
+
     # Handle deprecated :path option in favor of :path_limiter
+    #
+    # @param opts [Hash] options hash that may contain :path or :path_limiter
+    #
+    # @return [String, Pathname, Array<String, Pathname>, nil] the resolved path limiter
+    #
     def handle_deprecated_path_option(opts)
       if opts.key?(:path_limiter)
         opts[:path_limiter]
@@ -869,64 +886,107 @@ module Git
       end
     end
 
-    DIFF_FULL_OPTION_MAP = [
-      { type: :static, flag: '-p' },
-      { keys: [:path_limiter], type: :validate_only }
-    ].freeze
-
-    def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
-      assert_args_are_not_options('commit or commit range', obj1, obj2)
-      ArgsBuilder.validate!(opts, DIFF_FULL_OPTION_MAP)
-
-      args = build_args(opts, DIFF_FULL_OPTION_MAP)
-      args.push(obj1, obj2).compact!
-
-      if (pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter'))
-        args.push('--', *pathspecs)
-      end
-
-      command('diff', *args).stdout
+    # Validate that opts contains only allowed keys
+    #
+    # @param opts [Hash] options hash to validate
+    #
+    # @param allowed [Array<Symbol>] allowed option keys
+    #
+    # @raise [ArgumentError] if unknown keys are present
+    #
+    def assert_valid_opts(opts, allowed)
+      unknown = opts.keys - allowed
+      raise ArgumentError, "Unknown options: #{unknown.join(', ')}" if unknown.any?
     end
 
-    DIFF_STATS_OPTION_MAP = [
-      { type: :static, flag: '--numstat' },
-      { keys: [:path_limiter], type: :validate_only }
-    ].freeze
-
-    def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
+    # Show full diff patch output between commits or the working tree
+    #
+    # Delegates to {Git::Commands::Diff::Patch}.
+    #
+    # @param obj1 [String] first commit reference (default: 'HEAD')
+    #
+    # @param obj2 [String, nil] second commit reference (default: nil)
+    #
+    # @param opts [Hash] options
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter (nil)
+    #   pathspecs to limit the diff
+    #
+    # @return [String] the unified diff patch output
+    #
+    # @raise [Git::FailedError] if git returns exit code >= 2
+    #
+    # @see Git::Commands::Diff::Patch
+    #
+    def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
+      assert_valid_opts(opts, DIFF_FULL_ALLOWED_OPTS)
       assert_args_are_not_options('commit or commit range', obj1, obj2)
-      ArgsBuilder.validate!(opts, DIFF_STATS_OPTION_MAP)
+      pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
+      result = Git::Commands::Diff::Patch.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
+      extract_patch_text(result.stdout)
+    end
 
-      args = build_args(opts, DIFF_STATS_OPTION_MAP)
-      args.push(obj1, obj2).compact!
-
-      if (pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter'))
-        args.push('--', *pathspecs)
-      end
-
-      output_lines = command('diff', *args).stdout.split("\n")
+    # Show numstat diff output between commits or the working tree
+    #
+    # Delegates to {Git::Commands::Diff::Numstat}.
+    #
+    # @param obj1 [String] first commit reference (default: 'HEAD')
+    #
+    # @param obj2 [String, nil] second commit reference (default: nil)
+    #
+    # @param opts [Hash] options
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter (nil)
+    #   pathspecs to limit the diff
+    #
+    # @return [Hash] diff statistics with the shape:
+    #   `{ total: { insertions:, deletions:, lines:, files: }, files: { ... } }`
+    #
+    # @raise [Git::FailedError] if git returns exit code >= 2
+    #
+    # @see Git::Commands::Diff::Numstat
+    #
+    def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
+      assert_valid_opts(opts, DIFF_STATS_ALLOWED_OPTS)
+      assert_args_are_not_options('commit or commit range', obj1, obj2)
+      pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
+      result = Git::Commands::Diff::Numstat.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
+      output_lines = extract_numstat_lines(result.stdout)
       parse_diff_stats_output(output_lines)
     end
 
-    DIFF_PATH_STATUS_OPTION_MAP = [
-      { type: :static, flag: '--name-status' },
-      { keys: [:path_limiter], type: :validate_only },
-      { keys: [:path], type: :validate_only }
-    ].freeze
-
+    # Show path status (name-status) for diff between commits or the working tree
+    #
+    # Delegates to {Git::Commands::Diff::Raw} and extracts status letters and
+    # paths from the raw output lines.
+    #
+    # @param reference1 [String, nil] first commit reference (default: nil)
+    #
+    # @param reference2 [String, nil] second commit reference (default: nil)
+    #
+    # @param opts [Hash] options
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter (nil)
+    #   pathspecs to limit the diff
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path (nil)
+    #   deprecated; use :path_limiter instead
+    #
+    # @return [Hash] mapping of file paths to status letters
+    #   (e.g. `{ "lib/foo.rb" => "M", "README.md" => "A" }`)
+    #
+    # @raise [Git::FailedError] if git returns exit code >= 2
+    #
+    # @see Git::Commands::Diff::Raw
+    #
     def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
+      assert_valid_opts(opts, DIFF_PATH_STATUS_ALLOWED_OPTS)
       assert_args_are_not_options('commit or commit range', reference1, reference2)
-      ArgsBuilder.validate!(opts, DIFF_PATH_STATUS_OPTION_MAP)
-
-      args = build_args(opts, DIFF_PATH_STATUS_OPTION_MAP)
-      args.push(reference1, reference2).compact!
 
       path_limiter = handle_deprecated_path_option(opts)
-      if (pathspecs = normalize_pathspecs(path_limiter, 'path limiter'))
-        args.push('--', *pathspecs)
-      end
-
-      parse_diff_path_status(args)
+      pathspecs = normalize_pathspecs(path_limiter, 'path limiter')
+      result = Git::Commands::Diff::Raw.new(self).call(*[reference1, reference2].compact, pathspecs: pathspecs)
+      extract_name_status_from_raw(result.stdout)
     end
 
     # compares the index and the working directory
@@ -2015,11 +2075,55 @@ module Git
       result
     end
 
-    def parse_diff_path_status(args)
-      command('diff', *args).stdout.split("\n").each_with_object({}) do |line, memo|
-        status, path = split_status_line(line)
-        memo[path] = status
+    # Extract name-status data from --raw output lines
+    #
+    # Raw lines have the format:
+    #   :old_mode new_mode old_sha new_sha status\tpath
+    # or for renames/copies:
+    #   :old_mode new_mode old_sha new_sha Rxx\told_path\tnew_path
+    #
+    # @param output [String] raw diff output
+    #
+    # @return [Hash] mapping of file paths to status tokens
+    #
+    def extract_name_status_from_raw(output)
+      output.split("\n").each_with_object({}) do |line, memo|
+        next unless line.start_with?(':')
+
+        parts = line[1..].split(/\s+/, 5)
+        status_and_paths = parts[4].split("\t")
+        status = status_and_paths[0]
+        path = status_and_paths.length > 2 ? status_and_paths[2] : status_and_paths[1]
+        memo[unescape_quoted_path(path)] = status
       end
+    end
+
+    # Extract only the patch text from combined numstat + shortstat + patch output
+    #
+    # The Diff::Patch command produces output containing numstat, shortstat, and patch
+    # sections. This method extracts only the patch portion (starting at "diff --git").
+    #
+    # @param output [String] combined command output
+    #
+    # @return [String] only the patch text
+    #
+    def extract_patch_text(output)
+      match = output.match(/^diff --git /m)
+      match ? output[match.begin(0)..] : output
+    end
+
+    # Extract only the numstat lines from combined numstat + shortstat output
+    #
+    # The Diff::Numstat command produces output containing numstat lines followed by
+    # a shortstat summary line. This method filters out the shortstat line and
+    # empty lines, returning only the numstat lines.
+    #
+    # @param output [String] combined command output
+    #
+    # @return [Array<String>] only the numstat lines
+    #
+    def extract_numstat_lines(output)
+      output.split("\n").reject { |l| l.empty? || l.match?(/^\s*\d+\s+files?\s+changed/) }
     end
 
     def build_args(opts, option_map)
