@@ -281,4 +281,156 @@ RSpec.describe Git::Lib do
       expect(result).to be_a(Git::FsckResult)
     end
   end
+
+  describe '#diff_full' do
+    let(:patch_command) { instance_double(Git::Commands::Diff::Patch) }
+
+    before do
+      allow(Git::Commands::Diff::Patch).to receive(:new).with(lib).and_return(patch_command)
+    end
+
+    it 'returns only the patch text from the combined output' do
+      combined_output =
+        "10\t2\tfile.rb\n 1 file changed, 10 insertions(+), 2 deletions(-)\n\n" \
+        "diff --git a/file.rb b/file.rb\n--- a/file.rb\n+++ b/file.rb\n"
+      allow(patch_command).to receive(:call)
+        .and_return(command_result(combined_output))
+
+      result = lib.diff_full
+
+      expect(result).to eq("diff --git a/file.rb b/file.rb\n--- a/file.rb\n+++ b/file.rb\n")
+    end
+
+    it 'forwards obj1 and obj2 to the command' do
+      allow(patch_command).to receive(:call)
+        .with('HEAD~3', 'HEAD', pathspecs: nil)
+        .and_return(command_result(''))
+
+      lib.diff_full('HEAD~3', 'HEAD')
+
+      expect(patch_command).to have_received(:call)
+        .with('HEAD~3', 'HEAD', pathspecs: nil)
+    end
+
+    it 'forwards path_limiter as pathspecs' do
+      allow(patch_command).to receive(:call)
+        .with('HEAD', pathspecs: ['lib/'])
+        .and_return(command_result(''))
+
+      lib.diff_full('HEAD', nil, path_limiter: ['lib/'])
+
+      expect(patch_command).to have_received(:call)
+        .with('HEAD', pathspecs: ['lib/'])
+    end
+
+    it 'wraps a string path_limiter in an array' do
+      allow(patch_command).to receive(:call)
+        .with('HEAD', pathspecs: ['lib/foo.rb'])
+        .and_return(command_result(''))
+
+      lib.diff_full('HEAD', nil, path_limiter: 'lib/foo.rb')
+
+      expect(patch_command).to have_received(:call)
+        .with('HEAD', pathspecs: ['lib/foo.rb'])
+    end
+
+    it 'rejects unknown options' do
+      expect { lib.diff_full('HEAD', nil, bogus: true) }
+        .to raise_error(ArgumentError, /Unknown options: bogus/)
+    end
+  end
+
+  describe '#diff_stats' do
+    let(:numstat_command) { instance_double(Git::Commands::Diff::Numstat) }
+
+    before do
+      allow(Git::Commands::Diff::Numstat).to receive(:new).with(lib).and_return(numstat_command)
+    end
+
+    it 'parses the numstat output into a stats hash' do
+      numstat_output = "10\t2\tlib/foo.rb\n3\t0\tREADME.md\n 2 files changed, 13 insertions(+), 2 deletions(-)\n"
+      allow(numstat_command).to receive(:call)
+        .and_return(command_result(numstat_output))
+
+      result = lib.diff_stats
+
+      expect(result).to be_a(Hash)
+      expect(result[:total][:insertions]).to eq(13)
+      expect(result[:total][:deletions]).to eq(2)
+      expect(result[:total][:files]).to eq(2)
+      expect(result[:files]).to have_key('lib/foo.rb')
+      expect(result[:files]).to have_key('README.md')
+    end
+
+    it 'forwards obj1, obj2, and path_limiter to the command' do
+      allow(numstat_command).to receive(:call)
+        .with('HEAD~3', 'HEAD', pathspecs: ['lib/'])
+        .and_return(command_result(''))
+
+      lib.diff_stats('HEAD~3', 'HEAD', path_limiter: ['lib/'])
+
+      expect(numstat_command).to have_received(:call)
+        .with('HEAD~3', 'HEAD', pathspecs: ['lib/'])
+    end
+
+    it 'rejects unknown options' do
+      expect { lib.diff_stats('HEAD', nil, bogus: true) }
+        .to raise_error(ArgumentError, /Unknown options: bogus/)
+    end
+  end
+
+  describe '#diff_path_status' do
+    let(:raw_command) { instance_double(Git::Commands::Diff::Raw) }
+
+    before do
+      allow(Git::Commands::Diff::Raw).to receive(:new).with(lib).and_return(raw_command)
+    end
+
+    it 'extracts name-status from raw output into a hash' do
+      raw_output = ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+                   ":000000 100644 0000000 abc1234 A\tREADME.md\n"
+      allow(raw_command).to receive(:call)
+        .and_return(command_result(raw_output))
+
+      result = lib.diff_path_status('HEAD~1', 'HEAD')
+
+      expect(result).to eq({ 'lib/foo.rb' => 'M', 'README.md' => 'A' })
+    end
+
+    it 'handles renames by using the destination path' do
+      raw_output = ":100644 100644 abc1234 def5678 R100\told.rb\tnew.rb\n"
+      allow(raw_command).to receive(:call)
+        .and_return(command_result(raw_output))
+
+      result = lib.diff_path_status('HEAD~1', 'HEAD')
+
+      expect(result).to eq({ 'new.rb' => 'R100' })
+    end
+
+    it 'forwards references and path_limiter to the command' do
+      allow(raw_command).to receive(:call)
+        .with('abc123', 'def456', pathspecs: ['lib/'])
+        .and_return(command_result(''))
+
+      lib.diff_path_status('abc123', 'def456', path_limiter: ['lib/'])
+
+      expect(raw_command).to have_received(:call)
+        .with('abc123', 'def456', pathspecs: ['lib/'])
+    end
+
+    it 'supports the deprecated :path option' do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(raw_command).to receive(:call)
+        .and_return(command_result(''))
+
+      lib.diff_path_status('HEAD', nil, path: 'lib/foo.rb')
+
+      expect(Git::Deprecation).to have_received(:warn).with(/deprecated/)
+    end
+
+    it 'rejects unknown options' do
+      expect { lib.diff_path_status('HEAD', nil, bogus: true) }
+        .to raise_error(ArgumentError, /Unknown options: bogus/)
+    end
+  end
 end
