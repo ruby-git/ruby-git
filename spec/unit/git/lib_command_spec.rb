@@ -77,4 +77,176 @@ RSpec.describe Git::Lib do
       end
     end
   end
+
+  describe '#clone' do
+    let(:repository_url) { 'https://github.com/ruby-git/ruby-git.git' }
+    let(:directory) { 'ruby-git' }
+    let(:clone_command) { instance_double(Git::Commands::Clone) }
+
+    def clone_stderr(dir, bare: false)
+      bare ? "Cloning into bare repository '#{dir}'...\n" : "Cloning into '#{dir}'...\n"
+    end
+
+    before do
+      allow(Git::Commands::Clone).to receive(:new).with(lib).and_return(clone_command)
+    end
+
+    context 'with default options' do
+      it 'returns a hash with working_directory' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+
+        result = lib.clone(repository_url, directory)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory)
+        expect(result).to eq({ working_directory: directory })
+      end
+    end
+
+    context 'with :bare option' do
+      it 'returns a hash with repository' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory, bare: true)))
+
+        result = lib.clone(repository_url, directory, bare: true)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory, bare: true)
+        expect(result).to eq({ repository: directory })
+      end
+    end
+
+    context 'with :mirror option' do
+      it 'returns a hash with repository' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory, bare: true)))
+
+        result = lib.clone(repository_url, directory, mirror: true)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory, mirror: true)
+        expect(result).to eq({ repository: directory })
+      end
+    end
+
+    context 'with :path option' do
+      it 'uses path as the directory in result' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('custom/path')))
+
+        result = lib.clone(repository_url, directory, path: 'custom/path')
+
+        expect(clone_command).to have_received(:call).with(repository_url, 'custom/path')
+        expect(result).to eq({ working_directory: 'custom/path' })
+      end
+
+      it 'uses path with bare option' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('custom/path', bare: true)))
+
+        result = lib.clone(repository_url, directory, path: 'custom/path', bare: true)
+
+        expect(clone_command).to have_received(:call).with(repository_url, 'custom/path', bare: true)
+        expect(result).to eq({ repository: 'custom/path' })
+      end
+    end
+
+    context 'with nil directory' do
+      it 'derives directory from git output' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('ruby-git')))
+
+        result = lib.clone(repository_url, nil)
+
+        expect(clone_command).to have_received(:call).with(repository_url, nil)
+        expect(result).to eq({ working_directory: 'ruby-git' })
+      end
+
+      it 'detects bare repository from git output' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('ruby-git.git', bare: true)))
+
+        result = lib.clone(repository_url, nil, bare: true)
+
+        expect(clone_command).to have_received(:call).with(repository_url, nil, bare: true)
+        expect(result).to eq({ repository: 'ruby-git.git' })
+      end
+
+      it 'detects mirror repository from git output' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('ruby-git.git', bare: true)))
+
+        result = lib.clone(repository_url, nil, mirror: true)
+
+        expect(clone_command).to have_received(:call).with(repository_url, nil, mirror: true)
+        expect(result).to eq({ repository: 'ruby-git.git' })
+      end
+    end
+
+    context 'with :log option' do
+      it 'includes log in the result' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+        logger = double('Logger')
+
+        result = lib.clone(repository_url, directory, log: logger)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory)
+        expect(result).to eq({ working_directory: directory, log: logger })
+      end
+    end
+
+    context 'with :git_ssh option' do
+      it 'includes git_ssh in the result' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+
+        result = lib.clone(repository_url, directory, git_ssh: 'ssh -i /path/to/key')
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory)
+        expect(result).to eq({ working_directory: directory, git_ssh: 'ssh -i /path/to/key' })
+      end
+
+      it 'includes git_ssh even when nil' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+
+        result = lib.clone(repository_url, directory, git_ssh: nil)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory)
+        expect(result).to have_key(:git_ssh)
+        expect(result[:git_ssh]).to be_nil
+      end
+    end
+
+    context 'with multiple options' do
+      it 'includes all result fields' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+        logger = double('Logger')
+
+        result = lib.clone(repository_url, directory, log: logger, git_ssh: 'custom-ssh')
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory)
+        expect(result).to eq(
+          working_directory: directory,
+          log: logger,
+          git_ssh: 'custom-ssh'
+        )
+      end
+
+      it 'combines bare, log, and git_ssh' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory, bare: true)))
+        logger = double('Logger')
+
+        result = lib.clone(repository_url, directory, bare: true, log: logger, git_ssh: nil)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory, bare: true)
+        expect(result).to eq(
+          repository: directory,
+          log: logger,
+          git_ssh: nil
+        )
+      end
+    end
+  end
 end

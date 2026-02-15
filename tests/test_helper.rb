@@ -203,6 +203,26 @@ module Test
         RUBY_PLATFORM == 'java'
       end
 
+      # Build a mock CommandLineResult for clone commands
+      #
+      # Used in tests that mock Git::Lib#command to capture command line args.
+      # Returns a CommandLineResult with realistic stderr so that
+      # Lib#build_clone_result can parse the clone directory.
+      #
+      # @param directory [String] the clone directory name
+      # @param bare [Boolean] whether this is a bare/mirror clone
+      # @return [Git::CommandLineResult]
+      #
+      def mock_clone_result(directory, bare: false)
+        stderr = if bare
+                   "Cloning into bare repository '#{directory}'...\n"
+                 else
+                   "Cloning into '#{directory}'...\n"
+                 end
+        status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
+        Git::CommandLineResult.new(%w[git clone], status, '', stderr)
+      end
+
       # Run a command and return the status including stdout and stderr output
       #
       # @example
