@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -34,10 +34,8 @@ module Git
       #   create = Git::Commands::Branch::Create.new(execution_context)
       #   create.call('feature-branch', 'origin/main', track: 'inherit')
       #
-      class Create
-        # Arguments DSL for building command-line arguments
-        #
-        ARGS = Arguments.define do
+      class Create < Base
+        arguments do
           literal 'branch'
           flag_option %i[force f]
           flag_option :create_reflog, negatable: true
@@ -45,14 +43,6 @@ module Git
           flag_or_value_option %i[track t], negatable: true, inline: true
           operand :branch_name, required: true
           operand :start_point
-        end.freeze
-
-        # Initialize the Create command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git branch command to create a new branch
@@ -128,11 +118,7 @@ module Git
         #
         # @raise [Git::FailedError] if git returns a non-zero exit code
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

@@ -66,7 +66,7 @@ module Git
         #
         # @raise [Git::FailedError] for unexpected errors (exit code > 1)
         #
-        def call(...) = super
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

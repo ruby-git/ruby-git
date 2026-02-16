@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with no options (basic list)' do
       it 'runs branch with --list and format flags' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args)
+          .with(*expected_args, raise_on_failure: false)
           .and_return(command_result(sample_output))
 
         result = command.call
@@ -35,7 +35,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :all option' do
       it 'adds --all flag' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--all'))
+          .with(*expected_args('--all'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(all: true)
@@ -45,7 +45,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'accepts :a alias' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--all'))
+          .with(*expected_args('--all'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(a: true)
@@ -57,7 +57,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :remotes option' do
       it 'adds --remotes flag' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--remotes'))
+          .with(*expected_args('--remotes'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(remotes: true)
@@ -67,7 +67,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'accepts :r alias' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--remotes'))
+          .with(*expected_args('--remotes'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(r: true)
@@ -79,7 +79,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :sort option' do
       it 'adds --sort=<key> with single value' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--sort=refname'))
+          .with(*expected_args('--sort=refname'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(sort: 'refname')
@@ -89,7 +89,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds multiple --sort=<key> with array of values' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--sort=refname', '--sort=-committerdate'))
+          .with(*expected_args('--sort=refname', '--sort=-committerdate'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(sort: ['refname', '-committerdate'])
@@ -101,7 +101,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :ignore_case option' do
       it 'adds --ignore-case flag' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--ignore-case'))
+          .with(*expected_args('--ignore-case'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(ignore_case: true)
@@ -111,7 +111,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'accepts :i alias' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--ignore-case'))
+          .with(*expected_args('--ignore-case'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(i: true)
@@ -123,7 +123,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :contains option' do
       it 'adds --contains <commit> with string value' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--contains', 'abc123'))
+          .with(*expected_args('--contains', 'abc123'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(contains: 'abc123')
@@ -133,7 +133,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds --contains flag with true (defaults to HEAD)' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--contains'))
+          .with(*expected_args('--contains'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(contains: true)
@@ -145,7 +145,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :no_contains option' do
       it 'adds --no-contains <commit> with string value' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--no-contains', 'abc123'))
+          .with(*expected_args('--no-contains', 'abc123'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(no_contains: 'abc123')
@@ -155,7 +155,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds --no-contains flag with true (defaults to HEAD)' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--no-contains'))
+          .with(*expected_args('--no-contains'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(no_contains: true)
@@ -167,7 +167,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :merged option' do
       it 'adds --merged <commit> with string value' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--merged', 'main'))
+          .with(*expected_args('--merged', 'main'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(merged: 'main')
@@ -177,7 +177,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds --merged flag with true (defaults to HEAD)' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--merged'))
+          .with(*expected_args('--merged'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(merged: true)
@@ -189,7 +189,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :no_merged option' do
       it 'adds --no-merged <commit> with string value' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--no-merged', 'main'))
+          .with(*expected_args('--no-merged', 'main'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(no_merged: 'main')
@@ -199,7 +199,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds --no-merged flag with true (defaults to HEAD)' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--no-merged'))
+          .with(*expected_args('--no-merged'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(no_merged: true)
@@ -211,7 +211,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with :points_at option' do
       it 'adds --points-at <object>' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--points-at', 'v1.0'))
+          .with(*expected_args('--points-at', 'v1.0'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(points_at: 'v1.0')
@@ -223,7 +223,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with patterns' do
       it 'adds pattern arguments' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('feature/*'))
+          .with(*expected_args('feature/*'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call('feature/*')
@@ -233,7 +233,7 @@ RSpec.describe Git::Commands::Branch::List do
 
       it 'adds multiple pattern arguments' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('feature/*', 'bugfix/*'))
+          .with(*expected_args('feature/*', 'bugfix/*'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call('feature/*', 'bugfix/*')
@@ -245,7 +245,7 @@ RSpec.describe Git::Commands::Branch::List do
     context 'with multiple options' do
       it 'combines flags correctly' do
         expect(execution_context).to receive(:command)
-          .with(*expected_args('--all', '--sort=refname', '--contains', 'abc123'))
+          .with(*expected_args('--all', '--sort=refname', '--contains', 'abc123'), raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(all: true, sort: 'refname', contains: 'abc123')

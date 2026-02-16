@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -22,25 +22,14 @@ module Git
       #   set_upstream = Git::Commands::Branch::SetUpstream.new(execution_context)
       #   set_upstream.call('feature', set_upstream_to: 'origin/main')
       #
-      class SetUpstream
-        # Arguments DSL for building command-line arguments
-        #
+      class SetUpstream < Base
         # NOTE: The set_upstream_to option maps to git's --set-upstream-to=<upstream> syntax.
         # The branch_name positional is optional; if omitted, git uses the current branch.
         # The set_upstream_to keyword is required by the Ruby method signature, not the DSL.
-        #
-        ARGS = Arguments.define do
+        arguments do
           literal 'branch'
           value_option %i[set_upstream_to u], inline: true, required: true, allow_nil: false
           operand :branch_name
-        end.freeze
-
-        # Initialize the SetUpstream command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git branch --set-upstream-to command
@@ -75,11 +64,7 @@ module Git
         #
         # @raise [Git::FailedError] if the branch or upstream doesn't exist
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

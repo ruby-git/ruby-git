@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -26,29 +26,18 @@ module Git
       #   copy = Git::Commands::Branch::Copy.new(execution_context)
       #   copy.call('old-branch', 'existing-branch', force: true)
       #
-      class Copy
-        # Arguments DSL for building command-line arguments
-        #
+      class Copy < Base
         # NOTE: The positional arguments follow Ruby semantics:
         # - When one positional is provided, it fills new_branch (required)
         # - When two positionals are provided, they fill old_branch and new_branch
         #
         # This matches the git CLI: `git branch -c [<old-branch>] <new-branch>`
-        #
-        ARGS = Arguments.define do
+        arguments do
           literal 'branch'
           literal '--copy'
           flag_option %i[force f]
           operand :old_branch
           operand :new_branch, required: true
-        end.freeze
-
-        # Initialize the Copy command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git branch --copy command to copy a branch
@@ -85,11 +74,7 @@ module Git
         #
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

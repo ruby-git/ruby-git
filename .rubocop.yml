@@ -49,10 +49,6 @@ Style/Documentation:
   Exclude:
     - "tests/units/**/*"
 
-Lint/UselessMethodDefinition:
-  Exclude:
-    - "lib/git/commands/**/*"
-
 AllCops:
   # Pin this project to Ruby 3.1 in case the shared config above is upgraded to 3.2
   # or later.
