@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -22,24 +22,13 @@ module Git
       #   unset_upstream = Git::Commands::Branch::UnsetUpstream.new(execution_context)
       #   unset_upstream.call('feature')
       #
-      class UnsetUpstream
-        # Arguments DSL for building command-line arguments
-        #
+      class UnsetUpstream < Base
         # NOTE: The --unset-upstream flag is always present.
         # The branch_name positional is optional; if omitted, git uses the current branch.
-        #
-        ARGS = Arguments.define do
+        arguments do
           literal 'branch'
           literal '--unset-upstream'
           operand :branch_name
-        end.freeze
-
-        # Initialize the UnsetUpstream command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git branch --unset-upstream command
@@ -56,11 +45,7 @@ module Git
         #
         # @raise [Git::FailedError] if the branch doesn't exist or has no upstream
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

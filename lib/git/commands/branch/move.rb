@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -26,29 +26,18 @@ module Git
       #   move = Git::Commands::Branch::Move.new(execution_context)
       #   move.call('old-branch', 'existing-branch', force: true)
       #
-      class Move
-        # Arguments DSL for building command-line arguments
-        #
+      class Move < Base
         # NOTE: The positional arguments follow Ruby semantics:
         # - When one positional is provided, it fills new_branch (required)
         # - When two positionals are provided, they fill old_branch and new_branch
         #
         # This matches the git CLI: `git branch -m [<old-branch>] <new-branch>`
-        #
-        ARGS = Arguments.define do
+        arguments do
           literal 'branch'
           literal '--move'
           flag_option %i[force f]
           operand :old_branch
           operand :new_branch, required: true
-        end.freeze
-
-        # Initialize the Move command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git branch --move command to rename a branch
@@ -85,11 +74,7 @@ module Git
         #
         # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

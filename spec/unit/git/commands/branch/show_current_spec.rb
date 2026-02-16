@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::Branch::ShowCurrent do
       it 'runs branch --show-current' do
         expected_result = command_result("main\n")
         expect(execution_context).to receive(:command)
-          .with('branch', '--show-current')
+          .with('branch', '--show-current', raise_on_failure: false)
           .and_return(expected_result)
 
         result = command.call

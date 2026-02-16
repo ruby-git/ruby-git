@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
     context 'with no arguments (unset upstream for current branch)' do
       it 'runs branch --unset-upstream' do
         expect(execution_context).to receive(:command)
-          .with('branch', '--unset-upstream')
+          .with('branch', '--unset-upstream', raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call
@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
     context 'with branch_name' do
       it 'runs branch --unset-upstream <branch>' do
         expect(execution_context).to receive(:command)
-          .with('branch', '--unset-upstream', 'feature')
+          .with('branch', '--unset-upstream', 'feature', raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call('feature')
@@ -36,7 +36,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
     context 'with nil branch_name' do
       it 'runs branch --unset-upstream (nil is treated as not provided)' do
         expect(execution_context).to receive(:command)
-          .with('branch', '--unset-upstream')
+          .with('branch', '--unset-upstream', raise_on_failure: false)
           .and_return(command_result(''))
 
         result = command.call(nil)
