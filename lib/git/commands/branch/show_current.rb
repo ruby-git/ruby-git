@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'git/commands/arguments'
+
 module Git
   module Commands
     module Branch
@@ -10,6 +12,12 @@ module Git
       # @api private
       #
       class ShowCurrent
+        # Arguments DSL for building command-line arguments
+        ARGS = Arguments.define do
+          literal 'branch'
+          literal '--show-current'
+        end.freeze
+
         # Initialize the ShowCurrent command
         #
         # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
@@ -25,7 +33,9 @@ module Git
         # @raise [Git::FailedError] if git returns a non-zero exit code
         #
         def call
-          @execution_context.command('branch', '--show-current')
+          bound_args = ARGS.bind
+
+          @execution_context.command(*bound_args)
         end
       end
     end

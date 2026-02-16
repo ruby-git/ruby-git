@@ -9,42 +9,16 @@ RSpec.describe Git::Commands::Branch::ShowCurrent do
   let(:execution_context) { instance_double(Git::Lib) }
 
   describe '#call' do
-    context 'when on a branch' do
+    context 'with no arguments' do
       it 'runs branch --show-current' do
+        expected_result = command_result("main\n")
         expect(execution_context).to receive(:command)
           .with('branch', '--show-current')
-          .and_return(command_result("main\n"))
+          .and_return(expected_result)
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq("main\n")
-      end
-    end
-
-    context 'when in detached HEAD state' do
-      it 'returns empty stdout' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--show-current')
-          .and_return(command_result(''))
-
-        result = command.call
-
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq('')
-      end
-    end
-
-    context 'when on a feature branch with slashes' do
-      it 'returns the full branch name in stdout' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--show-current')
-          .and_return(command_result("feature/my-feature\n"))
-
-        result = command.call
-
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq("feature/my-feature\n")
+        expect(result).to eq(expected_result)
       end
     end
   end
