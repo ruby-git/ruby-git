@@ -920,7 +920,6 @@ module Git
     #
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_FULL_ALLOWED_OPTS)
-      assert_args_are_not_options('commit or commit range', obj1, obj2)
       pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
       result = Git::Commands::Diff::Patch.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
       extract_patch_text(result.stdout)
@@ -948,7 +947,6 @@ module Git
     #
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_STATS_ALLOWED_OPTS)
-      assert_args_are_not_options('commit or commit range', obj1, obj2)
       pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
       result = Git::Commands::Diff::Numstat.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
       output_lines = extract_numstat_lines(result.stdout)
@@ -981,7 +979,6 @@ module Git
     #
     def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_PATH_STATUS_ALLOWED_OPTS)
-      assert_args_are_not_options('commit or commit range', reference1, reference2)
 
       path_limiter = handle_deprecated_path_option(opts)
       pathspecs = normalize_pathspecs(path_limiter, 'path limiter')

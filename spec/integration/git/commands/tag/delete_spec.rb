@@ -41,10 +41,10 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError for fatal errors' do
-        # Exit code > 1 should raise (tested via unit tests for specific threshold)
-        # Here we verify that completely invalid usage raises
-        expect { command.call('--invalid-flag-xyz') }.to raise_error(Git::FailedError)
+      it 'raises ArgumentError for option-like tag names' do
+        # Option-like operand validation rejects values starting with '-'
+        # before they reach git, preventing misinterpretation as flags
+        expect { command.call('--invalid-flag-xyz') }.to raise_error(ArgumentError, /option-like values/)
       end
     end
   end
