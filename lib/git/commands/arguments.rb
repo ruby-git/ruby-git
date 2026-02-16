@@ -203,7 +203,7 @@ module Git
     # - {#key_value_option} - Key-value option that can be repeated (--trailer key=value)
     # - {#literal} - Literal string always included in output
     # - {#custom_option} - Custom option with builder block
-    # - {#metadata} - Validation-only option (not included in command output)
+    # - {#execution_option} - Execution option (not included in CLI output, forwarded to command execution)
     #
     # {#value_option} supports a `repeatable: true` parameter that allows the option to accept
     # an array of values. This repeats the flag for each value (or outputs each as an
@@ -238,7 +238,7 @@ module Git
     #   phase (for example, via #to_s in {Bound#to_a}). Defaults to nil (no validation).
     #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
-    # Note: {#literal} and {#metadata} do not support these validation parameters.
+    # Note: {#literal} and {#execution_option} do not support these validation parameters.
     #
     # These parameters affect **output generation** (what CLI arguments are
     # produced):
@@ -362,7 +362,7 @@ module Git
     # separator boundary. Git treats everything after `--` as operands, so
     # flags emitted there would be misinterpreted.
     #
-    # Only `value_option` with `as_operand: true` and `metadata` are allowed
+    # Only `value_option` with `as_operand: true` and `execution_option` are allowed
     # after the boundary because they do not produce flag-prefixed output.
     #
     # For example, this will raise +ArgumentError+ during definition:
@@ -855,14 +855,14 @@ module Git
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
       end
 
-      # Define a metadata option (for validation only, not included in command)
+      # Define an execution option (not included in CLI output, forwarded to command execution)
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
       # @return [void]
       #
-      def metadata(names)
-        register_option(names, type: :metadata)
+      def execution_option(names)
+        register_option(names, type: :execution_option)
       end
 
       # Declare that options conflict with each other (mutually exclusive)
@@ -1072,7 +1072,7 @@ module Git
       end
 
       # Option types allowed after a '--' separator boundary (they do not produce CLI flags)
-      OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand metadata].freeze
+      OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand execution_option].freeze
 
       private
 
@@ -1373,7 +1373,7 @@ module Git
           result = definition[:builder]&.call(value)
           result.is_a?(Array) ? args.concat(result) : (args << result if result)
         end,
-        metadata: ->(*) {}
+        execution_option: ->(*) {}
       }.freeze
       private_constant :BUILDERS
 

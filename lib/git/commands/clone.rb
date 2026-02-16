@@ -33,7 +33,7 @@ module Git
         custom_option(:depth) { |v| ['--depth', v.to_i] }
         operand :repository_url, required: true, separator: '--'
         operand :directory
-        metadata :timeout
+        execution_option :timeout
       end.freeze
 
       # Initialize the Clone command
