@@ -149,20 +149,20 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with metadata options' do
+    context 'with execution_option options' do
       let(:args) do
         described_class.define do
-          metadata :object
-          metadata :path_limiter
+          execution_option :object
+          execution_option :path_limiter
         end
       end
 
-      it 'does not output anything for metadata options' do
+      it 'does not output anything for execution_option options' do
         expect(args.bind(object: 'HEAD', path_limiter: 'src/').to_ary).to eq([])
       end
 
-      it 'allows validation of metadata presence' do
-        # metadata options are just for validation, not command building
+      it 'allows validation of execution_option presence' do
+        # execution_option options are just for validation, not command building
         expect(args.bind.to_ary).to eq([])
       end
     end
@@ -3605,11 +3605,11 @@ RSpec.describe Git::Commands::Arguments do
         end.not_to raise_error
       end
 
-      it 'allows metadata after literal \'--\'' do
+      it 'allows execution_option after literal \'--\'' do
         expect do
           described_class.define do
             literal '--'
-            metadata :internal
+            execution_option :internal
           end
         end.not_to raise_error
       end
@@ -3654,11 +3654,11 @@ RSpec.describe Git::Commands::Arguments do
         end.to raise_error(ArgumentError, /option :verbose cannot be defined after/)
       end
 
-      it 'allows metadata after value_option with as_operand separator \'--\'' do
+      it 'allows execution_option after value_option with as_operand separator \'--\'' do
         expect do
           described_class.define do
             value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
-            metadata :internal
+            execution_option :internal
           end
         end.not_to raise_error
       end
