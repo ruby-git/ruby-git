@@ -1477,7 +1477,8 @@ module Git
     #
     def merge_base(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
-      Git::Commands::MergeBase.new(self).call(*args, **opts)
+      result = Git::Commands::MergeBase.new(self).call(*args, **opts)
+      result.stdout.lines.map(&:strip).reject(&:empty?)
     end
 
     def unmerged
