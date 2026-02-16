@@ -1067,8 +1067,11 @@ module Git
 
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
+        execution_option_names = @option_definitions.each_with_object([]) do |(name, definition), names|
+          names << name if definition[:type] == :execution_option
+        end
 
-        Bound.new(args_array, options_hash, allocated_positionals)
+        Bound.new(args_array, options_hash, allocated_positionals, execution_option_names)
       end
 
       # Option types allowed after a '--' separator boundary (they do not produce CLI flags)
@@ -1962,13 +1965,30 @@ module Git
         # Names that cannot have accessor methods defined (would override Object methods)
         RESERVED_NAMES = (Object.instance_methods + [:to_ary]).freeze
 
+        # Canonical frozen empty hash returned by {#execution_options} when no
+        # non-nil execution options are present.
+        #
+        # @return [Hash{Symbol => Object}]
+        EMPTY_EXECUTION_OPTIONS = {}.freeze
+
+        # Execution options and values for command execution.
+        #
+        # Includes only options declared via {Arguments#execution_option} and
+        # excludes options with nil values.
+        #
+        # @return [Hash{Symbol => Object}] frozen hash of execution option values
+        # @!attribute [r] execution_options
+        attr_reader :execution_options
+
         # @param args_array [Array<String>] the CLI argument array (frozen)
         # @param options [Hash{Symbol => Object}] normalized options hash (frozen)
         # @param positionals [Hash{Symbol => Object}] positional arguments hash (frozen)
-        def initialize(args_array, options, positionals)
+        # @param execution_option_names [Array<Symbol>] option names declared via {Arguments#execution_option}
+        def initialize(args_array, options, positionals, execution_option_names = [])
           @args_array = args_array.freeze
           @options = options.freeze
           @positionals = positionals.freeze
+          @execution_options = build_execution_options(execution_option_names)
 
           # Define accessor methods (skip reserved names)
           @options.each_key { |name| define_accessor(name, @options) }
@@ -2011,6 +2031,15 @@ module Git
         end
 
         private
+
+        def build_execution_options(execution_option_names)
+          result = execution_option_names.each_with_object({}) do |name, values|
+            value = @options[name]
+            values[name] = value unless value.nil?
+          end
+
+          result.empty? ? EMPTY_EXECUTION_OPTIONS : result.freeze
+        end
 
         # Define an accessor method for the given name
         #
