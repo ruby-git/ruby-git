@@ -444,12 +444,12 @@ RSpec.describe Git::Commands::Arguments do
         let(:args) do
           described_class.define do
             operand :command, required: true
-            operand :args, repeatable: true
+            operand :args, repeatable: true, separator: '--'
           end
         end
 
         it 'accepts command with variadic args (no unexpected arguments)' do
-          expect(args.bind('run', '--verbose', '--debug').to_ary).to eq(['run', '--verbose', '--debug'])
+          expect(args.bind('run', '--verbose', '--debug').to_ary).to eq(['run', '--', '--verbose', '--debug'])
         end
 
         it 'accepts just the required command' do
@@ -3235,6 +3235,478 @@ RSpec.describe Git::Commands::Arguments do
       it 'raises ArgumentError for unsupported options' do
         expect { args.bind('file.txt', invalid: true) }.to raise_error(ArgumentError, /Unsupported options/)
       end
+    end
+  end
+
+  describe 'option-like operand validation' do
+    context 'when operand is before a separator: \"--\" boundary' do
+      let(:args) do
+        described_class.define do
+          operand :commit1
+          operand :commit2
+          operand :paths, repeatable: true, separator: '--'
+        end
+      end
+
+      it 'rejects a single-dash value' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, "operand :commit1 value '-s' looks like a command-line option"
+        )
+      end
+
+      it 'rejects a double-dash value' do
+        expect { args.bind('--stat') }.to raise_error(
+          ArgumentError, "operand :commit1 value '--stat' looks like a command-line option"
+        )
+      end
+
+      it 'validates each operand independently' do
+        expect { args.bind('HEAD', '-s') }.to raise_error(
+          ArgumentError, "operand :commit2 value '-s' looks like a command-line option"
+        )
+      end
+
+      it 'does not validate operands after the separator' do
+        expect(args.bind('HEAD', 'HEAD~1', '-file.txt').to_a).to eq(
+          ['HEAD', 'HEAD~1', '--', '-file.txt']
+        )
+      end
+
+      it 'allows valid commit values' do
+        expect(args.bind('HEAD', 'main').to_a).to eq(%w[HEAD main])
+      end
+    end
+
+    context 'when operand is before a literal \"--\" boundary' do
+      let(:args) do
+        described_class.define do
+          operand :tree_ish
+          literal '--'
+          operand :paths, repeatable: true
+        end
+      end
+
+      it 'validates the operand before literal \"--\"' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, "operand :tree_ish value '-s' looks like a command-line option"
+        )
+      end
+
+      it 'does not validate the operand after literal \"--\"' do
+        expect(args.bind('HEAD', '-file.txt').to_a).to eq(['HEAD', '--', '-file.txt'])
+      end
+    end
+
+    context 'when operand is before a value_option with separator: \"--\"' do
+      let(:args) do
+        described_class.define do
+          operand :commit1
+          value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+        end
+      end
+
+      it 'validates the operand before the value_option separator' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, "operand :commit1 value '-s' looks like a command-line option"
+        )
+      end
+
+      it 'allows -prefixed values in the value_option after separator' do
+        expect(args.bind('HEAD', pathspecs: ['-file.txt']).to_a).to eq(
+          ['HEAD', '--', '-file.txt']
+        )
+      end
+    end
+
+    context 'when no \"--\" boundary exists in definition' do
+      let(:args) do
+        described_class.define do
+          operand :path1, required: true
+          operand :path2, required: true
+        end
+      end
+
+      it 'validates all operands' do
+        expect { args.bind('-s', 'file.txt') }.to raise_error(
+          ArgumentError, "operand :path1 value '-s' looks like a command-line option"
+        )
+      end
+
+      it 'validates the second operand' do
+        expect { args.bind('file.txt', '-s') }.to raise_error(
+          ArgumentError, "operand :path2 value '-s' looks like a command-line option"
+        )
+      end
+    end
+
+    context 'when operand value is nil' do
+      let(:args) do
+        described_class.define do
+          operand :tree_ish, allow_nil: true
+          operand :paths, repeatable: true, separator: '--'
+        end
+      end
+
+      it 'skips validation for nil operand values' do
+        expect(args.bind(nil, 'file.txt').to_a).to eq(['--', 'file.txt'])
+      end
+    end
+
+    context 'when operand value is non-String' do
+      let(:args) do
+        described_class.define do
+          operand :count
+        end
+      end
+
+      it 'skips validation for non-String values' do
+        expect(args.bind(42).to_a).to eq(['42'])
+      end
+    end
+
+    context 'with repeatable operand containing option-like values' do
+      let(:args) do
+        described_class.define do
+          operand :refs, repeatable: true, required: true
+        end
+      end
+
+      it 'reports all offending values' do
+        expect { args.bind('-a', '-b') }.to raise_error(
+          ArgumentError, "operand :refs contains option-like values: '-a', '-b'"
+        )
+      end
+
+      it 'reports only the offending values from a mix' do
+        expect { args.bind('HEAD', '-a', 'main') }.to raise_error(
+          ArgumentError, "operand :refs contains option-like values: '-a'"
+        )
+      end
+    end
+
+    context 'with error messages' do
+      let(:args) do
+        described_class.define do
+          operand :commit
+        end
+      end
+
+      it 'includes the operand name in the error' do
+        expect { args.bind('-s') }.to raise_error(ArgumentError, /operand :commit/)
+      end
+
+      it 'includes the offending value in the error' do
+        expect { args.bind('-s') }.to raise_error(ArgumentError, /'-s'/)
+      end
+    end
+
+    context 'with diff-style ARGS pattern' do
+      let(:args) do
+        described_class.define do
+          literal 'diff'
+          literal '--raw'
+          operand :commit1
+          operand :commit2
+          value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+        end
+      end
+
+      it 'validates commit operands' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, /operand :commit1/
+        )
+      end
+
+      it 'does not validate pathspecs' do
+        expect(args.bind('HEAD', 'HEAD~1', pathspecs: ['-file.txt']).to_a).to eq(
+          ['diff', '--raw', 'HEAD', 'HEAD~1', '--', '-file.txt']
+        )
+      end
+
+      it 'allows valid commit values' do
+        expect(args.bind('HEAD', 'HEAD~1').to_a).to eq(
+          ['diff', '--raw', 'HEAD', 'HEAD~1']
+        )
+      end
+    end
+
+    context 'with no-index style ARGS pattern (no separator)' do
+      let(:args) do
+        described_class.define do
+          literal 'diff'
+          literal '--no-index'
+          operand :path1, required: true
+          operand :path2, required: true
+        end
+      end
+
+      it 'validates both operands' do
+        expect { args.bind('-bad', 'good') }.to raise_error(
+          ArgumentError, /operand :path1/
+        )
+        expect { args.bind('good', '-bad') }.to raise_error(
+          ArgumentError, /operand :path2/
+        )
+      end
+
+      it 'allows valid paths' do
+        expect(args.bind('/tmp/a', '/tmp/b').to_a).to eq(
+          ['diff', '--no-index', '/tmp/a', '/tmp/b']
+        )
+      end
+    end
+
+    context 'when separator boundary is inactive due to nil/empty value' do
+      let(:args) do
+        described_class.define do
+          operand :commit
+          operand :paths, repeatable: true, separator: '--'
+        end
+      end
+
+      it 'validates operand after inactive separator when paths are empty' do
+        # When paths are not provided, the separator won't be emitted,
+        # so :commit has no '--' protection and should still be validated
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, /operand :commit/
+        )
+      end
+
+      it 'does not validate paths when separator is active' do
+        expect(args.bind('HEAD', '-file.txt').to_a).to eq(
+          ['HEAD', '--', '-file.txt']
+        )
+      end
+    end
+
+    context 'when value_option separator is inactive due to nil value' do
+      let(:args) do
+        described_class.define do
+          operand :commit1
+          operand :commit2
+          value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+        end
+      end
+
+      it 'validates all operands when pathspecs is nil' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, /operand :commit1/
+        )
+      end
+
+      it 'validates all operands when pathspecs is empty array' do
+        expect { args.bind('-s', pathspecs: []) }.to raise_error(
+          ArgumentError, /operand :commit1/
+        )
+      end
+
+      it 'stops validating at active separator when pathspecs present' do
+        expect(args.bind('HEAD', 'HEAD~1', pathspecs: ['-file.txt']).to_a).to eq(
+          ['HEAD', 'HEAD~1', '--', '-file.txt']
+        )
+      end
+    end
+
+    context 'with checkout-style ARGS pattern (literal --)' do
+      let(:args) do
+        described_class.define do
+          literal 'checkout'
+          operand :tree_ish
+          literal '--'
+          operand :paths, repeatable: true
+        end
+      end
+
+      it 'validates tree_ish operand' do
+        expect { args.bind('-s') }.to raise_error(
+          ArgumentError, /operand :tree_ish/
+        )
+      end
+
+      it 'does not validate paths after literal \"--\"' do
+        expect(args.bind('HEAD', '-file.txt').to_a).to eq(
+          ['checkout', 'HEAD', '--', '-file.txt']
+        )
+      end
+    end
+  end
+
+  describe 'options after separator validation' do
+    context 'with literal \'--\'' do
+      it 'rejects flag_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            flag_option :verbose
+          end
+        end.to raise_error(ArgumentError, /option :verbose cannot be defined after a '--' separator boundary/)
+      end
+
+      it 'rejects value_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            value_option :branch
+          end
+        end.to raise_error(ArgumentError, /option :branch cannot be defined after/)
+      end
+
+      it 'rejects flag_or_value_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            flag_or_value_option :contains
+          end
+        end.to raise_error(ArgumentError, /option :contains cannot be defined after/)
+      end
+
+      it 'rejects key_value_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            key_value_option :trailers
+          end
+        end.to raise_error(ArgumentError, /option :trailers cannot be defined after/)
+      end
+
+      it 'rejects custom_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            custom_option(:extra, &:to_s)
+          end
+        end.to raise_error(ArgumentError, /option :extra cannot be defined after/)
+      end
+
+      it 'rejects negatable flag_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            flag_option :full, negatable: true
+          end
+        end.to raise_error(ArgumentError, /option :full cannot be defined after/)
+      end
+
+      it 'rejects inline value_option after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            value_option :format, inline: true
+          end
+        end.to raise_error(ArgumentError, /option :format cannot be defined after/)
+      end
+
+      it 'allows value_option with as_operand: true after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            value_option :paths, as_operand: true, repeatable: true
+          end
+        end.not_to raise_error
+      end
+
+      it 'allows metadata after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            metadata :internal
+          end
+        end.not_to raise_error
+      end
+
+      it 'allows operand after literal \'--\'' do
+        expect do
+          described_class.define do
+            literal '--'
+            operand :paths, repeatable: true
+          end
+        end.not_to raise_error
+      end
+    end
+
+    context 'with operand separator \'--\'' do
+      it 'rejects flag_option after operand with separator \'--\'' do
+        expect do
+          described_class.define do
+            operand :paths, repeatable: true, separator: '--'
+            flag_option :verbose
+          end
+        end.to raise_error(ArgumentError, /option :verbose cannot be defined after/)
+      end
+
+      it 'allows value_option as_operand after operand with separator \'--\'' do
+        expect do
+          described_class.define do
+            operand :paths, repeatable: true, separator: '--'
+            value_option :extra, as_operand: true
+          end
+        end.not_to raise_error
+      end
+    end
+
+    context 'with value_option as_operand separator \'--\'' do
+      it 'rejects flag_option after value_option with as_operand separator \'--\'' do
+        expect do
+          described_class.define do
+            value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+            flag_option :verbose
+          end
+        end.to raise_error(ArgumentError, /option :verbose cannot be defined after/)
+      end
+
+      it 'allows metadata after value_option with as_operand separator \'--\'' do
+        expect do
+          described_class.define do
+            value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+            metadata :internal
+          end
+        end.not_to raise_error
+      end
+    end
+
+    context 'without \'--\' boundary' do
+      it 'allows flag_option without any separator' do
+        expect do
+          described_class.define do
+            operand :path
+            flag_option :verbose
+          end
+        end.not_to raise_error
+      end
+
+      it 'allows options before literal \'--\'' do
+        expect do
+          described_class.define do
+            flag_option :force
+            value_option :branch
+            literal '--'
+            operand :paths, repeatable: true
+          end
+        end.not_to raise_error
+      end
+    end
+
+    context 'with non-separator literal' do
+      it 'allows flag_option after non-separator literal' do
+        expect do
+          described_class.define do
+            literal 'branch'
+            flag_option :verbose
+          end
+        end.not_to raise_error
+      end
+    end
+
+    it 'includes helpful error message about git treating post-separator as operands' do
+      expect do
+        described_class.define do
+          literal '--'
+          flag_option :verbose
+        end
+      end.to raise_error(
+        ArgumentError,
+        /its flags would be treated as operands by git/
+      )
     end
   end
 

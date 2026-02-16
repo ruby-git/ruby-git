@@ -321,6 +321,63 @@ module Git
     #   args.tree_ish # => nil
     #   args.paths    # => ['file1', 'file2']
     #
+    # ## Option-like Operand Rejection
+    #
+    # Operands that appear **before** a `--` separator boundary in the argument
+    # definition are automatically validated to ensure their values don't start
+    # with `-`. This prevents user-supplied strings like `'-s'` from being
+    # misinterpreted as git flags when passed as positional arguments.
+    #
+    # The `--` boundary can come from:
+    # - A `literal '--'` definition
+    # - An operand with `separator: '--'`
+    # - A `value_option` with `as_operand: true, separator: '--'`
+    #
+    # Operands **after** the `--` boundary are not validated (they represent
+    # paths/filenames which may legitimately start with `-`). If no `--`
+    # boundary exists in the definition, **all** operands are validated.
+    #
+    # @example Operands before and after '--' separator
+    #   args_def = Arguments.define do
+    #     operand :commit1
+    #     operand :commit2
+    #     operand :paths, repeatable: true, separator: '--'
+    #   end
+    #   args_def.bind('-s') #=> raise ArgumentError, "operand :commit1 value '-s' looks like a command-line option"
+    #   args_def.bind('HEAD', 'HEAD~1', '-file.txt').to_a
+    #   # => ['HEAD', 'HEAD~1', '--', '-file.txt']
+    #
+    # @example All operands validated when no '--' boundary exists
+    #   args_def = Arguments.define do
+    #     operand :path1, required: true
+    #     operand :path2, required: true
+    #   end
+    #   args_def.bind('-s', 'file.txt')
+    #   #=> raise ArgumentError, "operand :path1 value '-s' looks like a command-line option"
+    #
+    # ## Options After Separator
+    #
+    # Options that produce CLI flags (e.g. `flag_option`, `value_option`,
+    # `key_value_option`, `custom_option`) cannot be defined after a `--`
+    # separator boundary. Git treats everything after `--` as operands, so
+    # flags emitted there would be misinterpreted.
+    #
+    # Only `value_option` with `as_operand: true` and `metadata` are allowed
+    # after the boundary because they do not produce flag-prefixed output.
+    #
+    # For example, this will raise +ArgumentError+ during definition:
+    #
+    #     Arguments.define do
+    #       literal '--'
+    #       flag_option :verbose
+    #     end #=> raises ArgumentError
+    #
+    # @example Allowed: value_option as_operand after '--'
+    #   Arguments.define do
+    #     literal '--'
+    #     value_option :paths, as_operand: true, repeatable: true
+    #   end
+    #
     # ## Type Validation
     #
     # The `type:` parameter provides declarative type validation for option values.
@@ -388,6 +445,7 @@ module Git
         @operand_definitions = []
         @conflicts = [] # Array of conflicting option pairs/groups
         @ordered_definitions = [] # Tracks all definitions in definition order
+        @past_separator = false # Tracks whether a '--' boundary has been defined
       end
 
       # Define a boolean flag option (--flag when true)
@@ -413,6 +471,8 @@ module Git
       # @raise [ArgumentError] if inline: and as_operand: are both true
       #
       # @raise [ArgumentError] if separator: is provided without as_operand: true
+      #
+      # @raise [ArgumentError] if defined after a '--' separator boundary
       #
       # @example Basic flag
       #   args_def = Arguments.define do
@@ -490,6 +550,9 @@ module Git
       # @raise [ArgumentError] if inline: and as_operand: are both true
       #
       # @raise [ArgumentError] if separator: is provided without as_operand: true
+      #
+      # @raise [ArgumentError] if defined after a '--' separator boundary
+      #   (unless as_operand: true)
       #
       # @example Basic value (default mode)
       #   args_def = Arguments.define do
@@ -608,6 +671,8 @@ module Git
       #
       # @raise [ArgumentError] if value is not true, false, or a String
       #
+      # @raise [ArgumentError] if defined after a '--' separator boundary
+      #
       # @example Basic flag or value (new capability - not possible with old DSL)
       #   args_def = Arguments.define do
       #     flag_or_value_option :contains
@@ -678,6 +743,8 @@ module Git
       # @raise [ArgumentError] if a key is nil, empty, or contains the separator
       #
       # @raise [ArgumentError] if a value is a Hash or Array (non-scalar)
+      #
+      # @raise [ArgumentError] if defined after a '--' separator boundary
       #
       # @example Basic key-value (like --trailer)
       #   args_def = Arguments.define do
@@ -766,6 +833,7 @@ module Git
       def literal(flag_string)
         @static_flags << flag_string
         @ordered_definitions << { kind: :static, flag: flag_string }
+        @past_separator = true if flag_string == '--'
       end
 
       # Define a custom option with a custom builder block
@@ -780,6 +848,8 @@ module Git
       # @yield [value] block that receives the option value and returns the argument string
       #
       # @return [void]
+      #
+      # @raise [ArgumentError] if defined after a '--' separator boundary
       #
       def custom_option(names, required: false, allow_nil: true, &block)
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
@@ -941,6 +1011,9 @@ module Git
       #   args_def.bind(nil, 'file.rb').to_a
       #   # => ['--', 'file.rb']
       #
+      # @raise [ArgumentError] if the operand appears before a '--' boundary (or no
+      #   boundary exists) and the bound value starts with '-'
+      #
       def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false)
         validate_single_repeatable!(name) if repeatable
         add_operand_definition(name, required, repeatable, default, separator, allow_nil)
@@ -961,6 +1034,8 @@ module Git
       # @return [Bound] a frozen object with accessor methods for all arguments
       #
       # @raise [ArgumentError] if unsupported options are provided or validation fails
+      #
+      # @raise [ArgumentError] if an operand value before a '--' boundary starts with '-'
       #
       # @example Simple splatting (same behavior as build)
       #   def call(*, **)
@@ -986,23 +1061,36 @@ module Git
       #   bound_args[:hash]  # => 'abc123'
       #
       def bind(*positionals, **opts)
+        normalized_opts = validate_and_normalize_options!(opts)
+        allocated_positionals = allocate_and_validate_positionals(positionals)
+        validate_no_option_like_operands!(allocated_positionals, normalized_opts)
+
+        args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
+        options_hash = build_options_hash(normalized_opts)
+
+        Bound.new(args_array, options_hash, allocated_positionals)
+      end
+
+      # Option types allowed after a '--' separator boundary (they do not produce CLI flags)
+      OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand metadata].freeze
+
+      private
+
+      # Validate and normalize keyword options
+      #
+      # @param opts [Hash] raw keyword options
+      # @return [Hash] normalized options with aliases resolved
+      # @raise [ArgumentError] if options are unsupported, conflicting, or invalid
+      #
+      def validate_and_normalize_options!(opts)
         validate_unsupported_options!(opts)
         validate_conflicting_aliases!(opts)
         normalized_opts = normalize_aliases(opts)
         validate_required_options!(normalized_opts)
         validate_option_values!(normalized_opts)
         validate_conflicts!(normalized_opts)
-
-        args_array = build_ordered_arguments(positionals, normalized_opts)
-        allocated_positionals = allocate_and_validate_positionals(positionals)
-
-        # Build options hash with normalized values (including defaults for flags)
-        options_hash = build_options_hash(normalized_opts)
-
-        Bound.new(args_array, options_hash, allocated_positionals)
+        normalized_opts
       end
-
-      private
 
       # Build a hash of all option values for the Bound object
       #
@@ -1089,11 +1177,28 @@ module Git
         keys = Array(names)
         primary = keys.first
         definition[:aliases] = keys
+        validate_option_after_separator!(definition[:type], primary)
         validate_args_parameter!(definition, primary)
         apply_type_validator!(definition, primary)
         @option_definitions[primary] = definition
         keys.each { |key| @alias_map[key] = primary }
         @ordered_definitions << { kind: :option, name: primary }
+        @past_separator = true if definition[:separator] == '--'
+      end
+
+      # Validate that flag-producing options are not defined after a '--' boundary
+      #
+      # @param type [Symbol] the option type
+      # @param option_name [Symbol] the primary option name
+      # @raise [ArgumentError] if a flag-producing option is defined after '--'
+      #
+      def validate_option_after_separator!(type, option_name)
+        return unless @past_separator
+        return if OPTION_TYPES_AFTER_SEPARATOR.include?(type)
+
+        raise ArgumentError,
+              "option :#{option_name} cannot be defined after a '--' separator " \
+              'boundary because its flags would be treated as operands by git'
       end
 
       def apply_type_validator!(definition, option_name)
@@ -1124,13 +1229,12 @@ module Git
 
       # Build arguments by iterating over definitions in their defined order
       #
-      # @param positionals [Array] positional argument values
+      # @param allocated_positionals [Hash] the allocated positional values
       # @param normalized_opts [Hash] normalized keyword options
       # @return [Array<String>] the command-line arguments
       #
-      def build_ordered_arguments(positionals, normalized_opts)
+      def build_ordered_arguments(allocated_positionals, normalized_opts)
         args = []
-        allocated_positionals = allocate_and_validate_positionals(positionals)
 
         @ordered_definitions.each do |entry|
           build_entry(args, entry, normalized_opts, allocated_positionals)
@@ -1205,6 +1309,7 @@ module Git
           default: default, separator: separator, allow_nil: allow_nil
         }
         @ordered_definitions << { kind: :operand, name: name }
+        @past_separator = true if separator == '--'
       end
 
       BUILDERS = {
@@ -1596,6 +1701,126 @@ module Git
         return unless values.any?(&:nil?)
 
         raise ArgumentError, "nil values are not allowed in repeatable positional argument: #{definition[:name]}"
+      end
+
+      # Reject operand values that look like command-line options
+      #
+      # Operands appearing before a '--' separator boundary (or all operands
+      # if no separator exists) are validated to ensure they don't start with
+      # a hyphen, which could be misinterpreted as a git option.
+      #
+      # A separator boundary defined via `separator: '--'` on an operand or
+      # value_option is only considered active when the associated value will
+      # cause the separator to be emitted. If the value is nil or empty (meaning
+      # the separator will be omitted at runtime), operands past that definition
+      # are still validated.
+      #
+      # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      # @param normalized_opts [Hash] the normalized keyword options
+      # @raise [ArgumentError] if any pre-separator operand value starts with '-'
+      #
+      def validate_no_option_like_operands!(allocation, normalized_opts)
+        pre_separator_operands = operand_names_before_separator(allocation, normalized_opts)
+        pre_separator_operands.each do |name|
+          value = allocation[name]
+          check_operand_not_option_like(name, value)
+        end
+      end
+
+      # Determine which operands appear before any '--' separator boundary
+      #
+      # Walks the ordered definitions and collects operand names until hitting
+      # a literal '--' or an operand/option with separator: '--' whose value
+      # will cause the separator to be emitted. If the separator-defining entry
+      # has a nil or empty value, the boundary is not active and the walk
+      # continues past it.
+      #
+      # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      # @param normalized_opts [Hash] the normalized keyword options
+      # @return [Array<Symbol>] operand names that need option-like validation
+      #
+      def operand_names_before_separator(allocation, normalized_opts)
+        names = []
+        @ordered_definitions.each do |defn|
+          break if separator_boundary_active?(defn, allocation, normalized_opts)
+
+          names << defn[:name] if defn[:kind] == :operand
+        end
+        names
+      end
+
+      # Check if a definition represents an active '--' separator boundary
+      #
+      # A `literal '--'` is always active. An operand or option with
+      # `separator: '--'` is only active when its bound value will cause
+      # the separator to be emitted (i.e., the value is not nil/empty).
+      #
+      # @param defn [Hash] a definition entry from @ordered_definitions
+      # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      # @param normalized_opts [Hash] the normalized keyword options
+      # @return [Boolean] true if this definition is an active '--' boundary
+      #
+      def separator_boundary_active?(defn, allocation, normalized_opts)
+        return true if defn[:kind] == :static && defn[:flag] == '--'
+        return true if defn[:kind] == :operand && operand_separator_active?(defn[:name], allocation)
+        return true if defn[:kind] == :option && option_separator_active?(defn[:name], normalized_opts)
+
+        false
+      end
+
+      # Check if an operand with separator: '--' will emit its separator
+      #
+      # @param name [Symbol] the operand name
+      # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      # @return [Boolean] true if the operand has separator: '--' and its value is present
+      #
+      def operand_separator_active?(name, allocation)
+        operand_def = @operand_definitions.find { |d| d[:name] == name }
+        return false unless operand_def&.dig(:separator) == '--'
+
+        !positional_value_empty?(allocation[name], operand_def)
+      end
+
+      # Check if an option with separator: '--' will emit its separator
+      #
+      # @param name [Symbol] the option name
+      # @param normalized_opts [Hash] the normalized keyword options
+      # @return [Boolean] true if the option has separator: '--' and its value is present
+      #
+      def option_separator_active?(name, normalized_opts)
+        option_def = @option_definitions[name]
+        return false unless option_def&.dig(:separator) == '--'
+
+        !should_skip_option?(normalized_opts[name], option_def)
+      end
+
+      # Check that a single operand value does not look like a command-line option
+      #
+      # @param name [Symbol] the operand name
+      # @param value [Object] the operand value
+      # @raise [ArgumentError] if the value starts with '-'
+      #
+      def check_operand_not_option_like(name, value)
+        case value
+        when String
+          raise_option_like_error(name, value) if value.start_with?('-')
+        when Array
+          raise_option_like_array_error(name, value)
+        end
+      end
+
+      # @raise [ArgumentError] if the string value starts with '-'
+      def raise_option_like_error(name, value)
+        raise ArgumentError, "operand :#{name} value '#{value}' looks like a command-line option"
+      end
+
+      # @raise [ArgumentError] if any array element starts with '-'
+      def raise_option_like_array_error(name, values)
+        invalid = values.select { |v| v.is_a?(String) && v.start_with?('-') }
+        return if invalid.empty?
+
+        raise ArgumentError,
+              "operand :#{name} contains option-like values: #{invalid.map { |v| "'#{v}'" }.join(', ')}"
       end
 
       # Check if a positional value is empty (not provided)
