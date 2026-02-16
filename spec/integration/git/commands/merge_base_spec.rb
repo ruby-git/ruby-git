@@ -24,16 +24,16 @@ RSpec.describe Git::Commands::MergeBase, :integration do
         repo.checkout('main')
       end
 
-      it 'returns an Array of commit SHAs' do
+      it 'returns a CommandLineResult with output' do
         result = command.call('main', 'feature')
 
-        expect(result).to be_an(Array)
-        expect(result).not_to be_empty
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
       end
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError with a nonexistent ref' do
+      it 'raises FailedError for invalid revision' do
         expect { command.call('main', 'nonexistent') }.to raise_error(Git::FailedError)
       end
     end

@@ -16,18 +16,18 @@ module Git
     #
     # @example Find merge base of two branches
     #   merge_base = Git::Commands::MergeBase.new(execution_context)
-    #   shas = merge_base.call('main', 'feature')
-    #   # => ['abc123def456...']
+    #   result = merge_base.call('main', 'feature')
+    #   # => #<Git::CommandLineResult ...>
     #
     # @example Find all common ancestors
-    #   shas = merge_base.call('main', 'feature', all: true)
-    #   # => ['sha1', 'sha2']
+    #   result = merge_base.call('main', 'feature', all: true)
+    #   # => #<Git::CommandLineResult ...>
     #
     # @example Find merge base for octopus merge
-    #   shas = merge_base.call('main', 'branch1', 'branch2', octopus: true)
+    #   result = merge_base.call('main', 'branch1', 'branch2', octopus: true)
     #
     # @example Find fork point
-    #   shas = merge_base.call('main', 'feature', fork_point: true)
+    #   result = merge_base.call('main', 'feature', fork_point: true)
     #
     class MergeBase
       # Arguments DSL for building command-line arguments
@@ -75,25 +75,14 @@ module Git
       #   @option options [Boolean] :all (nil) Output all merge bases instead of
       #     just one (when multiple equally good bases exist)
       #
-      # @return [Array<String>] array of commit SHA strings (common ancestors)
+      # @return [Git::CommandLineResult] the result of calling `git merge-base`
       #
       # @raise [Git::FailedError] if the command fails
       #
       def call(*, **)
-        args = ARGS.bind(*, **)
-        output = @execution_context.command(*args).stdout
-        parse_output(output)
-      end
+        bound_args = ARGS.bind(*, **)
 
-      private
-
-      # Parse the command output into an array of SHAs
-      #
-      # @param output [String] the raw command output
-      # @return [Array<String>] array of commit SHAs
-      #
-      def parse_output(output)
-        output.lines.map(&:strip).reject(&:empty?)
+        @execution_context.command(*bound_args)
       end
     end
   end
