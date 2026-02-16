@@ -3202,6 +3202,62 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with execution options' do
+      context 'when execution option is bound' do
+        let(:args) do
+          described_class.define do
+            execution_option :timeout
+          end
+        end
+
+        it 'returns execution option values' do
+          bound = args.bind(timeout: 30)
+          expect(bound.execution_options).to eq({ timeout: 30 })
+        end
+      end
+
+      context 'when no execution options are defined' do
+        let(:args) do
+          described_class.define do
+            flag_option :force
+          end
+        end
+
+        it 'returns an empty hash' do
+          bound = args.bind(force: true)
+          expect(bound.execution_options).to eq({})
+        end
+      end
+
+      context 'when execution options are defined but nil' do
+        let(:args) do
+          described_class.define do
+            execution_option :timeout
+            execution_option :retries
+          end
+        end
+
+        it 'returns an empty hash when all values are nil' do
+          bound = args.bind
+          expect(bound.execution_options).to eq({})
+        end
+
+        it 'excludes nil-valued execution options' do
+          bound = args.bind(timeout: 15, retries: nil)
+          expect(bound.execution_options).to eq({ timeout: 15 })
+        end
+      end
+
+      it 'returns a frozen hash' do
+        args = described_class.define do
+          execution_option :timeout
+        end
+
+        bound = args.bind(timeout: 30)
+        expect(bound.execution_options).to be_frozen
+      end
+    end
+
     context 'with default values for positionals' do
       let(:args) do
         described_class.define do
