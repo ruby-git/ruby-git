@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -18,9 +18,8 @@ module Git
     #   clone = Git::Commands::Clone.new(execution_context)
     #   result = clone.call('https://github.com/user/repo.git', 'local-dir', bare: true, depth: 1)
     #
-    class Clone
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Clone < Base
+      arguments do
         literal 'clone'
         flag_option :bare
         flag_option :recursive
@@ -34,14 +33,6 @@ module Git
         operand :repository_url, required: true, separator: '--'
         operand :directory
         execution_option :timeout
-      end.freeze
-
-      # Initialize the Clone command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git clone command
@@ -82,10 +73,7 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided, if :single_branch is not true, false, or nil,
       #   or if any option fails validation
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args, timeout: args.timeout)
-      end
+      def call(...) = super
     end
   end
 end
