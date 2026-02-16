@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -17,21 +17,12 @@ module Git
     #   add.call('file1.rb', 'file2.rb')
     #   add.call(all: true)
     #
-    class Add
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Add < Base
+      arguments do
         literal 'add'
         flag_option :all
         flag_option :force
         operand :paths, repeatable: true, default: [], separator: '--'
-      end.freeze
-
-      # Initialize the Add command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git add command
@@ -49,10 +40,7 @@ module Git
       #
       # @return [Git::CommandLineResult] the result of the command
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args)
-      end
+      def call(...) = super
     end
   end
 end

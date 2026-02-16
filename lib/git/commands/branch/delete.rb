@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -27,24 +27,17 @@ module Git
       #   delete = Git::Commands::Branch::Delete.new(execution_context)
       #   result = delete.call('origin/feature', remotes: true)
       #
-      class Delete
-        # Arguments DSL for building command-line arguments
-        #
-        ARGS = Arguments.define do
+      class Delete < Base
+        arguments do
           literal 'branch'
           literal '--delete'
           flag_option %i[force f]
           flag_option %i[remotes r]
           operand :branch_names, repeatable: true, required: true
-        end.freeze
-
-        # Initialize the Delete command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
+
+        # git branch --delete exits 1 when one or more branches cannot be deleted
+        allow_exit_status 0..1
 
         # Execute the git branch --delete command to delete branches
         #
@@ -73,14 +66,7 @@ module Git
         #
         # @raise [Git::FailedError] for unexpected errors (exit code > 1)
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          # git branch --delete exit codes: 0 = all deleted, 1 = partial failure, 2+ = error
-          @execution_context.command(*bound_args, raise_on_failure: false).tap do |result|
-            raise Git::FailedError, result if result.status.exitstatus > 1
-          end
-        end
+        def call(...) = super
       end
     end
   end

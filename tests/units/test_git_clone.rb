@@ -105,8 +105,10 @@ class TestGitClone < Test::Unit::TestCase
       git.lib.clone(repository_url, destination, { config: 'user.name=John Doe' })
     end
 
-    expected_command_line = ['clone', '--config', 'user.name=John Doe', '--', repository_url, destination,
-                             { timeout: nil }]
+    expected_command_line = [
+      'clone', '--config', 'user.name=John Doe',
+      '--', repository_url, destination, { raise_on_failure: false }
+    ]
 
     assert_equal(expected_command_line, actual_command_line)
   end
@@ -134,7 +136,7 @@ class TestGitClone < Test::Unit::TestCase
       'clone',
       '--config', 'user.name=John Doe',
       '--config', 'user.email=john@doe.com',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -162,7 +164,7 @@ class TestGitClone < Test::Unit::TestCase
     expected_command_line = [
       'clone',
       '--filter', 'tree:0',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -188,7 +190,7 @@ class TestGitClone < Test::Unit::TestCase
 
     expected_command_line = [
       'clone',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -215,7 +217,7 @@ class TestGitClone < Test::Unit::TestCase
     expected_command_line = [
       'clone',
       '--single-branch',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -242,7 +244,7 @@ class TestGitClone < Test::Unit::TestCase
     expected_command_line = [
       'clone',
       '--no-single-branch',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
@@ -268,7 +270,7 @@ class TestGitClone < Test::Unit::TestCase
 
     expected_command_line = [
       'clone',
-      '--', repository_url, destination, { timeout: nil }
+      '--', repository_url, destination, { raise_on_failure: false }
     ]
 
     assert_equal(expected_command_line, actual_command_line)
