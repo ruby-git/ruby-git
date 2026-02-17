@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -34,13 +34,8 @@ module Git
       # @example Read paths from a file
       #   files.call('main', pathspec_from_file: 'paths.txt')
       #
-      class Files
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class Files < Base
+        arguments do
           literal 'checkout'
           flag_option %i[force f], args: '--force'
           flag_option :ours, args: '--ours'
@@ -53,14 +48,6 @@ module Git
 
           operand :tree_ish, required: true, allow_nil: true
           operand :paths, repeatable: true, separator: '--'
-        end.freeze
-
-        # Initialize the Files command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git checkout command for restoring files
@@ -100,10 +87,7 @@ module Git
         #
         # @raise [Git::FailedError] if the checkout fails
         #
-        def call(*, **)
-          args = ARGS.bind(*, **)
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

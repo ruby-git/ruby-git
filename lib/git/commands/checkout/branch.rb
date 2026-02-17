@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -31,13 +31,8 @@ module Git
       # @example Force checkout, discarding local changes
       #   checkout.call('main', force: true)
       #
-      class Branch
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class Branch < Base
+        arguments do
           literal 'checkout'
           flag_option %i[force f], args: '--force'
           flag_option %i[merge m], args: '--merge'
@@ -59,14 +54,6 @@ module Git
 
           # Positional arguments
           operand :branch
-        end.freeze
-
-        # Initialize the Branch command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git checkout command for branch switching
@@ -114,10 +101,7 @@ module Git
         #
         # @raise [Git::FailedError] if the checkout fails
         #
-        def call(*, **)
-          args = ARGS.bind(*, **)
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

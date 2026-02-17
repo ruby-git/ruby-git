@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 require 'git/parsers/diff'
 
 module Git
@@ -16,9 +16,8 @@ module Git
       #
       # @api private
       #
-      class Patch
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Patch < Base
+        arguments do
           literal 'diff'
           literal '--patch'
           literal '--numstat'
@@ -34,15 +33,10 @@ module Git
           operand :commit1
           operand :commit2
           value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
-        end.freeze
-
-        # Creates a new Patch command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
+
+        # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
+        allow_exit_status 0..1
 
         # Show diff patch
         #
@@ -161,14 +155,7 @@ module Git
         #
         # @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
-          @execution_context.command(*bound_args, raise_on_failure: false).tap do |result|
-            raise Git::FailedError, result if result.status.exitstatus >= 2
-          end
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
