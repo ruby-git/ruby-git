@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -18,19 +18,10 @@ module Git
       #   continue_cmd = Git::Commands::Merge::Continue.new(execution_context)
       #   continue_cmd.call
       #
-      class Continue
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Continue < Base
+        arguments do
           literal 'merge'
           literal '--continue'
-        end.freeze
-
-        # Initialize the Merge::Continue command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git merge --continue command
@@ -39,10 +30,7 @@ module Git
         #
         # @raise [Git::FailedError] if no merge is in progress or conflicts remain unresolved
         #
-        def call
-          args = ARGS.bind
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Tag::Create do
   describe '#call' do
     context 'with tag name only (lightweight tag)' do
       it 'creates a lightweight tag' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0').and_return(command_result)
+        expect_command('tag', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0')
 
@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with commit target' do
       it 'adds the commit after the tag name' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0', 'abc123').and_return(command_result)
+        expect_command('tag', 'v1.0.0', 'abc123').and_return(command_result)
 
         result = command.call('v1.0.0', 'abc123')
 
@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts a branch as target' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0', 'main').and_return(command_result)
+        expect_command('tag', 'v1.0.0', 'main').and_return(command_result)
 
         result = command.call('v1.0.0', 'main')
 
@@ -36,7 +36,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts HEAD as target' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0', 'HEAD').and_return(command_result)
+        expect_command('tag', 'v1.0.0', 'HEAD').and_return(command_result)
 
         result = command.call('v1.0.0', 'HEAD')
 
@@ -46,8 +46,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :annotate option' do
       it 'includes --annotate flag' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--annotate', '--message=Release', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--annotate', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', annotate: true, message: 'Release')
 
@@ -55,8 +54,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :a alias' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--annotate', '--message=Release', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--annotate', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', a: true, message: 'Release')
 
@@ -64,7 +62,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('tag', 'v1.0.0').and_return(command_result)
+        expect_command('tag', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', annotate: false)
 
@@ -74,8 +72,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :sign option' do
       it 'includes --sign flag' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--sign', '--message=Release', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--sign', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', sign: true, message: 'Release')
 
@@ -83,8 +80,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :s alias' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--sign', '--message=Release', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--sign', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', s: true, message: 'Release')
 
@@ -92,8 +88,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'includes --no-sign flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--no-sign', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--no-sign', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', sign: false)
 
@@ -103,9 +98,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :local_user option' do
       it 'includes --local-user flag with key' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--local-user=ABCD1234', '--message=Release', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--local-user=ABCD1234', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', local_user: 'ABCD1234', message: 'Release')
 
@@ -113,9 +106,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :u alias' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--local-user=ABCD1234', '--message=Release', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--local-user=ABCD1234', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', u: 'ABCD1234', message: 'Release')
 
@@ -125,8 +116,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :force option' do
       it 'includes --force flag' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--force', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--force', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', force: true)
 
@@ -134,8 +124,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :f alias' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--force', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--force', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', f: true)
 
@@ -143,8 +132,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('tag', 'v1.0.0').and_return(command_result)
+        expect_command('tag', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', force: false)
 
@@ -154,8 +142,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :message option' do
       it 'includes --message flag with value' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--message=Release version 1.0.0', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--message=Release version 1.0.0', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release version 1.0.0')
 
@@ -163,8 +150,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :m alias' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--message=Release', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', m: 'Release')
 
@@ -172,8 +158,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'handles message with special characters' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--message=Release "quoted"', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--message=Release "quoted"', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release "quoted"')
 
@@ -183,8 +168,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :file option' do
       it 'includes --file flag with path' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--file=/path/to/message.txt', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--file=/path/to/message.txt', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', file: '/path/to/message.txt')
 
@@ -192,8 +176,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'accepts :F alias' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--file=/path/to/message.txt', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--file=/path/to/message.txt', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', F: '/path/to/message.txt')
 
@@ -201,8 +184,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'supports reading from stdin with -' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--file=-', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--file=-', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', file: '-')
 
@@ -212,8 +194,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :create_reflog option' do
       it 'includes --create-reflog flag' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--create-reflog', 'v1.0.0').and_return(command_result)
+        expect_command('tag', '--create-reflog', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', create_reflog: true)
 
@@ -221,8 +202,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('tag', 'v1.0.0').and_return(command_result)
+        expect_command('tag', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', create_reflog: false)
 
@@ -232,9 +212,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with multiple options combined' do
       it 'creates an annotated tag with message and force' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--annotate', '--force', '--message=Release', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--annotate', '--force', '--message=Release', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', annotate: true, force: true, message: 'Release')
 
@@ -242,9 +220,8 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'creates a signed tag at specific commit' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--sign', '--message=Signed release', 'v1.0.0', 'abc123'
-        ).and_return(command_result)
+        expect_command('tag', '--sign', '--message=Signed release', 'v1.0.0', 'abc123')
+          .and_return(command_result)
 
         result = command.call('v1.0.0', 'abc123', sign: true, message: 'Signed release')
 
@@ -252,9 +229,8 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'creates tag with custom signing key at specific commit' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--local-user=KEY123', '--message=Release', 'v1.0.0', 'main'
-        ).and_return(command_result)
+        expect_command('tag', '--local-user=KEY123', '--message=Release', 'v1.0.0', 'main')
+          .and_return(command_result)
 
         result = command.call('v1.0.0', 'main', local_user: 'KEY123', message: 'Release')
 
@@ -262,9 +238,8 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'combines create_reflog with annotated tag' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--annotate', '--create-reflog', '--message=Release', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--annotate', '--create-reflog', '--message=Release', 'v1.0.0')
+          .and_return(command_result)
 
         result = command.call('v1.0.0', annotate: true, create_reflog: true, message: 'Release')
 
@@ -272,9 +247,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'allows annotate with file instead of message' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--annotate', '--file=/path/to/msg.txt', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--annotate', '--file=/path/to/msg.txt', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', annotate: true, file: '/path/to/msg.txt')
 
@@ -284,9 +257,8 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :trailer option' do
       it 'includes trailers with key-value pairs' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--message=Release', '--trailer', 'Signed-off-by: John Doe', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--message=Release', '--trailer', 'Signed-off-by: John Doe', 'v1.0.0')
+          .and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release', trailer: { 'Signed-off-by' => 'John Doe' })
 
@@ -294,7 +266,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'includes multiple trailers' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'tag', '--message=Release',
           '--trailer', 'Signed-off-by: John Doe',
           '--trailer', 'Reviewed-by: Jane Smith',
@@ -310,7 +282,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'includes trailers with array of pairs' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'tag', '--message=Release',
           '--trailer', 'Co-authored-by: Alice',
           '--trailer', 'Co-authored-by: Bob',
@@ -328,9 +300,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
     context 'with :cleanup option' do
       it 'includes --cleanup=strip' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--message=Release', '--cleanup=strip', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--message=Release', '--cleanup=strip', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'strip')
 
@@ -338,9 +308,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'includes --cleanup=verbatim' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--message=Release', '--cleanup=verbatim', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--message=Release', '--cleanup=verbatim', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'verbatim')
 
@@ -348,9 +316,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'includes --cleanup=whitespace' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--message=Release', '--cleanup=whitespace', 'v1.0.0'
-        ).and_return(command_result)
+        expect_command('tag', '--message=Release', '--cleanup=whitespace', 'v1.0.0').and_return(command_result)
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'whitespace')
 

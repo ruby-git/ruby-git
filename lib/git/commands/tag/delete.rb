@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -24,21 +24,15 @@ module Git
       #   delete = Git::Commands::Tag::Delete.new(execution_context)
       #   result = delete.call('v1.0.0', 'v2.0.0')
       #
-      class Delete
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Delete < Base
+        arguments do
           literal 'tag'
           literal '--delete'
           operand :tag_names, repeatable: true, required: true
-        end.freeze
-
-        # Initialize the Delete command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
+
+        # git tag --delete exits with status 1 when a tag does not exist, which is acceptable
+        allow_exit_status 0..1
 
         # Execute the git tag -d command to delete tags
         #
@@ -52,13 +46,7 @@ module Git
         #
         # @raise [Git::FailedError] for fatal errors (exit code > 1)
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args, raise_on_failure: false).tap do |result|
-            raise Git::FailedError, result if result.status.exitstatus > 1
-          end
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

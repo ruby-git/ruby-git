@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 require 'git/parsers/tag'
 
 module Git
@@ -32,13 +32,8 @@ module Git
       #   list = Git::Commands::Tag::List.new(execution_context)
       #   tags = list.call('v1.*', 'v2.*', sort: 'version:refname')
       #
-      class List
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions here determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class List < Base
+        arguments do
           literal 'tag'
           literal '--list'
           literal "--format=#{Git::Parsers::Tag::FORMAT_STRING}"
@@ -50,14 +45,6 @@ module Git
           flag_or_value_option :points_at, inline: true
           flag_option %i[ignore_case i]
           operand :patterns, repeatable: true
-        end.freeze
-
-        # Initialize the List command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git tag --list command
@@ -96,11 +83,7 @@ module Git
         #
         # @raise [Git::FailedError] if git returns a non-zero exit code
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

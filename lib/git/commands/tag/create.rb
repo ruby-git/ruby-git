@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -32,13 +32,8 @@ module Git
       #   create = Git::Commands::Tag::Create.new(execution_context)
       #   create.call('v1.0.0', force: true)
       #
-      class Create
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions here determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class Create < Base
+        arguments do
           literal 'tag'
           flag_option %i[annotate a]
           flag_option %i[sign s], negatable: true
@@ -54,14 +49,6 @@ module Git
 
           conflicts :annotate, :sign, :local_user
           conflicts :message, :file
-        end.freeze
-
-        # Initialize the Create command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git tag command to create a new tag
@@ -112,11 +99,7 @@ module Git
         # @raise [Git::FailedError] if the tag already exists (without force) or if
         #   an annotated tag is requested without a message
         #
-        def call(*, **)
-          bound_args = ARGS.bind(*, **)
-
-          @execution_context.command(*bound_args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

@@ -8,11 +8,14 @@ RSpec.describe Git::Commands::Merge::Start do
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
+    before do
+      allow(execution_context).to receive(:command).and_return(command_result)
+    end
+
     context 'with single branch to merge' do
       it 'calls git merge with --no-edit and the branch name' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', 'feature')
-                                                      .and_return(expected_result)
+        expect_command('merge', '--no-edit', 'feature').and_return(expected_result)
 
         result = command.call('feature')
 
@@ -22,12 +25,12 @@ RSpec.describe Git::Commands::Merge::Start do
 
     context 'with multiple branches (octopus merge)' do
       it 'merges multiple branches' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', 'branch1', 'branch2')
+        expect_command('merge', '--no-edit', 'branch1', 'branch2')
         command.call('branch1', 'branch2')
       end
 
       it 'merges three branches' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', 'a', 'b', 'c')
+        expect_command('merge', '--no-edit', 'a', 'b', 'c')
         command.call('a', 'b', 'c')
       end
     end
@@ -35,14 +38,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :commit option' do
       context 'when true' do
         it 'adds --commit flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--commit', 'feature')
+          expect_command('merge', '--no-edit', '--commit', 'feature')
           command.call('feature', commit: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-commit flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-commit', 'feature')
+          expect_command('merge', '--no-edit', '--no-commit', 'feature')
           command.call('feature', commit: false)
         end
       end
@@ -50,12 +53,12 @@ RSpec.describe Git::Commands::Merge::Start do
 
     context 'with :squash option' do
       it 'adds --squash flag' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '--squash', 'feature')
+        expect_command('merge', '--no-edit', '--squash', 'feature')
         command.call('feature', squash: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', 'feature')
+        expect_command('merge', '--no-edit', 'feature')
         command.call('feature', squash: false)
       end
     end
@@ -63,14 +66,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :ff option (fast-forward)' do
       context 'when true' do
         it 'adds --ff flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--ff', 'feature')
+          expect_command('merge', '--no-edit', '--ff', 'feature')
           command.call('feature', ff: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-ff flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-ff', 'feature')
+          expect_command('merge', '--no-edit', '--no-ff', 'feature')
           command.call('feature', ff: false)
         end
       end
@@ -78,72 +81,72 @@ RSpec.describe Git::Commands::Merge::Start do
 
     context 'with :ff_only option' do
       it 'adds --ff-only flag' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '--ff-only', 'feature')
+        expect_command('merge', '--no-edit', '--ff-only', 'feature')
         command.call('feature', ff_only: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', 'feature')
+        expect_command('merge', '--no-edit', 'feature')
         command.call('feature', ff_only: false)
       end
     end
 
     context 'with :message option' do
       it 'adds -m flag with message' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-m', 'Merge feature', 'feature')
+        expect_command('merge', '--no-edit', '-m', 'Merge feature', 'feature')
         command.call('feature', message: 'Merge feature')
       end
 
       it 'works with :m alias' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-m', 'My message', 'feature')
+        expect_command('merge', '--no-edit', '-m', 'My message', 'feature')
         command.call('feature', m: 'My message')
       end
     end
 
     context 'with :file option' do
       it 'adds -F flag with file path' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-F', '/path/to/msg.txt', 'feature')
+        expect_command('merge', '--no-edit', '-F', '/path/to/msg.txt', 'feature')
         command.call('feature', file: '/path/to/msg.txt')
       end
 
       it 'works with :F alias' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-F', 'msg.txt', 'feature')
+        expect_command('merge', '--no-edit', '-F', 'msg.txt', 'feature')
         command.call('feature', F: 'msg.txt')
       end
     end
 
     context 'with :into_name option' do
       it 'adds --into-name flag with value' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '--into-name=main', 'feature')
+        expect_command('merge', '--no-edit', '--into-name=main', 'feature')
         command.call('feature', into_name: 'main')
       end
     end
 
     context 'with :strategy option' do
       it 'adds -s flag with strategy name' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-s', 'ours', 'feature')
+        expect_command('merge', '--no-edit', '-s', 'ours', 'feature')
         command.call('feature', strategy: 'ours')
       end
 
       it 'works with :s alias' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-s', 'recursive', 'feature')
+        expect_command('merge', '--no-edit', '-s', 'recursive', 'feature')
         command.call('feature', s: 'recursive')
       end
     end
 
     context 'with :strategy_option option' do
       it 'adds -X flag with strategy option' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-X', 'ours', 'feature')
+        expect_command('merge', '--no-edit', '-X', 'ours', 'feature')
         command.call('feature', strategy_option: 'ours')
       end
 
       it 'works with :X alias' do
-        expect(execution_context).to receive(:command).with('merge', '--no-edit', '-X', 'theirs', 'feature')
+        expect_command('merge', '--no-edit', '-X', 'theirs', 'feature')
         command.call('feature', X: 'theirs')
       end
 
       it 'supports multiple strategy options' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'merge', '--no-edit', '-X', 'ours', '-X', 'patience', 'feature'
         )
         command.call('feature', strategy_option: %w[ours patience])
@@ -153,14 +156,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :verify option' do
       context 'when true' do
         it 'adds --verify flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--verify', 'feature')
+          expect_command('merge', '--no-edit', '--verify', 'feature')
           command.call('feature', verify: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-verify flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-verify', 'feature')
+          expect_command('merge', '--no-edit', '--no-verify', 'feature')
           command.call('feature', verify: false)
         end
       end
@@ -169,14 +172,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :verify_signatures option' do
       context 'when true' do
         it 'adds --verify-signatures flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--verify-signatures', 'feature')
+          expect_command('merge', '--no-edit', '--verify-signatures', 'feature')
           command.call('feature', verify_signatures: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-verify-signatures flag' do
-          expect(execution_context).to receive(:command).with(
+          expect_command(
             'merge', '--no-edit', '--no-verify-signatures', 'feature'
           )
           command.call('feature', verify_signatures: false)
@@ -187,14 +190,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :gpg_sign option' do
       context 'when true' do
         it 'adds --gpg-sign flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--gpg-sign', 'feature')
+          expect_command('merge', '--no-edit', '--gpg-sign', 'feature')
           command.call('feature', gpg_sign: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-gpg-sign flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-gpg-sign', 'feature')
+          expect_command('merge', '--no-edit', '--no-gpg-sign', 'feature')
           command.call('feature', gpg_sign: false)
         end
       end
@@ -203,7 +206,7 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :allow_unrelated_histories option' do
       context 'when true' do
         it 'adds --allow-unrelated-histories flag' do
-          expect(execution_context).to receive(:command).with(
+          expect_command(
             'merge', '--no-edit', '--allow-unrelated-histories', 'feature'
           )
           command.call('feature', allow_unrelated_histories: true)
@@ -212,7 +215,7 @@ RSpec.describe Git::Commands::Merge::Start do
 
       context 'when false' do
         it 'adds --no-allow-unrelated-histories flag' do
-          expect(execution_context).to receive(:command).with(
+          expect_command(
             'merge', '--no-edit', '--no-allow-unrelated-histories', 'feature'
           )
           command.call('feature', allow_unrelated_histories: false)
@@ -223,14 +226,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :rerere_autoupdate option' do
       context 'when true' do
         it 'adds --rerere-autoupdate flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--rerere-autoupdate', 'feature')
+          expect_command('merge', '--no-edit', '--rerere-autoupdate', 'feature')
           command.call('feature', rerere_autoupdate: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-rerere-autoupdate flag' do
-          expect(execution_context).to receive(:command).with(
+          expect_command(
             'merge', '--no-edit', '--no-rerere-autoupdate', 'feature'
           )
           command.call('feature', rerere_autoupdate: false)
@@ -241,14 +244,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :autostash option' do
       context 'when true' do
         it 'adds --autostash flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--autostash', 'feature')
+          expect_command('merge', '--no-edit', '--autostash', 'feature')
           command.call('feature', autostash: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-autostash flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-autostash', 'feature')
+          expect_command('merge', '--no-edit', '--no-autostash', 'feature')
           command.call('feature', autostash: false)
         end
       end
@@ -257,14 +260,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :signoff option' do
       context 'when true' do
         it 'adds --signoff flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--signoff', 'feature')
+          expect_command('merge', '--no-edit', '--signoff', 'feature')
           command.call('feature', signoff: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-signoff flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-signoff', 'feature')
+          expect_command('merge', '--no-edit', '--no-signoff', 'feature')
           command.call('feature', signoff: false)
         end
       end
@@ -273,14 +276,14 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'with :log option' do
       context 'when true' do
         it 'adds --log flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--log', 'feature')
+          expect_command('merge', '--no-edit', '--log', 'feature')
           command.call('feature', log: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-log flag' do
-          expect(execution_context).to receive(:command).with('merge', '--no-edit', '--no-log', 'feature')
+          expect_command('merge', '--no-edit', '--no-log', 'feature')
           command.call('feature', log: false)
         end
       end
@@ -288,7 +291,7 @@ RSpec.describe Git::Commands::Merge::Start do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'merge', '--no-edit', '--no-commit', '--no-ff',
           '-m', 'Merge feature branch',
           '-s', 'ort',
@@ -306,14 +309,12 @@ RSpec.describe Git::Commands::Merge::Start do
       end
 
       it 'combines squash with no-commit behavior' do
-        expect(execution_context).to receive(:command).with(
-          'merge', '--no-edit', '--squash', 'feature'
-        )
+        expect_command('merge', '--no-edit', '--squash', 'feature')
         command.call('feature', squash: true)
       end
 
       it 'combines ff_only with allow_unrelated_histories' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'merge', '--no-edit', '--ff-only', '--allow-unrelated-histories', 'feature'
         )
         command.call('feature', ff_only: true, allow_unrelated_histories: true)
