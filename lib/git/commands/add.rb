@@ -40,7 +40,7 @@ module Git
       #
       # @return [Git::CommandLineResult] the result of the command
       #
-      def call(...) = super
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end
