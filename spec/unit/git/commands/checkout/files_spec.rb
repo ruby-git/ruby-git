@@ -11,8 +11,7 @@ RSpec.describe Git::Commands::Checkout::Files do
     context 'with nil tree_ish (restore from index)' do
       it 'omits tree_ish from command when nil' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('checkout', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(expected_result)
+        expect_command('checkout', '--', 'file.txt').and_return(expected_result)
 
         result = command.call(nil, 'file.txt')
 
@@ -20,205 +19,173 @@ RSpec.describe Git::Commands::Checkout::Files do
       end
 
       it 'restores multiple files from index' do
-        expect(execution_context).to receive(:command).with('checkout', '--', 'file1.txt', 'file2.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--', 'file1.txt', 'file2.txt').and_return(command_result)
         command.call(nil, 'file1.txt', 'file2.txt')
       end
 
       it 'works with options' do
-        expect(execution_context).to receive(:command).with('checkout', '--force', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--force', '--', 'file.txt').and_return(command_result)
         command.call(nil, 'file.txt', force: true)
       end
     end
 
     context 'with tree_ish and paths' do
       it 'places tree_ish before -- separator' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD~1', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD~1', '--', 'file.txt').and_return(command_result)
         command.call('HEAD~1', 'file.txt')
       end
 
       it 'accepts branch name as tree_ish' do
-        expect(execution_context).to receive(:command).with('checkout', 'main', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'main', '--', 'file.txt').and_return(command_result)
         command.call('main', 'file.txt')
       end
 
       it 'accepts commit SHA as tree_ish' do
-        expect(execution_context).to receive(:command).with('checkout', 'abc123', '--', 'file.txt', 'other.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'abc123', '--', 'file.txt', 'other.txt').and_return(command_result)
         command.call('abc123', 'file.txt', 'other.txt')
       end
 
       it 'accepts tag as tree_ish' do
-        expect(execution_context).to receive(:command).with('checkout', 'v1.0.0', '--', 'config.yml',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'v1.0.0', '--', 'config.yml').and_return(command_result)
         command.call('v1.0.0', 'config.yml')
       end
 
       it 'accepts glob patterns' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', '*.rb',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', '*.rb').and_return(command_result)
         command.call('HEAD', '*.rb')
       end
 
       it 'accepts directory paths' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', 'src/',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', 'src/').and_return(command_result)
         command.call('HEAD', 'src/')
       end
     end
 
     context 'with :force option' do
       it 'adds --force flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--force', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--force', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', force: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', force: false)
       end
 
       it 'works with :f alias' do
-        expect(execution_context).to receive(:command).with('checkout', '--force', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--force', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', f: true)
       end
     end
 
     context 'with :ours option (for merge conflicts)' do
       it 'adds --ours flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--ours', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--ours', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', ours: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', ours: false)
       end
     end
 
     context 'with :theirs option (for merge conflicts)' do
       it 'adds --theirs flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--theirs', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--theirs', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', theirs: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', theirs: false)
       end
     end
 
     context 'with :merge option (recreate conflict markers)' do
       it 'adds --merge flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--merge', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', merge: true)
       end
 
       it 'does not add flag when false' do
-        expect(execution_context).to receive(:command).with('checkout', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', merge: false)
       end
 
       it 'works with :m alias' do
-        expect(execution_context).to receive(:command).with('checkout', '--merge', 'HEAD', '--', 'conflicted.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', 'conflicted.txt', m: true)
       end
     end
 
     context 'with :conflict option' do
       it 'adds --conflict=merge flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--conflict=merge', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--conflict=merge', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', conflict: 'merge')
       end
 
       it 'adds --conflict=diff3 flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--conflict=diff3', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--conflict=diff3', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', conflict: 'diff3')
       end
 
       it 'adds --conflict=zdiff3 flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--conflict=zdiff3', 'HEAD', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--conflict=zdiff3', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', 'file.txt', conflict: 'zdiff3')
       end
     end
 
     context 'with :overlay option' do
       it 'adds --overlay flag when true' do
-        expect(execution_context).to receive(:command).with('checkout', '--overlay', 'main', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--overlay', 'main', '--', 'file.txt').and_return(command_result)
         command.call('main', 'file.txt', overlay: true)
       end
 
       it 'adds --no-overlay flag when false' do
-        expect(execution_context).to receive(:command).with('checkout', '--no-overlay', 'main', '--', 'file.txt',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--no-overlay', 'main', '--', 'file.txt').and_return(command_result)
         command.call('main', 'file.txt', overlay: false)
       end
     end
 
     context 'with :pathspec_from_file option' do
       it 'adds --pathspec-from-file flag' do
-        expect(execution_context).to receive(:command).with('checkout', '--pathspec-from-file=paths.txt', 'main',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--pathspec-from-file=paths.txt', 'main').and_return(command_result)
         command.call('main', pathspec_from_file: 'paths.txt')
       end
 
       it 'accepts stdin with -' do
-        expect(execution_context).to receive(:command).with('checkout', '--pathspec-from-file=-', 'HEAD',
-                                                            raise_on_failure: false).and_return(command_result)
+        expect_command('checkout', '--pathspec-from-file=-', 'HEAD').and_return(command_result)
         command.call('HEAD', pathspec_from_file: '-')
       end
     end
 
     context 'with :pathspec_file_nul option' do
       it 'adds --pathspec-file-nul flag with pathspec_from_file' do
-        expect(execution_context).to receive(:command).with(
-          'checkout', '--pathspec-from-file=paths.txt', '--pathspec-file-nul', 'main', raise_on_failure: false
-        ).and_return(command_result)
+        expect_command('checkout', '--pathspec-from-file=paths.txt', '--pathspec-file-nul',
+                       'main').and_return(command_result)
         command.call('main', pathspec_from_file: 'paths.txt', pathspec_file_nul: true)
       end
     end
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect(execution_context).to receive(:command).with(
-          'checkout',
-          '--force',
-          '--ours',
-          'HEAD',
-          '--',
-          'file1.txt',
-          'file2.txt',
-          raise_on_failure: false
-        ).and_return(command_result)
+        expect_command('checkout',
+                       '--force',
+                       '--ours',
+                       'HEAD',
+                       '--',
+                       'file1.txt',
+                       'file2.txt').and_return(command_result)
         command.call('HEAD', 'file1.txt', 'file2.txt', force: true, ours: true)
       end
 
       it 'combines tree_ish with conflict resolution' do
-        expect(execution_context).to receive(:command).with(
-          'checkout',
-          '--conflict=diff3',
-          'main',
-          '--',
-          'conflicted.txt',
-          raise_on_failure: false
-        ).and_return(command_result)
+        expect_command('checkout',
+                       '--conflict=diff3',
+                       'main',
+                       '--',
+                       'conflicted.txt').and_return(command_result)
         command.call('main', 'conflicted.txt', conflict: 'diff3')
       end
     end
