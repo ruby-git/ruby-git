@@ -407,12 +407,14 @@ specific responsibilities:
    - Being incrementally migrated; will eventually become `Git::Repository`
 
 3. **Git::Commands::*** (New Architecture): Command-specific logic
-   - Each command class handles argument building via Arguments DSL
-   - Translates Ruby options to git command-line flags
-   - `#call` methods use keyword arguments (`**`) not options hashes
+   - Each command class inherits from `Git::Commands::Base`
+   - Declares arguments via the `arguments do … end` DSL (class-level)
+   - `Base` provides default `#initialize` and `#call`; simple commands write `def call(...) = super`
+   - `Base#call` binds arguments, calls `execution_context.command`, and validates exit status
+   - Optional `allow_exit_status <Range>` for commands where non-zero exit is not an error
    - `#call` returns `Git::CommandLineResult` by default (not rich objects)
    - Located in `lib/git/commands/`
-   - Unit tested with RSpec in `spec/git/commands/`
+   - Unit tested with RSpec in `spec/unit/git/commands/`
 
    **Layer Responsibilities Summary**:
    - **Commands**: Define git CLI API, bind arguments, execute command → return `CommandLineResult`
@@ -2195,7 +2197,7 @@ classes using a "Strangler Fig" pattern.
 
 ### Step 3: Write Tests First (TDD)
 
-1. **Create the spec file:** `spec/git/commands/<command>_spec.rb`
+1. **Create the spec file:** `spec/unit/git/commands/<command>_spec.rb`
 
 2. **Follow the testing pattern from existing specs:**
 
@@ -2211,9 +2213,14 @@ classes using a "Strangler Fig" pattern.
      describe '#call' do
        context 'with default arguments' do
          it 'executes the expected git command' do
+           expected_result = command_result
            expect(execution_context).to receive(:command)
-             .with('<git-subcommand>', '<expected>', '<args>')
-           command.call
+             .with('<git-subcommand>', raise_on_failure: false)
+             .and_return(expected_result)
+
+           result = command.call
+
+           expect(result).to eq(expected_result)
          end
        end
 
@@ -2221,6 +2228,10 @@ classes using a "Strangler Fig" pattern.
      end
    end
    ```
+
+   Note: `Base#call` always passes `raise_on_failure: false` (it validates
+   exit status itself). The `command_result` helper is defined in the spec
+   support files and returns a `Git::CommandLineResult` double.
 
 3. **Test every option** defined in the original `Git::Lib` method
 
@@ -2233,37 +2244,56 @@ classes using a "Strangler Fig" pattern.
    ```ruby
    # frozen_string_literal: true
 
-   require 'git/commands/arguments'
+   require 'git/commands/base'
 
    module Git
      module Commands
        # Implements the `git <command>` command
        #
        # @api private
-       class <CommandName>
-         ARGS = Arguments.define do
+       class <CommandName> < Base
+         arguments do
+           literal '<git-subcommand>'
            # Define arguments using the DSL
            # For repeatable operand:
            operand :paths, repeatable: true
-         end.freeze
-
-         def initialize(execution_context)
-           @execution_context = execution_context
          end
 
-         # Preferred: anonymous forwarding with ARGS.bind
-         def call(*, **)
-           @execution_context.command('<git-subcommand>', *ARGS.bind(*, **))
-         end
+         # Optionally, declare non-error exit codes:
+         # allow_exit_status 0..1
+
+         # Execute the git <command> command
+         #
+         # @overload call(*paths, **options)
+         #   @param paths [Array<String>] ...
+         #   @param options [Hash] command options
+         #   @option options [Boolean] :force (nil) ...
+         #
+         # @return [Git::CommandLineResult] the result of the command
+         #
+         def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
        end
      end
    end
    ```
 
+   **How `Base` works**: `Base` provides default `#initialize` (accepts an
+   `execution_context`) and `#call` (binds arguments via the DSL, calls
+   `execution_context.command`, validates exit status). Simple commands only need
+   `arguments do … end` and `def call(...) = super`. That `def call(...) = super`
+   definition exists primarily as the YARD documentation anchor so each command
+   can have its own `@overload` docs; because it merely forwards to `Base#call`,
+   RuboCop would normally flag it as a useless method, so we add
+   `# rubocop:disable Lint/UselessMethodDefinition` to prevent it being "fixed"
+   and inadvertently removing the per-command documentation hook.
+
    **Method Signature Convention:**
-   - **SHOULD** use anonymous `def call(*, **)` and splat `ARGS.bind(*, **)` directly
-   - **MAY** assign `bound_args = ARGS.bind(*, **)` when you need to access argument values (e.g., `bound_args.dirstat`)
-   - Note: defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied automatically by `ARGS.bind`
+   - Most commands use `def call(...) = super`, which forwards all arguments
+     to `Base#call` for binding, execution, and exit-status validation
+   - Override `call` only when the command needs to inspect argument values or
+     post-process output before returning
+   - Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are
+     applied automatically during binding
 
    **Return Value Convention:**
    - `#call` **SHOULD** return `Git::CommandLineResult` by default
@@ -2279,7 +2309,7 @@ classes using a "Strangler Fig" pattern.
      `lib/git/parsers/` namespace
    - Inline parsing is acceptable for trivial output (e.g., single line, simple split)
 
-3. **Run the spec to verify:** `bundle exec rspec spec/git/commands/<command>_spec.rb`
+3. **Run the spec to verify:** `bundle exec rspec spec/unit/git/commands/<command>_spec.rb`
 
 ### Step 5: Delegate from Git::Lib
 
@@ -2318,7 +2348,7 @@ classes using a "Strangler Fig" pattern.
 
 ```bash
 # Run the new RSpec tests
-bundle exec rspec spec/git/commands/<command>_spec.rb
+bundle exec rspec spec/unit/git/commands/<command>_spec.rb
 
 # Run all RSpec tests
 bundle exec rspec
@@ -2499,7 +2529,7 @@ Follow these guidelines for all RSpec tests:
 
 **For Git::Commands options:**
 
-When implementing a command using the `Git::Commands::Options` DSL, you **MUST** include comprehensive tests for every option defined:
+When implementing a command using the `Git::Commands::Arguments` DSL, you **MUST** include comprehensive tests for every option defined:
 
 - **Structure**: use a separate `context` block for each option (e.g., `context 'with :force option'`) to keep tests organized and readable.
 - **Valid Values**: Test each supported value type in its context (e.g., boolean `true/false`, string `'value'`, array `['a', 'b']`).

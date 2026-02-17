@@ -1,0 +1,129 @@
+## Review Arguments DSL
+
+Verify that a command class's `arguments do ... end` definition accurately maps Ruby
+call arguments to git CLI arguments, in the correct order, with the correct DSL
+methods and modifiers.
+
+### Related prompts
+
+- **Review Command Implementation** — class structure, phased rollout gates, and
+  internal compatibility contracts
+- **Review Command Tests** — unit/integration test expectations for command classes
+- **Review YARD Documentation** — documentation completeness for command classes
+
+### Input
+
+You will be given:
+1. One or more command source files containing a `class < Base` and an
+   `arguments do` block
+2. The git man page or documentation for the subcommand
+
+### Architecture Context (Base Pattern)
+
+Command classes now follow this structure:
+
+- `class < Git::Commands::Base`
+- class-level `arguments do ... end`
+- optional `allow_exit_status <range>` for commands where non-zero exits are valid
+- one-line YARD shim: `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`
+
+The CLI argument mapping is still defined exclusively by the Arguments DSL. The
+`Base` class handles binding and execution.
+
+### How Arguments Work
+
+Key behaviors:
+
+- **Output order matches definition order** — bound arguments are emitted in the
+  order entries appear in `arguments do`
+- **Name-to-flag mapping** — underscores become hyphens, single-char names map to
+  `-x`, multi-char names map to `--name`
+- **`args:` override** — only for flags that cannot be expressed by symbol naming
+  (e.g., `-C`)
+- **Aliases** — first alias is canonical and determines generated flag (long name
+  first: `%i[force f]`, not `%i[f force]`)
+
+### What to Check
+
+#### 1. Correct DSL method per option type
+
+| Git behavior | DSL method | Example |
+|---|---|---|
+| fixed flag always present | `literal` | `literal '--numstat'` |
+| boolean flag | `flag_option` | `flag_option :cached` |
+| boolean-or-value | `flag_or_value_option` | `flag_or_value_option :dirstat, inline: true` |
+| value option | `value_option` | `value_option :message` |
+| positional argument | `operand` | `operand :commit1` |
+| pathspec-style operands | `value_option ... as_operand: true, separator: '--'` | `value_option :pathspecs, as_operand: true, separator: '--', repeatable: true` |
+
+#### 2. Correct alias and `args:` usage
+
+- Prefer aliases for long/short pairs (`%i[force f]`, `%i[all a]`)
+- Use `args:` only when automatic mapping cannot generate the git flag
+- Ensure long name is first in alias arrays
+
+#### 3. Correct ordering
+
+Recommended order:
+1. literals
+2. flag options
+3. flag-or-value options
+4. operands
+5. as-operand value options (e.g., pathspecs)
+
+#### 4. Correct modifiers
+
+Validate `inline:`, `repeatable:`, `negatable:`, `required:`, `allow_nil:`,
+`separator:`, and `as_operand:` are applied where appropriate.
+
+#### 5. Completeness
+
+Cross-check against:
+- git docs
+- command `@overload` docs
+- command unit tests
+
+Every supported option should be represented in `arguments do`, and every DSL entry
+should be covered by tests.
+
+#### 6. Conflicts
+
+If options are mutually exclusive, verify `conflicts ...` declarations exist.
+
+#### 7. Exit-status declaration consistency (class-level, outside the DSL)
+
+`allow_exit_status` is a class-level declaration, not part of the `arguments do`
+block. It is included here because it should be validated alongside DSL entries for
+completeness. See **Review Command Implementation** for the full class-shape
+checklist.
+
+When command behavior expects non-zero success exits, verify:
+
+- `allow_exit_status` is declared with a `Range`
+- declaration is accompanied by a rationale comment
+- range matches documented git behavior
+
+Example:
+
+```ruby
+# git diff exits 1 when differences are found (not an error)
+allow_exit_status 0..1
+```
+
+### Verification Chain
+
+For each DSL entry, verify:
+
+`Ruby call -> bound argument output -> expected git CLI`
+
+### Output
+
+Produce:
+
+1. A per-entry table:
+
+| # | DSL method | Definition | CLI output | Correct? | Issue |
+|---|---|---|---|---|---|
+
+2. A list of missing options/modifier/order/conflict issues
+3. Any `allow_exit_status` mismatches or missing rationale comments

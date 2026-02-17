@@ -412,18 +412,16 @@ Example structure for `git add`:
 
 ```ruby
 # lib/git/commands/add.rb (internal)
+require 'git/commands/base'
+
 module Git
   module Commands
-    class Add
-      # Define arguments using the Arguments DSL
-      ARGS = Arguments.define do
+    class Add < Base
+      arguments do
+        literal 'add'
         flag_option :all
         flag_option :force
-        operand :paths, repeatable: true, default: ['.'], separator: '--'
-      end
-
-      def initialize(execution_context)
-        @execution_context = execution_context
+        operand :paths, repeatable: true, default: [], separator: '--'
       end
 
       # Execute the git add command
@@ -436,44 +434,43 @@ module Git
       #
       #   @param force [Boolean] Allow adding otherwise ignored files
       #
-      # @return [String] the command output
+      # @return [Git::CommandLineResult] the result of the command
       #
-      def call(*, **)
-        @execution_context.command('add', *ARGS.bind(*, **))
-      end
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end
 ```
 
-**Method Signature Convention**: The `#call` signature SHOULD, if possible, use
-anonymous repeatable arguments for both positional and keyword arguments:
+**How `Base` works**: `Base` provides default `#initialize` (accepts an
+`execution_context`) and `#call` (binds arguments via the DSL, calls
+`execution_context.command`, validates exit status). Simple commands only need to
+declare `arguments do … end` and write `def call(...) = super` (which also serves as
+the YARD documentation anchor for per-command documentation). That forwarding method
+looks "useless" to RuboCop, so we disable `Lint/UselessMethodDefinition` on it; the
+method body must exist for YARD to attach command-specific docs, even though all work
+is delegated to `Base#call`.
+
+**Method Signature Convention**: Most commands use `def call(...) = super`, which
+forwards all arguments to `Base#call`. `Base#call` binds them via the Arguments DSL,
+calls `@execution_context.command(*args, **args.execution_options,
+raise_on_failure: false)`, and validates the exit status.
+
+When a command needs to inspect or manipulate argument values, override `call` and
+call `super` or work with the arguments directly:
 
 ```ruby
 def call(*, **)
-  @execution_context.command('add', *ARGS.bind(*, **))
+  args = self.class.args_definition.bind(*, **)
+  result = @execution_context.command(*args, **args.execution_options, raise_on_failure: false)
+  validate_exit_status!(result)
+  Parsers::Diff.parse(result.stdout, include_dirstat: !args.dirstat.nil?)
 end
 ```
 
-The `#call` method MAY assign `bound_args = ARGS.bind(*, **)` when you need to
-access argument values (e.g., `bound_args.dirstat`). Note that default values
-defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
-automatically by `ARGS.bind`, so manual default checking is usually unnecessary.
-
-Specific arguments MAY be extracted when the command needs to inspect or manipulate
-them:
-
-```ruby
-def call(*, **)
-  bound_args = ARGS.bind(*, **)
-  output = @execution_context.command('diff', *bound_args).stdout
-  Parsers::Diff.parse(output, include_dirstat: !bound_args.dirstat.nil?)
-end
-```
-
-Validation of supported options is handled by the `Arguments` DSL via `ARGS.bind`,
-which raises `ArgumentError` for unsupported keywords. The public API in `Git::Lib`
-handles the translation from single values or arrays to the splat format.
+Validation of supported options is handled by the `Arguments` DSL, which raises
+`ArgumentError` for unsupported keywords. The public API in `Git::Lib` handles the
+translation from single values or arrays to the splat format.
 
 > **YARD Documentation Note:** When using anonymous keyword forwarding (`**`), YARD
 > cannot infer the method signature. Use the `@overload` directive with **explicit
@@ -485,7 +482,7 @@ handles the translation from single values or arrays to the splat format.
 > tests that verify each argument handles valid values correctly (booleans, strings,
 > arrays) and handles invalid values appropriately. Use a separate `context` block for
 > testing each option to ensure clarity and isolation. See
-> `spec/git/commands/add_spec.rb` for examples of comprehensive argument testing.
+> `spec/unit/git/commands/add_spec.rb` for examples of comprehensive argument testing.
 
 ```ruby
 # lib/git/lib.rb (delegation)
@@ -531,7 +528,7 @@ end
 ### Example implementations
 
 The following command classes demonstrate patterns for implementing new commands.
-See `lib/git/commands/` and `spec/git/commands/` for the full implementations:
+See `lib/git/commands/` and `spec/unit/git/commands/` for the full implementations:
 
 - **Simple command**: `Git::Commands::Add` — straightforward argument building with
   the Arguments DSL
@@ -710,7 +707,7 @@ $ bin/test test_object
 $ bin/test test_object test_archive
 
 # Run a specific RSpec file:
-$ bundle exec rspec spec/git/commands/add_spec.rb
+$ bundle exec rspec spec/unit/git/commands/add_spec.rb
 
 # Run TestUnit tests with a different version of the git command line:
 $ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
