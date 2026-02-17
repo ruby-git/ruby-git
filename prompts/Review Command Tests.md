@@ -45,18 +45,16 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
 
 #### Expectations for command invocation
 
-Since `Base#call` passes `raise_on_failure: false`, expectations should include it:
+Use the `expect_command` helper from `spec_helper.rb` which automatically includes `raise_on_failure: false`:
 
 ```ruby
-expect(execution_context).to receive(:command)
-  .with('clone', '--', url, dir, raise_on_failure: false)
-  .and_return(command_result)
+expect_command('clone', '--', url, dir).and_return(command_result)
 ```
 
-When testing execution options, include forwarded keywords as well:
+When testing execution options, include forwarded keywords:
 
 ```ruby
-.with('clone', '--', url, dir, timeout: 30, raise_on_failure: false)
+expect_command('clone', '--', url, dir, timeout: 30).and_return(command_result)
 ```
 
 #### What not to test
@@ -124,9 +122,7 @@ RSpec.describe Git::Commands::Branch::Delete do
     context 'with single branch name' do
       it 'passes the branch name' do
         expected_result = command_result('Deleted branch feature.')
-        expect(execution_context).to receive(:command)
-          .with('branch', '-d', 'feature', raise_on_failure: false)
-          .and_return(expected_result)
+        expect_command('branch', '-d', 'feature').and_return(expected_result)
         result = command.call('feature')
         expect(result).to eq(expected_result)
       end
