@@ -154,77 +154,61 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     [issue #997](https://github.com/ruby-git/ruby-git/issues/997) for the work to
     migrate existing commands that currently parse output.
 
-    **Commands::Base Pattern (Planned)**: To standardize command implementation,
-    all command classes will inherit from a common base class. (Note: This pattern
-    is not yet implemented. Current commands use the Arguments DSL inline. See
-    [issue #996](https://github.com/ruby-git/ruby-git/issues/996) for migration details.)
+    **Commands::Base Pattern**: All command classes inherit from `Git::Commands::Base`.
+    Implemented in [issue #996](https://github.com/ruby-git/ruby-git/issues/996).
+
+    Simple commands declare `arguments do … end` and provide a YARD shim:
 
     ```ruby
-    module Git
-      module Commands
-        class Base
-          class << self
-            attr_reader :args_definition
-            def arguments(&block)
-              @args_definition = Arguments.define(&block).freeze
-            end
-          end
-
-          attr_reader :args
-
-          def initialize(execution_context)
-            @execution_context = execution_context
-          end
-
-          def bind(*, **)
-            @args = self.class.args_definition.bind(*, **)
-            self
-          end
-
-          def call
-            @execution_context.command(*@args)
-          end
-        end
+    class Add < Base
+      arguments do
+        literal 'add'
+        flag_option :all
+        flag_option :force
+        operand :paths, repeatable: true, default: [], separator: '--'
       end
+
+      # Execute the git add command
+      # ...YARD docs...
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+    end
+    ```
+
+    Commands with non-zero successful exits declare their accepted range:
+
+    ```ruby
+    class Diff::Patch < Base
+      arguments do
+        literal 'diff'
+        literal '--patch'
+        # ...
+      end
+
+      # git diff exits 1 when differences are found (not an error)
+      allow_exit_status 0..1
+
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
     ```
 
     This pattern provides:
 
     - Declarative argument definition via the class-level `arguments` DSL
-    - Consistent `bind`/`call` interface across all commands
-    - Customizable execution via `call` override (e.g., suppressing errors for
-      commands where non-zero exit codes are expected, like `git diff`)
+    - Behavioral inheritance from `Base` (`#initialize` and `#call`)
+    - Unified exit-status handling via `allow_exit_status <Range>` (default `0..0`)
+    - Per-command YARD documentation via `def call(...) = super` shim
+    - Automatic execution option forwarding (e.g., `timeout:`) via `Bound#execution_options`
 
     **Method Return Values**:
 
-    - `#bind(*, **)` → Returns `self` for method chaining
-    - `#args` → Returns the bound arguments object with accessor methods for each
-      argument defined in the DSL (e.g., `args.directory`, `args.force`)
     - `#call` → Returns `Git::CommandLineResult` (stdout, stderr, status)
+    - `#args_definition` → Returns the frozen `Arguments` instance (class-level metadata)
 
-    **Bind/Call Pattern for Facade Access (Planned)**: Once the `Commands::Base`
-    pattern is implemented, the facade layer will be able to access bound arguments
-    for orchestration and result building:
-
-    ```ruby
-    # Command defines its arguments
-    class Clone < Base
-      arguments do
-        operand :url
-        operand :directory
-        flag_option :bare
-      end
-    end
-
-    # Facade usage - second positional maps to args.directory
-    cmd = Git::Commands::Clone.new(ctx).bind(url, dir, bare: true)
-    result = cmd.call
-    cmd.args.directory  # => dir (accessible for result building)
-    ```
-
-    Note: Current commands use `ARGS.bind(*, **)` internally within the `call()`
-    method. The `bind`/`call` separation is planned architecture.
+    **No Bind/Call Split**: Arguments are bound as a local variable inside `Base#call`.
+    Commands remain stateless beyond `@execution_context` — there is no separate `#bind`
+    method. If facade-layer access to bound argument values is needed in the future,
+    a `#bind` method can be added as a backward-compatible addition. See the design
+    rationale in [issue #996](https://github.com/ruby-git/ruby-git/issues/996).
 
     **Migration Strategy: Git::Lib as Adapter Layer**
 
@@ -271,26 +255,18 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     ```
 
     The DSL supports several option types (`flag_option`, `value_option`, `flag_or_value_option`, `literal`,
-    `custom_option`, `metadata`) and positional arguments, each with various modifiers. See
+    `custom_option`, `execution_option`) and positional arguments, each with various modifiers. See
     [Git::Commands::Arguments](../lib/git/commands/arguments.rb) for full documentation.
 
-    **Interface Convention**: The `#call` signature SHOULD use anonymous repeatable
-    arguments when possible. Arguments MAY be named when needed to inspect or manipulate
-    them. Note that defaults defined in the DSL (e.g., `positional :paths, default: ['.']`)
-    are applied automatically by `ARGS.bind`, so manual default checking is usually
-    unnecessary:
+    **Interface Convention**: With the `Base` pattern, all commands use
+    `def call(...) = super` as a YARD documentation shim. `Base#call` handles
+    argument binding and execution automatically; defaults defined in the DSL
+    (e.g., `operand :paths, default: []`) are applied during binding, so no manual
+    default checking is needed:
 
     ```ruby
-    # Preferred: anonymous forwarding (DSL handles defaults)
-    def call(*, **)
-      @execution_context.command('add', *ARGS.bind(*, **))
-    end
-
-    # Acceptable: explicit args when manipulation needed
-    def call(repository_url, directory = nil, **options)
-      directory ||= derive_directory_from(repository_url)
-      # ...
-    end
+    # All commands: YARD shim delegates to Base#call
+    def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     ```
 
     The facade layer (`Git::Base`, `Git::Lib`) handles translation from the public API
@@ -314,10 +290,14 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
 
     ```ruby
     # Command layer: returns CommandLineResult
-    class Git::Commands::Stash::List
-      def call(*, **)
-        @execution_context.command('stash', 'list', *ARGS.bind(*, **))
+    class Git::Commands::Stash::List < Base
+      arguments do
+        literal 'stash'
+        literal 'list'
+        # ...
       end
+
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
 
     # Facade layer: builds rich objects
