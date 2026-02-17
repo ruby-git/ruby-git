@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -8,6 +8,8 @@ module Git
     #
     # This command resets the current HEAD to the specified state. It can be used to
     # unstage files, move the HEAD pointer, or reset the working directory.
+    #
+    # @see https://git-scm.com/docs/git-reset git-reset
     #
     # @api private
     #
@@ -28,23 +30,14 @@ module Git
     # @example Mixed reset (keeps changes unstaged)
     #   reset.call('HEAD~1', mixed: true)
     #
-    class Reset
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Reset < Base
+      arguments do
         literal 'reset'
         flag_option :hard
         flag_option :soft
         flag_option :mixed
         conflicts :hard, :soft, :mixed
         operand :commit, required: false
-      end.freeze
-
-      # Initialize the Reset command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git reset command
@@ -64,14 +57,13 @@ module Git
       #   @option options [Boolean] :mixed (nil) resets the index but not the working tree (i.e., the
       #     changed files are preserved but not marked for commit)
       #
+      # @return [Git::CommandLineResult] the result of calling `git reset`
+      #
       # @raise [ArgumentError] if more than one of :hard, :soft, or :mixed is specified
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @raise [Git::FailedError] if the command returns a non-zero exit status
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args)
-      end
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

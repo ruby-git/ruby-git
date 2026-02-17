@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -8,6 +8,8 @@ module Git
     #
     # This command moves or renames a file, directory, or symlink. The index is
     # updated after successful completion, but the change must still be committed.
+    #
+    # @see https://git-scm.com/docs/git-mv git-mv
     #
     # @api private
     #
@@ -21,9 +23,8 @@ module Git
     # @example Force overwrite if destination exists
     #   mv.call('source.rb', 'dest.rb', force: true)
     #
-    class Mv
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Mv < Base
+      arguments do
         literal 'mv'
         flag_option :force, args: '--force'
         flag_option :dry_run, args: '--dry-run'
@@ -31,14 +32,6 @@ module Git
         flag_option :skip_errors, args: '-k'
         operand :source, repeatable: true, required: true, separator: '--'
         operand :destination, required: true
-      end.freeze
-
-      # Initialize the Mv command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git mv command
@@ -59,12 +52,11 @@ module Git
       #
       #   @option options [Boolean] :skip_errors (nil) Skip move or rename actions which would lead to an error
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @return [Git::CommandLineResult] the result of calling `git mv`
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args)
-      end
+      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

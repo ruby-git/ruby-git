@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -25,14 +25,8 @@ module Git
     #   commit = Git::Commands::Commit.new(execution_context)
     #   commit.call(amend: true)
     #
-    class Commit
-      # Arguments DSL for building command-line arguments
-      #
-      # NOTE: The order of definitions here determines the order of arguments
-      # in the final command line. This order matches the original COMMIT_OPTION_MAP
-      # for backward compatibility with existing tests.
-      #
-      ARGS = Arguments.define do
+    class Commit < Base
+      arguments do
         literal 'commit'
         flag_option %i[all add_all]
         flag_option :allow_empty
@@ -43,14 +37,6 @@ module Git
         value_option :date, inline: true, type: String
         flag_option :amend, args: ['--amend', '--no-edit']
         flag_or_value_option :gpg_sign, negatable: true, inline: true
-      end.freeze
-
-      # Initialize the Commit command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git commit command
@@ -84,15 +70,15 @@ module Git
       #     default key. When a string, uses the specified key ID. When false, adds --no-gpg-sign
       #     to override any commit.gpgsign configuration.
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @return [Git::CommandLineResult] the result of calling `git commit`
       #
       # @raise [ArgumentError] if unsupported options are provided
+      #
       # @raise [ArgumentError] if :date is not a String
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args)
-      end
+      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -29,13 +29,8 @@ module Git
     # @example Find fork point
     #   result = merge_base.call('main', 'feature', fork_point: true)
     #
-    class MergeBase
-      # Arguments DSL for building command-line arguments
-      #
-      # NOTE: The order of definitions determines the order of arguments
-      # in the final command line.
-      #
-      ARGS = Arguments.define do
+    class MergeBase < Base
+      arguments do
         literal 'merge-base'
         flag_option :octopus, args: '--octopus'
         flag_option :independent, args: '--independent'
@@ -44,14 +39,6 @@ module Git
 
         # Positional: commits to find common ancestor(s) of
         operand :commits, repeatable: true, required: true
-      end.freeze
-
-      # Initialize the MergeBase command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git merge-base command
@@ -77,13 +64,9 @@ module Git
       #
       # @return [Git::CommandLineResult] the result of calling `git merge-base`
       #
-      # @raise [Git::FailedError] if the command fails
+      # @raise [Git::FailedError] if the command returns a non-zero exit status
       #
-      def call(*, **)
-        bound_args = ARGS.bind(*, **)
-
-        @execution_context.command(*bound_args)
-      end
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end
