@@ -29,15 +29,14 @@ RSpec.describe Git::Commands::Diff::Patch do
   describe '#call' do
     context 'with no arguments (working tree vs index)' do
       it 'runs diff with --patch, --numstat, --shortstat, prefix options, and -M flag' do
+        expected_result = command_result(patch_output)
         expect(execution_context).to receive(:command)
           .with(*static_args, raise_on_failure: false)
-          .and_return(command_result(patch_output))
+          .and_return(expected_result)
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq(patch_output)
-        expect(result.stdout).to include('diff --git')
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -47,9 +46,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, 'abc123', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('abc123')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('abc123')
       end
     end
 
@@ -59,9 +56,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, 'abc123', 'def456', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('abc123', 'def456')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('abc123', 'def456')
       end
     end
 
@@ -71,9 +66,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--cached', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call(cached: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(cached: true)
       end
 
       it 'accepts :staged alias' do
@@ -81,9 +74,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--cached', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call(staged: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(staged: true)
       end
     end
 
@@ -93,9 +84,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '-C', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call(find_copies: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(find_copies: true)
       end
     end
 
@@ -105,9 +94,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--merge-base', 'feature', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('feature', merge_base: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature', merge_base: true)
       end
 
       it 'includes --merge-base with two commits' do
@@ -115,9 +102,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--merge-base', 'main', 'feature', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('main', 'feature', merge_base: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('main', 'feature', merge_base: true)
       end
     end
 
@@ -127,9 +112,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--no-index', '/path/a', '/path/b', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('/path/a', '/path/b', no_index: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('/path/a', '/path/b', no_index: true)
       end
     end
 
@@ -139,9 +122,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--', 'lib/', 'spec/', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call(pathspecs: ['lib/', 'spec/'])
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(pathspecs: ['lib/', 'spec/'])
       end
 
       it 'combines commit with pathspecs' do
@@ -149,9 +130,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, 'HEAD~3', '--', 'lib/', raise_on_failure: false)
           .and_return(command_result(patch_output))
 
-        result = command.call('HEAD~3', pathspecs: ['lib/'])
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('HEAD~3', pathspecs: ['lib/'])
       end
     end
 
@@ -178,7 +157,6 @@ RSpec.describe Git::Commands::Diff::Patch do
 
         result = command.call(dirstat: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
         expect(result.stdout).to include('100.0% lib/')
       end
 
@@ -187,9 +165,7 @@ RSpec.describe Git::Commands::Diff::Patch do
           .with(*static_args, '--dirstat=lines,cumulative', raise_on_failure: false)
           .and_return(command_result(dirstat_output))
 
-        result = command.call(dirstat: 'lines,cumulative')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(dirstat: 'lines,cumulative')
       end
     end
 
