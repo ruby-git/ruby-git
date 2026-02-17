@@ -12,9 +12,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
     context 'with single tag name' do
       it 'deletes the tag' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
-          .and_return(command_result(delete_output))
+        expect_command('tag', '--delete', 'v1.0.0').and_return(command_result(delete_output))
 
         result = command.call('v1.0.0')
 
@@ -31,8 +29,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'deletes all specified tags in one command' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0', raise_on_failure: false)
+        expect_command('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0')
           .and_return(command_result(multi_delete_output))
 
         result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
@@ -44,8 +41,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
     context 'with various tag name formats' do
       it 'handles semver tags' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--delete', 'v1.2.3', raise_on_failure: false)
+        expect_command('tag', '--delete', 'v1.2.3')
           .and_return(command_result("Deleted tag 'v1.2.3' (was abc)\n"))
 
         result = command.call('v1.2.3')
@@ -54,8 +50,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'handles tags with slashes' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--delete', 'release/v1.0', raise_on_failure: false)
+        expect_command('tag', '--delete', 'release/v1.0')
           .and_return(command_result("Deleted tag 'release/v1.0' (was abc)\n"))
 
         result = command.call('release/v1.0')
@@ -64,8 +59,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'handles tags with hyphens and underscores' do
-        expect(execution_context).to receive(:command)
-          .with('tag', '--delete', 'my-tag_name', raise_on_failure: false)
+        expect_command('tag', '--delete', 'my-tag_name')
           .and_return(command_result("Deleted tag 'my-tag_name' (was abc)\n"))
 
         result = command.call('my-tag_name')

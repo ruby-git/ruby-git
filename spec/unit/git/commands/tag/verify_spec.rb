@@ -8,11 +8,14 @@ RSpec.describe Git::Commands::Tag::Verify do
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
+    before do
+      allow(execution_context).to receive(:command).and_return(command_result)
+    end
+
     context 'with a single tag name' do
       it 'calls git tag --verify with the tag name' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('tag', '--verify', 'v1.0.0')
-                                                      .and_return(expected_result)
+        expect_command('tag', '--verify', 'v1.0.0').and_return(expected_result)
 
         result = command.call('v1.0.0')
 
@@ -22,23 +25,19 @@ RSpec.describe Git::Commands::Tag::Verify do
 
     context 'with multiple tag names' do
       it 'passes all tag names to the command' do
-        expect(execution_context).to receive(:command).with('tag', '--verify', 'v1.0.0', 'v2.0.0', 'v3.0.0')
+        expect_command('tag', '--verify', 'v1.0.0', 'v2.0.0', 'v3.0.0')
         command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
       end
     end
 
     context 'with :format option' do
       it 'adds --format flag with the specified format string' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--verify', '--format=%(refname:short)', 'v1.0.0'
-        )
+        expect_command('tag', '--verify', '--format=%(refname:short)', 'v1.0.0')
         command.call('v1.0.0', format: '%(refname:short)')
       end
 
       it 'works with multiple tags and format' do
-        expect(execution_context).to receive(:command).with(
-          'tag', '--verify', '--format=%(objectname)', 'v1.0.0', 'v2.0.0'
-        )
+        expect_command('tag', '--verify', '--format=%(objectname)', 'v1.0.0', 'v2.0.0')
         command.call('v1.0.0', 'v2.0.0', format: '%(objectname)')
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -29,25 +29,12 @@ module Git
       #   verify = Git::Commands::Tag::Verify.new(execution_context)
       #   verify.call('v1.0.0', format: '%(refname:short) %(contents:subject)')
       #
-      class Verify
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions here determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class Verify < Base
+        arguments do
           literal 'tag'
           literal '--verify'
           value_option :format, inline: true
           operand :tag_names, repeatable: true, required: true
-        end.freeze
-
-        # Initialize the Verify command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git tag --verify command to verify tag signatures
@@ -69,10 +56,7 @@ module Git
         #
         # @raise [ArgumentError] if no tag names are provided
         #
-        def call(*, **)
-          args = ARGS.bind(*, **)
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

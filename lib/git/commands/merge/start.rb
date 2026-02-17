@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -30,13 +30,8 @@ module Git
       # @example Octopus merge (multiple branches)
       #   merge.call('branch1', 'branch2', 'branch3')
       #
-      class Start
-        # Arguments DSL for building command-line arguments
-        #
-        # NOTE: The order of definitions determines the order of arguments
-        # in the final command line.
-        #
-        ARGS = Arguments.define do
+      class Start < Base
+        arguments do
           literal 'merge'
           # Always suppress editor (non-interactive use)
           literal '--no-edit'
@@ -74,14 +69,6 @@ module Git
 
           # Positional: commits to merge (variadic, required)
           operand :commits, repeatable: true, required: true
-        end.freeze
-
-        # Initialize the Merge::Start command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git merge command
@@ -154,10 +141,7 @@ module Git
         #
         # @raise [Git::FailedError] if the merge fails (e.g., conflicts)
         #
-        def call(*, **)
-          args = ARGS.bind(*, **)
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

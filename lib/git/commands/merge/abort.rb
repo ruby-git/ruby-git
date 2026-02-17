@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -18,19 +18,10 @@ module Git
       #   abort_cmd = Git::Commands::Merge::Abort.new(execution_context)
       #   abort_cmd.call
       #
-      class Abort
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Abort < Base
+        arguments do
           literal 'merge'
           literal '--abort'
-        end.freeze
-
-        # Initialize the Merge::Abort command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git merge --abort command
@@ -39,10 +30,7 @@ module Git
         #
         # @raise [Git::FailedError] if no merge is in progress
         #
-        def call
-          args = ARGS.bind
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

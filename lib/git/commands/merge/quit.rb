@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -19,19 +19,10 @@ module Git
       #   quit_cmd = Git::Commands::Merge::Quit.new(execution_context)
       #   quit_cmd.call
       #
-      class Quit
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Quit < Base
+        arguments do
           literal 'merge'
           literal '--quit'
-        end.freeze
-
-        # Initialize the Merge::Quit command
-        #
-        # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Execute the git merge --quit command
@@ -41,10 +32,7 @@ module Git
         # @raise [Git::FailedError] if the underlying git command exits non-zero
         #   (for example, on Git versions before 2.35 when no merge is in progress)
         #
-        def call
-          args = ARGS.bind
-          @execution_context.command(*args)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
