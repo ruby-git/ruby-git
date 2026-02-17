@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
     # Implements the `git rm` command
     #
     # This command removes files from the working tree and from the index.
+    #
+    # @see https://git-scm.com/docs/git-rm git-rm
     #
     # @api private
     #
@@ -27,22 +29,13 @@ module Git
     #   rm = Git::Commands::Rm.new(execution_context)
     #   rm.call('modified_file.txt', force: true)
     #
-    class Rm
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Rm < Base
+      arguments do
         literal 'rm'
         flag_option :force, args: '-f'
         flag_option :recursive, args: '-r'
         flag_option :cached
         operand :paths, repeatable: true, required: true, separator: '--'
-      end.freeze
-
-      # Initialize the Rm command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git rm command
@@ -62,14 +55,11 @@ module Git
       #
       #   @option options [Boolean] :cached (nil) Only remove from the index, keeping the working tree files
       #
+      # @return [Git::CommandLineResult] the result of calling `git rm`
+      #
       # @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
       #
-      # @return [Git::CommandLineResult] the result of the command
-      #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args)
-      end
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Reset do
     context 'with no arguments' do
       it 'runs git reset without a commit' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('reset')
-                                                      .and_return(expected_result)
+        expect_command('reset').and_return(expected_result)
 
         result = command.call
 
@@ -21,19 +20,19 @@ RSpec.describe Git::Commands::Reset do
 
     context 'with a commit argument' do
       it 'resets to the specified commit' do
-        expect(execution_context).to receive(:command).with('reset', 'HEAD~1')
+        expect_command('reset', 'HEAD~1').and_return(command_result)
 
         command.call('HEAD~1')
       end
 
       it 'resets to a SHA' do
-        expect(execution_context).to receive(:command).with('reset', 'abc123')
+        expect_command('reset', 'abc123').and_return(command_result)
 
         command.call('abc123')
       end
 
       it 'accepts nil as the commit' do
-        expect(execution_context).to receive(:command).with('reset')
+        expect_command('reset').and_return(command_result)
 
         command.call(nil)
       end
@@ -41,19 +40,19 @@ RSpec.describe Git::Commands::Reset do
 
     context 'with the :hard option' do
       it 'includes the --hard flag when true' do
-        expect(execution_context).to receive(:command).with('reset', '--hard')
+        expect_command('reset', '--hard').and_return(command_result)
 
         command.call(hard: true)
       end
 
       it 'includes --hard with a commit' do
-        expect(execution_context).to receive(:command).with('reset', '--hard', 'HEAD~1')
+        expect_command('reset', '--hard', 'HEAD~1').and_return(command_result)
 
         command.call('HEAD~1', hard: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command).with('reset')
+        expect_command('reset').and_return(command_result)
 
         command.call(hard: false)
       end
@@ -61,19 +60,19 @@ RSpec.describe Git::Commands::Reset do
 
     context 'with the :soft option' do
       it 'includes the --soft flag when true' do
-        expect(execution_context).to receive(:command).with('reset', '--soft')
+        expect_command('reset', '--soft').and_return(command_result)
 
         command.call(soft: true)
       end
 
       it 'includes --soft with a commit' do
-        expect(execution_context).to receive(:command).with('reset', '--soft', 'HEAD~1')
+        expect_command('reset', '--soft', 'HEAD~1').and_return(command_result)
 
         command.call('HEAD~1', soft: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command).with('reset')
+        expect_command('reset').and_return(command_result)
 
         command.call(soft: false)
       end
@@ -81,19 +80,19 @@ RSpec.describe Git::Commands::Reset do
 
     context 'with the :mixed option' do
       it 'includes the --mixed flag when true' do
-        expect(execution_context).to receive(:command).with('reset', '--mixed')
+        expect_command('reset', '--mixed').and_return(command_result)
 
         command.call(mixed: true)
       end
 
       it 'includes --mixed with a commit' do
-        expect(execution_context).to receive(:command).with('reset', '--mixed', 'HEAD~1')
+        expect_command('reset', '--mixed', 'HEAD~1').and_return(command_result)
 
         command.call('HEAD~1', mixed: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command).with('reset')
+        expect_command('reset').and_return(command_result)
 
         command.call(mixed: false)
       end

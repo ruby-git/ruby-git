@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Commit do
     context 'with a simple message' do
       it 'commits with the given message' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('commit', '--message=Initial commit')
-                                                      .and_return(expected_result)
+        expect_command('commit', '--message=Initial commit').and_return(expected_result)
 
         result = command.call(message: 'Initial commit')
 
@@ -21,19 +20,19 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :all option' do
       it 'includes the --all flag' do
-        expect(execution_context).to receive(:command).with('commit', '--all', '--message=Add all changes')
+        expect_command('commit', '--all', '--message=Add all changes').and_return(command_result)
 
         command.call(message: 'Add all changes', all: true)
       end
 
       it 'also accepts :add_all as an alias' do
-        expect(execution_context).to receive(:command).with('commit', '--all', '--message=Add all changes')
+        expect_command('commit', '--all', '--message=Add all changes').and_return(command_result)
 
         command.call(message: 'Add all changes', add_all: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command).with('commit', '--message=Message')
+        expect_command('commit', '--message=Message').and_return(command_result)
 
         command.call(message: 'Message', all: false)
       end
@@ -41,7 +40,7 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :allow_empty option' do
       it 'includes the --allow-empty flag' do
-        expect(execution_context).to receive(:command).with('commit', '--allow-empty', '--message=Empty commit')
+        expect_command('commit', '--allow-empty', '--message=Empty commit').and_return(command_result)
 
         command.call(message: 'Empty commit', allow_empty: true)
       end
@@ -49,7 +48,7 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :allow_empty_message option' do
       it 'includes the --allow-empty-message flag without a message' do
-        expect(execution_context).to receive(:command).with('commit', '--allow-empty-message')
+        expect_command('commit', '--allow-empty-message').and_return(command_result)
 
         command.call(allow_empty_message: true)
       end
@@ -57,7 +56,7 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :no_verify option' do
       it 'includes the --no-verify flag' do
-        expect(execution_context).to receive(:command).with('commit', '--no-verify', '--message=Skip hooks')
+        expect_command('commit', '--no-verify', '--message=Skip hooks').and_return(command_result)
 
         command.call(message: 'Skip hooks', no_verify: true)
       end
@@ -65,11 +64,11 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :author option' do
       it 'includes the --author flag with the specified value' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'commit',
           '--author=John Doe <john@example.com>',
           '--message=Authored commit'
-        )
+        ).and_return(command_result)
 
         command.call(message: 'Authored commit', author: 'John Doe <john@example.com>')
       end
@@ -77,11 +76,11 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :date option' do
       it 'includes the --date flag with the specified value' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'commit',
           '--message=Dated commit',
           '--date=2023-01-15T10:30:00'
-        )
+        ).and_return(command_result)
 
         command.call(message: 'Dated commit', date: '2023-01-15T10:30:00')
       end
@@ -89,13 +88,13 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with the :amend option' do
       it 'includes --amend and --no-edit flags' do
-        expect(execution_context).to receive(:command).with('commit', '--amend', '--no-edit')
+        expect_command('commit', '--amend', '--no-edit').and_return(command_result)
 
         command.call(amend: true)
       end
 
       it 'does not include the flags when false' do
-        expect(execution_context).to receive(:command).with('commit', '--message=Normal commit')
+        expect_command('commit', '--message=Normal commit').and_return(command_result)
 
         command.call(message: 'Normal commit', amend: false)
       end
@@ -104,7 +103,7 @@ RSpec.describe Git::Commands::Commit do
     context 'with GPG signing options' do
       context 'when :gpg_sign is true' do
         it 'includes --gpg-sign flag' do
-          expect(execution_context).to receive(:command).with('commit', '--message=Signed commit', '--gpg-sign')
+          expect_command('commit', '--message=Signed commit', '--gpg-sign').and_return(command_result)
 
           command.call(message: 'Signed commit', gpg_sign: true)
         end
@@ -112,11 +111,11 @@ RSpec.describe Git::Commands::Commit do
 
       context 'when :gpg_sign is a key ID' do
         it 'includes --gpg-sign with the key ID' do
-          expect(execution_context).to receive(:command).with(
+          expect_command(
             'commit',
             '--message=Signed commit',
             '--gpg-sign=ABCD1234'
-          )
+          ).and_return(command_result)
 
           command.call(message: 'Signed commit', gpg_sign: 'ABCD1234')
         end
@@ -124,7 +123,7 @@ RSpec.describe Git::Commands::Commit do
 
       context 'when :gpg_sign is false' do
         it 'includes --no-gpg-sign flag' do
-          expect(execution_context).to receive(:command).with('commit', '--message=Unsigned commit', '--no-gpg-sign')
+          expect_command('commit', '--message=Unsigned commit', '--no-gpg-sign').and_return(command_result)
 
           command.call(message: 'Unsigned commit', gpg_sign: false)
         end
@@ -133,13 +132,13 @@ RSpec.describe Git::Commands::Commit do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect(execution_context).to receive(:command).with(
+        expect_command(
           'commit',
           '--all',
           '--no-verify',
           '--author=Jane <jane@example.com>',
           '--message=Combined options'
-        )
+        ).and_return(command_result)
 
         command.call(
           message: 'Combined options',

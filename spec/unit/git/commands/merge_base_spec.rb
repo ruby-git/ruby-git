@@ -11,9 +11,7 @@ RSpec.describe Git::Commands::MergeBase do
     context 'with two commits' do
       it 'runs merge-base with both commits' do
         expected_result = command_result("abc123\n")
-        expect(execution_context).to receive(:command)
-          .with('merge-base', 'main', 'feature')
-          .and_return(expected_result)
+        expect_command('merge-base', 'main', 'feature').and_return(expected_result)
 
         result = command.call('main', 'feature')
 
@@ -23,9 +21,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with multiple commits' do
       it 'passes all commits as operands' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', 'main', 'feature1', 'feature2')
-          .and_return(command_result("abc123\n"))
+        expect_command('merge-base', 'main', 'feature1', 'feature2').and_return(command_result("abc123\n"))
 
         command.call('main', 'feature1', 'feature2')
       end
@@ -33,9 +29,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with :octopus option' do
       it 'includes the --octopus flag' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', '--octopus', 'main', 'b1', 'b2')
-          .and_return(command_result("abc123\n"))
+        expect_command('merge-base', '--octopus', 'main', 'b1', 'b2').and_return(command_result("abc123\n"))
 
         command.call('main', 'b1', 'b2', octopus: true)
       end
@@ -43,9 +37,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with :independent option' do
       it 'includes the --independent flag' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', '--independent', 'a', 'b', 'c')
-          .and_return(command_result("sha1\nsha2\n"))
+        expect_command('merge-base', '--independent', 'a', 'b', 'c').and_return(command_result("sha1\nsha2\n"))
 
         command.call('a', 'b', 'c', independent: true)
       end
@@ -53,9 +45,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with :fork_point option' do
       it 'includes the --fork-point flag' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', '--fork-point', 'main', 'feature')
-          .and_return(command_result("abc123\n"))
+        expect_command('merge-base', '--fork-point', 'main', 'feature').and_return(command_result("abc123\n"))
 
         command.call('main', 'feature', fork_point: true)
       end
@@ -63,9 +53,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with :all option' do
       it 'includes the --all flag' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', '--all', 'main', 'feature')
-          .and_return(command_result("sha1\nsha2\n"))
+        expect_command('merge-base', '--all', 'main', 'feature').and_return(command_result("sha1\nsha2\n"))
 
         command.call('main', 'feature', all: true)
       end
@@ -73,9 +61,8 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect(execution_context).to receive(:command)
-          .with('merge-base', '--octopus', '--all', 'main', 'b1', 'b2')
-          .and_return(command_result("sha1\nsha2\n"))
+        expect_command('merge-base', '--octopus', '--all', 'main', 'b1',
+                       'b2').and_return(command_result("sha1\nsha2\n"))
 
         command.call('main', 'b1', 'b2', octopus: true, all: true)
       end

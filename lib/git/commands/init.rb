@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
     # Implements the `git init` command
     #
     # This command creates an empty Git repository or reinitializes an existing one.
+    #
+    # @see https://git-scm.com/docs/git-init git-init
     #
     # @api private
     #
@@ -22,22 +24,13 @@ module Git
     #   init = Git::Commands::Init.new(execution_context)
     #   init.call('my-repo', initial_branch: 'main')
     #
-    class Init
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Init < Base
+      arguments do
         literal 'init'
         flag_option :bare
         value_option :initial_branch, inline: true
         value_option :repository, inline: true, args: '--separate-git-dir'
         operand :directory
-      end.freeze
-
-      # Initialize the Init command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
 
       # Execute the git init command
@@ -56,13 +49,13 @@ module Git
       #
       #   @option options [String] :repository (nil) Path to put the .git directory (uses --separate-git-dir)
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @return [Git::CommandLineResult] the result of calling `git init`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      def call(*, **)
-        @execution_context.command(*ARGS.bind(*, **))
-      end
+      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

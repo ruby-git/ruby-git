@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -27,9 +27,8 @@ module Git
     #   fsck = Git::Commands::Fsck.new(execution_context)
     #   result = fsck.call(unreachable: true, strict: true)
     #
-    class Fsck
-      # Arguments DSL for building command-line arguments
-      ARGS = Arguments.define do
+    class Fsck < Base
+      arguments do
         literal 'fsck'
         literal '--no-progress'
         flag_option :unreachable
@@ -45,15 +44,11 @@ module Git
         flag_option :name_objects, negatable: true
         flag_option :references, negatable: true
         operand :objects, repeatable: true
-      end.freeze
-
-      # Initialize the Fsck command
-      #
-      # @param execution_context [Git::ExecutionContext, Git::Lib] the context for executing git commands
-      #
-      def initialize(execution_context)
-        @execution_context = execution_context
       end
+
+      # git fsck uses exit codes 0-7 to indicate different levels of issues found
+      # Exit code 0 = no issues, 1-7 = various issue types (still considered successful)
+      allow_exit_status 0..7
 
       # Execute the git fsck command
       #
@@ -110,15 +105,7 @@ module Git
       #
       # @raise [Git::FailedError] if git returns an exit code > 7
       #
-      def call(*, **)
-        args = ARGS.bind(*, **)
-        @execution_context.command(*args, raise_on_failure: false).tap do |result|
-          # fsck returns non-zero exit status when issues are found:
-          # 1 = errors found, 2 = missing objects, 4 = warnings
-          # These are bit flags that can be combined (0-7 are valid)
-          raise Git::FailedError, result if result.status.exitstatus > 7
-        end
-      end
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end
