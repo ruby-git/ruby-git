@@ -1,14 +1,32 @@
-# Backward Compatibility Audit for Git::Lib Methods
+# Review Backward Compatibility
 
-## Context
+Review `Git::Lib` methods for backward compatibility after commands are moved to
+`Git::Commands::*` classes. This prompt guides the process of restoring backward
+compatibility for a specific set of git commands while maintaining the benefits of
+the new command infrastructure.
 
-The ruby-git gem is undergoing a refactoring where git commands are being moved from `Git::Lib` to dedicated `Git::Commands::*` classes. During this refactoring, new methods may have been added to `Git::Lib` that break backward compatibility with version 4.0.0.
+### Related prompts
 
-This prompt guides the process of restoring backward compatibility for a specific set of git commands while maintaining the benefits of the new command infrastructure.
+- **Refactor Command to CommandLineResult** — migrating command classes to Base;
+  the counterpart to this prompt's `Git::Lib` facade focus
+- **Review Command Implementation** — class structure, phased rollout gates, and
+  internal compatibility contracts
 
 ## Objective
 
 For the specified git command(s), remove methods added to `Git::Lib` since v4.3.0 and ensure that remaining methods (which existed in v4.3.0) are backward compatible.
+
+## Current Command Architecture Note
+
+When auditing modern implementations, assume command classes follow `Git::Commands::Base`:
+
+- classes use `class < Base` with `arguments do ... end`
+- command entrypoint is typically `def call(...) = super`
+- exit-status behavior is centralized via `allow_exit_status` declarations on the class
+
+Because of this, backward-compatibility adaptation should happen in `Git::Lib`
+methods (facade/adapter layer), not by reintroducing legacy execution logic inside
+command classes.
 
 ## Instructions
 

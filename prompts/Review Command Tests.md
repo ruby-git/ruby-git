@@ -1,44 +1,63 @@
-## Testing guidelines for `Git::Commands::*` classes
+## Review Command Tests
 
-Each command class has a single `#call` method that builds git CLI arguments using an
-`Arguments` DSL, executes the command via `execution_context.command`, and returns a
-`Git::CommandLineResult`. Commands that detect errors raise `Git::FailedError`.
+Verify unit and integration tests for `Git::Commands::*` classes follow project
+conventions.
+
+Command classes follow `Git::Commands::Base`: they declare `arguments do`, may
+declare `allow_exit_status`, and provide a YARD shim `def call(...) = super`.
+`Base#call` performs binding and execution and always passes
+`raise_on_failure: false`, then validates exit status membership against the
+allowed range (`0..0` by default).
+
+### Related prompts
+
+- **Review Arguments DSL** — verifying DSL entries match git CLI
+- **Review Command Implementation** — class structure, phased rollout gates, and
+  internal compatibility contracts
+- **Review YARD Documentation** — documentation completeness for command classes
 
 ### Unit tests
 
-Unit tests verify that the command builds the correct arguments for every option and
-operand combination. For each entry in the command's `ARGS` definition (literals,
-flag options, operands, value options), there should be a unit test that sets a
-message expectation on `execution_context.command` with the exact expected arguments.
+Unit tests verify CLI argument building and command-layer behavior for each command.
 
-Unit tests should cover:
+#### Cover these cases
 
-- The base invocation with no options (verifies all literal flags are passed in the
-  correct order). This test should also store the `.and_return` value in an
-  `expected_result` variable and assert `expect(result).to eq(expected_result)` to
-  verify that `#call` passes through what `execution_context.command` returns. This
-  assertion belongs only in the base invocation test — do not repeat it in every test.
+- Base invocation (no options): verify literals and return pass-through. Store the
+  `.and_return` value in an `expected_result` variable and assert
+  `expect(result).to eq(expected_result)` to verify that `#call` passes through what
+  `execution_context.command` returns. This assertion belongs only in the base
+  invocation test — do not repeat it in every test.
 - Each positional operand variation (e.g., single value, multiple values)
-- Each flag option, including aliases (e.g., `:cached` and its `:staged` alias, or
-  `:force` and its `:f` short alias)
+- Each flag option, including aliases (e.g., `:force` and `:f`)
 - Flag options combined with operands where meaningful (e.g., an option that modifies
   how operands are interpreted)
 - Value options with each accepted form (e.g., boolean `true` vs a string value like
   `'lines,cumulative'`)
 - Pathspecs or other repeatable/separator-based options, both alone and combined with
   operands
-- Exit code branching logic: verify the command's own success/failure threshold using
-  mocked exit codes. Test every exit code the command treats as success and at least
-  two it treats as failure. For example, if the command raises `FailedError` when
-  `exitstatus >= 2`, test that exit codes 0 and 1 return a result without raising,
-  and that exit codes 2 and 128 raise `FailedError`. This tests the command's
-  branching logic, not git's behavior.
-- Input validation: unsupported options raise `ArgumentError`, conflicting options
-  raise `ArgumentError`, required arguments raise `ArgumentError` when missing.
+- Execution options forwarding where applicable (e.g., `timeout:`)
+- Exit-status behavior for commands using `allow_exit_status`: test that exit codes
+  within the declared range return a result without raising, and that exit codes
+  outside the range raise `FailedError`. For example, if the command declares
+  `allow_exit_status 0..1`, test that exit codes 0 and 1 succeed, and that exit
+  codes 2 and 128 raise `FailedError`.
+- Input validation (`ArgumentError`) for unsupported/conflicting/missing args
 
-Unit test descriptions should be concise and action-oriented. Use descriptions like
-"includes the --cached flag", "passes both commits as operands", "combines commit
-with pathspecs".
+#### Expectations for command invocation
+
+Since `Base#call` passes `raise_on_failure: false`, expectations should include it:
+
+```ruby
+expect(execution_context).to receive(:command)
+  .with('clone', '--', url, dir, raise_on_failure: false)
+  .and_return(command_result)
+```
+
+When testing execution options, include forwarded keywords as well:
+
+```ruby
+.with('clone', '--', url, dir, timeout: 30, raise_on_failure: false)
+```
 
 #### What not to test
 
@@ -53,21 +72,18 @@ Unit tests should exercise each **code path** through the command, not each poss
 - **Repeating the return value assertion.** The base invocation test asserts
   `expect(result).to eq(expected_result)` once as a contract check. Do not
   repeat this assertion in other tests — one check per file is sufficient.
-- **String-variant pass-through tests.** For pure pass-through commands (where
-  `#call` only does `ARGS.bind` → `execution_context.command` → return result), do
-  not write multiple tests that pass different string values through the same
-  positional argument or value option. Tests like "handles paths with spaces",
-  "handles paths with unicode", "handles tags with slashes" all exercise the same
+- **String-variant pass-through tests.** Do not write multiple tests that pass
+  different string values through the same positional argument or value option. Tests
+  like "handles paths with spaces" and "handles paths with unicode" exercise the same
   code path — the command passes strings unchanged. One test per operand/option is
   sufficient.
 - **Multiple format variants for the same operand.** For example, a stash command
   that accepts a stash reference does not need separate tests for `stash@{0}`,
-  `stash@{2}`, and `1` — they all flow through the same positional argument. One test
-  that passes any valid value is enough.
+  `stash@{2}`, and `1` — they all flow through the same positional argument.
 - **Varying mocked stdout for the same invocation.** If the command has no output
-  parsing, testing the same `#call` with different mocked stdout values (e.g., "when
-  on a branch" vs "when in detached HEAD state") exercises identical code. One test
-  is sufficient unless the command parses or branches on the output.
+  parsing, testing the same `#call` with different mocked stdout values exercises
+  identical code. One test is sufficient unless the command parses or branches on
+  the output.
 
 The `Arguments` DSL has its own comprehensive spec (`arguments_spec.rb`) that tests
 flag handling, value options, positionals, separators, edge cases, and error
@@ -81,15 +97,20 @@ Unit tests are organized under `describe '#call'` with three sections:
 
 1. **Argument building** (the bulk) — flat `context` blocks, one per option/operand
    variation. These are always present and come first.
-2. **`context 'exit code handling'`** — only for commands with non-default exit code
-   thresholds (e.g., `exitstatus >= 2` or `exitstatus > 7`). Uses mocked exit codes
-   via `command_result` helper to test the branching logic.
+2. **`context 'exit code handling'`** — only for commands with `allow_exit_status`
+   ranges beyond `0..0`. Uses mocked exit codes via `command_result` helper to test
+   that exit codes within the allowed range return a result and exit codes outside
+   the range raise `FailedError`.
 3. **`context 'input validation'`** — only for commands with validation rules. Covers
    unsupported options, conflicting options, and required arguments that raise
    `ArgumentError`.
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.
+
+Unit test descriptions should be concise and action-oriented. Use descriptions like
+"includes the --cached flag", "passes both commits as operands", "combines commit
+with pathspecs".
 
 **Example with all three sections:**
 
@@ -115,7 +136,7 @@ RSpec.describe Git::Commands::Branch::Delete do
       # ...
     end
 
-    # Exit code handling — only when command has custom thresholds
+    # Exit code handling — only when command declares allow_exit_status
     context 'exit code handling' do
       it 'returns result for exit code 0' do
         # ... mock exit code 0, assert result returned ...
@@ -183,11 +204,11 @@ Integration tests should only cover:
   git invocations that naturally produce each code. For example, for `git diff`:
   identical refs produce exit code 0 with empty output; differing refs produce exit
   code ≤1 with non-empty output. This confirms that real git returns the exit codes
-  the command's branching logic expects.
+  the command's `allow_exit_status` range expects.
 - Error handling: invalid input (e.g., a nonexistent ref) raises `FailedError`.
   **Every command must have at least one error handling test.** Even commands with
-  non-standard exit code thresholds can be forced to fail (e.g., by removing `.git`
-  to trigger exit code 128).
+  non-default `allow_exit_status` ranges can be forced to fail (e.g., by removing
+  `.git` to trigger exit code 128).
 
 **Do not** write integration tests that assert on git's output format (e.g., matching
 specific line patterns, status letters, or header syntax). The command's job is to
@@ -215,8 +236,6 @@ RSpec.describe Git::Commands::Add, :integration do
 
   subject(:command) { described_class.new(execution_context) }
 
-  # shared setup goes here if needed
-
   describe '#call' do
     describe 'when the command succeeds' do
       it 'returns a CommandLineResult' do
@@ -233,7 +252,7 @@ RSpec.describe Git::Commands::Add, :integration do
 end
 ```
 
-**Custom exit code example** (command treats multiple exit codes as success):
+**Custom exit code example** (command declares `allow_exit_status`):
 
 ```ruby
 RSpec.describe Git::Commands::Diff::Numstat, :integration do
