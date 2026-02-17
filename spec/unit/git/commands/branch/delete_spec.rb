@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Branch::Delete do
   describe '#call' do
     context 'with single branch name' do
       it 'runs branch --delete with the branch name' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', 'feature-branch', raise_on_failure: false)
+        expect_command('branch', '--delete', 'feature-branch')
           .and_return(command_result("Deleted branch feature-branch (was abc1234).\n"))
 
         result = command.call('feature-branch')
@@ -26,8 +25,7 @@ RSpec.describe Git::Commands::Branch::Delete do
         stdout = "Deleted branch branch1 (was abc1234).\n" \
                  "Deleted branch branch2 (was abc1234).\n" \
                  "Deleted branch branch3 (was abc1234).\n"
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', 'branch1', 'branch2', 'branch3', raise_on_failure: false)
+        expect_command('branch', '--delete', 'branch1', 'branch2', 'branch3')
           .and_return(command_result(stdout))
 
         result = command.call('branch1', 'branch2', 'branch3')
@@ -38,8 +36,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
     context 'with :force option' do
       it 'adds --force flag' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', '--force', 'feature-branch', raise_on_failure: false)
+        expect_command('branch', '--delete', '--force', 'feature-branch')
           .and_return(command_result("Deleted branch feature-branch (was abc1234).\n"))
 
         result = command.call('feature-branch', force: true)
@@ -48,8 +45,7 @@ RSpec.describe Git::Commands::Branch::Delete do
       end
 
       it 'accepts :f alias' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', '--force', 'feature-branch', raise_on_failure: false)
+        expect_command('branch', '--delete', '--force', 'feature-branch')
           .and_return(command_result("Deleted branch feature-branch (was abc1234).\n"))
 
         result = command.call('feature-branch', f: true)
@@ -60,8 +56,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
     context 'with :remotes option' do
       it 'adds --remotes flag' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', '--remotes', 'origin/feature', raise_on_failure: false)
+        expect_command('branch', '--delete', '--remotes', 'origin/feature')
           .and_return(command_result("Deleted remote-tracking branch origin/feature (was abc1234).\n"))
 
         result = command.call('origin/feature', remotes: true)
@@ -70,8 +65,7 @@ RSpec.describe Git::Commands::Branch::Delete do
       end
 
       it 'accepts :r alias' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', '--remotes', 'origin/feature', raise_on_failure: false)
+        expect_command('branch', '--delete', '--remotes', 'origin/feature')
           .and_return(command_result("Deleted remote-tracking branch origin/feature (was abc1234).\n"))
 
         result = command.call('origin/feature', r: true)
@@ -82,8 +76,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', '--force', '--remotes', 'origin/feature', raise_on_failure: false)
+        expect_command('branch', '--delete', '--force', '--remotes', 'origin/feature')
           .and_return(command_result("Deleted remote-tracking branch origin/feature (was abc1234).\n"))
 
         result = command.call('origin/feature', force: true, remotes: true)
@@ -94,8 +87,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
     context 'exit code handling' do
       it 'returns result for exit code 0 (all deleted)' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', 'feature', raise_on_failure: false)
+        expect_command('branch', '--delete', 'feature')
           .and_return(command_result("Deleted branch feature (was abc1234).\n", exitstatus: 0))
 
         result = command.call('feature')
@@ -105,8 +97,7 @@ RSpec.describe Git::Commands::Branch::Delete do
       end
 
       it 'returns result for exit code 1 (partial failure)' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', 'feature', 'nonexistent', raise_on_failure: false)
+        expect_command('branch', '--delete', 'feature', 'nonexistent')
           .and_return(
             command_result(
               "Deleted branch feature (was abc1234).\n",
@@ -122,8 +113,7 @@ RSpec.describe Git::Commands::Branch::Delete do
       end
 
       it 'raises FailedError for exit code > 1' do
-        expect(execution_context).to receive(:command)
-          .with('branch', '--delete', 'feature', raise_on_failure: false)
+        expect_command('branch', '--delete', 'feature')
           .and_return(command_result('', stderr: 'fatal: error', exitstatus: 128))
 
         expect { command.call('feature') }.to raise_error(Git::FailedError)

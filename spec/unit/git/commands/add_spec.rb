@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Add do
     context 'with default arguments' do
       it 'adds nothing' do
         expected_result = command_result
-        expect(execution_context).to receive(:command).with('add', raise_on_failure: false)
-                                                      .and_return(expected_result)
+        expect_command('add').and_return(expected_result)
 
         result = command.call
 
@@ -21,9 +20,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with a single file path' do
       it 'adds the specified file' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', 'path/to/file.rb', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', 'path/to/file.rb').and_return(command_result)
 
         command.call('path/to/file.rb')
       end
@@ -31,9 +28,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with multiple file paths as an array' do
       it 'adds all specified files' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', 'file1.rb', 'file2.rb', 'file3.rb', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', 'file1.rb', 'file2.rb', 'file3.rb').and_return(command_result)
 
         command.call(%w[file1.rb file2.rb file3.rb])
       end
@@ -41,17 +36,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :all option' do
       it 'includes the --all flag' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--all', '--', '.', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--all', '--', '.').and_return(command_result)
 
         command.call('.', all: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', '.', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', '.').and_return(command_result)
 
         command.call('.', all: false)
       end
@@ -59,17 +50,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :force option' do
       it 'includes the --force flag' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--force', '--', 'ignored_file.txt', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--force', '--', 'ignored_file.txt').and_return(command_result)
 
         command.call('ignored_file.txt', force: true)
       end
 
       it 'does not include the flag when false' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', 'file.txt', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', force: false)
       end
@@ -77,9 +64,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--all', '--force', '--', '.', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--all', '--force', '--', '.').and_return(command_result)
 
         command.call('.', all: true, force: true)
       end
@@ -87,17 +72,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with paths containing special characters' do
       it 'handles paths with spaces' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', 'path/to/my file.rb', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', 'path/to/my file.rb').and_return(command_result)
 
         command.call('path/to/my file.rb')
       end
 
       it 'handles paths with unicode characters' do
-        expect(execution_context).to receive(:command)
-          .with('add', '--', 'path/to/файл.rb', raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('add', '--', 'path/to/файл.rb').and_return(command_result)
 
         command.call('path/to/файл.rb')
       end

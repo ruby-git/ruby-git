@@ -13,9 +13,7 @@ RSpec.describe Git::Commands::Clone do
     context 'with minimal arguments' do
       it 'clones into the specified directory' do
         expected_result = command_result
-        expect(execution_context).to receive(:command)
-          .with('clone', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(expected_result)
+        expect_command('clone', '--', repository_url, directory).and_return(expected_result)
 
         result = command.call(repository_url, directory)
 
@@ -25,9 +23,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with nil directory' do
       it 'omits the directory operand' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--', repository_url, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--', repository_url).and_return(command_result)
 
         command.call(repository_url, nil)
       end
@@ -35,9 +31,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :bare option' do
       it 'includes the --bare flag' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--bare', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--bare', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, bare: true)
       end
@@ -45,9 +39,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :mirror option' do
       it 'includes the --mirror flag' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--mirror', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--mirror', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, mirror: true)
       end
@@ -55,9 +47,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :recursive option' do
       it 'includes the --recursive flag' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--recursive', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--recursive', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, recursive: true)
       end
@@ -65,9 +55,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :branch option' do
       it 'includes the --branch flag with value' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--branch', 'development', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--branch', 'development', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, branch: 'development')
       end
@@ -75,9 +63,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :filter option' do
       it 'includes the --filter flag with value' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--filter', 'tree:0', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--filter', 'tree:0', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, filter: 'tree:0')
       end
@@ -85,9 +71,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :origin option' do
       it 'includes the --origin flag with value' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--origin', 'upstream', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--origin', 'upstream', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, origin: 'upstream')
       end
@@ -95,9 +79,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :remote option (alias for origin)' do
       it 'includes the --origin flag with value' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--origin', 'upstream', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--origin', 'upstream', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, remote: 'upstream')
       end
@@ -105,18 +87,15 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :config option' do
       it 'includes a single config option' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--config', 'user.name=John Doe', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--config', 'user.name=John Doe', '--', repository_url,
+                       directory).and_return(command_result)
 
         command.call(repository_url, directory, config: 'user.name=John Doe')
       end
 
       it 'includes multiple config options' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--config', 'user.name=John Doe', '--config', 'user.email=john@doe.com',
-                '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--config', 'user.name=John Doe', '--config', 'user.email=john@doe.com',
+                       '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, config: ['user.name=John Doe', 'user.email=john@doe.com'])
       end
@@ -124,25 +103,19 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :single_branch option' do
       it 'includes --single-branch when true' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--single-branch', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--single-branch', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, single_branch: true)
       end
 
       it 'includes --no-single-branch when false' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--no-single-branch', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--no-single-branch', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, single_branch: false)
       end
 
       it 'includes no flag when nil' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, single_branch: nil)
       end
@@ -150,17 +123,13 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :depth option' do
       it 'includes --depth with integer value' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--depth', 1, '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--depth', 1, '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, depth: 1)
       end
 
       it 'converts string depth to integer' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--depth', 5, '--', repository_url, directory, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--depth', 5, '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, depth: '5')
       end
@@ -168,9 +137,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :timeout option' do
       it 'passes timeout to the command' do
-        expect(execution_context).to receive(:command)
-          .with('clone', '--', repository_url, directory, timeout: 30, raise_on_failure: false)
-          .and_return(command_result)
+        expect_command('clone', '--', repository_url, directory, timeout: 30).and_return(command_result)
 
         command.call(repository_url, directory, timeout: 30)
       end
