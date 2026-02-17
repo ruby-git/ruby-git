@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -28,21 +28,12 @@ module Git
       # @example Create branch from specific stash
       #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch', 'stash@{2}')
       #
-      class Branch
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Branch < Base
+        arguments do
           literal 'stash'
           literal 'branch'
           operand :branchname, required: true
           operand :stash
-        end.freeze
-
-        # Creates a new Branch command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Create a branch from a stash entry
@@ -65,9 +56,7 @@ module Git
         #
         # @raise [Git::FailedError] if the branch already exists or stash doesn't exist
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

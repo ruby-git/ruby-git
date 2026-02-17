@@ -78,3 +78,24 @@ def command_result(stdout = '', stderr: '', exitstatus: 0)
   status = double('status', success?: exitstatus.zero?, exitstatus: exitstatus, signaled?: false)
   Git::CommandLineResult.new(%w[git], status, stdout, stderr)
 end
+
+# Helper to expect a command call with raise_on_failure: false automatically included
+#
+# This helper simplifies testing commands that inherit from Commands::Base, which
+# always passes raise_on_failure: false to the execution context.
+#
+# @param args [Array] the command arguments to expect
+#
+# @param execution_options [Hash] additional execution options to expect
+#
+# @return [RSpec::Mocks::MessageExpectation] the expectation object for chaining
+#
+# @example
+#   expect_command('stash', 'apply').and_return(command_result(''))
+#   expect_command('stash', 'push', '--all').and_return(command_result(''))
+#   expect_command('fetch', 'origin', timeout: 30).and_return(command_result(''))
+#
+def expect_command(*, **execution_options)
+  expect(execution_context).to receive(:command)
+    .with(*, **execution_options, raise_on_failure: false)
+end

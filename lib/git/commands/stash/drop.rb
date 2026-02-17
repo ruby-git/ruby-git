@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -22,20 +22,11 @@ module Git
       # @example Drop a specific stash
       #   Git::Commands::Stash::Drop.new(execution_context).call('stash@\\{2}')
       #
-      class Drop
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Drop < Base
+        arguments do
           literal 'stash'
           literal 'drop'
           operand :stash
-        end.freeze
-
-        # Creates a new Drop command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Drop a stash entry
@@ -54,9 +45,7 @@ module Git
         #
         # @raise [Git::FailedError] if the stash does not exist
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

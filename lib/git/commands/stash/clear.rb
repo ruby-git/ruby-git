@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -18,28 +18,17 @@ module Git
       # @example Clear all stashes
       #   Git::Commands::Stash::Clear.new(execution_context).call
       #
-      class Clear
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Clear < Base
+        arguments do
           literal 'stash'
           literal 'clear'
-        end.freeze
-
-        # Creates a new Clear command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Clear all stash entries
         #
         # @return [Git::CommandLineResult] the result of calling `git stash clear`
         #
-        def call
-          @execution_context.command(*ARGS.bind)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

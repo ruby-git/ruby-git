@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 require 'git/parsers/stash'
 
 module Git
@@ -17,20 +17,11 @@ module Git
       # @example List all stashes
       #   Git::Commands::Stash::List.new(execution_context).call
       #
-      class List
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class List < Base
+        arguments do
           literal 'stash'
           literal 'list'
           literal "--format=#{Git::Parsers::Stash::STASH_FORMAT}"
-        end.freeze
-
-        # Creates a new List command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # List all stash entries
@@ -39,9 +30,7 @@ module Git
         #
         # @return [Git::CommandLineResult] the result of calling `git stash list`
         #
-        def call
-          @execution_context.command(*ARGS.bind)
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

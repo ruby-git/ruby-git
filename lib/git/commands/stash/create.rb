@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -26,20 +26,11 @@ module Git
       # @example Create a stash commit with a message
       #   Git::Commands::Stash::Create.new(execution_context).call('WIP: my changes')
       #
-      class Create
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Create < Base
+        arguments do
           literal 'stash'
           literal 'create'
           operand :message
-        end.freeze
-
-        # Creates a new Create command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Create a stash commit
@@ -56,9 +47,7 @@ module Git
         #
         # @return [Git::CommandLineResult] the result of calling `git stash create`
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

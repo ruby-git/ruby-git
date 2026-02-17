@@ -18,8 +18,7 @@ RSpec.describe Git::Commands::Stash::List do
     it 'runs stash list with format' do
       format_arg = "--format=#{Git::Parsers::Stash::STASH_FORMAT}"
 
-      expect(execution_context).to receive(:command)
-        .with('stash', 'list', format_arg)
+      expect_command('stash', 'list', format_arg)
         .and_return(command_result(stash_output))
 
       result = command.call

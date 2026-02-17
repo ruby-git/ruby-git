@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -23,9 +23,8 @@ module Git
       #   Git::Commands::Stash::ShowNumstat.new(execution_context).call(dirstat: true)
       #   Git::Commands::Stash::ShowNumstat.new(execution_context).call(dirstat: 'lines,cumulative')
       #
-      class ShowNumstat
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class ShowNumstat < Base
+        arguments do
           literal 'stash'
           literal 'show'
           literal '--numstat'
@@ -35,14 +34,6 @@ module Git
           flag_option :only_untracked
           flag_or_value_option :dirstat, inline: true
           operand :stash
-        end.freeze
-
-        # Creates a new ShowNumstat command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Show stash numstat
@@ -81,9 +72,7 @@ module Git
         #
         # @return [Git::CommandLineResult] the result of calling `git stash show --numstat`
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
