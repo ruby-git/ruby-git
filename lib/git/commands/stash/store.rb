@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -25,21 +25,12 @@ module Git
       # @example Store with a custom message
       #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456', message: 'WIP: feature')
       #
-      class Store
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Store < Base
+        arguments do
           literal 'stash'
           literal 'store'
           value_option %i[message m], inline: true
           operand :commit, required: true
-        end.freeze
-
-        # Creates a new Store command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Store a commit in the stash reflog
@@ -58,9 +49,7 @@ module Git
         #
         # @raise [Git::FailedError] if the commit is not a valid stash commit
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

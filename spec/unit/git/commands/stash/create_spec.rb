@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Stash::Create do
   describe '#call' do
     context 'with no arguments' do
       it 'runs stash create' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'create')
+        expect_command('stash', 'create')
           .and_return(command_result("abc123def456789\n"))
 
         result = command.call
@@ -23,24 +22,21 @@ RSpec.describe Git::Commands::Stash::Create do
 
     context 'with message' do
       it 'passes message to command' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'create', 'WIP: my changes')
+        expect_command('stash', 'create', 'WIP: my changes')
           .and_return(command_result("abc123\n"))
 
         command.call('WIP: my changes')
       end
 
       it 'handles message with special characters' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'create', 'Fix "bug" in code')
+        expect_command('stash', 'create', 'Fix "bug" in code')
           .and_return(command_result("abc123\n"))
 
         command.call('Fix "bug" in code')
       end
 
       it 'handles empty string message' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'create', '')
+        expect_command('stash', 'create', '')
           .and_return(command_result("abc123\n"))
 
         command.call('')
@@ -49,8 +45,7 @@ RSpec.describe Git::Commands::Stash::Create do
 
     context 'with nil message' do
       it 'omits nil message from arguments' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'create')
+        expect_command('stash', 'create')
           .and_return(command_result("abc123\n"))
 
         command.call(nil)

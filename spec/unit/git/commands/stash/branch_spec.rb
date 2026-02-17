@@ -10,8 +10,7 @@ RSpec.describe Git::Commands::Stash::Branch do
   describe '#call' do
     context 'with branch name only (latest stash)' do
       it 'runs stash branch with the given branch name' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'my-feature')
+        expect_command('stash', 'branch', 'my-feature')
           .and_return(command_result("Switched to a new branch 'my-feature'\n"))
 
         result = command.call('my-feature')
@@ -23,16 +22,14 @@ RSpec.describe Git::Commands::Stash::Branch do
 
     context 'with branch name and stash reference' do
       it 'passes stash reference to command' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'my-feature', 'stash@{2}')
+        expect_command('stash', 'branch', 'my-feature', 'stash@{2}')
           .and_return(command_result(''))
 
         command.call('my-feature', 'stash@{2}')
       end
 
       it 'accepts numeric stash reference' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'bugfix', '1')
+        expect_command('stash', 'branch', 'bugfix', '1')
           .and_return(command_result(''))
 
         command.call('bugfix', '1')
@@ -41,16 +38,14 @@ RSpec.describe Git::Commands::Stash::Branch do
 
     context 'with special branch names' do
       it 'handles branch names with slashes' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'feature/new-thing')
+        expect_command('stash', 'branch', 'feature/new-thing')
           .and_return(command_result(''))
 
         command.call('feature/new-thing')
       end
 
       it 'handles branch names with hyphens' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'fix-bug-123')
+        expect_command('stash', 'branch', 'fix-bug-123')
           .and_return(command_result(''))
 
         command.call('fix-bug-123')
@@ -59,8 +54,7 @@ RSpec.describe Git::Commands::Stash::Branch do
 
     context 'with nil stash reference' do
       it 'omits nil stash from arguments' do
-        expect(execution_context).to receive(:command)
-          .with('stash', 'branch', 'my-branch')
+        expect_command('stash', 'branch', 'my-branch')
           .and_return(command_result(''))
 
         command.call('my-branch', nil)

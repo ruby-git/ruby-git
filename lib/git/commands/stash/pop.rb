@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'git/commands/arguments'
+require 'git/commands/base'
 
 module Git
   module Commands
@@ -25,21 +25,12 @@ module Git
       # @example Pop and restore index state
       #   Git::Commands::Stash::Pop.new(execution_context).call(index: true)
       #
-      class Pop
-        # Arguments DSL for building command-line arguments
-        ARGS = Arguments.define do
+      class Pop < Base
+        arguments do
           literal 'stash'
           literal 'pop'
           flag_option :index
           operand :stash
-        end.freeze
-
-        # Creates a new Pop command instance
-        #
-        # @param execution_context [Git::ExecutionContext] the execution context for running commands
-        #
-        def initialize(execution_context)
-          @execution_context = execution_context
         end
 
         # Pop stashed changes
@@ -66,9 +57,7 @@ module Git
         #
         # @raise [Git::FailedError] if the stash does not exist
         #
-        def call(*, **)
-          @execution_context.command(*ARGS.bind(*, **))
-        end
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
