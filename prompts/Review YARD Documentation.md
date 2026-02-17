@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with one or more
+command source files whose YARD docs should be reviewed. Examples:
+
+```text
+Using the Review YARD Documentation prompt, review
+lib/git/commands/branch/delete.rb.
+```
+
+```text
+Review YARD Documentation: lib/git/commands/stash/push.rb
+lib/git/commands/stash/pop.rb
+```
+
+The invocation needs the command file(s) to review.
+
+---
+
 ## Review YARD Documentation
 
 Verify YARD documentation for command classes is complete, accurate, and aligned

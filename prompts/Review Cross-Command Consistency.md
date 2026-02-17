@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with the sibling
+command files (same module/family) to compare. Examples:
+
+```text
+Using the Review Cross-Command Consistency prompt, review the
+Git::Commands::Diff family: lib/git/commands/diff/patch.rb,
+lib/git/commands/diff/numstat.rb, lib/git/commands/diff/raw.rb.
+```
+
+```text
+Review Cross-Command Consistency: all files under lib/git/commands/stash/
+```
+
+The invocation needs two or more sibling command files from the same family.
+
+---
+
 ## Review Cross-Command Consistency
 
 Review sibling command classes (same module/family) for consistent structure,

@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with one or more
+command source files and the relevant git man page or documentation. Examples:
+
+```text
+Using the Review Arguments DSL prompt, review
+lib/git/commands/diff/numstat.rb against `git diff --numstat` docs.
+```
+
+```text
+Review Arguments DSL: lib/git/commands/stash/push.rb
+```
+
+The invocation needs the command file(s) to review. Providing the git man page
+or CLI documentation helps verify flag accuracy.
+
+---
+
 ## Review Arguments DSL
 
 Verify that a command class's `arguments do ... end` definition accurately maps Ruby

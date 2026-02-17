@@ -1,3 +1,23 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with the unit
+and/or integration spec file(s) to review. Examples:
+
+```text
+Using the Review Command Tests prompt, review
+spec/unit/git/commands/branch/delete_spec.rb and
+spec/integration/git/commands/branch/delete_spec.rb.
+```
+
+```text
+Review Command Tests: spec/unit/git/commands/stash/push_spec.rb
+```
+
+The invocation needs the spec file(s) to review. Including the corresponding
+command source file provides useful context for verifying argument coverage.
+
+---
+
 ## Review Command Tests
 
 Verify unit and integration tests for `Git::Commands::*` classes follow project
