@@ -85,6 +85,7 @@ When command declares non-default exit range:
 #### 5. Formatting consistency
 
 - [ ] blank comment line before each YARD tag block
+- [ ] `@option` description text starts with a capital letter (sentence case)
 - [ ] consistent option wording and defaults across sibling commands
 - [ ] no stale references to removed per-command implementation details
 
