@@ -73,7 +73,7 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided, if :single_branch is not true, false, or nil,
       #   or if any option fails validation
       #
-      def call(...) = super
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end
