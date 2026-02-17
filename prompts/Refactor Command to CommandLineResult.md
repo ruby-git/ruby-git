@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with the command
+class or source file to migrate. Examples:
+
+```text
+Using the Refactor Command to CommandLineResult prompt, migrate
+Git::Commands::Stash::Pop to the Base pattern.
+```
+
+```text
+Refactor Command to CommandLineResult: lib/git/commands/branch/delete.rb
+```
+
+The invocation needs the command class name or file path of the command to
+refactor.
+
+---
+
 ## Refactor Command to CommandLineResult
 
 Migrate a command that still performs parsing or custom execution logic to the

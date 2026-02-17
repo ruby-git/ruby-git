@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with one or more
+command source files to review. Examples:
+
+```text
+Using the Review Command Implementation prompt, review
+lib/git/commands/branch/delete.rb.
+```
+
+```text
+Review Command Implementation: lib/git/commands/diff/patch.rb
+lib/git/commands/diff/numstat.rb
+```
+
+The invocation needs the command file(s) to review.
+
+---
+
 ## Review Command Implementation
 
 Verify a command class follows the current `Git::Commands::Base` architecture and

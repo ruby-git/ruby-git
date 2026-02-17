@@ -1,3 +1,18 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with the git
+command name(s) to audit. Example:
+
+```text
+Remove methods added to Git::Lib since v4.3.0 for the `branch` git command
+and ensure the remaining methods are backward compatible.
+```
+
+Replace `branch` with the specific git command(s) you want to audit (e.g.,
+`worktree`, `tag`, `merge`, `reset`).
+
+---
+
 # Review Backward Compatibility
 
 Review `Git::Lib` methods for backward compatibility after commands are moved to

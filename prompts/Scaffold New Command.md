@@ -1,3 +1,22 @@
+## How to use this prompt
+
+Attach this file to your Copilot Chat context, then invoke it with the git
+subcommand name and the Ruby module path for the new class. Examples:
+
+```text
+Using the Scaffold New Command prompt, scaffold Git::Commands::Worktree::Add
+for `git worktree add`.
+```
+
+```text
+Scaffold New Command: Git::Commands::LsTree for `git ls-tree`.
+```
+
+The invocation needs the target `Git::Commands::*` class name and the git
+subcommand (or subcommand + sub-action) it wraps.
+
+---
+
 ## Scaffold New Command
 
 Generate a production-ready command class, unit tests, integration tests, and YARD
