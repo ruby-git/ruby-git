@@ -2214,9 +2214,7 @@ classes using a "Strangler Fig" pattern.
        context 'with default arguments' do
          it 'executes the expected git command' do
            expected_result = command_result
-           expect(execution_context).to receive(:command)
-             .with('<git-subcommand>', raise_on_failure: false)
-             .and_return(expected_result)
+           expect_command('<git-subcommand>').and_return(expected_result)
 
            result = command.call
 
