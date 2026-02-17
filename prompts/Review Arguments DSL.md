@@ -53,6 +53,7 @@ Key behaviors:
 | boolean flag | `flag_option` | `flag_option :cached` |
 | boolean-or-value | `flag_or_value_option` | `flag_or_value_option :dirstat, inline: true` |
 | value option | `value_option` | `value_option :message` |
+| execution kwarg (not a CLI arg) | `execution_option` | `execution_option :timeout` |
 | positional argument | `operand` | `operand :commit1` |
 | pathspec-style operands | `value_option ... as_operand: true, separator: '--'` | `value_option :pathspecs, as_operand: true, separator: '--', repeatable: true` |
 
