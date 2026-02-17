@@ -1960,6 +1960,12 @@ module Git
     #
     #   If the command does not respond to SIGKILL, it will hang this method.
     #
+    # @note Individual command classes (under {Git::Commands}) can selectively
+    #   expose `:timeout` and `:env` to their callers by declaring them as
+    #   execution options in their Arguments DSL definition and forwarding
+    #   them to this method. See {Git::Commands::Clone#call} for an example
+    #   of a command that exposes `:timeout`.
+    #
     # @see Git::CommandLine#run
     #
     # @return [Git::CommandLineResult] the result of the command

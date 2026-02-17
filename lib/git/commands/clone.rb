@@ -65,13 +65,16 @@ module Git
       #   @option options [Boolean, nil] :single_branch (nil) Clone only the history
       #     leading to the tip of a single branch
       #
-      #   @option options [Numeric, nil] :timeout (nil) The number of seconds to wait for
-      #     the command to complete
+      #   @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
+      #     for the command to complete. If nil, uses the global timeout from
+      #     {Git::Config}. If 0, no timeout is enforced.
       #
       # @return [Git::CommandLineResult] the result of the git clone command
       #
       # @raise [ArgumentError] if unsupported options are provided, if :single_branch is not true, false, or nil,
       #   or if any option fails validation
+      #
+      # @see Git::Lib#command for details on timeout behavior and other execution options
       #
       def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
