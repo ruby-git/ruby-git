@@ -777,7 +777,7 @@ module Git
     # @return [HeadState] the state and name of the current branch
     #
     def current_branch_state
-      branch_name = command('branch', '--show-current').stdout
+      branch_name = Git::Commands::Branch::ShowCurrent.new(self).call.stdout
       return HeadState.new(:detached, 'HEAD') if branch_name.empty?
 
       state = get_branch_state(branch_name)
@@ -791,7 +791,9 @@ module Git
     end
 
     def branch_contains(commit, branch_name = '')
-      command('branch', branch_name, '--contains', commit).stdout
+      branch_name = branch_name.to_s
+      pattern = branch_name.empty? ? nil : branch_name
+      Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit).stdout
     end
 
     GREP_OPTION_MAP = [

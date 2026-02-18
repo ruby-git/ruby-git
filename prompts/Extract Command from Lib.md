@@ -28,7 +28,7 @@ class. The git subcommand is determined by the first (or first few) arguments to
 Run or reference these prompts during the workflow:
 
 - **Scaffold New Command** — generates the `Git::Commands::*` class, unit tests,
-  integration tests, and YARD docs (used in Step 3 if the command class does not
+  integration tests, and YARD docs (used in Step 4 if the command class does not
   exist yet)
 - **Review Command Implementation** — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
@@ -63,7 +63,29 @@ You will be given:
    ```
    Fix any issues before continuing.
 
-#### Step 2 — Ensure adequate legacy tests
+#### Step 2 — Plan the migration and get approval
+
+Before writing or changing any code, present a migration plan and **wait for
+explicit confirmation** from the user. Do not proceed until they approve.
+
+The plan must cover every `#command` call identified above. For each one, state:
+
+| `Git::Lib` method | `#command` call | Target `Git::Commands` class | Class exists? | Notes |
+|---|---|---|---|---|
+| `some_method` | `command('sub', '--flag', arg)` | `Git::Commands::Sub` (new) or existing | ✅ / 🆕 | any mapping decisions |
+
+Also state:
+- Which (if any) new `Git::Commands::*` classes need to be created
+- How optional or empty arguments will be handled (e.g., nil vs `''` operands)
+- Any return-value post-processing that stays in `Git::Lib`
+
+Then ask:
+
+> Does this mapping look correct? Any changes before I start implementing?
+
+**Do not move to Step 3 until the user confirms the plan.**
+
+#### Step 3 — Ensure adequate legacy tests
 
 Before making any changes, verify that `tests/units/` has adequate tests for the
 `Git::Lib` method being migrated.
@@ -93,7 +115,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    git commit -m "refactor(test): add legacy tests for <method_name>"
    ```
 
-#### Step 3 — Ensure the `Git::Commands::*` class exists
+#### Step 4 — Ensure the `Git::Commands::*` class exists
 
 1. Search `lib/git/commands/` for an existing command class that matches the git
    subcommand:
@@ -103,7 +125,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    Also check the class contents to confirm the existing class covers the same
    subcommand variation (e.g., `branch --show-current` vs. `branch --list`).
 
-2. **If the command class already exists**, skip to Step 4.
+2. **If the command class already exists**, skip to Step 5.
 
 3. **If the command class does not exist**, scaffold it using the
    **Scaffold New Command** prompt. This produces:
@@ -126,7 +148,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    git commit -m "refactor(command): add Git::Commands::<Command> class"
    ```
 
-#### Step 4 — Update `Git::Lib` to delegate to the command class
+#### Step 5 — Update `Git::Lib` to delegate to the command class
 
 1. Replace the `command(...)` call with a call to the `Git::Commands::*` class:
    ```ruby
