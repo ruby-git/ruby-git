@@ -66,6 +66,18 @@ occurs because the method appears "useless" to the linter (it is required for YA
 - [ ] `@overload` blocks cover valid call shapes
 - [ ] every positional arg has `@param`
 - [ ] every applicable option has `@option`
+- [ ] `@option` entries appear in the same order as the corresponding entries in
+      the `arguments do` block
+- [ ] `@option` types match the DSL method used to define the option:
+
+  | DSL method | YARD type |
+  |---|---|
+  | `flag_option` | `[Boolean]` |
+  | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
+  | `value_option` | `[String]` (or a more specific type where known) |
+  | `operand` (repeatable) | `[Array<String>]` |
+  | `operand` (single) | `[String]` |
+
 - [ ] option defaults/types are consistent with DSL definitions
 
 #### 3. Return and raise tags
