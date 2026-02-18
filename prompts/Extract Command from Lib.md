@@ -47,6 +47,20 @@ You will be given:
 
 ### Workflow
 
+#### Branch setup
+
+All work must be done on a feature branch. **Never commit or push directly to
+`main`.**
+
+Before starting, create a new branch:
+
+```bash
+git checkout -b <feature-branch-name>
+```
+
+All commits in this workflow go on the feature branch. When work is complete,
+open a pull request — do not merge or push directly into `main`.
+
 #### Step 1 — Identify the `#command` call
 
 1. Locate the `Git::Lib` method that calls `command(...)`.

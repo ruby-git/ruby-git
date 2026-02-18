@@ -108,6 +108,7 @@ reference this section rather than duplicating the full checklist.
 
 For migration PRs, verify process constraints:
 
+- [ ] changes are on a feature branch — **never commit or push directly to `main`**
 - [ ] migration slice is scoped (pilot or one family), not all commands at once
 - [ ] each slice is independently revertible
 - [ ] refactor-only changes are not mixed with unrelated behavior changes
