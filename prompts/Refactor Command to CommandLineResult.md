@@ -84,6 +84,9 @@ end
 See **Review Command Implementation** for the canonical phased rollout checklist
 and internal compatibility contract. In summary:
 
+- **always work on a feature branch** — never commit or push directly to `main`;
+  create a branch before starting (`git checkout -b <feature-branch-name>`) and
+  open a pull request when the slice is ready
 - perform refactor in phased slices (pilot/family)
 - keep each slice independently revertible
 - do not mix unrelated behavior changes with refactor-only changes

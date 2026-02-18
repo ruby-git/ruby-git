@@ -138,6 +138,9 @@ per-command documentation.
 See **Review Command Implementation** for the canonical phased rollout checklist,
 internal compatibility contract, and quality gate commands. In summary:
 
+- **always work on a feature branch** — never commit or push directly to `main`;
+  create a branch before starting (`git checkout -b <feature-branch-name>`) and
+  open a pull request when the slice is ready
 - migrate in small slices (pilot or family), not all commands at once
 - keep each slice independently revertible
 - pass per-slice gates: `bundle exec rspec`, `bundle exec rake test`,

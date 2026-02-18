@@ -85,3 +85,6 @@ were migrated in the same slice and that the same quality gates were applied.
 
 | Issue | Files | Recommended canonical form |
 |---|---|---|
+
+> **Branch workflow:** Implement any fixes on a feature branch. Never commit or
+> push directly to `main` — open a pull request when changes are ready to merge.

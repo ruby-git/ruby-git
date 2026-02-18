@@ -169,3 +169,6 @@ Produce:
 
 2. A list of missing options/modifier/order/conflict issues
 3. Any `allow_exit_status` mismatches or missing rationale comments
+
+> **Branch workflow:** Implement any fixes on a feature branch. Never commit or
+> push directly to `main` — open a pull request when changes are ready to merge.

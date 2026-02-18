@@ -233,6 +233,10 @@ behavior is testing git, not the command. If a particular flag needs to be teste
 (e.g., `-M` for rename detection), verify the flag appears in the arguments via a
 unit test.
 
+> **Branch workflow:** Implement any new or updated tests on a feature branch. Never
+> commit or push directly to `main` — open a pull request when changes are ready to
+> merge.
+
 #### Test grouping
 
 Integration tests must be organized into two `describe` blocks under `#call`:

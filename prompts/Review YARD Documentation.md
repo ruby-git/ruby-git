@@ -122,3 +122,6 @@ For each file, provide:
 |---|---|---|
 
 2. corrected doc block snippets (only where needed)
+
+> **Branch workflow:** Implement any fixes on a feature branch. Never commit or
+> push directly to `main` — open a pull request when changes are ready to merge.

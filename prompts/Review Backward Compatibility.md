@@ -45,6 +45,20 @@ command classes.
 
 ## Instructions
 
+### Branch setup
+
+All work must be done on a feature branch. **Never commit or push directly to
+`main`.**
+
+Before starting, create a new branch:
+
+```bash
+git checkout -b <feature-branch-name>
+```
+
+All commits in this workflow go on the feature branch. When work is complete,
+open a pull request — do not merge or push directly into `main`.
+
 ### Step 1: Identify Methods Added Since v4.3.0
 
 1. Check out the v4.3.0 tag to examine the historical state:
@@ -210,6 +224,7 @@ end
 
 ## Validation Checklist
 
+- [ ] Working on a feature branch (not `main`)
 - [ ] Identified all methods for the command in v4.3.0
 - [ ] Documented v4.3.0 return values exactly
 - [ ] Removed all methods not present in v4.3.0
