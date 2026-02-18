@@ -17,7 +17,7 @@ class TestLib < Test::Unit::TestCase
 
   def test_fetch_unshallow
     in_temp_dir do |dir|
-      git = Git.clone("file://#{@wdir}", 'shallow', path: dir, depth: 1).lib
+      git = Git.clone("file://#{@wdir}", 'shallow', chdir: dir, depth: 1).lib
       assert_equal(1, git.log_commits.length)
       git.fetch("file://#{@wdir}", unshallow: true)
       assert_equal(72, git.log_commits.length)

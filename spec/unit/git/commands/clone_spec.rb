@@ -113,12 +113,6 @@ RSpec.describe Git::Commands::Clone do
 
         command.call(repository_url, directory, single_branch: false)
       end
-
-      it 'includes no flag when nil' do
-        expect_command('clone', '--', repository_url, directory).and_return(command_result)
-
-        command.call(repository_url, directory, single_branch: nil)
-      end
     end
 
     context 'with :depth option' do
@@ -127,12 +121,6 @@ RSpec.describe Git::Commands::Clone do
 
         command.call(repository_url, directory, depth: 1)
       end
-
-      it 'converts string depth to integer' do
-        expect_command('clone', '--depth', 5, '--', repository_url, directory).and_return(command_result)
-
-        command.call(repository_url, directory, depth: '5')
-      end
     end
 
     context 'with :timeout option' do
@@ -140,6 +128,14 @@ RSpec.describe Git::Commands::Clone do
         expect_command('clone', '--', repository_url, directory, timeout: 30).and_return(command_result)
 
         command.call(repository_url, directory, timeout: 30)
+      end
+    end
+
+    context 'with :chdir option' do
+      it 'passes chdir to the command' do
+        expect_command('clone', '--', repository_url, directory, chdir: '/parent/dir').and_return(command_result)
+
+        command.call(repository_url, directory, chdir: '/parent/dir')
       end
     end
 

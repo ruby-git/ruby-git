@@ -139,9 +139,9 @@ module Git
   #
   # @param directory [Pathname, nil] The directory to clone into
   #
-  #   If `directory` is a relative directory it is relative to the `path` option if
-  #   given. If `path` is not given, `directory` is relative to the current working
-  #   directory.
+  #   If `directory` is a relative path it is relative to the `:chdir` option if
+  #   given. If `:chdir` is not given, `directory` is relative to the current
+  #   working directory.
   #
   #   If `nil`, `directory` will be set to the basename of the last component of
   #   the path from the `repository_url`. For example, for the URL:
@@ -192,9 +192,14 @@ module Git
   # @option options [String] :origin Use the value instead `origin` to track
   #   the upstream repository.
   #
-  # @option options [Pathname] :path The directory to clone into.  May be used
-  #   as an alternative to the `directory` parameter.  If specified, the
-  #   `path` option is used instead of the `directory` parameter.
+  # @option options [Pathname] :chdir Run `git clone` from within this directory.
+  #
+  #   The `directory` parameter (or the repository basename when `directory` is nil)
+  #   is resolved relative to `:chdir`, just as if you had `cd`'d into it before
+  #   running `git clone`. The returned path is the join of `:chdir` and the
+  #   cloned directory path.
+  #
+  # @option options [Pathname] :path Deprecated — use `:chdir` instead.
   #
   # @option options [Boolean] :recursive After the clone is created, initialize
   #   all submodules within, using their default settings.
@@ -207,8 +212,10 @@ module Git
   #
   # @example Clone into a different directory `my-ruby-git`
   #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', 'my-ruby-git')
-  #   # or:
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', path: 'my-ruby-git')
+  #
+  # @example Clone into a specific parent directory
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', chdir: '/path/to/projects')
+  #   # clones into /path/to/projects/ruby-git
   #
   # @example Create a bare repository in the directory `ruby-git.git`
   #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', bare: true)
