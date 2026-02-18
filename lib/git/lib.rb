@@ -152,7 +152,14 @@ module Git
     #
     # @option opts [String] :origin the name of the remote
     #
-    # @option opts [String] :path an optional prefix for the directory parameter
+    # @option opts [String] :chdir run `git clone` from this directory
+    #
+    #   When given, `directory` (or the repository basename when `directory` is nil)
+    #   is resolved relative to `:chdir`, just as if you had `cd`'d into it before
+    #   running `git clone`. The returned path is the join of `:chdir` and the
+    #   cloned directory path.
+    #
+    # @option opts [String] :path Deprecated. Use `:chdir` instead.
     #
     # @option opts [String] :remote the name of the remote
     #
@@ -170,10 +177,14 @@ module Git
     #
     def clone(repository_url, directory = nil, opts = {})
       opts = opts.dup
-      clone_dir = opts.delete(:path) || directory
+      deprecate_clone_path_option!(opts)
+      chdir = opts.delete(:chdir)
       execution_opts = extract_clone_execution_context_opts(opts)
-      command_line_result = Git::Commands::Clone.new(self).call(repository_url, clone_dir, **opts)
-      build_clone_result(command_line_result, execution_opts)
+      opts[:chdir] = chdir if chdir
+      command_line_result = Git::Commands::Clone.new(self).call(repository_url, directory, **opts)
+      result = build_clone_result(command_line_result, execution_opts)
+      prefix_clone_result_paths!(result, chdir)
+      result
     end
 
     # Returns the name of the default branch of the given repository
@@ -1940,16 +1951,25 @@ module Git
     #     result.status.success? #=> false
     #
     #   @param args [Array<String>] the command and its arguments
+    #
     #   @param options_hash [Hash] the options to pass to the command
     #
     # @option options_hash [IO, String, #write, nil] :out the destination for captured stdout
+    #
     # @option options_hash [IO, String, #write, nil] :err the destination for captured stderr
+    #
     # @option options_hash [Boolean] :normalize true to normalize the output encoding to UTF-8
+    #
     # @option options_hash [Boolean] :chomp true to remove trailing newlines from the output
+    #
     # @option options_hash [Boolean] :merge true to merge stdout and stderr into a single output
+    #
     # @option options_hash [String, nil] :chdir the directory to run the command in
+    #
     # @option options_hash [Hash] :env additional environment variable overrides for this command
+    #
     # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
+    #
     # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
     #
     #   If timeout is nil, the global timeout from {Git::Config} is used.
@@ -2047,7 +2067,41 @@ module Git
       [match[2], !match[1].nil?]
     end
 
-    # Extract execution context options from clone options
+    # Prefixes clone result path values with the chdir directory.
+    #
+    # Mutates the given result hash in place, updating any :working_directory
+    # and :repository entries to be rooted under the provided +chdir+ directory.
+    # If +chdir+ is nil, the hash is left unchanged.
+    #
+    # @param result [Hash] clone result hash containing path information
+    # @param chdir [String, nil] directory under which the repository was cloned
+    # @return [nil]
+    #
+    def prefix_clone_result_paths!(result, chdir)
+      return unless chdir
+
+      %i[working_directory repository].each do |key|
+        result[key] = File.join(chdir, result[key]) if result.key?(key)
+      end
+    end
+
+    # Handles the deprecated :path option for Git::Lib#clone.
+    #
+    # If opts contains :path, emits a deprecation warning and migrates the
+    # value to :chdir (unless :chdir is already set). Mutates opts in place.
+    #
+    # @param opts [Hash] clone options, possibly containing :path
+    # @return [nil]
+    #
+    def deprecate_clone_path_option!(opts)
+      return unless opts.key?(:path)
+
+      Git::Deprecation.warn('The :path option for Git::Lib#clone is deprecated, use :chdir instead')
+      path = opts.delete(:path)
+      opts[:chdir] ||= path
+    end
+
+    # Extracts execution context options from clone options.
     #
     # @param opts [Hash] clone options
     # @return [Hash] hash with :log and :git_ssh keys if present

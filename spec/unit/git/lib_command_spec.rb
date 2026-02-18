@@ -127,25 +127,100 @@ RSpec.describe Git::Lib do
       end
     end
 
-    context 'with :path option' do
-      it 'uses path as the directory in result' do
+    context 'with :chdir option' do
+      let(:chdir) { '/parent/dir' }
+
+      it 'passes chdir to clone command and prefixes result working_directory' do
         allow(clone_command).to receive(:call)
-          .and_return(command_result(stderr: clone_stderr('custom/path')))
+          .and_return(command_result(stderr: clone_stderr(directory)))
 
-        result = lib.clone(repository_url, directory, path: 'custom/path')
+        result = lib.clone(repository_url, directory, chdir: chdir)
 
-        expect(clone_command).to have_received(:call).with(repository_url, 'custom/path')
-        expect(result).to eq({ working_directory: 'custom/path' })
+        expect(clone_command).to have_received(:call).with(repository_url, directory, chdir: chdir)
+        expect(result).to eq({ working_directory: "#{chdir}/#{directory}" })
       end
 
-      it 'uses path with bare option' do
+      it 'passes chdir to clone command and prefixes bare repository result' do
         allow(clone_command).to receive(:call)
-          .and_return(command_result(stderr: clone_stderr('custom/path', bare: true)))
+          .and_return(command_result(stderr: clone_stderr(directory, bare: true)))
 
-        result = lib.clone(repository_url, directory, path: 'custom/path', bare: true)
+        result = lib.clone(repository_url, directory, chdir: chdir, bare: true)
 
-        expect(clone_command).to have_received(:call).with(repository_url, 'custom/path', bare: true)
-        expect(result).to eq({ repository: 'custom/path' })
+        expect(clone_command).to have_received(:call).with(repository_url, directory, chdir: chdir, bare: true)
+        expect(result).to eq({ repository: "#{chdir}/#{directory}" })
+      end
+
+      it 'prefixes the derived directory name when directory is nil' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr('ruby-git')))
+
+        result = lib.clone(repository_url, nil, chdir: chdir)
+
+        expect(clone_command).to have_received(:call).with(repository_url, nil, chdir: chdir)
+        expect(result).to eq({ working_directory: "#{chdir}/ruby-git" })
+      end
+
+      it 'does not modify :log in the result when :chdir is given' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+
+        result = lib.clone(repository_url, directory, chdir: chdir, log: logger)
+
+        expect(result[:log]).to be(logger)
+        expect(result[:working_directory]).to eq("#{chdir}/#{directory}")
+      end
+
+      it 'does not modify :git_ssh in the result when :chdir is given' do
+        git_ssh = '/usr/bin/my-ssh'
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+
+        result = lib.clone(repository_url, directory, chdir: chdir, git_ssh: git_ssh)
+
+        expect(result[:git_ssh]).to eq(git_ssh)
+        expect(result[:working_directory]).to eq("#{chdir}/#{directory}")
+      end
+    end
+
+    context 'with deprecated :path option' do
+      let(:chdir) { '/parent/dir' }
+
+      it 'emits a deprecation warning' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+        allow(Git::Deprecation).to receive(:warn)
+
+        lib.clone(repository_url, directory, path: chdir)
+
+        expect(Git::Deprecation).to have_received(:warn).with(
+          'The :path option for Git::Lib#clone is deprecated, use :chdir instead'
+        )
+      end
+
+      it 'behaves like :chdir — passes chdir to clone and prefixes result' do
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+        allow(Git::Deprecation).to receive(:warn)
+
+        result = lib.clone(repository_url, directory, path: chdir)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory, chdir: chdir)
+        expect(result).to eq({ working_directory: "#{chdir}/#{directory}" })
+      end
+
+      it 'prefers :chdir over :path when both are given, and still warns' do
+        other_dir = '/other/dir'
+        allow(clone_command).to receive(:call)
+          .and_return(command_result(stderr: clone_stderr(directory)))
+        allow(Git::Deprecation).to receive(:warn)
+
+        result = lib.clone(repository_url, directory, chdir: chdir, path: other_dir)
+
+        expect(clone_command).to have_received(:call).with(repository_url, directory, chdir: chdir)
+        expect(result).to eq({ working_directory: "#{chdir}/#{directory}" })
+        expect(Git::Deprecation).to have_received(:warn).with(
+          'The :path option for Git::Lib#clone is deprecated, use :chdir instead'
+        )
       end
     end
 

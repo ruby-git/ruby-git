@@ -33,6 +33,7 @@ module Git
         operand :repository_url, required: true, separator: '--'
         operand :directory
         execution_option :timeout
+        execution_option :chdir
       end
 
       # Execute the git clone command
@@ -68,6 +69,9 @@ module Git
       #   @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
       #     for the command to complete. If nil, uses the global timeout from
       #     {Git::Config}. If 0, no timeout is enforced.
+      #
+      #   @option options [String, nil] :chdir (nil) the directory to run the git clone
+      #     command in. When given, the clone is created relative to this directory.
       #
       # @return [Git::CommandLineResult] the result of the git clone command
       #
