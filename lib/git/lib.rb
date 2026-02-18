@@ -8,6 +8,7 @@ require_relative 'commands/branch/list'
 require_relative 'commands/branch/show_current'
 require_relative 'commands/checkout/branch'
 require_relative 'commands/checkout/files'
+require_relative 'commands/checkout_index'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -1803,22 +1804,10 @@ module Git
       command('update-ref', ref, commit)
     end
 
-    CHECKOUT_INDEX_OPTION_MAP = [
-      { keys: [:prefix], flag: '--prefix', type: :valued_equals },
-      { keys: [:force],  flag: '--force',  type: :boolean },
-      { keys: [:all],    flag: '--all',    type: :boolean },
-      { keys: [:path_limiter], type: :validate_only }
-    ].freeze
-
     def checkout_index(opts = {})
-      ArgsBuilder.validate!(opts, CHECKOUT_INDEX_OPTION_MAP)
-      args = build_args(opts, CHECKOUT_INDEX_OPTION_MAP)
-
-      if (path = opts[:path_limiter]) && path.is_a?(String)
-        args.push('--', path)
-      end
-
-      command('checkout-index', *args)
+      paths = normalize_pathspecs(opts[:path_limiter], 'path_limiter')
+      keyword_opts = opts.except(:path_limiter)
+      Git::Commands::CheckoutIndex.new(self).call(*paths.to_a, **keyword_opts)
     end
 
     ARCHIVE_OPTION_MAP = [
