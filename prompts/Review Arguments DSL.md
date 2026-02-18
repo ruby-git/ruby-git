@@ -61,6 +61,10 @@ Key behaviors:
   (e.g., `-C`)
 - **Aliases** — first alias is canonical and determines generated flag (long name
   first: `%i[force f]`, not `%i[f force]`)
+- **Operand naming** — use the parameter name from the git-scm.com man page, in
+  singular form (e.g., `<file>` → `:file`, `<tag>` → `:tag`). The `repeatable: true`
+  modifier already communicates that multiple values are accepted; pluralising the
+  name is unnecessary and diverges from the docs.
 
 ### What to Check
 
@@ -84,17 +88,35 @@ Key behaviors:
 
 #### 3. Correct ordering
 
-Recommended order:
+Mirror the order options appear in the git-scm.com SYNOPSIS for the command.
+This keeps the DSL self-documenting and makes it easy to verify completeness
+against the man page.
+
+Within a group where the man page does not impose an order (e.g., a block of
+short flags), prefer:
 1. literals
 2. flag options
 3. flag-or-value options
-4. operands
-5. as-operand value options (e.g., pathspecs)
+4. value options
+5. operands (positional args / pathspecs after `--`)
 
 #### 4. Correct modifiers
 
-Validate `inline:`, `repeatable:`, `negatable:`, `required:`, `allow_nil:`,
-`separator:`, and `as_operand:` are applied where appropriate.
+Derive `required:` and `repeatable:` directly from the git-scm.com SYNOPSIS
+notation for operands:
+
+| SYNOPSIS notation | `required:` | `repeatable:` |
+|---|---|---|
+| `<arg>` | `true` | — |
+| `[<arg>]` | `false` (default) | — |
+| `<arg>…​` | `true` | `true` |
+| `[<arg>…​]` | `false` | `true` |
+
+Square brackets `[…]` → optional (`required: false`).
+Ellipsis `…​` → repeatable (`repeatable: true`).
+
+Also validate `inline:`, `negatable:`, `allow_nil:`, `separator:`, and
+`as_operand:` are applied where appropriate.
 
 #### 5. Completeness
 
