@@ -72,8 +72,16 @@ Shared behavior lives in `Base`:
 
 #### 2. `#call` implementation
 
+**Simple commands** (no pre-call logic needed):
 - [ ] Uses `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition` as YARD documentation shim
-- [ ] Contains no custom bind/execute/exit-status logic in migrated commands
+- [ ] Contains no custom bind/execute/exit-status logic
+- [ ] Does not parse output in command class
+
+**Commands with legitimate `call` overrides** (input validation, stdin protocol, non-trivial option routing):
+- [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
+- [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
+- [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
+- [ ] Bulk of override is extracted into a private helper (`run_batch`, etc.) to satisfy Rubocop `Metrics` thresholds
 - [ ] Does not parse output in command class
 
 #### 3. Exit-status configuration
@@ -120,7 +128,9 @@ For migration PRs, verify process constraints:
 - lingering `ARGS = Arguments.define` constant and custom `#call`
 - command-specific duplicated exit-status checks instead of `allow_exit_status`
 - missing rationale comment for `allow_exit_status`
-- missing YARD shim method (`def call(...) = super`)
+- missing YARD shim method (`def call(...) = super`) on simple commands
+- `call` override that reimplements `Base#call` logic instead of delegating to `validate_exit_status!`
+- using a manual `IO.pipe` inline instead of `Base#with_stdin` for stdin-feeding commands
 - migration PR scope too broad (not phased)
 
 ### Output

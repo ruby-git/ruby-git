@@ -2288,8 +2288,15 @@ classes using a "Strangler Fig" pattern.
    **Method Signature Convention:**
    - Most commands use `def call(...) = super`, which forwards all arguments
      to `Base#call` for binding, execution, and exit-status validation
-   - Override `call` only when the command needs to inspect argument values or
-     post-process output before returning
+   - Override `call` when the command needs: (a) input validation (`ArgumentError`
+     for invalid option combinations the DSL cannot express), (b) stdin feeding via
+     `Base#with_stdin` for batch protocols (`--batch`, `--batch-check`), or
+     (c) non-trivial option routing
+   - When overriding, bind via `args_definition.bind(...)` and delegate
+     exit-status handling to `validate_exit_status!` — do not reimplement these
+   - `Base#with_stdin(content)` opens an `IO.pipe`, writes the string content, and
+     yields the read end as `in:` — use this instead of manual pipe management;
+     `StringIO` cannot be used because `Process.spawn` requires a real file descriptor
    - Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are
      applied automatically during binding
 
@@ -2299,6 +2306,16 @@ classes using a "Strangler Fig" pattern.
      by the **Facade layer** (`Git::Lib`), not by commands
    - Commands simply execute and return the raw result; parsing and object building
      is handled by Parser classes and Result factories in the facade
+
+   **Result class naming (top-level `Git::` namespace):**
+   - `*Info` suffix — parsed metadata struct returned from a read/query operation
+     (e.g., `BranchInfo`, `TagInfo`, `StashInfo`, `ObjectMetaInfo`)
+   - `*Result` suffix — outcome struct from a mutating/destructive operation
+     (e.g., `BranchDeleteResult`, `TagDeleteResult`)
+   - **Never** use `*Info` or `*Result` on `Git::Commands::*` classes — those are
+     subprocess runners; a reader encountering `Commands::Foo::BarInfo` expects a
+     data struct, not a class that shells out to git
+   - **Never** name a sub-command class `Object` — it shadows Ruby's `::Object`
 
    **When to Create Parser Classes:**
    - Create a Parser class when command output needs to be transformed into
