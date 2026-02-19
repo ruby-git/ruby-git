@@ -34,22 +34,22 @@ module Git
       class Branch < Base
         arguments do
           literal 'checkout'
-          flag_option %i[force f], args: '--force'
-          flag_option %i[merge m], args: '--merge'
-          flag_option %i[detach d], args: '--detach'
+          flag_option %i[force f], as: '--force'
+          flag_option %i[merge m], as: '--merge'
+          flag_option %i[detach d], as: '--detach'
 
           # Branch creation options (mutually exclusive)
           # These use `value` (not `value :name, inline: true`) because git expects: -b <branch>, not -b=<branch>
-          value_option %i[new_branch b], args: '-b'
-          value_option %i[new_branch_force B], args: '-B'
-          value_option :orphan, args: '--orphan'
+          value_option %i[new_branch b], as: '-b'
+          value_option %i[new_branch_force B], as: '-B'
+          value_option :orphan, as: '--orphan'
 
           # Tracking options
           flag_or_value_option :track, negatable: true, inline: true
 
           # Other options
           flag_option :guess, negatable: true
-          flag_option :ignore_other_worktrees, args: '--ignore-other-worktrees'
+          flag_option :ignore_other_worktrees, as: '--ignore-other-worktrees'
           flag_option :recurse_submodules, negatable: true
 
           # Positional arguments

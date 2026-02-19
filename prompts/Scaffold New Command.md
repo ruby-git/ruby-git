@@ -85,7 +85,7 @@ end
 5. as-operand value options (e.g., pathspecs)
 
 Use aliases for long/short forms (`%i[force f]`), with long name first.
-Use `args:` only when symbol mapping cannot produce the desired flag.
+Use `as:` only when symbol mapping cannot produce the desired flag.
 
 ### Exit status guidance
 

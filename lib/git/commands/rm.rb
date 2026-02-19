@@ -32,8 +32,8 @@ module Git
     class Rm < Base
       arguments do
         literal 'rm'
-        flag_option :force, args: '-f'
-        flag_option :recursive, args: '-r'
+        flag_option :force, as: '-f'
+        flag_option :recursive, as: '-r'
         flag_option :cached
         operand :paths, repeatable: true, required: true, separator: '--'
       end

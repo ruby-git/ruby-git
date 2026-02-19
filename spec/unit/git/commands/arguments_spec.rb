@@ -1091,8 +1091,8 @@ RSpec.describe Git::Commands::Arguments do
     context 'with custom flag names' do
       let(:args) do
         described_class.define do
-          flag_option :recursive, args: '-r'
-          value_option :skip, args: '--skip-worktree'
+          flag_option :recursive, as: '-r'
+          value_option :skip, as: '--skip-worktree'
         end
       end
 
@@ -1185,7 +1185,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'allows custom flag with aliases' do
-        args = described_class.define { flag_option %i[recursive r], args: '-R' }
+        args = described_class.define { flag_option %i[recursive r], as: '-R' }
         expect(args.bind(recursive: true).to_ary).to eq(['-R'])
         expect(args.bind(r: true).to_ary).to eq(['-R'])
       end
@@ -1221,10 +1221,10 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with args: parameter arrays' do
+    context 'with as: parameter arrays' do
       it 'supports arrays for flag type' do
         args = described_class.define do
-          flag_option :amend, args: ['--amend', '--no-edit']
+          flag_option :amend, as: ['--amend', '--no-edit']
         end
         expect(args.bind(amend: true).to_ary).to eq(['--amend', '--no-edit'])
       end
@@ -1232,41 +1232,41 @@ RSpec.describe Git::Commands::Arguments do
       it 'rejects arrays for flag negatable: true type' do
         expect do
           described_class.define do
-            flag_option :verbose, negatable: true, args: ['--verbose', '--all']
+            flag_option :verbose, negatable: true, as: ['--verbose', '--all']
           end
-        end.to raise_error(ArgumentError, /arrays for args: parameter cannot be combined with negatable: true/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter cannot be combined with negatable: true/)
       end
 
       it 'rejects arrays for value type' do
         expect do
           described_class.define do
-            value_option :branch, args: ['--branch', '--set-upstream']
+            value_option :branch, as: ['--branch', '--set-upstream']
           end
-        end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter are only supported for flag types/)
       end
 
       it 'rejects arrays for value inline: true type' do
         expect do
           described_class.define do
-            value_option :message, inline: true, args: ['--message', '--edit']
+            value_option :message, inline: true, as: ['--message', '--edit']
           end
-        end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter are only supported for flag types/)
       end
 
       it 'rejects arrays for flag_or_value inline: true type' do
         expect do
           described_class.define do
-            flag_or_value_option :gpg_sign, inline: true, args: ['--gpg-sign', '--verify']
+            flag_or_value_option :gpg_sign, inline: true, as: ['--gpg-sign', '--verify']
           end
-        end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter are only supported for flag types/)
       end
 
       it 'rejects arrays for flag_or_value negatable: true, inline: true type' do
         expect do
           described_class.define do
-            flag_or_value_option :sign, negatable: true, inline: true, args: ['--sign', '--verify']
+            flag_or_value_option :sign, negatable: true, inline: true, as: ['--sign', '--verify']
           end
-        end.to raise_error(ArgumentError, /arrays for args: parameter are only supported for flag types/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter are only supported for flag types/)
       end
     end
 
@@ -2475,7 +2475,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'basic Hash input' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2495,7 +2495,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'Hash with array values' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2515,7 +2515,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'Array of arrays input' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2541,7 +2541,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'nil and empty value handling' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2589,7 +2589,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with inline: true' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer', inline: true
+            key_value_option :trailers, as: '--trailer', inline: true
           end
         end
 
@@ -2615,7 +2615,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'key validation' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2640,7 +2640,7 @@ RSpec.describe Git::Commands::Arguments do
         context 'with custom separator' do
           let(:args) do
             described_class.define do
-              key_value_option :trailers, args: '--trailer', key_separator: ': '
+              key_value_option :trailers, as: '--trailer', key_separator: ': '
             end
           end
 
@@ -2721,7 +2721,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with custom key_separator' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer', key_separator: ': '
+            key_value_option :trailers, as: '--trailer', key_separator: ': '
           end
         end
 
@@ -2735,7 +2735,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer', required: true
+            key_value_option :trailers, as: '--trailer', required: true
           end
         end
 
@@ -2765,7 +2765,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with required: true and allow_nil: false' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer', required: true, allow_nil: false
+            key_value_option :trailers, as: '--trailer', required: true, allow_nil: false
           end
         end
 
@@ -2783,7 +2783,7 @@ RSpec.describe Git::Commands::Arguments do
       context 'with symbol keys and values' do
         let(:args) do
           described_class.define do
-            key_value_option :trailers, args: '--trailer'
+            key_value_option :trailers, as: '--trailer'
           end
         end
 
@@ -2974,24 +2974,24 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'with explicit args: override' do
-        subject(:args) { described_class.define { flag_option :f, args: '--force' } }
+      context 'with explicit as: override' do
+        subject(:args) { described_class.define { flag_option :f, as: '--force' } }
 
         it 'uses the explicit args even for single-character name' do
           expect(args.bind(f: true).to_ary).to eq(['--force'])
         end
       end
 
-      context 'with multi-character name and explicit short args: override' do
-        subject(:args) { described_class.define { flag_option :all, args: '-a' } }
+      context 'with multi-character name and explicit short as: override' do
+        subject(:args) { described_class.define { flag_option :all, as: '-a' } }
 
         it 'uses the explicit short args instead of deriving from name' do
           expect(args.bind(all: true).to_ary).to eq(['-a'])
         end
       end
 
-      context 'with multi-character name and explicit short args: for inline value' do
-        subject(:args) { described_class.define { value_option :number, inline: true, args: '-n' } }
+      context 'with multi-character name and explicit short as: for inline value' do
+        subject(:args) { described_class.define { value_option :number, inline: true, as: '-n' } }
 
         it 'uses no separator for explicitly short args' do
           expect(args.bind(number: 5).to_ary).to eq(['-n5'])

@@ -26,10 +26,10 @@ module Git
     class Mv < Base
       arguments do
         literal 'mv'
-        flag_option :force, args: '--force'
-        flag_option :dry_run, args: '--dry-run'
-        flag_option :verbose, args: '--verbose'
-        flag_option :skip_errors, args: '-k'
+        flag_option :force, as: '--force'
+        flag_option :dry_run, as: '--dry-run'
+        flag_option :verbose, as: '--verbose'
+        flag_option :skip_errors, as: '-k'
         operand :source, repeatable: true, required: true, separator: '--'
         operand :destination, required: true
       end

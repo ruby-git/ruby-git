@@ -33,7 +33,7 @@ module Git
           literal '-M'
           flag_option %i[include_untracked u], negatable: true
           flag_option :only_untracked
-          flag_option :find_copies, args: '-C'
+          flag_option :find_copies, as: '-C'
           flag_or_value_option :dirstat, inline: true
           operand :stash
         end

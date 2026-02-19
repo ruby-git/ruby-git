@@ -37,14 +37,14 @@ module Git
       class Files < Base
         arguments do
           literal 'checkout'
-          flag_option %i[force f], args: '--force'
-          flag_option :ours, args: '--ours'
-          flag_option :theirs, args: '--theirs'
-          flag_option %i[merge m], args: '--merge'
-          value_option :conflict, inline: true, args: '--conflict'
+          flag_option %i[force f], as: '--force'
+          flag_option :ours, as: '--ours'
+          flag_option :theirs, as: '--theirs'
+          flag_option %i[merge m], as: '--merge'
+          value_option :conflict, inline: true, as: '--conflict'
           flag_option :overlay, negatable: true
-          value_option :pathspec_from_file, inline: true, args: '--pathspec-from-file'
-          flag_option :pathspec_file_nul, args: '--pathspec-file-nul'
+          value_option :pathspec_from_file, inline: true, as: '--pathspec-from-file'
+          flag_option :pathspec_file_nul, as: '--pathspec-file-nul'
 
           operand :tree_ish, required: true, allow_nil: true
           operand :paths, repeatable: true, separator: '--'

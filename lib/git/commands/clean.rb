@@ -33,9 +33,9 @@ module Git
       arguments do
         literal 'clean'
         flag_option :force
-        flag_option :force_force, args: '-ff'
-        flag_option :d, args: '-d'
-        flag_option :x, args: '-x'
+        flag_option :force_force, as: '-ff'
+        flag_option :d, as: '-d'
+        flag_option :x, as: '-x'
         conflicts :force, :force_force
       end
 
