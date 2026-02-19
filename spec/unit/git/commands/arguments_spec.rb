@@ -3155,6 +3155,96 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with ? predicate accessors for flag options' do
+      context 'with a simple flag_option' do
+        let(:args) do
+          described_class.define do
+            flag_option :force
+          end
+        end
+
+        it 'generates a ? accessor for flag_option' do
+          bound = args.bind(force: true)
+          expect(bound.force?).to be true
+        end
+
+        it 'generates a ? accessor returning false when flag is not set' do
+          bound = args.bind
+          expect(bound.force?).to be false
+        end
+
+        it '? accessor returns same value as plain accessor' do
+          bound = args.bind(force: true)
+          expect(bound.force?).to eq(bound.force)
+        end
+
+        it 'keeps the plain accessor for backward compatibility' do
+          bound = args.bind(force: true)
+          expect(bound.force).to be true
+        end
+      end
+
+      context 'with aliased flag options' do
+        let(:args) do
+          described_class.define do
+            flag_option %i[remotes r]
+          end
+        end
+
+        it 'generates ? accessor on canonical name' do
+          bound = args.bind(r: true)
+          expect(bound.remotes?).to be true
+        end
+
+        it 'does not generate ? accessor for alias name' do
+          bound = args.bind(r: true)
+          expect { bound.r? }.to raise_error(NoMethodError)
+        end
+      end
+
+      context 'with negatable flag_option' do
+        let(:args) do
+          described_class.define do
+            flag_option :verbose, negatable: true
+          end
+        end
+
+        it 'generates a ? accessor for negatable flag_option' do
+          bound = args.bind(verbose: true)
+          expect(bound.verbose?).to be true
+        end
+
+        it '? accessor returns false when negatable flag is false' do
+          bound = args.bind(verbose: false)
+          expect(bound.verbose?).to be false
+        end
+      end
+
+      context 'with value_option' do
+        let(:args) do
+          described_class.define do
+            value_option :branch
+          end
+        end
+
+        it 'does not generate a ? accessor for value_option' do
+          bound = args.bind(branch: 'main')
+          expect { bound.branch? }.to raise_error(NoMethodError)
+        end
+      end
+
+      context 'when ? name is a reserved name' do
+        it 'does not override nil? from Object' do
+          args = described_class.define do
+            flag_option :nil
+          end
+          bound = args.bind(nil: true)
+          # nil? is a reserved Object method — must not be overridden
+          expect(bound.nil?).to be false
+        end
+      end
+    end
+
     context 'with immutability' do
       let(:args) do
         described_class.define do
