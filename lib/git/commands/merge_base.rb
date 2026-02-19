@@ -32,10 +32,10 @@ module Git
     class MergeBase < Base
       arguments do
         literal 'merge-base'
-        flag_option :octopus, args: '--octopus'
-        flag_option :independent, args: '--independent'
-        flag_option :fork_point, args: '--fork-point'
-        flag_option :all, args: '--all'
+        flag_option :octopus, as: '--octopus'
+        flag_option :independent, as: '--independent'
+        flag_option :fork_point, as: '--fork-point'
+        flag_option :all, as: '--all'
 
         # Positional: commits to find common ancestor(s) of
         operand :commits, repeatable: true, required: true

@@ -57,7 +57,7 @@ Key behaviors:
   order entries appear in `arguments do`
 - **Name-to-flag mapping** — underscores become hyphens, single-char names map to
   `-x`, multi-char names map to `--name`
-- **`args:` override** — only for flags that cannot be expressed by symbol naming
+- **`as:` override** — only for flags that cannot be expressed by symbol naming
   (e.g., `-C`)
 - **Aliases** — first alias is canonical and determines generated flag (long name
   first: `%i[force f]`, not `%i[f force]`)
@@ -80,10 +80,10 @@ Key behaviors:
 | positional argument | `operand` | `operand :commit1` |
 | pathspec-style operands | `value_option ... as_operand: true, separator: '--'` | `value_option :pathspecs, as_operand: true, separator: '--', repeatable: true` |
 
-#### 2. Correct alias and `args:` usage
+#### 2. Correct alias and `as:` usage
 
 - Prefer aliases for long/short pairs (`%i[force f]`, `%i[all a]`)
-- Use `args:` only when automatic mapping cannot generate the git flag
+- Use `as:` only when automatic mapping cannot generate the git flag
 - Ensure long name is first in alias arrays
 
 #### 3. Correct ordering

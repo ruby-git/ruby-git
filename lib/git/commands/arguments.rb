@@ -171,7 +171,7 @@ module Git
     #
     # Negated flags always use double-dash format (e.g., `-f` → `--no-f` when false).
     #
-    # The `args:` parameter can override this automatic detection when needed.
+    # The `as:` parameter can override this automatic detection when needed.
     #
     # @example Short option detection
     #   args_def = Arguments.define do
@@ -184,9 +184,9 @@ module Git
     #   args_def.bind(f: true, force: true, n: 3, name: 'test').to_a
     #   # => ['-f', '--force', '-n3', '--name=test']
     #
-    # @example Explicit override with `args:`
+    # @example Explicit override with `as:`
     #   args_def = Arguments.define do
-    #     flag_option :f, args: '--force'
+    #     flag_option :f, as: '--force'
     #   end
     #   args_def.bind(f: true).to_a  # => ['--force']
     #
@@ -243,7 +243,7 @@ module Git
     # These parameters affect **output generation** (what CLI arguments are
     # produced):
     #
-    # - **args:** - Override the CLI argument(s) derived from the option name
+    # - **as:** - Override the CLI argument(s) derived from the option name
     #   Can be a String or an Array. Default is nil (derives from name).
     # - **allow_empty:** - ({#value_option} only) When true, output the option
     #   even if the value is an empty string. Default is false (empty strings skipped).
@@ -452,7 +452,7 @@ module Git
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
-      # @param args [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
+      # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
@@ -501,9 +501,9 @@ module Git
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :force"
       #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
-      def flag_option(names, args: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
+      def flag_option(names, as: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
         option_type = negatable ? :negatable_flag : :flag
-        register_option(names, type: option_type, args: args, expected_type: type, validator: validator,
+        register_option(names, type: option_type, as: as, expected_type: type, validator: validator,
                                required: required, allow_nil: allow_nil)
       end
 
@@ -517,7 +517,7 @@ module Git
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
-      # @param args [String, nil] custom option string (arrays not supported for value types)
+      # @param as [String, nil] custom option string (arrays not supported for value types)
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match. Cannot be combined with validator:.
@@ -635,12 +635,12 @@ module Git
       #   args_def.bind(message: nil) #=> raise ArgumentError, "Required options cannot be nil: :message"
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :message"
       #
-      def value_option(names, args: nil, type: nil, inline: false, as_operand: false, separator: nil,
+      def value_option(names, as: nil, type: nil, inline: false, as_operand: false, separator: nil,
                        allow_empty: false, repeatable: false, required: false, allow_nil: true)
         validate_value_modifiers!(names, inline, as_operand, separator)
 
         option_type = determine_value_option_type(inline, as_operand)
-        register_option(names, type: option_type, args: args, expected_type: type, separator: separator,
+        register_option(names, type: option_type, as: as, expected_type: type, separator: separator,
                                allow_empty: allow_empty, repeatable: repeatable, required: required,
                                allow_nil: allow_nil)
       end
@@ -655,7 +655,7 @@ module Git
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
-      # @param args [String, nil] custom option string
+      # @param as [String, nil] custom option string
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation
       #
@@ -709,10 +709,10 @@ module Git
       #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
       #   args_def.bind(sign: nil).to_a     # => []
       #
-      def flag_or_value_option(names, args: nil, type: nil, negatable: false, inline: false,
+      def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
                                required: false, allow_nil: true)
         option_type = determine_flag_or_value_option_type(negatable, inline)
-        register_option(names, type: option_type, args: args, expected_type: type,
+        register_option(names, type: option_type, as: as, expected_type: type,
                                required: required, allow_nil: allow_nil)
       end
 
@@ -723,7 +723,7 @@ module Git
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
-      # @param args [String, nil] custom option string (e.g., '--trailer')
+      # @param as [String, nil] custom option string (e.g., '--trailer')
       #
       # @param key_separator [String] separator between key and value (default: '=')
       #
@@ -748,57 +748,57 @@ module Git
       #
       # @example Basic key-value (like --trailer)
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer'
+      #     key_value_option :trailers, as: '--trailer'
       #   end
       #   args_def.bind(trailers: { 'Signed-off-by' => 'John' }).to_a
       #   # => ['--trailer', 'Signed-off-by=John']
       #
       # @example Hash with array values (multiple values for same key)
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer'
+      #     key_value_option :trailers, as: '--trailer'
       #   end
       #   args_def.bind(trailers: { 'Signed-off-by' => ['John', 'Jane'] }).to_a
       #   # => ['--trailer', 'Signed-off-by=John', '--trailer', 'Signed-off-by=Jane']
       #
       # @example Array of arrays (full ordering control)
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer'
+      #     key_value_option :trailers, as: '--trailer'
       #   end
       #   args_def.bind(trailers: [['Signed-off-by', 'John'], ['Acked-by', 'Bob']]).to_a
       #   # => ['--trailer', 'Signed-off-by=John', '--trailer', 'Acked-by=Bob']
       #
       # @example Key without value (nil value omits separator)
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer'
+      #     key_value_option :trailers, as: '--trailer'
       #   end
       #   args_def.bind(trailers: [['Acked-by', nil]]).to_a
       #   # => ['--trailer', 'Acked-by']
       #
       # @example Nil in array values produces key-only entries
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer'
+      #     key_value_option :trailers, as: '--trailer'
       #   end
       #   args_def.bind(trailers: { 'Key' => ['Value1', nil, 'Value2'] }).to_a
       #   # => ['--trailer', 'Key=Value1', '--trailer', 'Key', '--trailer', 'Key=Value2']
       #
       # @example With custom separator
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer', key_separator: ': '
+      #     key_value_option :trailers, as: '--trailer', key_separator: ': '
       #   end
       #   args_def.bind(trailers: { 'Signed-off-by' => 'John' }).to_a
       #   # => ['--trailer', 'Signed-off-by: John']
       #
       # @example Empty values produce no output
       #   args_def = Arguments.define do
-      #     key_value_option :trailers, args: '--trailer', required: true
+      #     key_value_option :trailers, as: '--trailer', required: true
       #   end
       #   args_def.bind(trailers: {}).to_a   # => []
       #   args_def.bind(trailers: []).to_a   # => []
       #   args_def.bind(trailers: nil).to_a  # => []
       #
-      def key_value_option(names, args: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
+      def key_value_option(names, as: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
         option_type = inline ? :inline_key_value : :key_value
-        register_option(names, type: option_type, args: args, key_separator: key_separator,
+        register_option(names, type: option_type, as: as, key_separator: key_separator,
                                required: required, allow_nil: allow_nil)
       end
 
@@ -1045,7 +1045,7 @@ module Git
       # @example Inspecting options before command execution
       #   args_def = Arguments.define do
       #     flag_option :force
-      #     flag_option :remotes, args: ['-r', '--remotes']
+      #     flag_option :remotes, as: ['-r', '--remotes']
       #     operand :branch_names, repeatable: true
       #   end
       #   bound_args = args_def.bind('branch1', 'branch2', force: true, remotes: true)
@@ -1192,7 +1192,7 @@ module Git
         primary = keys.first
         definition[:aliases] = keys
         validate_option_after_separator!(definition[:type], primary)
-        validate_args_parameter!(definition, primary)
+        validate_as_parameter!(definition, primary)
         apply_type_validator!(definition, primary)
         @option_definitions[primary] = definition
         keys.each { |key| @alias_map[key] = primary }
@@ -1226,19 +1226,19 @@ module Git
         definition[:validator] = create_type_validator(option_name, definition[:expected_type])
       end
 
-      def validate_args_parameter!(definition, option_name)
-        return unless definition[:args].is_a?(Array)
+      def validate_as_parameter!(definition, option_name)
+        return unless definition[:as].is_a?(Array)
 
         if definition[:type] == :negatable_flag
           raise ArgumentError,
-                "arrays for args: parameter cannot be combined with negatable: true (option :#{option_name})"
+                "arrays for as: parameter cannot be combined with negatable: true (option :#{option_name})"
         end
 
         return if definition[:type] == :flag
 
         type = definition[:type]
         raise ArgumentError,
-              "arrays for args: parameter are only supported for flag types, not :#{type} (option :#{option_name})"
+              "arrays for as: parameter are only supported for flag types, not :#{type} (option :#{option_name})"
       end
 
       # Build arguments by iterating over definitions in their defined order
@@ -1394,7 +1394,7 @@ module Git
       def build_option(args, name, definition, value)
         return if should_skip_option?(value, definition)
 
-        arg_spec = definition[:args] || default_arg_spec(name)
+        arg_spec = definition[:as] || default_arg_spec(name)
         builder = BUILDERS[definition[:type]]
         if builder.is_a?(Symbol)
           send(builder, args, arg_spec, value, definition)
@@ -1959,7 +1959,7 @@ module Git
       # @example Accessing bound arguments
       #   args_def = Arguments.define do
       #     flag_option :force
-      #     flag_option :remotes, args: ['-r', '--remotes']
+      #     flag_option :remotes, as: ['-r', '--remotes']
       #     operand :branch_names, repeatable: true
       #   end
       #   bound = args_def.bind('branch1', 'branch2', force: true, remotes: true)

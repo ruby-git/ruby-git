@@ -26,7 +26,7 @@ module Git
           flag_option %i[cached staged]
           flag_option :merge_base
           flag_option :no_index
-          flag_option :find_copies, args: '-C'
+          flag_option :find_copies, as: '-C'
           flag_or_value_option :dirstat, inline: true
           operand :commit1
           operand :commit2

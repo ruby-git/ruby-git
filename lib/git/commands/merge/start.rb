@@ -38,20 +38,20 @@ module Git
 
           # Commit behavior
           flag_option :commit, negatable: true
-          flag_option :squash, args: '--squash'
+          flag_option :squash, as: '--squash'
 
           # Fast-forward behavior
           flag_option :ff, negatable: true
-          flag_option :ff_only, args: '--ff-only'
+          flag_option :ff_only, as: '--ff-only'
 
           # Message options
-          value_option %i[message m], args: '-m'
-          value_option %i[file F], args: '-F'
-          value_option :into_name, inline: true, args: '--into-name'
+          value_option %i[message m], as: '-m'
+          value_option %i[file F], as: '-F'
+          value_option :into_name, inline: true, as: '--into-name'
 
           # Strategy options
-          value_option %i[strategy s], args: '-s'
-          value_option %i[strategy_option X], args: '-X', repeatable: true
+          value_option %i[strategy s], as: '-s'
+          value_option %i[strategy_option X], as: '-X', repeatable: true
 
           # Verification
           flag_option :verify, negatable: true

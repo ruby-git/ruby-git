@@ -35,7 +35,7 @@ module Git
         value_option :author, inline: true
         value_option :message, inline: true, allow_empty: true
         value_option :date, inline: true, type: String
-        flag_option :amend, args: ['--amend', '--no-edit']
+        flag_option :amend, as: ['--amend', '--no-edit']
         flag_or_value_option :gpg_sign, negatable: true, inline: true
       end
 

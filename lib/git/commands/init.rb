@@ -29,7 +29,7 @@ module Git
         literal 'init'
         flag_option :bare
         value_option :initial_branch, inline: true
-        value_option :repository, inline: true, args: '--separate-git-dir'
+        value_option :repository, inline: true, as: '--separate-git-dir'
         operand :directory
       end
 
