@@ -37,7 +37,7 @@ module Git
     # args.to_a # => ['--force', '--branch', 'main', 'https://github.com/user/repo']
     #
     # # Bonus: accessing bound values
-    # args.force       # => true
+    # args.force?      # => true
     # args.branch      # => 'main'
     # args.repository  # => 'https://github.com/user/repo'
     # ```
@@ -1049,8 +1049,8 @@ module Git
       #     operand :branch_names, repeatable: true
       #   end
       #   bound_args = args_def.bind('branch1', 'branch2', force: true, remotes: true)
-      #   bound_args.force          # => true
-      #   bound_args.remotes        # => true
+      #   bound_args.force?         # => true
+      #   bound_args.remotes?       # => true
       #   bound_args.branch_names   # => ['branch1', 'branch2']
       #
       # @example Hash-style access for reserved names
@@ -1067,17 +1067,28 @@ module Git
 
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
-        execution_option_names = @option_definitions.each_with_object([]) do |(name, definition), names|
-          names << name if definition[:type] == :execution_option
-        end
+        execution_option_names = option_names_by_type(:execution_option)
+        flag_names = option_names_by_type(:flag, :negatable_flag)
 
-        Bound.new(args_array, options_hash, allocated_positionals, execution_option_names)
+        Bound.new(args_array, options_hash, allocated_positionals, execution_option_names, flag_names)
       end
 
       # Option types allowed after a '--' separator boundary (they do not produce CLI flags)
       OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand execution_option].freeze
 
       private
+
+      # Collect option names whose definition type is one of the given types
+      #
+      # @param types [Array<Symbol>] the option types to match
+      #
+      # @return [Array<Symbol>]
+      #
+      def option_names_by_type(*types)
+        @option_definitions.each_with_object([]) do |(name, definition), names|
+          names << name if types.include?(definition[:type])
+        end
+      end
 
       # Validate and normalize keyword options
       #
@@ -1933,6 +1944,16 @@ module Git
       # Provides accessor methods for all defined options and positional arguments,
       # with automatic normalization of aliases to their canonical names.
       #
+      # For every `flag_option`, both a plain accessor (e.g. `bound.force`) and a
+      # `?`-suffixed predicate alias (e.g. `bound.force?`) are generated, following
+      # Ruby convention for boolean predicates. Plain accessors are kept for backward
+      # compatibility. `value_option` fields only receive plain accessors.
+      #
+      # **Reserved-name exception:** if the `?`-suffixed name conflicts with a name
+      # in {RESERVED_NAMES} (e.g. `nil?`, `frozen?`), the predicate alias is *not*
+      # generated to avoid overriding built-in `Object` methods. Use hash-style
+      # access (`bound[:nil]`) when the flag name is reserved.
+      #
       # @api private
       #
       # @example Accessing bound arguments
@@ -1943,7 +1964,9 @@ module Git
       #   end
       #   bound = args_def.bind('branch1', 'branch2', force: true, remotes: true)
       #   bound.force          # => true
+      #   bound.force?         # => true   # ? alias for flag_option
       #   bound.remotes        # => true
+      #   bound.remotes?       # => true   # ? alias for flag_option
       #   bound.branch_names   # => ['branch1', 'branch2']
       #
       # @example Splatting for command execution
@@ -1984,7 +2007,9 @@ module Git
         # @param options [Hash{Symbol => Object}] normalized options hash (frozen)
         # @param positionals [Hash{Symbol => Object}] positional arguments hash (frozen)
         # @param execution_option_names [Array<Symbol>] option names declared via {Arguments#execution_option}
-        def initialize(args_array, options, positionals, execution_option_names = [])
+        # @param flag_names [Array<Symbol>] option names declared via {Arguments#flag_option}
+        #
+        def initialize(args_array, options, positionals, execution_option_names = [], flag_names = [])
           @args_array = args_array.freeze
           @options = options.freeze
           @positionals = positionals.freeze
@@ -1993,6 +2018,7 @@ module Git
           # Define accessor methods (skip reserved names)
           @options.each_key { |name| define_accessor(name, @options) }
           @positionals.each_key { |name| define_accessor(name, @positionals) }
+          define_flag_predicate_accessors(flag_names)
 
           freeze
         end
@@ -2043,12 +2069,33 @@ module Git
 
         # Define an accessor method for the given name
         #
+        # For `flag_option` names, a `?`-suffixed predicate alias is also defined
+        # by {#initialize} after all plain accessors have been set up.
+        #
         # @param name [Symbol] the option or positional name
         # @param source [Hash] the hash to read from (@options or @positionals)
+        #
         def define_accessor(name, source)
           return if RESERVED_NAMES.include?(name)
 
           define_singleton_method(name) { source[name] }
+        end
+
+        # Define `?`-suffixed predicate aliases for each flag option
+        #
+        # Skips any name whose `?` form appears in {RESERVED_NAMES} and skips
+        # names that are not present in the options hash.
+        #
+        # @param flag_names [Array<Symbol>] flag option names
+        #
+        def define_flag_predicate_accessors(flag_names)
+          flag_names.each do |name|
+            predicate_name = :"#{name}?"
+            next if RESERVED_NAMES.include?(predicate_name)
+            next unless @options.key?(name)
+
+            define_singleton_method(predicate_name) { @options[name] }
+          end
         end
       end
     end
