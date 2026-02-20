@@ -120,8 +120,8 @@ Unit tests are organized under `describe '#call'` with three sections:
    that exit codes within the allowed range return a result and exit codes outside
    the range raise `FailedError`.
 3. **`context 'input validation'`** — only for commands with validation rules. Covers
-   unsupported options, conflicting options, and required arguments that raise
-   `ArgumentError`.
+   unsupported options, conflicting options, at-least-one-required groups, and
+   required arguments that raise `ArgumentError`.
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.

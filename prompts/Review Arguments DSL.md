@@ -100,6 +100,11 @@ short flags), prefer:
 4. value options
 5. operands (positional args / pathspecs after `--`)
 
+Constraint declarations always come after all arguments they reference are defined:
+
+6. `conflicts` declarations
+7. `requires_one_of` declarations
+
 #### 4. Correct modifiers
 
 Derive `required:` and `repeatable:` directly from the git-scm.com SYNOPSIS
@@ -135,7 +140,19 @@ or operand vs operand — verify `conflicts ...` declarations exist. Names in a
 `conflicts` group may be any mix of option names and operand names. Unknown names
 raise `ArgumentError` at definition time, so any typo is caught early.
 
-#### 7. Exit-status declaration consistency (class-level, outside the DSL)
+#### 7. At-Least-One Validation
+
+If a command requires at least one argument from a group to be present — options,
+operands, or a mix — verify `requires_one_of ...` declarations exist. As with
+`conflicts`, names may be any mix of option names and operand names. Alias
+resolution applies before the check, so supplying an alias counts as its canonical
+argument being present. Unknown names raise `ArgumentError` at definition time.
+
+The error at bind time has the form:
+
+  "at least one of :name1, :name2 must be provided"
+
+#### 8. Exit-status declaration consistency (class-level, outside the DSL)
 
 `allow_exit_status` is a class-level declaration, not part of the `arguments do`
 block. It is included here because it should be validated alongside DSL entries for
