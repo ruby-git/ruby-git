@@ -1439,7 +1439,7 @@ module Git
     # @return [String] the command output
     #
     def checkout_file(version, file)
-      Git::Commands::Checkout::Files.new(self).call(version, file).stdout
+      Git::Commands::Checkout::Files.new(self).call(version, pathspec: [file]).stdout
     end
 
     # Merge one or more branches into the current branch

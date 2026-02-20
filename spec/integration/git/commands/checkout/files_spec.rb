@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Checkout::Files, :integration do
       before { write_file('file.txt', "modified\n") }
 
       it 'returns a CommandLineResult' do
-        result = command.call('HEAD', 'file.txt')
+        result = command.call('HEAD', pathspec: ['file.txt'])
 
         expect(result).to be_a(Git::CommandLineResult)
       end
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Checkout::Files, :integration do
 
     describe 'when the command fails' do
       it 'raises FailedError with a nonexistent ref' do
-        expect { command.call('nonexistent', 'file.txt') }.to raise_error(Git::FailedError)
+        expect { command.call('nonexistent', pathspec: ['file.txt']) }.to raise_error(Git::FailedError)
       end
     end
   end
