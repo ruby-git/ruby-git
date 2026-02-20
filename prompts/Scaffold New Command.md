@@ -78,12 +78,25 @@ end
 
 ### DSL ordering convention
 
+**Primary rule:** define arguments in the order they appear in the git-scm.com
+SYNOPSIS for the command. This keeps the DSL self-documenting and makes it easy
+to verify completeness against the man page.
+
+Within a group where the SYNOPSIS does not impose an order (e.g., a block of
+interchangeable flags), prefer:
+
 1. literals
 2. flag options
 3. flag-or-value options
-4. operands
-5. as-operand value options (e.g., pathspecs)
-6. `conflicts` declarations (after all arguments are defined)
+4. value options
+5. operands (positional args)
+6. as-operand value options (e.g., pathspecs after `--`)
+
+Constraint declarations always come last, after all arguments they reference
+are defined:
+
+7. `conflicts` declarations
+8. `requires_one_of` declarations
 
 Use aliases for long/short forms (`%i[force f]`), with long name first.
 Use `as:` only when symbol mapping cannot produce the desired flag.
@@ -95,6 +108,15 @@ Unknown names raise `ArgumentError` at load time. Examples:
 ```ruby
 conflicts :gpg_sign, :no_gpg_sign        # option vs option
 conflicts :merge, :tree_ish              # option vs operand
+```
+
+When at least one of a group of arguments must be present — options, operands, or
+a mix — declare it with `requires_one_of`. Names may be option names or operand
+names. Unknown names raise `ArgumentError` at load time. Examples:
+
+```ruby
+requires_one_of :pathspec, :pathspec_from_file   # at least one option required
+requires_one_of :all, :paths                     # option or operand required
 ```
 
 ### Exit status guidance

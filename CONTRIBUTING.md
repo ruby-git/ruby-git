@@ -305,6 +305,10 @@ accept these via an options splat parameter (e.g., `def replace(object, replacem
   `--global`, `--local`, `--system`), only one may be set to `true`. Setting more
   than one raises `ArgumentError`.
 
+- **At-least-one required**: When at least one of a group of arguments (options or
+  positional) must be provided, omitting all of them raises `ArgumentError`. The DSL
+  enforces this via `requires_one_of` declarations at bind time.
+
 #### Positional arguments
 
 Arguments that are not options (e.g., file names, branch names) are passed as method
