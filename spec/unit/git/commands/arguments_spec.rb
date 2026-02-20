@@ -1892,9 +1892,31 @@ RSpec.describe Git::Commands::Arguments do
         it 'passes when an alias is provided (alias resolves to primary)' do
           expect { args.bind(f: true) }.not_to raise_error
         end
+
+        it 'deduplicates when primary and alias are both listed' do
+          # :f and :force both canonicalize to :force; the stored group should
+          # contain :force only once so the error message is not duplicated
+          args_def = described_class.define do
+            flag_option %i[force f]
+            requires_one_of :force, :f
+          end
+          expect { args_def.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :force must be provided'
+          )
+        end
       end
 
       context 'with definition-time errors' do
+        it 'raises ArgumentError when called with no names' do
+          expect do
+            described_class.define do
+              flag_option :force
+              requires_one_of
+            end
+          end.to raise_error(ArgumentError, 'requires_one_of must be given at least one argument name')
+        end
+
         it 'raises ArgumentError for an unknown option name' do
           expect do
             described_class.define do
