@@ -77,6 +77,44 @@ When testing execution options, include forwarded keywords:
 expect_command('clone', '--', url, dir, timeout: 30).and_return(command_result)
 ```
 
+#### Expectations for stdin-feeding commands
+
+Commands that use `Base#with_stdin` pass an `IO` pipe read end as `in:` to
+`execution_context.command`. Unit tests must capture that IO object and assert its
+content. Use a block form on the `expect` to intercept keyword arguments:
+
+```ruby
+# Helper defined in the spec file:
+def expect_batch_command(*extra_args, stdin_content: nil, **extra_opts) # rubocop:disable Metrics/AbcSize
+  expect(execution_context).to receive(:command) do |*args, **kwargs|
+    expect(args).to eq(['cat-file', '--batch-check', *extra_args])
+    expect(kwargs).to include(raise_on_failure: false, **extra_opts)
+    expect(kwargs[:in].read).to eq(stdin_content) if stdin_content
+    command_result
+  end
+end
+
+# Usage:
+it 'passes the object via stdin and runs --batch-check' do
+  expect_batch_command(stdin_content: "HEAD\n")
+  command.call('HEAD')
+end
+
+it 'writes each object on its own line to stdin' do
+  expect_batch_command(stdin_content: "HEAD\nv1.0\nabc123\n")
+  command.call('HEAD', 'v1.0', 'abc123')
+end
+
+it 'includes --batch-all-objects and writes nothing to stdin' do
+  expect_batch_command('--batch-all-objects', stdin_content: '')
+  command.call(batch_all_objects: true)
+end
+```
+
+`kwargs[:in].read` works because `Base#with_stdin` closes the write end before
+yielding the read end — all content is immediately available. Test `stdin_content: ''`
+explicitly for the no-input case (e.g. `--batch-all-objects`) to confirm nothing is written.
+
 #### What not to test
 
 Unit tests should exercise each **code path** through the command, not each possible

@@ -37,7 +37,8 @@ documentation, testing, and exit-status conventions under the `Base` architectur
 - [ ] all classes use `class < Base`
 - [ ] all require `git/commands/base`
 - [ ] all use `arguments do ... end` (no legacy `ARGS =` constants)
-- [ ] all use YARD shim `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`
+- [ ] all use YARD shim `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`, OR have a legitimate `call` override (stdin protocol, input validation, non-trivial option routing) — not both
+- [ ] commands with `call` overrides use `Base#with_stdin` for stdin feeding and delegate exit-status validation to `validate_exit_status!`
 
 #### 2. Arguments DSL consistency
 

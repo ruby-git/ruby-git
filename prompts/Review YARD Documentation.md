@@ -36,18 +36,30 @@ One or more command files from `lib/git/commands/` containing:
 - `class < Base`
 - `arguments do ... end`
 - optional `allow_exit_status`
-- one-line method shim `def call(...) = super`
+- either a one-line YARD shim `def call(...) = super` or a full `call` override
 
 ### Required documentation model
 
 Because YARD does not attach command-specific `@overload` docs to purely inherited
-methods, each command must keep:
+methods, each command must provide a documented `call` in one of two forms:
+
+**Simple commands** — all logic in `Base#call`; use a shim so YARD picks up docs:
 
 ```ruby
 def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
 ```
 
-This method is documentation scaffolding and should have full per-command YARD tags.
+**Commands with a `call` override** — the override itself is the YARD documentation
+anchor; no additional shim is needed:
+
+```ruby
+def call(*objects, **options)
+  # ...
+end
+```
+
+In either form, the `call` method should have full per-command YARD tags (`@overload`,
+`@param`, `@option`, `@return`, `@raise`).
 The rubocop disable comment suppresses the Lint/UselessMethodDefinition warning that
 occurs because the method appears "useless" to the linter (it is required for YARD).
 
@@ -107,7 +119,7 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
 
 ### Common issues
 
-- Missing `def call(...) = super` (loses child-specific docs in generated YARD)
+- Missing `def call(...) = super` on simple commands (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
