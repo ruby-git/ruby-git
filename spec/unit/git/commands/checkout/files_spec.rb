@@ -13,113 +13,113 @@ RSpec.describe Git::Commands::Checkout::Files do
         expected_result = command_result
         expect_command('checkout', '--', 'file.txt').and_return(expected_result)
 
-        result = command.call(nil, 'file.txt')
+        result = command.call(nil, pathspec: ['file.txt'])
 
         expect(result).to eq(expected_result)
       end
 
       it 'restores multiple files from index' do
         expect_command('checkout', '--', 'file1.txt', 'file2.txt').and_return(command_result)
-        command.call(nil, 'file1.txt', 'file2.txt')
+        command.call(nil, pathspec: ['file1.txt', 'file2.txt'])
       end
 
       it 'works with options' do
         expect_command('checkout', '--force', '--', 'file.txt').and_return(command_result)
-        command.call(nil, 'file.txt', force: true)
+        command.call(nil, pathspec: ['file.txt'], force: true)
       end
     end
 
-    context 'with tree_ish and paths' do
+    context 'with tree_ish and pathspec' do
       it 'places tree_ish before -- separator' do
         expect_command('checkout', 'HEAD~1', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD~1', 'file.txt')
+        command.call('HEAD~1', pathspec: ['file.txt'])
       end
 
       it 'accepts branch name as tree_ish' do
         expect_command('checkout', 'main', '--', 'file.txt').and_return(command_result)
-        command.call('main', 'file.txt')
+        command.call('main', pathspec: ['file.txt'])
       end
 
       it 'accepts commit SHA as tree_ish' do
         expect_command('checkout', 'abc123', '--', 'file.txt', 'other.txt').and_return(command_result)
-        command.call('abc123', 'file.txt', 'other.txt')
+        command.call('abc123', pathspec: ['file.txt', 'other.txt'])
       end
 
       it 'accepts tag as tree_ish' do
         expect_command('checkout', 'v1.0.0', '--', 'config.yml').and_return(command_result)
-        command.call('v1.0.0', 'config.yml')
+        command.call('v1.0.0', pathspec: ['config.yml'])
       end
 
       it 'accepts glob patterns' do
         expect_command('checkout', 'HEAD', '--', '*.rb').and_return(command_result)
-        command.call('HEAD', '*.rb')
+        command.call('HEAD', pathspec: ['*.rb'])
       end
 
       it 'accepts directory paths' do
         expect_command('checkout', 'HEAD', '--', 'src/').and_return(command_result)
-        command.call('HEAD', 'src/')
+        command.call('HEAD', pathspec: ['src/'])
       end
     end
 
     context 'with :force option' do
       it 'adds --force flag' do
         expect_command('checkout', '--force', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', force: true)
+        command.call('HEAD', pathspec: ['file.txt'], force: true)
       end
 
       it 'does not add flag when false' do
         expect_command('checkout', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', force: false)
+        command.call('HEAD', pathspec: ['file.txt'], force: false)
       end
 
       it 'works with :f alias' do
         expect_command('checkout', '--force', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', f: true)
+        command.call('HEAD', pathspec: ['file.txt'], f: true)
       end
     end
 
     context 'with :ours option (for merge conflicts)' do
       it 'adds --ours flag' do
         expect_command('checkout', '--ours', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', ours: true)
+        command.call('HEAD', pathspec: ['conflicted.txt'], ours: true)
       end
 
       it 'does not add flag when false' do
         expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', ours: false)
+        command.call('HEAD', pathspec: ['conflicted.txt'], ours: false)
       end
     end
 
     context 'with :theirs option (for merge conflicts)' do
       it 'adds --theirs flag' do
         expect_command('checkout', '--theirs', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', theirs: true)
+        command.call('HEAD', pathspec: ['conflicted.txt'], theirs: true)
       end
 
       it 'does not add flag when false' do
         expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', theirs: false)
+        command.call('HEAD', pathspec: ['conflicted.txt'], theirs: false)
       end
     end
 
     context 'with :merge option (recreate conflict markers)' do
       it 'adds --merge flag' do
         expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
-        command.call(nil, 'conflicted.txt', merge: true)
+        command.call(nil, pathspec: ['conflicted.txt'], merge: true)
       end
 
       it 'does not add flag when false' do
         expect_command('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', merge: false)
+        command.call('HEAD', pathspec: ['conflicted.txt'], merge: false)
       end
 
       it 'works with :m alias' do
         expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
-        command.call(nil, 'conflicted.txt', m: true)
+        command.call(nil, pathspec: ['conflicted.txt'], m: true)
       end
 
       it 'raises when :merge and tree_ish are both provided' do
-        expect { command.call('HEAD', 'conflicted.txt', merge: true) }
+        expect { command.call('HEAD', pathspec: ['conflicted.txt'], merge: true) }
           .to raise_error(ArgumentError, /cannot specify :merge and :tree_ish/)
       end
     end
@@ -127,29 +127,29 @@ RSpec.describe Git::Commands::Checkout::Files do
     context 'with :conflict option' do
       it 'adds --conflict=merge flag' do
         expect_command('checkout', '--conflict=merge', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', conflict: 'merge')
+        command.call('HEAD', pathspec: ['file.txt'], conflict: 'merge')
       end
 
       it 'adds --conflict=diff3 flag' do
         expect_command('checkout', '--conflict=diff3', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', conflict: 'diff3')
+        command.call('HEAD', pathspec: ['file.txt'], conflict: 'diff3')
       end
 
       it 'adds --conflict=zdiff3 flag' do
         expect_command('checkout', '--conflict=zdiff3', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', 'file.txt', conflict: 'zdiff3')
+        command.call('HEAD', pathspec: ['file.txt'], conflict: 'zdiff3')
       end
     end
 
     context 'with :overlay option' do
       it 'adds --overlay flag when true' do
         expect_command('checkout', '--overlay', 'main', '--', 'file.txt').and_return(command_result)
-        command.call('main', 'file.txt', overlay: true)
+        command.call('main', pathspec: ['file.txt'], overlay: true)
       end
 
       it 'adds --no-overlay flag when false' do
         expect_command('checkout', '--no-overlay', 'main', '--', 'file.txt').and_return(command_result)
-        command.call('main', 'file.txt', overlay: false)
+        command.call('main', pathspec: ['file.txt'], overlay: false)
       end
     end
 
@@ -182,7 +182,7 @@ RSpec.describe Git::Commands::Checkout::Files do
                        '--',
                        'file1.txt',
                        'file2.txt').and_return(command_result)
-        command.call('HEAD', 'file1.txt', 'file2.txt', force: true, ours: true)
+        command.call('HEAD', pathspec: ['file1.txt', 'file2.txt'], force: true, ours: true)
       end
 
       it 'combines tree_ish with conflict resolution' do
@@ -191,7 +191,26 @@ RSpec.describe Git::Commands::Checkout::Files do
                        'main',
                        '--',
                        'conflicted.txt').and_return(command_result)
-        command.call('main', 'conflicted.txt', conflict: 'diff3')
+        command.call('main', pathspec: ['conflicted.txt'], conflict: 'diff3')
+      end
+    end
+
+    context 'with requires_one_of validation' do
+      it 'raises when neither :pathspec nor :pathspec_from_file is provided' do
+        expect { command.call(nil) }.to raise_error(
+          ArgumentError,
+          'at least one of :pathspec, :pathspec_from_file must be provided'
+        )
+      end
+
+      it 'passes when :pathspec is provided' do
+        expect_command('checkout', '--', 'file.txt').and_return(command_result)
+        expect { command.call(nil, pathspec: ['file.txt']) }.not_to raise_error
+      end
+
+      it 'passes when :pathspec_from_file is provided' do
+        expect_command('checkout', '--pathspec-from-file=paths.txt', 'main').and_return(command_result)
+        expect { command.call('main', pathspec_from_file: 'paths.txt') }.not_to raise_error
       end
     end
   end

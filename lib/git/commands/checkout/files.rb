@@ -17,19 +17,19 @@ module Git
       #
       # @example Restore a file from the index (discard uncommitted changes)
       #   files = Git::Commands::Checkout::Files.new(execution_context)
-      #   files.call(nil, 'file.txt')
+      #   files.call(nil, pathspec: ['file.txt'])
       #
       # @example Restore a file from HEAD
-      #   files.call('HEAD', 'file.txt')
+      #   files.call('HEAD', pathspec: ['file.txt'])
       #
       # @example Restore a file from a specific commit
-      #   files.call('HEAD~1', 'file.txt')
+      #   files.call('HEAD~1', pathspec: ['file.txt'])
       #
       # @example Restore multiple files from a branch
-      #   files.call('main', 'file1.txt', 'file2.txt')
+      #   files.call('main', pathspec: ['file1.txt', 'file2.txt'])
       #
       # @example Resolve merge conflict by choosing "ours" version
-      #   files.call(nil, 'conflicted.txt', ours: true)
+      #   files.call(nil, pathspec: ['conflicted.txt'], ours: true)
       #
       # @example Read paths from a file
       #   files.call('main', pathspec_from_file: 'paths.txt')
@@ -47,22 +47,23 @@ module Git
           flag_option :pathspec_file_nul, as: '--pathspec-file-nul'
 
           operand :tree_ish, required: true, allow_nil: true
-          operand :paths, repeatable: true, separator: '--'
+          value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
 
           conflicts :merge, :tree_ish
+          requires_one_of :pathspec, :pathspec_from_file
         end
 
         # Execute the git checkout command for restoring files
         #
-        # @overload call(tree_ish, *paths, **options)
+        # @overload call(tree_ish, **options)
         #
         #   @param tree_ish [String, nil] The commit, branch, or tree to restore
         #     files from. When nil, files are restored from the index.
         #
-        #   @param paths [Array<String>] The files or directories to restore.
-        #     Required unless pathspec_from_file is provided.
-        #
         #   @param options [Hash] command options
+        #
+        #   @option options [Array<String>, String] :pathspec The files or directories
+        #     to restore. Required unless :pathspec_from_file is provided.
         #
         #   @option options [Boolean] :force (nil) Ignore unmerged entries. Alias: :f
         #
@@ -80,12 +81,14 @@ module Git
         #     --no-overlay
         #
         #   @option options [String] :pathspec_from_file (nil) Read paths from file
-        #     ('-' for stdin)
+        #     ('-' for stdin). Required unless :pathspec is provided.
         #
         #   @option options [Boolean] :pathspec_file_nul (nil) NUL-separated paths in
         #     pathspec file
         #
         # @return [Git::CommandLineResult] the result of the command
+        #
+        # @raise [ArgumentError] if neither :pathspec nor :pathspec_from_file is provided
         #
         # @raise [Git::FailedError] if the checkout fails
         #

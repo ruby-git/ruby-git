@@ -1729,6 +1729,314 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with requires_one_of method' do
+      context 'with two options where at least one must be present' do
+        let(:args) do
+          described_class.define do
+            value_option :pathspec_from_file, inline: true
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            requires_one_of :pathspec, :pathspec_from_file
+          end
+        end
+
+        it 'raises ArgumentError when neither option is present' do
+          expect { args.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'passes when only the first option is present (non-empty array)' do
+          expect { args.bind(pathspec: ['file.txt']) }.not_to raise_error
+        end
+
+        it 'passes when only the second option is present (non-empty string)' do
+          expect { args.bind(pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+
+        it 'passes when both options are present' do
+          expect { args.bind(pathspec: ['file.txt'], pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+
+        it 'raises when first option is nil and second is nil' do
+          expect { args.bind(pathspec: nil, pathspec_from_file: nil) }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'raises when first option is empty array and second is absent' do
+          expect { args.bind(pathspec: []) }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'passes when first option is nil but second is present' do
+          expect { args.bind(pathspec: nil, pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+
+        it 'passes when first option is empty array but second is present' do
+          expect { args.bind(pathspec: [], pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+      end
+
+      context 'with presence semantics — absent values' do
+        let(:args) do
+          described_class.define do
+            value_option :a
+            value_option :b
+            requires_one_of :a, :b
+          end
+        end
+
+        it 'treats nil as absent' do
+          expect { args.bind(a: nil, b: nil) }.to raise_error(
+            ArgumentError,
+            'at least one of :a, :b must be provided'
+          )
+        end
+
+        it 'treats false as absent' do
+          expect { args.bind(a: false, b: false) }.to raise_error(
+            ArgumentError,
+            'at least one of :a, :b must be provided'
+          )
+        end
+
+        it 'treats empty string as absent' do
+          expect { args.bind(a: '', b: '') }.to raise_error(
+            ArgumentError,
+            'at least one of :a, :b must be provided'
+          )
+        end
+
+        it 'treats empty array as absent' do
+          expect { args.bind(a: [], b: []) }.to raise_error(
+            ArgumentError,
+            'at least one of :a, :b must be provided'
+          )
+        end
+      end
+
+      context 'with presence semantics — present values' do
+        let(:args) do
+          described_class.define do
+            flag_option :a
+            value_option :b
+            requires_one_of :a, :b
+          end
+        end
+
+        it 'treats true as present' do
+          expect { args.bind(a: true) }.not_to raise_error
+        end
+
+        it 'treats non-empty string as present' do
+          expect { args.bind(b: 'value') }.not_to raise_error
+        end
+
+        it 'treats non-empty array as present' do
+          expect { args.bind(b: ['x']) }.not_to raise_error
+        end
+      end
+
+      context 'with multiple independent requires_one_of groups' do
+        let(:args) do
+          described_class.define do
+            flag_option :commit
+            flag_option :all
+            value_option :pathspec_from_file, inline: true
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            requires_one_of :commit, :all
+            requires_one_of :pathspec, :pathspec_from_file
+          end
+        end
+
+        it 'raises when neither group is satisfied' do
+          expect { args.bind }.to raise_error(ArgumentError, /at least one of/)
+        end
+
+        it 'raises when only second group is satisfied' do
+          expect { args.bind(pathspec: ['file.txt']) }.to raise_error(
+            ArgumentError,
+            'at least one of :commit, :all must be provided'
+          )
+        end
+
+        it 'raises when only first group is satisfied' do
+          expect { args.bind(commit: true) }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'passes when both groups are satisfied' do
+          expect { args.bind(commit: true, pathspec: ['file.txt']) }.not_to raise_error
+        end
+      end
+
+      context 'with alias resolution' do
+        let(:args) do
+          described_class.define do
+            flag_option %i[force f]
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            requires_one_of :force, :pathspec
+          end
+        end
+
+        it 'passes when the primary name is provided' do
+          expect { args.bind(force: true) }.not_to raise_error
+        end
+
+        it 'passes when an alias is provided (alias resolves to primary)' do
+          expect { args.bind(f: true) }.not_to raise_error
+        end
+      end
+
+      context 'with definition-time errors' do
+        it 'raises ArgumentError for an unknown option name' do
+          expect do
+            described_class.define do
+              flag_option :force
+              requires_one_of :force, :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo in requires_one_of declaration/)
+        end
+
+        it 'raises ArgumentError for an unknown operand name' do
+          expect do
+            described_class.define do
+              operand :paths, repeatable: true
+              requires_one_of :paths, :nonexistent
+            end
+          end.to raise_error(ArgumentError, /unknown argument :nonexistent in requires_one_of declaration/)
+        end
+
+        it 'allows a positional-only operand in a group' do
+          expect do
+            described_class.define do
+              flag_option :force
+              operand :paths, repeatable: true
+              requires_one_of :force, :paths
+            end
+          end.not_to raise_error
+        end
+
+        it 'allows value_option with as_operand: true' do
+          expect do
+            described_class.define do
+              value_option :pathspec_from_file, inline: true
+              value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+              requires_one_of :pathspec, :pathspec_from_file
+            end
+          end.not_to raise_error
+        end
+      end
+
+      context 'with positional-only operand group' do
+        let(:args) do
+          described_class.define do
+            operand :commit
+            operand :paths, repeatable: true
+            requires_one_of :commit, :paths
+          end
+        end
+
+        it 'raises when neither operand is present' do
+          expect { args.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :commit, :paths must be provided'
+          )
+        end
+
+        it 'passes when the single operand is present' do
+          expect { args.bind('HEAD') }.not_to raise_error
+        end
+
+        it 'passes when the repeatable operand is present' do
+          expect { args.bind(nil, 'file.txt') }.not_to raise_error
+        end
+
+        it 'passes when both are present' do
+          expect { args.bind('HEAD', 'file.txt') }.not_to raise_error
+        end
+
+        it 'treats empty array in repeatable operand as absent' do
+          expect { args.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :commit, :paths must be provided'
+          )
+        end
+      end
+
+      context 'with mixed option and operand group' do
+        let(:args) do
+          described_class.define do
+            flag_option :all
+            operand :paths, repeatable: true
+            requires_one_of :all, :paths
+          end
+        end
+
+        it 'raises when neither is present' do
+          expect { args.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :all, :paths must be provided'
+          )
+        end
+
+        it 'passes when the flag option is present' do
+          expect { args.bind(all: true) }.not_to raise_error
+        end
+
+        it 'passes when the operand is present' do
+          expect { args.bind('file.txt') }.not_to raise_error
+        end
+
+        it 'passes when both are present' do
+          expect { args.bind('file.txt', all: true) }.not_to raise_error
+        end
+
+        it 'treats false flag as absent' do
+          expect { args.bind(all: false) }.to raise_error(
+            ArgumentError,
+            'at least one of :all, :paths must be provided'
+          )
+        end
+      end
+
+      context 'with requires_one_of alongside conflicts' do
+        let(:args) do
+          described_class.define do
+            flag_option :merge
+            value_option :pathspec_from_file, inline: true
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            conflicts :merge, :pathspec
+            requires_one_of :pathspec, :pathspec_from_file
+          end
+        end
+
+        it 'validates the requires_one_of group independently of conflicts' do
+          expect { args.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'validates conflicts independently of requires_one_of' do
+          expect { args.bind(merge: true, pathspec: ['file.txt']) }.to raise_error(
+            ArgumentError,
+            /cannot specify :merge and :pathspec/
+          )
+        end
+
+        it 'passes when constraints are satisfied' do
+          expect { args.bind(merge: true, pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+      end
+    end
+
     context 'with allow_nil positional arguments' do
       context 'when required with allow_nil' do
         let(:args) do

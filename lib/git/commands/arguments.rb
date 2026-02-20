@@ -399,9 +399,8 @@ module Git
     #   args_def.bind(timeout: "30")
     #   #=> raise ArgumentError, "The :timeout option must be a Integer or Float, but was a String"
     #
-    # @note The `type:` parameter cannot be combined with a custom `validator:`
-    #   parameter. Attempting to use both will raise an ArgumentError during
-    #   definition.
+    # The `type:` parameter cannot be combined with a custom `validator:` parameter.
+    # Attempting to use both will raise an ArgumentError during definition.
     #
     # ## Conflict Detection
     #
@@ -430,6 +429,33 @@ module Git
     #   args_def.bind('main', merge: true)  #=> raise ArgumentError, "cannot specify :merge and :tree_ish"
     #   args_def.bind(nil, merge: true).to_a  # => ['--merge']
     #
+    # ## At-Least-One Presence Validation
+    #
+    # Use {#requires_one_of} to declare groups of arguments where at least one must be
+    # present. Names may refer to **options** (flag, value, flag-or-value, etc.) or
+    # **operands** (positional arguments) interchangeably. When {#bind} is called, if
+    # none of the arguments in a group is present, an ArgumentError is raised.
+    #
+    # @example Requiring at least one path source (options only)
+    #   args_def = Arguments.define do
+    #     value_option :pathspec_from_file, inline: true
+    #     value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+    #     requires_one_of :pathspec, :pathspec_from_file
+    #   end
+    #   args_def.bind
+    #     #=> raise ArgumentError, 'at least one of :pathspec, :pathspec_from_file must be provided'
+    #   args_def.bind(pathspec: ['file.txt']).to_a  # => ['--', 'file.txt']
+    #
+    # @example Mixed option and operand group
+    #   args_def = Arguments.define do
+    #     flag_option :all
+    #     operand :paths, repeatable: true
+    #     requires_one_of :all, :paths
+    #   end
+    #   args_def.bind
+    #     #=> raise ArgumentError, 'at least one of :all, :paths must be provided'
+    #   args_def.bind('file.txt').to_a  # => ['file.txt']
+    #
     # @api private
     #
     class Arguments
@@ -454,9 +480,9 @@ module Git
       def initialize
         @option_definitions = {}
         @alias_map = {} # Maps alias keys to primary keys
-        @static_flags = []
         @operand_definitions = []
         @conflicts = [] # Array of conflicting option pairs/groups
+        @requires_one_of = [] # Array of "at least one must be present" groups
         @ordered_definitions = [] # Tracks all definitions in definition order
         @past_separator = false # Tracks whether a '--' boundary has been defined
       end
@@ -844,7 +870,6 @@ module Git
       #   # => ['--force', 'HEAD', '--', 'file.txt']
       #
       def literal(flag_string)
-        @static_flags << flag_string
         @ordered_definitions << { kind: :static, flag: flag_string }
         @past_separator = true if flag_string == '--'
       end
@@ -937,6 +962,81 @@ module Git
           raise ArgumentError, "unknown argument :#{sym} in conflicts declaration"
         end
         @conflicts << names.map(&:to_sym)
+      end
+
+      # Declare that at least one of the named arguments must be present when binding
+      #
+      # Each call to {#requires_one_of} defines an independent "at least one" group.
+      # When {#bind} is called, if none of the arguments in the group is present,
+      # an ArgumentError is raised.
+      #
+      # **Presence semantics** — an argument is considered present when its value is
+      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
+      # non-empty strings, and non-empty arrays) are considered present.
+      #
+      # Names may refer to **options** (flag, value, flag-or-value, etc.) or
+      # **operands** (positional arguments) interchangeably. Alias resolution happens
+      # before the check, so supplying an alias for one of the named options counts
+      # as that option being present.
+      #
+      # An ArgumentError is raised at definition time if any name is not a known
+      # option or operand, catching typos early.
+      #
+      # The error message has the general form:
+      #
+      #   "at least one of :name1, :name2 must be provided"
+      #
+      # @param names [Array<Symbol>] the option/operand names where at least one
+      #   must be present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name is not a known option or operand
+      #
+      # @raise [ArgumentError] if none of the arguments in the group is present
+      #   when binding arguments
+      #
+      # @example At-least-one of two keyword options
+      #   args_def = Arguments.define do
+      #     value_option :pathspec_from_file, inline: true
+      #     value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+      #     requires_one_of :pathspec, :pathspec_from_file
+      #   end
+      #   args_def.bind(pathspec: ['file.txt']).to_a  # => ['--', 'file.txt']
+      #   args_def.bind(pathspec_from_file: 'paths.txt').to_a
+      #   # => ['--pathspec-from-file=paths.txt']
+      #   args_def.bind
+      #     # => raise ArgumentError, 'at least one of :pathspec, :pathspec_from_file must be provided'
+      #
+      # @example Mixed option and operand group
+      #   args_def = Arguments.define do
+      #     flag_option :all
+      #     operand :paths, repeatable: true
+      #     requires_one_of :all, :paths
+      #   end
+      #   args_def.bind('file.txt').to_a     # passes — :paths is present
+      #   args_def.bind(all: true).to_a      # passes — :all is present
+      #   args_def.bind
+      #     # => raise ArgumentError, 'at least one of :all, :paths must be provided'
+      #
+      # @example Multiple independent groups
+      #   args_def = Arguments.define do
+      #     flag_option :commit
+      #     flag_option :all
+      #     value_option :pathspec_from_file, inline: true
+      #     value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+      #     requires_one_of :commit, :all
+      #     requires_one_of :pathspec, :pathspec_from_file
+      #   end
+      #
+      def requires_one_of(*names)
+        names.each { |name| validate_requires_one_of_name!(name.to_sym) }
+        # For options: store the canonical (primary) name via alias_map.
+        # For positional-only operands: the name is used directly (not in alias_map).
+        @requires_one_of << names.map do |name|
+          sym = name.to_sym
+          @alias_map[sym] || sym
+        end
       end
 
       # Define an operand (positional argument in Ruby terminology)
@@ -1101,6 +1201,7 @@ module Git
         allocated_positionals = allocate_and_validate_positionals(positionals)
         validate_no_option_like_operands!(allocated_positionals, normalized_opts)
         validate_conflicts!(normalized_opts, allocated_positionals)
+        validate_requires_one_of!(normalized_opts, allocated_positionals)
 
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
@@ -1976,6 +2077,34 @@ module Git
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
         end
+      end
+
+      # Validate that at least one argument in each requires_one_of group is present
+      #
+      # @param opts [Hash] normalized keyword options (aliases already resolved)
+      # @param allocated_positionals [Hash] the allocated positional values
+      # @raise [ArgumentError] if none of the arguments in any group is present
+      #
+      def validate_requires_one_of!(opts, allocated_positionals = {})
+        @requires_one_of.each do |group|
+          any_present = group.any? do |name|
+            value = opts.key?(name) ? opts[name] : allocated_positionals[name]
+            argument_present?(value)
+          end
+          next if any_present
+
+          formatted = group.map { |name| ":#{name}" }.join(', ')
+          raise ArgumentError, "at least one of #{formatted} must be provided"
+        end
+      end
+
+      # Validate a single name used in a requires_one_of declaration
+      #
+      # @param sym [Symbol] the name to validate
+      # @raise [ArgumentError] if sym is not a known option or operand
+      #
+      def validate_requires_one_of_name!(sym)
+        raise ArgumentError, "unknown argument :#{sym} in requires_one_of declaration" unless known_argument?(sym)
       end
 
       # Return true if the given name refers to a defined option or operand
