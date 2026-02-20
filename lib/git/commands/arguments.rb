@@ -991,6 +991,8 @@ module Git
       #
       # @return [void]
       #
+      # @raise [ArgumentError] if no names are given
+      #
       # @raise [ArgumentError] if any name is not a known option or operand
       #
       # @raise [ArgumentError] if none of the arguments in the group is present
@@ -1030,13 +1032,18 @@ module Git
       #   end
       #
       def requires_one_of(*names)
-        names.each { |name| validate_requires_one_of_name!(name.to_sym) }
+        raise ArgumentError, 'requires_one_of must be given at least one argument name' if names.empty?
+
         # For options: store the canonical (primary) name via alias_map.
         # For positional-only operands: the name is used directly (not in alias_map).
-        @requires_one_of << names.map do |name|
+        # uniq guards against a caller listing both a primary name and its alias,
+        # which would otherwise canonicalize to the same name twice.
+        canonical_group = names.map do |name|
           sym = name.to_sym
+          validate_requires_one_of_name!(sym)
           @alias_map[sym] || sym
-        end
+        end.uniq
+        @requires_one_of << canonical_group
       end
 
       # Define an operand (positional argument in Ruby terminology)
