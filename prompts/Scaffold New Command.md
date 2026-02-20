@@ -83,9 +83,19 @@ end
 3. flag-or-value options
 4. operands
 5. as-operand value options (e.g., pathspecs)
+6. `conflicts` declarations (after all arguments are defined)
 
 Use aliases for long/short forms (`%i[force f]`), with long name first.
 Use `as:` only when symbol mapping cannot produce the desired flag.
+
+When two or more arguments are mutually exclusive — options, operands, or a mix —
+declare them with `conflicts`. Names may be option names or operand names.
+Unknown names raise `ArgumentError` at load time. Examples:
+
+```ruby
+conflicts :gpg_sign, :no_gpg_sign        # option vs option
+conflicts :merge, :tree_ish              # option vs operand
+```
 
 ### Exit status guidance
 

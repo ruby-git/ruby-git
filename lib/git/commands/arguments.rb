@@ -405,17 +405,30 @@ module Git
     #
     # ## Conflict Detection
     #
-    # Use {#conflicts} to declare mutually exclusive options. When building
-    # arguments, if more than one option in a conflict group is provided, an
-    # ArgumentError is raised.
+    # Use {#conflicts} to declare mutually exclusive arguments. Names may refer to
+    # **options** (flag, value, flag-or-value, etc.) or **operands** (positional
+    # arguments) interchangeably. When {#bind} is called, if more than one argument
+    # in a conflict group is "present", an ArgumentError is raised.
     #
-    # @example
+    # An argument is considered **present** when its value is not `nil`, `false`,
+    # `[]`, or `''`.
+    #
+    # @example Option vs option conflict
     #   args_def = Arguments.define do
     #     flag_option :force
     #     flag_option :force_force
     #     conflicts :force, :force_force
     #   end
     #   args_def.bind(force: true, force_force: true) #=> raise ArgumentError, "cannot specify :force and :force_force"
+    #
+    # @example Mixed option and operand conflict
+    #   args_def = Arguments.define do
+    #     flag_option %i[merge m], as: '--merge'
+    #     operand :tree_ish, required: true, allow_nil: true
+    #     conflicts :merge, :tree_ish
+    #   end
+    #   args_def.bind('main', merge: true)  #=> raise ArgumentError, "cannot specify :merge and :tree_ish"
+    #   args_def.bind(nil, merge: true).to_a  # => ['--merge']
     #
     # @api private
     #
@@ -865,30 +878,36 @@ module Git
         register_option(names, type: :execution_option)
       end
 
-      # Declare that options conflict with each other (mutually exclusive)
+      # Declare that arguments conflict with each other (mutually exclusive)
       #
       # Each call to {#conflicts} defines a separate group of mutually exclusive
-      # options. When arguments are built, if more than one option in the same
-      # conflict group is provided with a truthy value, an ArgumentError is
-      # raised. Options whose values are `nil` or `false` do not participate in
-      # conflict detection.
+      # arguments. Names may refer to **options** (flag, value, flag-or-value, etc.)
+      # or **operands** (positional arguments). When {#bind} is called, if more than
+      # one argument in the same conflict group is "present", an ArgumentError is
+      # raised.
+      #
+      # **Presence semantics** — an argument is considered present when its value is
+      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
+      # non-empty strings, and non-empty arrays) are considered present.
+      #
+      # An ArgumentError is raised at definition time if any name given to
+      # +conflicts+ is not a known option or operand, catching typos early.
       #
       # The error message has the general form:
       #
-      #   "cannot specify :option1 and :option2"
+      #   "cannot specify :name1 and :name2"
       #
-      # where the option names correspond to the conflicting options that were
-      # given truthy values.
-      #
-      # @param option_names [Array<Symbol>] the option names that conflict within
+      # @param names [Array<Symbol>] the option/operand names that conflict within
       #   this group
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if more than one option in the same conflict group
-      #   is provided with a truthy value when building arguments
+      # @raise [ArgumentError] if any name is not a known option or operand
       #
-      # @example Multiple independent conflict groups
+      # @raise [ArgumentError] if more than one argument in the same conflict group
+      #   is present when building arguments
+      #
+      # @example Option-only conflict group
       #   args_def = Arguments.define do
       #     flag_option :gpg_sign
       #     flag_option :no_gpg_sign
@@ -899,8 +918,25 @@ module Git
       #   end
       #   args_def.bind(gpg_sign: true).to_a  # => ['--gpg-sign']
       #
-      def conflicts(*option_names)
-        @conflicts << option_names.map(&:to_sym)
+      # @example Mixed option and operand conflict
+      #   args_def = Arguments.define do
+      #     flag_option %i[merge m], as: '--merge'
+      #     operand :tree_ish, required: true, allow_nil: true
+      #     operand :paths, repeatable: true, separator: '--'
+      #     conflicts :merge, :tree_ish
+      #   end
+      #   args_def.bind(nil, 'file.txt', merge: true).to_a  # => ['--merge', '--', 'file.txt']
+      #   args_def.bind('main', 'file.txt', merge: true)
+      #     # => raise ArgumentError, 'cannot specify :merge and :tree_ish'
+      #
+      def conflicts(*names)
+        names.each do |name|
+          sym = name.to_sym
+          next if known_argument?(sym)
+
+          raise ArgumentError, "unknown argument :#{sym} in conflicts declaration"
+        end
+        @conflicts << names.map(&:to_sym)
       end
 
       # Define an operand (positional argument in Ruby terminology)
@@ -1064,6 +1100,7 @@ module Git
         normalized_opts = validate_and_normalize_options!(opts)
         allocated_positionals = allocate_and_validate_positionals(positionals)
         validate_no_option_like_operands!(allocated_positionals, normalized_opts)
+        validate_conflicts!(normalized_opts, allocated_positionals)
 
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
@@ -1102,7 +1139,6 @@ module Git
         normalized_opts = normalize_aliases(opts)
         validate_required_options!(normalized_opts)
         validate_option_values!(normalized_opts)
-        validate_conflicts!(normalized_opts)
         normalized_opts
       end
 
@@ -1929,14 +1965,41 @@ module Git
         end
       end
 
-      def validate_conflicts!(opts)
+      def validate_conflicts!(opts, allocated_positionals = {})
         @conflicts.each do |conflict_group|
-          provided = conflict_group.select { |name| opts.key?(name) && opts[name] }
+          provided = conflict_group.select do |name|
+            value = opts.key?(name) ? opts[name] : allocated_positionals[name]
+            argument_present?(value)
+          end
           next if provided.size <= 1
 
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
         end
+      end
+
+      # Return true if the given name refers to a defined option or operand
+      #
+      # @param name [Symbol] the argument name to look up
+      # @return [Boolean]
+      def known_argument?(name)
+        @alias_map.key?(name) || @operand_definitions.any? { |d| d[:name] == name }
+      end
+
+      # Return true if a conflict-group value should be considered "present"
+      #
+      # A value is absent (not present) when it is nil, false, an empty array,
+      # or an empty string. All other values are present.
+      #
+      # @param value [Object] the argument value to test
+      # @return [Boolean]
+      def argument_present?(value)
+        return false if value.nil?
+        return false if value == false
+        return false if value == []
+        return false if value == ''
+
+        true
       end
 
       # Bound arguments object returned by {Arguments#bind}
