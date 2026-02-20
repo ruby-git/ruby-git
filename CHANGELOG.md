@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.3.1](https://github.com/ruby-git/ruby-git/compare/v4.3.0...v4.3.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* Resolve NoMethodError for Git::Base#cat_file ([#1058](https://github.com/ruby-git/ruby-git/issues/1058)) ([310bc73](https://github.com/ruby-git/ruby-git/commit/310bc73c1a62e7548eb43e5d3ef844af0b266fc7))
+
 ## [4.3.0](https://github.com/ruby-git/ruby-git/compare/v4.2.0...v4.3.0) (2026-01-15)
 
 
