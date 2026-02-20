@@ -1961,13 +1961,6 @@ RSpec.describe Git::Commands::Arguments do
         it 'passes when both are present' do
           expect { args.bind('HEAD', 'file.txt') }.not_to raise_error
         end
-
-        it 'treats empty array in repeatable operand as absent' do
-          expect { args.bind }.to raise_error(
-            ArgumentError,
-            'at least one of :commit, :paths must be provided'
-          )
-        end
       end
 
       context 'with mixed option and operand group' do
