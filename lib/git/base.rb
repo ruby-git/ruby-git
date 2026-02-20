@@ -812,8 +812,19 @@ module Git
       lib.ls_tree(objectish, opts)
     end
 
+    # Returns the contents of a git object
+    #
+    # Uses `git cat-file -p` to pretty-print the contents of the given object.
+    #
+    # @param objectish [String] a SHA, branch name, tag, or other revision reference
+    #   to the git object
+    #
+    # @return [String] the contents of the object
+    #
+    # @see https://git-scm.com/docs/git-cat-file git-cat-file
+    #
     def cat_file(objectish)
-      lib.cat_file(objectish)
+      lib.cat_file_contents(objectish)
     end
 
     # The name of the branch HEAD refers to or 'HEAD' if detached
