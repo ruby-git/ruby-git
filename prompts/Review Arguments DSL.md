@@ -130,7 +130,10 @@ should be covered by tests.
 
 #### 6. Conflicts
 
-If options are mutually exclusive, verify `conflicts ...` declarations exist.
+If arguments are mutually exclusive — whether option vs option, option vs operand,
+or operand vs operand — verify `conflicts ...` declarations exist. Names in a
+`conflicts` group may be any mix of option names and operand names. Unknown names
+raise `ArgumentError` at definition time, so any typo is caught early.
 
 #### 7. Exit-status declaration consistency (class-level, outside the DSL)
 

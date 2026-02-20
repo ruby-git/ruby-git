@@ -104,8 +104,8 @@ RSpec.describe Git::Commands::Checkout::Files do
 
     context 'with :merge option (recreate conflict markers)' do
       it 'adds --merge flag' do
-        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', merge: true)
+        expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
+        command.call(nil, 'conflicted.txt', merge: true)
       end
 
       it 'does not add flag when false' do
@@ -114,8 +114,13 @@ RSpec.describe Git::Commands::Checkout::Files do
       end
 
       it 'works with :m alias' do
-        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', 'conflicted.txt', m: true)
+        expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
+        command.call(nil, 'conflicted.txt', m: true)
+      end
+
+      it 'raises when :merge and tree_ish are both provided' do
+        expect { command.call('HEAD', 'conflicted.txt', merge: true) }
+          .to raise_error(ArgumentError, /cannot specify :merge and :tree_ish/)
       end
     end
 

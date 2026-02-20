@@ -48,6 +48,8 @@ module Git
 
           operand :tree_ish, required: true, allow_nil: true
           operand :paths, repeatable: true, separator: '--'
+
+          conflicts :merge, :tree_ish
         end
 
         # Execute the git checkout command for restoring files

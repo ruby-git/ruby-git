@@ -1576,6 +1576,157 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(since: '2020-01-01').to_ary).to eq(['--since', '2020-01-01'])
         end
       end
+
+      context 'with operand vs option conflict' do
+        let(:args) do
+          described_class.define do
+            flag_option %i[merge m], as: '--merge'
+            operand :tree_ish, required: true, allow_nil: true
+            operand :paths, repeatable: true, separator: '--'
+            conflicts :merge, :tree_ish
+          end
+        end
+
+        it 'raises when both the option and the operand are present' do
+          expect { args.bind('main', 'file.txt', merge: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :merge and :tree_ish/
+          )
+        end
+
+        it 'allows the option when the operand is absent (nil)' do
+          expect { args.bind(nil, 'file.txt', merge: true) }.not_to raise_error
+        end
+
+        it 'allows the operand when the option is absent' do
+          expect { args.bind('main', 'file.txt') }.not_to raise_error
+        end
+
+        it 'allows neither being present' do
+          expect { args.bind(nil) }.not_to raise_error
+        end
+      end
+
+      context 'with operand vs operand conflict' do
+        let(:args) do
+          described_class.define do
+            operand :ref_a, required: true, allow_nil: true
+            operand :ref_b, required: true, allow_nil: true
+            conflicts :ref_a, :ref_b
+          end
+        end
+
+        it 'raises when both operands are present' do
+          expect { args.bind('main', 'dev') }.to raise_error(
+            ArgumentError,
+            /cannot specify :ref_a and :ref_b/
+          )
+        end
+
+        it 'allows only the first operand (second is nil)' do
+          expect { args.bind('main', nil) }.not_to raise_error
+        end
+
+        it 'allows neither operand present (both nil)' do
+          expect { args.bind(nil, nil) }.not_to raise_error
+        end
+      end
+
+      context 'with value_option as_operand: true in a conflict group' do
+        let(:args) do
+          described_class.define do
+            flag_option :force
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            conflicts :force, :pathspec
+          end
+        end
+
+        it 'raises when both force flag and pathspec are present' do
+          expect { args.bind(force: true, pathspec: ['file.txt']) }.to raise_error(
+            ArgumentError,
+            /cannot specify :force and :pathspec/
+          )
+        end
+
+        it 'allows force when pathspec is absent (empty array)' do
+          expect { args.bind(force: true, pathspec: []) }.not_to raise_error
+        end
+
+        it 'allows pathspec when force is absent' do
+          expect { args.bind(pathspec: ['file.txt']) }.not_to raise_error
+        end
+      end
+
+      context 'with unknown name in conflicts declaration' do
+        it 'raises ArgumentError at definition time for an unknown option name' do
+          expect do
+            described_class.define do
+              flag_option :merge
+              conflicts :merge, :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo in conflicts declaration/)
+        end
+
+        it 'raises ArgumentError at definition time for an unknown operand name' do
+          expect do
+            described_class.define do
+              operand :tree_ish
+              conflicts :tree_ish, :nonexistent
+            end
+          end.to raise_error(ArgumentError, /unknown argument :nonexistent in conflicts declaration/)
+        end
+      end
+
+      context 'with multi-member conflict group mixing options and operands' do
+        let(:args) do
+          described_class.define do
+            flag_option :ours
+            flag_option :theirs
+            operand :tree_ish, required: true, allow_nil: true
+            conflicts :ours, :theirs, :tree_ish
+          end
+        end
+
+        it 'raises when two options in the group are both present' do
+          expect { args.bind(nil, ours: true, theirs: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :ours and :theirs/
+          )
+        end
+
+        it 'raises when an option and the operand are both present' do
+          expect { args.bind('main', ours: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :ours and :tree_ish/
+          )
+        end
+
+        it 'allows a single option with operand absent' do
+          expect { args.bind(nil, ours: true) }.not_to raise_error
+        end
+
+        it 'allows the operand alone with no conflicting options' do
+          expect { args.bind('main') }.not_to raise_error
+        end
+      end
+
+      context 'with presence semantics edge cases' do
+        let(:args) do
+          described_class.define do
+            flag_option :patch
+            flag_option :stat
+            conflicts :patch, :stat
+          end
+        end
+
+        it 'treats false as absent (no conflict)' do
+          expect { args.bind(patch: true, stat: false) }.not_to raise_error
+        end
+
+        it 'treats nil as absent (no conflict)' do
+          expect { args.bind(patch: true, stat: nil) }.not_to raise_error
+        end
+      end
     end
 
     context 'with allow_nil positional arguments' do
