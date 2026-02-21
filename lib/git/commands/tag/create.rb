@@ -49,6 +49,9 @@ module Git
 
           conflicts :annotate, :sign, :local_user
           conflicts :message, :file
+          requires_one_of :message, :file, when: :annotate
+          requires_one_of :message, :file, when: :sign
+          requires_one_of :message, :file, when: :local_user
         end
 
         # @!method call(*, **)
