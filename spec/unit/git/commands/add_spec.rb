@@ -240,6 +240,12 @@ RSpec.describe Git::Commands::Add do
           raise_error(ArgumentError, /:all.*:update|:update.*:all/)
         )
       end
+
+      it 'raises ArgumentError when :all is false (--no-all) and :update is given' do
+        expect { command.call('.', all: false, update: true) }.to(
+          raise_error(ArgumentError, /:all.*:update|:update.*:all/)
+        )
+      end
     end
 
     context 'with requires constraint violations' do

@@ -302,9 +302,11 @@ accept these via an options splat parameter (e.g., `def replace(object, replacem
   - `git -c user.name=Scott` → `c: { 'user.name' => 'Scott' }`
 
 - **Mutually exclusive options**: If options are mutually exclusive (e.g.,
-  `--global`, `--local`, `--system`), only one may be set to `true`. Setting more
+  `--global`, `--local`, `--system`), only one may be used at a time. Setting more
   than one raises `ArgumentError`. The DSL enforces this via `conflicts`
-  declarations at bind time.
+  declarations at bind time. For **negatable flag options** (`negatable: true`),
+  passing `false` (which emits `--no-flag`) also counts as using that option in the
+  conflict check; non-negatable `false` is treated as absent.
 
 - **Exactly-one required from a mutually exclusive group**: When exactly one of a
   group of arguments must be provided (e.g., a command that accepts exactly one of

@@ -207,7 +207,13 @@ would work should be corrected.
 
 When two or more arguments are mutually exclusive — options, operands, or a mix —
 declare them with `conflicts`. Names may be option names or operand names.
-Unknown names raise `ArgumentError` at load time. Examples:
+Unknown names raise `ArgumentError` at load time.
+
+**Presence semantics:** a value is present when it is not `nil`, `[]`, or `''`. For
+**negatable flag options** (`negatable: true`), `false` also counts as present
+because it emits `--no-flag`. Non-negatable `false` is absent.
+
+Examples:
 
 ```ruby
 conflicts :gpg_sign, :no_gpg_sign        # option vs option
@@ -243,7 +249,14 @@ requires_one_of :all, :paths                     # option or operand required
 When an argument is only required if a *specific trigger* argument is present, use
 `requires` (single name) or `requires_one_of ... when:` (group). Both forms skip
 the check when the trigger is absent. Unknown names raise `ArgumentError` at load
-time. Examples:
+time.
+
+**Presence semantics (trigger):** the trigger fires when its value is not `nil`,
+`false`, `[]`, or `''`. A negatable flag set to `false` means the feature is **off**;
+the trigger does **not** fire. The satisfied-by check uses the same rule as
+`conflicts`: negatable `false` counts as present.
+
+Examples:
 
 ```ruby
 # Single: :pathspec_from_file must be present whenever :pathspec_file_nul is present

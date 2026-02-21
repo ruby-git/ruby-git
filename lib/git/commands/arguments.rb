@@ -966,9 +966,10 @@ module Git
       # one argument in the same conflict group is "present", an ArgumentError is
       # raised.
       #
-      # **Presence semantics** — an argument is considered present when its value is
-      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
-      # non-empty strings, and non-empty arrays) are considered present.
+      # **Presence semantics** — an argument is present when its value is not `nil`,
+      # `[]`, or `''`. For **negatable flag options** (`negatable: true`), an explicit
+      # `false` value also counts as present because it emits a real CLI token
+      # (`--no-flag`). For all other option types `false` means absent.
       #
       # An ArgumentError is raised at definition time if any name given to
       # +conflicts+ is not a known option or operand, catching typos early.
@@ -1029,9 +1030,15 @@ module Git
       # the named trigger argument is present. If the trigger is absent the group is
       # skipped entirely.
       #
-      # **Presence semantics** — an argument is considered present when its value is
-      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
-      # non-empty strings, and non-empty arrays) are considered present.
+      # **Presence semantics** — two slightly different rules apply:
+      #
+      # - *`when:` trigger* — the trigger is considered present when its value is
+      #   not `nil`, `false`, `[]`, or `''`. A negatable flag set to `false`
+      #   means the feature is OFF, so the trigger does **not** fire.
+      # - *Satisfied-by check* — a group member is considered present when its
+      #   value is not `nil`, `[]`, or `''`. For **negatable flag options**
+      #   (`negatable: true`), an explicit `false` also counts as present because
+      #   the caller explicitly provided `--no-flag`.
       #
       # Names may refer to **options** (flag, value, flag-or-value, etc.) or
       # **operands** (positional arguments) interchangeably. Alias resolution happens
@@ -1136,9 +1143,10 @@ module Git
       #   requires_one_of :a, :b, :c
       #   conflicts       :a, :b, :c
       #
-      # **Presence semantics** — an argument is considered present when its value is
-      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
-      # non-empty strings, and non-empty arrays) are considered present.
+      # **Presence semantics** — inherits the rules from the constituent methods:
+      # for the satisfied-by check a negatable flag option set to `false` counts
+      # as present; for the conflict check the same rule applies. See
+      # {#requires_one_of} and {#conflicts} for the full details.
       #
       # An ArgumentError is raised at definition time if any name is not a known
       # option or operand, catching typos early.
@@ -1182,9 +1190,14 @@ module Git
       # When {#bind} is called, if the trigger argument is present and *name* is absent,
       # an ArgumentError is raised. If the trigger is absent, the check is skipped.
       #
-      # **Presence semantics** — an argument is considered present when its value is
-      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
-      # non-empty strings, and non-empty arrays) are considered present.
+      # **Presence semantics** — two slightly different rules apply:
+      #
+      # - *`when:` trigger* — the trigger is considered present when its value is
+      #   not `nil`, `false`, `[]`, or `''`. A negatable flag set to `false`
+      #   means the feature is OFF, so the trigger does **not** fire.
+      # - *Required argument* — *name* is considered present when its value is
+      #   not `nil`, `[]`, or `''`. For **negatable flag options** (`negatable:
+      #   true`), an explicit `false` also counts as present.
       #
       # An ArgumentError is raised at definition time if either *name* or the `when:`
       # trigger is not a known option or operand, catching typos early.
@@ -2418,7 +2431,7 @@ module Git
         @conflicts.each do |conflict_group|
           provided = conflict_group.select do |name|
             value = opts.key?(name) ? opts[name] : allocated_positionals[name]
-            argument_present?(value)
+            argument_present_for_name?(name, value)
           end
           next if provided.size <= 1
 
@@ -2460,7 +2473,7 @@ module Git
         end
 
         names = entry[:names]
-        return if names.any? { |n| argument_present?(opts.key?(n) ? opts[n] : allocated_positionals[n]) }
+        return if names.any? { |n| argument_present_for_name?(n, opts.key?(n) ? opts[n] : allocated_positionals[n]) }
 
         raise ArgumentError, requires_one_of_error_message(names, condition, entry[:single])
       end
@@ -2550,6 +2563,43 @@ module Git
         return false if value == ''
 
         true
+      end
+
+      # Return true if the named argument's value should be considered "present"
+      # for conflict and requires-one-of *satisfied-by* checks.
+      #
+      # Unlike {#argument_present?}, this method is aware of negatable flag options.
+      # For a negatable flag, an explicit +false+ value represents the +--no-*+ form
+      # of the flag and is therefore considered *present* — the caller explicitly
+      # provided it, so it can participate in a conflict group or satisfy a
+      # requires-one-of group.
+      #
+      # This method is intentionally *not* used for +when:+ trigger evaluation.
+      # A negatable flag set to +false+ means the feature is disabled, so its
+      # dependent requirements should not be activated (use {#argument_present?}
+      # for that path instead).
+      #
+      # +nil+, +[]+, and <tt>''</tt> are always treated as absent regardless of the
+      # argument type.
+      #
+      # @param name [Symbol] the argument name (alias or canonical) to look up
+      # @param value [Object] the argument value to test
+      # @return [Boolean]
+      def argument_present_for_name?(name, value)
+        return false if value.nil? || value == [] || value == ''
+        return true  unless value == false
+
+        negatable_option?(name)
+      end
+
+      # Return true if the named option is a negatable flag type
+      #
+      # @param name [Symbol] the option name (alias or canonical)
+      # @return [Boolean]
+      def negatable_option?(name)
+        canonical = @alias_map[name] || name
+        defn = @option_definitions[canonical]
+        %i[negatable_flag negatable_flag_or_value negatable_flag_or_inline_value].include?(defn&.dig(:type))
       end
 
       # Bound arguments object returned by {Arguments#bind}
