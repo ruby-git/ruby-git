@@ -456,6 +456,40 @@ module Git
     #     #=> raise ArgumentError, 'at least one of :all, :paths must be provided'
     #   args_def.bind('file.txt').to_a  # => ['file.txt']
     #
+    # ## Conditional Argument Requirements
+    #
+    # Use {#requires} and the `when:` form of {#requires_one_of} to declare that an
+    # argument (or at least one of a group) must be present **only when** a specific
+    # trigger argument is present. These constraints are evaluated during {#bind}: if
+    # the trigger is absent the check is skipped entirely.
+    #
+    # An ArgumentError is raised at definition time if either the required name(s) or
+    # the trigger name are not known arguments, catching typos early.
+    #
+    # @example Single conditional requirement
+    #   args_def = Arguments.define do
+    #     flag_option :pathspec_file_nul
+    #     value_option :pathspec_from_file, inline: true
+    #     requires :pathspec_from_file, when: :pathspec_file_nul
+    #   end
+    #   args_def.bind(pathspec_file_nul: true, pathspec_from_file: 'paths.txt').to_a
+    #   # => ['--pathspec-file-nul', '--pathspec-from-file=paths.txt']
+    #   args_def.bind(pathspec_file_nul: true)
+    #   #=> raise ArgumentError, ':pathspec_file_nul requires :pathspec_from_file'
+    #   args_def.bind  # trigger absent — no error
+    #
+    # @example Conditional at-least-one-of group
+    #   args_def = Arguments.define do
+    #     flag_option :annotate
+    #     value_option :message, inline: true
+    #     value_option :file, inline: true
+    #     requires_one_of :message, :file, when: :annotate
+    #   end
+    #   args_def.bind(annotate: true, message: 'v1.0').to_a  # => ['--annotate', '--message=v1.0']
+    #   args_def.bind(annotate: true)
+    #   #=> raise ArgumentError, ':annotate requires at least one of :message, :file'
+    #   args_def.bind  # trigger absent — no error
+    #
     # @api private
     #
     class Arguments
@@ -970,6 +1004,10 @@ module Git
       # When {#bind} is called, if none of the arguments in the group is present,
       # an ArgumentError is raised.
       #
+      # **Conditional form** — when `when:` is given, the check is only performed if
+      # the named trigger argument is present. If the trigger is absent the group is
+      # skipped entirely.
+      #
       # **Presence semantics** — an argument is considered present when its value is
       # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
       # non-empty strings, and non-empty arrays) are considered present.
@@ -979,26 +1017,34 @@ module Git
       # before the check, so supplying an alias for one of the named options counts
       # as that option being present.
       #
-      # An ArgumentError is raised at definition time if any name is not a known
-      # option or operand, catching typos early.
+      # An ArgumentError is raised at definition time if any name (including the
+      # `when:` trigger) is not a known option or operand, catching typos early.
       #
-      # The error message has the general form:
+      # The error message has the general form (unconditional):
       #
       #   "at least one of :name1, :name2 must be provided"
       #
+      # The error message has the general form (conditional, `when:` given):
+      #
+      #   ":trigger requires at least one of :name1, :name2"
+      #
       # @param names [Array<Symbol>] the option/operand names where at least one
       #   must be present
+      #
+      # @option kwargs [Symbol] :when optional trigger argument; when given, the check is
+      #   only performed if the trigger argument is present
       #
       # @return [void]
       #
       # @raise [ArgumentError] if no names are given
       #
-      # @raise [ArgumentError] if any name is not a known option or operand
+      # @raise [ArgumentError] if any name (or the `when:` trigger) is not a known
+      #   option or operand
       #
       # @raise [ArgumentError] if none of the arguments in the group is present
-      #   when binding arguments
+      #   when binding arguments (and the trigger, if any, is present)
       #
-      # @example At-least-one of two keyword options
+      # @example At-least-one of two keyword options (unconditional)
       #   args_def = Arguments.define do
       #     value_option :pathspec_from_file, inline: true
       #     value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
@@ -1010,7 +1056,7 @@ module Git
       #   args_def.bind
       #     # => raise ArgumentError, 'at least one of :pathspec, :pathspec_from_file must be provided'
       #
-      # @example Mixed option and operand group
+      # @example Mixed option and operand group (unconditional)
       #   args_def = Arguments.define do
       #     flag_option :all
       #     operand :paths, repeatable: true
@@ -1021,7 +1067,7 @@ module Git
       #   args_def.bind
       #     # => raise ArgumentError, 'at least one of :all, :paths must be provided'
       #
-      # @example Multiple independent groups
+      # @example Multiple independent groups (unconditional)
       #   args_def = Arguments.define do
       #     flag_option :commit
       #     flag_option :all
@@ -1031,19 +1077,88 @@ module Git
       #     requires_one_of :pathspec, :pathspec_from_file
       #   end
       #
-      def requires_one_of(*names)
+      # @example Conditional at-least-one-of group (`when:` form)
+      #   args_def = Arguments.define do
+      #     flag_option :annotate
+      #     value_option :message, inline: true
+      #     value_option :file, inline: true
+      #     requires_one_of :message, :file, when: :annotate
+      #   end
+      #   args_def.bind(annotate: true, message: 'v1.0').to_a  # passes
+      #   args_def.bind(annotate: true)
+      #     # => raise ArgumentError, ':annotate requires at least one of :message, :file'
+      #   args_def.bind  # trigger absent — no error
+      #
+      def requires_one_of(*names, **kwargs)
+        condition = kwargs.delete(:when)
+        raise ArgumentError, "requires_one_of: unknown keyword arguments: #{kwargs.keys.inspect}" unless kwargs.empty?
         raise ArgumentError, 'requires_one_of must be given at least one argument name' if names.empty?
 
-        # For options: store the canonical (primary) name via alias_map.
-        # For positional-only operands: the name is used directly (not in alias_map).
-        # uniq guards against a caller listing both a primary name and its alias,
-        # which would otherwise canonicalize to the same name twice.
-        canonical_group = names.map do |name|
-          sym = name.to_sym
-          validate_requires_one_of_name!(sym)
-          @alias_map[sym] || sym
-        end.uniq
-        @requires_one_of << canonical_group
+        canonical_group = canonicalize_requires_names(names)
+        canonical_condition = resolve_requires_condition(condition)
+        @requires_one_of << { names: canonical_group, condition: canonical_condition, single: false }
+      end
+
+      # Declare that *name* must be present whenever the trigger argument *when:* is present
+      #
+      # When {#bind} is called, if the trigger argument is present and *name* is absent,
+      # an ArgumentError is raised. If the trigger is absent, the check is skipped.
+      #
+      # **Presence semantics** — an argument is considered present when its value is
+      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
+      # non-empty strings, and non-empty arrays) are considered present.
+      #
+      # An ArgumentError is raised at definition time if either *name* or the `when:`
+      # trigger is not a known option or operand, catching typos early.
+      #
+      # The error message has the form:
+      #
+      #   ":trigger requires :name"
+      #
+      # @param name [Symbol] the option/operand name that must be present
+      #
+      # @option kwargs [Symbol] :when the trigger argument; when present, *name* must also be present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if `when:` is not provided
+      #
+      # @raise [ArgumentError] if *name* or the `when:` trigger is not a known option
+      #   or operand
+      #
+      # @raise [ArgumentError] if the trigger is present and *name* is absent when
+      #   binding arguments
+      #
+      # @example Require pathspec_from_file when pathspec_file_nul is present
+      #   args_def = Arguments.define do
+      #     flag_option :pathspec_file_nul
+      #     value_option :pathspec_from_file, inline: true
+      #     requires :pathspec_from_file, when: :pathspec_file_nul
+      #   end
+      #   args_def.bind(pathspec_file_nul: true, pathspec_from_file: 'paths.txt').to_a
+      #   # => ['--pathspec-file-nul', '--pathspec-from-file=paths.txt']
+      #   args_def.bind(pathspec_file_nul: true)
+      #   # => raise ArgumentError, ':pathspec_file_nul requires :pathspec_from_file'
+      #   args_def.bind  # trigger absent — no error
+      #
+      # @example Require dry_run when ignore_missing is present
+      #   args_def = Arguments.define do
+      #     flag_option :dry_run
+      #     flag_option :ignore_missing
+      #     requires :dry_run, when: :ignore_missing
+      #   end
+      #   args_def.bind(ignore_missing: true)
+      #   # => raise ArgumentError, ':ignore_missing requires :dry_run'
+      #
+      def requires(name, **kwargs)
+        condition = kwargs.delete(:when)
+        raise ArgumentError, 'requires: `when:` keyword is required' unless condition
+        raise ArgumentError, "requires: unknown keyword arguments: #{kwargs.keys.inspect}" unless kwargs.empty?
+
+        sym = name.to_sym
+        validate_requires_name!(sym)
+        canonical_trigger = resolve_requires_condition(condition)
+        @requires_one_of << { names: [@alias_map[sym] || sym], condition: canonical_trigger, single: true }
       end
 
       # Define an operand (positional argument in Ruby terminology)
@@ -2086,23 +2201,57 @@ module Git
         end
       end
 
-      # Validate that at least one argument in each requires_one_of group is present
+      # Validate conditional and unconditional requires_one_of groups
+      #
+      # Each entry in @requires_one_of is a Hash with keys:
+      #   :names     — Array of canonical argument names that must collectively satisfy
+      #                the at-least-one constraint
+      #   :condition — canonical trigger name (Symbol), or nil for unconditional groups
+      #   :single    — true when declared via `requires` (affects error message wording)
       #
       # @param opts [Hash] normalized keyword options (aliases already resolved)
       # @param allocated_positionals [Hash] the allocated positional values
-      # @raise [ArgumentError] if none of the arguments in any group is present
+      # @raise [ArgumentError] if none of the arguments in any applicable group is present
       #
       def validate_requires_one_of!(opts, allocated_positionals = {})
-        @requires_one_of.each do |group|
-          any_present = group.any? do |name|
-            value = opts.key?(name) ? opts[name] : allocated_positionals[name]
-            argument_present?(value)
-          end
-          next if any_present
-
-          formatted = group.map { |name| ":#{name}" }.join(', ')
-          raise ArgumentError, "at least one of #{formatted} must be provided"
+        @requires_one_of.each do |entry|
+          validate_requires_one_of_entry!(entry, opts, allocated_positionals)
         end
+      end
+
+      # Validate a single requires_one_of entry
+      #
+      # @param entry [Hash] the group entry with :names, :condition, :single keys
+      # @param opts [Hash] normalized keyword options
+      # @param allocated_positionals [Hash] the allocated positional values
+      #
+      def validate_requires_one_of_entry!(entry, opts, allocated_positionals)
+        condition = entry[:condition]
+
+        if condition
+          trigger_value = opts.key?(condition) ? opts[condition] : allocated_positionals[condition]
+          return unless argument_present?(trigger_value)
+        end
+
+        names = entry[:names]
+        return if names.any? { |n| argument_present?(opts.key?(n) ? opts[n] : allocated_positionals[n]) }
+
+        raise ArgumentError, requires_one_of_error_message(names, condition, entry[:single])
+      end
+
+      # Build the error message for a failed requires_one_of check
+      #
+      # @param names [Array<Symbol>] the required argument names
+      # @param condition [Symbol, nil] the trigger argument name, or nil for unconditional
+      # @param single [Boolean] true when declared via `requires` (single required arg)
+      # @return [String] the error message
+      #
+      def requires_one_of_error_message(names, condition, single)
+        formatted = names.map { |name| ":#{name}" }.join(', ')
+        return "at least one of #{formatted} must be provided" unless condition
+        return ":#{condition} requires #{formatted}" if single
+
+        ":#{condition} requires at least one of #{formatted}"
       end
 
       # Validate a single name used in a requires_one_of declaration
@@ -2112,6 +2261,45 @@ module Git
       #
       def validate_requires_one_of_name!(sym)
         raise ArgumentError, "unknown argument :#{sym} in requires_one_of declaration" unless known_argument?(sym)
+      end
+
+      # Validate a single name used in a requires or conditional requires_one_of declaration
+      #
+      # @param sym [Symbol] the name to validate
+      # @raise [ArgumentError] if sym is not a known option or operand
+      #
+      def validate_requires_name!(sym)
+        raise ArgumentError, "unknown argument :#{sym} in requires declaration" unless known_argument?(sym)
+      end
+
+      # Canonicalize an array of argument names for a requires_one_of group
+      #
+      # Validates each name, resolves aliases to their primary name, and deduplicates.
+      # For options, canonical name comes from alias_map; for positional-only operands
+      # the name is used directly.
+      #
+      # @param names [Array<Symbol, String>] raw argument names
+      # @return [Array<Symbol>] canonical, deduplicated names
+      #
+      def canonicalize_requires_names(names)
+        names.map do |name|
+          sym = name.to_sym
+          validate_requires_one_of_name!(sym)
+          @alias_map[sym] || sym
+        end.uniq
+      end
+
+      # Validate and canonicalize the `when:` condition for requires/requires_one_of
+      #
+      # @param condition [Symbol, nil] the raw trigger argument name
+      # @return [Symbol, nil] canonical trigger name, or nil when condition is nil
+      #
+      def resolve_requires_condition(condition)
+        return nil unless condition
+
+        trigger_sym = condition.to_sym
+        validate_requires_name!(trigger_sym)
+        @alias_map[trigger_sym] || trigger_sym
       end
 
       # Return true if the given name refers to a defined option or operand

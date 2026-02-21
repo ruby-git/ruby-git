@@ -1901,6 +1901,185 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with requires method' do
+      context 'unary form — single conditional requirement' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :pathspec_file_nul
+            value_option :pathspec_from_file, inline: true
+            requires :pathspec_from_file, when: :pathspec_file_nul
+          end
+        end
+
+        it 'raises when trigger is present but required argument is absent' do
+          expect { args_def.bind(pathspec_file_nul: true) }
+            .to raise_error(ArgumentError, /:pathspec_file_nul requires :pathspec_from_file/)
+        end
+
+        it 'does not raise when trigger is absent' do
+          expect { args_def.bind }.not_to raise_error
+        end
+
+        it 'does not raise when both trigger and required argument are present' do
+          expect { args_def.bind(pathspec_file_nul: true, pathspec_from_file: 'paths.txt') }
+            .not_to raise_error
+        end
+
+        it 'does not raise when required argument is present but trigger is absent' do
+          expect { args_def.bind(pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+
+        it 'skips check when trigger is nil' do
+          expect { args_def.bind(pathspec_file_nul: nil) }.not_to raise_error
+        end
+
+        it 'skips check when trigger is false' do
+          expect { args_def.bind(pathspec_file_nul: false) }.not_to raise_error
+        end
+      end
+
+      context 'group form — conditional requires_one_of with when:' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :annotate
+            value_option :message, inline: true
+            value_option :file, inline: true
+            requires_one_of :message, :file, when: :annotate
+          end
+        end
+
+        it 'raises when trigger is present but none of the group are present' do
+          expect { args_def.bind(annotate: true) }
+            .to raise_error(ArgumentError, /:annotate requires at least one of :message, :file/)
+        end
+
+        it 'does not raise when trigger is absent' do
+          expect { args_def.bind }.not_to raise_error
+        end
+
+        it 'does not raise when trigger and one group member are present' do
+          expect { args_def.bind(annotate: true, message: 'Release') }.not_to raise_error
+        end
+
+        it 'does not raise when trigger and other group member are present' do
+          expect { args_def.bind(annotate: true, file: 'msg.txt') }.not_to raise_error
+        end
+
+        it 'does not raise when trigger and both group members are present' do
+          expect { args_def.bind(annotate: true, message: 'Release', file: 'msg.txt') }.not_to raise_error
+        end
+
+        it 'skips check when trigger is false' do
+          expect { args_def.bind(annotate: false) }.not_to raise_error
+        end
+
+        it 'skips check when trigger is nil' do
+          expect { args_def.bind(annotate: nil) }.not_to raise_error
+        end
+      end
+
+      context 'typo guard — definition-time errors' do
+        it 'raises at definition time for unknown required name' do
+          expect do
+            described_class.define do
+              flag_option :verbose
+              requires :typo, when: :verbose
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo/)
+        end
+
+        it 'raises at definition time for unknown trigger name' do
+          expect do
+            described_class.define do
+              flag_option :verbose
+              requires :verbose, when: :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo/)
+        end
+
+        it 'raises when when: keyword is missing' do
+          expect do
+            described_class.define do
+              flag_option :verbose
+              requires :verbose
+            end
+          end.to raise_error(ArgumentError, /requires: `when:` keyword is required/)
+        end
+
+        it 'raises at definition time for unknown name in requires_one_of when: form' do
+          expect do
+            described_class.define do
+              flag_option :annotate
+              value_option :message, inline: true
+              requires_one_of :typo, when: :annotate
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo/)
+        end
+
+        it 'raises at definition time for unknown trigger in requires_one_of when: form' do
+          expect do
+            described_class.define do
+              flag_option :annotate
+              value_option :message, inline: true
+              requires_one_of :message, when: :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo/)
+        end
+      end
+
+      context 'backward compatibility — unconditional requires_one_of still works' do
+        let(:args_def) do
+          described_class.define do
+            value_option :pathspec_from_file, inline: true
+            value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+            requires_one_of :pathspec, :pathspec_from_file
+          end
+        end
+
+        it 'raises when neither option is present' do
+          expect { args_def.bind }.to raise_error(
+            ArgumentError,
+            'at least one of :pathspec, :pathspec_from_file must be provided'
+          )
+        end
+
+        it 'passes when one of the options is present' do
+          expect { args_def.bind(pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+      end
+
+      context 'multiple conditional requires with same trigger' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :annotate
+            flag_option :sign
+            value_option :message, inline: true
+            value_option :file, inline: true
+            requires_one_of :message, :file, when: :annotate
+            requires_one_of :message, :file, when: :sign
+          end
+        end
+
+        it 'raises for :annotate trigger without message or file' do
+          expect { args_def.bind(annotate: true) }
+            .to raise_error(ArgumentError, /:annotate requires at least one of :message, :file/)
+        end
+
+        it 'raises for :sign trigger without message or file' do
+          expect { args_def.bind(sign: true) }
+            .to raise_error(ArgumentError, /:sign requires at least one of :message, :file/)
+        end
+
+        it 'passes when :annotate and message are present' do
+          expect { args_def.bind(annotate: true, message: 'Release') }.not_to raise_error
+        end
+
+        it 'passes when both triggers and message are present' do
+          expect { args_def.bind(annotate: true, sign: true, message: 'Release') }.not_to raise_error
+        end
+      end
+    end
+
     context 'with allow_nil positional arguments' do
       context 'when required with allow_nil' do
         let(:args) do

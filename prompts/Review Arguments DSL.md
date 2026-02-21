@@ -190,7 +190,8 @@ short flags), prefer:
 Constraint declarations always come after all arguments they reference are defined:
 
 6. `conflicts` declarations
-7. `requires_one_of` declarations
+7. `requires_one_of` declarations (unconditional and `when:` conditional forms)
+8. `requires` declarations (single-argument conditional form)
 
 ### 4. Correct modifiers
 
@@ -276,7 +277,9 @@ or operand vs operand — verify `conflicts ...` declarations exist. Names in a
 `conflicts` group may be any mix of option names and operand names. Unknown names
 raise `ArgumentError` at definition time, so any typo is caught early.
 
-### 7. At-Least-One Validation
+### 7. Conditional and Unconditional Argument Requirements
+
+#### 7a. Unconditional at-least-one (`requires_one_of`)
 
 If a command requires at least one argument from a group to be present — options,
 operands, or a mix — verify `requires_one_of ...` declarations exist. As with
@@ -287,6 +290,44 @@ argument being present. Unknown names raise `ArgumentError` at definition time.
 The error at bind time has the form:
 
   "at least one of :name1, :name2 must be provided"
+
+#### 7b. Conditional single requirement (`requires`)
+
+If an argument is only required when another specific argument is present, verify a
+`requires :name, when: :trigger` declaration exists. The check is skipped entirely
+when the trigger is absent. Unknown names (including the trigger) raise
+`ArgumentError` at definition time.
+
+The error at bind time has the form:
+
+  ":trigger requires :name"
+
+Example in `git add`:
+
+```ruby
+requires :pathspec_from_file, when: :pathspec_file_nul
+requires :dry_run,            when: :ignore_missing
+```
+
+#### 7c. Conditional at-least-one-of group (`requires_one_of ... when:`)
+
+If at least one of a group must be present only when another argument is present,
+verify a `requires_one_of :a, :b, when: :trigger` declaration exists. Like the
+unconditional form, names may be any mix of option/operand names. The check is
+skipped when the trigger is absent. Unknown names (including the trigger) raise
+`ArgumentError` at definition time.
+
+The error at bind time has the form:
+
+  ":trigger requires at least one of :name1, :name2"
+
+Example in `git tag --create`:
+
+```ruby
+requires_one_of :message, :file, when: :annotate
+requires_one_of :message, :file, when: :sign
+requires_one_of :message, :file, when: :local_user
+```
 
 ### 8. Exit-status declaration consistency (class-level, outside the DSL)
 

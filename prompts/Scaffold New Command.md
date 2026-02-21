@@ -148,7 +148,8 @@ Constraint declarations always come last, after all arguments they reference
 are defined:
 
 7. `conflicts` declarations
-8. `requires_one_of` declarations
+8. `requires_one_of` declarations (unconditional and `when:` conditional forms)
+9. `requires` declarations (single-argument conditional form)
 
 Use aliases for long/short forms (`%i[force f]`, `%i[all A]`, `%i[intent_to_add N]`),
 with long name first. The DSL preserves symbol case, so uppercase single-char aliases
@@ -196,6 +197,23 @@ names. Unknown names raise `ArgumentError` at load time. Examples:
 ```ruby
 requires_one_of :pathspec, :pathspec_from_file   # at least one option required
 requires_one_of :all, :paths                     # option or operand required
+```
+
+When an argument is only required if a *specific trigger* argument is present, use
+`requires` (single name) or `requires_one_of ... when:` (group). Both forms skip
+the check when the trigger is absent. Unknown names raise `ArgumentError` at load
+time. Examples:
+
+```ruby
+# Single: :pathspec_from_file must be present whenever :pathspec_file_nul is present
+requires :pathspec_from_file, when: :pathspec_file_nul
+# Single: :dry_run must be present whenever :ignore_missing is present
+requires :dry_run,            when: :ignore_missing
+
+# Group: at least one of :message/:file must be present whenever :annotate is present
+requires_one_of :message, :file, when: :annotate
+requires_one_of :message, :file, when: :sign
+requires_one_of :message, :file, when: :local_user
 ```
 
 ## Exit status guidance

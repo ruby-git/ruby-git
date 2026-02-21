@@ -36,6 +36,8 @@ module Git
         operand :pathspec, repeatable: true, separator: '--'
 
         conflicts :all, :update
+        requires :pathspec_from_file, when: :pathspec_file_nul
+        requires :dry_run, when: :ignore_missing
       end
 
       # @!method call(*, **)
