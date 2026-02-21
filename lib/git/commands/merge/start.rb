@@ -30,7 +30,7 @@ module Git
       # @example Octopus merge (multiple branches)
       #   merge.call('branch1', 'branch2', 'branch3')
       #
-      class Start < Base
+      class Start < Git::Commands::Base
         arguments do
           literal 'merge'
           # Always suppress editor (non-interactive use)
@@ -75,78 +75,78 @@ module Git
           conflicts :m, :file
         end
 
-        # Execute the git merge command
+        # @!method call(*, **)
         #
-        # @overload call(*commit, **options)
+        #   Execute the git merge command
         #
-        #   @param commit [Array<String>] One or more branch names, commit SHAs,
-        #     or refs to merge into the current branch. Multiple commits create
-        #     an octopus merge.
+        #   @overload call(*commit, **options)
         #
-        #   @param options [Hash] command options
+        #     @param commit [Array<String>] One or more branch names, commit SHAs,
+        #       or refs to merge into the current branch. Multiple commits create
+        #       an octopus merge.
         #
-        #   @option options [Boolean] :commit (nil) Perform merge and commit.
-        #     true for --commit, false for --no-commit
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean] :squash (nil) Create a single commit on top
-        #     of current branch with the effect of merging another branch
+        #     @option options [Boolean] :commit (nil) Perform merge and commit.
+        #       true for --commit, false for --no-commit
         #
-        #   @option options [Boolean] :ff (nil) Fast-forward behavior.
-        #     true for --ff, false for --no-ff
+        #     @option options [Boolean] :squash (nil) Create a single commit on top
+        #       of current branch with the effect of merging another branch
         #
-        #   @option options [Boolean] :ff_only (nil) Refuse to merge unless
-        #     fast-forward is possible
+        #     @option options [Boolean] :ff (nil) Fast-forward behavior.
+        #       true for --ff, false for --no-ff
         #
-        #   @option options [String] :m (nil) Commit message for the merge commit.
+        #     @option options [Boolean] :ff_only (nil) Refuse to merge unless
+        #       fast-forward is possible
         #
-        #   @option options [String] :file (nil) Read commit message from file.
-        #     Alias: :F
+        #     @option options [String] :m (nil) Commit message for the merge commit.
         #
-        #   @option options [String] :into_name (nil) Prepare merge message as if
-        #     merging into this branch name
+        #     @option options [String] :file (nil) Read commit message from file.
+        #       Alias: :F
         #
-        #   @option options [String] :strategy (nil) Merge strategy to use
-        #     (e.g., 'ort', 'recursive', 'resolve', 'octopus', 'ours', 'subtree').
-        #     Alias: :s
+        #     @option options [String] :into_name (nil) Prepare merge message as if
+        #       merging into this branch name
         #
-        #   @option options [String, Array<String>] :strategy_option (nil) Pass
-        #     option(s) to the merge strategy (e.g., 'ours', 'theirs', 'patience').
-        #     Can be a single value or array for multiple -X flags. Alias: :X
+        #     @option options [String] :strategy (nil) Merge strategy to use
+        #       (e.g., 'ort', 'recursive', 'resolve', 'octopus', 'ours', 'subtree').
+        #       Alias: :s
         #
-        #   @option options [Boolean, String] :gpg_sign (nil) GPG-sign the merge commit.
-        #     true for --gpg-sign, a String key ID for --gpg-sign=<keyid>, false for --no-gpg-sign.
-        #     Alias: :S
+        #     @option options [String, Array<String>] :strategy_option (nil) Pass
+        #       option(s) to the merge strategy (e.g., 'ours', 'theirs', 'patience').
+        #       Can be a single value or array for multiple -X flags. Alias: :X
         #
-        #   @option options [Boolean] :verify (nil) Run pre-merge and commit-msg
-        #     hooks. true for --verify, false for --no-verify
+        #     @option options [Boolean, String] :gpg_sign (nil) GPG-sign the merge commit.
+        #       true for --gpg-sign, a String key ID for --gpg-sign=<keyid>, false for --no-gpg-sign.
+        #       Alias: :S
         #
-        #   @option options [Boolean] :verify_signatures (nil) Verify commit
-        #     signatures. true for --verify-signatures, false for
-        #     --no-verify-signatures
+        #     @option options [Boolean] :verify (nil) Run pre-merge and commit-msg
+        #       hooks. true for --verify, false for --no-verify
         #
-        #   @option options [Boolean] :allow_unrelated_histories (nil) Allow
-        #     merging histories without common ancestor. true for
-        #     --allow-unrelated-histories, false for --no-allow-unrelated-histories
+        #     @option options [Boolean] :verify_signatures (nil) Verify commit
+        #       signatures. true for --verify-signatures, false for
+        #       --no-verify-signatures
         #
-        #   @option options [Boolean] :rerere_autoupdate (nil) Allow rerere to
-        #     update index. true for --rerere-autoupdate, false for
-        #     --no-rerere-autoupdate
+        #     @option options [Boolean] :allow_unrelated_histories (nil) Allow
+        #       merging histories without common ancestor. true for
+        #       --allow-unrelated-histories, false for --no-allow-unrelated-histories
         #
-        #   @option options [Boolean] :autostash (nil) Automatically stash/unstash
-        #     before/after merge. true for --autostash, false for --no-autostash
+        #     @option options [Boolean] :rerere_autoupdate (nil) Allow rerere to
+        #       update index. true for --rerere-autoupdate, false for
+        #       --no-rerere-autoupdate
         #
-        #   @option options [Boolean] :signoff (nil) Add Signed-off-by trailer.
-        #     true for --signoff, false for --no-signoff
+        #     @option options [Boolean] :autostash (nil) Automatically stash/unstash
+        #       before/after merge. true for --autostash, false for --no-autostash
         #
-        #   @option options [Boolean, Integer] :log (nil) Include one-line descriptions
-        #     from commits in merge message. true for --log, false for --no-log,
-        #     or an integer for --log=<n> to limit the number of entries.
+        #     @option options [Boolean] :signoff (nil) Add Signed-off-by trailer.
+        #       true for --signoff, false for --no-signoff
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #     @option options [Boolean, Integer] :log (nil) Include one-line descriptions
+        #       from commits in merge message. true for --log, false for --no-log,
+        #       or an integer for --log=<n> to limit the number of entries.
         #
-        # @raise [Git::FailedError] if the merge fails (e.g., conflicts)
+        #     @return [Git::CommandLineResult] the result of the command
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the merge fails (e.g., conflicts)
       end
     end
   end

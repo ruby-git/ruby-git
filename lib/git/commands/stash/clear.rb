@@ -18,17 +18,19 @@ module Git
       # @example Clear all stashes
       #   Git::Commands::Stash::Clear.new(execution_context).call
       #
-      class Clear < Base
+      class Clear < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'clear'
         end
 
-        # Clear all stash entries
+        # @!method call(*, **)
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash clear`
+        #   @overload call()
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     Clear all stash entries
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git stash clear`
       end
     end
   end

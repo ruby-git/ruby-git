@@ -38,7 +38,7 @@ For migrated commands, the expected structure is:
 ```ruby
 require 'git/commands/base'
 
-class SomeCommand < Base
+class SomeCommand < Git::Commands::Base
   arguments do
     ...
   end
@@ -47,8 +47,13 @@ class SomeCommand < Base
   # reason comment
   allow_exit_status 0..1
 
-  # YARD docs for this command's call signature
-  def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+  # @!method call(*, **)
+  #
+  #   @overload call(**options)
+  #
+  #     YARD docs for this command's call signature.
+  #
+  #     @return [Git::CommandLineResult]
 end
 ```
 
@@ -62,7 +67,7 @@ Shared behavior lives in `Base`:
 
 ### 1. Class shape
 
-- [ ] Class inherits from `Base`
+- [ ] Class inherits from `Git::Commands::Base`
 - [ ] Requires `git/commands/base` (not `git/commands/arguments`)
 - [ ] Has exactly one `arguments do` declaration
 - [ ] Does not define command-specific `initialize` that only assigns
@@ -70,7 +75,7 @@ Shared behavior lives in `Base`:
 
 ### 2. `#call` implementation
 
-- [ ] Uses `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition` as YARD documentation shim
+- [ ] Uses `# @!method call(*, **)` YARD directive with nested `@overload` blocks as documentation shim
 - [ ] Contains no custom bind/execute/exit-status logic in migrated commands
 - [ ] Does not parse output in command class
 
@@ -118,7 +123,7 @@ For migration PRs, verify process constraints:
 - lingering `ARGS = Arguments.define` constant and custom `#call`
 - command-specific duplicated exit-status checks instead of `allow_exit_status`
 - missing rationale comment for `allow_exit_status`
-- missing YARD shim method (`def call(...) = super`)
+- missing YARD directive (`# @!method call(*, **)`)
 - migration PR scope too broad (not phased)
 
 ## Output

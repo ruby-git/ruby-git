@@ -17,7 +17,7 @@ module Git
     #   add.call('file1.rb', 'file2.rb')
     #   add.call(all: true)
     #
-    class Add < Base
+    class Add < Git::Commands::Base
       arguments do
         literal 'add'
         flag_option %i[dry_run n]

@@ -22,30 +22,30 @@ module Git
       # @example Drop a specific stash
       #   Git::Commands::Stash::Drop.new(execution_context).call('stash@\\{2}')
       #
-      class Drop < Base
+      class Drop < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'drop'
           operand :stash
         end
 
-        # Drop a stash entry
+        # @!method call(*, **)
         #
-        # @overload call()
+        #   Drop a stash entry
         #
-        #   Drop the latest stash
+        #   @overload call()
         #
-        # @overload call(stash)
+        #     Drop the latest stash
         #
-        #   Drop a specific stash
+        #   @overload call(stash)
         #
-        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #     Drop a specific stash
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash drop`
+        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        # @raise [Git::FailedError] if the stash does not exist
+        #   @return [Git::CommandLineResult] the result of calling `git stash drop`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @raise [Git::FailedError] if the stash does not exist
       end
     end
   end

@@ -34,7 +34,7 @@ module Git
       #   create = Git::Commands::Branch::Create.new(execution_context)
       #   create.call('feature-branch', 'origin/main', track: 'inherit')
       #
-      class Create < Base
+      class Create < Git::Commands::Base
         arguments do
           literal 'branch'
           flag_or_value_option %i[track t], negatable: true, inline: true
@@ -45,80 +45,80 @@ module Git
           operand :start_point
         end
 
-        # Execute the git branch command to create a new branch
+        # @!method call(*, **)
         #
-        # @overload call(branch_name, **options)
+        #   Execute the git branch command to create a new branch
         #
-        #   Create a new branch from the current HEAD
+        #   @overload call(branch_name, **options)
         #
-        #   @param branch_name [String] The name of the branch to create
+        #     Create a new branch from the current HEAD
         #
-        #   @param options [Hash] command options
+        #     @param branch_name [String] The name of the branch to create
         #
-        #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
-        #     - `true`: Set up tracking using the start-point branch itself (`--track`)
-        #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
-        #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
-        #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #     @param options [Hash] command options
         #
-        #     Alias: :t
+        #     @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
+        #       - `true`: Set up tracking using the start-point branch itself (`--track`)
+        #       - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
+        #       - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
+        #       - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
-        #     Without this, git branch refuses to change an existing branch.
-        #     Adds `--force` flag.
+        #       Alias: :t
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
+        #       Without this, git branch refuses to change an existing branch.
+        #       Adds `--force` flag.
         #
-        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
-        #     submodules. This is an experimental feature.
-        #     Adds `--recurse-submodules` flag.
+        #       Alias: :f
         #
-        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
-        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
-        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
-        #     Adds `--create-reflog` flag.
+        #     @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
+        #       submodules. This is an experimental feature.
+        #       Adds `--recurse-submodules` flag.
         #
-        # @overload call(branch_name, start_point, **options)
+        #     @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
+        #       expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
+        #       reflogs are usually enabled by default via `core.logAllRefUpdates`.
+        #       Adds `--create-reflog` flag.
         #
-        #   Create a new branch from the specified start point
+        #   @overload call(branch_name, start_point, **options)
         #
-        #   @param branch_name [String] The name of the branch to create
+        #     Create a new branch from the specified start point
         #
-        #   @param start_point [String, nil] The commit, branch, or tag to start the new branch from.
-        #     Can also use `<rev-A>...<rev-B>` syntax for merge base.
+        #     @param branch_name [String] The name of the branch to create
         #
-        #   @param options [Hash] command options
+        #     @param start_point [String, nil] The commit, branch, or tag to start the new branch from.
+        #       Can also use `<rev-A>...<rev-B>` syntax for merge base.
         #
-        #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
-        #     - `true`: Set up tracking using the start-point branch itself (`--track`)
-        #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
-        #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
-        #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #     @param options [Hash] command options
         #
-        #     Alias: :t
+        #     @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
+        #       - `true`: Set up tracking using the start-point branch itself (`--track`)
+        #       - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
+        #       - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
+        #       - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
-        #     Without this, git branch refuses to change an existing branch.
-        #     Adds `--force` flag.
+        #       Alias: :t
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
+        #       Without this, git branch refuses to change an existing branch.
+        #       Adds `--force` flag.
         #
-        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
-        #     submodules. This is an experimental feature.
-        #     Adds `--recurse-submodules` flag.
+        #       Alias: :f
         #
-        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
-        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
-        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
-        #     Adds `--create-reflog` flag.
+        #     @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
+        #       submodules. This is an experimental feature.
+        #       Adds `--recurse-submodules` flag.
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch`
+        #     @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
+        #       expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
+        #       reflogs are usually enabled by default via `core.logAllRefUpdates`.
+        #       Adds `--create-reflog` flag.
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch`
         #
-        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #     @raise [ArgumentError] if unsupported options are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if git returns a non-zero exit code
       end
     end
   end

@@ -22,7 +22,7 @@ module Git
       #   unset_upstream = Git::Commands::Branch::UnsetUpstream.new(execution_context)
       #   unset_upstream.call('feature')
       #
-      class UnsetUpstream < Base
+      class UnsetUpstream < Git::Commands::Base
         # NOTE: The --unset-upstream flag is always present.
         # The branch_name positional is optional; if omitted, git uses the current branch.
         arguments do
@@ -31,21 +31,21 @@ module Git
           operand :branch_name
         end
 
-        # Execute the git branch --unset-upstream command
+        # @!method call(*, **)
         #
-        # @overload call(branch_name = nil, **options)
+        #   Execute the git branch --unset-upstream command
         #
-        #   @param branch_name [String, nil] The branch to configure (defaults to current branch if nil)
+        #   @overload call(branch_name = nil, **options)
         #
-        #   @param options [Hash] command options (none currently supported)
+        #     @param branch_name [String, nil] The branch to configure (defaults to current branch if nil)
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --unset-upstream`
+        #     @param options [Hash] command options (none currently supported)
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch --unset-upstream`
         #
-        # @raise [Git::FailedError] if the branch doesn't exist or has no upstream
+        #     @raise [ArgumentError] if unsupported options are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the branch doesn't exist or has no upstream
       end
     end
   end

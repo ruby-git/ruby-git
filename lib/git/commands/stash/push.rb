@@ -29,7 +29,7 @@ module Git
       # @example Include untracked files
       #   Git::Commands::Stash::Push.new(execution_context).call(include_untracked: true)
       #
-      class Push < Base
+      class Push < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'push'
@@ -44,45 +44,45 @@ module Git
           operand :pathspec, repeatable: true, separator: '--'
         end
 
-        # Stash changes in the working directory
+        # @!method call(*, **)
         #
-        # @overload call(*pathspec, **options)
+        #   Stash changes in the working directory
         #
-        #   @param pathspec [Array<String>] optional paths to limit what gets stashed
+        #   @overload call(*pathspec, **options)
         #
-        #   @param options [Hash] command options
+        #     @param pathspec [Array<String>] optional paths to limit what gets stashed
         #
-        #   @option options [String] :message (nil) descriptive message for the stash.
+        #     @param options [Hash] command options
         #
-        #     Alias: :m
+        #     @option options [String] :message (nil) descriptive message for the stash.
         #
-        #   @option options [Boolean] :patch (nil) interactively select hunks to stash.
+        #       Alias: :m
         #
-        #     Alias: :p
+        #     @option options [Boolean] :patch (nil) interactively select hunks to stash.
         #
-        #   @option options [Boolean] :staged (nil) stash only staged changes.
+        #       Alias: :p
         #
-        #     Alias: :S
+        #     @option options [Boolean] :staged (nil) stash only staged changes.
         #
-        #   @option options [Boolean, nil] :keep_index (nil) keep staged changes in index.
+        #       Alias: :S
         #
-        #     Alias: :k
+        #     @option options [Boolean, nil] :keep_index (nil) keep staged changes in index.
         #
-        #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #       Alias: :k
         #
-        #     Alias: :u
+        #     @option options [Boolean] :include_untracked (nil) include untracked files.
         #
-        #   @option options [Boolean] :all (nil) include untracked and ignored files.
+        #       Alias: :u
         #
-        #     Alias: :a
+        #     @option options [Boolean] :all (nil) include untracked and ignored files.
         #
-        #   @option options [String] :pathspec_from_file (nil) read pathspecs from file
+        #       Alias: :a
         #
-        #   @option options [Boolean] :pathspec_file_nul (nil) pathspecs are NUL separated
+        #     @option options [String] :pathspec_from_file (nil) read pathspecs from file
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash push`
+        #     @option options [Boolean] :pathspec_file_nul (nil) pathspecs are NUL separated
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of calling `git stash push`
       end
     end
   end

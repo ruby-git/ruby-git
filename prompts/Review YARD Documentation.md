@@ -31,23 +31,33 @@ The invocation needs the command file(s) to review.
 
 One or more command files from `lib/git/commands/` containing:
 
-- `class < Base`
+- `class < Git::Commands::Base`
 - `arguments do ... end`
 - optional `allow_exit_status`
-- one-line method shim `def call(...) = super`
+- `# @!method call(*, **)` YARD directive with nested `@overload` blocks
 
 ## Required documentation model
 
-Because YARD does not attach command-specific `@overload` docs to purely inherited
-methods, each command must keep:
+Each command must use the `@!method` YARD directive to attach per-command
+documentation to the inherited `call` method:
 
 ```ruby
-def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+# @!method call(*, **)
+#
+#   @overload call(**options)
+#
+#     Execute the git ... command.
+#
+#     @param options [Hash] command options
+#
+#     @option options [Boolean] :force (nil) ...
+#
+#     @return [Git::CommandLineResult]
 ```
 
-This method is documentation scaffolding and should have full per-command YARD tags.
-The rubocop disable comment suppresses the Lint/UselessMethodDefinition warning that
-occurs because the method appears "useless" to the linter (it is required for YARD).
+This directive is documentation scaffolding — YARD uses it to render per-command
+docs on the inherited `call` method without requiring a method definition in the
+subclass.
 
 ## What to Check
 
@@ -105,7 +115,7 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
 
 ## Common issues
 
-- Missing `def call(...) = super` (loses child-specific docs in generated YARD)
+- Missing `# @!method call(*, **)` directive (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`

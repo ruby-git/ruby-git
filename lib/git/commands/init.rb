@@ -24,7 +24,7 @@ module Git
     #   init = Git::Commands::Init.new(execution_context)
     #   init.call('my-repo', initial_branch: 'main')
     #
-    class Init < Base
+    class Init < Git::Commands::Base
       arguments do
         literal 'init'
         flag_option :bare
@@ -33,30 +33,30 @@ module Git
         operand :directory
       end
 
-      # Execute the git init command
+      # @!method call(*, **)
       #
-      # @overload call(directory = nil, **options)
+      #   Execute the git init command
       #
-      #   @param directory [String] the directory to initialize (default: '.')
-      #     If :bare is false, creates the repository in +<directory>/.git+.
-      #     If :bare is true, creates a bare repository in +<directory>+.
+      #   @overload call(directory = nil, **options)
       #
-      #   @param options [Hash] command options
+      #     @param directory [String] the directory to initialize (default: '.')
+      #       If :bare is false, creates the repository in +<directory>/.git+.
+      #       If :bare is true, creates a bare repository in +<directory>+.
       #
-      #   @option options [Boolean] :bare (nil) Create a bare repository
+      #     @param options [Hash] command options
       #
-      #   @option options [String] :initial_branch (nil) Use the specified name for the initial branch.
-      #     Alias: :b
+      #     @option options [Boolean] :bare (nil) Create a bare repository
       #
-      #   @option options [String] :separate_git_dir (nil) Path to put the .git directory (`--separate-git-dir`)
+      #     @option options [String] :initial_branch (nil) Use the specified name for the initial branch.
+      #       Alias: :b
       #
-      # @return [Git::CommandLineResult] the result of calling `git init`
+      #     @option options [String] :separate_git_dir (nil) Path to put the .git directory (`--separate-git-dir`)
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #     @return [Git::CommandLineResult] the result of calling `git init`
       #
-      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #     @raise [ArgumentError] if unsupported options are provided
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @raise [Git::FailedError] if the command returns a non-zero exit status
     end
   end
 end

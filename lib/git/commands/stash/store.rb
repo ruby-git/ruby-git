@@ -25,7 +25,7 @@ module Git
       # @example Store with a custom message
       #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456', message: 'WIP: feature')
       #
-      class Store < Base
+      class Store < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'store'
@@ -33,23 +33,23 @@ module Git
           operand :commit, required: true
         end
 
-        # Store a commit in the stash reflog
+        # @!method call(*, **)
         #
-        # @overload call(commit, **options)
+        #   Store a commit in the stash reflog
         #
-        #   @param commit [String] the commit SHA to store in the stash (required)
+        #   @overload call(commit, **options)
         #
-        #   @param options [Hash] command options
+        #     @param commit [String] the commit SHA to store in the stash (required)
         #
-        #   @option options [String] :message (nil) description for the reflog entry.
+        #     @param options [Hash] command options
         #
-        #     Alias: :m
+        #     @option options [String] :message (nil) description for the reflog entry.
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash store`
+        #       Alias: :m
         #
-        # @raise [Git::FailedError] if the commit is not a valid stash commit
+        #     @return [Git::CommandLineResult] the result of calling `git stash store`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the commit is not a valid stash commit
       end
     end
   end

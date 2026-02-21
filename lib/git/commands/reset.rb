@@ -30,7 +30,7 @@ module Git
     # @example Mixed reset (keeps changes unstaged)
     #   reset.call('HEAD~1', mixed: true)
     #
-    class Reset < Base
+    class Reset < Git::Commands::Base
       arguments do
         literal 'reset'
         flag_option :soft
@@ -42,38 +42,38 @@ module Git
         operand :commit, required: false
       end
 
-      # Execute the git reset command
+      # @!method call(*, **)
       #
-      # @overload call(commit = nil, **options)
+      #   Execute the git reset command
       #
-      #   @param commit [String, nil] the commit to reset to (defaults to HEAD if not specified)
+      #   @overload call(commit = nil, **options)
       #
-      #   @param options [Hash] command options
+      #     @param commit [String, nil] the commit to reset to (defaults to HEAD if not specified)
       #
-      #   @option options [Boolean] :soft (nil) does not touch the index file or the working tree at all,
-      #     but resets the head to the commit
+      #     @param options [Hash] command options
       #
-      #   @option options [Boolean] :mixed (nil) resets the index but not the working tree (i.e., the
-      #     changed files are preserved but not marked for commit)
+      #     @option options [Boolean] :soft (nil) does not touch the index file or the working tree at all,
+      #       but resets the head to the commit
       #
-      #   @option options [Boolean] :hard (nil) reset the index and working tree. Any changes to tracked
-      #     files in the working tree since the commit are discarded
+      #     @option options [Boolean] :mixed (nil) resets the index but not the working tree (i.e., the
+      #       changed files are preserved but not marked for commit)
       #
-      #   @option options [Boolean] :merge (nil) reset the index and update the files in the working tree
-      #     that are different between the commit and HEAD, but keep those which are different between
-      #     the index and working tree
+      #     @option options [Boolean] :hard (nil) reset the index and working tree. Any changes to tracked
+      #       files in the working tree since the commit are discarded
       #
-      #   @option options [Boolean] :keep (nil) reset the index and update the files in the working tree
-      #     that are different between the commit and HEAD. If a file that is different between the
-      #     commit and HEAD has local changes, reset is aborted
+      #     @option options [Boolean] :merge (nil) reset the index and update the files in the working tree
+      #       that are different between the commit and HEAD, but keep those which are different between
+      #       the index and working tree
       #
-      # @return [Git::CommandLineResult] the result of calling `git reset`
+      #     @option options [Boolean] :keep (nil) reset the index and update the files in the working tree
+      #       that are different between the commit and HEAD. If a file that is different between the
+      #       commit and HEAD has local changes, reset is aborted
       #
-      # @raise [ArgumentError] if more than one of :soft, :mixed, :hard, :merge, or :keep is specified
+      #     @return [Git::CommandLineResult] the result of calling `git reset`
       #
-      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #     @raise [ArgumentError] if more than one of :soft, :mixed, :hard, :merge, or :keep is specified
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @raise [Git::FailedError] if the command returns a non-zero exit status
     end
   end
 end

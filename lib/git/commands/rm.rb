@@ -29,7 +29,7 @@ module Git
     #   rm = Git::Commands::Rm.new(execution_context)
     #   rm.call('modified_file.txt', force: true)
     #
-    class Rm < Base
+    class Rm < Git::Commands::Base
       arguments do
         literal 'rm'
         flag_option %i[force f]
@@ -38,28 +38,28 @@ module Git
         operand :pathspec, repeatable: true, required: true, separator: '--'
       end
 
-      # Execute the git rm command
+      # @!method call(*, **)
       #
-      # @overload call(*pathspec, **options)
+      #   Execute the git rm command
       #
-      #   @param pathspec [Array<String>] files or directories to be removed from the repository
-      #     (relative to the worktree root). At least one pathspec is required.
+      #   @overload call(*pathspec, **options)
       #
-      #   @param options [Hash] command options
+      #     @param pathspec [Array<String>] files or directories to be removed from the repository
+      #       (relative to the worktree root). At least one pathspec is required.
       #
-      #   @option options [Boolean] :force (nil) Override the up-to-date check and remove files with
-      #     local modifications. Without this, git rm will refuse to remove files that have
-      #     uncommitted changes. Alias: :f
+      #     @param options [Hash] command options
       #
-      #   @option options [Boolean] :r (nil) Remove directories and their contents recursively
+      #     @option options [Boolean] :force (nil) Override the up-to-date check and remove files with
+      #       local modifications. Without this, git rm will refuse to remove files that have
+      #       uncommitted changes. Alias: :f
       #
-      #   @option options [Boolean] :cached (nil) Only remove from the index, keeping the working tree files
+      #     @option options [Boolean] :r (nil) Remove directories and their contents recursively
       #
-      # @return [Git::CommandLineResult] the result of calling `git rm`
+      #     @option options [Boolean] :cached (nil) Only remove from the index, keeping the working tree files
       #
-      # @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
+      #     @return [Git::CommandLineResult] the result of calling `git rm`
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
     end
   end
 end

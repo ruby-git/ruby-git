@@ -31,7 +31,7 @@ or CLI documentation helps verify flag accuracy.
 ## Input
 
 You will be given:
-1. One or more command source files containing a `class < Base` and an
+1. One or more command source files containing a `class < Git::Commands::Base` and an
    `arguments do` block
 2. The git man page or documentation for the subcommand
 
@@ -42,7 +42,7 @@ Command classes now follow this structure:
 - `class < Git::Commands::Base`
 - class-level `arguments do ... end`
 - optional `allow_exit_status <range>` for commands where non-zero exits are valid
-- one-line YARD shim: `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`
+- YARD directive: `# @!method call(*, **)` with nested `@overload` blocks
 
 The CLI argument mapping is still defined exclusively by the Arguments DSL. The
 `Base` class handles binding and execution.

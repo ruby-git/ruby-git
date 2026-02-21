@@ -18,19 +18,21 @@ module Git
       #   abort_cmd = Git::Commands::Merge::Abort.new(execution_context)
       #   abort_cmd.call
       #
-      class Abort < Base
+      class Abort < Git::Commands::Base
         arguments do
           literal 'merge'
           literal '--abort'
         end
 
-        # Execute the git merge --abort command
+        # @!method call(*, **)
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #   @overload call()
         #
-        # @raise [Git::FailedError] if no merge is in progress
+        #     Execute the git merge --abort command
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of the command
+        #
+        #     @raise [Git::FailedError] if no merge is in progress
       end
     end
   end

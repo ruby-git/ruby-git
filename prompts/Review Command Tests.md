@@ -4,8 +4,8 @@ Verify unit and integration tests for `Git::Commands::*` classes follow project
 conventions.
 
 Command classes follow `Git::Commands::Base`: they declare `arguments do`, may
-declare `allow_exit_status`, and provide a YARD shim `def call(...) = super`.
-`Base#call` performs binding and execution and always passes
+declare `allow_exit_status`, and use a `# @!method call(*, **)` YARD directive to
+document overloads. `Base#call` performs binding and execution and always passes
 `raise_on_failure: false`, then validates exit status membership against the
 allowed range (`0..0` by default).
 

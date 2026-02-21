@@ -32,7 +32,7 @@ module Git
       #   list = Git::Commands::Tag::List.new(execution_context)
       #   tags = list.call('v1.*', 'v2.*', sort: 'version:refname')
       #
-      class List < Base
+      class List < Git::Commands::Base
         arguments do
           literal 'tag'
           literal '--list'
@@ -47,43 +47,44 @@ module Git
           operand :pattern, repeatable: true
         end
 
-        # Execute the git tag --list command
+        # @!method call(*, **)
         #
-        # @overload call(*pattern, **options)
+        #   Execute the git tag --list command
         #
-        #   @param pattern [Array<String>] Shell wildcard patterns to filter tags.
-        #     Multiple patterns can be provided; a tag is shown if it matches any pattern.
+        #   @overload call(*pattern, **options)
         #
-        #   @param options [Hash] command options
+        #     @param pattern [Array<String>] Shell wildcard patterns to filter tags.
+        #       Multiple patterns can be provided; a tag is shown if it matches any pattern.
         #
-        #   @option options [Boolean, String] :contains (nil) List only tags that contain the
-        #     specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :no_contains (nil) List only tags that don't contain
-        #     the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #     @option options [Boolean, String] :contains (nil) List only tags that contain the
+        #       specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [Boolean, String] :points_at (nil) List only tags that point at the
-        #     specified object. Pass `true` to use HEAD, or an object reference string.
+        #     @option options [Boolean, String] :no_contains (nil) List only tags that don't contain
+        #       the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [String, Array<String>] :sort (nil) Sort tags by the specified
-        #     key(s). Prefix `-` to sort in descending order. Common keys: 'refname',
-        #     '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
-        #     version sorting).
+        #     @option options [Boolean, String] :points_at (nil) List only tags that point at the
+        #       specified object. Pass `true` to use HEAD, or an object reference string.
         #
-        #   @option options [Boolean, String] :merged (nil) List only tags whose commits are
-        #     reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #     @option options [String, Array<String>] :sort (nil) Sort tags by the specified
+        #       key(s). Prefix `-` to sort in descending order. Common keys: 'refname',
+        #       '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
+        #       version sorting).
         #
-        #   @option options [Boolean, String] :no_merged (nil) List only tags whose commits are
-        #     not reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #     @option options [Boolean, String] :merged (nil) List only tags whose commits are
+        #       reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        #   @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
-        #     case insensitive. Also available as `:i`.
+        #     @option options [Boolean, String] :no_merged (nil) List only tags whose commits are
+        #       not reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
         #
-        # @return [Git::CommandLineResult] the result of calling `git tag --list`
+        #     @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
+        #       case insensitive. Also available as `:i`.
         #
-        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #     @return [Git::CommandLineResult] the result of calling `git tag --list`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if git returns a non-zero exit code
+        #
       end
     end
   end

@@ -17,20 +17,20 @@ module Git
       # @example List all stashes
       #   Git::Commands::Stash::List.new(execution_context).call
       #
-      class List < Base
+      class List < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'list'
           literal "--format=#{Git::Parsers::Stash::STASH_FORMAT}"
         end
 
-        # List all stash entries
+        # @!method call(*, **)
         #
-        # @overload call()
+        #   List all stash entries
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash list`
+        #   @overload call()
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of calling `git stash list`
       end
     end
   end

@@ -11,19 +11,21 @@ module Git
       #
       # @api private
       #
-      class ShowCurrent < Base
+      class ShowCurrent < Git::Commands::Base
         arguments do
           literal 'branch'
           literal '--show-current'
         end
 
-        # Execute the git branch --show-current command
+        # @!method call(*, **)
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --show-current`
+        #   Execute the git branch --show-current command
         #
-        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #   @overload call()
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of calling `git branch --show-current`
+        #
+        #     @raise [Git::FailedError] if git returns a non-zero exit code
       end
     end
   end

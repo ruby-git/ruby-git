@@ -23,7 +23,7 @@ module Git
     # @example Force overwrite if destination exists
     #   mv.call('source.rb', 'dest.rb', force: true)
     #
-    class Mv < Base
+    class Mv < Git::Commands::Base
       arguments do
         literal 'mv'
         literal '--verbose'
@@ -34,29 +34,29 @@ module Git
         operand :destination, required: true
       end
 
-      # Execute the git mv command
+      # @!method call(*, **)
       #
-      # @overload call(*source, destination, **options)
+      #   Execute the git mv command
       #
-      #   @param source [Array<String>] one or more source file(s) or directories to move
+      #   @overload call(*source, destination, **options)
       #
-      #   @param destination [String] the destination file or directory
+      #     @param source [Array<String>] one or more source file(s) or directories to move
       #
-      #   @param options [Hash] command options
+      #     @param destination [String] the destination file or directory
       #
-      #   @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists.
-      #     Alias: :f
+      #     @param options [Hash] command options
       #
-      #   @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen.
-      #     Alias: :n
+      #     @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists.
+      #       Alias: :f
       #
-      #   @option options [Boolean] :k (nil) Skip move or rename actions which would lead to an error
+      #     @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen.
+      #       Alias: :n
       #
-      # @return [Git::CommandLineResult] the result of calling `git mv`
+      #     @option options [Boolean] :k (nil) Skip move or rename actions which would lead to an error
       #
-      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      #     @return [Git::CommandLineResult] the result of calling `git mv`
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @raise [Git::FailedError] if the command returns a non-zero exit status
     end
   end
 end

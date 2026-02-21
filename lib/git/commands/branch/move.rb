@@ -26,7 +26,7 @@ module Git
       #   move = Git::Commands::Branch::Move.new(execution_context)
       #   move.call('old-branch', 'existing-branch', force: true)
       #
-      class Move < Base
+      class Move < Git::Commands::Base
         # NOTE: The positional arguments follow Ruby semantics:
         # - When one positional is provided, it fills new_branch (required)
         # - When two positionals are provided, they fill old_branch and new_branch
@@ -40,41 +40,41 @@ module Git
           operand :new_branch, required: true
         end
 
-        # Execute the git branch --move command to rename a branch
+        # @!method call(*, **)
         #
-        # @overload call(new_branch, **options)
+        #   Execute the git branch --move command to rename a branch
         #
-        #   Rename the current branch to new_branch
+        #   @overload call(new_branch, **options)
         #
-        #   @param new_branch [String] the new name for the branch
+        #     Rename the current branch to new_branch
         #
-        #   @param options [Hash] command options
+        #     @param new_branch [String] the new name for the branch
         #
-        #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
+        #     @param options [Hash] command options
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
         #
-        # @overload call(old_branch, new_branch, **options)
+        #       Alias: :f
         #
-        #   Rename old_branch to new_branch
+        #   @overload call(old_branch, new_branch, **options)
         #
-        #   @param old_branch [String] the current name of the branch
+        #     Rename old_branch to new_branch
         #
-        #   @param new_branch [String] the new name for the branch
+        #     @param old_branch [String] the current name of the branch
         #
-        #   @param options [Hash] command options
+        #     @param new_branch [String] the new name for the branch
         #
-        #   @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
+        #     @param options [Hash] command options
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #       Alias: :f
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch --move`
         #
-        # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
+        #     @raise [ArgumentError] if unsupported options are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
       end
     end
   end

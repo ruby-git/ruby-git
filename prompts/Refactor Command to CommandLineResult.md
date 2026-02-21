@@ -32,7 +32,7 @@ refactor.
 ## Target end state
 
 ```ruby
-class SomeCommand < Base
+class SomeCommand < Git::Commands::Base
   arguments do
     ...
   end
@@ -41,7 +41,13 @@ class SomeCommand < Base
   # rationale comment
   # allow_exit_status 0..1
 
-  def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+  # @!method call(*, **)
+  #
+  #   @overload call(**options)
+  #
+  #     Execute the git ... command.
+  #
+  #     @return [Git::CommandLineResult]
 end
 ```
 
@@ -50,7 +56,7 @@ end
 1. Move parsing/transforming logic out of command class into caller/facade/parser.
 2. Replace legacy `ARGS` constant + custom `initialize` with `arguments do` +
    inheritance from `Base`.
-3. Replace custom `#call` body with `def call(...) = super`.
+3. Remove custom `#call` body and add `# @!method call(*, **)` YARD directive.
 4. If command requires non-default success exits, add `allow_exit_status` with
    rationale comment.
 5. Update callers to consume `CommandLineResult` and parse `result.stdout` where
@@ -74,7 +80,7 @@ end
 ## YARD updates
 
 - update `@return` to `Git::CommandLineResult`
-- keep command-specific `@overload` docs on `def call(...) = super`
+- keep command-specific `@overload` docs nested under `# @!method call(*, **)` directive
 - ensure `@raise` wording reflects allowed range behavior
 
 ## Migration process and internal compatibility
