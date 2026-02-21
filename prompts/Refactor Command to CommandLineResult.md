@@ -1,3 +1,9 @@
+# Refactor Command to CommandLineResult
+
+Migrate a command that still performs parsing or custom execution logic to the
+`Git::Commands::Base` pattern, so command classes return raw
+`Git::CommandLineResult` and parsing moves to facade/parser layers.
+
 ## How to use this prompt
 
 Attach this file to your Copilot Chat context, then invoke it with the command
@@ -15,15 +21,7 @@ Refactor Command to CommandLineResult: lib/git/commands/branch/delete.rb
 The invocation needs the command class name or file path of the command to
 refactor.
 
----
-
-## Refactor Command to CommandLineResult
-
-Migrate a command that still performs parsing or custom execution logic to the
-`Git::Commands::Base` pattern, so command classes return raw
-`Git::CommandLineResult` and parsing moves to facade/parser layers.
-
-### Related prompts
+## Related prompts
 
 - **Review Command Implementation** — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
@@ -31,7 +29,7 @@ Migrate a command that still performs parsing or custom execution logic to the
 - **Review Command Tests** — unit/integration test expectations for command classes
 - **Review Backward Compatibility** — preserving `Git::Lib` return-value contracts
 
-### Target end state
+## Target end state
 
 ```ruby
 class SomeCommand < Base
@@ -47,7 +45,7 @@ class SomeCommand < Base
 end
 ```
 
-### Refactor steps
+## Refactor steps
 
 1. Move parsing/transforming logic out of command class into caller/facade/parser.
 2. Replace legacy `ARGS` constant + custom `initialize` with `arguments do` +
@@ -58,7 +56,7 @@ end
 5. Update callers to consume `CommandLineResult` and parse `result.stdout` where
    needed.
 
-### What to remove from command classes
+## What to remove from command classes
 
 - parser invocations
 - output transformation logic
@@ -66,20 +64,20 @@ end
   an unmigrated class)
 - duplicated bind/execute logic
 
-### What to update in tests
+## What to update in tests
 
 - unit specs should assert CLI args and `CommandLineResult` behavior
 - remove parsed-object assertions from command unit specs
 - move parsing expectations to parser/facade tests
 - include `raise_on_failure: false` in mocked command expectations
 
-### YARD updates
+## YARD updates
 
 - update `@return` to `Git::CommandLineResult`
 - keep command-specific `@overload` docs on `def call(...) = super`
 - ensure `@raise` wording reflects allowed range behavior
 
-### Migration process and internal compatibility
+## Migration process and internal compatibility
 
 See **Review Command Implementation** for the canonical phased rollout checklist
 and internal compatibility contract. In summary:

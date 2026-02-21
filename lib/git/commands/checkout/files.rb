@@ -17,7 +17,7 @@ module Git
       #
       # @example Restore a file from the index (discard uncommitted changes)
       #   files = Git::Commands::Checkout::Files.new(execution_context)
-      #   files.call(nil, pathspec: ['file.txt'])
+      #   files.call(pathspec: ['file.txt'])
       #
       # @example Restore a file from HEAD
       #   files.call('HEAD', pathspec: ['file.txt'])
@@ -29,7 +29,7 @@ module Git
       #   files.call('main', pathspec: ['file1.txt', 'file2.txt'])
       #
       # @example Resolve merge conflict by choosing "ours" version
-      #   files.call(nil, pathspec: ['conflicted.txt'], ours: true)
+      #   files.call(pathspec: ['conflicted.txt'], ours: true)
       #
       # @example Read paths from a file
       #   files.call('main', pathspec_from_file: 'paths.txt')
@@ -37,28 +37,28 @@ module Git
       class Files < Base
         arguments do
           literal 'checkout'
-          flag_option %i[force f], as: '--force'
-          flag_option :ours, as: '--ours'
-          flag_option :theirs, as: '--theirs'
-          flag_option %i[merge m], as: '--merge'
-          value_option :conflict, inline: true, as: '--conflict'
+          flag_option %i[force f]
+          flag_option :ours
+          flag_option :theirs
+          flag_option %i[merge m]
+          value_option :conflict, inline: true
           flag_option :overlay, negatable: true
-          value_option :pathspec_from_file, inline: true, as: '--pathspec-from-file'
-          flag_option :pathspec_file_nul, as: '--pathspec-file-nul'
+          value_option :pathspec_from_file, inline: true
+          flag_option :pathspec_file_nul
 
-          operand :tree_ish, required: true, allow_nil: true
+          operand :tree_ish
           value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
-
-          conflicts :merge, :tree_ish
-          requires_one_of :pathspec, :pathspec_from_file
         end
 
         # Execute the git checkout command for restoring files
         #
-        # @overload call(tree_ish, **options)
+        # @overload call(tree_ish = nil, pathspec: nil, **options)
         #
         #   @param tree_ish [String, nil] The commit, branch, or tree to restore
         #     files from. When nil, files are restored from the index.
+        #
+        #   @param pathspec [String, Array<String>, nil] The files or directories
+        #     to restore. Required unless pathspec_from_file is provided.
         #
         #   @param options [Hash] command options
         #

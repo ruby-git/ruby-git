@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
     context 'with no arguments (latest stash)' do
       it 'calls git stash show --raw --numstat --shortstat -M' do
         expected_result = command_result(raw_output)
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat')
           .and_return(expected_result)
 
         result = command.call
@@ -43,7 +43,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
 
     context 'with specific stash reference' do
       it 'passes stash reference to command' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M', 'stash@{2}')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', 'stash@{2}')
           .and_return(command_result(raw_output))
 
         command.call('stash@{2}')
@@ -52,7 +52,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
 
     context 'with :include_untracked option' do
       it 'adds --include-untracked flag when true' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M',
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat',
                        '--include-untracked')
           .and_return(command_result(raw_output))
 
@@ -60,7 +60,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
       end
 
       it 'adds --no-include-untracked flag when false' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M',
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat',
                        '--no-include-untracked')
           .and_return(command_result(raw_output))
 
@@ -70,7 +70,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
 
     context 'with :only_untracked option' do
       it 'adds --only-untracked flag' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M', '--only-untracked')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '--only-untracked')
           .and_return(command_result(raw_output))
 
         command.call(only_untracked: true)
@@ -79,7 +79,7 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
 
     context 'with :find_copies option' do
       it 'adds -C flag when true' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M', '-C')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '--find-copies')
           .and_return(command_result(raw_output))
 
         command.call(find_copies: true)
@@ -88,14 +88,14 @@ RSpec.describe Git::Commands::Stash::ShowRaw do
 
     context 'with :dirstat option' do
       it 'adds --dirstat flag when true' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M', '--dirstat')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '--dirstat')
           .and_return(command_result(raw_output))
 
         command.call(dirstat: true)
       end
 
       it 'passes dirstat options when string' do
-        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '-M', '--dirstat=files')
+        expect_command('stash', 'show', '--raw', '--numstat', '--shortstat', '--dirstat=files')
           .and_return(command_result(raw_output))
 
         command.call(dirstat: 'files')

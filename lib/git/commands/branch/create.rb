@@ -37,10 +37,10 @@ module Git
       class Create < Base
         arguments do
           literal 'branch'
-          flag_option %i[force f]
-          flag_option :create_reflog, negatable: true
-          flag_option :recurse_submodules
           flag_or_value_option %i[track t], negatable: true, inline: true
+          flag_option %i[force f]
+          flag_option :recurse_submodules
+          flag_option :create_reflog, negatable: true
           operand :branch_name, required: true
           operand :start_point
         end
@@ -55,21 +55,6 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
-        #     Without this, git branch refuses to change an existing branch.
-        #     Adds `--force` flag.
-        #
-        #     Alias: :f
-        #
-        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
-        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
-        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
-        #     Adds `--create-reflog` flag.
-        #
-        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
-        #     submodules. This is an experimental feature.
-        #     Adds `--recurse-submodules` flag.
-        #
         #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
         #     - `true`: Set up tracking using the start-point branch itself (`--track`)
         #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
@@ -77,6 +62,21 @@ module Git
         #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
         #     Alias: :t
+        #
+        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
+        #     Without this, git branch refuses to change an existing branch.
+        #     Adds `--force` flag.
+        #
+        #     Alias: :f
+        #
+        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
+        #     submodules. This is an experimental feature.
+        #     Adds `--recurse-submodules` flag.
+        #
+        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
+        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
+        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
+        #     Adds `--create-reflog` flag.
         #
         # @overload call(branch_name, start_point, **options)
         #
@@ -89,21 +89,6 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
-        #     Without this, git branch refuses to change an existing branch.
-        #     Adds `--force` flag.
-        #
-        #     Alias: :f
-        #
-        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
-        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
-        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
-        #     Adds `--create-reflog` flag.
-        #
-        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
-        #     submodules. This is an experimental feature.
-        #     Adds `--recurse-submodules` flag.
-        #
         #   @option options [Boolean, String, false] :track (nil) Configure upstream tracking for the new branch.
         #     - `true`: Set up tracking using the start-point branch itself (`--track`)
         #     - `false`: Do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
@@ -111,6 +96,21 @@ module Git
         #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
         #     Alias: :t
+        #
+        #   @option options [Boolean] :force (nil) Reset the branch to `start_point` even if it already exists.
+        #     Without this, git branch refuses to change an existing branch.
+        #     Adds `--force` flag.
+        #
+        #     Alias: :f
+        #
+        #   @option options [Boolean] :recurse_submodules (nil) Create the branch in the superproject and all
+        #     submodules. This is an experimental feature.
+        #     Adds `--recurse-submodules` flag.
+        #
+        #   @option options [Boolean] :create_reflog (nil) Create the branch's reflog, enabling date-based sha1
+        #     expressions such as `branch@{yesterday}`. Note that in non-bare repositories,
+        #     reflogs are usually enabled by default via `core.logAllRefUpdates`.
+        #     Adds `--create-reflog` flag.
         #
         # @return [Git::CommandLineResult] the result of calling `git branch`
         #

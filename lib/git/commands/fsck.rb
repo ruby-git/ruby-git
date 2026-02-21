@@ -31,19 +31,19 @@ module Git
       arguments do
         literal 'fsck'
         literal '--no-progress'
-        flag_option :unreachable
-        flag_option :strict
-        flag_option :connectivity_only
-        flag_option :root
         flag_option :tags
+        flag_option :root
+        flag_option :unreachable
         flag_option :cache
         flag_option :no_reflogs
+        flag_option :full, negatable: true
+        flag_option :strict
         flag_option :lost_found
         flag_option :dangling, negatable: true
-        flag_option :full, negatable: true
+        flag_option :connectivity_only
         flag_option :name_objects, negatable: true
         flag_option :references, negatable: true
-        operand :objects, repeatable: true
+        operand :object, repeatable: true
       end
 
       # git fsck uses exit codes 0-7 to indicate different levels of issues found
@@ -52,7 +52,7 @@ module Git
 
       # Execute the git fsck command
       #
-      # @overload call(*objects, **options)
+      # @overload call(*object, **options)
       #
       #   @example Check repository integrity
       #     # git fsck --no-progress
@@ -66,20 +66,16 @@ module Git
       #     # git fsck --no-progress --unreachable --strict
       #     result = fsck.call(unreachable: true, strict: true)
       #
-      #   @param objects [Array<String>] optional object identifiers to check
+      #   @param object [Array<String>] optional object identifiers to check
       #
       #   @param options [Hash] command options
       #
-      #   @option options [Boolean] :unreachable (nil) print out objects that exist but are not
-      #     reachable from any of the reference nodes
-      #
-      #   @option options [Boolean] :strict (nil) enable more strict checking
-      #
-      #   @option options [Boolean] :connectivity_only (nil) check only the connectivity of objects
+      #   @option options [Boolean] :tags (nil) report tags
       #
       #   @option options [Boolean] :root (nil) report root nodes
       #
-      #   @option options [Boolean] :tags (nil) report tags
+      #   @option options [Boolean] :unreachable (nil) print out objects that exist but are not
+      #     reachable from any of the reference nodes
       #
       #   @option options [Boolean] :cache (nil) consider any object recorded in the index also
       #     as a head node for reachability
@@ -87,13 +83,17 @@ module Git
       #   @option options [Boolean] :no_reflogs (nil) do not consider commits referenced only by
       #     reflogs to be reachable
       #
+      #   @option options [Boolean] :full (nil) check all objects, not just reachable ones. Pass
+      #     false to explicitly disable
+      #
+      #   @option options [Boolean] :strict (nil) enable more strict checking
+      #
       #   @option options [Boolean] :lost_found (nil) write dangling objects into .git/lost-found
       #
       #   @option options [Boolean] :dangling (nil) report dangling objects. Pass false to suppress
       #     dangling object reporting
       #
-      #   @option options [Boolean] :full (nil) check all objects, not just reachable ones. Pass
-      #     false to explicitly disable
+      #   @option options [Boolean] :connectivity_only (nil) check only the connectivity of objects
       #
       #   @option options [Boolean] :name_objects (nil) show the name of each reachable object
       #     alongside its identifier. Pass false to explicitly disable

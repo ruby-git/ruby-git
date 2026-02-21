@@ -61,7 +61,7 @@ RSpec.describe Git::Commands::MergeBase do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect_command('merge-base', '--octopus', '--all', 'main', 'b1',
+        expect_command('merge-base', '--all', '--octopus', 'main', 'b1',
                        'b2').and_return(command_result("sha1\nsha2\n"))
 
         command.call('main', 'b1', 'b2', octopus: true, all: true)
@@ -71,6 +71,16 @@ RSpec.describe Git::Commands::MergeBase do
     context 'input validation' do
       it 'raises ArgumentError when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
+      end
+
+      it 'raises ArgumentError when all and independent are combined' do
+        expect { command.call('a', 'b', all: true, independent: true) }
+          .to raise_error(ArgumentError, /cannot specify :all and :independent/)
+      end
+
+      it 'raises ArgumentError when all and fork_point are combined' do
+        expect { command.call('main', 'feature', all: true, fork_point: true) }
+          .to raise_error(ArgumentError, /cannot specify :all and :fork_point/)
       end
     end
   end

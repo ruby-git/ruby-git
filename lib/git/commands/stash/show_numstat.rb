@@ -27,13 +27,20 @@ module Git
         arguments do
           literal 'stash'
           literal 'show'
+          # These two format literals are always emitted together. The stash diff parser
+          # expects both sections to be present in every stash show command's output:
+          # --numstat for per-file line counts and --shortstat for aggregate totals.
+          # Fixing them here keeps the parser contract simple and unconditional.
           literal '--numstat'
-          literal '--shortstat'
-          literal '-M'
+          literal '--shortstat' # always present alongside --numstat: parser requires aggregate totals
           flag_option %i[include_untracked u], negatable: true
           flag_option :only_untracked
+          flag_or_value_option %i[find_renames M], inline: true
+          flag_or_value_option %i[find_copies C], inline: true
+          flag_option :find_copies_harder
           flag_or_value_option :dirstat, inline: true
           operand :stash
+          conflicts :include_untracked, :only_untracked
         end
 
         # Show stash numstat
@@ -49,6 +56,14 @@ module Git
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
+        #
+        #   @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
+        #     similarity threshold (e.g., 50 for 50%). Alias: :M
+        #
+        #   @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
+        #     optionally pass a threshold. Alias: :C
+        #
+        #   @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
         #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
         #     Pass true for default, or a string like 'lines,cumulative' for options.
@@ -66,6 +81,14 @@ module Git
         #     Alias: :u
         #
         #   @option options [Boolean] :only_untracked (nil) show only untracked files
+        #
+        #   @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
+        #     similarity threshold (e.g., 50 for 50%). Alias: :M
+        #
+        #   @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
+        #     optionally pass a threshold. Alias: :C
+        #
+        #   @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
         #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
         #     Pass true for default, or a string like 'lines,cumulative' for options.

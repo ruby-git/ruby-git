@@ -20,10 +20,10 @@ module Git
       #   checkout.call('main')
       #
       # @example Create and switch to a new branch
-      #   checkout.call(new_branch: 'feature-branch')
+      #   checkout.call(b: 'feature-branch')
       #
       # @example Create a branch from a specific start point
-      #   checkout.call('origin/main', new_branch: 'feature-branch', track: true)
+      #   checkout.call('origin/main', b: 'feature-branch', track: true)
       #
       # @example Detach HEAD at a specific commit
       #   checkout.call('abc123', detach: true)
@@ -34,23 +34,25 @@ module Git
       class Branch < Base
         arguments do
           literal 'checkout'
-          flag_option %i[force f], as: '--force'
-          flag_option %i[merge m], as: '--merge'
-          flag_option %i[detach d], as: '--detach'
+          flag_option %i[force f]
+          flag_option %i[merge m]
 
           # Branch creation options (mutually exclusive)
           # These use `value` (not `value :name, inline: true`) because git expects: -b <branch>, not -b=<branch>
-          value_option %i[new_branch b], as: '-b'
-          value_option %i[new_branch_force B], as: '-B'
-          value_option :orphan, as: '--orphan'
+          value_option :b
+          value_option :B
 
           # Tracking options
-          flag_or_value_option :track, negatable: true, inline: true
+          flag_or_value_option %i[track t], negatable: true, inline: true
 
           # Other options
           flag_option :guess, negatable: true
-          flag_option :ignore_other_worktrees, as: '--ignore-other-worktrees'
+          flag_option %i[detach d]
+          value_option :orphan
+          flag_option :ignore_other_worktrees
           flag_option :recurse_submodules, negatable: true
+
+          conflicts :b, :B, :orphan
 
           # Positional arguments
           operand :branch
@@ -72,24 +74,23 @@ module Git
         #   @option options [Boolean] :merge (nil) Perform a three-way merge.
         #     Alias: :m
         #
-        #   @option options [Boolean] :detach (nil) Detach HEAD at the specified
-        #     commit. Alias: :d
+        #   @option options [String] :b (nil) Create a new branch with this name and switch to it
         #
-        #   @option options [String] :new_branch (nil) Create a new branch with this
-        #     name and switch to it. Alias: :b
-        #
-        #   @option options [String] :new_branch_force (nil) Like :new_branch, but
-        #     reset if the branch exists. Alias: :B
-        #
-        #   @option options [String] :orphan (nil) Create a new orphan branch with
-        #     no history
+        #   @option options [String] :'B' (nil) Like :b, but reset if the branch already exists
         #
         #   @option options [Boolean, String] :track (nil) Set up upstream tracking.
         #     true/false for --track/--no-track, or 'direct'/'inherit' for
-        #     --track=<value>
+        #     --track=<value>.
+        #     Alias: :t
         #
         #   @option options [Boolean] :guess (nil) Control automatic branch creation
         #     from remotes. true for --guess, false for --no-guess
+        #
+        #   @option options [Boolean] :detach (nil) Detach HEAD at the specified
+        #     commit. Alias: :d
+        #
+        #   @option options [String] :orphan (nil) Create a new orphan branch with
+        #     no history
         #
         #   @option options [Boolean] :ignore_other_worktrees (nil) Allow checking
         #     out a branch checked out in another worktree

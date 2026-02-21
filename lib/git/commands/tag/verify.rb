@@ -34,14 +34,14 @@ module Git
           literal 'tag'
           literal '--verify'
           value_option :format, inline: true
-          operand :tag_names, repeatable: true, required: true
+          operand :tagname, repeatable: true, required: true
         end
 
         # Execute the git tag --verify command to verify tag signatures
         #
-        # @overload call(*tag_names, **options)
+        # @overload call(*tagname, **options)
         #
-        #   @param tag_names [Array<String>] One or more tag names to verify.
+        #   @param tagname [Array<String>] One or more tag names to verify.
         #     At least one tag name is required.
         #
         #   @param options [Hash] command options

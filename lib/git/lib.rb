@@ -117,10 +117,14 @@ module Git
     # @param opts [Hash] command options
     # @option opts [Boolean] :bare Create a bare repository
     # @option opts [String] :initial_branch Use the specified name for the initial branch
+    # @option opts [String] :separate_git_dir Path to put the .git directory (`--separate-git-dir`)
+    # @option opts [String] :repository Deprecated — use :separate_git_dir instead
     #
     # @return [String] the command output
     #
     def init(opts = {})
+      opts = opts.dup
+      opts[:separate_git_dir] ||= opts.delete(:repository)
       Git::Commands::Init.new(self).call(**opts).stdout
     end
 
@@ -178,7 +182,7 @@ module Git
     #
     def clone(repository_url, directory = nil, opts = {})
       opts = opts.dup
-      deprecate_clone_path_option!(opts)
+      deprecate_clone_options!(opts)
       chdir = opts.delete(:chdir)
       execution_opts = extract_clone_execution_context_opts(opts)
       opts[:chdir] = chdir if chdir
@@ -1174,6 +1178,7 @@ module Git
     # @param path [String, Array<String>] files or directories to remove
     # @param opts [Hash] command options
     #
+    # @option opts [Boolean] :force Force removal, bypassing the up-to-date check. Alias: :f
     # @option opts [Boolean] :recursive Remove directories and their contents recursively
     # @option opts [Boolean] :cached Only remove from the index, keeping working tree files
     #
@@ -1226,6 +1231,8 @@ module Git
         opts.delete(:no_gpg_sign)
         opts[:gpg_sign] = false
       end
+
+      deprecate_commit_add_all_option!(opts)
 
       Git::Commands::Commit.new(self).call(**opts).stdout
     end
@@ -1414,23 +1421,28 @@ module Git
     # @return [String] the command output
     #
     def checkout(branch = nil, opts = {})
-      # Handle the case where branch is actually the options hash
       if branch.is_a?(Hash) && opts.empty?
         opts = branch
         branch = nil
       end
 
-      # Translate legacy interface to new command class interface
-      # Legacy: checkout('branch', new_branch: true, start_point: 'main')
-      # New: checkout('main', new_branch: 'branch')
+      target, translated_opts = translate_checkout_opts(branch, opts)
+      Git::Commands::Checkout::Branch.new(self).call(target, **translated_opts).stdout
+    end
+
+    # Translates legacy checkout options to the new command interface.
+    # Legacy: checkout('branch', new_branch: true, start_point: 'main')
+    # New: checkout('main', b: 'branch')
+    def translate_checkout_opts(branch, opts)
       if opts[:new_branch] == true || opts[:b] == true
-        # Legacy mode: branch name is the first argument, start_point is in opts
-        new_opts = opts.except(:new_branch, :b, :start_point).merge(new_branch: branch)
-        Git::Commands::Checkout::Branch.new(self).call(opts[:start_point], **new_opts).stdout
+        [opts[:start_point], opts.except(:new_branch, :b, :start_point).merge(b: branch)]
+      elsif opts[:new_branch].is_a?(String)
+        [branch, opts.except(:new_branch).merge(b: opts[:new_branch])]
       else
-        Git::Commands::Checkout::Branch.new(self).call(branch, **opts).stdout
+        [branch, opts]
       end
     end
+    private :translate_checkout_opts
 
     # Checkout a specific version of a file
     #
@@ -2092,6 +2104,33 @@ module Git
       opts[:chdir] ||= path
     end
 
+    def deprecate_clone_recursive_option!(opts)
+      return unless opts.key?(:recursive)
+
+      Git::Deprecation.warn('The :recursive option for Git::Lib#clone is deprecated, use :recurse_submodules instead')
+      opts[:recurse_submodules] = opts.delete(:recursive)
+    end
+
+    def deprecate_clone_remote_option!(opts)
+      return unless opts.key?(:remote)
+
+      Git::Deprecation.warn('The :remote option for Git::Lib#clone is deprecated, use :origin instead')
+      opts[:origin] = opts.delete(:remote)
+    end
+
+    def deprecate_clone_options!(opts)
+      deprecate_clone_path_option!(opts)
+      deprecate_clone_recursive_option!(opts)
+      deprecate_clone_remote_option!(opts)
+    end
+
+    def deprecate_commit_add_all_option!(opts)
+      return unless opts.key?(:add_all)
+
+      Git::Deprecation.warn('The :add_all option for Git::Lib#commit is deprecated, use :all instead')
+      opts[:all] = opts.delete(:add_all)
+    end
+
     # Extracts execution context options from clone options.
     #
     # @param opts [Hash] clone options
@@ -2118,8 +2157,8 @@ module Git
       # :no_ff => true becomes :ff => false
       result[:ff] = false if result.delete(:no_ff)
 
-      # :m => 'msg' becomes :message => 'msg'
-      result[:message] = result.delete(:m) if result.key?(:m)
+      # :message => 'msg' becomes :m => 'msg' (git merge uses -m, not --message)
+      result[:m] = result.delete(:message) if result.key?(:message)
 
       result
     end

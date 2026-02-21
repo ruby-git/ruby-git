@@ -19,16 +19,27 @@ module Git
       class Numstat < Base
         arguments do
           literal 'diff'
+          # These two format literals are always emitted together. Git::Parsers::Diff
+          # expects both sections to be present in every diff command's output:
+          # --numstat for per-file line counts and --shortstat for aggregate totals.
+          # Fixing them here keeps the parser contract simple and unconditional.
           literal '--numstat'
-          literal '--shortstat'
-          literal '-M'
+          literal '--shortstat' # always present alongside --numstat: parser requires aggregate totals
+          literal '--src-prefix=a/'
+          literal '--dst-prefix=b/'
           flag_option %i[cached staged]
           flag_option :merge_base
           flag_option :no_index
+          flag_or_value_option %i[find_renames M], inline: true
+          flag_or_value_option %i[find_copies C], inline: true
+          flag_option :find_copies_harder
           flag_or_value_option :dirstat, inline: true
+          # NOTE: git diff uses <commit> for both positional arguments. The DSL requires distinct
+          # names for two positional operands, so :commit1 and :commit2 are used here.
           operand :commit1
           operand :commit2
           value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+          conflicts :cached, :no_index
         end
 
         # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
@@ -42,7 +53,7 @@ module Git
         #   @example
         #     # git diff [-- <pathspecs>...]
         #     Numstat.new(ctx).call
-        #     Numstat.new(ctx).call(pathspecs: ['lib/', '*.rb'])
+        #     Numstat.new(ctx).call(path: ['lib/', '*.rb'])
         #
         #   @param options [Hash] command options
         #
@@ -57,7 +68,7 @@ module Git
         #   @example
         #     # git diff --no-index <path> <path> [<pathspec>...]
         #     Numstat.new(ctx).call('/path/a', '/path/b', no_index: true)
-        #     Numstat.new(ctx).call('/dir/a', '/dir/b', no_index: true, pathspecs: ['*.rb'])
+        #     Numstat.new(ctx).call('/dir/a', '/dir/b', no_index: true, path: ['*.rb'])
         #
         #   @param path1 [String] first filesystem path
         #
@@ -79,7 +90,7 @@ module Git
         #   @example
         #     # git diff --cached [<commit>] [-- <pathspecs>...]
         #     Numstat.new(ctx).call(cached: true)
-        #     Numstat.new(ctx).call('HEAD~3', cached: true, pathspecs: ['lib/'])
+        #     Numstat.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
         #
         #   @param commit [String] optional commit reference (defaults to HEAD)
         #
@@ -98,7 +109,7 @@ module Git
         #   @example
         #     # git diff <commit> [-- <pathspecs>...]
         #     Numstat.new(ctx).call('HEAD~3')
-        #     Numstat.new(ctx).call('abc123', pathspecs: ['lib/', '*.rb'])
+        #     Numstat.new(ctx).call('abc123', path: ['lib/', '*.rb'])
         #
         #   @param commit [String] commit reference
         #

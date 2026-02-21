@@ -33,7 +33,7 @@ module Git
           literal '--delete'
           flag_option %i[force f]
           flag_option %i[remotes r]
-          operand :branch_names, repeatable: true, required: true
+          operand :branch_name, repeatable: true, required: true
         end
 
         # git branch --delete exits 1 when one or more branches cannot be deleted
@@ -41,9 +41,9 @@ module Git
 
         # Execute the git branch --delete command to delete branches
         #
-        # @overload call(*branch_names, **options)
+        # @overload call(*branch_name, **options)
         #
-        #   @param branch_names [Array<String>] One or more branch names to delete.
+        #   @param branch_name [Array<String>] One or more branch names to delete.
         #
         #   @param options [Hash] command options
         #

@@ -87,37 +87,27 @@ RSpec.describe Git::Commands::Checkout::Branch do
       end
     end
 
-    context 'with :new_branch option (creates and switches to new branch)' do
+    context 'with :b option (creates and switches to new branch)' do
       it 'adds -b flag with branch name' do
         expect_command('checkout', '-b', 'feature-branch').and_return(command_result)
-        command.call(new_branch: 'feature-branch')
+        command.call(b: 'feature-branch')
       end
 
       it 'adds start_point after -b branch' do
         expect_command('checkout', '-b', 'feature-branch', 'main').and_return(command_result)
-        command.call('main', new_branch: 'feature-branch')
-      end
-
-      it 'works with :b alias' do
-        expect_command('checkout', '-b', 'feature-branch').and_return(command_result)
-        command.call(b: 'feature-branch')
+        command.call('main', b: 'feature-branch')
       end
     end
 
-    context 'with :new_branch_force option (creates/resets and switches)' do
+    context "with :'B' option (creates/resets and switches)" do
       it 'adds -B flag with branch name' do
         expect_command('checkout', '-B', 'feature-branch').and_return(command_result)
-        command.call(new_branch_force: 'feature-branch')
+        command.call(B: 'feature-branch')
       end
 
       it 'adds start_point after -B branch' do
         expect_command('checkout', '-B', 'feature-branch', 'main').and_return(command_result)
-        command.call('main', new_branch_force: 'feature-branch')
-      end
-
-      it 'works with :B alias' do
-        expect_command('checkout', '-B', 'feature-branch').and_return(command_result)
-        command.call(B: 'feature-branch')
+        command.call('main', B: 'feature-branch')
       end
     end
 
@@ -164,7 +154,7 @@ RSpec.describe Git::Commands::Checkout::Branch do
 
       it 'works with -b to set upstream' do
         expect_command('checkout', '-b', 'feature', '--track', 'origin/feature').and_return(command_result)
-        command.call('origin/feature', new_branch: 'feature', track: true)
+        command.call('origin/feature', b: 'feature', track: true)
       end
     end
 
@@ -219,7 +209,7 @@ RSpec.describe Git::Commands::Checkout::Branch do
                        '-b', 'feature',
                        '--track',
                        'origin/main').and_return(command_result)
-        command.call('origin/main', force: true, new_branch: 'feature', track: true)
+        command.call('origin/main', force: true, b: 'feature', track: true)
       end
 
       it 'combines detach with force' do
@@ -239,7 +229,7 @@ RSpec.describe Git::Commands::Checkout::Branch do
 
       it 'allows creating a branch with -b and no start point' do
         expect_command('checkout', '-b', 'new-feature').and_return(command_result)
-        command.call(nil, new_branch: 'new-feature')
+        command.call(nil, b: 'new-feature')
       end
     end
   end

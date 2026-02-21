@@ -238,7 +238,7 @@ RSpec.describe Git::Commands::Tag::Create do
       end
 
       it 'combines create_reflog with annotated tag' do
-        expect_command('tag', '--annotate', '--create-reflog', '--message=Release', 'v1.0.0')
+        expect_command('tag', '--annotate', '--message=Release', '--create-reflog', 'v1.0.0')
           .and_return(command_result)
 
         result = command.call('v1.0.0', annotate: true, create_reflog: true, message: 'Release')

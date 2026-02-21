@@ -26,10 +26,10 @@ module Git
     class Mv < Base
       arguments do
         literal 'mv'
-        flag_option :force, as: '--force'
-        flag_option :dry_run, as: '--dry-run'
-        flag_option :verbose, as: '--verbose'
-        flag_option :skip_errors, as: '-k'
+        literal '--verbose'
+        flag_option %i[force f]
+        flag_option %i[dry_run n]
+        flag_option :k
         operand :source, repeatable: true, required: true, separator: '--'
         operand :destination, required: true
       end
@@ -44,13 +44,13 @@ module Git
       #
       #   @param options [Hash] command options
       #
-      #   @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists
+      #   @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists.
+      #     Alias: :f
       #
-      #   @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen
+      #   @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen.
+      #     Alias: :n
       #
-      #   @option options [Boolean] :verbose (nil) Report the names of files as they are moved
-      #
-      #   @option options [Boolean] :skip_errors (nil) Skip move or rename actions which would lead to an error
+      #   @option options [Boolean] :k (nil) Skip move or rename actions which would lead to an error
       #
       # @return [Git::CommandLineResult] the result of calling `git mv`
       #

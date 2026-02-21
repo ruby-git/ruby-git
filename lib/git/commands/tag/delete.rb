@@ -28,7 +28,7 @@ module Git
         arguments do
           literal 'tag'
           literal '--delete'
-          operand :tag_names, repeatable: true, required: true
+          operand :tagname, repeatable: true, required: true
         end
 
         # git tag --delete exits with status 1 when a tag does not exist, which is acceptable
@@ -36,9 +36,9 @@ module Git
 
         # Execute the git tag -d command to delete tags
         #
-        # @overload call(*tag_names)
+        # @overload call(*tagname)
         #
-        #   @param tag_names [Array<String>] One or more tag names to delete.
+        #   @param tagname [Array<String>] One or more tag names to delete.
         #
         # @return [Git::CommandLineResult] the result of calling `git tag --delete`
         #

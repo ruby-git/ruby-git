@@ -17,7 +17,7 @@ module Git
     # @example Compare the index to the working tree
     #   # git diff [--] [<path>...]
     #   Numstat.new(ctx).call
-    #   Numstat.new(ctx).call(pathspecs: ['lib/', '*.rb'])
+    #   Numstat.new(ctx).call(path: ['lib/', '*.rb'])
     #
     # @example Compare two paths on the filesystem (outside git)
     #   # git diff --no-index [--] <path> <path>
@@ -26,12 +26,12 @@ module Git
     # @example Compare the index to HEAD or the named commit
     #   # git diff --cached [<commit>] [--] [<path>...]
     #   Numstat.new(ctx).call(cached: true)
-    #   Numstat.new(ctx).call('HEAD~3', cached: true, pathspecs: ['lib/'])
+    #   Numstat.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
     #
     # @example Compare the working tree to the named commit
     #   # git diff <commit> [--] [<path>...]
     #   Numstat.new(ctx).call('HEAD~3')
-    #   Numstat.new(ctx).call('abc123', pathspecs: ['lib/', '*.rb'])
+    #   Numstat.new(ctx).call('abc123', path: ['lib/', '*.rb'])
     #
     # @example Compare two commits
     #   # git diff <commit> <commit> [--] [<path>...]

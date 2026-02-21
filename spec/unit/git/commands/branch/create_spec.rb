@@ -206,7 +206,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect_command('branch', '--force', '--create-reflog', '--track', 'feature-branch', 'origin/main')
+        expect_command('branch', '--track', '--force', '--create-reflog', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'origin/main', force: true, create_reflog: true, track: true)
@@ -215,7 +215,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'combines force with no-track' do
-        expect_command('branch', '--force', '--no-track', 'feature-branch', 'main')
+        expect_command('branch', '--no-track', '--force', 'feature-branch', 'main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'main', force: true, track: false)

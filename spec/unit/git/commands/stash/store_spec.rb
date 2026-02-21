@@ -22,28 +22,28 @@ RSpec.describe Git::Commands::Stash::Store do
 
     context 'with :message option' do
       it 'adds --message flag with value' do
-        expect_command('stash', 'store', '--message=WIP: my changes', 'abc123')
+        expect_command('stash', 'store', '--message', 'WIP: my changes', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'WIP: my changes')
       end
 
       it 'accepts :m alias' do
-        expect_command('stash', 'store', '--message=WIP', 'abc123')
+        expect_command('stash', 'store', '--message', 'WIP', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', m: 'WIP')
       end
 
       it 'handles message with special characters' do
-        expect_command('stash', 'store', '--message=Fix "bug" in code', 'abc123')
+        expect_command('stash', 'store', '--message', 'Fix "bug" in code', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'Fix "bug" in code')
       end
 
       it 'handles message with spaces' do
-        expect_command('stash', 'store', '--message=work in progress', 'abc123')
+        expect_command('stash', 'store', '--message', 'work in progress', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'work in progress')

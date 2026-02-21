@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Tag::Verify do
 
     context 'input validation' do
       it 'raises ArgumentError when no tag names are provided' do
-        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for tag_names/i)
+        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for tagname/i)
       end
     end
   end

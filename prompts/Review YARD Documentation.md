@@ -1,3 +1,8 @@
+# Review YARD Documentation
+
+Verify YARD documentation for command classes is complete, accurate, and aligned
+with the `Git::Commands::Base` pattern.
+
 ## How to use this prompt
 
 Attach this file to your Copilot Chat context, then invoke it with one or more
@@ -15,21 +20,14 @@ lib/git/commands/stash/pop.rb
 
 The invocation needs the command file(s) to review.
 
----
-
-## Review YARD Documentation
-
-Verify YARD documentation for command classes is complete, accurate, and aligned
-with the `Git::Commands::Base` pattern.
-
-### Related prompts
+## Related prompts
 
 - **Review Arguments DSL** — verifying DSL entries match git CLI
 - **Review Command Implementation** — class structure, phased rollout gates, and
   internal compatibility contracts
 - **Review Command Tests** — unit/integration test expectations for command classes
 
-### Input
+## Input
 
 One or more command files from `lib/git/commands/` containing:
 
@@ -38,7 +36,7 @@ One or more command files from `lib/git/commands/` containing:
 - optional `allow_exit_status`
 - one-line method shim `def call(...) = super`
 
-### Required documentation model
+## Required documentation model
 
 Because YARD does not attach command-specific `@overload` docs to purely inherited
 methods, each command must keep:
@@ -51,9 +49,9 @@ This method is documentation scaffolding and should have full per-command YARD t
 The rubocop disable comment suppresses the Lint/UselessMethodDefinition warning that
 occurs because the method appears "useless" to the linter (it is required for YARD).
 
-### What to Check
+## What to Check
 
-#### 1. Class-level docs
+### 1. Class-level docs
 
 - [ ] one-line summary
 - [ ] brief behavior description
@@ -61,7 +59,7 @@ occurs because the method appears "useless" to the linter (it is required for YA
 - [ ] `@see` to parent command module where applicable
 - [ ] `@see` to relevant git docs
 
-#### 2. Arguments docs
+### 2. Arguments docs
 
 - [ ] `@overload` blocks cover valid call shapes
 - [ ] every positional arg has `@param`
@@ -80,46 +78,46 @@ occurs because the method appears "useless" to the linter (it is required for YA
 
 - [ ] option defaults/types are consistent with DSL definitions
 
-#### 3. Return and raise tags
+### 3. Return and raise tags
 
 - [ ] `@return [Git::CommandLineResult]` with wording:
       `the result of calling \`git <subcommand>\``
 - [ ] `@raise [Git::FailedError]` reflects range-based behavior
       (outside default `0..0` or declared `allow_exit_status` range)
 
-#### 4. `allow_exit_status` rationale consistency
+### 4. `allow_exit_status` rationale consistency
 
 When command declares non-default exit range:
 
 - [ ] includes short rationale comment above declaration
 - [ ] YARD `@raise` text does not contradict accepted status behavior
 
-#### 5. Formatting consistency
+### 5. Formatting consistency
 
 - [ ] blank comment line before each YARD tag block
 - [ ] `@option` description text starts with a capital letter (sentence case)
 - [ ] consistent option wording and defaults across sibling commands
 - [ ] no stale references to removed per-command implementation details
 
-#### 6. Avoid internal implementation detail leakage
+### 6. Avoid internal implementation detail leakage
 
 Prefer interface-level wording (what callers can pass/expect), not internals.
 
-### Common issues
+## Common issues
 
 - Missing `def call(...) = super` (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
 
-### Output
+## Output
 
 For each file, provide:
 
 1. issue table
 
-| Check | Status | Issue |
-|---|---|---|
+   | Check | Status | Issue |
+   | --- | --- | --- |
 
 2. corrected doc block snippets (only where needed)
 

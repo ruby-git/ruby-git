@@ -27,8 +27,8 @@ RSpec.describe Git::Commands::Rm do
     end
 
     context 'with the :force option' do
-      it 'includes the -f flag when true' do
-        expect_command('rm', '-f', '--', 'file.txt').and_return(command_result)
+      it 'includes the --force flag when true' do
+        expect_command('rm', '--force', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', force: true)
       end
@@ -38,19 +38,25 @@ RSpec.describe Git::Commands::Rm do
 
         command.call('file.txt', force: false)
       end
+
+      it 'accepts :f as an alias for :force' do
+        expect_command('rm', '--force', '--', 'file.txt').and_return(command_result)
+
+        command.call('file.txt', f: true)
+      end
     end
 
-    context 'with the :recursive option' do
+    context 'with the :r option' do
       it 'includes the -r flag when true' do
         expect_command('rm', '-r', '--', 'directory').and_return(command_result)
 
-        command.call('directory', recursive: true)
+        command.call('directory', r: true)
       end
 
       it 'does not include the flag when false' do
         expect_command('rm', '--', 'file.txt').and_return(command_result)
 
-        command.call('file.txt', recursive: false)
+        command.call('file.txt', r: false)
       end
     end
 
@@ -70,9 +76,9 @@ RSpec.describe Git::Commands::Rm do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command('rm', '-f', '-r', '--cached', '--', 'directory').and_return(command_result)
+        expect_command('rm', '--force', '-r', '--cached', '--', 'directory').and_return(command_result)
 
-        command.call('directory', force: true, recursive: true, cached: true)
+        command.call('directory', force: true, r: true, cached: true)
       end
     end
 
@@ -96,11 +102,11 @@ RSpec.describe Git::Commands::Rm do
       end
 
       it 'raises ArgumentError for empty array' do
-        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for paths/)
+        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for pathspec/)
       end
 
       it 'raises ArgumentError for no arguments' do
-        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for paths/)
+        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for pathspec/)
       end
 
       it 'raises ArgumentError for unsupported options' do

@@ -45,11 +45,17 @@ RSpec.describe Git::Commands::Clone do
       end
     end
 
-    context 'with :recursive option' do
-      it 'includes the --recursive flag' do
-        expect_command('clone', '--recursive', '--', repository_url, directory).and_return(command_result)
+    context 'with :recurse_submodules option' do
+      it 'includes the --recurse-submodules flag' do
+        expect_command('clone', '--recurse-submodules', '--', repository_url, directory).and_return(command_result)
 
-        command.call(repository_url, directory, recursive: true)
+        command.call(repository_url, directory, recurse_submodules: true)
+      end
+
+      it 'includes --recurse-submodules=<pathspec> with inline value' do
+        expect_command('clone', '--recurse-submodules=lib/', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, recurse_submodules: 'lib/')
       end
     end
 
@@ -63,7 +69,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :filter option' do
       it 'includes the --filter flag with value' do
-        expect_command('clone', '--filter', 'tree:0', '--', repository_url, directory).and_return(command_result)
+        expect_command('clone', '--filter=tree:0', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, filter: 'tree:0')
       end
@@ -77,11 +83,11 @@ RSpec.describe Git::Commands::Clone do
       end
     end
 
-    context 'with :remote option (alias for origin)' do
+    context 'with :o option (alias for origin)' do
       it 'includes the --origin flag with value' do
         expect_command('clone', '--origin', 'upstream', '--', repository_url, directory).and_return(command_result)
 
-        command.call(repository_url, directory, remote: 'upstream')
+        command.call(repository_url, directory, o: 'upstream')
       end
     end
 
@@ -117,7 +123,7 @@ RSpec.describe Git::Commands::Clone do
 
     context 'with :depth option' do
       it 'includes --depth with integer value' do
-        expect_command('clone', '--depth', 1, '--', repository_url, directory).and_return(command_result)
+        expect_command('clone', '--depth', '1', '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, depth: 1)
       end

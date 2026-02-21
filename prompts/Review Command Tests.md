@@ -1,3 +1,14 @@
+# Review Command Tests
+
+Verify unit and integration tests for `Git::Commands::*` classes follow project
+conventions.
+
+Command classes follow `Git::Commands::Base`: they declare `arguments do`, may
+declare `allow_exit_status`, and provide a YARD shim `def call(...) = super`.
+`Base#call` performs binding and execution and always passes
+`raise_on_failure: false`, then validates exit status membership against the
+allowed range (`0..0` by default).
+
 ## How to use this prompt
 
 Attach this file to your Copilot Chat context, then invoke it with the unit
@@ -16,31 +27,18 @@ Review Command Tests: spec/unit/git/commands/stash/push_spec.rb
 The invocation needs the spec file(s) to review. Including the corresponding
 command source file provides useful context for verifying argument coverage.
 
----
-
-## Review Command Tests
-
-Verify unit and integration tests for `Git::Commands::*` classes follow project
-conventions.
-
-Command classes follow `Git::Commands::Base`: they declare `arguments do`, may
-declare `allow_exit_status`, and provide a YARD shim `def call(...) = super`.
-`Base#call` performs binding and execution and always passes
-`raise_on_failure: false`, then validates exit status membership against the
-allowed range (`0..0` by default).
-
-### Related prompts
+## Related prompts
 
 - **Review Arguments DSL** — verifying DSL entries match git CLI
 - **Review Command Implementation** — class structure, phased rollout gates, and
   internal compatibility contracts
 - **Review YARD Documentation** — documentation completeness for command classes
 
-### Unit tests
+## Unit tests
 
 Unit tests verify CLI argument building and command-layer behavior for each command.
 
-#### Cover these cases
+### Cover these cases
 
 - Base invocation (no options): verify literals and return pass-through. Store the
   `.and_return` value in an `expected_result` variable and assert
@@ -63,7 +61,7 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   codes 2 and 128 raise `FailedError`.
 - Input validation (`ArgumentError`) for unsupported/conflicting/missing args
 
-#### Expectations for command invocation
+### Expectations for command invocation
 
 Use the `expect_command` helper from `spec_helper.rb` which automatically includes `raise_on_failure: false`:
 
@@ -77,7 +75,7 @@ When testing execution options, include forwarded keywords:
 expect_command('clone', '--', url, dir, timeout: 30).and_return(command_result)
 ```
 
-#### What not to test
+### What not to test
 
 Unit tests should exercise each **code path** through the command, not each possible
 **input value**. Avoid these patterns:
@@ -109,7 +107,7 @@ conditions. Command specs should test that the command **uses** the DSL correctl
 (i.e., the right arguments reach `execution_context.command`), not re-test the DSL's
 own behavior.
 
-#### Test grouping
+### Test grouping
 
 Unit tests are organized under `describe '#call'` with three sections:
 
@@ -201,7 +199,7 @@ RSpec.describe Git::Commands::Stash::Pop do
 end
 ```
 
-### Integration tests
+## Integration tests
 
 Integration tests are minimal smoke tests that confirm the command executes
 successfully against a real git repository. They should NOT test git's output format,
@@ -237,7 +235,7 @@ unit test.
 > commit or push directly to `main` — open a pull request when changes are ready to
 > merge.
 
-#### Test grouping
+### Test grouping
 
 Integration tests must be organized into two `describe` blocks under `#call`:
 
@@ -304,7 +302,7 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
 end
 ```
 
-### General guidelines
+## General guidelines
 
 **No shell-outs in tests.** Never use backticks, `system()`, or `%x[]` in tests. For
 git commands (including setup steps), use `execution_context.command` — it is

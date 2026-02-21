@@ -38,17 +38,17 @@ module Git
           flag_option %i[keep_index k], negatable: true
           flag_option %i[include_untracked u]
           flag_option %i[all a]
-          value_option %i[message m], inline: true
+          value_option %i[message m]
           value_option :pathspec_from_file, inline: true
           flag_option :pathspec_file_nul
-          operand :pathspecs, repeatable: true, separator: '--'
+          operand :pathspec, repeatable: true, separator: '--'
         end
 
         # Stash changes in the working directory
         #
-        # @overload call(*pathspecs, **options)
+        # @overload call(*pathspec, **options)
         #
-        #   @param pathspecs [Array<String>] optional paths to limit what gets stashed
+        #   @param pathspec [Array<String>] optional paths to limit what gets stashed
         #
         #   @param options [Hash] command options
         #

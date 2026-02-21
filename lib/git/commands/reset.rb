@@ -33,10 +33,12 @@ module Git
     class Reset < Base
       arguments do
         literal 'reset'
-        flag_option :hard
         flag_option :soft
         flag_option :mixed
-        conflicts :hard, :soft, :mixed
+        flag_option :hard
+        flag_option :merge
+        flag_option :keep
+        conflicts :soft, :mixed, :hard, :merge, :keep
         operand :commit, required: false
       end
 
@@ -48,18 +50,26 @@ module Git
       #
       #   @param options [Hash] command options
       #
-      #   @option options [Boolean] :hard (nil) reset the index and working tree. Any changes to tracked
-      #     files in the working tree since the commit are discarded
-      #
       #   @option options [Boolean] :soft (nil) does not touch the index file or the working tree at all,
       #     but resets the head to the commit
       #
       #   @option options [Boolean] :mixed (nil) resets the index but not the working tree (i.e., the
       #     changed files are preserved but not marked for commit)
       #
+      #   @option options [Boolean] :hard (nil) reset the index and working tree. Any changes to tracked
+      #     files in the working tree since the commit are discarded
+      #
+      #   @option options [Boolean] :merge (nil) reset the index and update the files in the working tree
+      #     that are different between the commit and HEAD, but keep those which are different between
+      #     the index and working tree
+      #
+      #   @option options [Boolean] :keep (nil) reset the index and update the files in the working tree
+      #     that are different between the commit and HEAD. If a file that is different between the
+      #     commit and HEAD has local changes, reset is aborted
+      #
       # @return [Git::CommandLineResult] the result of calling `git reset`
       #
-      # @raise [ArgumentError] if more than one of :hard, :soft, or :mixed is specified
+      # @raise [ArgumentError] if more than one of :soft, :mixed, :hard, :merge, or :keep is specified
       #
       # @raise [Git::FailedError] if the command returns a non-zero exit status
       #

@@ -22,15 +22,15 @@ module Git
       arguments do
         literal 'clone'
         flag_option :bare
-        flag_option :recursive
         flag_option :mirror
-        value_option :branch
-        value_option :filter
-        value_option %i[origin remote]
-        value_option :config, repeatable: true
+        value_option %i[origin o]
+        value_option %i[branch b]
+        value_option :depth
         flag_option :single_branch, negatable: true, validator: ->(v) { [nil, true, false].include?(v) }
-        custom_option(:depth) { |v| ['--depth', v.to_i] }
-        operand :repository_url, required: true, separator: '--'
+        flag_or_value_option :recurse_submodules, inline: true
+        value_option :filter, inline: true
+        value_option %i[config c], repeatable: true
+        operand :repository, required: true, separator: '--'
         operand :directory
         execution_option :timeout
         execution_option :chdir
@@ -38,9 +38,9 @@ module Git
 
       # Execute the git clone command
       #
-      # @overload call(repository_url, directory = nil, **options)
+      # @overload call(repository, directory = nil, **options)
       #
-      #   @param repository_url [String] the URL of the repository to clone
+      #   @param repository [String] the URL of the repository to clone
       #
       #   @param directory [String, nil] the directory to clone into.
       #     If nil, git derives the directory name from the repository URL.
@@ -49,22 +49,27 @@ module Git
       #
       #   @option options [Boolean] :bare (nil) Clone as a bare repository
       #
-      #   @option options [String] :branch (nil) The branch to checkout after cloning
+      #   @option options [Boolean] :mirror (nil) Set up a mirror clone (implies --bare)
       #
-      #   @option options [String, Array<String>] :config (nil) Configuration options to set
+      #   @option options [String] :origin (nil) Name of the remote (defaults to 'origin').
+      #     Alias: :o
       #
-      #   @option options [Integer] :depth (nil) Create a shallow clone with the specified number of commits
+      #   @option options [String] :branch (nil) The branch to checkout after cloning.
+      #     Alias: :b
       #
-      #   @option options [String] :filter (nil) Specify partial clone (e.g., 'tree:0', 'blob:none')
-      #
-      #   @option options [String] :origin (nil) Name of the remote (defaults to 'origin')
-      #
-      #   @option options [Boolean] :recursive (nil) Initialize submodules after cloning
-      #
-      #   @option options [String] :remote (nil) Alias for :origin
+      #   @option options [Integer, String] :depth (nil) Create a shallow clone with the specified number of commits
       #
       #   @option options [Boolean, nil] :single_branch (nil) Clone only the history
       #     leading to the tip of a single branch
+      #
+      #   @option options [Boolean, String] :recurse_submodules (nil) Initialize all submodules
+      #     after cloning. When true, uses `--recurse-submodules`. When a string, passes the
+      #     pathspec to limit which submodules are initialized.
+      #
+      #   @option options [String] :filter (nil) Specify partial clone (e.g., 'tree:0', 'blob:none')
+      #
+      #   @option options [String, Array<String>] :config (nil) Configuration options to set.
+      #     Alias: :c
       #
       #   @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
       #     for the command to complete. If nil, uses the global timeout from
