@@ -16,7 +16,7 @@ module Git
       #
       # @api private
       #
-      class Numstat < Base
+      class Numstat < Git::Commands::Base
         arguments do
           literal 'diff'
           # These two format literals are always emitted together. Git::Parsers::Diff
@@ -45,129 +45,129 @@ module Git
         # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
         allow_exit_status 0..1
 
-        # Show diff numstat
+        # @!method call(*, **)
         #
-        # @overload call(**options)
-        #   Compare the index to the working tree
+        #   Show diff numstat
         #
-        #   @example
-        #     # git diff [-- <pathspecs>...]
-        #     Numstat.new(ctx).call
-        #     Numstat.new(ctx).call(path: ['lib/', '*.rb'])
+        #   @overload call(**options)
+        #     Compare the index to the working tree
         #
-        #   @param options [Hash] command options
+        #     @example
+        #       # git diff [-- <pathspecs>...]
+        #       Numstat.new(ctx).call
+        #       Numstat.new(ctx).call(path: ['lib/', '*.rb'])
         #
-        #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        # @overload call(path1, path2, no_index: true, **options)
-        #   Compare two paths on the filesystem (outside git)
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   @example
-        #     # git diff --no-index <path> <path> [<pathspec>...]
-        #     Numstat.new(ctx).call('/path/a', '/path/b', no_index: true)
-        #     Numstat.new(ctx).call('/dir/a', '/dir/b', no_index: true, path: ['*.rb'])
+        #   @overload call(path1, path2, no_index: true, **options)
+        #     Compare two paths on the filesystem (outside git)
         #
-        #   @param path1 [String] first filesystem path
+        #     @example
+        #       # git diff --no-index <path> <path> [<pathspec>...]
+        #       Numstat.new(ctx).call('/path/a', '/path/b', no_index: true)
+        #       Numstat.new(ctx).call('/dir/a', '/dir/b', no_index: true, path: ['*.rb'])
         #
-        #   @param path2 [String] second filesystem path
+        #     @param path1 [String] first filesystem path
         #
-        #   @param no_index [Boolean] must be true
+        #     @param path2 [String] second filesystem path
         #
-        #   @param options [Hash] command options
+        #     @param no_index [Boolean] must be true
         #
-        #   @option options [Array<String>] :pathspecs (nil) when comparing directories, zero or more
-        #     relative pathspecs to limit diff to (applies to both sides)
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Array<String>] :pathspecs (nil) when comparing directories, zero or more
+        #       relative pathspecs to limit diff to (applies to both sides)
         #
-        # @overload call(commit = nil, cached:, **options)
-        #   Compare the index to HEAD or the named commit
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   @example
-        #     # git diff --cached [<commit>] [-- <pathspecs>...]
-        #     Numstat.new(ctx).call(cached: true)
-        #     Numstat.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
+        #   @overload call(commit = nil, cached:, **options)
+        #     Compare the index to HEAD or the named commit
         #
-        #   @param commit [String] optional commit reference (defaults to HEAD)
+        #     @example
+        #       # git diff --cached [<commit>] [-- <pathspecs>...]
+        #       Numstat.new(ctx).call(cached: true)
+        #       Numstat.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
         #
-        #   @param cached [Boolean] must be true (alias: :staged)
+        #     @param commit [String] optional commit reference (defaults to HEAD)
         #
-        #   @param options [Hash] command options
+        #     @param cached [Boolean] must be true (alias: :staged)
         #
-        #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        # @overload call(commit, **options)
-        #   Compare the working tree to the named commit
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   @example
-        #     # git diff <commit> [-- <pathspecs>...]
-        #     Numstat.new(ctx).call('HEAD~3')
-        #     Numstat.new(ctx).call('abc123', path: ['lib/', '*.rb'])
+        #   @overload call(commit, **options)
+        #     Compare the working tree to the named commit
         #
-        #   @param commit [String] commit reference
+        #     @example
+        #       # git diff <commit> [-- <pathspecs>...]
+        #       Numstat.new(ctx).call('HEAD~3')
+        #       Numstat.new(ctx).call('abc123', path: ['lib/', '*.rb'])
         #
-        #   @param options [Hash] command options
+        #     @param commit [String] commit reference
         #
-        #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        # @overload call(commit1, commit2, **options)
-        #   Compare two commits
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   @example
-        #     # git diff <commit> <commit> [-- <pathspecs>...]
-        #     # git diff <commit>..<commit> [-- <pathspecs>...]
-        #     # git diff <commit>...<commit> [-- <pathspecs>...]
-        #     Numstat.new(ctx).call('abc123', 'def456')
-        #     Numstat.new(ctx).call('v1.0..v2.0')   # two-dot range syntax
-        #     Numstat.new(ctx).call('main...feature')  # three-dot (merge-base) syntax
+        #   @overload call(commit1, commit2, **options)
+        #     Compare two commits
         #
-        #   @param commit1 [String] first commit reference (or range string like 'main..feature')
+        #     @example
+        #       # git diff <commit> <commit> [-- <pathspecs>...]
+        #       # git diff <commit>..<commit> [-- <pathspecs>...]
+        #       # git diff <commit>...<commit> [-- <pathspecs>...]
+        #       Numstat.new(ctx).call('abc123', 'def456')
+        #       Numstat.new(ctx).call('v1.0..v2.0')   # two-dot range syntax
+        #       Numstat.new(ctx).call('main...feature')  # three-dot (merge-base) syntax
         #
-        #   @param commit2 [String] second commit reference (omit if commit1 is a range)
+        #     @param commit1 [String] first commit reference (or range string like 'main..feature')
         #
-        #   @param options [Hash] command options
+        #     @param commit2 [String] second commit reference (omit if commit1 is a range)
         #
-        #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean] :merge_base (false) use merge base of commits
-        #     (alternative to three-dot syntax)
+        #     @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Boolean] :merge_base (false) use merge base of commits
+        #       (alternative to three-dot syntax)
         #
-        # @overload call(merge_commit, range, **options)
-        #   Show changes introduced by a merge commit beyond the merged branches
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   @example
-        #     # git diff <merge-commit> <commit>...<commit> [-- <pathspecs>...]
-        #     Numstat.new(ctx).call('merge_commit', 'main...feature')
+        #   @overload call(merge_commit, range, **options)
+        #     Show changes introduced by a merge commit beyond the merged branches
         #
-        #   @param merge_commit [String] merge commit reference
+        #     @example
+        #       # git diff <merge-commit> <commit>...<commit> [-- <pathspecs>...]
+        #       Numstat.new(ctx).call('merge_commit', 'main...feature')
         #
-        #   @param range [String] three-dot range of merged branches
+        #     @param merge_commit [String] merge commit reference
         #
-        #   @param options [Hash] command options
+        #     @param range [String] three-dot range of merged branches
         #
-        #   @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Array<String>] :pathspecs (nil) zero or more pathspecs to limit diff to
         #
-        # @return [Git::CommandLineResult] the result of calling `git diff --numstat`
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        # @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
+        #   @return [Git::CommandLineResult] the result of calling `git diff --numstat`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
       end
     end
   end

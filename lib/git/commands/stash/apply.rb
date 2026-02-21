@@ -25,7 +25,7 @@ module Git
       # @example Apply and restore index state
       #   Git::Commands::Stash::Apply.new(execution_context).call(index: true)
       #
-      class Apply < Base
+      class Apply < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'apply'
@@ -33,31 +33,31 @@ module Git
           operand :stash
         end
 
-        # Apply stashed changes
+        # @!method call(*, **)
         #
-        # @overload call(**options)
+        #   Apply stashed changes
         #
-        #   Apply the latest stash
+        #   @overload call(**options)
         #
-        #   @param options [Hash] command options
+        #     Apply the latest stash
         #
-        #   @option options [Boolean] :index (nil) restore the index state as well
+        #     @param options [Hash] command options
         #
-        # @overload call(stash, **options)
+        #     @option options [Boolean] :index (nil) restore the index state as well
         #
-        #   Apply a specific stash
+        #   @overload call(stash, **options)
         #
-        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #     Apply a specific stash
         #
-        #   @param options [Hash] command options
+        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        #   @option options [Boolean] :index (nil) restore the index state as well
+        #     @param options [Hash] command options
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash apply`
+        #     @option options [Boolean] :index (nil) restore the index state as well
         #
-        # @raise [Git::FailedError] if the stash does not exist
+        #   @return [Git::CommandLineResult] the result of calling `git stash apply`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @raise [Git::FailedError] if the stash does not exist
       end
     end
   end

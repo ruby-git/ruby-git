@@ -24,7 +24,7 @@ module Git
       #   delete = Git::Commands::Tag::Delete.new(execution_context)
       #   result = delete.call('v1.0.0', 'v2.0.0')
       #
-      class Delete < Base
+      class Delete < Git::Commands::Base
         arguments do
           literal 'tag'
           literal '--delete'
@@ -34,19 +34,20 @@ module Git
         # git tag --delete exits with status 1 when a tag does not exist, which is acceptable
         allow_exit_status 0..1
 
-        # Execute the git tag -d command to delete tags
+        # @!method call(*, **)
         #
-        # @overload call(*tagname)
+        #   Execute the git tag -d command to delete tags
         #
-        #   @param tagname [Array<String>] One or more tag names to delete.
+        #   @overload call(*tagname)
         #
-        # @return [Git::CommandLineResult] the result of calling `git tag --delete`
+        #     @param tagname [Array<String>] One or more tag names to delete.
         #
-        # @raise [ArgumentError] if no tag names are provided
+        #     @return [Git::CommandLineResult] the result of calling `git tag --delete`
         #
-        # @raise [Git::FailedError] for fatal errors (exit code > 1)
+        #     @raise [ArgumentError] if no tag names are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] for fatal errors (exit code > 1)
+        #
       end
     end
   end

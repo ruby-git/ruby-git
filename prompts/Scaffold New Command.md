@@ -53,7 +53,7 @@ module Git
       # Summary...
       #
       # @api private
-      class Bar < Base
+      class Bar < Git::Commands::Base
         arguments do
           # literals/options/operands
         end
@@ -62,12 +62,15 @@ module Git
         # rationale comment
         # allow_exit_status 0..1
 
-        # Execute the git ... command
+        # @!method call(*, **)
         #
-        # @overload ...
-        # @return [Git::CommandLineResult] the result of calling `git ...`
-        # @raise [Git::FailedError] if git exits outside allowed status range
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @overload ...
+        #
+        #     Execute the git ... command.
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git ...`
+        #
+        #     @raise [Git::FailedError] if git exits outside allowed status range
       end
     end
   end
@@ -233,13 +236,9 @@ Include at least one failure case per command.
 
 ## YARD requirements
 
-- keep `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition` for per-command docs
-- add `@overload` blocks for valid call shapes
+- use `# @!method call(*, **)` YARD directive with nested `@overload` blocks for per-command docs
+- add `@overload` blocks for valid call shapes, indented under `@!method`
 - keep tags aligned with `arguments do` and `allow_exit_status` behavior
-
-Note: The rubocop disable comment suppresses the Lint/UselessMethodDefinition warning.
-The method appears "useless" to the linter but is required for YARD to render
-per-command documentation.
 
 ## Phased rollout, compatibility, and quality gates
 

@@ -29,7 +29,7 @@ module Git
       #   verify = Git::Commands::Tag::Verify.new(execution_context)
       #   verify.call('v1.0.0', format: '%(refname:short) %(contents:subject)')
       #
-      class Verify < Base
+      class Verify < Git::Commands::Base
         arguments do
           literal 'tag'
           literal '--verify'
@@ -37,26 +37,27 @@ module Git
           operand :tagname, repeatable: true, required: true
         end
 
-        # Execute the git tag --verify command to verify tag signatures
+        # @!method call(*, **)
         #
-        # @overload call(*tagname, **options)
+        #   Execute the git tag --verify command to verify tag signatures
         #
-        #   @param tagname [Array<String>] One or more tag names to verify.
-        #     At least one tag name is required.
+        #   @overload call(*tagname, **options)
         #
-        #   @param options [Hash] command options
+        #     @param tagname [Array<String>] One or more tag names to verify.
+        #       At least one tag name is required.
         #
-        #   @option options [String] :format (nil) A format string that interpolates
-        #     `%(fieldname)` from the tag ref being shown and the object it points at.
-        #     The format is the same as that of git-for-each-ref.
+        #     @param options [Hash] command options
         #
-        # @return [Git::CommandLineResult] the result of calling `git tag --verify`
+        #     @option options [String] :format (nil) A format string that interpolates
+        #       `%(fieldname)` from the tag ref being shown and the object it points at.
+        #       The format is the same as that of git-for-each-ref.
         #
-        # @raise [Git::FailedError] if the tag does not exist or signature verification fails
+        #     @return [Git::CommandLineResult] the result of calling `git tag --verify`
         #
-        # @raise [ArgumentError] if no tag names are provided
+        #     @raise [Git::FailedError] if the tag does not exist or signature verification fails
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [ArgumentError] if no tag names are provided
+        #
       end
     end
   end

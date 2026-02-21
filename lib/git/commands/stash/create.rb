@@ -26,28 +26,28 @@ module Git
       # @example Create a stash commit with a message
       #   Git::Commands::Stash::Create.new(execution_context).call('WIP: my changes')
       #
-      class Create < Base
+      class Create < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'create'
           operand :message
         end
 
-        # Create a stash commit
+        # @!method call(*, **)
         #
-        # @overload call()
+        #   Create a stash commit
         #
-        #   Create a stash commit without a message
+        #   @overload call()
         #
-        # @overload call(message)
+        #     Create a stash commit without a message
         #
-        #   Create a stash commit with a message
+        #   @overload call(message)
         #
-        #   @param message [String] optional message for the stash commit
+        #     Create a stash commit with a message
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash create`
+        #     @param message [String] optional message for the stash commit
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @return [Git::CommandLineResult] the result of calling `git stash create`
       end
     end
   end

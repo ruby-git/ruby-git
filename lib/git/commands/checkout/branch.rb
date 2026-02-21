@@ -31,7 +31,7 @@ module Git
       # @example Force checkout, discarding local changes
       #   checkout.call('main', force: true)
       #
-      class Branch < Base
+      class Branch < Git::Commands::Base
         arguments do
           literal 'checkout'
           flag_option %i[force f]
@@ -58,51 +58,51 @@ module Git
           operand :branch
         end
 
-        # Execute the git checkout command for branch switching
+        # @!method call(*, **)
         #
-        # @overload call(branch = nil, **options)
+        #   Execute the git checkout command for branch switching
         #
-        #   @param branch [String, nil] The branch name, commit SHA, or ref to
-        #     checkout. When used with branch creation options, this becomes the
-        #     start point.
+        #   @overload call(branch = nil, **options)
         #
-        #   @param options [Hash] command options
+        #     @param branch [String, nil] The branch name, commit SHA, or ref to
+        #       checkout. When used with branch creation options, this becomes the
+        #       start point.
         #
-        #   @option options [Boolean] :force (nil) Proceed even if the index or
-        #     working tree differs from HEAD. Local changes are discarded. Alias: :f
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean] :merge (nil) Perform a three-way merge.
-        #     Alias: :m
+        #     @option options [Boolean] :force (nil) Proceed even if the index or
+        #       working tree differs from HEAD. Local changes are discarded. Alias: :f
         #
-        #   @option options [String] :b (nil) Create a new branch with this name and switch to it
+        #     @option options [Boolean] :merge (nil) Perform a three-way merge.
+        #       Alias: :m
         #
-        #   @option options [String] :'B' (nil) Like :b, but reset if the branch already exists
+        #     @option options [String] :b (nil) Create a new branch with this name and switch to it
         #
-        #   @option options [Boolean, String] :track (nil) Set up upstream tracking.
-        #     true/false for --track/--no-track, or 'direct'/'inherit' for
-        #     --track=<value>.
-        #     Alias: :t
+        #     @option options [String] :'B' (nil) Like :b, but reset if the branch already exists
         #
-        #   @option options [Boolean] :guess (nil) Control automatic branch creation
-        #     from remotes. true for --guess, false for --no-guess
+        #     @option options [Boolean, String] :track (nil) Set up upstream tracking.
+        #       true/false for --track/--no-track, or 'direct'/'inherit' for
+        #       --track=<value>.
+        #       Alias: :t
         #
-        #   @option options [Boolean] :detach (nil) Detach HEAD at the specified
-        #     commit. Alias: :d
+        #     @option options [Boolean] :guess (nil) Control automatic branch creation
+        #       from remotes. true for --guess, false for --no-guess
         #
-        #   @option options [String] :orphan (nil) Create a new orphan branch with
-        #     no history
+        #     @option options [Boolean] :detach (nil) Detach HEAD at the specified
+        #       commit. Alias: :d
         #
-        #   @option options [Boolean] :ignore_other_worktrees (nil) Allow checking
-        #     out a branch checked out in another worktree
+        #     @option options [String] :orphan (nil) Create a new orphan branch with
+        #       no history
         #
-        #   @option options [Boolean] :recurse_submodules (nil) Update submodules.
-        #     true for --recurse-submodules, false for --no-recurse-submodules
+        #     @option options [Boolean] :ignore_other_worktrees (nil) Allow checking
+        #       out a branch checked out in another worktree
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #     @option options [Boolean] :recurse_submodules (nil) Update submodules.
+        #       true for --recurse-submodules, false for --no-recurse-submodules
         #
-        # @raise [Git::FailedError] if the checkout fails
+        #     @return [Git::CommandLineResult] the result of the command
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the checkout fails
       end
     end
   end

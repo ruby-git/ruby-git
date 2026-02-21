@@ -27,7 +27,7 @@ module Git
       #   delete = Git::Commands::Branch::Delete.new(execution_context)
       #   result = delete.call('origin/feature', remotes: true)
       #
-      class Delete < Base
+      class Delete < Git::Commands::Base
         arguments do
           literal 'branch'
           literal '--delete'
@@ -39,34 +39,34 @@ module Git
         # git branch --delete exits 1 when one or more branches cannot be deleted
         allow_exit_status 0..1
 
-        # Execute the git branch --delete command to delete branches
+        # @!method call(*, **)
         #
-        # @overload call(*branch_name, **options)
+        #   Execute the git branch --delete command to delete branches
         #
-        #   @param branch_name [Array<String>] One or more branch names to delete.
+        #   @overload call(*branch_name, **options)
         #
-        #   @param options [Hash] command options
+        #     @param branch_name [Array<String>] One or more branch names to delete.
         #
-        #   @option options [Boolean] :force (nil) Allow deleting the branch irrespective of its merged
-        #     status, or whether it even points to a valid commit. This is equivalent
-        #     to the `-D` shortcut (`--delete --force`).
+        #     @param options [Hash] command options
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Allow deleting the branch irrespective of its merged
+        #       status, or whether it even points to a valid commit. This is equivalent
+        #       to the `-D` shortcut (`--delete --force`).
         #
-        #   @option options [Boolean] :remotes (nil) Delete remote-tracking branches. Use this together
-        #     with `--delete` to delete remote-tracking branches. Note that this only
-        #     makes sense if the remote-tracking branches no longer exist in the remote
-        #     repository or if `git fetch` was configured not to fetch them again.
+        #       Alias: :f
         #
-        #     Alias: :r
+        #     @option options [Boolean] :remotes (nil) Delete remote-tracking branches. Use this together
+        #       with `--delete` to delete remote-tracking branches. Note that this only
+        #       makes sense if the remote-tracking branches no longer exist in the remote
+        #       repository or if `git fetch` was configured not to fetch them again.
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --delete`
+        #       Alias: :r
         #
-        # @raise [ArgumentError] if no branch names are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch --delete`
         #
-        # @raise [Git::FailedError] for unexpected errors (exit code > 1)
+        #     @raise [ArgumentError] if no branch names are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] for unexpected errors (exit code > 1)
       end
     end
   end

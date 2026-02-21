@@ -25,7 +25,7 @@ module Git
       # @example Pop and restore index state
       #   Git::Commands::Stash::Pop.new(execution_context).call(index: true)
       #
-      class Pop < Base
+      class Pop < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'pop'
@@ -33,31 +33,31 @@ module Git
           operand :stash
         end
 
-        # Pop stashed changes
+        # @!method call(*, **)
         #
-        # @overload call(**options)
+        #   Pop stashed changes
         #
-        #   Pop the latest stash
+        #   @overload call(**options)
         #
-        #   @param options [Hash] command options
+        #     Pop the latest stash
         #
-        #   @option options [Boolean] :index (nil) restore the index state as well
+        #     @param options [Hash] command options
         #
-        # @overload call(stash, **options)
+        #     @option options [Boolean] :index (nil) restore the index state as well
         #
-        #   Pop a specific stash
+        #   @overload call(stash, **options)
         #
-        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #     Pop a specific stash
         #
-        #   @param options [Hash] command options
+        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        #   @option options [Boolean] :index (nil) restore the index state as well
+        #     @param options [Hash] command options
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash pop`
+        #     @option options [Boolean] :index (nil) restore the index state as well
         #
-        # @raise [Git::FailedError] if the stash does not exist
+        #   @return [Git::CommandLineResult] the result of calling `git stash pop`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @raise [Git::FailedError] if the stash does not exist
       end
     end
   end

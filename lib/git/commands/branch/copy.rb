@@ -26,7 +26,7 @@ module Git
       #   copy = Git::Commands::Branch::Copy.new(execution_context)
       #   copy.call('old-branch', 'existing-branch', force: true)
       #
-      class Copy < Base
+      class Copy < Git::Commands::Base
         # NOTE: The positional arguments follow Ruby semantics:
         # - When one positional is provided, it fills new_branch (required)
         # - When two positionals are provided, they fill old_branch and new_branch
@@ -40,41 +40,41 @@ module Git
           operand :new_branch, required: true
         end
 
-        # Execute the git branch --copy command to copy a branch
+        # @!method call(*, **)
         #
-        # @overload call(new_branch, **options)
+        #   Execute the git branch --copy command to copy a branch
         #
-        #   Copies the current branch to the new_branch
+        #   @overload call(new_branch, **options)
         #
-        #   @param new_branch [String] the new name for the copied branch
+        #     Copies the current branch to the new_branch
         #
-        #   @param options [Hash] command options
+        #     @param new_branch [String] the new name for the copied branch
         #
-        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
+        #     @param options [Hash] command options
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
         #
-        # @overload call(old_branch, new_branch, **options)
+        #       Alias: :f
         #
-        #   Copies old_branch to new_branch
+        #   @overload call(old_branch, new_branch, **options)
         #
-        #   @param old_branch [String] branch to copy from
+        #     Copies old_branch to new_branch
         #
-        #   @param new_branch [String] the new name for the copied branch
+        #     @param old_branch [String] branch to copy from
         #
-        #   @param options [Hash] command options
+        #     @param new_branch [String] the new name for the copied branch
         #
-        #   @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
+        #     @param options [Hash] command options
         #
-        #     Alias: :f
+        #     @option options [Boolean] :force (nil) Allow copying even if new_branch already exists.
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --copy`
+        #       Alias: :f
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch --copy`
         #
-        # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
+        #     @raise [ArgumentError] if unsupported options are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
       end
     end
   end

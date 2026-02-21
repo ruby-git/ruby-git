@@ -34,7 +34,7 @@ module Git
       # @example Read paths from a file
       #   files.call('main', pathspec_from_file: 'paths.txt')
       #
-      class Files < Base
+      class Files < Git::Commands::Base
         arguments do
           literal 'checkout'
           flag_option %i[force f]
@@ -50,49 +50,49 @@ module Git
           value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
         end
 
-        # Execute the git checkout command for restoring files
+        # @!method call(*, **)
         #
-        # @overload call(tree_ish = nil, pathspec: nil, **options)
+        #   Execute the git checkout command for restoring files
         #
-        #   @param tree_ish [String, nil] The commit, branch, or tree to restore
-        #     files from. When nil, files are restored from the index.
+        #   @overload call(tree_ish = nil, pathspec: nil, **options)
         #
-        #   @param pathspec [String, Array<String>, nil] The files or directories
-        #     to restore. Required unless pathspec_from_file is provided.
+        #     @param tree_ish [String, nil] The commit, branch, or tree to restore
+        #       files from. When nil, files are restored from the index.
         #
-        #   @param options [Hash] command options
+        #     @param pathspec [String, Array<String>, nil] The files or directories
+        #       to restore. Required unless pathspec_from_file is provided.
         #
-        #   @option options [Array<String>, String] :pathspec The files or directories
-        #     to restore. Required unless :pathspec_from_file is provided.
+        #     @param options [Hash] command options
         #
-        #   @option options [Boolean] :force (nil) Ignore unmerged entries. Alias: :f
+        #     @option options [Array<String>, String] :pathspec The files or directories
+        #       to restore. Required unless :pathspec_from_file is provided.
         #
-        #   @option options [Boolean] :ours (nil) For unmerged paths, use stage #2
+        #     @option options [Boolean] :force (nil) Ignore unmerged entries. Alias: :f
         #
-        #   @option options [Boolean] :theirs (nil) For unmerged paths, use stage #3
+        #     @option options [Boolean] :ours (nil) For unmerged paths, use stage #2
         #
-        #   @option options [Boolean] :merge (nil) Recreate the conflicted merge.
-        #     Alias: :m
+        #     @option options [Boolean] :theirs (nil) For unmerged paths, use stage #3
         #
-        #   @option options [String] :conflict (nil) Conflict marker style: 'merge',
-        #     'diff3', 'zdiff3'
+        #     @option options [Boolean] :merge (nil) Recreate the conflicted merge.
+        #       Alias: :m
         #
-        #   @option options [Boolean] :overlay (nil) true for --overlay, false for
-        #     --no-overlay
+        #     @option options [String] :conflict (nil) Conflict marker style: 'merge',
+        #       'diff3', 'zdiff3'
         #
-        #   @option options [String] :pathspec_from_file (nil) Read paths from file
-        #     ('-' for stdin). Required unless :pathspec is provided.
+        #     @option options [Boolean] :overlay (nil) true for --overlay, false for
+        #       --no-overlay
         #
-        #   @option options [Boolean] :pathspec_file_nul (nil) NUL-separated paths in
-        #     pathspec file
+        #     @option options [String] :pathspec_from_file (nil) Read paths from file
+        #       ('-' for stdin). Required unless :pathspec is provided.
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #     @option options [Boolean] :pathspec_file_nul (nil) NUL-separated paths in
+        #       pathspec file
         #
-        # @raise [ArgumentError] if neither :pathspec nor :pathspec_from_file is provided
+        #     @return [Git::CommandLineResult] the result of the command
         #
-        # @raise [Git::FailedError] if the checkout fails
+        #     @raise [ArgumentError] if neither :pathspec nor :pathspec_from_file is provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if the checkout fails
       end
     end
   end

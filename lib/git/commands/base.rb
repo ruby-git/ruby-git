@@ -11,7 +11,7 @@ module Git
     # Provides default {#initialize} and {#call} methods so that simple commands
     # only need to declare their arguments:
     #
-    #   class Add < Base
+    #   class Add < Git::Commands::Base
     #     arguments do
     #       literal 'add'
     #       flag_option :all
@@ -27,7 +27,7 @@ module Git
     # Commands whose git process may exit with a non-zero status that is
     # *not* an error can declare the acceptable range of exit codes:
     #
-    #   class Delete < Base
+    #   class Delete < Git::Commands::Base
     #     arguments do
     #       literal 'branch'
     #       literal '--delete'

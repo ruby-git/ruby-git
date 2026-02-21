@@ -33,8 +33,8 @@ For the specified git command(s), remove methods added to `Git::Lib` since v4.3.
 
 When auditing modern implementations, assume command classes follow `Git::Commands::Base`:
 
-- classes use `class < Base` with `arguments do ... end`
-- command entrypoint is typically `def call(...) = super`
+- classes use `class < Git::Commands::Base` with `arguments do ... end`
+- command entrypoint is `call(*, **)` (inherited from `Base`)
 - exit-status behavior is centralized via `allow_exit_status` declarations on the class
 
 Because of this, backward-compatibility adaptation should happen in `Git::Lib`

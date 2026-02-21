@@ -32,10 +32,10 @@ The invocation needs two or more sibling command files from the same family.
 
 ### 1. Class structure consistency
 
-- [ ] all classes use `class < Base`
+- [ ] all classes use `class < Git::Commands::Base`
 - [ ] all require `git/commands/base`
 - [ ] all use `arguments do ... end` (no legacy `ARGS =` constants)
-- [ ] all use YARD shim `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`
+- [ ] all use YARD directive `# @!method call(*, **)` with nested `@overload` blocks
 
 ### 2. Arguments DSL consistency
 

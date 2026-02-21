@@ -23,7 +23,7 @@ module Git
       #   Git::Commands::Stash::ShowPatch.new(execution_context).call(dirstat: true)
       #   Git::Commands::Stash::ShowPatch.new(execution_context).call(dirstat: 'lines,cumulative')
       #
-      class ShowPatch < Base
+      class ShowPatch < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'show'
@@ -45,59 +45,59 @@ module Git
           conflicts :include_untracked, :only_untracked
         end
 
-        # Show stash patch
+        # @!method call(*, **)
         #
-        # @overload call(**options)
+        #   Show stash patch
         #
-        #   Show patch for the latest stash
+        #   @overload call(**options)
         #
-        #   @param options [Hash] command options
+        #     Show patch for the latest stash
         #
-        #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #     @param options [Hash] command options
         #
-        #     Alias: :u
+        #     @option options [Boolean] :include_untracked (nil) include untracked files.
         #
-        #   @option options [Boolean] :only_untracked (nil) show only untracked files
+        #       Alias: :u
         #
-        #   @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
-        #     similarity threshold (e.g., 50 for 50%). Alias: :M
+        #     @option options [Boolean] :only_untracked (nil) show only untracked files
         #
-        #   @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
-        #     optionally pass a threshold. Alias: :C
+        #     @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
+        #       similarity threshold (e.g., 50 for 50%). Alias: :M
         #
-        #   @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #     @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
+        #       optionally pass a threshold. Alias: :C
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
-        # @overload call(stash, **options)
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        #   Show patch for a specific stash
+        #   @overload call(stash, **options)
         #
-        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #     Show patch for a specific stash
         #
-        #   @param options [Hash] command options
+        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        #   @option options [Boolean] :include_untracked (nil) include untracked files.
+        #     @param options [Hash] command options
         #
-        #     Alias: :u
+        #     @option options [Boolean] :include_untracked (nil) include untracked files.
         #
-        #   @option options [Boolean] :only_untracked (nil) show only untracked files
+        #       Alias: :u
         #
-        #   @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
-        #     similarity threshold (e.g., 50 for 50%). Alias: :M
+        #     @option options [Boolean] :only_untracked (nil) show only untracked files
         #
-        #   @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
-        #     optionally pass a threshold. Alias: :C
+        #     @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
+        #       similarity threshold (e.g., 50 for 50%). Alias: :M
         #
-        #   @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #     @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
+        #       optionally pass a threshold. Alias: :C
         #
-        #   @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #     Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash show --patch`
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
+        #       Pass true for default, or a string like 'lines,cumulative' for options.
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @return [Git::CommandLineResult] the result of calling `git stash show --patch`
       end
     end
   end

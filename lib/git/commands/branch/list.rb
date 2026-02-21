@@ -28,7 +28,7 @@ module Git
       #   list = Git::Commands::Branch::List.new(execution_context)
       #   feature_branches = list.call(patterns: 'feature/*')
       #
-      class List < Base
+      class List < Git::Commands::Base
         arguments do
           literal 'branch'
           literal '--list'
@@ -45,63 +45,63 @@ module Git
           operand :pattern, repeatable: true
         end
 
-        # Execute the git branch --list command
+        # @!method call(*, **)
         #
-        # @overload call(*pattern, **options)
+        #   Execute the git branch --list command
         #
-        #   @param pattern [Array<String>] Shell wildcard patterns to filter
-        #   branches
+        #   @overload call(*pattern, **options)
         #
-        #     If multiple patterns are given, a branch is shown if it matches any of the patterns.
+        #     @param pattern [Array<String>] Shell wildcard patterns to filter
+        #     branches
         #
-        #   @param options [Hash] command options
+        #       If multiple patterns are given, a branch is shown if it matches any of the patterns.
         #
-        #   @option options [Boolean] :all (nil) List both local and remote branches.
+        #     @param options [Hash] command options
         #
-        #     Alias: :a
+        #     @option options [Boolean] :all (nil) List both local and remote branches.
         #
-        #   @option options [Boolean] :remotes (nil) List only remote-tracking
-        #     branches.
+        #       Alias: :a
         #
-        #     Alias: :r
+        #     @option options [Boolean] :remotes (nil) List only remote-tracking
+        #       branches.
         #
-        #   @option options [String, Array<String>] :sort (nil) Sort branches by the
-        #     specified key(s).
+        #       Alias: :r
         #
-        #     Give an array to add multiple --sort options. Prefix each key with '-' for
-        #     descending order. For example, sort: ['refname', '-committerdate'].
+        #     @option options [String, Array<String>] :sort (nil) Sort branches by the
+        #       specified key(s).
         #
-        #   @option options [Boolean, String] :merged (nil) List only branches merged
-        #     into the specified commit. Pass `true` to default to HEAD or a commit
-        #     ref string to filter by that commit.
+        #       Give an array to add multiple --sort options. Prefix each key with '-' for
+        #       descending order. For example, sort: ['refname', '-committerdate'].
         #
-        #   @option options [Boolean, String] :no_merged (nil) List only branches not
-        #     merged into the specified commit. Pass `true` to default to HEAD or a
-        #     commit ref string to filter by that commit.
+        #     @option options [Boolean, String] :merged (nil) List only branches merged
+        #       into the specified commit. Pass `true` to default to HEAD or a commit
+        #       ref string to filter by that commit.
         #
-        #   @option options [Boolean, String] :contains (nil) List only branches that
-        #     contain the specified commit. Pass `true` to default to HEAD or a commit
-        #     ref string to filter by that commit.
+        #     @option options [Boolean, String] :no_merged (nil) List only branches not
+        #       merged into the specified commit. Pass `true` to default to HEAD or a
+        #       commit ref string to filter by that commit.
         #
-        #   @option options [Boolean, String] :no_contains (nil) List only branches
-        #     that don't contain the specified commit. Pass `true` to default to HEAD
-        #     or a commit ref string to filter by that commit.
+        #     @option options [Boolean, String] :contains (nil) List only branches that
+        #       contain the specified commit. Pass `true` to default to HEAD or a commit
+        #       ref string to filter by that commit.
         #
-        #   @option options [String] :points_at (nil) List only branches that point
-        #     at the specified object
+        #     @option options [Boolean, String] :no_contains (nil) List only branches
+        #       that don't contain the specified commit. Pass `true` to default to HEAD
+        #       or a commit ref string to filter by that commit.
         #
-        #   @option options [Boolean] :ignore_case (nil) Sort and filter branches
-        #     case insensitively.
+        #     @option options [String] :points_at (nil) List only branches that point
+        #       at the specified object
         #
-        #     Alias: :i
+        #     @option options [Boolean] :ignore_case (nil) Sort and filter branches
+        #       case insensitively.
         #
-        # @return [Git::CommandLineResult] the result of calling `git branch --list`
+        #       Alias: :i
         #
-        # @raise [ArgumentError] if unsupported options are provided
+        #     @return [Git::CommandLineResult] the result of calling `git branch --list`
         #
-        # @raise [Git::FailedError] if git returns a non-zero exit code
+        #     @raise [ArgumentError] if unsupported options are provided
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @raise [Git::FailedError] if git returns a non-zero exit code
       end
     end
   end

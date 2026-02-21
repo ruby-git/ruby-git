@@ -28,7 +28,7 @@ module Git
       # @example Create branch from specific stash
       #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch', 'stash@{2}')
       #
-      class Branch < Base
+      class Branch < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'branch'
@@ -36,27 +36,27 @@ module Git
           operand :stash
         end
 
-        # Create a branch from a stash entry
+        # @!method call(*, **)
         #
-        # @overload call(branchname)
+        #   Create a branch from a stash entry
         #
-        #   Create a branch from the latest stash
+        #   @overload call(branchname)
         #
-        #   @param branchname [String] the name of the branch to create (required)
+        #     Create a branch from the latest stash
         #
-        # @overload call(branchname, stash)
+        #     @param branchname [String] the name of the branch to create (required)
         #
-        #   Create a branch from a specific stash
+        #   @overload call(branchname, stash)
         #
-        #   @param branchname [String] the name of the branch to create (required)
+        #     Create a branch from a specific stash
         #
-        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #     @param branchname [String] the name of the branch to create (required)
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash branch`
+        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        # @raise [Git::FailedError] if the branch already exists or stash doesn't exist
+        #   @return [Git::CommandLineResult] the result of calling `git stash branch`
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #   @raise [Git::FailedError] if the branch already exists or stash doesn't exist
       end
     end
   end

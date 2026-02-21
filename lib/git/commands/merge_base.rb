@@ -29,7 +29,7 @@ module Git
     # @example Find fork point
     #   result = merge_base.call('main', 'feature', fork_point: true)
     #
-    class MergeBase < Base
+    class MergeBase < Git::Commands::Base
       arguments do
         literal 'merge-base'
         flag_option %i[all a]
@@ -47,33 +47,33 @@ module Git
       # git merge-base --fork-point returns exit code 1 when no fork point is found (not an error)
       allow_exit_status 0..1
 
-      # Execute the git merge-base command
+      # @!method call(*, **)
       #
-      # @overload call(*commit, **options)
+      #   Execute the git merge-base command
       #
-      #   @param commit [Array<String>] Two or more commit SHAs, branch names,
-      #     or refs to find common ancestor(s) of
+      #   @overload call(*commit, **options)
       #
-      #   @param options [Hash] command options
+      #     @param commit [Array<String>] Two or more commit SHAs, branch names,
+      #       or refs to find common ancestor(s) of
       #
-      #   @option options [Boolean] :all (nil) Output all merge bases instead of
-      #     just one (when multiple equally good bases exist).
-      #     Alias: :a
+      #     @param options [Hash] command options
       #
-      #   @option options [Boolean] :octopus (nil) Compute best common ancestor
-      #     for an n-way merge (intersection of all merge bases)
+      #     @option options [Boolean] :all (nil) Output all merge bases instead of
+      #       just one (when multiple equally good bases exist).
+      #       Alias: :a
       #
-      #   @option options [Boolean] :independent (nil) List commits not reachable
-      #     from any other (useful for finding branch tips)
+      #     @option options [Boolean] :octopus (nil) Compute best common ancestor
+      #       for an n-way merge (intersection of all merge bases)
       #
-      #   @option options [Boolean] :fork_point (nil) Find the fork point where
-      #     a branch diverged from another
+      #     @option options [Boolean] :independent (nil) List commits not reachable
+      #       from any other (useful for finding branch tips)
       #
-      # @return [Git::CommandLineResult] the result of calling `git merge-base`
+      #     @option options [Boolean] :fork_point (nil) Find the fork point where
+      #       a branch diverged from another
       #
-      # @raise [Git::FailedError] if git returns an exit code > 1
+      #     @return [Git::CommandLineResult] the result of calling `git merge-base`
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @raise [Git::FailedError] if git returns an exit code > 1
     end
   end
 end

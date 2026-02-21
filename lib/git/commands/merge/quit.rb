@@ -19,20 +19,22 @@ module Git
       #   quit_cmd = Git::Commands::Merge::Quit.new(execution_context)
       #   quit_cmd.call
       #
-      class Quit < Base
+      class Quit < Git::Commands::Base
         arguments do
           literal 'merge'
           literal '--quit'
         end
 
-        # Execute the git merge --quit command
+        # @!method call(*, **)
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #   @overload call()
         #
-        # @raise [Git::FailedError] if the underlying git command exits non-zero
-        #   (for example, on Git versions before 2.35 when no merge is in progress)
+        #     Execute the git merge --quit command
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of the command
+        #
+        #     @raise [Git::FailedError] if the underlying git command exits non-zero
+        #       (for example, on Git versions before 2.35 when no merge is in progress)
       end
     end
   end

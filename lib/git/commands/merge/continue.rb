@@ -18,19 +18,21 @@ module Git
       #   continue_cmd = Git::Commands::Merge::Continue.new(execution_context)
       #   continue_cmd.call
       #
-      class Continue < Base
+      class Continue < Git::Commands::Base
         arguments do
           literal 'merge'
           literal '--continue'
         end
 
-        # Execute the git merge --continue command
+        # @!method call(*, **)
         #
-        # @return [Git::CommandLineResult] the result of the command
+        #   @overload call()
         #
-        # @raise [Git::FailedError] if no merge is in progress or conflicts remain unresolved
+        #     Execute the git merge --continue command
         #
-        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+        #     @return [Git::CommandLineResult] the result of the command
+        #
+        #     @raise [Git::FailedError] if no merge is in progress or conflicts remain unresolved
       end
     end
   end
