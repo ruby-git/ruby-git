@@ -38,8 +38,8 @@ module Git
         flag_option :hard
         flag_option :merge
         flag_option :keep
-        conflicts :soft, :mixed, :hard, :merge, :keep
         operand :commit, required: false
+        conflicts :soft, :mixed, :hard, :merge, :keep
       end
 
       # @!method call(*, **)

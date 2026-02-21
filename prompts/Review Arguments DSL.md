@@ -190,8 +190,9 @@ short flags), prefer:
 Constraint declarations always come after all arguments they reference are defined:
 
 6. `conflicts` declarations
-7. `requires_one_of` declarations (unconditional and `when:` conditional forms)
-8. `requires` declarations (single-argument conditional form)
+7. `requires_exactly_one_of` declarations (when a group needs exactly-one semantics)
+8. `requires_one_of` declarations (unconditional and `when:` conditional forms)
+9. `requires` declarations (single-argument conditional form)
 
 ### 4. Correct modifiers
 
@@ -277,9 +278,16 @@ or operand vs operand — verify `conflicts ...` declarations exist. Names in a
 `conflicts` group may be any mix of option names and operand names. Unknown names
 raise `ArgumentError` at definition time, so any typo is caught early.
 
+**Preferred single declaration when a group is both required and mutually exclusive:**
+If a `conflicts` group also has a corresponding bare `requires_one_of` for the
+identical argument list, the two declarations should be collapsed into a single
+`requires_exactly_one_of` call (see §7a below). Flag any command where a bare
+`requires_one_of` and a `conflicts` share the same names as a candidate for this
+consolidation.
+
 ### 7. Conditional and Unconditional Argument Requirements
 
-#### 7a. Unconditional at-least-one (`requires_one_of`)
+#### 7a. Unconditional at-least-one (`requires_one_of`) and exactly-one (`requires_exactly_one_of`)
 
 If a command requires at least one argument from a group to be present — options,
 operands, or a mix — verify `requires_one_of ...` declarations exist. As with
@@ -290,6 +298,24 @@ argument being present. Unknown names raise `ArgumentError` at definition time.
 The error at bind time has the form:
 
   "at least one of :name1, :name2 must be provided"
+
+When the group must have **exactly one** member present (both at-least-one and
+at-most-one), prefer `requires_exactly_one_of` over separate `requires_one_of` +
+`conflicts` declarations for the same names:
+
+```ruby
+# Preferred — single declaration for exactly-one semantics:
+requires_exactly_one_of :mode_a, :mode_b, :mode_c
+
+# Equivalent but verbose — two declarations that must stay in sync:
+requires_one_of :mode_a, :mode_b, :mode_c
+conflicts       :mode_a, :mode_b, :mode_c
+```
+
+`requires_exactly_one_of` raises at definition time for unknown names (typo guard),
+and at bind time:
+- zero members present → `"at least one of :a, :b, :c must be provided"`
+- two or more present → `"cannot specify :a and :b"`
 
 #### 7b. Conditional single requirement (`requires`)
 
