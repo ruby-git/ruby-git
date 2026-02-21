@@ -87,6 +87,9 @@ subclass.
   | `operand` (single) | `[String]` |
 
 - [ ] option defaults/types are consistent with DSL definitions
+- [ ] `@option` descriptions for options that have an `allowed_values` declaration
+      enumerate the accepted values in the description text, e.g.:
+      `@option options [String] :cleanup (nil) Cleanup mode — one of `verbatim`, `whitespace`, `strip``
 
 ### 3. Return and raise tags
 

@@ -329,6 +329,39 @@ requires_one_of :message, :file, when: :sign
 requires_one_of :message, :file, when: :local_user
 ```
 
+### 7d. Allowed-values constraints
+
+If a `value_option`, `flag_or_value_option`, or `flag_or_inline_value_option`
+accepts a fixed, enumerated set of strings, verify an `allowed_values` declaration
+exists for that option:
+
+```ruby
+value_option :cleanup, inline: true
+allowed_values :cleanup, in: %w[verbatim whitespace strip]
+```
+
+Points to check:
+
+- `allowed_values` supersedes ad-hoc `validator:` lambdas for enumerated-string
+  cases — flag any `validator:` doing a simple set-membership test as a
+  candidate for replacement.
+- The declaration must reference a name already defined in `arguments do`; an
+  unknown name raises `ArgumentError` at load time.
+- Validation is **skipped** for `nil` / absent values; callers that want a
+  non-nil value must add a separate `required:` or `requires_one_of` check.
+- Validation is also skipped for empty strings when the option is declared with
+  `allow_empty: true`.
+- For `repeatable: true` options each element in the array is checked
+  individually.
+- Aliases are resolved before the check, so the declaration may use either the
+  primary name or any alias.
+
+Error form at bind time:
+
+```
+Invalid value for :name: expected one of ["a", "b"], got "actual"
+```
+
 ### 8. Exit-status declaration consistency (class-level, outside the DSL)
 
 `allow_exit_status` is a class-level declaration, not part of the `arguments do`

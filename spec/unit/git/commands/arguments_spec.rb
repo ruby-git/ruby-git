@@ -4498,6 +4498,313 @@ RSpec.describe Git::Commands::Arguments do
     end
   end
 
+  describe '#allowed_values' do
+    describe 'valid usage' do
+      let(:args_def) do
+        described_class.define do
+          value_option :chmod, inline: true
+          allowed_values :chmod, in: ['+x', '-x']
+        end
+      end
+
+      it 'passes when the value is in the allowed set' do
+        expect { args_def.bind(chmod: '+x') }.not_to raise_error
+      end
+
+      it 'produces correct CLI output for a valid value' do
+        expect(args_def.bind(chmod: '+x').to_a).to eq(['--chmod=+x'])
+      end
+
+      it 'raises when the value is not in the allowed set' do
+        expect { args_def.bind(chmod: 'rx') }
+          .to raise_error(ArgumentError, /expected one of \["\+x", "-x"\].*got "rx"/)
+      end
+
+      it 'skips validation when the option is absent' do
+        expect { args_def.bind }.not_to raise_error
+      end
+
+      it 'skips validation when the value is nil' do
+        expect { args_def.bind(chmod: nil) }.not_to raise_error
+      end
+
+      it 'raises when the value is boolean true (value_option, not flag_or_value)' do
+        # For plain value options, `true` is not a valid string value and must not
+        # bypass allowed_values — only flag_or_value* option types get the boolean skip.
+        expect { args_def.bind(chmod: true) }
+          .to raise_error(ArgumentError, /expected one of \["\+x", "-x"\]/)
+      end
+    end
+
+    describe 'with allow_empty: true' do
+      let(:args_def) do
+        described_class.define do
+          value_option :format, inline: true, allow_empty: true
+          allowed_values :format, in: %w[short medium]
+        end
+      end
+
+      it 'skips validation for an empty string when allow_empty: true' do
+        expect { args_def.bind(format: '') }.not_to raise_error
+      end
+
+      it 'still validates a non-empty string that is not in the allowed set' do
+        expect { args_def.bind(format: 'long') }
+          .to raise_error(ArgumentError, /expected one of/)
+      end
+    end
+
+    describe 'with repeatable: true' do
+      let(:args_def) do
+        described_class.define do
+          value_option :cleanup, inline: true, repeatable: true
+          allowed_values :cleanup, in: %w[verbatim whitespace strip]
+        end
+      end
+
+      it 'passes when all elements are in the allowed set' do
+        expect { args_def.bind(cleanup: %w[verbatim strip]) }.not_to raise_error
+      end
+
+      it 'validates each element individually and raises on first invalid' do
+        expect { args_def.bind(cleanup: %w[verbatim compact]) }
+          .to raise_error(ArgumentError, /got "compact"/)
+      end
+
+      it 'passes for a single valid scalar value' do
+        expect { args_def.bind(cleanup: 'verbatim') }.not_to raise_error
+      end
+
+      it 'skips validation when value is nil' do
+        expect { args_def.bind(cleanup: nil) }.not_to raise_error
+      end
+    end
+
+    describe 'with value_option inline: true' do
+      let(:args_def) do
+        described_class.define do
+          value_option :format, inline: true
+          allowed_values :format, in: %w[short medium]
+        end
+      end
+
+      it 'passes when the value is in the allowed set' do
+        expect { args_def.bind(format: 'short') }.not_to raise_error
+      end
+
+      it 'produces inline CLI output for a valid value' do
+        expect(args_def.bind(format: 'medium').to_a).to eq(['--format=medium'])
+      end
+
+      it 'raises when the value is not in the allowed set' do
+        expect { args_def.bind(format: 'long') }
+          .to raise_error(ArgumentError, /expected one of.*got "long"/)
+      end
+    end
+
+    describe 'with value_option as_operand: true' do
+      let(:args_def) do
+        described_class.define do
+          value_option :paths, as_operand: true, repeatable: true
+          allowed_values :paths, in: %w[README.md CHANGELOG.md]
+        end
+      end
+
+      it 'passes when all values are in the allowed set' do
+        expect { args_def.bind(paths: %w[README.md CHANGELOG.md]) }.not_to raise_error
+      end
+
+      it 'produces operand CLI output for valid values' do
+        expect(args_def.bind(paths: %w[README.md CHANGELOG.md]).to_a)
+          .to eq(%w[README.md CHANGELOG.md])
+      end
+
+      it 'raises when any operand value is not in the allowed set' do
+        expect { args_def.bind(paths: %w[README.md LICENSE]) }
+          .to raise_error(ArgumentError, /expected one of.*got "LICENSE"/)
+      end
+    end
+
+    describe 'with flag_or_value_option' do
+      let(:args_def) do
+        described_class.define do
+          flag_or_value_option :sign, inline: true
+          allowed_values :sign, in: %w[yes no]
+        end
+      end
+
+      it 'raises when the value is not in the allowed set' do
+        expect { args_def.bind(sign: 'maybe') }
+          .to raise_error(ArgumentError, /expected one of/)
+      end
+
+      it 'skips validation when the value is true (flag mode)' do
+        # true means emit the flag without a value (e.g. --sign)
+        # allowed_values should not validate flag-mode booleans
+        expect { args_def.bind(sign: true) }.not_to raise_error
+      end
+
+      it 'skips validation when the value is false (flag suppressed)' do
+        # false means suppress the flag entirely — not a value to validate
+        expect { args_def.bind(sign: false) }.not_to raise_error
+      end
+
+      it 'skips validation when the value is nil' do
+        expect { args_def.bind(sign: nil) }.not_to raise_error
+      end
+
+      it 'passes when the value is in the allowed set' do
+        expect { args_def.bind(sign: 'yes') }.not_to raise_error
+      end
+    end
+
+    describe 'with flag_or_value_option negatable: true and inline: true' do
+      let(:args_def) do
+        described_class.define do
+          flag_or_value_option :sign, negatable: true, inline: true
+          allowed_values :sign, in: %w[yes no]
+        end
+      end
+
+      it 'passes for an allowed string value and emits inline format' do
+        expect { args_def.bind(sign: 'yes') }.not_to raise_error
+        expect(args_def.bind(sign: 'yes').to_a).to eq(['--sign=yes'])
+      end
+
+      it 'raises when the string value is not in the allowed set' do
+        expect { args_def.bind(sign: 'maybe') }
+          .to raise_error(ArgumentError, /expected one of.*got "maybe"/)
+      end
+
+      it 'skips allowed_values validation in boolean modes' do
+        expect { args_def.bind(sign: true) }.not_to raise_error
+        expect { args_def.bind(sign: false) }.not_to raise_error
+        expect(args_def.bind(sign: false).to_a).to eq(['--no-sign'])
+      end
+    end
+
+    describe 'definition-time type guard' do
+      it 'raises for a flag_option (not a value option)' do
+        expect do
+          described_class.define do
+            flag_option :verbose
+            allowed_values :verbose, in: %w[yes no]
+          end
+        end.to raise_error(ArgumentError, /:verbose is not a value option/)
+      end
+
+      it 'raises for a key_value_option (not a value option)' do
+        expect do
+          described_class.define do
+            key_value_option :trailer
+            allowed_values :trailer, in: %w[a b]
+          end
+        end.to raise_error(ArgumentError, /:trailer is not a value option/)
+      end
+    end
+
+    describe 'definition-time typo guard' do
+      it 'raises for an unknown option name' do
+        expect do
+          described_class.define do
+            value_option :chmod, inline: true
+            allowed_values :typo, in: ['+x', '-x']
+          end
+        end.to raise_error(ArgumentError, /unknown argument :typo/)
+      end
+
+      it 'raises for an operand name (not an option)' do
+        expect do
+          described_class.define do
+            operand :paths, repeatable: true
+            allowed_values :paths, in: %w[a b]
+          end
+        end.to raise_error(ArgumentError, /:paths is not a value option/)
+      end
+    end
+
+    describe 'definition-time in: guard' do
+      it 'raises when in: is nil' do
+        expect do
+          described_class.define do
+            value_option :chmod, inline: true
+            allowed_values :chmod, in: nil
+          end
+        end.to raise_error(ArgumentError, /expects an Enumerable/)
+      end
+
+      it 'raises when in: is a non-enumerable' do
+        expect do
+          described_class.define do
+            value_option :chmod, inline: true
+            allowed_values :chmod, in: 42
+          end
+        end.to raise_error(ArgumentError, /expects an Enumerable/)
+      end
+
+      it 'raises when in: is empty' do
+        expect do
+          described_class.define do
+            value_option :chmod, inline: true
+            allowed_values :chmod, in: []
+          end
+        end.to raise_error(ArgumentError, /at least one allowed value/)
+      end
+    end
+
+    describe 'with alias' do
+      let(:args_def) do
+        described_class.define do
+          value_option %i[chmod c], inline: true
+          allowed_values :c, in: ['+x', '-x']
+        end
+      end
+
+      it 'resolves the alias to the primary name and applies the constraint' do
+        expect { args_def.bind(chmod: 'rx') }
+          .to raise_error(ArgumentError, /expected one of/)
+      end
+
+      it 'passes when the value is in the allowed set (supplied via alias)' do
+        expect { args_def.bind(c: '+x') }.not_to raise_error
+      end
+    end
+
+    describe 'applied to git add :chmod' do
+      let(:add_args) { Git::Commands::Add.args_definition }
+
+      it 'passes for +x' do
+        expect { add_args.bind(chmod: '+x') }.not_to raise_error
+      end
+
+      it 'passes for -x' do
+        expect { add_args.bind(chmod: '-x') }.not_to raise_error
+      end
+
+      it 'raises for an invalid value' do
+        expect { add_args.bind(chmod: 'rx') }
+          .to raise_error(ArgumentError, /expected one of.*got "rx"/)
+      end
+
+      it 'skips when chmod is absent' do
+        expect { add_args.bind }.not_to raise_error
+      end
+    end
+
+    describe 'applied to git tag create :cleanup' do
+      let(:create_args) { Git::Commands::Tag::Create.args_definition }
+
+      it 'passes for verbatim' do
+        expect { create_args.bind('v1.0', nil, cleanup: 'verbatim', message: 'msg') }.not_to raise_error
+      end
+
+      it 'raises for an invalid value' do
+        expect { create_args.bind('v1.0', nil, cleanup: 'compact', message: 'msg') }
+          .to raise_error(ArgumentError, /expected one of.*got "compact"/)
+      end
+    end
+  end
+
   describe Git::Commands::Arguments::Bound do
     describe 'RESERVED_NAMES' do
       it 'includes Object instance methods' do
