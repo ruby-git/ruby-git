@@ -2078,6 +2078,146 @@ RSpec.describe Git::Commands::Arguments do
           expect { args_def.bind(annotate: true, sign: true, message: 'Release') }.not_to raise_error
         end
       end
+
+      context 'with alias resolution' do
+        let(:args_def) do
+          described_class.define do
+            flag_option %i[pathspec_file_nul n]
+            value_option %i[pathspec_from_file p], inline: true
+            requires :pathspec_from_file, when: :pathspec_file_nul
+          end
+        end
+
+        it 'works when primary names are used' do
+          expect { args_def.bind(pathspec_file_nul: true, pathspec_from_file: 'paths.txt') }
+            .not_to raise_error
+        end
+
+        it 'works when alias is used for trigger' do
+          expect { args_def.bind(n: true, pathspec_from_file: 'paths.txt') }
+            .not_to raise_error
+        end
+
+        it 'works when alias is used for required argument' do
+          expect { args_def.bind(pathspec_file_nul: true, p: 'paths.txt') }
+            .not_to raise_error
+        end
+
+        it 'raises when trigger alias is present but required is absent' do
+          expect { args_def.bind(n: true) }
+            .to raise_error(ArgumentError, /:pathspec_file_nul requires :pathspec_from_file/)
+        end
+      end
+
+      context 'with operands as trigger in requires' do
+        let(:args_def) do
+          described_class.define do
+            value_option :option, inline: true
+            operand :commit_operand
+            requires :option, when: :commit_operand
+          end
+        end
+
+        it 'raises when the operand trigger is present without the required option' do
+          expect { args_def.bind('HEAD') }
+            .to raise_error(ArgumentError, /:commit_operand requires :option/)
+        end
+
+        it 'passes when both operand trigger and required option are present' do
+          expect { args_def.bind('HEAD', option: 'value') }.not_to raise_error
+        end
+
+        it 'passes when only the required option is present and the trigger operand is absent' do
+          expect { args_def.bind(option: 'value') }.not_to raise_error
+        end
+
+        it 'passes when neither trigger operand nor required option are present' do
+          expect { args_def.bind }.not_to raise_error
+        end
+      end
+
+      context 'with operand as the required argument in requires' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :force
+            operand :path_operand
+            requires :path_operand, when: :force
+          end
+        end
+
+        it 'raises when the flag trigger is present without the required operand' do
+          expect { args_def.bind(force: true) }
+            .to raise_error(ArgumentError, /:force requires :path_operand/)
+        end
+
+        it 'passes when both flag trigger and required operand are present' do
+          expect { args_def.bind('path.txt', force: true) }.not_to raise_error
+        end
+
+        it 'passes when only the required operand is present and the trigger flag is absent' do
+          expect { args_def.bind('path.txt') }.not_to raise_error
+        end
+
+        it 'passes when neither trigger flag nor required operand are present' do
+          expect { args_def.bind }.not_to raise_error
+        end
+      end
+
+      context 'with operand in the group for conditional requires_one_of' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :verbose
+            flag_option :all
+            operand :paths_operand, repeatable: true
+            requires_one_of :all, :paths_operand, when: :verbose
+          end
+        end
+
+        it 'raises when the trigger flag is present without any of the required options or operands' do
+          expect { args_def.bind(verbose: true) }
+            .to raise_error(ArgumentError, /:verbose requires at least one of :all, :paths_operand/)
+        end
+
+        it 'passes when trigger flag and flag member of the group are present' do
+          expect { args_def.bind(verbose: true, all: true) }.not_to raise_error
+        end
+
+        it 'passes when trigger flag and operand member of the group are present' do
+          expect { args_def.bind('file1.txt', verbose: true) }.not_to raise_error
+        end
+
+        it 'passes when trigger flag is absent' do
+          expect { args_def.bind(verbose: false) }.not_to raise_error
+        end
+      end
+
+      context 'with operand as the trigger for conditional requires_one_of' do
+        let(:args_def) do
+          described_class.define do
+            value_option :message, inline: true
+            value_option :file, inline: true
+            operand :commit_operand
+            requires_one_of :message, :file, when: :commit_operand
+          end
+        end
+
+        it 'raises when the operand trigger is present without any of the required options' do
+          expect { args_def.bind('HEAD') }
+            .to raise_error(ArgumentError, /:commit_operand requires at least one of :message, :file/)
+        end
+
+        it 'passes when operand trigger and one of the required options are present' do
+          expect { args_def.bind('HEAD', message: 'msg') }.not_to raise_error
+        end
+
+        it 'passes when trigger operand is absent' do
+          expect { args_def.bind(message: 'msg') }.not_to raise_error
+        end
+
+        it 'passes when trigger operand and required options are all absent' do
+          expect { args_def.bind }.not_to raise_error
+        end
+      end
     end
 
     context 'with allow_nil positional arguments' do
