@@ -1810,7 +1810,7 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
 
-        it 'allows all: false with update: true (no conflicts violation)' do
+        it 'raises conflicts error for all: false with update: true (negatable false counts as present)' do
           expect { args.bind(all: false, update: true) }.to raise_error(
             ArgumentError, /cannot specify :all and :update/
           )
