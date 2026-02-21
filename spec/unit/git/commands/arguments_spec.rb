@@ -1901,6 +1901,49 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with requires_exactly_one_of method' do
+      let(:args_def) do
+        described_class.define do
+          flag_option :soft
+          flag_option :mixed
+          flag_option :hard
+          requires_exactly_one_of :soft, :mixed, :hard
+        end
+      end
+
+      it 'raises when none of the group are present' do
+        expect { args_def.bind }
+          .to raise_error(ArgumentError, /at least one of :soft, :mixed, :hard must be provided/)
+      end
+
+      it 'does not raise when exactly one member is present' do
+        expect { args_def.bind(hard: true) }.not_to raise_error
+      end
+
+      it 'raises when two members are present' do
+        expect { args_def.bind(soft: true, hard: true) }
+          .to raise_error(ArgumentError, /cannot specify :soft and :hard/)
+      end
+
+      context 'typo guard' do
+        it 'raises at definition time for unknown names' do
+          expect do
+            described_class.define do
+              flag_option :soft
+              requires_exactly_one_of :soft, :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo/)
+        end
+      end
+
+      context 'with three members in the group' do
+        it 'raises when all three are present' do
+          expect { args_def.bind(soft: true, mixed: true, hard: true) }
+            .to raise_error(ArgumentError, /cannot specify/)
+        end
+      end
+    end
+
     context 'with requires method' do
       context 'unary form — single conditional requirement' do
         let(:args_def) do

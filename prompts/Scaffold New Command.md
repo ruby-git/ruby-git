@@ -156,8 +156,24 @@ Constraint declarations always come last, after all arguments they reference
 are defined:
 
 7. `conflicts` declarations
-8. `requires_one_of` declarations (unconditional and `when:` conditional forms)
-9. `requires` declarations (single-argument conditional form)
+8. `requires_exactly_one_of` declarations — when a group must have exactly one
+   member present. Replaces the two-declaration pattern of `requires_one_of` +
+   `conflicts` for the same names:
+
+   ```ruby
+   requires_exactly_one_of :mode_a, :mode_b, :mode_c
+   ```
+
+   This is equivalent to (but preferred over):
+
+   ```ruby
+   requires_one_of :mode_a, :mode_b, :mode_c
+   conflicts       :mode_a, :mode_b, :mode_c
+   ```
+
+9. `requires_one_of` declarations (unconditional and `when:` conditional forms) —
+   use these when only an at-least-one constraint is needed (no at-most-one)
+10. `requires` declarations (single-argument conditional form)
 
 Use aliases for long/short forms (`%i[force f]`, `%i[all A]`, `%i[intent_to_add N]`),
 with long name first. The DSL preserves symbol case, so uppercase single-char aliases
@@ -198,9 +214,26 @@ conflicts :gpg_sign, :no_gpg_sign        # option vs option
 conflicts :merge, :tree_ish              # option vs operand
 ```
 
+When a group of mutually exclusive arguments also requires **exactly one** member to
+be present, use `requires_exactly_one_of` instead of separate `requires_one_of` +
+`conflicts` declarations. It combines both constraints in a single declaration and
+eliminates the risk of the two lists diverging:
+
+```ruby
+requires_exactly_one_of :mode_a, :mode_b, :mode_c
+```
+
+This is equivalent to (but preferred over):
+
+```ruby
+requires_one_of :mode_a, :mode_b, :mode_c
+conflicts       :mode_a, :mode_b, :mode_c
+```
+
 When at least one of a group of arguments must be present — options, operands, or
-a mix — declare it with `requires_one_of`. Names may be option names or operand
-names. Unknown names raise `ArgumentError` at load time. Examples:
+a mix — but the group is **not** mutually exclusive, declare it with `requires_one_of`.
+Names may be option names or operand names. Unknown names raise `ArgumentError` at
+load time. Examples:
 
 ```ruby
 requires_one_of :pathspec, :pathspec_from_file   # at least one option required

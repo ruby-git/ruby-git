@@ -1120,6 +1120,63 @@ module Git
         @requires_one_of << { names: canonical_group, condition: canonical_condition, single: false }
       end
 
+      # Declare that exactly one of the named arguments must be present when binding
+      #
+      # This is a convenience composite that combines {#requires_one_of} (at least one
+      # must be present) and {#conflicts} (at most one may be present). Use it when a
+      # group of arguments is mutually exclusive *and* the caller must supply precisely
+      # one of them.
+      #
+      # The call:
+      #
+      #   requires_exactly_one_of :a, :b, :c
+      #
+      # is exactly equivalent to:
+      #
+      #   requires_one_of :a, :b, :c
+      #   conflicts       :a, :b, :c
+      #
+      # **Presence semantics** — an argument is considered present when its value is
+      # not any of: `nil`, `false`, `[]`, `''`. All other values (including `true`,
+      # non-empty strings, and non-empty arrays) are considered present.
+      #
+      # An ArgumentError is raised at definition time if any name is not a known
+      # option or operand, catching typos early.
+      #
+      # Error messages reuse the formats from the constituent methods:
+      #
+      #   "at least one of :a, :b, :c must be provided"   # zero present
+      #   "cannot specify :a and :b"                       # two or more present
+      #
+      # @param names [Array<Symbol>] the option/operand names where exactly one
+      #   must be present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name is not a known option or operand
+      #
+      # @raise [ArgumentError] at bind time if none of the arguments in the group is present
+      #
+      # @raise [ArgumentError] at bind time if more than one argument in the group is present
+      #
+      # @example Mode flags where exactly one must be supplied
+      #   args_def = Arguments.define do
+      #     flag_option :mode_a
+      #     flag_option :mode_b
+      #     flag_option :mode_c
+      #     requires_exactly_one_of :mode_a, :mode_b, :mode_c
+      #   end
+      #   args_def.bind(mode_a: true).to_a  # => ['--mode-a']
+      #   args_def.bind
+      #     # => raise ArgumentError, 'at least one of :mode_a, :mode_b, :mode_c must be provided'
+      #   args_def.bind(mode_a: true, mode_c: true)
+      #     # => raise ArgumentError, 'cannot specify :mode_a and :mode_c'
+      #
+      def requires_exactly_one_of(*names)
+        requires_one_of(*names)
+        conflicts(*names)
+      end
+
       # Declare that *name* must be present whenever the trigger argument *when:* is present
       #
       # When {#bind} is called, if the trigger argument is present and *name* is absent,

@@ -303,11 +303,20 @@ accept these via an options splat parameter (e.g., `def replace(object, replacem
 
 - **Mutually exclusive options**: If options are mutually exclusive (e.g.,
   `--global`, `--local`, `--system`), only one may be set to `true`. Setting more
-  than one raises `ArgumentError`.
+  than one raises `ArgumentError`. The DSL enforces this via `conflicts`
+  declarations at bind time.
+
+- **Exactly-one required from a mutually exclusive group**: When exactly one of a
+  group of arguments must be provided (e.g., a command that accepts exactly one of
+  `--mode-a`, `--mode-b`, or `--mode-c`), omitting all of them or supplying more
+  than one raises `ArgumentError`. The DSL enforces this via
+  `requires_exactly_one_of` declarations, which combine `requires_one_of`
+  (at-least-one) and `conflicts` (at-most-one) in a single declaration.
 
 - **At-least-one required**: When at least one of a group of arguments (options or
-  positional) must be provided, omitting all of them raises `ArgumentError`. The DSL
-  enforces this via `requires_one_of` declarations at bind time.
+  positional) must be provided, but the group is not mutually exclusive, omitting
+  all of them raises `ArgumentError`. The DSL enforces this via `requires_one_of`
+  declarations at bind time.
 
 #### Positional arguments
 
