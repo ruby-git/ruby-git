@@ -163,7 +163,7 @@ class TestGitClone < Test::Unit::TestCase
 
     expected_command_line = [
       'clone',
-      '--filter', 'tree:0',
+      '--filter=tree:0',
       '--', repository_url, destination, { raise_on_failure: false }
     ]
 

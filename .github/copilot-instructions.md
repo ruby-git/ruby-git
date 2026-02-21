@@ -2293,6 +2293,42 @@ classes using a "Strangler Fig" pattern.
    - Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are
      applied automatically during binding
 
+   **DSL Operand Shape Convention:**
+
+   When a command has two optional argument groups separated by `--` in git's
+   SYNOPSIS (e.g., `[<tree-ish>] [--] [<pathspec>...]`), the post-`--` group is
+   *independently reachable* — callers must be able to supply it without supplying
+   the first group. Represent such commands with a plain `operand` for the first
+   group and a `value_option … as_operand: true, separator: '--'` for the second:
+
+   ```ruby
+   arguments do
+     literal 'diff'
+     operand :tree_ish                                             # positional
+     value_option :pathspec, as_operand: true, separator: '--',   # keyword
+                  repeatable: true
+   end
+   # cmd.call                               → git diff
+   # cmd.call('HEAD~3')                     → git diff HEAD~3
+   # cmd.call(pathspec: ['file.rb'])        → git diff -- file.rb
+   # cmd.call('HEAD~3', pathspec: ['f.rb']) → git diff HEAD~3 -- f.rb
+   ```
+
+   When the SYNOPSIS shows pure nesting (`[<commit1> [<commit2>]]`) with no `--`,
+   the second operand is only meaningful when the first is present. Two plain
+   `operand` entries with left-to-right binding are correct:
+
+   ```ruby
+   arguments do
+     literal 'diff'
+     operand :commit1   # optional
+     operand :commit2   # optional — only meaningful when commit1 is also given
+   end
+   # cmd.call                    → git diff
+   # cmd.call('HEAD~3')          → git diff HEAD~3
+   # cmd.call('HEAD~3', 'HEAD')  → git diff HEAD~3 HEAD
+   ```
+
    **Return Value Convention:**
    - `#call` **SHOULD** return `Git::CommandLineResult` by default
    - Rich objects (e.g., `StashInfo`, `BranchInfo`, `BranchDeleteResult`) are built

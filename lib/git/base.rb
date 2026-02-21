@@ -472,7 +472,7 @@ module Git
     # but automatically adds all modified files without having to explicitly
     # calling @git.add() on them.
     def commit_all(message, opts = {})
-      opts = { add_all: true }.merge(opts)
+      opts = { all: true }.merge(opts)
       lib.commit(message, opts)
     end
 

@@ -157,7 +157,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command('fsck', '--no-progress', '--unreachable', '--strict', '--full').and_return(command_result(''))
+        expect_command('fsck', '--no-progress', '--unreachable', '--full', '--strict').and_return(command_result(''))
 
         command.call(unreachable: true, strict: true, full: true)
       end

@@ -63,15 +63,15 @@ RSpec.describe Git::Commands::Clean do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command('clean', '--force', '-d', '-x').and_return(command_result)
+        expect_command('clean', '-d', '--force', '-x').and_return(command_result)
         command.call(force: true, d: true, x: true)
       end
     end
 
     context 'input validation' do
-      it 'raises an ArgumentError when both :force and :force_force are true' do
-        expect { command.call(force: true, force_force: true) }.to(
-          raise_error(ArgumentError, /cannot specify :force and :force_force/)
+      it 'raises an ArgumentError when both :x and :X are true' do
+        expect { command.call(x: true, X: true) }.to(
+          raise_error(ArgumentError, /cannot specify :x and :X/)
         )
       end
 

@@ -19,18 +19,29 @@ module Git
       class Raw < Base
         arguments do
           literal 'diff'
+          # These three format literals are always emitted together. Git::Parsers::Diff
+          # expects all three sections to be present in every diff command's output:
+          # --raw for per-file mode/SHA/status metadata, --numstat for per-file line
+          # counts, and --shortstat for aggregate totals. Fixing them here keeps the
+          # parser contract simple and unconditional.
           literal '--raw'
-          literal '--numstat'
-          literal '--shortstat'
-          literal '-M'
+          literal '--numstat'    # always present alongside --raw: parser requires per-file counts
+          literal '--shortstat'  # always present alongside --raw: parser requires aggregate totals
+          literal '--src-prefix=a/'
+          literal '--dst-prefix=b/'
           flag_option %i[cached staged]
           flag_option :merge_base
           flag_option :no_index
-          flag_option :find_copies, as: '-C'
+          flag_or_value_option %i[find_renames M], inline: true
+          flag_or_value_option %i[find_copies C], inline: true
+          flag_option :find_copies_harder
           flag_or_value_option :dirstat, inline: true
+          # NOTE: git diff uses <commit> for both positional arguments. The DSL requires distinct
+          # names for two positional operands, so :commit1 and :commit2 are used here.
           operand :commit1
           operand :commit2
           value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
+          conflicts :cached, :no_index
         end
 
         # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
@@ -44,7 +55,7 @@ module Git
         #   @example
         #     # git diff --raw [--] [<path>...]
         #     Raw.new(ctx).call
-        #     Raw.new(ctx).call(pathspecs: ['lib/', '*.rb'])
+        #     Raw.new(ctx).call(path: ['lib/', '*.rb'])
         #
         #   @param options [Hash] command options
         #
@@ -75,7 +86,7 @@ module Git
         #   @example
         #     # git diff --raw --cached [<commit>] [--] [<path>...]
         #     Raw.new(ctx).call(cached: true)
-        #     Raw.new(ctx).call('HEAD~3', cached: true, pathspecs: ['lib/'])
+        #     Raw.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
         #
         #   @param commit [String] optional commit reference (defaults to HEAD)
         #   @param cached [Boolean] must be true (alias: :staged)
@@ -94,7 +105,7 @@ module Git
         #   @example
         #     # git diff --raw <commit> [--] [<path>...]
         #     Raw.new(ctx).call('HEAD~3')
-        #     Raw.new(ctx).call('abc123', pathspecs: ['lib/', '*.rb'])
+        #     Raw.new(ctx).call('abc123', path: ['lib/', '*.rb'])
         #
         #   @param commit [String] commit reference
         #   @param options [Hash] command options

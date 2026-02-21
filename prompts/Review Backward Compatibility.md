@@ -1,3 +1,10 @@
+# Review Backward Compatibility
+
+Review `Git::Lib` methods for backward compatibility after commands are moved to
+`Git::Commands::*` classes. This prompt guides the process of restoring backward
+compatibility for a specific set of git commands while maintaining the benefits of
+the new command infrastructure.
+
 ## How to use this prompt
 
 Attach this file to your Copilot Chat context, then invoke it with the git
@@ -11,16 +18,7 @@ and ensure the remaining methods are backward compatible.
 Replace `branch` with the specific git command(s) you want to audit (e.g.,
 `worktree`, `tag`, `merge`, `reset`).
 
----
-
-# Review Backward Compatibility
-
-Review `Git::Lib` methods for backward compatibility after commands are moved to
-`Git::Commands::*` classes. This prompt guides the process of restoring backward
-compatibility for a specific set of git commands while maintaining the benefits of
-the new command infrastructure.
-
-### Related prompts
+## Related prompts
 
 - **Refactor Command to CommandLineResult** — migrating command classes to Base;
   the counterpart to this prompt's `Git::Lib` facade focus

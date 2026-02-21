@@ -25,13 +25,13 @@ class TestRm < Test::Unit::TestCase
   end
 
   test 'rm with the force option' do
-    expected_command_line = ['rm', '-f', '--', 'pathspec', {}]
+    expected_command_line = ['rm', '--force', '--', 'pathspec', {}]
     assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', force: true) }
   end
 
   test 'rm with the recursive option' do
     expected_command_line = ['rm', '-r', '--', 'pathspec', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', recursive: true) }
+    assert_command_line_eq(expected_command_line) { |git| git.rm('pathspec', r: true) }
   end
 
   test 'rm with the cached option' do

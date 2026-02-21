@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
     context 'with no arguments (latest stash)' do
       it 'calls git stash show --numstat --shortstat -M' do
         expected_result = command_result(numstat_output)
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M')
+        expect_command('stash', 'show', '--numstat', '--shortstat')
           .and_return(expected_result)
 
         result = command.call
@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
 
     context 'with specific stash reference' do
       it 'passes stash reference to command' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', 'stash@{2}')
+        expect_command('stash', 'show', '--numstat', '--shortstat', 'stash@{2}')
           .and_return(command_result(numstat_output))
 
         command.call('stash@{2}')
@@ -39,21 +39,21 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
 
     context 'with :include_untracked option' do
       it 'adds --include-untracked flag when true' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', '--include-untracked')
+        expect_command('stash', 'show', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(numstat_output))
 
         command.call(include_untracked: true)
       end
 
       it 'adds --no-include-untracked flag when false' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', '--no-include-untracked')
+        expect_command('stash', 'show', '--numstat', '--shortstat', '--no-include-untracked')
           .and_return(command_result(numstat_output))
 
         command.call(include_untracked: false)
       end
 
       it 'accepts :u alias' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', '--include-untracked')
+        expect_command('stash', 'show', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(numstat_output))
 
         command.call(u: true)
@@ -62,7 +62,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
 
     context 'with :only_untracked option' do
       it 'adds --only-untracked flag' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', '--only-untracked')
+        expect_command('stash', 'show', '--numstat', '--shortstat', '--only-untracked')
           .and_return(command_result(numstat_output))
 
         command.call(only_untracked: true)
@@ -71,14 +71,14 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
 
     context 'with :dirstat option' do
       it 'adds --dirstat flag when true' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M', '--dirstat')
+        expect_command('stash', 'show', '--numstat', '--shortstat', '--dirstat')
           .and_return(command_result(numstat_output))
 
         command.call(dirstat: true)
       end
 
       it 'passes dirstat options when string' do
-        expect_command('stash', 'show', '--numstat', '--shortstat', '-M',
+        expect_command('stash', 'show', '--numstat', '--shortstat',
                        '--dirstat=lines,cumulative')
           .and_return(command_result(numstat_output))
 

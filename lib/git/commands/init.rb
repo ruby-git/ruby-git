@@ -28,8 +28,8 @@ module Git
       arguments do
         literal 'init'
         flag_option :bare
-        value_option :initial_branch, inline: true
-        value_option :repository, inline: true, as: '--separate-git-dir'
+        value_option :separate_git_dir, inline: true
+        value_option %i[initial_branch b], inline: true
         operand :directory
       end
 
@@ -45,9 +45,10 @@ module Git
       #
       #   @option options [Boolean] :bare (nil) Create a bare repository
       #
-      #   @option options [String] :initial_branch (nil) Use the specified name for the initial branch
+      #   @option options [String] :initial_branch (nil) Use the specified name for the initial branch.
+      #     Alias: :b
       #
-      #   @option options [String] :repository (nil) Path to put the .git directory (uses --separate-git-dir)
+      #   @option options [String] :separate_git_dir (nil) Path to put the .git directory (`--separate-git-dir`)
       #
       # @return [Git::CommandLineResult] the result of calling `git init`
       #

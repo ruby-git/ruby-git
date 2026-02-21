@@ -8,7 +8,7 @@ RSpec.describe Git::Commands::Diff::Patch do
   let(:command) { described_class.new(execution_context) }
 
   # Static args that Patch always includes for consistent prefix handling and rename detection
-  let(:static_args) { ['diff', '--patch', '--numstat', '--shortstat', '-M', '--src-prefix=a/', '--dst-prefix=b/'] }
+  let(:static_args) { ['diff', '--patch', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/'] }
 
   let(:patch_output) do
     <<~OUTPUT
@@ -75,7 +75,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with :find_copies option' do
       it 'includes the -C flag' do
-        expect_command(*static_args, '-C')
+        expect_command(*static_args, '--find-copies')
           .and_return(command_result(patch_output))
 
         command.call(find_copies: true)

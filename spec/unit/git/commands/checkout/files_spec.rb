@@ -13,19 +13,19 @@ RSpec.describe Git::Commands::Checkout::Files do
         expected_result = command_result
         expect_command('checkout', '--', 'file.txt').and_return(expected_result)
 
-        result = command.call(nil, pathspec: ['file.txt'])
+        result = command.call(pathspec: ['file.txt'])
 
         expect(result).to eq(expected_result)
       end
 
       it 'restores multiple files from index' do
         expect_command('checkout', '--', 'file1.txt', 'file2.txt').and_return(command_result)
-        command.call(nil, pathspec: ['file1.txt', 'file2.txt'])
+        command.call(pathspec: ['file1.txt', 'file2.txt'])
       end
 
       it 'works with options' do
         expect_command('checkout', '--force', '--', 'file.txt').and_return(command_result)
-        command.call(nil, pathspec: ['file.txt'], force: true)
+        command.call(pathspec: ['file.txt'], force: true)
       end
     end
 
@@ -42,7 +42,7 @@ RSpec.describe Git::Commands::Checkout::Files do
 
       it 'accepts commit SHA as tree_ish' do
         expect_command('checkout', 'abc123', '--', 'file.txt', 'other.txt').and_return(command_result)
-        command.call('abc123', pathspec: ['file.txt', 'other.txt'])
+        command.call('abc123', pathspec: %w[file.txt other.txt])
       end
 
       it 'accepts tag as tree_ish' do
@@ -104,8 +104,8 @@ RSpec.describe Git::Commands::Checkout::Files do
 
     context 'with :merge option (recreate conflict markers)' do
       it 'adds --merge flag' do
-        expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
-        command.call(nil, pathspec: ['conflicted.txt'], merge: true)
+        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
+        command.call('HEAD', pathspec: ['conflicted.txt'], merge: true)
       end
 
       it 'does not add flag when false' do
@@ -114,13 +114,8 @@ RSpec.describe Git::Commands::Checkout::Files do
       end
 
       it 'works with :m alias' do
-        expect_command('checkout', '--merge', '--', 'conflicted.txt').and_return(command_result)
-        command.call(nil, pathspec: ['conflicted.txt'], m: true)
-      end
-
-      it 'raises when :merge and tree_ish are both provided' do
-        expect { command.call('HEAD', pathspec: ['conflicted.txt'], merge: true) }
-          .to raise_error(ArgumentError, /cannot specify :merge and :tree_ish/)
+        expect_command('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
+        command.call('HEAD', pathspec: ['conflicted.txt'], m: true)
       end
     end
 
@@ -182,7 +177,7 @@ RSpec.describe Git::Commands::Checkout::Files do
                        '--',
                        'file1.txt',
                        'file2.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['file1.txt', 'file2.txt'], force: true, ours: true)
+        command.call('HEAD', pathspec: %w[file1.txt file2.txt], force: true, ours: true)
       end
 
       it 'combines tree_ish with conflict resolution' do
@@ -192,25 +187,6 @@ RSpec.describe Git::Commands::Checkout::Files do
                        '--',
                        'conflicted.txt').and_return(command_result)
         command.call('main', pathspec: ['conflicted.txt'], conflict: 'diff3')
-      end
-    end
-
-    context 'with requires_one_of validation' do
-      it 'raises when neither :pathspec nor :pathspec_from_file is provided' do
-        expect { command.call(nil) }.to raise_error(
-          ArgumentError,
-          'at least one of :pathspec, :pathspec_from_file must be provided'
-        )
-      end
-
-      it 'passes when :pathspec is provided' do
-        expect_command('checkout', '--', 'file.txt').and_return(command_result)
-        expect { command.call(nil, pathspec: ['file.txt']) }.not_to raise_error
-      end
-
-      it 'passes when :pathspec_from_file is provided' do
-        expect_command('checkout', '--pathspec-from-file=paths.txt', 'main').and_return(command_result)
-        expect { command.call('main', pathspec_from_file: 'paths.txt') }.not_to raise_error
       end
     end
   end

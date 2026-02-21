@@ -1,3 +1,8 @@
+# Review Command Implementation
+
+Verify a command class follows the current `Git::Commands::Base` architecture and
+contains no duplicated execution behavior.
+
 ## How to use this prompt
 
 Attach this file to your Copilot Chat context, then invoke it with one or more
@@ -15,25 +20,18 @@ lib/git/commands/diff/numstat.rb
 
 The invocation needs the command file(s) to review.
 
----
-
-## Review Command Implementation
-
-Verify a command class follows the current `Git::Commands::Base` architecture and
-contains no duplicated execution behavior.
-
-### Related prompts
+## Related prompts
 
 - **Review Arguments DSL** — verifying DSL entries match git CLI
 - **Review Command Tests** — unit/integration test expectations for command classes
 - **Review YARD Documentation** — documentation completeness for command classes
 - **Review Cross-Command Consistency** — sibling consistency within a command family
 
-### Input
+## Input
 
 You will be given one or more command source files from `lib/git/commands/`.
 
-### Architecture Contract (Current)
+## Architecture Contract (Current)
 
 For migrated commands, the expected structure is:
 
@@ -60,9 +58,9 @@ Shared behavior lives in `Base`:
 - calls `@execution_context.command(*args, **args.execution_options, raise_on_failure: false)`
 - raises `Git::FailedError` unless exit status is in allowed range (`0..0` default)
 
-### What to Check
+## What to Check
 
-#### 1. Class shape
+### 1. Class shape
 
 - [ ] Class inherits from `Base`
 - [ ] Requires `git/commands/base` (not `git/commands/arguments`)
@@ -70,25 +68,25 @@ Shared behavior lives in `Base`:
 - [ ] Does not define command-specific `initialize` that only assigns
       `@execution_context`
 
-#### 2. `#call` implementation
+### 2. `#call` implementation
 
 - [ ] Uses `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition` as YARD documentation shim
 - [ ] Contains no custom bind/execute/exit-status logic in migrated commands
 - [ ] Does not parse output in command class
 
-#### 3. Exit-status configuration
+### 3. Exit-status configuration
 
 - [ ] Commands with non-zero successful exits declare `allow_exit_status <range>`
 - [ ] Declaration includes a short rationale comment explaining git semantics
 - [ ] Range values match expected command behavior
 
-#### 4. Arguments DSL quality
+### 4. Arguments DSL quality
 
 - [ ] DSL entries accurately describe subcommand interface
 - [ ] Option aliases and modifiers are used correctly
 - [ ] Ordering produces expected CLI argument order
 
-#### 5. Internal compatibility contract
+### 5. Internal compatibility contract
 
 This is the canonical location for the internal compatibility contract. Other
 prompts reference this section rather than duplicating it.
@@ -101,7 +99,7 @@ Ensure refactors preserve these contract expectations:
 
 If an intentional deviation exists, require migration notes/changelog documentation.
 
-#### 6. Phased rollout / rollback requirements
+### 6. Phased rollout / rollback requirements
 
 This is the canonical location for phased rollout requirements. Other prompts
 reference this section rather than duplicating the full checklist.
@@ -115,7 +113,7 @@ For migration PRs, verify process constraints:
 - [ ] quality gates pass for the slice (`bundle exec rspec`, `bundle exec rake test`,
       `bundle exec rubocop`, `bundle exec yard`)
 
-### Common Failures
+## Common Failures
 
 - lingering `ARGS = Arguments.define` constant and custom `#call`
 - command-specific duplicated exit-status checks instead of `allow_exit_status`
@@ -123,12 +121,12 @@ For migration PRs, verify process constraints:
 - missing YARD shim method (`def call(...) = super`)
 - migration PR scope too broad (not phased)
 
-### Output
+## Output
 
 For each file, produce:
 
 | Check | Status | Issue |
-|---|---|---|
+| --- | --- | --- |
 | Base inheritance | Pass/Fail | ... |
 | arguments DSL | Pass/Fail | ... |
 | call shim | Pass/Fail | ... |

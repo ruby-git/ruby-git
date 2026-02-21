@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Checkout::Branch, :integration do
       end
 
       it 'returns a CommandLineResult when creating a new branch' do
-        result = command.call(new_branch: 'new-feature')
+        result = command.call(b: 'new-feature')
 
         expect(result).to be_a(Git::CommandLineResult)
       end

@@ -21,17 +21,17 @@ RSpec.describe Git::Commands::Stash::Push do
 
     context 'with :message option' do
       it 'adds -m flag with message' do
-        expect_command('stash', 'push', '--message=WIP changes').and_return(command_result(''))
+        expect_command('stash', 'push', '--message', 'WIP changes').and_return(command_result(''))
         command.call(message: 'WIP changes')
       end
 
       it 'accepts :m alias' do
-        expect_command('stash', 'push', '--message=WIP').and_return(command_result(''))
+        expect_command('stash', 'push', '--message', 'WIP').and_return(command_result(''))
         command.call(m: 'WIP')
       end
 
       it 'handles message with special characters' do
-        expect_command('stash', 'push', '--message=Fix "bug" in code').and_return(command_result(''))
+        expect_command('stash', 'push', '--message', 'Fix "bug" in code').and_return(command_result(''))
         command.call(message: 'Fix "bug" in code')
       end
     end
@@ -139,7 +139,7 @@ RSpec.describe Git::Commands::Stash::Push do
       end
 
       it 'combines paths with options' do
-        expect_command('stash', 'push', '--message=Partial stash', '--', 'src/')
+        expect_command('stash', 'push', '--message', 'Partial stash', '--', 'src/')
           .and_return(command_result(''))
         command.call('src/', message: 'Partial stash')
       end
@@ -147,7 +147,7 @@ RSpec.describe Git::Commands::Stash::Push do
 
     context 'with multiple options combined' do
       it 'combines keep_index with message' do
-        expect_command('stash', 'push', '--keep-index', '--message=Testing')
+        expect_command('stash', 'push', '--keep-index', '--message', 'Testing')
           .and_return(command_result(''))
         command.call(keep_index: true, message: 'Testing')
       end

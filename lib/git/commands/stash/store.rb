@@ -29,7 +29,7 @@ module Git
         arguments do
           literal 'stash'
           literal 'store'
-          value_option %i[message m], inline: true
+          value_option %i[message m]
           operand :commit, required: true
         end
 

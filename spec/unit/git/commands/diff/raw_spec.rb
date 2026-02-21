@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Diff::Raw do
     context 'with no arguments (working tree vs index)' do
       it 'runs diff with --raw, --numstat, --shortstat, and -M flags' do
         expected_result = command_result(raw_output)
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/')
           .and_return(expected_result)
 
         result = command.call
@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with single commit' do
       it 'passes the commit as an operand' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', 'abc123')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', 'abc123')
           .and_return(command_result(raw_output))
 
         command.call('abc123')
@@ -41,7 +41,8 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with two commits' do
       it 'passes both commits as operands' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', 'abc123', 'def456')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', 'abc123',
+                       'def456')
           .and_return(command_result(raw_output))
 
         command.call('abc123', 'def456')
@@ -50,14 +51,14 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with :cached option' do
       it 'includes the --cached flag' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--cached')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', '--cached')
           .and_return(command_result(raw_output))
 
         command.call(cached: true)
       end
 
       it 'accepts :staged alias' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--cached')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', '--cached')
           .and_return(command_result(raw_output))
 
         command.call(staged: true)
@@ -66,7 +67,8 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with :find_copies option' do
       it 'includes the -C flag' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '-C')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/',
+                       '--find-copies')
           .and_return(command_result(raw_output))
 
         command.call(find_copies: true)
@@ -75,14 +77,16 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with :merge_base option' do
       it 'includes the --merge-base flag' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--merge-base', 'feature')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/',
+                       '--merge-base', 'feature')
           .and_return(command_result(raw_output))
 
         command.call('feature', merge_base: true)
       end
 
       it 'includes --merge-base with two commits' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--merge-base', 'main', 'feature')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/',
+                       '--merge-base', 'main', 'feature')
           .and_return(command_result(raw_output))
 
         command.call('main', 'feature', merge_base: true)
@@ -91,7 +95,8 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with :no_index option' do
       it 'includes the --no-index flag' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--no-index', '/path/a', '/path/b')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', '--no-index',
+                       '/path/a', '/path/b')
           .and_return(command_result(raw_output))
 
         command.call('/path/a', '/path/b', no_index: true)
@@ -100,14 +105,16 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'with pathspec limiting' do
       it 'adds pathspecs after the -- separator' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--', 'lib/', 'spec/')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', '--', 'lib/',
+                       'spec/')
           .and_return(command_result(raw_output))
 
         command.call(pathspecs: ['lib/', 'spec/'])
       end
 
       it 'combines commit with pathspecs' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', 'HEAD~3', '--', 'lib/')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', 'HEAD~3',
+                       '--', 'lib/')
           .and_return(command_result(raw_output))
 
         command.call('HEAD~3', pathspecs: ['lib/'])
@@ -125,7 +132,7 @@ RSpec.describe Git::Commands::Diff::Raw do
       end
 
       it 'includes the --dirstat flag when true' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--dirstat')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/', '--dirstat')
           .and_return(command_result(dirstat_output))
 
         result = command.call(dirstat: true)
@@ -134,7 +141,8 @@ RSpec.describe Git::Commands::Diff::Raw do
       end
 
       it 'passes dirstat options when string' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M', '--dirstat=lines,cumulative')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/',
+                       '--dirstat=lines,cumulative')
           .and_return(command_result(dirstat_output))
 
         command.call(dirstat: 'lines,cumulative')
@@ -143,7 +151,7 @@ RSpec.describe Git::Commands::Diff::Raw do
 
     context 'exit code handling' do
       it 'returns successfully with exit code 0 when no differences' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/')
           .and_return(command_result('', exitstatus: 0))
 
         result = command.call
@@ -154,7 +162,7 @@ RSpec.describe Git::Commands::Diff::Raw do
       end
 
       it 'returns successfully with exit code 1 when differences found' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/')
           .and_return(command_result(raw_output, exitstatus: 1))
 
         result = command.call
@@ -165,14 +173,14 @@ RSpec.describe Git::Commands::Diff::Raw do
       end
 
       it 'raises FailedError with exit code 2 (error)' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/')
           .and_return(command_result('', stderr: 'fatal: bad revision', exitstatus: 2))
 
         expect { command.call }.to raise_error(Git::FailedError)
       end
 
       it 'raises FailedError with exit code 128 (git error)' do
-        expect_command('diff', '--raw', '--numstat', '--shortstat', '-M')
+        expect_command('diff', '--raw', '--numstat', '--shortstat', '--src-prefix=a/', '--dst-prefix=b/')
           .and_return(command_result('', stderr: 'fatal: not a git repository', exitstatus: 128))
 
         expect { command.call }.to raise_error(Git::FailedError)

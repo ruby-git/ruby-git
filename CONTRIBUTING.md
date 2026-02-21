@@ -329,14 +329,29 @@ arguments, not as keyword arguments.
   (required).
   - `git add [<pathspec>...]` → `def add(*paths)`
 
-- **Mixed single-valued and multi-valued positional arguments**: If a command has
-  both single-valued and multi-valued positional arguments (e.g., `<branch>
-  [<pathspec>...]`), accept the single-valued positional arguments first (with `nil`
-  for omitted optionals), and use a keyword argument with an empty array default for
-  the multi-valued argument. The keyword argument should accept either a single value
-  or an array. If a single value is provided, wrap it in an array internally.
+- **Mixed single-valued and multi-valued positional arguments — `--` separated
+  (independently reachable groups)**: When a git command separates two optional
+  groups with `--` (e.g., `[<tree-ish>] [-- <pathspec>...]`), callers may want
+  to supply the post-`--` group *without* supplying the first group. Use the
+  single-valued argument as a regular optional parameter and the multi-valued
+  group as a keyword argument with an empty array default. The keyword argument
+  should accept a single value or an array; wrap a single value in an array
+  internally.
   - `git checkout [<branch>] [-- <pathspec>...]` → `def checkout(branch = nil,
     pathspecs: [])`
+  - `git diff [<tree-ish>] [-- <pathspec>...]` → `def diff(tree_ish = nil,
+    pathspec: [])`
+  - Callers can then do `checkout(pathspecs: ['file.rb'])` (no branch) or
+    `diff('HEAD~3', pathspec: ['file.rb'])` (both), with no ambiguity.
+
+- **Multiple optional single-valued positional arguments — pure nesting
+  (second only meaningful with first)**: When the git SYNOPSIS shows nested
+  optional brackets and the inner operand is only useful in the presence of the
+  outer one, both arguments may be regular optional parameters in left-to-right
+  order. A caller would never supply the second without the first.
+  - `git diff [<commit1> [<commit2>]]` → `def diff(commit1 = nil, commit2 = nil)`
+  - Callers can do `diff` (no args), `diff('HEAD~3')`, or `diff('HEAD~3', 'HEAD')`.
+    There is no case where someone would pass `commit2` without `commit1`.
 
 These conventions ensure the API is predictable and closely aligned with the git CLI.
 If a new option type is encountered, extend this section to document the mapping.

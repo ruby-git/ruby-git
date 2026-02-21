@@ -35,21 +35,21 @@ module Git
           literal "--format=#{Git::Parsers::Branch::FORMAT_STRING}"
           flag_option %i[all a]
           flag_option %i[remotes r]
-          flag_option %i[ignore_case i]
           value_option :sort, inline: true, repeatable: true
-          flag_or_value_option :contains
-          flag_or_value_option :no_contains
           flag_or_value_option :merged
           flag_or_value_option :no_merged
+          flag_or_value_option :contains
+          flag_or_value_option :no_contains
           value_option :points_at
-          operand :patterns, repeatable: true
+          flag_option %i[ignore_case i]
+          operand :pattern, repeatable: true
         end
 
         # Execute the git branch --list command
         #
-        # @overload call(*patterns, **options)
+        # @overload call(*pattern, **options)
         #
-        #   @param patterns [Array<String>] Shell wildcard patterns to filter
+        #   @param pattern [Array<String>] Shell wildcard patterns to filter
         #   branches
         #
         #     If multiple patterns are given, a branch is shown if it matches any of the patterns.
@@ -65,24 +65,11 @@ module Git
         #
         #     Alias: :r
         #
-        #   @option options [Boolean] :ignore_case (nil) Sort and filter branches
-        #     case insensitively.
-        #
-        #     Alias: :i
-        #
         #   @option options [String, Array<String>] :sort (nil) Sort branches by the
         #     specified key(s).
         #
         #     Give an array to add multiple --sort options. Prefix each key with '-' for
         #     descending order. For example, sort: ['refname', '-committerdate'].
-        #
-        #   @option options [Boolean, String] :contains (nil) List only branches that
-        #     contain the specified commit. Pass `true` to default to HEAD or a commit
-        #     ref string to filter by that commit.
-        #
-        #   @option options [Boolean, String] :no_contains (nil) List only branches
-        #     that don't contain the specified commit. Pass `true` to default to HEAD
-        #     or a commit ref string to filter by that commit.
         #
         #   @option options [Boolean, String] :merged (nil) List only branches merged
         #     into the specified commit. Pass `true` to default to HEAD or a commit
@@ -92,8 +79,21 @@ module Git
         #     merged into the specified commit. Pass `true` to default to HEAD or a
         #     commit ref string to filter by that commit.
         #
+        #   @option options [Boolean, String] :contains (nil) List only branches that
+        #     contain the specified commit. Pass `true` to default to HEAD or a commit
+        #     ref string to filter by that commit.
+        #
+        #   @option options [Boolean, String] :no_contains (nil) List only branches
+        #     that don't contain the specified commit. Pass `true` to default to HEAD
+        #     or a commit ref string to filter by that commit.
+        #
         #   @option options [String] :points_at (nil) List only branches that point
         #     at the specified object
+        #
+        #   @option options [Boolean] :ignore_case (nil) Sort and filter branches
+        #     case insensitively.
+        #
+        #     Alias: :i
         #
         # @return [Git::CommandLineResult] the result of calling `git branch --list`
         #

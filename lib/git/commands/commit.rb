@@ -28,15 +28,17 @@ module Git
     class Commit < Base
       arguments do
         literal 'commit'
-        flag_option %i[all add_all]
+        # Always suppress editor (non-interactive use)
+        literal '--no-edit'
+        flag_option %i[all a]
+        flag_option :amend
+        value_option %i[message m], inline: true, allow_empty: true
         flag_option :allow_empty
-        flag_option :no_verify
         flag_option :allow_empty_message
+        flag_option :no_verify
         value_option :author, inline: true
-        value_option :message, inline: true, allow_empty: true
         value_option :date, inline: true, type: String
-        flag_option :amend, as: ['--amend', '--no-edit']
-        flag_or_value_option :gpg_sign, negatable: true, inline: true
+        flag_or_value_option %i[gpg_sign S], negatable: true, inline: true
       end
 
       # Execute the git commit command
@@ -45,30 +47,30 @@ module Git
       #
       #   @param options [Hash] command options
       #
-      #   @option options [String] :message (nil) The commit message
-      #
       #   @option options [Boolean] :all (nil) Automatically stage all modified and deleted files
-      #     before committing (alias: add_all)
+      #     before committing.
+      #     Alias: :a
       #
-      #   @option options [Boolean] :add_all (nil) Alias for :all
+      #   @option options [Boolean] :amend (nil) Amend the previous commit instead of creating a new one
+      #
+      #   @option options [String] :message (nil) The commit message.
+      #     Alias: :m
       #
       #   @option options [Boolean] :allow_empty (nil) Allow creating a commit with no changes
       #
       #   @option options [Boolean] :allow_empty_message (nil) Allow creating a commit with an empty message
       #
-      #   @option options [Boolean] :amend (nil) Amend the previous commit instead of creating a new one.
-      #     When true, --no-edit is also added to prevent opening an editor.
+      #   @option options [Boolean] :no_verify (nil) Bypass the pre-commit and commit-msg hooks
       #
       #   @option options [String] :author (nil) Override the commit author in the format 'Name <email>'
       #
       #   @option options [String] :date (nil) Override the author date. Must be a string in a format
       #     that git understands (e.g., '2023-01-15T10:30:00', 'now', 'yesterday')
       #
-      #   @option options [Boolean] :no_verify (nil) Bypass the pre-commit and commit-msg hooks
-      #
       #   @option options [Boolean, String, false] :gpg_sign (nil) GPG-sign the commit. When true, uses the
       #     default key. When a string, uses the specified key ID. When false, adds --no-gpg-sign
       #     to override any commit.gpgsign configuration.
+      #     Alias: :S
       #
       # @return [Git::CommandLineResult] the result of calling `git commit`
       #

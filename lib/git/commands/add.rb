@@ -20,27 +20,74 @@ module Git
     class Add < Base
       arguments do
         literal 'add'
-        flag_option :all
-        flag_option :force
-        operand :paths, repeatable: true, default: [], separator: '--'
+        flag_option %i[dry_run n]
+        flag_option %i[force f]
+        flag_option %i[all A], negatable: true
+        flag_option %i[update u]
+        flag_option :sparse
+        flag_option %i[intent_to_add N]
+        flag_option :refresh
+        flag_option :ignore_errors
+        flag_option :ignore_missing
+        flag_option :renormalize
+        value_option :chmod, inline: true
+        value_option :pathspec_from_file, inline: true
+        flag_option :pathspec_file_nul
+        operand :pathspec, repeatable: true, separator: '--'
+
+        conflicts :all, :update
       end
 
-      # Execute the git add command
+      # @!method call(*, **)
       #
-      # @overload call(*paths, **options)
+      #   @overload call(*pathspec, **options)
       #
-      #   @param paths [Array<String>] files to be added to the repository
-      #     (relative to the worktree root)
+      #     Execute the git add command.
       #
-      #   @param options [Hash] command options
+      #     @param pathspec [Array<String>] files to be added to the repository
+      #       (relative to the worktree root)
       #
-      #   @option options [Boolean] :all (nil) Add, modify, and remove index entries to match the worktree
+      #     @option options [Boolean] :dry_run (nil) Don't actually add files; show what would be added.
+      #       Alias: :n
       #
-      #   @option options [Boolean] :force (nil) Allow adding otherwise ignored files
+      #     @option options [Boolean] :force (nil) Allow adding otherwise ignored files.
+      #       Alias: :f
       #
-      # @return [Git::CommandLineResult] the result of the command
+      #     @option options [Boolean] :all (nil) Add, modify, and remove index entries to match the worktree.
+      #       Use `no_all: true` (i.e. `--no-all`) to ignore removed files. Alias: :A.
+      #       Mutually exclusive with :update.
       #
-      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
+      #     @option options [Boolean] :update (nil) Update tracked files only; does not add new files.
+      #       Mutually exclusive with :all. Alias: :u
+      #
+      #     @option options [Boolean] :sparse (nil) Allow updating index entries outside the
+      #       sparse-checkout cone.
+      #
+      #     @option options [Boolean] :intent_to_add (nil) Record that the path will be added later,
+      #       placing an empty entry in the index. Alias: :N
+      #
+      #     @option options [Boolean] :refresh (nil) Refresh stat() information in the index without
+      #       adding files.
+      #
+      #     @option options [Boolean] :ignore_errors (nil) Continue adding other files if some files
+      #       cannot be added due to indexing errors.
+      #
+      #     @option options [Boolean] :ignore_missing (nil) Check whether any given files would be
+      #       ignored. Only meaningful with :dry_run.
+      #
+      #     @option options [Boolean] :renormalize (nil) Apply the clean process freshly to all tracked
+      #       files to forcibly re-add them with correct line endings.
+      #
+      #     @option options [String] :chmod (nil) Override the executable bit of added files in the
+      #       index. Value must be `'+x'` or `'-x'`.
+      #
+      #     @option options [String] :pathspec_from_file (nil) Read pathspec from the given file
+      #       (use `'-'` for stdin).
+      #
+      #     @option options [Boolean] :pathspec_file_nul (nil) Separate pathspec elements with NUL
+      #       when reading from a file. Only meaningful with :pathspec_from_file.
+      #
+      #     @return [Git::CommandLineResult] the result of the command
     end
   end
 end

@@ -91,26 +91,26 @@ RSpec.describe Git::Commands::Merge::Start do
       end
     end
 
-    context 'with :message option' do
+    context 'with :m option' do
       it 'adds -m flag with message' do
         expect_command('merge', '--no-edit', '-m', 'Merge feature', 'feature')
-        command.call('feature', message: 'Merge feature')
+        command.call('feature', m: 'Merge feature')
       end
 
-      it 'works with :m alias' do
-        expect_command('merge', '--no-edit', '-m', 'My message', 'feature')
-        command.call('feature', m: 'My message')
+      it 'raises ArgumentError for unsupported :message key' do
+        expect { command.call('feature', message: 'Merge feature') }
+          .to raise_error(ArgumentError, /Unsupported options/)
       end
     end
 
     context 'with :file option' do
-      it 'adds -F flag with file path' do
-        expect_command('merge', '--no-edit', '-F', '/path/to/msg.txt', 'feature')
+      it 'adds --file flag with file path' do
+        expect_command('merge', '--no-edit', '--file', '/path/to/msg.txt', 'feature')
         command.call('feature', file: '/path/to/msg.txt')
       end
 
       it 'works with :F alias' do
-        expect_command('merge', '--no-edit', '-F', 'msg.txt', 'feature')
+        expect_command('merge', '--no-edit', '--file', 'msg.txt', 'feature')
         command.call('feature', F: 'msg.txt')
       end
     end
@@ -123,31 +123,31 @@ RSpec.describe Git::Commands::Merge::Start do
     end
 
     context 'with :strategy option' do
-      it 'adds -s flag with strategy name' do
-        expect_command('merge', '--no-edit', '-s', 'ours', 'feature')
+      it 'adds --strategy flag with strategy name' do
+        expect_command('merge', '--no-edit', '--strategy', 'ours', 'feature')
         command.call('feature', strategy: 'ours')
       end
 
       it 'works with :s alias' do
-        expect_command('merge', '--no-edit', '-s', 'recursive', 'feature')
+        expect_command('merge', '--no-edit', '--strategy', 'recursive', 'feature')
         command.call('feature', s: 'recursive')
       end
     end
 
     context 'with :strategy_option option' do
-      it 'adds -X flag with strategy option' do
-        expect_command('merge', '--no-edit', '-X', 'ours', 'feature')
+      it 'adds --strategy-option flag with strategy option' do
+        expect_command('merge', '--no-edit', '--strategy-option', 'ours', 'feature')
         command.call('feature', strategy_option: 'ours')
       end
 
       it 'works with :X alias' do
-        expect_command('merge', '--no-edit', '-X', 'theirs', 'feature')
+        expect_command('merge', '--no-edit', '--strategy-option', 'theirs', 'feature')
         command.call('feature', X: 'theirs')
       end
 
       it 'supports multiple strategy options' do
         expect_command(
-          'merge', '--no-edit', '-X', 'ours', '-X', 'patience', 'feature'
+          'merge', '--no-edit', '--strategy-option', 'ours', '--strategy-option', 'patience', 'feature'
         )
         command.call('feature', strategy_option: %w[ours patience])
       end
@@ -294,15 +294,15 @@ RSpec.describe Git::Commands::Merge::Start do
         expect_command(
           'merge', '--no-edit', '--no-commit', '--no-ff',
           '-m', 'Merge feature branch',
-          '-s', 'ort',
-          '-X', 'theirs',
+          '--strategy', 'ort',
+          '--strategy-option', 'theirs',
           'feature'
         )
         command.call(
           'feature',
           commit: false,
           ff: false,
-          message: 'Merge feature branch',
+          m: 'Merge feature branch',
           strategy: 'ort',
           strategy_option: 'theirs'
         )
@@ -324,6 +324,11 @@ RSpec.describe Git::Commands::Merge::Start do
     context 'input validation' do
       it 'raises an error when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
+      end
+
+      it 'raises ArgumentError when both ff and ff_only are provided' do
+        expect { command.call('feature', ff: true, ff_only: true) }
+          .to raise_error(ArgumentError, /cannot specify :ff and :ff_only/)
       end
     end
   end

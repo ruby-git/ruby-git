@@ -54,12 +54,18 @@ RSpec.describe Git::Commands::Init do
       end
     end
 
-    context 'with the :repository option' do
+    context 'with the :separate_git_dir option' do
       it 'uses --separate-git-dir for the repository path' do
         # The repository path is passed through as-is (not expanded by the command)
         expect_command('init', '--separate-git-dir=repo.git', 'work').and_return(command_result)
 
-        command.call('work', repository: 'repo.git')
+        command.call('work', separate_git_dir: 'repo.git')
+      end
+
+      it 'raises ArgumentError for the old :repository option (backward compat is in Git::Lib#init)' do
+        expect { command.call('work', repository: 'repo.git') }.to(
+          raise_error(ArgumentError, /Unsupported options: :repository/)
+        )
       end
     end
 

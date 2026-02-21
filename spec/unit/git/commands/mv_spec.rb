@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Mv do
     context 'with a single file to move' do
       it 'moves the file to the destination' do
         expected_result = command_result
-        expect_command('mv', '--', 'old_name.rb', 'new_name.rb').and_return(expected_result)
+        expect_command('mv', '--verbose', '--', 'old_name.rb', 'new_name.rb').and_return(expected_result)
 
         result = command.call('old_name.rb', 'new_name.rb')
 
@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Mv do
     context 'with multiple source files' do
       it 'moves all files to the destination directory' do
         expect_command(
-          'mv', '--', 'file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/'
+          'mv', '--verbose', '--', 'file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/'
         ).and_return(command_result)
 
         command.call('file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/')
@@ -30,13 +30,13 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with the :force option' do
       it 'includes the --force flag' do
-        expect_command('mv', '--force', '--', 'source.rb', 'dest.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--force', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', force: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command('mv', '--', 'source.rb', 'dest.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', force: false)
       end
@@ -44,79 +44,65 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with the :dry_run option' do
       it 'includes the --dry-run flag' do
-        expect_command('mv', '--dry-run', '--', 'source.rb', 'dest.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--dry-run', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', dry_run: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command('mv', '--', 'source.rb', 'dest.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', dry_run: false)
       end
     end
 
-    context 'with the :verbose option' do
-      it 'includes the --verbose flag' do
+    context 'with the :k option' do
+      it 'includes the -k flag' do
+        expect_command('mv', '--verbose', '-k', '--', 'source.rb', 'dest.rb').and_return(command_result)
+
+        command.call('source.rb', 'dest.rb', k: true)
+      end
+
+      it 'does not include the flag when false' do
         expect_command('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
-        command.call('source.rb', 'dest.rb', verbose: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect_command('mv', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', verbose: false)
-      end
-    end
-
-    context 'with the :skip_errors option' do
-      it 'includes the -k flag' do
-        expect_command('mv', '-k', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', skip_errors: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect_command('mv', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', skip_errors: false)
+        command.call('source.rb', 'dest.rb', k: false)
       end
     end
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
         expect_command(
-          'mv', '--force', '--dry-run', '--verbose', '--', 'source.rb', 'dest.rb'
+          'mv', '--verbose', '--force', '--dry-run', '--', 'source.rb', 'dest.rb'
         ).and_return(command_result)
 
-        command.call('source.rb', 'dest.rb', force: true, dry_run: true, verbose: true)
+        command.call('source.rb', 'dest.rb', force: true, dry_run: true)
       end
 
-      it 'handles force and skip_errors together' do
+      it 'handles force and k together' do
         expect_command(
-          'mv', '--force', '-k', '--', 'file1.rb', 'file2.rb', 'dest_dir/'
+          'mv', '--verbose', '--force', '-k', '--', 'file1.rb', 'file2.rb', 'dest_dir/'
         ).and_return(command_result)
 
-        command.call('file1.rb', 'file2.rb', 'dest_dir/', force: true, skip_errors: true)
+        command.call('file1.rb', 'file2.rb', 'dest_dir/', force: true, k: true)
       end
     end
 
     context 'with paths containing special characters' do
       it 'handles paths with spaces' do
-        expect_command('mv', '--', 'old file.rb', 'new file.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'old file.rb', 'new file.rb').and_return(command_result)
 
         command.call('old file.rb', 'new file.rb')
       end
 
       it 'handles paths with unicode characters' do
-        expect_command('mv', '--', 'старый.rb', 'новый.rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'старый.rb', 'новый.rb').and_return(command_result)
 
         command.call('старый.rb', 'новый.rb')
       end
 
       it 'handles paths with special characters' do
-        expect_command('mv', '--', 'file[1].rb', 'file(2).rb').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'file[1].rb', 'file(2).rb').and_return(command_result)
 
         command.call('file[1].rb', 'file(2).rb')
       end
@@ -124,14 +110,14 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with directory paths' do
       it 'moves a directory to a new location' do
-        expect_command('mv', '--', 'old_dir/', 'new_dir/').and_return(command_result)
+        expect_command('mv', '--verbose', '--', 'old_dir/', 'new_dir/').and_return(command_result)
 
         command.call('old_dir/', 'new_dir/')
       end
 
       it 'moves files into an existing directory' do
         expect_command(
-          'mv', '--', 'file1.rb', 'file2.rb', 'existing_dir/'
+          'mv', '--verbose', '--', 'file1.rb', 'file2.rb', 'existing_dir/'
         ).and_return(command_result)
 
         command.call('file1.rb', 'file2.rb', 'existing_dir/')

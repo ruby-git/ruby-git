@@ -19,7 +19,7 @@ module Git
       #   merge.call('feature')
       #
       # @example Merge with no fast-forward
-      #   merge.call('feature', ff: false, message: 'Merge feature branch')
+      #   merge.call('feature', ff: false, m: 'Merge feature branch')
       #
       # @example Squash merge
       #   merge.call('feature', squash: true)
@@ -38,25 +38,27 @@ module Git
 
           # Commit behavior
           flag_option :commit, negatable: true
-          flag_option :squash, as: '--squash'
+          flag_option :squash
 
           # Fast-forward behavior
           flag_option :ff, negatable: true
-          flag_option :ff_only, as: '--ff-only'
+          flag_option :ff_only
 
           # Message options
-          value_option %i[message m], as: '-m'
-          value_option %i[file F], as: '-F'
-          value_option :into_name, inline: true, as: '--into-name'
+          value_option :m
+          value_option %i[file F]
+          value_option :into_name, inline: true
 
           # Strategy options
-          value_option %i[strategy s], as: '-s'
-          value_option %i[strategy_option X], as: '-X', repeatable: true
+          value_option %i[strategy s]
+          value_option %i[strategy_option X], repeatable: true
+
+          # Signing
+          flag_or_value_option %i[gpg_sign S], negatable: true, inline: true
 
           # Verification
           flag_option :verify, negatable: true
           flag_option :verify_signatures, negatable: true
-          flag_option :gpg_sign, negatable: true
 
           # History
           flag_option :allow_unrelated_histories, negatable: true
@@ -65,17 +67,19 @@ module Git
           # Other
           flag_option :autostash, negatable: true
           flag_option :signoff, negatable: true
-          flag_option :log, negatable: true
+          flag_or_value_option :log, negatable: true, inline: true
 
           # Positional: commits to merge (variadic, required)
-          operand :commits, repeatable: true, required: true
+          operand :commit, repeatable: true, required: true
+          conflicts :ff, :ff_only
+          conflicts :m, :file
         end
 
         # Execute the git merge command
         #
-        # @overload call(*commits, **options)
+        # @overload call(*commit, **options)
         #
-        #   @param commits [Array<String>] One or more branch names, commit SHAs,
+        #   @param commit [Array<String>] One or more branch names, commit SHAs,
         #     or refs to merge into the current branch. Multiple commits create
         #     an octopus merge.
         #
@@ -93,8 +97,7 @@ module Git
         #   @option options [Boolean] :ff_only (nil) Refuse to merge unless
         #     fast-forward is possible
         #
-        #   @option options [String] :message (nil) Commit message for merge commit.
-        #     Alias: :m
+        #   @option options [String] :m (nil) Commit message for the merge commit.
         #
         #   @option options [String] :file (nil) Read commit message from file.
         #     Alias: :F
@@ -110,15 +113,16 @@ module Git
         #     option(s) to the merge strategy (e.g., 'ours', 'theirs', 'patience').
         #     Can be a single value or array for multiple -X flags. Alias: :X
         #
+        #   @option options [Boolean, String] :gpg_sign (nil) GPG-sign the merge commit.
+        #     true for --gpg-sign, a String key ID for --gpg-sign=<keyid>, false for --no-gpg-sign.
+        #     Alias: :S
+        #
         #   @option options [Boolean] :verify (nil) Run pre-merge and commit-msg
         #     hooks. true for --verify, false for --no-verify
         #
         #   @option options [Boolean] :verify_signatures (nil) Verify commit
         #     signatures. true for --verify-signatures, false for
         #     --no-verify-signatures
-        #
-        #   @option options [Boolean] :gpg_sign (nil) GPG-sign the merge commit.
-        #     true for --gpg-sign, false for --no-gpg-sign
         #
         #   @option options [Boolean] :allow_unrelated_histories (nil) Allow
         #     merging histories without common ancestor. true for
@@ -134,8 +138,9 @@ module Git
         #   @option options [Boolean] :signoff (nil) Add Signed-off-by trailer.
         #     true for --signoff, false for --no-signoff
         #
-        #   @option options [Boolean] :log (nil) Include one-line descriptions
-        #     from commits in merge message. true for --log, false for --no-log
+        #   @option options [Boolean, Integer] :log (nil) Include one-line descriptions
+        #     from commits in merge message. true for --log, false for --no-log,
+        #     or an integer for --log=<n> to limit the number of entries.
         #
         # @return [Git::CommandLineResult] the result of the command
         #

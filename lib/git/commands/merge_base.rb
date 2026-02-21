@@ -32,23 +32,33 @@ module Git
     class MergeBase < Base
       arguments do
         literal 'merge-base'
-        flag_option :octopus, as: '--octopus'
-        flag_option :independent, as: '--independent'
-        flag_option :fork_point, as: '--fork-point'
-        flag_option :all, as: '--all'
+        flag_option %i[all a]
+        flag_option :octopus
+        flag_option :independent
+        flag_option :fork_point
 
         # Positional: commits to find common ancestor(s) of
-        operand :commits, repeatable: true, required: true
+        operand :commit, repeatable: true, required: true
+        conflicts :octopus, :independent, :fork_point
+        conflicts :all, :independent
+        conflicts :all, :fork_point
       end
+
+      # git merge-base --fork-point returns exit code 1 when no fork point is found (not an error)
+      allow_exit_status 0..1
 
       # Execute the git merge-base command
       #
-      # @overload call(*commits, **options)
+      # @overload call(*commit, **options)
       #
-      #   @param commits [Array<String>] Two or more commit SHAs, branch names,
+      #   @param commit [Array<String>] Two or more commit SHAs, branch names,
       #     or refs to find common ancestor(s) of
       #
       #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :all (nil) Output all merge bases instead of
+      #     just one (when multiple equally good bases exist).
+      #     Alias: :a
       #
       #   @option options [Boolean] :octopus (nil) Compute best common ancestor
       #     for an n-way merge (intersection of all merge bases)
@@ -59,12 +69,9 @@ module Git
       #   @option options [Boolean] :fork_point (nil) Find the fork point where
       #     a branch diverged from another
       #
-      #   @option options [Boolean] :all (nil) Output all merge bases instead of
-      #     just one (when multiple equally good bases exist)
-      #
       # @return [Git::CommandLineResult] the result of calling `git merge-base`
       #
-      # @raise [Git::FailedError] if the command returns a non-zero exit status
+      # @raise [Git::FailedError] if git returns an exit code > 1
       #
       def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
