@@ -354,6 +354,21 @@ RSpec.describe Git::Commands::Tag::Create do
           raise_error(ArgumentError, /cannot specify :message and :file/)
         )
       end
+
+      it 'raises ArgumentError when :annotate is given without :message or :file' do
+        expect { command.call('v1.0.0', annotate: true) }
+          .to raise_error(ArgumentError, /:annotate requires at least one of :message, :file/)
+      end
+
+      it 'raises ArgumentError when :sign is given without :message or :file' do
+        expect { command.call('v1.0.0', sign: true) }
+          .to raise_error(ArgumentError, /:sign requires at least one of :message, :file/)
+      end
+
+      it 'raises ArgumentError when :local_user is given without :message or :file' do
+        expect { command.call('v1.0.0', local_user: 'KEY') }
+          .to raise_error(ArgumentError, /:local_user requires at least one of :message, :file/)
+      end
     end
   end
 end

@@ -29,11 +29,6 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
 
         expect { command.call('v1.0.0') }.to raise_error(Git::FailedError)
       end
-
-      it 'raises ArgumentError when annotated tag is requested without a message' do
-        expect { command.call('v1.0.0', annotate: true) }
-          .to raise_error(ArgumentError, /:annotate requires at least one of :message, :file/)
-      end
     end
   end
 end
