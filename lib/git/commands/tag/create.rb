@@ -43,6 +43,7 @@ module Git
           value_option %i[file F], inline: true
           key_value_option :trailer, key_separator: ': '
           value_option :cleanup, inline: true
+          allowed_values :cleanup, in: %w[verbatim whitespace strip]
           flag_option :create_reflog
           operand :tagname, required: true
           operand :commit

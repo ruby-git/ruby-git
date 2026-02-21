@@ -1161,6 +1161,75 @@ module Git
         @requires_one_of << { names: [@alias_map[sym] || sym], condition: canonical_trigger, single: true }
       end
 
+      # rubocop:disable Layout/LineLength
+
+      # Restrict a value option to a fixed set of accepted strings
+      #
+      # Declares that the named option must only receive values from the given list
+      # when a value is provided. Validation runs during {#bind}, after type checking.
+      # `nil` and absent values are always skipped. Empty strings are skipped when
+      # `allow_empty: true` is set on the option. For `repeatable: true` options
+      # each element of the array is validated individually.
+      #
+      # @param name [Symbol] the option name (primary or alias); must refer to a
+      #   previously defined {#value_option} or {#flag_or_value_option}
+      #
+      # @param in [Array<String>] the accepted string values
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if +name+ is not a known option at definition time
+      #
+      # @raise [ArgumentError] if +name+ refers to a non-value option (e.g., a flag)
+      #
+      # @raise [ArgumentError] during {#bind} if the bound value is not in the
+      #   accepted set, with a message of the form:
+      #   `"Invalid value for :name: expected one of [...], got \"actual\""`
+      #
+      # @example Constrain chmod to '+x' or '-x'
+      #   args_def = Arguments.define do
+      #     value_option :chmod, inline: true
+      #     allowed_values :chmod, in: ['+x', '-x']
+      #   end
+      #   args_def.bind(chmod: '+x').to_a   # => ['--chmod=+x']
+      #   args_def.bind(chmod: 'rx')
+      #     # => raise ArgumentError, 'Invalid value for :chmod: expected one of ["+x", "-x"], got "rx"'
+      #   args_def.bind.to_a              # => []  # (absent — no error)
+      #
+      # @example Constrain cleanup to an enumerated set
+      #   args_def = Arguments.define do
+      #     value_option :cleanup, inline: true
+      #     allowed_values :cleanup, in: %w[verbatim whitespace strip]
+      #   end
+      #   args_def.bind(cleanup: 'verbatim').to_a  # => ['--cleanup=verbatim']
+      #   args_def.bind(cleanup: 'compact')
+      #     # => raise ArgumentError, 'Invalid value for :cleanup: expected one of ["verbatim", "whitespace", "strip"], got "compact"'
+      #
+      # @example Repeatable option — each element is validated
+      #   args_def = Arguments.define do
+      #     value_option :strategy, inline: true, repeatable: true
+      #     allowed_values :strategy, in: %w[ours theirs]
+      #   end
+      #   args_def.bind(strategy: %w[ours theirs]).to_a
+      #     # => ['--strategy=ours', '--strategy=theirs']
+      #   args_def.bind(strategy: %w[ours other])
+      #     # => raise ArgumentError, 'Invalid value for :strategy: expected one of ["ours", "theirs"], got "other"'
+      #
+      def allowed_values(name, in:)
+        sym = name.to_sym
+        primary = @alias_map[sym]
+        defn = primary && @option_definitions[primary]
+        raise ArgumentError, "unknown argument :#{sym} in allowed_values declaration" unless defn
+
+        unless VALUE_OPTION_TYPES_FOR_ALLOWED_VALUES.include?(defn[:type])
+          raise ArgumentError, ":#{sym} is not a value option"
+        end
+
+        defn[:allowed_values] = binding.local_variable_get(:in).map(&:to_s).freeze
+      end
+
+      # rubocop:enable Layout/LineLength
+
       # Define an operand (positional argument in Ruby terminology)
       #
       # Operands are mapped to values following Ruby method signature
@@ -1335,6 +1404,13 @@ module Git
 
       # Option types allowed after a '--' separator boundary (they do not produce CLI flags)
       OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand execution_option].freeze
+
+      # Option types that accept a string value — eligible for `allowed_values` constraints
+      VALUE_OPTION_TYPES_FOR_ALLOWED_VALUES = %i[
+        value inline_value value_as_operand
+        flag_or_value flag_or_inline_value
+        negatable_flag_or_value negatable_flag_or_inline_value
+      ].freeze
 
       private
 
@@ -2159,19 +2235,54 @@ module Git
 
       def validate_option_values!(opts)
         @option_definitions.each do |name, definition|
-          validator = definition[:validator]
-          next unless validator
           next unless opts.key?(name)
 
-          value = opts[name]
-          result = validator.call(value)
-          next if result == true
-
-          # If validator returns a string, use it as the error message
-          # Otherwise, generate a generic error message
-          error_msg = result.is_a?(String) ? result : "Invalid value for option: #{name}"
-          raise ArgumentError, error_msg
+          validate_single_option!(name, opts[name], definition)
         end
+      end
+
+      def validate_single_option!(name, value, definition)
+        run_validator!(name, value, definition[:validator]) if definition[:validator]
+        check_allowed_values!(name, value, definition) if definition[:allowed_values]
+      end
+
+      def run_validator!(name, value, validator)
+        result = validator.call(value)
+        return if result == true
+
+        error_msg = result.is_a?(String) ? result : "Invalid value for option: #{name}"
+        raise ArgumentError, error_msg
+      end
+
+      def check_allowed_values!(name, value, definition)
+        allowed = definition[:allowed_values]
+        if definition[:repeatable]
+          check_repeatable_allowed_values!(name, value, allowed, definition[:allow_empty])
+        else
+          check_single_allowed_value!(name, value, allowed, definition[:allow_empty])
+        end
+      end
+
+      def check_repeatable_allowed_values!(name, values, allowed, allow_empty)
+        Array(values).each do |v|
+          next if v.nil?
+          next if v.to_s.empty? && allow_empty
+
+          unless allowed.include?(v.to_s)
+            raise ArgumentError,
+                  "Invalid value for :#{name}: expected one of #{allowed.inspect}, got #{v.inspect}"
+          end
+        end
+      end
+
+      def check_single_allowed_value!(name, value, allowed, allow_empty)
+        return if value.nil?
+        return if value.to_s.empty? && allow_empty
+
+        return if allowed.include?(value.to_s)
+
+        raise ArgumentError,
+              "Invalid value for :#{name}: expected one of #{allowed.inspect}, got #{value.inspect}"
       end
 
       def create_type_validator(option_name, expected_type)

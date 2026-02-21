@@ -35,6 +35,7 @@ module Git
         flag_option :pathspec_file_nul
         operand :pathspec, repeatable: true, separator: '--'
 
+        allowed_values :chmod, in: ['+x', '-x']
         conflicts :all, :update
         requires :pathspec_from_file, when: :pathspec_file_nul
         requires :dry_run, when: :ignore_missing
