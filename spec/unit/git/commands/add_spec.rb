@@ -242,6 +242,18 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
+    context 'with requires constraint violations' do
+      it 'raises ArgumentError when :pathspec_file_nul is given without :pathspec_from_file' do
+        expect { command.call(pathspec_file_nul: true) }
+          .to raise_error(ArgumentError, /:pathspec_file_nul requires :pathspec_from_file/)
+      end
+
+      it 'raises ArgumentError when :ignore_missing is given without :dry_run' do
+        expect { command.call(ignore_missing: true) }
+          .to raise_error(ArgumentError, /:ignore_missing requires :dry_run/)
+      end
+    end
+
     context 'with multiple options combined' do
       it 'includes all specified flags' do
         expect_command('add', '--force', '--all', '--', '.').and_return(command_result)
