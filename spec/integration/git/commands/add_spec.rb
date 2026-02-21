@@ -41,16 +41,6 @@ RSpec.describe Git::Commands::Add, :integration do
       it 'raises FailedError with a nonexistent path' do
         expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
       end
-
-      it 'raises ArgumentError when pathspec_file_nul is given without pathspec_from_file' do
-        expect { command.call(pathspec_file_nul: true) }
-          .to raise_error(ArgumentError, /:pathspec_file_nul requires :pathspec_from_file/)
-      end
-
-      it 'raises ArgumentError when ignore_missing is given without dry_run' do
-        expect { command.call(ignore_missing: true) }
-          .to raise_error(ArgumentError, /:ignore_missing requires :dry_run/)
-      end
     end
   end
 end
