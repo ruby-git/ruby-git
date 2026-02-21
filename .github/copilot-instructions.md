@@ -2570,7 +2570,7 @@ When implementing a command using the `Git::Commands::Arguments` DSL, you **MUST
 - **Invalid Values**: Test that invalid values raise appropriate errors or are handled correctly.
 - **Argument Building**: Verify that the generated git command arguments match the expected CLI flags.
 - **Edge Cases**: Test nil values, empty strings/arrays, and special characters.
-- **Constraint Validation**: If the command uses `conflicts`, `requires_one_of`, `requires`, or `allowed_values` DSL declarations, include a `context 'input validation'` block that tests each constraint raises `ArgumentError` as expected (too many conflicting args present; none of the required group present; value outside the allowed set).
+- **Constraint Validation**: If the command uses `conflicts`, `forbid_values`, `requires_one_of`, `requires`, or `allowed_values` DSL declarations, include a `context 'input validation'` block that tests each constraint raises `ArgumentError` as expected (too many conflicting args present; forbidden exact-value tuple matched; none of the required group present; value outside the allowed set).
 
 ### Coverage Target
 

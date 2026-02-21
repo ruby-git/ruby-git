@@ -41,6 +41,11 @@ module Git
         conflicts :all, :update
         conflicts :ignore_removal, :update
         conflicts :pathspec, :pathspec_from_file
+        # --all=true  + --ignore-removal=true  : contradictory (stage all vs ignore removed files)
+        # --all=false + --ignore-removal=false : contradictory (--no-all vs --no-ignore-removal cancel out)
+        # Equivalent pairs (--no-all --ignore-removal or --all --no-ignore-removal) are allowed.
+        forbid_values all: true,  ignore_removal: true
+        forbid_values all: false, ignore_removal: false
         requires :pathspec_from_file, when: :pathspec_file_nul
         requires :dry_run, when: :ignore_missing
       end

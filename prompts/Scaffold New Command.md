@@ -117,7 +117,9 @@ interchangeable flags), prefer:
    ```
 
 5. operands (positional args)
+
 6. separator-delimited pathspec entries — either form:
+
    - `operand :pathspec, repeatable: true, separator: '--'` (positional calling convention)
    - `value_option :pathspec, as_operand: true, separator: '--', repeatable: true` (keyword calling convention)
 
@@ -152,11 +154,21 @@ interchangeable flags), prefer:
      # cmd.call('HEAD~3', 'HEAD')  → git <sub> HEAD~3 HEAD
      ```
 
-Constraint declarations always come last, after all arguments they reference
-are defined:
+   Constraint declarations always come last, after all arguments they reference
+   are defined:
 
-7. `conflicts` declarations
-8. `requires_exactly_one_of` declarations — when a group must have exactly one
+7. `conflicts` declarations — presence-based mutual exclusion
+
+8. `forbid_values` declarations — exact-value tuple constraints for negatable
+   flags where some value-pairings are contradictory but others are equivalent:
+
+   ```ruby
+   forbid_values all: true,  ignore_removal: true   # contradictory
+   forbid_values all: false, ignore_removal: false  # contradictory
+   # allows: all: true + ignore_removal: false (equivalent pair)
+   ```
+
+9. `requires_exactly_one_of` declarations — when a group must have exactly one
    member present. Replaces the two-declaration pattern of `requires_one_of` +
    `conflicts` for the same names:
 
@@ -171,9 +183,10 @@ are defined:
    conflicts       :mode_a, :mode_b, :mode_c
    ```
 
-9. `requires_one_of` declarations (unconditional and `when:` conditional forms) —
-   use these when only an at-least-one constraint is needed (no at-most-one)
-10. `requires` declarations (single-argument conditional form)
+10.  `requires_one_of` declarations (unconditional and `when:` conditional forms) —
+    use these when only an at-least-one constraint is needed (no at-most-one)
+
+11.  `requires` declarations (single-argument conditional form)
 
 Use aliases for long/short forms (`%i[force f]`, `%i[all A]`, `%i[intent_to_add N]`),
 with long name first. The DSL preserves symbol case, so uppercase single-char aliases

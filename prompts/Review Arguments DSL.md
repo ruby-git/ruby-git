@@ -187,12 +187,13 @@ short flags), prefer:
 4. value options
 5. operands (positional args / pathspecs after `--`)
 
-Constraint declarations always come after all arguments they reference are defined:
+   Constraint declarations always come after all arguments they reference are defined:
 
 6. `conflicts` declarations
-7. `requires_exactly_one_of` declarations (when a group needs exactly-one semantics)
-8. `requires_one_of` declarations (unconditional and `when:` conditional forms)
-9. `requires` declarations (single-argument conditional form)
+7. `forbid_values` declarations (exact-value tuple constraints for negatable flags)
+8. `requires_exactly_one_of` declarations (when a group needs exactly-one semantics)
+9. `requires_one_of` declarations (unconditional and `when:` conditional forms)
+10. `requires` declarations (single-argument conditional form)
 
 ### 4. Correct modifiers
 
@@ -283,6 +284,14 @@ raise `ArgumentError` at definition time, so any typo is caught early.
 `false` also counts as present because it emits `--no-flag` — a real CLI token that
 can conflict with other options. Non-negatable `false` is absent.
 
+**`conflicts` vs `forbid_values`:** `conflicts` is presence-based — it fires whenever
+more than one member of the group is "present", regardless of value. For **negatable
+flags** where some value-pairings are semantically equivalent rather than contradictory,
+`conflicts` is too coarse: it would block valid combinations like `--no-all
+--ignore-removal`. In those cases use `forbid_values` (see §7e) instead of (or in
+place of) `conflicts`. Flag any `conflicts` declaration between two or more negatable
+flags as a candidate for replacement with targeted `forbid_values` declarations.
+
 **Preferred single declaration when a group is both required and mutually exclusive:**
 If a `conflicts` group also has a corresponding bare `requires_one_of` for the
 identical argument list, the two declarations should be collapsed into a single
@@ -370,7 +379,45 @@ requires_one_of :message, :file, when: :sign
 requires_one_of :message, :file, when: :local_user
 ```
 
-### 7d. Allowed-values constraints
+#### 7d. Forbidden value combinations
+
+`forbid_values` declares **exact-value tuples** that are invalid at bind time.
+Each call declares one forbidden tuple; a tuple matches only when every listed
+name is bound and each bound value equals the declared value (`==`). Non-matching
+tuples are allowed through without error.
+
+This fills the gap left by `conflicts` (which is presence-based and cannot
+distinguish equivalent from contradictory value-pairings of negatable flags):
+
+```ruby
+flag_option :all,            negatable: true
+flag_option :ignore_removal, negatable: true
+forbid_values all: true,  ignore_removal: true   # contradictory
+forbid_values all: false, ignore_removal: false  # contradictory
+# Equivalent pairs (all: true + ignore_removal: false, etc.) are allowed
+```
+
+Points to check:
+
+- Each `forbid_values` declaration uses keyword-pair syntax only (`name: value`).
+- All names must be known options or operands; an unknown name raises
+  `ArgumentError` at definition time.
+- Alias names are accepted and canonicalized to primary names.
+- `conflicts :a, :b` plus `forbid_values a: true, b: true` is **not** equivalent:
+  `conflicts` catches any presence combination; `forbid_values` catches only the
+  specific value tuple. When the intent is to block a specific value pairing (not
+  all co-presence), use `forbid_values` not `conflicts`.
+- For negatable flags that may share semantically equivalent combinations, prefer
+  `forbid_values` over `conflicts` so equivalent pairings (e.g. `--no-all
+  --ignore-removal`) remain valid.
+
+Error form at bind time:
+
+```
+cannot specify :name1=value1 with :name2=value2
+```
+
+#### 7e. Allowed-values constraints
 
 If a `value_option`, `flag_or_value_option`, or `flag_or_inline_value_option`
 accepts a fixed, enumerated set of strings, verify an `allowed_values` declaration
