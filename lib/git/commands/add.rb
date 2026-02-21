@@ -23,12 +23,14 @@ module Git
         flag_option %i[dry_run n]
         flag_option %i[force f]
         flag_option %i[all A], negatable: true
+        flag_option :ignore_removal, negatable: true
         flag_option %i[update u]
         flag_option :sparse
         flag_option %i[intent_to_add N]
         flag_option :refresh
         flag_option :ignore_errors
         flag_option :ignore_missing
+        flag_option :no_warn_embedded_repo
         flag_option :renormalize
         value_option :chmod, inline: true
         value_option :pathspec_from_file, inline: true
@@ -37,6 +39,8 @@ module Git
 
         allowed_values :chmod, in: ['+x', '-x']
         conflicts :all, :update
+        conflicts :ignore_removal, :update
+        conflicts :pathspec, :pathspec_from_file
         requires :pathspec_from_file, when: :pathspec_file_nul
         requires :dry_run, when: :ignore_missing
       end
@@ -61,7 +65,11 @@ module Git
       #       Mutually exclusive with :update.
       #
       #     @option options [Boolean] :update (nil) Update tracked files only; does not add new files.
-      #       Mutually exclusive with :all. Alias: :u
+      #       Mutually exclusive with :all and :ignore_removal. Alias: :u
+      #
+      #     @option options [Boolean] :ignore_removal (nil) Add and modify files, but ignore removed files.
+      #       Use `ignore_removal: false` (i.e. `--no-ignore-removal`) to match :all behavior.
+      #       Mutually exclusive with :update.
       #
       #     @option options [Boolean] :sparse (nil) Allow updating index entries outside the
       #       sparse-checkout cone.
@@ -78,6 +86,9 @@ module Git
       #     @option options [Boolean] :ignore_missing (nil) Check whether any given files would be
       #       ignored. Only meaningful with :dry_run.
       #
+      #     @option options [Boolean] :no_warn_embedded_repo (nil) Suppress warning when adding an
+      #       embedded repository without using `git submodule add`.
+      #
       #     @option options [Boolean] :renormalize (nil) Apply the clean process freshly to all tracked
       #       files to forcibly re-add them with correct line endings.
       #
@@ -86,6 +97,8 @@ module Git
       #
       #     @option options [String] :pathspec_from_file (nil) Read pathspec from the given file
       #       (use `'-'` for stdin).
+      #
+      #       Mutually exclusive with positional :pathspec values.
       #
       #     @option options [Boolean] :pathspec_file_nul (nil) Separate pathspec elements with NUL
       #       when reading from a file. Only meaningful with :pathspec_from_file.

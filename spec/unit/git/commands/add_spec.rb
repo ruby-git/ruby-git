@@ -108,6 +108,26 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
+    context 'with the :ignore_removal option' do
+      it 'includes the --ignore-removal flag when true' do
+        expect_command('add', '--ignore-removal', '--', '.').and_return(command_result)
+
+        command.call('.', ignore_removal: true)
+      end
+
+      it 'includes --no-ignore-removal when false (negatable flag)' do
+        expect_command('add', '--no-ignore-removal', '--', '.').and_return(command_result)
+
+        command.call('.', ignore_removal: false)
+      end
+
+      it 'omits the flag when not provided' do
+        expect_command('add', '--', '.').and_return(command_result)
+
+        command.call('.')
+      end
+    end
+
     context 'with the :intent_to_add option' do
       it 'includes the --intent-to-add flag' do
         expect_command('add', '--intent-to-add', '--', 'new_file.rb').and_return(command_result)
@@ -184,6 +204,20 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
+    context 'with the :no_warn_embedded_repo option' do
+      it 'includes the --no-warn-embedded-repo flag' do
+        expect_command('add', '--no-warn-embedded-repo', '--', 'repo-dir').and_return(command_result)
+
+        command.call('repo-dir', no_warn_embedded_repo: true)
+      end
+
+      it 'does not include the flag when false' do
+        expect_command('add', '--', 'repo-dir').and_return(command_result)
+
+        command.call('repo-dir', no_warn_embedded_repo: false)
+      end
+    end
+
     context 'with the :renormalize option' do
       it 'includes the --renormalize flag' do
         expect_command('add', '--renormalize').and_return(command_result)
@@ -241,10 +275,30 @@ RSpec.describe Git::Commands::Add do
         )
       end
 
-      it 'raises ArgumentError when :all is false (--no-all) and :update is given' do
-        expect { command.call('.', all: false, update: true) }.to(
-          raise_error(ArgumentError, /:all.*:update|:update.*:all/)
+      it 'raises ArgumentError when :update and :ignore_removal are both given' do
+        expect { command.call('.', update: true, ignore_removal: true) }.to(
+          raise_error(ArgumentError, /:update.*:ignore_removal|:ignore_removal.*:update/)
         )
+      end
+
+      it 'raises ArgumentError when :pathspec and :pathspec_from_file are both given' do
+        expect { command.call('file.rb', pathspec_from_file: 'paths.txt') }.to(
+          raise_error(ArgumentError, /:pathspec.*:pathspec_from_file|:pathspec_from_file.*:pathspec/)
+        )
+      end
+    end
+
+    context 'with equivalent all/ignore_removal combinations' do
+      it 'allows :all false with :ignore_removal true' do
+        expect_command('add', '--no-all', '--ignore-removal', '--', '.').and_return(command_result)
+
+        command.call('.', all: false, ignore_removal: true)
+      end
+
+      it 'allows :all true with :ignore_removal false' do
+        expect_command('add', '--all', '--no-ignore-removal', '--', '.').and_return(command_result)
+
+        command.call('.', all: true, ignore_removal: false)
       end
     end
 
