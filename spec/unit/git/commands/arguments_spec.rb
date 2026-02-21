@@ -1576,6 +1576,67 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(since: '2020-01-01').to_ary).to eq(['--since', '2020-01-01'])
         end
       end
+
+      context 'with negatable flag options in conflict groups' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :all,    negatable: true
+            flag_option :update
+            conflicts :all, :update
+          end
+        end
+
+        it 'raises when negatable flag is true and conflicting option is present' do
+          expect { args_def.bind(all: true, update: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :all and :update/
+          )
+        end
+
+        it 'raises when negatable flag is false and conflicting option is present' do
+          expect { args_def.bind(all: false, update: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :all and :update/
+          )
+        end
+
+        it 'does not raise when non-negatable flag is false and other option is present' do
+          # :update is not negatable — false means absent, so no conflict
+          expect { args_def.bind(all: true, update: false) }.not_to raise_error
+        end
+
+        it 'does not raise when both negatable flags are absent (nil)' do
+          expect { args_def.bind }.not_to raise_error
+        end
+
+        context 'with flag_or_value_option negatable: true in conflict group' do
+          let(:fov_args_def) do
+            described_class.define do
+              flag_or_value_option :sign, negatable: true
+              flag_option :no_verify
+              conflicts :sign, :no_verify
+            end
+          end
+
+          it 'raises when negatable flag_or_value is false and conflicting option is present' do
+            expect { fov_args_def.bind(sign: false, no_verify: true) }.to raise_error(
+              ArgumentError,
+              /cannot specify :sign and :no_verify/
+            )
+          end
+
+          it 'raises when negatable flag_or_value is true and conflicting option is present' do
+            expect { fov_args_def.bind(sign: true, no_verify: true) }.to raise_error(
+              ArgumentError,
+              /cannot specify :sign and :no_verify/
+            )
+          end
+
+          it 'does not raise when negatable flag_or_value is false and no conflicting option' do
+            expect { fov_args_def.bind(sign: false) }.not_to raise_error
+          end
+        end
+      end
     end
 
     context 'with requires_one_of method' do
@@ -1897,6 +1958,74 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'passes when constraints are satisfied' do
           expect { args.bind(merge: true, pathspec_from_file: 'paths.txt') }.not_to raise_error
+        end
+      end
+
+      context 'with negatable flag options in requires_one_of groups' do
+        context 'satisfied-by check: negatable false counts as present' do
+          let(:args_def) do
+            described_class.define do
+              flag_option :all,    negatable: true
+              flag_option :update
+              requires_one_of :all, :update
+            end
+          end
+
+          it 'counts negatable false as satisfying the group' do
+            expect { args_def.bind(all: false) }.not_to raise_error
+          end
+
+          it 'counts negatable true as satisfying the group' do
+            expect { args_def.bind(all: true) }.not_to raise_error
+          end
+
+          it 'does not count non-negatable false as satisfying the group' do
+            non_negatable_def = described_class.define do
+              flag_option :all
+              flag_option :update
+              requires_one_of :all, :update
+            end
+            expect { non_negatable_def.bind(all: false) }
+              .to raise_error(ArgumentError, /at least one of :all, :update must be provided/)
+          end
+
+          it 'raises when no group member is present' do
+            expect { args_def.bind }
+              .to raise_error(ArgumentError, /at least one of :all, :update must be provided/)
+          end
+        end
+
+        context 'trigger (when:) check: negatable false does not fire the trigger' do
+          let(:args_def) do
+            described_class.define do
+              flag_option :verbose, negatable: true
+              flag_option :output
+              requires :output, when: :verbose
+            end
+          end
+
+          it 'does not fire the trigger when negatable flag is false' do
+            # --no-verbose means the feature is disabled; its requirements don't apply
+            expect { args_def.bind(verbose: false) }.not_to raise_error
+          end
+
+          it 'fires the trigger when negatable flag is true' do
+            expect { args_def.bind(verbose: true) }
+              .to raise_error(ArgumentError, /:verbose requires :output/)
+          end
+
+          it 'does not fire the trigger when non-negatable flag is false' do
+            non_negatable_def = described_class.define do
+              flag_option :verbose
+              flag_option :output
+              requires :output, when: :verbose
+            end
+            expect { non_negatable_def.bind(verbose: false) }.not_to raise_error
+          end
+
+          it 'does not raise when negatable trigger is absent (nil)' do
+            expect { args_def.bind }.not_to raise_error
+          end
         end
       end
     end

@@ -278,6 +278,11 @@ or operand vs operand — verify `conflicts ...` declarations exist. Names in a
 `conflicts` group may be any mix of option names and operand names. Unknown names
 raise `ArgumentError` at definition time, so any typo is caught early.
 
+**Presence semantics for conflicts:** a value is considered present when it is not
+`nil`, `[]`, or `''`. For **negatable flag options** (`negatable: true`), an explicit
+`false` also counts as present because it emits `--no-flag` — a real CLI token that
+can conflict with other options. Non-negatable `false` is absent.
+
 **Preferred single declaration when a group is both required and mutually exclusive:**
 If a `conflicts` group also has a corresponding bare `requires_one_of` for the
 identical argument list, the two declarations should be collapsed into a single
@@ -294,6 +299,9 @@ operands, or a mix — verify `requires_one_of ...` declarations exist. As with
 `conflicts`, names may be any mix of option names and operand names. Alias
 resolution applies before the check, so supplying an alias counts as its canonical
 argument being present. Unknown names raise `ArgumentError` at definition time.
+
+**Presence semantics (satisfied-by):** same rule as `conflicts` — negatable `false`
+counts as present (the caller explicitly provided `--no-flag`).
 
 The error at bind time has the form:
 
@@ -324,6 +332,10 @@ If an argument is only required when another specific argument is present, verif
 when the trigger is absent. Unknown names (including the trigger) raise
 `ArgumentError` at definition time.
 
+**Presence semantics (trigger):** the trigger fires when its value is not `nil`,
+`false`, `[]`, or `''`. A negatable flag set to `false` means the feature is **off**,
+so the trigger does **not** fire and no dependency check is performed.
+
 The error at bind time has the form:
 
   ":trigger requires :name"
@@ -342,6 +354,9 @@ verify a `requires_one_of :a, :b, when: :trigger` declaration exists. Like the
 unconditional form, names may be any mix of option/operand names. The check is
 skipped when the trigger is absent. Unknown names (including the trigger) raise
 `ArgumentError` at definition time.
+
+**Presence semantics (trigger):** same rule as `requires` — a negatable trigger set
+to `false` means the feature is off; the group check is skipped.
 
 The error at bind time has the form:
 
