@@ -107,7 +107,15 @@ interchangeable flags), prefer:
 1. literals
 2. flag options
 3. flag-or-value options
-4. value options
+4. value options, immediately followed by `allowed_values` for any option that
+   accepts only a fixed set of strings — `allowed_values` supersedes ad-hoc
+   `validator:` lambdas for enumerated cases:
+
+   ```ruby
+   value_option :cleanup, inline: true
+   allowed_values :cleanup, in: %w[verbatim whitespace strip]
+   ```
+
 5. operands (positional args)
 6. separator-delimited pathspec entries — either form:
    - `operand :pathspec, repeatable: true, separator: '--'` (positional calling convention)
