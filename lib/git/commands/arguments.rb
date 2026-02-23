@@ -429,6 +429,36 @@ module Git
     #   args_def.bind('main', merge: true)  #=> raise ArgumentError, "cannot specify :merge and :tree_ish"
     #   args_def.bind(nil, merge: true).to_a  # => ['--merge']
     #
+    # ## Forbidden Value Combinations
+    #
+    # {#conflicts} is presence-based — it cannot distinguish between semantically
+    # equivalent and contradictory combinations of negatable flags. Use
+    # {#forbid_values} to declare specific **exact-value tuples** that are invalid.
+    #
+    # A `forbid_values` declaration matches only when **every** listed name has a
+    # bound value equal to the declared value (Ruby `==`). Only matching tuples raise
+    # ArgumentError; all other value combinations are permitted. Names may be options
+    # or operands; aliases are canonicalized before comparison.
+    #
+    # This is most useful for negatable flags where some value-pairings are
+    # contradictory but others are semantically equivalent and should remain valid.
+    #
+    # The error message has the form:
+    #
+    #   "cannot specify :name1=value1 with :name2=value2"
+    #
+    # @example Reject contradictory pairs without blocking equivalent ones
+    #   args_def = Arguments.define do
+    #     flag_option :all,            negatable: true
+    #     flag_option :ignore_removal, negatable: true
+    #     forbid_values all: true,  ignore_removal: true   # --all --ignore-removal: contradictory
+    #     forbid_values all: false, ignore_removal: false  # --no-all --no-ignore-removal: contradictory
+    #   end
+    #   args_def.bind(all: true,  ignore_removal: true)
+    #     #=> raise ArgumentError, 'cannot specify :all=true with :ignore_removal=true'
+    #   args_def.bind(all: true,  ignore_removal: false).to_a  # => ['--all', '--no-ignore-removal']
+    #   args_def.bind(all: false, ignore_removal: true).to_a   # => ['--no-all', '--ignore-removal']
+    #
     # ## At-Least-One Presence Validation
     #
     # Use {#requires_one_of} to declare groups of arguments where at least one must be
@@ -493,9 +523,10 @@ module Git
     # ## Value Constraints
     #
     # In addition to presence-based validation ({#conflicts}, {#requires_one_of},
-    # and {#requires}), you can restrict the *set of acceptable values* for any
-    # value-type option using {#allowed_values}. If a bound value falls outside
-    # the configured set, {#bind} raises ArgumentError with a descriptive message.
+    # and {#requires}) and value-combination constraints ({#forbid_values}), you can
+    # restrict the *set of acceptable values* for any value-type option using
+    # {#allowed_values}. If a bound value falls outside the configured set, {#bind}
+    # raises ArgumentError with a descriptive message.
     #
     # This is typically used to model git options that accept only a fixed list of
     # modes or strategies, and supersedes ad-hoc `validator:` lambdas for simple
@@ -537,6 +568,7 @@ module Git
         @alias_map = {} # Maps alias keys to primary keys
         @operand_definitions = []
         @conflicts = [] # Array of conflicting option pairs/groups
+        @forbidden_values = [] # Array of forbidden exact-value tuples
         @requires_one_of = [] # Array of "at least one must be present" groups
         @ordered_definitions = [] # Tracks all definitions in definition order
         @past_separator = false # Tracks whether a '--' boundary has been defined
@@ -1020,6 +1052,70 @@ module Git
         @conflicts << names.map(&:to_sym)
       end
 
+      # Declare that an exact combination of argument values is forbidden
+      #
+      # Each call to {#forbid_values} defines one forbidden tuple. A tuple matches
+      # when **every** listed name is present (has a bound value after alias
+      # normalization) **and** each value equals the declared value exactly (Ruby
+      # `==`). When a tuple matches, {#bind} raises ArgumentError.
+      #
+      # This fills the gap left by {#conflicts}, which only checks *presence*.
+      # `forbid_values` is useful for negatable flags whose combinations can be
+      # semantically equivalent or contradictory depending on the actual boolean
+      # values — presence-based exclusion would be too coarse.
+      #
+      # Names may refer to **options** (flag, value, flag-or-value, etc.) or
+      # **operands** (positional arguments). Alias names are accepted and
+      # canonicalized to their primary names.
+      #
+      # An ArgumentError is raised at **definition time** if any name is not a
+      # known option or operand.
+      #
+      # The error message has the form:
+      #
+      #   "cannot specify :name1=value1 with :name2=value2"
+      #
+      # @param pairs [Hash] keyword pairs mapping argument name to forbidden value
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name in +pairs+ is not a known option or
+      #   operand
+      #
+      # @raise [ArgumentError] during {#bind} if all names are present and all
+      #   values exactly match the declared tuple
+      #
+      # @example Reject only the contradictory negatable flag combinations
+      #   args_def = Arguments.define do
+      #     flag_option :all,            negatable: true
+      #     flag_option :ignore_removal, negatable: true
+      #     # --all --ignore-removal: contradictory (add ALL vs ignore removals)
+      #     forbid_values all: true,  ignore_removal: true
+      #     # --no-all --no-ignore-removal: contradictory (ignore removals vs include removals)
+      #     forbid_values all: false, ignore_removal: false
+      #   end
+      #   # Contradictory tuples raise:
+      #   args_def.bind(all: true,  ignore_removal: true)
+      #     # => raise ArgumentError, 'cannot specify :all=true with :ignore_removal=true'
+      #   args_def.bind(all: false, ignore_removal: false)
+      #     # => raise ArgumentError, 'cannot specify :all=false with :ignore_removal=false'
+      #   # Semantically equivalent pairs are allowed:
+      #   args_def.bind(all: true,  ignore_removal: false).to_a  # => ['--all', '--no-ignore-removal']
+      #   args_def.bind(all: false, ignore_removal: true).to_a   # => ['--no-all', '--ignore-removal']
+      #
+      def forbid_values(**pairs)
+        raise ArgumentError, 'forbid_values must be given at least one name-value pair' if pairs.empty?
+
+        pairs.each_key do |name|
+          sym = name.to_sym
+          next if known_argument?(sym)
+
+          raise ArgumentError, "unknown argument :#{sym} in forbid_values declaration"
+        end
+        canonical = pairs.transform_keys { |k| @alias_map[k] || k }
+        @forbidden_values << canonical
+      end
+
       # Declare that at least one of the named arguments must be present when binding
       #
       # Each call to {#requires_one_of} defines an independent "at least one" group.
@@ -1474,9 +1570,7 @@ module Git
       def bind(*positionals, **opts)
         normalized_opts = validate_and_normalize_options!(opts)
         allocated_positionals = allocate_and_validate_positionals(positionals)
-        validate_no_option_like_operands!(allocated_positionals, normalized_opts)
-        validate_conflicts!(normalized_opts, allocated_positionals)
-        validate_requires_one_of!(normalized_opts, allocated_positionals)
+        validate_bind_inputs!(normalized_opts, allocated_positionals)
 
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
@@ -1505,6 +1599,19 @@ module Git
       ].freeze
 
       private
+
+      # Run all cross-field validations on bound inputs
+      #
+      # @param normalized_opts [Hash] normalized keyword options
+      # @param allocated_positionals [Hash] allocated positional arguments
+      # @return [void]
+      #
+      def validate_bind_inputs!(normalized_opts, allocated_positionals)
+        validate_no_option_like_operands!(allocated_positionals, normalized_opts)
+        validate_conflicts!(normalized_opts, allocated_positionals)
+        validate_forbidden_values!(normalized_opts, allocated_positionals)
+        validate_requires_one_of!(normalized_opts, allocated_positionals)
+      end
 
       # Collect option names whose definition type is one of the given types
       #
@@ -2437,6 +2544,45 @@ module Git
 
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
+        end
+      end
+
+      # Validate that no bound values match a forbidden exact-value tuple
+      #
+      # @param opts [Hash] normalized keyword options (aliases already resolved)
+      # @param allocated_positionals [Hash] the allocated positional values
+      # @raise [ArgumentError] if all names in a forbidden tuple are present with
+      #   their declared values
+      #
+      def validate_forbidden_values!(opts, allocated_positionals = {})
+        @forbidden_values.each do |tuple|
+          next unless forbidden_tuple_matches?(tuple, opts, allocated_positionals)
+
+          formatted = tuple.map { |name, value| ":#{name}=#{value.inspect}" }.join(' with ')
+          raise ArgumentError, "cannot specify #{formatted}"
+        end
+      end
+
+      # Return true if every name in the tuple has a bound value equal to the
+      # declared forbidden value.
+      #
+      # The check only fires when the key is actually present (bound) — an absent
+      # key never triggers a forbidden-values match.
+      #
+      # @param tuple [Hash{Symbol => Object}] canonical name → forbidden value
+      # @param opts [Hash] normalized keyword options
+      # @param allocated_positionals [Hash] the allocated positional values
+      # @return [Boolean]
+      #
+      def forbidden_tuple_matches?(tuple, opts, allocated_positionals)
+        tuple.all? do |name, forbidden_value|
+          if opts.key?(name)
+            opts[name] == forbidden_value
+          elsif allocated_positionals.key?(name)
+            allocated_positionals[name] == forbidden_value
+          else
+            false
+          end
         end
       end
 

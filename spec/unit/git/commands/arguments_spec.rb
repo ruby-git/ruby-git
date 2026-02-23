@@ -1639,6 +1639,189 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with forbid_values method' do
+      context 'with two negatable flag options' do
+        let(:args) do
+          described_class.define do
+            flag_option :all,            negatable: true
+            flag_option :ignore_removal, negatable: true
+            forbid_values all: true,  ignore_removal: true
+            forbid_values all: false, ignore_removal: false
+          end
+        end
+
+        it 'rejects the exact forbidden tuple (all: true, ignore_removal: true)' do
+          expect { args.bind(all: true, ignore_removal: true) }.to raise_error(
+            ArgumentError,
+            /all.*ignore_removal/
+          )
+        end
+
+        it 'rejects the exact forbidden tuple (all: false, ignore_removal: false)' do
+          expect { args.bind(all: false, ignore_removal: false) }.to raise_error(
+            ArgumentError,
+            /all.*ignore_removal/
+          )
+        end
+
+        it 'allows semantically equivalent pair (all: true, ignore_removal: false)' do
+          expect { args.bind(all: true, ignore_removal: false) }.not_to raise_error
+        end
+
+        it 'allows semantically equivalent pair (all: false, ignore_removal: true)' do
+          expect { args.bind(all: false, ignore_removal: true) }.not_to raise_error
+        end
+
+        it 'allows only :all being provided' do
+          expect { args.bind(all: true) }.not_to raise_error
+          expect { args.bind(all: false) }.not_to raise_error
+        end
+
+        it 'allows only :ignore_removal being provided' do
+          expect { args.bind(ignore_removal: true) }.not_to raise_error
+          expect { args.bind(ignore_removal: false) }.not_to raise_error
+        end
+
+        it 'includes name=value pairs in the error message' do
+          expect { args.bind(all: true, ignore_removal: true) }.to raise_error(
+            ArgumentError,
+            'cannot specify :all=true with :ignore_removal=true'
+          )
+        end
+      end
+
+      context 'with a single tuple declaration' do
+        let(:args) do
+          described_class.define do
+            flag_option :all, negatable: true
+            flag_option :ignore_removal, negatable: true
+            forbid_values all: true, ignore_removal: true
+          end
+        end
+
+        it 'rejects the exact forbidden tuple' do
+          expect { args.bind(all: true, ignore_removal: true) }.to raise_error(ArgumentError)
+        end
+
+        it 'allows non-matching tuple' do
+          expect { args.bind(all: false, ignore_removal: true) }.not_to raise_error
+        end
+
+        it 'allows when only one of the names is provided' do
+          expect { args.bind(all: true) }.not_to raise_error
+        end
+
+        it 'allows when no names are provided' do
+          expect { args.bind }.not_to raise_error
+        end
+      end
+
+      context 'with alias names in declaration' do
+        let(:args) do
+          described_class.define do
+            flag_option %i[all A], negatable: true
+            flag_option :ignore_removal, negatable: true
+            forbid_values A: true, ignore_removal: true
+          end
+        end
+
+        it 'canonicalizes alias to primary name and rejects the tuple' do
+          expect { args.bind(all: true, ignore_removal: true) }.to raise_error(ArgumentError)
+        end
+
+        it 'canonicalizes alias in bind and rejects the tuple' do
+          expect { args.bind(A: true, ignore_removal: true) }.to raise_error(ArgumentError)
+        end
+      end
+
+      context 'with value options' do
+        let(:args) do
+          described_class.define do
+            value_option :strategy
+            value_option :rebase
+            forbid_values strategy: 'ours', rebase: 'false'
+          end
+        end
+
+        it 'rejects the exact forbidden value combination' do
+          expect { args.bind(strategy: 'ours', rebase: 'false') }.to raise_error(ArgumentError)
+        end
+
+        it 'allows different value pairs' do
+          expect { args.bind(strategy: 'theirs', rebase: 'false') }.not_to raise_error
+          expect { args.bind(strategy: 'ours', rebase: 'true') }.not_to raise_error
+        end
+      end
+
+      context 'definition-time validation' do
+        it 'raises ArgumentError for unknown names at definition time' do
+          expect do
+            described_class.define do
+              flag_option :all
+              forbid_values all: true, nonexistent: true
+            end
+          end.to raise_error(ArgumentError, /unknown argument :nonexistent in forbid_values declaration/)
+        end
+
+        it 'raises ArgumentError when called with no pairs' do
+          expect do
+            described_class.define do
+              flag_option :all
+              forbid_values
+            end
+          end.to raise_error(ArgumentError, /forbid_values must be given at least one name-value pair/)
+        end
+      end
+
+      context 'with mixed option and operand names' do
+        let(:args) do
+          described_class.define do
+            flag_option :all, negatable: true
+            operand :paths, repeatable: true
+            forbid_values all: true, paths: []
+          end
+        end
+
+        it 'allows :all with provided paths' do
+          expect { args.bind('file.txt', all: true) }.not_to raise_error
+        end
+      end
+
+      context 'alongside conflicts (independent checks)' do
+        let(:args) do
+          described_class.define do
+            flag_option :all,            negatable: true
+            flag_option :ignore_removal, negatable: true
+            flag_option :update
+            conflicts :all, :update
+            forbid_values all: true, ignore_removal: true
+          end
+        end
+
+        it 'raises for conflicts violation (all+update present)' do
+          expect { args.bind(all: true, update: true) }.to raise_error(
+            ArgumentError, /cannot specify :all and :update/
+          )
+        end
+
+        it 'raises for forbid_values violation (all=true + ignore_removal=true)' do
+          expect { args.bind(all: true, ignore_removal: true) }.to raise_error(
+            ArgumentError, /cannot specify :all=true with :ignore_removal=true/
+          )
+        end
+
+        it 'raises conflicts error for all: false with update: true (negatable false counts as present)' do
+          expect { args.bind(all: false, update: true) }.to raise_error(
+            ArgumentError, /cannot specify :all and :update/
+          )
+        end
+
+        it 'allows all: true with ignore_removal: false (no forbid_values violation)' do
+          expect { args.bind(all: true, ignore_removal: false) }.not_to raise_error
+        end
+      end
+    end
+
     context 'with requires_one_of method' do
       context 'with two options where at least one must be present' do
         let(:args) do
