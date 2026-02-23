@@ -30,8 +30,8 @@ module Git
         flag_option :refresh
         flag_option :ignore_errors
         flag_option :ignore_missing
-        flag_option :no_warn_embedded_repo
         flag_option :renormalize
+        flag_option :no_warn_embedded_repo
         value_option :chmod, inline: true
         value_option :pathspec_from_file, inline: true
         flag_option :pathspec_file_nul
@@ -41,6 +41,11 @@ module Git
         conflicts :all, :update
         conflicts :ignore_removal, :update
         conflicts :pathspec, :pathspec_from_file
+        # --all=true  + --ignore-removal=true  : contradictory (stage all vs ignore removed files)
+        # --all=false + --ignore-removal=false : contradictory (--no-all vs --no-ignore-removal cancel out)
+        # Equivalent pairs (--no-all --ignore-removal or --all --no-ignore-removal) are allowed.
+        forbid_values all: true,  ignore_removal: true
+        forbid_values all: false, ignore_removal: false
         requires :pathspec_from_file, when: :pathspec_file_nul
         requires :dry_run, when: :ignore_missing
       end

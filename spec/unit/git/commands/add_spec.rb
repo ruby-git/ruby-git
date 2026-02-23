@@ -302,6 +302,20 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
+    context 'with contradictory all/ignore_removal combinations' do
+      it 'raises ArgumentError for :all true with :ignore_removal true' do
+        expect { command.call('.', all: true, ignore_removal: true) }.to(
+          raise_error(ArgumentError, /cannot specify :all=true with :ignore_removal=true/)
+        )
+      end
+
+      it 'raises ArgumentError for :all false with :ignore_removal false' do
+        expect { command.call('.', all: false, ignore_removal: false) }.to(
+          raise_error(ArgumentError, /cannot specify :all=false with :ignore_removal=false/)
+        )
+      end
+    end
+
     context 'with requires constraint violations' do
       it 'raises ArgumentError when :pathspec_file_nul is given without :pathspec_from_file' do
         expect { command.call(pathspec_file_nul: true) }

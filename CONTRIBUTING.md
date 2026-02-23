@@ -308,6 +308,23 @@ accept these via an options splat parameter (e.g., `def replace(object, replacem
   passing `false` (which emits `--no-flag`) also counts as using that option in the
   conflict check; non-negatable `false` is treated as absent.
 
+- **Forbidden value combinations (negatable flags)**: When two negatable flags may
+  both be present but only certain value pairings are contradictory, use
+  `forbid_values` declarations instead of (or in addition to) `conflicts`.
+  `conflicts` is presence-based and blocks all co-presence; `forbid_values` blocks
+  only the exact `name: value` tuples listed, leaving semantically equivalent pairs
+  valid. For example, `--all --no-ignore-removal` and `--no-all --ignore-removal`
+  are equivalent and should remain allowed, while `--all --ignore-removal` and
+  `--no-all --no-ignore-removal` are contradictory and should be rejected:
+
+  ```ruby
+  forbid_values all: true,  ignore_removal: true   # contradictory
+  forbid_values all: false, ignore_removal: false  # contradictory
+  ```
+
+  Unknown names raise `ArgumentError` at definition time. Alias names are
+  canonicalized automatically.
+
 - **Exactly-one required from a mutually exclusive group**: When exactly one of a
   group of arguments must be provided (e.g., a command that accepts exactly one of
   `--mode-a`, `--mode-b`, or `--mode-c`), omitting all of them or supplying more
