@@ -43,6 +43,9 @@ module Git
         flag_option :temp
         flag_option :ignore_skip_worktree_bits
         operand :file, required: false, repeatable: true, separator: '--'
+
+        allowed_values :stage, in: %w[1 2 3 all]
+        conflicts :all, :file
       end
 
       # @!method call(*, **)

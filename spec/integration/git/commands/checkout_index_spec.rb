@@ -40,5 +40,19 @@ RSpec.describe Git::Commands::CheckoutIndex, :integration do
         expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
       end
     end
+
+    describe 'input validation' do
+      it 'raises ArgumentError when :all and a file path are both given' do
+        expect { command.call('file.txt', all: true) }.to(
+          raise_error(ArgumentError, /cannot specify :all and :file/)
+        )
+      end
+
+      it 'raises ArgumentError for an invalid :stage value' do
+        expect { command.call(stage: 'invalid') }.to(
+          raise_error(ArgumentError, /Invalid value for :stage/)
+        )
+      end
+    end
   end
 end
