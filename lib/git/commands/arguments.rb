@@ -594,10 +594,6 @@ module Git
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if inline: and as_operand: are both true
-      #
-      # @raise [ArgumentError] if separator: is provided without as_operand: true
-      #
       # @raise [ArgumentError] if defined after a '--' separator boundary
       #
       # @example Basic flag
@@ -789,6 +785,10 @@ module Git
       #
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
       #
+      # @param repeatable [Boolean] when true, accepts an array of values and repeats the option
+      #   for each value. A single value (true/false/string) or nil is also accepted.
+      #   Boolean values in the array are treated as flag appearances. (default: false)
+      #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
       #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
@@ -835,11 +835,21 @@ module Git
       #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
       #   args_def.bind(sign: nil).to_a     # => []
       #
+      # @example With repeatable: true and inline: true
+      #   args_def = Arguments.define do
+      #     flag_or_value_option :recurse_submodules, inline: true, repeatable: true
+      #   end
+      #   args_def.bind(recurse_submodules: true).to_a       # => ['--recurse-submodules']
+      #   args_def.bind(recurse_submodules: 'lib/').to_a     # => ['--recurse-submodules=lib/']
+      #   args_def.bind(recurse_submodules: ['lib/', 'ext/']).to_a
+      #   # => ['--recurse-submodules=lib/', '--recurse-submodules=ext/']
+      #   args_def.bind(recurse_submodules: nil).to_a        # => []
+      #
       def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
-                               required: false, allow_nil: true)
+                               repeatable: false, required: false, allow_nil: true)
         option_type = determine_flag_or_value_option_type(negatable, inline)
         register_option(names, type: option_type, as: as, expected_type: type,
-                               required: required, allow_nil: allow_nil)
+                               repeatable: repeatable, required: required, allow_nil: allow_nil)
       end
 
       # Define a key-value option that can be specified multiple times
@@ -1877,20 +1887,7 @@ module Git
         inline_value: :build_inline_value,
         flag_or_inline_value: :build_flag_or_inline_value,
         negatable_flag_or_inline_value: :build_negatable_flag_or_inline_value,
-        flag_or_value: lambda do |args, arg_spec, value, _|
-          unless value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
-            raise ArgumentError,
-                  "Invalid value for flag_or_value: #{value.inspect} (#{value.class}); " \
-                  'expected true, false, or a String'
-          end
-          return if value == false
-
-          if value == true
-            args << arg_spec
-          else
-            args << arg_spec << value.to_s
-          end
-        end,
+        flag_or_value: :build_flag_or_value,
         negatable_flag_or_value: :build_negatable_flag_or_value,
         value_as_operand: lambda do |args, _, value, definition|
           # Validate array usage when repeatable is false
@@ -1999,35 +1996,60 @@ module Git
 
       # Build flag or inline value option with POSIX-compliant formatting
       #
-      def build_flag_or_inline_value(args, arg_spec, value, _definition)
-        validate_flag_or_value_type!(value, 'flag_or_inline_value')
-        return if value == false
+      def build_flag_or_inline_value(args, arg_spec, value, definition)
+        each_flag_or_value_value(value, definition, 'flag_or_inline_value') do |v|
+          next if v == false
 
-        args << (value == true ? arg_spec : "#{arg_spec}#{inline_value_separator(arg_spec)}#{value}")
+          args << (v == true ? arg_spec : "#{arg_spec}#{inline_value_separator(arg_spec)}#{v}")
+        end
       end
 
       # Build negatable flag or inline value option with POSIX-compliant formatting
       #
-      def build_negatable_flag_or_inline_value(args, arg_spec, value, _definition)
-        validate_flag_or_value_type!(value, 'negatable_flag_or_inline_value')
-        args << case value
-                when true then arg_spec
-                when false then negate_flag(arg_spec)
-                else "#{arg_spec}#{inline_value_separator(arg_spec)}#{value}"
-                end
+      def build_negatable_flag_or_inline_value(args, arg_spec, value, definition)
+        each_flag_or_value_value(value, definition, 'negatable_flag_or_inline_value') do |v|
+          args << case v
+                  when true then arg_spec
+                  when false then negate_flag(arg_spec)
+                  else "#{arg_spec}#{inline_value_separator(arg_spec)}#{v}"
+                  end
+        end
+      end
+
+      # Build flag or value option
+      #
+      def build_flag_or_value(args, arg_spec, value, definition)
+        each_flag_or_value_value(value, definition, 'flag_or_value') do |v|
+          next if v == false
+
+          if v == true
+            args << arg_spec
+          else
+            args << arg_spec << v.to_s
+          end
+        end
       end
 
       # Build negatable flag or value option with proper negation format for short options
       #
-      def build_negatable_flag_or_value(args, arg_spec, value, _definition)
-        validate_flag_or_value_type!(value, 'negatable_flag_or_value')
-        case value
-        when true
-          args << arg_spec
-        when false
-          args << negate_flag(arg_spec)
-        else
-          args << arg_spec << value.to_s
+      def build_negatable_flag_or_value(args, arg_spec, value, definition)
+        each_flag_or_value_value(value, definition, 'negatable_flag_or_value') do |v|
+          case v
+          when true
+            args << arg_spec
+          when false
+            args << negate_flag(arg_spec)
+          else
+            args << arg_spec << v.to_s
+          end
+        end
+      end
+
+      def each_flag_or_value_value(value, definition, option_type)
+        values = definition[:repeatable] ? Array(value) : [value]
+        values.each do |v|
+          validate_flag_or_value_type!(v, option_type)
+          yield v
         end
       end
 
