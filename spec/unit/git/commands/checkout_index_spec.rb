@@ -96,10 +96,22 @@ RSpec.describe Git::Commands::CheckoutIndex do
     end
 
     context 'with the :stage option' do
-      it 'includes --stage=<value>' do
+      it 'includes --stage=1 for stage 1' do
+        expect_command('checkout-index', '--stage=1').and_return(command_result)
+
+        command.call(stage: '1')
+      end
+
+      it 'includes --stage=2 for stage 2' do
         expect_command('checkout-index', '--stage=2').and_return(command_result)
 
         command.call(stage: '2')
+      end
+
+      it 'includes --stage=3 for stage 3' do
+        expect_command('checkout-index', '--stage=3').and_return(command_result)
+
+        command.call(stage: '3')
       end
 
       it 'accepts "all" as the stage value' do
@@ -165,6 +177,24 @@ RSpec.describe Git::Commands::CheckoutIndex do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call(invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)
+        )
+      end
+
+      it 'raises ArgumentError when :all and :file are both given' do
+        expect { command.call('file.txt', all: true) }.to(
+          raise_error(ArgumentError, /cannot specify :all and :file/)
+        )
+      end
+
+      it 'raises ArgumentError for an invalid :stage value' do
+        expect { command.call(stage: '4') }.to(
+          raise_error(ArgumentError, /Invalid value for :stage/)
+        )
+      end
+
+      it 'raises ArgumentError for a non-numeric, non-"all" :stage value' do
+        expect { command.call(stage: 'other') }.to(
+          raise_error(ArgumentError, /Invalid value for :stage/)
         )
       end
     end
