@@ -227,7 +227,7 @@ module Git
     #
     # - **required:** - When true, the option key must be present in the provided
     #   opts. Raises ArgumentError if the key is missing. Defaults to false.
-    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#custom_option}, {#operand}.
+    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#key_value_option}, {#custom_option}, {#operand}.
     # - **allow_nil:** - When false (with required: true), the value cannot be nil.
     #   Raises ArgumentError if a nil value is provided. Defaults to true for
     #   options, false for operands. Supported by: same as **required:**.
@@ -247,7 +247,7 @@ module Git
     #   Can be a String or an Array. Default is nil (derives from name).
     # - **allow_empty:** - ({#value_option} only) When true, output the option
     #   even if the value is an empty string. Default is false (empty strings skipped).
-    # - **repeatable:** - ({#value_option} and {#operand} only) Output an option or
+    # - **repeatable:** - ({#value_option}, {#flag_or_value_option}, and {#operand} only) Output an option or
     #   operand for each array element. Default is false.
     #
     # @example Required option with non-nil value
@@ -547,7 +547,9 @@ module Git
     class Arguments
       # Define a new Arguments instance using the DSL
       #
-      # @yield The block where arguments are defined using DSL methods
+      # @yield [] block evaluated in the context of the new Arguments instance via
+      #   +instance_eval+, so DSL methods ({#flag_option}, {#operand}, etc.) are called
+      #   directly without an explicit receiver
       #
       # @return [Arguments] The configured Arguments instance
       #
@@ -581,9 +583,13 @@ module Git
       # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      #   descriptive message if value doesn't match.
       #
-      # @param validator [Proc, nil] optional validator block (cannot be combined with type:)
+      # @param validator [Proc, nil] optional validator proc; receives the bound value and
+      #   must return +true+ to indicate the value is valid, or return
+      #   a +String+ to raise ArgumentError using that string as the message, or return any
+      #   other non-true value to raise ArgumentError with a generic message. The proc may
+      #   also raise ArgumentError directly. Cannot be combined with type:.
       #
       # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
       #
@@ -642,7 +648,7 @@ module Git
       # @param as [String, nil] custom option string (arrays not supported for value types)
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match. Cannot be combined with validator:.
+      #   descriptive message if value doesn't match.
       #
       # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
       #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
@@ -785,9 +791,10 @@ module Git
       #
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
       #
-      # @param repeatable [Boolean] when true, accepts an array of values and repeats the option
-      #   for each value. A single value (true/false/string) or nil is also accepted.
-      #   Boolean values in the array are treated as flag appearances. (default: false)
+      # @param repeatable [Boolean] when true, accepts an Array of values and repeats the option
+      #   for each element. Each element must be +true+, +false+, or a +String+; nil elements
+      #   raise ArgumentError at bind time. A single (non-Array) value is also accepted.
+      #   Default false.
       #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
       #
@@ -795,7 +802,9 @@ module Git
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if value is not true, false, or a String
+      # @raise [ArgumentError] at bind time if a non-Array bound value is not
+      #   true, false, nil, or a String; or if +repeatable: true+ is used and any
+      #   Array element is not true, false, or a String (including nil elements)
       #
       # @raise [ArgumentError] if defined after a '--' separator boundary
       #
@@ -834,8 +843,8 @@ module Git
       #   args_def.bind(sign: false).to_a   # => ['--no-sign']
       #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
       #   args_def.bind(sign: nil).to_a     # => []
-      #
-      # @example With repeatable: true and inline: true
+
+      # @example With inline: true and repeatable: true
       #   args_def = Arguments.define do
       #     flag_or_value_option :recurse_submodules, inline: true, repeatable: true
       #   end
@@ -843,7 +852,8 @@ module Git
       #   args_def.bind(recurse_submodules: 'lib/').to_a     # => ['--recurse-submodules=lib/']
       #   args_def.bind(recurse_submodules: ['lib/', 'ext/']).to_a
       #   # => ['--recurse-submodules=lib/', '--recurse-submodules=ext/']
-      #   args_def.bind(recurse_submodules: nil).to_a        # => []
+      #   args_def.bind(recurse_submodules: [nil])
+      #   # => raise ArgumentError, 'Invalid value for flag_or_inline_value: nil (NilClass); expected true, false, or a String'
       #
       def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
                                repeatable: false, required: false, allow_nil: true)
@@ -872,13 +882,13 @@ module Git
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if array input is not a [key, value] pair or array of pairs
+      # @raise [ArgumentError] at bind time if array input is not a [key, value] pair or array of pairs
       #
-      # @raise [ArgumentError] if a sub-array has more than 2 elements
+      # @raise [ArgumentError] at bind time if a sub-array has more than 2 elements
       #
-      # @raise [ArgumentError] if a key is nil, empty, or contains the separator
+      # @raise [ArgumentError] at bind time if a key is nil, empty, or contains the separator
       #
-      # @raise [ArgumentError] if a value is a Hash or Array (non-scalar)
+      # @raise [ArgumentError] at bind time if a value is a Hash or Array (non-scalar)
       #
       # @raise [ArgumentError] if defined after a '--' separator boundary
       #
@@ -980,11 +990,25 @@ module Git
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
       #
-      # @yield [value] block that receives the option value and returns the argument string
+      # @yield [value] block that receives the option value and returns the CLI argument(s)
+      #
+      # @yieldparam value [Object] the bound value for this option
+      #
+      # @yieldreturn [String, Array<String>, nil] the CLI argument(s) to emit;
+      #   nil or an empty array emits nothing
       #
       # @return [void]
       #
       # @raise [ArgumentError] if defined after a '--' separator boundary
+      #
+      # @example Custom transformation (e.g., formatting a Date value)
+      #   args_def = Arguments.define do
+      #     custom_option :since do |val|
+      #       val ? "--since=#{val.strftime('%Y-%m-%d')}" : nil
+      #     end
+      #   end
+      #   args_def.bind(since: Date.new(2024, 1, 1)).to_a  # => ['--since=2024-01-01']
+      #   args_def.bind.to_a                               # => []
       #
       def custom_option(names, required: false, allow_nil: true, &block)
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
@@ -992,9 +1016,22 @@ module Git
 
       # Define an execution option (not included in CLI output, forwarded to command execution)
       #
+      # Execution options are omitted from the CLI argument array produced by {Bound#to_a}, but
+      # their values are still accessible on the {Bound} object. This is useful for options that
+      # control Ruby-side execution context (e.g., working directory) rather than git flags.
+      #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
       #
       # @return [void]
+      #
+      # @example Chdir option forwarded to execution context, not emitted as a CLI flag
+      #   args_def = Arguments.define do
+      #     flag_option :verbose
+      #     execution_option :chdir
+      #   end
+      #   bound = args_def.bind(verbose: true, chdir: '/tmp')
+      #   bound.to_a        # => ['--verbose']  # :chdir is not included
+      #   bound[:chdir]     # => '/tmp'          # still accessible on the Bound object
       #
       def execution_option(names)
         register_option(names, type: :execution_option)
@@ -1371,7 +1408,13 @@ module Git
       # @param name [Symbol] the option name (primary or alias); must refer to a
       #   previously defined {#value_option} or {#flag_or_value_option}
       #
-      # @param in [Array<String>] the accepted string values
+      # @param in [#each] accepted values enumerable. Each value is coerced with
+      #   +to_s+ and compared as a string.
+
+      # For {#flag_or_value_option} / {#negatable_flag_or_value_option} variants,
+      # boolean values (+true+ / +false+) are skipped by this check because they
+      # control flag-emission behavior rather than representing candidate string
+      # values.
       #
       # @return [void]
       #
@@ -1528,8 +1571,8 @@ module Git
       #   args_def.bind(nil, 'file.rb').to_a
       #   # => ['--', 'file.rb']
       #
-      # @raise [ArgumentError] if the operand appears before a '--' boundary (or no
-      #   boundary exists) and the bound value starts with '-'
+      # @raise [ArgumentError] during {#bind} if the operand appears before a '--'
+      #   boundary (or no boundary exists) and the bound value starts with '-'
       #
       def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false)
         validate_single_repeatable!(name) if repeatable
