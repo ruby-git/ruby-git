@@ -51,7 +51,8 @@ RSpec.describe Git::Commands::Clone, :integration do
 
     describe 'when the command fails' do
       it 'raises FailedError with a nonexistent source' do
-        expect { command.call('/nonexistent/repo', File.join(clone_dir, 'cloned')) }.to raise_error(Git::FailedError)
+        nonexistent = File.join(clone_dir, 'nonexistent_source')
+        expect { command.call(nonexistent, File.join(clone_dir, 'cloned')) }.to raise_error(Git::FailedError)
       end
     end
   end
