@@ -37,12 +37,13 @@ Layout/LineLength:
     - "tests/units/**/*"
     - "*.gemspec"
 
-# Testing and gemspec DSL results in large blocks
+# Testing, gemspec, and command DSL blocks are intentionally long
 Metrics/BlockLength:
   Exclude:
     - "tests/test_helper.rb"
     - "tests/units/**/*"
     - "*.gemspec"
+    - "lib/git/commands/*.rb"
 
 # Don't force every test class to be described
 Style/Documentation:
