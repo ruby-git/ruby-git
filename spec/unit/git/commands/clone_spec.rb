@@ -72,6 +72,12 @@ RSpec.describe Git::Commands::Clone do
 
         command.call(repository_url, directory, branch: 'development')
       end
+
+      it 'accepts the :b alias' do
+        expect_command('clone', '--branch', 'development', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, b: 'development')
+      end
     end
 
     context 'with :filter option' do
@@ -111,6 +117,13 @@ RSpec.describe Git::Commands::Clone do
                        '--', repository_url, directory).and_return(command_result)
 
         command.call(repository_url, directory, config: ['user.name=John Doe', 'user.email=john@doe.com'])
+      end
+
+      it 'accepts the :c alias' do
+        expect_command('clone', '--config', 'user.name=John Doe', '--', repository_url,
+                       directory).and_return(command_result)
+
+        command.call(repository_url, directory, c: 'user.name=John Doe')
       end
     end
 
@@ -428,12 +441,6 @@ RSpec.describe Git::Commands::Clone do
 
         command.call(repository_url, directory, ref_format: 'reftable')
       end
-
-      it 'rejects invalid ref_format values' do
-        expect do
-          command.call(repository_url, directory, ref_format: 'invalid')
-        end.to raise_error(ArgumentError, /Invalid value for :ref_format/)
-      end
     end
 
     context 'with :revision option' do
@@ -445,7 +452,27 @@ RSpec.describe Git::Commands::Clone do
       end
     end
 
-    context 'with constraint violations' do
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(repository_url, directory, invalid_option: true) }
+          .to raise_error(ArgumentError, /Unsupported options: :invalid_option/)
+      end
+
+      it 'raises ArgumentError when repository is missing' do
+        expect { command.call }
+          .to raise_error(ArgumentError, /repository is required/)
+      end
+
+      it 'raises ArgumentError for non-boolean single_branch values' do
+        expect { command.call(repository_url, directory, single_branch: 'yes') }
+          .to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
+      end
+
+      it 'raises ArgumentError for invalid ref_format values' do
+        expect { command.call(repository_url, directory, ref_format: 'invalid') }
+          .to raise_error(ArgumentError, /Invalid value for :ref_format/)
+      end
+
       it 'raises ArgumentError when :also_filter_submodules is given without :filter' do
         expect { command.call(repository_url, directory, recurse_submodules: true, also_filter_submodules: true) }
           .to raise_error(ArgumentError, /:also_filter_submodules requires :filter/)
@@ -487,13 +514,6 @@ RSpec.describe Git::Commands::Clone do
           command.call(repository_url, directory, bundle_uri: 'https://example.com/bundle',
                                                   shallow_exclude: 'v1.0')
         end.to raise_error(ArgumentError, /:bundle_uri.*:shallow_exclude|:shallow_exclude.*:bundle_uri/)
-      end
-    end
-
-    context 'input validation' do
-      it 'raises ArgumentError for non-boolean single_branch values' do
-        expect { command.call(repository_url, directory, single_branch: 'yes') }
-          .to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
       end
     end
   end
