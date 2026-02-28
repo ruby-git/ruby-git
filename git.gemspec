@@ -51,7 +51,7 @@ Gem::Specification.new do |spec|
     spec.add_development_dependency 'irb', '~> 1.16'
     spec.add_development_dependency 'redcarpet', '~> 3.6'
     spec.add_development_dependency 'yard', '~> 0.9', '>= 0.9.28'
-    spec.add_development_dependency 'yard-doctest', '~> 0.1'
+    spec.add_development_dependency 'yard_example_test', '~> 0.2'
     spec.add_development_dependency 'yardstick', '~> 0.9'
   end
 
