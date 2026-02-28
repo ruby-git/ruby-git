@@ -267,8 +267,7 @@ module Git
         #
         def split_sections(output, include_dirstat)
           lines = output.split("\n").reject(&:empty?)
-          raw_lines = lines.select { |l| l.start_with?(':') }
-          non_raw_lines = lines.reject { |l| l.start_with?(':') }
+          raw_lines, non_raw_lines = lines.partition { |l| l.start_with?(':') }
           shortstat_index = non_raw_lines.index { |l| l.match?(/^\s*\d+\s+files?\s+changed/) }
 
           return [raw_lines, non_raw_lines, nil, []] unless shortstat_index

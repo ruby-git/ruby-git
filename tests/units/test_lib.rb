@@ -293,7 +293,7 @@ class TestLib < Test::Unit::TestCase
   def test_branches_all
     branches = @lib.branches_all
     assert(branches.size.positive?)
-    assert(branches.all? { |b| b.is_a?(Git::BranchInfo) }) # all are BranchInfo objects
+    assert(branches.all?(Git::BranchInfo)) # all are BranchInfo objects
     assert(branches.select(&:current).size.positive?) # has a current branch
     assert(branches.select { |b| %r{/}.match(b.refname) }.size.positive?) # has a remote branch
     assert(branches.reject { |b| %r{/}.match(b.refname) }.size.positive?) # has a local branch
