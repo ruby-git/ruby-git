@@ -227,15 +227,22 @@ module Git
     #
     # - **required:** - When true, the option key must be present in the provided
     #   opts. Raises ArgumentError if the key is missing. Defaults to false.
-    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}, {#key_value_option}, {#custom_option}, {#operand}.
+    #
+    #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option},
+    #   {#key_value_option}, {#custom_option}, {#operand}.
+    #
     # - **allow_nil:** - When false (with required: true), the value cannot be nil.
     #   Raises ArgumentError if a nil value is provided. Defaults to true for
-    #   options, false for operands. Supported by: same as **required:**.
+    #   options, false for operands.
+    #
+    #   Supported by: same as **required:**.
+    #
     # - **type:** - Validates the value is an instance of the specified class(es).
     #   Accepts a single class or an array of classes. Raises ArgumentError if type
     #   doesn't match. This parameter only performs type checking during validation;
     #   conversion of values to CLI argument strings happens later during the build
     #   phase (for example, via #to_s in {Bound#to_a}). Defaults to nil (no validation).
+    #
     #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
     # Note: {#literal} and {#execution_option} do not support these validation parameters.
@@ -245,10 +252,12 @@ module Git
     #
     # - **as:** - Override the CLI argument(s) derived from the option name
     #   Can be a String or an Array. Default is nil (derives from name).
+    #
     # - **allow_empty:** - ({#value_option} only) When true, output the option
     #   even if the value is an empty string. Default is false (empty strings skipped).
-    # - **repeatable:** - ({#value_option}, {#flag_or_value_option}, and {#operand} only) Output an option or
-    #   operand for each array element. Default is false.
+    #
+    # - **repeatable:** - ({#value_option}, {#flag_or_value_option}, and {#operand}
+    #   only) Output an option or operand for each array element. Default is false.
     #
     # @example Required option with non-nil value
     #   args_def = Arguments.define do
@@ -843,7 +852,7 @@ module Git
       #   args_def.bind(sign: false).to_a   # => ['--no-sign']
       #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
       #   args_def.bind(sign: nil).to_a     # => []
-
+      #
       # @example With inline: true and repeatable: true
       #   args_def = Arguments.define do
       #     flag_or_value_option :recurse_submodules, inline: true, repeatable: true
@@ -853,7 +862,7 @@ module Git
       #   args_def.bind(recurse_submodules: ['lib/', 'ext/']).to_a
       #   # => ['--recurse-submodules=lib/', '--recurse-submodules=ext/']
       #   args_def.bind(recurse_submodules: [nil])
-      #   # => raise ArgumentError, 'Invalid value for flag_or_inline_value: nil (NilClass); expected true, false, or a String'
+      #   # => raise_error ArgumentError, /Invalid value for flag_or_inline_value/
       #
       def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
                                repeatable: false, required: false, allow_nil: true)
@@ -1410,8 +1419,8 @@ module Git
       #
       # @param in [#each] accepted values enumerable. Each value is coerced with
       #   +to_s+ and compared as a string.
-
-      # For {#flag_or_value_option} / {#negatable_flag_or_value_option} variants,
+      #
+      # For \\{#flag_or_value_option} / \\{#negatable_flag_or_value_option} variants,
       # boolean values (+true+ / +false+) are skipped by this check because they
       # control flag-emission behavior rather than representing candidate string
       # values.

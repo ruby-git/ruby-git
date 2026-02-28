@@ -258,7 +258,7 @@ module Git
     # @api private
     #
     def build_git_cmd(args)
-      raise ArgumentError, 'The args array can not contain an array' if args.any? { |a| a.is_a?(Array) }
+      raise ArgumentError, 'The args array can not contain an array' if args.any?(Array)
 
       [binary_path, *global_opts, *args].map(&:to_s)
     end

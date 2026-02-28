@@ -32,7 +32,7 @@ module Git
       def each(&block) = commits.each(&block)
       def last = commits.last
       def [](index) = commits[index]
-      def to_s = map(&:to_s).join("\n")
+      def to_s = commits.join("\n")
       def size = commits.size
     end
 
@@ -117,7 +117,7 @@ module Git
         'Calling Git::Log#to_s is deprecated. Call #execute and then #to_s on the result object.'
       )
       run_log_if_dirty
-      @commits&.map(&:to_s)&.join("\n")
+      @commits&.join("\n")
     end
 
     # @deprecated Use {#execute} and call the method on the result.
