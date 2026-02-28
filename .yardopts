@@ -3,7 +3,7 @@
 --markup-provider=redcarpet
 --markup=markdown
 --fail-on-warning
---plugin yard-doctest
+--plugin yard_example_test
 -
 README.md
 CHANGELOG.md

@@ -32,13 +32,11 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
     verify.require_exact_threshold = false
   end
 
-  # yard:doctest
+  # yard:example-test
 
-  require 'yard-doctest'
-  require 'yard/doctest/rake'
+  require 'yard_example_test/rake'
 
-  desc 'Run YARD doctest to verify documentation examples'
-  YARD::Doctest::RakeTask.new('yard:doctest') do |task|
+  YardExampleTest::RakeTask.new('yard:example-test') do |task|
     task.pattern = 'lib/git/commands/arguments.rb'
   end
 
@@ -47,6 +45,6 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
   # Do not include yard:audit in the yard task because there are too many
   # missing YARD doc elements
   #
-  desc 'Run YARD documentation tasks (build, coverage, doctest)'
-  task yard: %i[yard:build yard:coverage yard:doctest]
+  desc 'Run YARD documentation tasks (build, coverage, example-test)'
+  task yard: %i[yard:build yard:coverage yard:example-test]
 end
