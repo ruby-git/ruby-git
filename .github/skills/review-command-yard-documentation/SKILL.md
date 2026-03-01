@@ -138,12 +138,28 @@ When command declares non-default exit range:
 
 Prefer interface-level wording (what callers can pass/expect), not internals.
 
+**Common example — stdin transport mechanism:**
+
+```ruby
+# Bad: leaks implementation detail (IO pipe, threading)
+# Object names are written to the process's stdin via an in-memory IO pipe;
+# this avoids spawning additional processes and works with the --batch protocol.
+
+# Good: describes caller-facing behavior
+# Object names are passed to the git process's stdin using the --batch protocol.
+```
+
+- [ ] description does not mention `IO.pipe`, threads, or pipe buffer management
+- [ ] description does not reference internal method names (`with_stdin`, `run_batch`)
+- [ ] description describes what the caller passes and what they get back
+
 ## Common issues
 
 - Missing `# @!method call(*, **)` directive (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
+- Description leaks internal mechanics (e.g., "written via IO pipe") instead of describing caller-facing behavior
 
 ## Output
 
