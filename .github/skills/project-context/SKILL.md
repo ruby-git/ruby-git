@@ -190,11 +190,12 @@ swallow exceptions silently.
 
 ## Compatibility
 
-- **Minimum Ruby:** 3.2.0 — MRI only; tested on 3.2, 3.4, 4.0
+- **Minimum Ruby (language level):** 3.2.0
+- **Supported Rubies:** MRI (macOS, Linux, Windows); latest JRuby and TruffleRuby on Linux
 - **Minimum Git:** 2.28.0
-- **Platforms:** macOS, Linux, Windows
+- **Platforms:** macOS, Linux, Windows (JRuby/TruffleRuby officially supported on Linux only)
 - Use `File.join` and forward slashes; avoid platform-specific paths in tests
-- Windows has different path handling, file-system behavior, and line endings
+- Windows has different path handling, file-system behavior, and line endings; JRuby on Windows is not supported
 - Document git version requirements for features that need newer git
 
 ## Performance
