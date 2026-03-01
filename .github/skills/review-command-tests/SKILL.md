@@ -1,21 +1,33 @@
+---
+name: review-command-tests
+description: "Verifies unit and integration tests for Git::Commands::* classes follow project conventions. Use to audit test quality and coverage for command classes."
+---
+
 # Review Command Tests
 
 Verify unit and integration tests for `Git::Commands::*` classes follow project
 conventions.
 
-Command classes follow `Git::Commands::Base`: they declare `arguments do`, may
-declare `allow_exit_status`, and use a `# @!method call(*, **)` YARD directive to
-document overloads. `Base#call` performs binding and execution and always passes
-`raise_on_failure: false`, then validates exit status membership against the
-allowed range (`0..0` by default).
+## Contents
 
-## How to use this prompt
+- [How to use this skill](#how-to-use-this-skill)
+- [Related skills](#related-skills)
+- [Unit tests](#unit-tests)
+  - [Cover these cases](#cover-these-cases)
+  - [Expectations for command invocation](#expectations-for-command-invocation)
+  - [What not to test](#what-not-to-test)
+  - [Test grouping](#test-grouping)
+- [Integration tests](#integration-tests)
+  - [Test grouping](#test-grouping)
+- [General guidelines](#general-guidelines)
+
+## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with the unit
 and/or integration spec file(s) to review. Examples:
 
 ```text
-Using the Review Command Tests prompt, review
+Using the Review Command Tests skill, review
 spec/unit/git/commands/branch/delete_spec.rb and
 spec/integration/git/commands/branch/delete_spec.rb.
 ```
@@ -27,12 +39,12 @@ Review Command Tests: spec/unit/git/commands/stash/push_spec.rb
 The invocation needs the spec file(s) to review. Including the corresponding
 command source file provides useful context for verifying argument coverage.
 
-## Related prompts
+## Related skills
 
-- **Review Arguments DSL** — verifying DSL entries match git CLI
-- **Review Command Implementation** — class structure, phased rollout gates, and
+- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
+- [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
-- **Review YARD Documentation** — documentation completeness for command classes
+- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
 
 ## Unit tests
 

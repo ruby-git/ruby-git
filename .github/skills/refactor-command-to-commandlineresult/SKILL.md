@@ -1,16 +1,32 @@
+---
+name: refactor-command-to-commandlineresult
+description: "Migrates a command class that still performs parsing or custom execution logic to return raw Git::CommandLineResult, moving parsing to facade/parser layers. Use during architectural redesign refactoring."
+---
+
 # Refactor Command to CommandLineResult
 
 Migrate a command that still performs parsing or custom execution logic to the
 `Git::Commands::Base` pattern, so command classes return raw
 `Git::CommandLineResult` and parsing moves to facade/parser layers.
 
-## How to use this prompt
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Related skills](#related-skills)
+- [Target end state](#target-end-state)
+- [Refactor steps](#refactor-steps)
+- [What to remove from command classes](#what-to-remove-from-command-classes)
+- [What to update in tests](#what-to-update-in-tests)
+- [YARD updates](#yard-updates)
+- [Migration process and internal compatibility](#migration-process-and-internal-compatibility)
+
+## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with the command
 class or source file to migrate. Examples:
 
 ```text
-Using the Refactor Command to CommandLineResult prompt, migrate
+Using the Refactor Command to CommandLineResult skill, migrate
 Git::Commands::Stash::Pop to the Base pattern.
 ```
 
@@ -21,13 +37,13 @@ Refactor Command to CommandLineResult: lib/git/commands/branch/delete.rb
 The invocation needs the command class name or file path of the command to
 refactor.
 
-## Related prompts
+## Related skills
 
-- **Review Command Implementation** — canonical class-shape checklist, phased
+- [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
-- **Review Arguments DSL** — verifying DSL entries match git CLI
-- **Review Command Tests** — unit/integration test expectations for command classes
-- **Review Backward Compatibility** — preserving `Git::Lib` return-value contracts
+- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
+- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 
 ## Target end state
 
@@ -85,7 +101,7 @@ end
 
 ## Migration process and internal compatibility
 
-See **Review Command Implementation** for the canonical phased rollout checklist
+See [Review Command Implementation](../review-command-implementation/SKILL.md) for the canonical phased rollout checklist
 and internal compatibility contract. In summary:
 
 - **always work on a feature branch** — never commit or push directly to `main`;
@@ -95,4 +111,4 @@ and internal compatibility contract. In summary:
 - keep each slice independently revertible
 - do not mix unrelated behavior changes with refactor-only changes
 - pass slice gates: `bundle exec rspec`, `bundle exec rake test`,
-  `bundle exec rubocop`, `bundle exec yard`
+  `bundle exec rubocop`, `bundle exec rake yard`
