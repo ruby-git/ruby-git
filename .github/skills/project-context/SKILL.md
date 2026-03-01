@@ -109,6 +109,16 @@ Command classes that need non-zero successful exits declare
 | Constant | UPPER_SNAKE_CASE | `VERSION` |
 | Predicate | ends with `?` | `bare?` |
 | Mutating method | ends with `!` | `reset!` |
+| Parsed metadata struct (top-level `Git::`) | `*Info` suffix | `BranchInfo`, `TagInfo`, `StashInfo` |
+| Mutating-operation outcome struct (top-level `Git::`) | `*Result` suffix | `BranchDeleteResult`, `TagDeleteResult` |
+
+**Result class constraints:**
+
+- `*Info` / `*Result` suffixes are reserved for top-level `Git::` data structs.
+  Never apply them to `Git::Commands::*` classes — command classes are subprocess
+  runners, not data structs, and a name like `Commands::Foo::BarInfo` misleads
+  readers.
+- Never name a sub-command class `Object` — it shadows Ruby's `::Object`.
 
 ### Code Organization
 
