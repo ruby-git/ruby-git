@@ -48,7 +48,7 @@ Evaluate the PR against these criteria:
 
 **Code Quality:** Ruby style (Rubocop-compliant), `frozen_string_literal: true`, proper naming (snake_case/PascalCase), single-responsibility, no duplication, Ruby 3.2+ idioms.
 
-**Testing:** Changes covered by atomic Test::Unit tests, well-named, passing CI. Test modifications require justification.
+**Testing:** Changes are covered by atomic RSpec specs (`spec/`), well-named, and passing CI. Legacy Test::Unit tests (`tests/units/`) require justification to modify.
 
 **Documentation:** YARD docs on public methods with `@param`, `@return`, `@raise`, `@example`. README updated for user-facing changes. Platform differences and security documented.
 

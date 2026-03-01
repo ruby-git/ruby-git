@@ -55,7 +55,7 @@ check discoverability quality before committing.
 Create a new folder with a lowercase, hyphenated name:
 
 ```
-skills/<skill-name>/
+.github/skills/<skill-name>/
 └── SKILL.md          # Required
 ```
 
@@ -75,7 +75,7 @@ description: '<What it does>. Use when <specific triggers, scenarios, keywords u
 | Field | Required | Constraints |
 |-------|----------|-------------|
 | `name` | **Yes** | 1-64 chars, lowercase letters/numbers/hyphens only, must match folder name |
-| `description` | **Yes** | 1-1024 chars, must describe WHAT it does AND WHEN to use it |
+| `description` | **Yes** | 10-1024 chars, must describe WHAT it does AND WHEN to use it |
 | `license` | No | License name or reference to bundled LICENSE.txt |
 | `compatibility` | No | 1-500 chars, environment requirements if needed |
 | `metadata` | No | Key-value pairs for additional properties |
