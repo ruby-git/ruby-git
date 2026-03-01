@@ -7,8 +7,8 @@ system calls to the `git` CLI and exposes an API for creating and manipulating r
 working with branches/commits/tags/remotes, inspecting history and objects, and
 performing all standard Git operations.
 
-**Status:** Stable. Minimum Ruby 3.2.0, minimum Git 2.28.0. MRI only; Mac, Linux,
-Windows.
+**Status:** Stable. Minimum Ruby 3.2.0, minimum Git 2.28.0. MRI on macOS/Linux/Windows;
+JRuby and TruffleRuby on Linux (JRuby/TruffleRuby on Windows are not tested).
 
 For architecture details, coding standards, design philosophy, key technical details,
 and compatibility requirements see the
