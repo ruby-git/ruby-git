@@ -72,7 +72,7 @@ module Git
       # Summary...
       #
       # @api private
-      class Bar < Git::Commands::Base
+      class Bar < Git::Commands::Base  # never name the class Object
         arguments do
           # literals/options/operands
         end
