@@ -13,6 +13,7 @@ docs using the `Git::Commands::Base` architecture.
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Files to generate](#files-to-generate)
+- [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
 - [Command template (Base pattern)](#command-template-base-pattern)
 - [Output-format options are intentionally omitted](#output-format-options-are-intentionally-omitted)
 - [DSL ordering convention](#dsl-ordering-convention)
@@ -59,6 +60,102 @@ Optional (first command in module):
 
 - `lib/git/commands/foo.rb`
 
+## Single class vs. sub-command namespace
+
+Most git commands map to a single class. Split into a namespace module with
+multiple sub-command classes when the git command surfaces **meaningfully
+different concerns** that have distinct call shapes, output formats, or
+protocols.
+
+### When to use sub-commands
+
+**Split by operation** — when the git command has named sub-actions whose
+option sets have little overlap (each sub-action would have mostly dead options
+if they shared one class):
+
+```
+git stash push / pop / apply / drop / list / show
+git tag --create / --delete / --list
+git worktree add / list / remove / move
+```
+
+**Split by output type / protocol** — when the same underlying git command
+produces structurally different output depending on a mode flag, and callers
+will always use one mode or the other (never both):
+
+```
+git diff --numstat  → Diff::Numstat   (integer line counts per file)
+git diff --raw      → Diff::Raw       (file metadata, modes, status codes)
+git diff            → Diff::Patch     (full unified patch text)
+
+git cat-file --batch-check → CatFile::ObjectMeta    (sha + type + size per object)
+git cat-file --batch       → CatFile::ObjectContent (sha + type + size + raw content)
+```
+
+**Split by stdin protocol** — when one variant reads from stdin and another
+does not (even if the git command is the same). The stdin variant needs a
+`call` override that uses `Base#with_stdin`; mixing that with a no-stdin path
+in one class produces an awkward interface.
+
+### When to keep a single class
+
+- Minor option variations that share the same output format and argument set.
+- When the "different modes" are just 1–2 flags that can be `@overload`-documented
+  naturally and all callers supply the same operands.
+- When callers would always need both modes together (rare: consider a facade
+  instead).
+
+### Naming sub-command classes
+
+Prefer **user-oriented names** (what the caller gets back) over flag names
+(implementation detail the caller shouldn't need to know):
+
+```
+# Avoid — leaks implementation detail
+CatFile::BatchCheck / CatFile::Batch
+
+# Prefer — describes the result from the caller's perspective
+CatFile::ObjectMeta / CatFile::ObjectContent
+```
+
+Two hard constraints:
+
+- **Never name a sub-command class `Object`** — it shadows Ruby's `::Object`
+  base class anywhere that constant is looked up inside the namespace.
+- **Never use the `*Info` or `*Result` suffix** on command classes — those
+  suffixes are reserved for parsed result structs (`BranchInfo`, `TagInfo`,
+  `BranchDeleteResult`) which live in the top-level `Git::` namespace, not
+  in `Git::Commands::*`. A reader seeing `CommandFoo::BarInfo` expects a data
+  struct, not a class that runs a subprocess.
+
+### Namespace module template
+
+When splitting, create a bare namespace module file (`foo.rb`) — no class —
+matching the pattern of `diff.rb` and `cat_file.rb`:
+
+```ruby
+# frozen_string_literal: true
+
+module Git
+  module Commands
+    # One-line summary of what the git command does.
+    #
+    # This module contains command classes for [reason for split]:
+    # - {Foo::Bar} – what Bar does
+    # - {Foo::Baz} – what Baz does
+    #
+    # @api private
+    # @see https://git-scm.com/docs/git-foo git-foo documentation
+    #
+    module Foo
+    end
+  end
+end
+```
+
+Each sub-command file adds `@see Git::Commands::Foo` to link back to the
+parent module's overview.
+
 ## Command template (Base pattern)
 
 ```ruby
@@ -101,6 +198,45 @@ The template above uses the default `def call(...) = super` implicitly — no ex
 validation, stdin feeding (`Base#with_stdin`), or non-trivial option routing, see
 the [`#call` override guidance](../review-command-implementation/SKILL.md#2-call-implementation)
 in the Review Command Implementation skill.
+
+### Overriding `call` — inline example
+
+When `def call(...) = super` is not enough, override `call` explicitly. Call
+`args_definition.bind(...)` directly rather than `super`, and invoke
+`@execution_context.command` yourself:
+
+```ruby
+def call(*objects, **options)
+  raise ArgumentError, '...' if objects.empty? && !options[:flag]
+
+  bound = args_definition.bind(**options)
+  with_stdin(objects.map { |o| "#{o}\n" }.join) do |reader|
+    run_batch(bound, reader)
+  end
+end
+
+private
+
+def run_batch(bound, reader)
+  result = @execution_context.command(*bound, in: reader, **bound.execution_options, raise_on_failure: false)
+  validate_exit_status!(result)
+  result
+end
+```
+
+Key points:
+
+- **`in:` requires a real IO object.** `Process.spawn` only accepts objects with
+  a file descriptor; `StringIO` does not work. `Base#with_stdin` handles this by
+  opening an `IO.pipe` and spawning a background `Thread` that writes the content
+  to the write end (then closes it). The threaded write prevents deadlocks when
+  content exceeds the OS pipe buffer — the subprocess can drain the pipe
+  concurrently. The thread rescues `Errno::EPIPE` / `IOError` so it exits cleanly
+  if the subprocess closes stdin early. Pass an empty string when the process
+  should receive no input (e.g. when a `--batch-all-objects`-style flag makes git
+  enumerate objects itself).
+- **Extract helpers** like `run_batch` to stay within Rubocop `Metrics/MethodLength`
+  and `Metrics/AbcSize` thresholds. Aim to keep `call` under ~10 lines.
 
 ## Output-format options are intentionally omitted
 
