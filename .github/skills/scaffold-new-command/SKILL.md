@@ -96,6 +96,12 @@ module Git
 end
 ```
 
+The template above uses the default `def call(...) = super` implicitly — no explicit
+`call` definition is needed in the common case. For commands that require input
+validation, stdin feeding (`Base#with_stdin`), or non-trivial option routing, see
+the [`#call` override guidance](../review-command-implementation/SKILL.md#2-call-implementation)
+in the Review Command Implementation skill.
+
 ## Output-format options are intentionally omitted
 
 The library requires **deterministic, parseable output** from each command class.

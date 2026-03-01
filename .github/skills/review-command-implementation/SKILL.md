@@ -100,6 +100,39 @@ Shared behavior lives in `Base`:
 - [ ] Contains no custom bind/execute/exit-status logic in migrated commands
 - [ ] Does not parse output in command class
 
+#### `#call` override guidance
+
+Most commands use `def call(...) = super`, which forwards all arguments to
+`Base#call` for binding, execution, and exit-status validation.
+
+**Override `call` only when the command needs:**
+
+1. **Input validation** — raise `ArgumentError` for invalid option combinations
+   the DSL cannot express (e.g., mutually exclusive modes)
+2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
+   `Base#with_stdin`
+3. **Non-trivial option routing** — build different argument sets based on
+   which options are present
+
+**When overriding:**
+
+- Bind arguments via `args_definition.bind(...)` — do not reimplement binding
+- Delegate exit-status handling to `validate_exit_status!` — do not reimplement
+- Do not call `super` after manual binding; use `@execution_context.command` directly
+
+**`Base#with_stdin(content)` mechanics:**
+
+`Base#with_stdin(content)` opens an `IO.pipe`, writes the string `content`, and
+yields the read end as `in:` to the execution context. Use this instead of manual
+pipe management. `StringIO` cannot be used because `Process.spawn` requires a real
+file descriptor.
+
+**DSL defaults:**
+
+Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
+automatically during `args_definition.bind(...)` — do not set defaults manually in
+`call`.
+
 ### 3. Exit-status configuration
 
 - [ ] Commands with non-zero successful exits declare `allow_exit_status <range>`
