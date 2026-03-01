@@ -138,6 +138,58 @@ module Git
       def validate_exit_status!(result)
         raise Git::FailedError, result unless allowed_exit_status_range.include?(result.status.exitstatus)
       end
+
+      # Opens an in-memory IO pipe, spawns a background thread to write
+      # `content` to the write end (then close it), and immediately yields
+      # the read end. The write and close happen concurrently with the block.
+      #
+      # The read end can be passed as the `in:` keyword to
+      # {Git::Lib#command} / {Git::CommandLine#run}, connecting it directly to
+      # the spawned git process's stdin without an intermediate file or shell
+      # heredoc. This is required because `Process.spawn` only accepts real IO
+      # objects with a file descriptor — `StringIO` does not work.
+      #
+      # The threaded write prevents deadlocks when `content` exceeds the OS
+      # pipe buffer: the subprocess can drain the pipe concurrently while the
+      # writer thread continues writing.
+      #
+      # Pass an empty string when the process should receive no input (e.g.
+      # when `--batch-all-objects` is used and git enumerates objects itself).
+      #
+      # @example Feed a list of object names to a git batch command
+      #   stdin_content = objects.map { |o| "#{o}\n" }.join
+      #   with_stdin(stdin_content) do |reader|
+      #     @execution_context.command('cat-file', '--batch-check', in: reader, raise_on_failure: false)
+      #   end
+      #
+      # @param content [String] text to write to the process's stdin
+      #
+      # @yield [reader [IO]] the read end of the pipe; valid only for the
+      #   duration of the block
+      #
+      # @return [Object] the value returned by the block
+      #
+      def with_stdin(content)
+        reader, writer = IO.pipe
+        writer_thread = start_stdin_writer(content, writer)
+        yield reader
+      ensure
+        reader.close unless reader.closed?
+        writer_thread&.join
+      end
+
+      # Spawns a thread that writes content to writer then closes it.
+      # Rescues EPIPE/IOError so the thread exits cleanly when the subprocess
+      # closes its stdin early (e.g. on error exit before reading all input).
+      def start_stdin_writer(content, writer)
+        Thread.new do
+          writer.write(content) unless content.empty?
+        rescue Errno::EPIPE, IOError
+          nil # subprocess closed stdin early
+        ensure
+          writer.close unless writer.closed?
+        end
+      end
     end
   end
 end

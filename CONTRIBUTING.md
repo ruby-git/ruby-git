@@ -243,6 +243,19 @@ names where appropriate.
 See also [Output processing](#output-processing) for when different output formats
 require separate methods.
 
+### Result class naming
+
+Parsed result objects returned from facade methods follow a reserved suffix convention:
+
+- **`*Info`** — a parsed metadata struct returned from a query (e.g., `BranchInfo`,
+  `TagInfo`, `StashInfo`, `DiffInfo`). Always lives in the top-level `Git::` namespace.
+- **`*Result`** — the outcome of a mutating or destructive operation (e.g.,
+  `BranchDeleteResult`, `TagDeleteResult`). Also lives in `Git::`.
+
+Do **not** use these suffixes on `Git::Commands::*` command classes — those are
+subprocess runners, not data objects. A reader seeing `Commands::Foo::BarInfo`
+expects a parsed struct, not a class that shells out to git.
+
 ### Parameter naming
 
 Parameters within the `git` gem methods are named after their corresponding long
@@ -503,15 +516,36 @@ forwards all arguments to `Base#call`. `Base#call` binds them via the Arguments 
 calls `@execution_context.command(*args, **args.execution_options,
 raise_on_failure: false)`, and validates the exit status.
 
-When a command needs to inspect or manipulate argument values, override `call` and
-call `super` or work with the arguments directly:
+Override `call` explicitly in three situations:
+
+1. **Input validation** — guard `ArgumentError` for invalid option combinations that
+   the DSL cannot express (e.g., empty operands without a compensating flag).
+2. **Stdin via IO pipe** — commands using the `--batch` / `--batch-check` protocol
+   must feed object names to the subprocess's stdin. Use the inherited
+   `Base#with_stdin(content)`, which opens an `IO.pipe`, writes the string content,
+   and yields the read end as `in:`. Do not open a pipe manually — `StringIO` is
+   not accepted by `Process.spawn` (it has no file descriptor).
+3. **Non-trivial option routing** — when multiple call shapes require different
+   argument sets built separately before dispatching.
+
+When overriding, work with `args_definition.bind(...)` directly and delegate
+exit-status handling to the inherited `validate_exit_status!`. Extract bulk logic
+into private helpers to satisfy Rubocop `Metrics` thresholds:
 
 ```ruby
-def call(*, **)
-  args = self.class.args_definition.bind(*, **)
-  result = @execution_context.command(*args, **args.execution_options, raise_on_failure: false)
+def call(*objects, **options)
+  raise ArgumentError, '...' if objects.empty? && !options[:batch_all_objects]
+
+  bound = args_definition.bind(**options)
+  with_stdin(objects.map { |o| "#{o}\n" }.join) { |reader| run_batch(bound, reader) }
+end
+
+private
+
+def run_batch(bound, reader)
+  result = @execution_context.command(*bound, in: reader, **bound.execution_options, raise_on_failure: false)
   validate_exit_status!(result)
-  Parsers::Diff.parse(result.stdout, include_dirstat: !args.dirstat.nil?)
+  result
 end
 ```
 

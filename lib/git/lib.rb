@@ -1893,6 +1893,7 @@ module Git
     end
 
     COMMAND_ARG_DEFAULTS = {
+      in: nil,
       out: nil,
       err: nil,
       normalize: true,
@@ -1956,6 +1957,9 @@ module Git
     #   @param args [Array<String>] the command and its arguments
     #
     #   @param options_hash [Hash] the options to pass to the command
+    #
+    # @option options_hash [IO, nil] :in the IO object to use as stdin for the command, or nil to
+    #   inherit the parent process stdin. Must be a real IO object with a file descriptor.
     #
     # @option options_hash [IO, String, #write, nil] :out the destination for captured stdout
     #
