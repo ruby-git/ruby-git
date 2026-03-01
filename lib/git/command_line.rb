@@ -148,6 +148,9 @@ module Git
     #
     # @param options_hash [Hash] the options to pass to the command
     #
+    # @option options_hash [IO, nil] :in the IO object to use as stdin for the command, or nil to
+    #   inherit the parent process stdin. Must be a real IO object with a file descriptor (not StringIO).
+    #
     # @option options_hash [#write, nil] :out the object to write stdout to or nil to ignore stdout
     #
     #   If this is a 'StringIO' object, then `stdout_writer.string` will be returned.
@@ -229,13 +232,10 @@ module Git
     def run_with_capture_options(**options_hash)
       chdir = options_hash[:chdir] || :not_set
       timeout_after = options_hash[:timeout]
-      out = options_hash[:out]
-      err = options_hash[:err]
       merge_output = options_hash[:merge] || false
 
       { chdir:, timeout_after:, merge_output:, raise_errors: false }.tap do |options|
-        options[:out] = out unless out.nil?
-        options[:err] = err unless err.nil?
+        redirect_options(options_hash).each { |k, v| options[k] = v }
       end
     end
 
@@ -243,6 +243,7 @@ module Git
       normalize: false,
       chomp: false,
       merge: false,
+      in: nil,
       out: nil,
       err: nil,
       chdir: nil,
@@ -252,6 +253,13 @@ module Git
     }.freeze
 
     private
+
+    def redirect_options(options_hash)
+      %i[in out err].filter_map do |key|
+        val = options_hash[key]
+        [key, val] unless val.nil?
+      end.to_h
+    end
 
     # Build the git command line from the available sources to send to `Process.spawn`
     # @return [Array<String>]
