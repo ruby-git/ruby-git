@@ -100,7 +100,7 @@ the current state of the codebase, and determine whether implementation is neede
    - Are there reproduction steps or examples provided?
 
 3. **Search for Context:** Investigate the codebase to understand the area affected:
-   - Use `grep_search` or `semantic_search` to find relevant code
+   - Use `grep -rn "search_term" .` or `git grep "search_term"` to find relevant code (or use GitHub's repository code search)
    - Read related test files to understand existing behavior
    - Check if similar functionality already exists
    - Look for related issues or PRs that might be relevant
