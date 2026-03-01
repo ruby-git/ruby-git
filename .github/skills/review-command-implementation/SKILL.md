@@ -1,15 +1,36 @@
+---
+name: review-command-implementation
+description: "Verifies a command class follows the Git::Commands::Base architecture contract and contains no duplicated execution behavior. Use after implementing or modifying a command class."
+---
+
 # Review Command Implementation
 
 Verify a command class follows the current `Git::Commands::Base` architecture and
 contains no duplicated execution behavior.
 
-## How to use this prompt
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Related skills](#related-skills)
+- [Input](#input)
+- [Architecture Contract (Current)](#architecture-contract-current)
+- [What to Check](#what-to-check)
+  - [1. Class shape](#1-class-shape)
+  - [2. `#call` implementation](#2-call-implementation)
+  - [3. Exit-status configuration](#3-exit-status-configuration)
+  - [4. Arguments DSL quality](#4-arguments-dsl-quality)
+  - [5. Internal compatibility contract](#5-internal-compatibility-contract)
+  - [6. Phased rollout / rollback requirements](#6-phased-rollout-rollback-requirements)
+- [Common Failures](#common-failures)
+- [Output](#output)
+
+## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with one or more
 command source files to review. Examples:
 
 ```text
-Using the Review Command Implementation prompt, review
+Using the Review Command Implementation skill, review
 lib/git/commands/branch/delete.rb.
 ```
 
@@ -20,16 +41,16 @@ lib/git/commands/diff/numstat.rb
 
 The invocation needs the command file(s) to review.
 
-## Related prompts
+## Related skills
 
-- **Review Arguments DSL** — verifying DSL entries match git CLI
-- **Review Command Tests** — unit/integration test expectations for command classes
-- **Review YARD Documentation** — documentation completeness for command classes
-- **Review Cross-Command Consistency** — sibling consistency within a command family
+- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
+- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
 
 ## Input
 
-You will be given one or more command source files from `lib/git/commands/`.
+Required: one or more command source files from `lib/git/commands/`.
 
 ## Architecture Contract (Current)
 
@@ -94,7 +115,7 @@ Shared behavior lives in `Base`:
 ### 5. Internal compatibility contract
 
 This is the canonical location for the internal compatibility contract. Other
-prompts reference this section rather than duplicating it.
+skills reference this section rather than duplicating it.
 
 Ensure refactors preserve these contract expectations:
 
@@ -106,7 +127,7 @@ If an intentional deviation exists, require migration notes/changelog documentat
 
 ### 6. Phased rollout / rollback requirements
 
-This is the canonical location for phased rollout requirements. Other prompts
+This is the canonical location for phased rollout requirements. Other skills
 reference this section rather than duplicating the full checklist.
 
 For migration PRs, verify process constraints:
@@ -116,7 +137,7 @@ For migration PRs, verify process constraints:
 - [ ] each slice is independently revertible
 - [ ] refactor-only changes are not mixed with unrelated behavior changes
 - [ ] quality gates pass for the slice (`bundle exec rspec`, `bundle exec rake test`,
-      `bundle exec rubocop`, `bundle exec yard`)
+      `bundle exec rubocop`, `bundle exec rake yard`)
 
 ## Common Failures
 

@@ -1,11 +1,37 @@
+---
+name: review-backward-compatibility
+description: "Audits Git::Lib methods for backward compatibility after commands are moved to Git::Commands::* classes. Use to verify that migrated commands maintain their existing public API."
+---
+
 # Review Backward Compatibility
 
 Review `Git::Lib` methods for backward compatibility after commands are moved to
-`Git::Commands::*` classes. This prompt guides the process of restoring backward
+`Git::Commands::*` classes. This skill guides the process of restoring backward
 compatibility for a specific set of git commands while maintaining the benefits of
 the new command infrastructure.
 
-## How to use this prompt
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Related skills](#related-skills)
+- [Objective](#objective)
+- [Current Command Architecture Note](#current-command-architecture-note)
+- [Instructions](#instructions)
+  - [Branch setup](#branch-setup)
+  - [Step 1: Identify Methods Added Since v4.3.0](#step-1-identify-methods-added-since-v430)
+  - [Step 2: Remove New Methods](#step-2-remove-new-methods)
+  - [Step 3: Restore Backward-Compatible Implementations](#step-3-restore-backward-compatible-implementations)
+  - [Step 4: Add Required Dependencies](#step-4-add-required-dependencies)
+  - [Step 5: Verify the Changes](#step-5-verify-the-changes)
+- [Example: Stash Commands](#example-stash-commands)
+  - [Legacy Methods (v4.3.0)](#legacy-methods-v430)
+  - [New Methods (removed)](#new-methods-removed)
+  - [Implementation Pattern](#implementation-pattern)
+- [Key Principles](#key-principles)
+- [Validation Checklist](#validation-checklist)
+- [Usage](#usage)
+
+## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with the git
 command name(s) to audit. Example:
@@ -18,11 +44,11 @@ and ensure the remaining methods are backward compatible.
 Replace `branch` with the specific git command(s) you want to audit (e.g.,
 `worktree`, `tag`, `merge`, `reset`).
 
-## Related prompts
+## Related skills
 
-- **Refactor Command to CommandLineResult** — migrating command classes to Base;
-  the counterpart to this prompt's `Git::Lib` facade focus
-- **Review Command Implementation** — class structure, phased rollout gates, and
+- [Refactor Command to CommandLineResult](../refactor-command-to-commandlineresult/SKILL.md) — migrating command classes to Base;
+  the counterpart to this skill's `Git::Lib` facade focus
+- [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
 
 ## Objective
@@ -60,6 +86,10 @@ open a pull request — do not merge or push directly into `main`.
 ### Step 1: Identify Methods Added Since v4.3.0
 
 1. Check out the v4.3.0 tag to examine the historical state:
+
+   **Warning:** `git checkout` modifies the working tree. Stash or commit any
+   uncommitted changes first (`git stash`).
+
    ```bash
    git checkout v4.3.0
    ```

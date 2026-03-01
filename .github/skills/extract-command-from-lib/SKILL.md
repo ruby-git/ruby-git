@@ -1,16 +1,43 @@
+---
+name: extract-command-from-lib
+description: "Migrates a direct #command call in Git::Lib to a Git::Commands::* class as part of the architectural redesign. Use when extracting a specific command during the Strangler Fig migration."
+---
+
 # Extract Command from Lib
 
 Replace a direct `#command` call in `Git::Lib` with a call to a `Git::Commands::*`
 class. The git subcommand is determined by the first (or first few) arguments to the
 `#command` method call.
 
-## How to use this prompt
+## Contents
+
+- [How to use this skill](#how-to-use-this-skill)
+- [Related skills](#related-skills)
+- [Input](#input)
+- [Workflow](#workflow)
+  - [Branch setup](#branch-setup)
+  - [Step 1 — Identify the `#command` call](#step-1-identify-the-command-call)
+  - [Step 2 — Plan the migration and get approval](#step-2-plan-the-migration-and-get-approval)
+  - [Step 3 — Ensure adequate legacy tests](#step-3-ensure-adequate-legacy-tests)
+  - [Step 4 — Ensure the `Git::Commands::*` class exists](#step-4-ensure-the-gitcommands-class-exists)
+  - [Step 5 — Update `Git::Lib` to delegate to the command class](#step-5-update-gitlib-to-delegate-to-the-command-class)
+- [Commit discipline](#commit-discipline)
+- [Create a pull request](#create-a-pull-request)
+- [Quality gates (run at every step)](#quality-gates-run-at-every-step)
+- [Common patterns](#common-patterns)
+  - [Simple delegation (stdout passthrough)](#simple-delegation-stdout-passthrough)
+  - [Delegation with post-processing](#delegation-with-post-processing)
+  - [Delegation with parsed return value](#delegation-with-parsed-return-value)
+- [What stays in `Git::Lib`](#what-stays-in-gitlib)
+- [What moves to `Git::Commands::*`](#what-moves-to-gitcommands)
+
+## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with a short message
 identifying the `Git::Lib` method or `#command` call to migrate. Examples:
 
 ```text
-Using the Extract Command from Lib prompt, migrate Git::Lib#worktree_add —
+Using the Extract Command from Lib skill, migrate Git::Lib#worktree_add —
 it calls command('worktree', 'add', ...).
 ```
 
@@ -21,24 +48,24 @@ Extract Command from Lib: command('ls-tree', ...)
 The invocation needs either the `Git::Lib` method name or the git subcommand string
 from the `#command` call (or both).
 
-## Related prompts
+## Related skills
 
-Run or reference these prompts during the workflow:
+Run or reference these skills during the workflow:
 
-- **Scaffold New Command** — generates the `Git::Commands::*` class, unit tests,
+- [Scaffold New Command](../scaffold-new-command/SKILL.md) — generates the `Git::Commands::*` class, unit tests,
   integration tests, and YARD docs (used in Step 4 if the command class does not
   exist yet)
-- **Review Command Implementation** — canonical class-shape checklist, phased
+- [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
-- **Review Arguments DSL** — verifying DSL entries match git CLI
-- **Review Command Tests** — unit/integration test expectations for command classes
-- **Review YARD Documentation** — documentation completeness for command classes
-- **Review Cross-Command Consistency** — sibling consistency within a command family
-- **Review Backward Compatibility** — preserving `Git::Lib` return-value contracts
+- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
+- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
+- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 
 ## Input
 
-You will be given:
+Required:
 
 1. A `Git::Lib` method that contains one or more `command(...)` calls to replace
 2. The git subcommand name (derived from the first arguments to `#command`)
@@ -152,7 +179,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
 2. **If the command class already exists**, skip to Step 5.
 
 3. **If the command class does not exist**, scaffold it using the
-   **Scaffold New Command** prompt. This produces:
+  [Scaffold New Command](../scaffold-new-command/SKILL.md) skill. This produces:
 
    - `lib/git/commands/<command>.rb` (or `lib/git/commands/<family>/<action>.rb`)
    - `spec/unit/git/commands/<command>_spec.rb`
@@ -164,7 +191,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    bundle exec rspec spec/unit/git/commands/<command>_spec.rb
    bundle exec rspec spec/integration/git/commands/<command>_spec.rb
    bundle exec rubocop lib/git/commands/<command>.rb
-   bundle exec yard
+   bundle exec rake yard
    ```
 
    Fix any issues before continuing.
@@ -205,7 +232,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    bundle exec bin/test <legacy-test-file-basename>
    bundle exec rspec
    bundle exec rubocop
-   bundle exec yard
+   bundle exec rake yard
    ```
 
    Fix any issues before continuing.
@@ -219,8 +246,8 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
 
 ## Commit discipline
 
-Keep changes in **exactly three distinct commits** (each optional if no changes were
-needed for that step):
+Keep work organized into **three logical commit categories** (each optional if no
+changes were needed for that step):
 
 1. `refactor(test): add legacy tests for <method_name>` — new tests in
    `tests/units/`
@@ -229,7 +256,12 @@ needed for that step):
 3. `refactor(lib): delegate <method_name> to Git::Commands::<Command>` — `Git::Lib`
    changes only
 
-If further changes are needed after these commits are created:
+During implementation, you may use multiple task-level commits. Before opening a
+PR, follow the repository finalize workflow (see
+[Development Workflow](../development-workflow/SKILL.md)) and squash commits as
+required.
+
+If further changes are needed after task commits are created:
 
 - Amend the change to the **appropriate commit** (e.g., a command class fix goes
   into the `refactor(command)` commit).
@@ -242,7 +274,7 @@ If further changes are needed after these commits are created:
 - After rebasing, verify all quality gates still pass:
 
   ```bash
-  bundle exec rspec && bundle exec rake test && bundle exec rubocop && bundle exec yard
+  bundle exec rspec && bundle exec rake test && bundle exec rubocop && bundle exec rake yard
   ```
 
 ## Create a pull request
@@ -265,7 +297,7 @@ If changes are made after the PR is created:
 bundle exec rspec
 bundle exec rake test
 bundle exec rubocop
-bundle exec yard
+bundle exec rake yard
 ```
 
 All four must pass before committing at each step. If errors are found, fix them
