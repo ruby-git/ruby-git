@@ -122,10 +122,20 @@ Most commands use `def call(...) = super`, which forwards all arguments to
 
 **`Base#with_stdin(content)` mechanics:**
 
-`Base#with_stdin(content)` opens an `IO.pipe`, writes the string `content`, and
-yields the read end as `in:` to the execution context. Use this instead of manual
-pipe management. `StringIO` cannot be used because `Process.spawn` requires a real
-file descriptor.
+`Base#with_stdin(content)` opens an `IO.pipe`, writes the string `content` to the
+write end, closes it, and yields the read end as `in:` to the execution context.
+Use this instead of manual pipe management. `StringIO` cannot be used because
+`Process.spawn` requires a real file descriptor.
+
+Example — batch stdin protocol (as used by `git cat-file --batch`):
+
+```ruby
+def call(object_names:, **kwargs)
+  with_stdin(object_names.join("\n")) do |stdin_r|
+    run_batch(stdin_r, **kwargs)
+  end
+end
+```
 
 **DSL defaults:**
 
