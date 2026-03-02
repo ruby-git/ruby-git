@@ -22,18 +22,18 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (23/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (33/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate the `tag` command** → `Git::Commands::Tag`
+**Migrate `log_commits` / `full_log_commits`** → `Git::Commands::Log`
 
 #### Workflow
 
 1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-   merge`). Understand all options and edge cases.
+  log_commits` and `def full_log_commits`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -148,7 +148,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-   - `bundle exec rspec spec/git/commands/branch_spec.rb` — new tests pass (branch example)
+  - `bundle exec rspec spec/unit/git/commands/log_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -163,7 +163,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 #### Reference Files
 
-- Pattern to follow: `lib/git/commands/commit.rb` + `spec/git/commands/commit_spec.rb`
+- Pattern to follow: `lib/git/commands/commit.rb` + `spec/unit/git/commands/commit_spec.rb`
 - Namespace example: `lib/git/commands/checkout/branch.rb`
 - Complex options example: `lib/git/commands/clone.rb`
 - Contributing guide: `CONTRIBUTING.md` (see "Wrapping a git command")
@@ -686,32 +686,32 @@ The following tracks the migration status of commands from `Git::Lib` to
 
 **Reference implementations** (use these as templates):
 
-- Simple command: `lib/git/commands/add.rb` + `spec/git/commands/add_spec.rb`
+- Simple command: `lib/git/commands/add.rb` + `spec/unit/git/commands/add_spec.rb`
 - Command with output parsing: `lib/git/commands/fsck.rb` +
-  `spec/git/commands/fsck_spec.rb`
+  `spec/unit/git/commands/fsck_spec.rb`
 - Command with complex options: `lib/git/commands/clone.rb` +
-  `spec/git/commands/clone_spec.rb`
+  `spec/unit/git/commands/clone_spec.rb`
 
 #### ✅ Migrated Commands
 
 | Git::Lib Method | Command Class | Spec | Git Command |
 | --------------- | ------------- | ---- | ----------- |
-| `add` | `Git::Commands::Add` | `spec/git/commands/add_spec.rb` | `git add` |
-| `clone` | `Git::Commands::Clone` | `spec/git/commands/clone_spec.rb` | `git clone` |
-| `commit` | `Git::Commands::Commit` | `spec/git/commands/commit_spec.rb` | `git commit` |
-| `fsck` | `Git::Commands::Fsck` | `spec/git/commands/fsck_spec.rb` | `git fsck` |
-| `init` | `Git::Commands::Init` | `spec/git/commands/init_spec.rb` | `git init` |
-| `mv` | `Git::Commands::Mv` | `spec/git/commands/mv_spec.rb` | `git mv` |
-| `reset` | `Git::Commands::Reset` | `spec/git/commands/reset_spec.rb` | `git reset` |
-| `rm` | `Git::Commands::Rm` | `spec/git/commands/rm_spec.rb` | `git rm` |
-| `clean` | `Git::Commands::Clean` | `spec/git/commands/clean_spec.rb` | `git clean` |
-| `branches_all` | `Git::Commands::Branch::List` | `spec/git/commands/branch/list_spec.rb` | `git branch --list` |
-| `branch_new` | `Git::Commands::Branch::Create` | `spec/git/commands/branch/create_spec.rb` | `git branch <name>` |
-| `branch_delete` | `Git::Commands::Branch::Delete` | `spec/git/commands/branch/delete_spec.rb` | `git branch --delete` |
-| N/A (new) | `Git::Commands::Branch::Move` | `spec/git/commands/branch/move_spec.rb` | `git branch --move` |
-| `diff_full` | `Git::Commands::Diff::Patch` | `spec/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
-| `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
-| `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/git/commands/diff/raw_spec.rb` | `git diff --raw` |
+| `add` | `Git::Commands::Add` | `spec/unit/git/commands/add_spec.rb` | `git add` |
+| `clone` | `Git::Commands::Clone` | `spec/unit/git/commands/clone_spec.rb` | `git clone` |
+| `commit` | `Git::Commands::Commit` | `spec/unit/git/commands/commit_spec.rb` | `git commit` |
+| `fsck` | `Git::Commands::Fsck` | `spec/unit/git/commands/fsck_spec.rb` | `git fsck` |
+| `init` | `Git::Commands::Init` | `spec/unit/git/commands/init_spec.rb` | `git init` |
+| `mv` | `Git::Commands::Mv` | `spec/unit/git/commands/mv_spec.rb` | `git mv` |
+| `reset` | `Git::Commands::Reset` | `spec/unit/git/commands/reset_spec.rb` | `git reset` |
+| `rm` | `Git::Commands::Rm` | `spec/unit/git/commands/rm_spec.rb` | `git rm` |
+| `clean` | `Git::Commands::Clean` | `spec/unit/git/commands/clean_spec.rb` | `git clean` |
+| `branches_all` | `Git::Commands::Branch::List` | `spec/unit/git/commands/branch/list_spec.rb` | `git branch --list` |
+| `branch_new` | `Git::Commands::Branch::Create` | `spec/unit/git/commands/branch/create_spec.rb` | `git branch <name>` |
+| `branch_delete` | `Git::Commands::Branch::Delete` | `spec/unit/git/commands/branch/delete_spec.rb` | `git branch --delete` |
+| N/A (new) | `Git::Commands::Branch::Move` | `spec/unit/git/commands/branch/move_spec.rb` | `git branch --move` |
+| `diff_full` | `Git::Commands::Diff::Patch` | `spec/unit/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
+| `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/unit/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
+| `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/unit/git/commands/diff/raw_spec.rb` | `git diff --raw` |
 | `stashes_list` | `Git::Commands::Stash::List` | `spec/unit/git/commands/stash/list_spec.rb` | `git stash list` |
 | `stash_save` | `Git::Commands::Stash::Push` | `spec/unit/git/commands/stash/push_spec.rb` | `git stash push` |
 | `stash_pop` | `Git::Commands::Stash::Pop` | `spec/unit/git/commands/stash/pop_spec.rb` | `git stash pop` |
@@ -752,7 +752,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `checkout` / `checkout_file` → `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` — `git checkout`
 - [x] `merge` → `Git::Commands::Merge::Start` — `git merge`
 - [x] N/A (new) → `Git::Commands::Merge::Abort` / `Git::Commands::Merge::Continue` / `Git::Commands::Merge::Quit` — `git merge --abort/--continue/--quit`
-- [ ] `tag` → `Git::Commands::Tag` — `git tag`
+- [x] `tag` → `Git::Commands::Tag::*` — `git tag` (implemented as `List`, `Create`, `Delete`, and `Verify`)
 - [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
 
 **Inspection & Comparison:**
@@ -785,11 +785,11 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [ ] `rev_parse` → `Git::Commands::RevParse` — `git rev-parse`
 - [ ] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
-- [ ] `cat_file_*` → `Git::Commands::CatFile` — `git cat-file`
+- [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `ObjectContent` and `ObjectMeta`)
 - [ ] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
 - [ ] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
 - [ ] `update_ref` → `Git::Commands::UpdateRef` — `git update-ref`
-- [ ] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
+- [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
 - [ ] `archive` → `Git::Commands::Archive` — `git archive`
 
 **Setup & Config:**
