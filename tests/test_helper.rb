@@ -45,7 +45,11 @@ module Test
 
       teardown
       def git_teardown
-        FileUtils.rm_r(@tmp_path) if instance_variable_defined?(:@tmp_path)
+        # Use rm_rf (force) to silently ignore ENOTEMPTY errors that can occur on
+        # macOS/Windows when an OS daemon (e.g. Spotlight) has a brief lock on a file
+        # in the temp directory during cleanup. This mirrors the same defensive pattern
+        # used in in_temp_dir below.
+        FileUtils.rm_rf(@tmp_path) if instance_variable_defined?(:@tmp_path)
       end
 
       def in_bare_repo_clone
