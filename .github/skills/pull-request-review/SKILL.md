@@ -155,3 +155,12 @@ After posting, confirm with the user:
 Review posted successfully to PR #999.
 View at: [PR URL from gh pr view output]
 ```
+
+When editing a PR description as part of follow-up review changes, use a
+file-based flow for reliability:
+
+- write/update markdown in a local file
+- run `gh pr edit #999 --body-file <path>`
+- verify the final stored body with `gh pr view #999 --json body`
+
+Avoid long multiline inline `--body "..."` commands for complex markdown.
