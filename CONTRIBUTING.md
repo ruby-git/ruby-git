@@ -18,6 +18,7 @@
 - [Wrapping a git command](#wrapping-a-git-command)
   - [Method placement](#method-placement)
   - [Method naming](#method-naming)
+  - [Result class naming](#result-class-naming)
   - [Parameter naming](#parameter-naming)
   - [Parameter values](#parameter-values)
     - [Options](#options)
@@ -31,6 +32,7 @@
     - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
   - [Unit tests](#unit-tests)
     - [RSpec best practices](#rspec-best-practices)
+    - [Unit tests vs Integration tests](#unit-tests-vs-integration-tests)
 - [Building a specific version of the Git command-line](#building-a-specific-version-of-the-git-command-line)
   - [Install pre-requisites](#install-pre-requisites)
   - [Obtain Git source code](#obtain-git-source-code)
@@ -558,7 +560,7 @@ translation from single values or arrays to the splat format.
 > keyword parameters** (e.g., `@overload call(paths, all: nil, force: nil)`) and
 > document each keyword with its own `@param` tag. Do not use `@option` with
 > `@overload`. See the example above for the pattern.
-
+>
 > **Testing Requirement:** When defining arguments with the DSL, you must write RSpec
 > tests that verify each argument handles valid values correctly (booleans, strings,
 > arrays) and handles invalid values appropriately. Use a separate `context` block for
@@ -747,12 +749,14 @@ This project uses two types of RSpec tests, organized by directory:
 
 **Purpose of integration tests**: Integration tests validate that the gem correctly
 interacts with git, not that git itself works correctly. They should verify:
+
 - That the gem's mocked command expectations match real git output format
 - That the gem correctly handles real git behavior (e.g., unicode in branch names)
 - That command options produce expected git behavior
 - Edge cases that are difficult to mock reliably
 
 **Integration test guidelines**:
+
 - Keep tests **minimal and purposeful** - only create what's needed for the test
 - Focus on **key behaviors** that unit tests can't verify
 - Don't test git's functionality - test the gem's interaction with git
