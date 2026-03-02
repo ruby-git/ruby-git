@@ -65,6 +65,9 @@ coding standard details, or implementation constraints.
 - `spec/integration/` — RSpec integration tests (real git repositories)
 - `spec/support/` — Shared test contexts and helpers
 - `redesign/` — Architecture redesign documentation
+  - `redesign/3_architecture_implementation.md` is a living migration tracker.
+    When command migrations land, keep checklist states, "Next Task", and Phase 2
+    progress counts synchronized with `lib/git/commands/` and current spec paths.
 
 ## Layer Responsibilities
 

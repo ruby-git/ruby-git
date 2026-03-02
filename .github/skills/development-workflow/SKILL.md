@@ -283,6 +283,16 @@ based on what was learned during the current task.
   cases, or necessary refactorings, add them to the task list.
 - **Reprioritize if Needed:** Adjust task order if dependencies or priorities have
   changed.
+- **Sync Redesign Tracker (required for command migrations):** If the task adds,
+  migrates, or rewires any `Git::Commands::*` usage, update
+  `redesign/3_architecture_implementation.md` in the same task commit:
+  - mark migrated command checklist entries (`[ ]` → `[x]`)
+  - update Phase 2 migrated count in the Progress Tracker
+  - update "Next Task" to the next unchecked command in list order
+  - ensure command spec paths use `spec/unit/...` or `spec/integration/...` (never
+    stale `spec/git/...` paths)
+  - run a stale-doc sanity check by comparing unchecked `Git::Commands::*` entries
+    against files under `lib/git/commands/`; resolve any mismatches before moving on
 - **Report Progress:** Briefly summarize what was completed and what remains.
   **ALWAYS** print the updated task list with status (e.g., `[x] Task 1`, `[ ] Task
   2`).
