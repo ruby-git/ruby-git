@@ -22,7 +22,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (33/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (36/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
@@ -32,8 +32,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def
-  log_commits` and `def full_log_commits`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def log_commits` and `def full_log_commits`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -154,8 +153,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    - `bundle exec rubocop` — no lint errors
    - `bundle exec yard` — no yardoc errors
 
-   To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle
-   exec bin/test test_branch`)
+  To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle exec bin/test test_branch`)
 
 7. **Update Checklist**: Move the command from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
@@ -720,6 +718,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `stash_clear` | `Git::Commands::Stash::Clear` | `spec/unit/git/commands/stash/clear_spec.rb` | `git stash clear` |
 | `checkout` / `checkout_file` | `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` | `spec/unit/git/commands/checkout/branch_spec.rb` / `spec/unit/git/commands/checkout/files_spec.rb` | `git checkout` (branch) / `git checkout` (files) |
 | `merge` | `Git::Commands::Merge::Start` | `spec/unit/git/commands/merge/start_spec.rb` | `git merge` |
+| `tag` | `Git::Commands::Tag::*` | `spec/unit/git/commands/tag/*_spec.rb` | `git tag` |
 | N/A (new) | `Git::Commands::Merge::Abort` | `spec/unit/git/commands/merge/abort_spec.rb` | `git merge --abort` |
 | N/A (new) | `Git::Commands::Merge::Continue` | `spec/unit/git/commands/merge/continue_spec.rb` | `git merge --continue` |
 | N/A (new) | `Git::Commands::Merge::Quit` | `spec/unit/git/commands/merge/quit_spec.rb` | `git merge --quit` |
@@ -729,6 +728,8 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Stash::ShowNumstat` | `spec/unit/git/commands/stash/show_numstat_spec.rb` | `git stash show --numstat` |
 | N/A (new) | `Git::Commands::Stash::ShowPatch` | `spec/unit/git/commands/stash/show_patch_spec.rb` | `git stash show --patch` |
 | N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
+| `cat_file_*` | `Git::Commands::CatFile::*` | `spec/unit/git/commands/cat_file/*_spec.rb` | `git cat-file` |
+| `checkout_index` | `Git::Commands::CheckoutIndex` | `spec/unit/git/commands/checkout_index_spec.rb` | `git checkout-index` |
 
 #### ⏳ Commands To Migrate
 
