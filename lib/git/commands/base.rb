@@ -156,8 +156,9 @@ module Git
       # Pass an empty string when the process should receive no input (e.g.
       # when `--batch-all-objects` is used and git enumerates objects itself).
       #
-      # @example Feed a list of object names to a git batch command
-      #   stdin_content = objects.map { |o| "#{o}\n" }.join
+      # @example Feed bound object names to a git batch command
+      #   bound = args_definition.bind(*, **)
+      #   stdin_content = Array(bound.objects).map { |object| "#{object}\n" }.join
       #   with_stdin(stdin_content) do |reader|
       #     @execution_context.command('cat-file', '--batch-check', in: reader, raise_on_failure: false)
       #   end

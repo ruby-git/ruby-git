@@ -194,8 +194,9 @@ end
 ```
 
 The template above uses the default `def call(...) = super` implicitly — no explicit
-`call` definition is needed in the common case. For commands that require input
-validation, stdin feeding (`Base#with_stdin`), or non-trivial option routing, see
+`call` definition is needed in the common case. For commands that require validation
+the DSL cannot express, stdin feeding (`Base#with_stdin`), or non-trivial option
+routing, see
 the [`#call` override guidance](../review-command-implementation/SKILL.md#2-call-implementation)
 in the Review Command Implementation skill.
 
@@ -207,10 +208,8 @@ When `def call(...) = super` is not enough, override `call` explicitly. Call
 
 ```ruby
 def call(*objects, **options)
-  raise ArgumentError, '...' if objects.empty? && !options[:flag]
-
-  bound = args_definition.bind(**options)
-  with_stdin(objects.map { |o| "#{o}\n" }.join) do |reader|
+  bound = args_definition.bind(*objects, **options)
+  with_stdin(Array(bound.objects).map { |o| "#{o}\n" }.join) do |reader|
     run_batch(bound, reader)
   end
 end
@@ -223,6 +222,37 @@ def run_batch(bound, reader)
   result
 end
 ```
+
+For stdin-driven commands where objects are domain inputs but not CLI argv, prefer
+modeling that contract in the DSL:
+
+```ruby
+arguments do
+  literal 'cat-file'
+  literal '--batch-check'
+  flag_option :batch_all_objects
+  operand :objects, repeatable: true, skip_cli: true
+
+  conflicts :objects, :batch_all_objects
+  requires_one_of :objects, :batch_all_objects
+end
+```
+
+#### When to use `skip_cli` on `operand`
+
+Use `operand ..., skip_cli: true` when all of the following are true:
+
+- The value is part of the Ruby `#call` interface and should be bound/validated
+  by the DSL
+- The value should remain accessible on `bound` (for cross-field constraints,
+  helper methods, and documentation)
+- The value must **not** be emitted into CLI argv (for example, it is sent via
+  stdin protocol)
+
+Do **not** use `skip_cli` for execution-engine kwargs (`timeout:`, `chdir:`,
+etc.) — those belong to `execution_option`.
+
+`skip_cli: true` cannot be combined with `separator:` on `operand`.
 
 Key points:
 

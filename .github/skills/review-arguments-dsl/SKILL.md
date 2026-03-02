@@ -81,6 +81,9 @@ Key behaviors:
   need `as:`.
 - **Aliases** — first alias is canonical and determines generated flag (long name
   first: `%i[force f]`, not `%i[f force]`)
+- **`skip_cli` operand behavior** — `operand ..., skip_cli: true` binds and validates
+  like any other operand and remains accessible on `Bound`, but is intentionally
+  excluded from argv emission
 - **Operand naming** — use the parameter name from the git-scm.com man page, in
   singular form (e.g., `<file>` → `:file`, `<tag>` → `:tag`). The `repeatable: true`
   modifier already communicates that multiple values are accepted; pluralising the

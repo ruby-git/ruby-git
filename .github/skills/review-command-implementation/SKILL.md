@@ -105,6 +105,8 @@ Shared behavior lives in `Base`:
 - [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
 - [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
 - [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
+- [ ] Validation expressible in the DSL is declared in `arguments do` (`conflicts`,
+      `requires_one_of`, `forbid_values`, etc.) rather than manually raised in `call`
 - [ ] Bulk of override is extracted into a private helper (`run_batch`, etc.) to satisfy Rubocop `Metrics` thresholds
 - [ ] Does not parse output in command class
 
@@ -115,8 +117,9 @@ Most commands use `def call(...) = super`, which forwards all arguments to
 
 **Override `call` only when the command needs:**
 
-1. **Input validation** — raise `ArgumentError` for invalid option combinations
-   the DSL cannot express (e.g., mutually exclusive modes)
+1. **Input validation the DSL cannot express** — prefer declarative constraints in
+  `arguments do` (`conflicts`, `requires_one_of`, `forbid_values`, etc.) and only
+  raise `ArgumentError` manually when needed
 2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
    `Base#with_stdin`
 3. **Non-trivial option routing** — build different argument sets based on
@@ -143,9 +146,10 @@ because `Process.spawn` requires a real file descriptor.
 Example — batch stdin protocol (as used by `git cat-file --batch`):
 
 ```ruby
-def call(object_names:, **kwargs)
-  with_stdin(object_names.join("\n")) do |stdin_r|
-    run_batch(stdin_r, **kwargs)
+def call(*, **)
+  bound = args_definition.bind(*, **)
+  with_stdin(Array(bound.objects).map { |object| "#{object}\n" }.join) do |stdin_r|
+    run_batch(bound, stdin_r)
   end
 end
 ```
@@ -167,6 +171,9 @@ automatically during `args_definition.bind(...)` — do not set defaults manuall
 - [ ] DSL entries accurately describe subcommand interface
 - [ ] Option aliases and modifiers are used correctly
 - [ ] Ordering produces expected CLI argument order
+- [ ] `operand ... skip_cli: true` is used only for domain inputs that must bind/validate
+  but must not emit to argv (for example, stdin-fed object lists)
+- [ ] `execution_option` is used for execution kwargs (`timeout:`, `chdir:`), not `skip_cli`
 
 ### 5. Internal compatibility contract
 
