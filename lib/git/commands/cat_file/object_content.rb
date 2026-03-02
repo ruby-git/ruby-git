@@ -52,6 +52,12 @@ module Git
           # Allow an unknown type object to be queried without erroring out
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---allow-unknown-type
           flag_option :allow_unknown_type
+
+          # Object names are passed via stdin batch protocol, not argv
+          operand :objects, repeatable: true, skip_cli: true
+
+          conflicts :objects, :batch_all_objects
+          requires_one_of :objects, :batch_all_objects
         end
 
         # Returns the full content (header + raw bytes) for each named git object
@@ -98,20 +104,16 @@ module Git
         #
         # @raise [Git::FailedError] if git exits with a non-zero status
         #
-        def call(*objects, **options)
-          if objects.empty? && !options[:batch_all_objects]
-            raise ArgumentError, 'at least one object is required unless batch_all_objects: true'
-          end
-
-          if !objects.empty? && options[:batch_all_objects]
-            raise ArgumentError, 'objects cannot be passed with batch_all_objects: true'
-          end
-
-          bound = args_definition.bind(**options)
-          with_stdin(objects.map { |o| "#{o}\n" }.join) { |reader| run_batch(bound, reader) }
+        def call(*, **)
+          bound = args_definition.bind(*, **)
+          with_stdin(stdin_content(bound.objects)) { |reader| run_batch(bound, reader) }
         end
 
         private
+
+        def stdin_content(objects)
+          Array(objects).map { |object| "#{object}\n" }.join
+        end
 
         # Executes the bound command with stdin connected to reader
         #

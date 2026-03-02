@@ -146,8 +146,15 @@ All valid `operand` modifiers:
 | `default:` | `nil` | Value emitted when the operand is absent — see note below |
 | `separator:` | `nil` | Emits a literal (e.g. `'--'`) before the operand value(s) |
 | `allow_nil:` | `false` | Permits an explicit `nil` to be passed without raising |
+| `skip_cli:` | `false` | Binds/validates/accesses the operand but suppresses argv emission |
 
 **When to use `default:`**: omit it unless the explicit default value produces different output than `nil`. For a repeatable operand, both `nil` and `[]` are treated as absent — no args are emitted — so `default: []` is redundant and should be left off. Only supply `default:` when you need a non-empty fallback value to be emitted automatically (e.g. `default: 'HEAD'` on an optional commit operand).
+
+**When to use `skip_cli:`**: use it only when an operand is part of the Ruby
+call contract and should be bound/validated and available on `Bound`, but must
+not be emitted to CLI argv (for example, values passed via stdin protocol).
+Do not use `skip_cli:` for execution kwargs; use `execution_option` for those.
+`skip_cli: true` must not be combined with `separator:`.
 
 Also validate that these modifiers (which do **not** apply to `operand`) are correctly
 placed on their respective DSL methods:

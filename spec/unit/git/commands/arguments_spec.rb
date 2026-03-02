@@ -285,6 +285,97 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with skip_cli positional arguments' do
+      it 'keeps the operand accessible but excludes it from argv emission' do
+        args = described_class.define do
+          flag_option :force
+          operand :object, required: true, skip_cli: true
+        end
+
+        bound = args.bind('HEAD', force: true)
+        expect(bound.object).to eq('HEAD')
+        expect(bound.to_ary).to eq(['--force'])
+      end
+
+      it 'keeps repeatable operand values accessible but excludes them from argv emission' do
+        args = described_class.define do
+          flag_option :force
+          operand :objects, repeatable: true, skip_cli: true
+        end
+
+        bound = args.bind('HEAD', 'HEAD~1', force: true)
+        expect(bound.objects).to eq(%w[HEAD HEAD~1])
+        expect(bound.to_ary).to eq(['--force'])
+      end
+
+      it 'keeps required semantics unchanged' do
+        args = described_class.define do
+          operand :object, required: true, skip_cli: true
+        end
+
+        expect { args.bind }.to raise_error(ArgumentError, /object is required/)
+      end
+
+      it 'keeps allow_nil semantics unchanged' do
+        args = described_class.define do
+          operand :object, required: true, allow_nil: true, skip_cli: true
+        end
+
+        bound = args.bind(nil)
+        expect(bound.object).to be_nil
+        expect(bound.to_ary).to eq([])
+      end
+
+      it 'keeps default semantics unchanged' do
+        args = described_class.define do
+          operand :object, default: 'HEAD', skip_cli: true
+        end
+
+        bound = args.bind
+        expect(bound.object).to eq('HEAD')
+        expect(bound.to_ary).to eq([])
+      end
+
+      it 'still participates in conflicts validation' do
+        args = described_class.define do
+          flag_option :all
+          operand :objects, repeatable: true, skip_cli: true
+          conflicts :all, :objects
+        end
+
+        expect { args.bind('HEAD', all: true) }.to raise_error(ArgumentError, /cannot specify :all and :objects/)
+      end
+
+      it 'still participates in requires_one_of validation' do
+        args = described_class.define do
+          flag_option :all
+          operand :objects, repeatable: true, skip_cli: true
+          requires_one_of :all, :objects
+        end
+
+        expect { args.bind }.to raise_error(ArgumentError, /at least one of :all, :objects must be provided/)
+      end
+
+      it 'still participates in forbid_values validation' do
+        args = described_class.define do
+          flag_option :all
+          operand :object, skip_cli: true
+          forbid_values all: true, object: 'HEAD'
+        end
+
+        expect { args.bind('HEAD', all: true) }
+          .to raise_error(ArgumentError, /cannot specify :all=true with :object="HEAD"/)
+      end
+
+      it 'rejects separator when skip_cli is true' do
+        expect do
+          described_class.define do
+            operand :paths, repeatable: true, separator: '--', skip_cli: true
+          end
+        end.to raise_error(ArgumentError, /separator: cannot be combined with skip_cli: true for :paths/)
+      end
+    end
+
     context 'with mixed positionals and keyword options' do
       let(:args) do
         described_class.define do
@@ -4670,6 +4761,25 @@ RSpec.describe Git::Commands::Arguments do
         expect(args.bind('HEAD', '-file.txt').to_a).to eq(
           ['checkout', 'HEAD', '--', '-file.txt']
         )
+      end
+    end
+
+    context 'with skip_cli operands' do
+      let(:args) do
+        described_class.define do
+          operand :objects, repeatable: true, skip_cli: true
+          flag_option :batch_all_objects
+          conflicts :objects, :batch_all_objects
+          requires_one_of :objects, :batch_all_objects
+        end
+      end
+
+      it 'allows option-like single values for skip_cli operands' do
+        expect(args.bind('-stdin-name').to_a).to eq([])
+      end
+
+      it 'allows option-like repeatable values for skip_cli operands' do
+        expect(args.bind('-a', '--batchish').to_a).to eq([])
       end
     end
   end

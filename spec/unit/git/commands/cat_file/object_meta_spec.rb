@@ -42,7 +42,7 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta do
     context 'with no objects and no options' do
       it 'raises ArgumentError' do
         expect { command.call }.to raise_error(
-          ArgumentError, 'at least one object is required unless batch_all_objects: true'
+          ArgumentError, 'at least one of :objects, :batch_all_objects must be provided'
         )
       end
     end
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta do
     context 'with objects and batch_all_objects: true' do
       it 'raises ArgumentError' do
         expect { command.call('HEAD', batch_all_objects: true) }.to raise_error(
-          ArgumentError, 'objects cannot be passed with batch_all_objects: true'
+          ArgumentError, 'cannot specify :objects and :batch_all_objects'
         )
       end
     end

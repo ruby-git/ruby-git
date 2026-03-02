@@ -112,7 +112,7 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta, :integration do
     context 'with no objects and no options' do
       it 'raises ArgumentError before calling git' do
         expect { command.call }.to raise_error(
-          ArgumentError, 'at least one object is required unless batch_all_objects: true'
+          ArgumentError, 'at least one of :objects, :batch_all_objects must be provided'
         )
       end
     end

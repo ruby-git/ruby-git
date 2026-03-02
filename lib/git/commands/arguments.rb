@@ -259,6 +259,9 @@ module Git
     # - **repeatable:** - ({#value_option}, {#flag_or_value_option}, and {#operand}
     #   only) Output an option or operand for each array element. Default is false.
     #
+    # - **skip_cli:** - ({#operand} only) Bind, validate, and expose an operand
+    #   accessor without emitting that operand in {Bound#to_a}. Default is false.
+    #
     # @example Required option with non-nil value
     #   args_def = Arguments.define do
     #     value_option :upstream, inline: true, required: true, allow_nil: false
@@ -1501,6 +1504,10 @@ module Git
       #   the tree-ish is required to consume a slot but may be nil to restore
       #   from the index. Defaults to false.
       #
+      # @param skip_cli [Boolean] whether this operand participates in binding,
+      #   validation, and accessors but is omitted from CLI argv emission.
+      #   Defaults to false.
+      #
       # @return [void]
       #
       # @example Required operand (like `def clone(repository)`)
@@ -1583,9 +1590,14 @@ module Git
       # @raise [ArgumentError] during {#bind} if the operand appears before a '--'
       #   boundary (or no boundary exists) and the bound value starts with '-'
       #
-      def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false)
+      # @raise [ArgumentError] during definition if `skip_cli: true` is combined
+      #   with `separator:`
+      #
+      def operand(name, required: false, repeatable: false, default: nil, separator: nil, allow_nil: false,
+                  skip_cli: false)
+        validate_skip_cli_operand!(name, skip_cli, separator)
         validate_single_repeatable!(name) if repeatable
-        add_operand_definition(name, required, repeatable, default, separator, allow_nil)
+        add_operand_definition(name, required, repeatable, default, separator, allow_nil, skip_cli)
       end
 
       # Bind positionals and options, returning a Bound object with accessor methods
@@ -1900,8 +1912,16 @@ module Git
       #
       def build_single_positional(args, name, allocation)
         definition = @operand_definitions.find { |d| d[:name] == name }
+        return if definition[:skip_cli]
+
         value = allocation[name]
         append_positional_to_args(args, value, definition)
+      end
+
+      def validate_skip_cli_operand!(name, skip_cli, separator)
+        return unless skip_cli && separator
+
+        raise ArgumentError, "separator: cannot be combined with skip_cli: true for :#{name}"
       end
 
       def validate_single_repeatable!(name)
@@ -1913,10 +1933,10 @@ module Git
               "cannot add :#{name} as repeatable"
       end
 
-      def add_operand_definition(name, required, repeatable, default, separator, allow_nil)
+      def add_operand_definition(name, required, repeatable, default, separator, allow_nil, skip_cli)
         @operand_definitions << {
           name: name, required: required, repeatable: repeatable,
-          default: default, separator: separator, allow_nil: allow_nil
+          default: default, separator: separator, allow_nil: allow_nil, skip_cli: skip_cli
         }
         @ordered_definitions << { kind: :operand, name: name }
         @past_separator = true if separator == '--'
@@ -2366,9 +2386,19 @@ module Git
         @ordered_definitions.each do |defn|
           break if separator_boundary_active?(defn, allocation, normalized_opts)
 
-          names << defn[:name] if defn[:kind] == :operand
+          names << defn[:name] if defn[:kind] == :operand && !operand_skip_cli?(defn[:name])
         end
         names
+      end
+
+      # Check if an operand is configured with skip_cli: true
+      #
+      # @param name [Symbol] the operand name
+      # @return [Boolean] true if operand has skip_cli enabled
+      #
+      def operand_skip_cli?(name)
+        operand_def = @operand_definitions.find { |d| d[:name] == name }
+        operand_def&.dig(:skip_cli) == true
       end
 
       # Check if a definition represents an active '--' separator boundary
@@ -2908,7 +2938,9 @@ module Git
 
         # Returns the CLI arguments array for splatting
         #
-        # This enables direct splatting: `command(*bound_args)`
+        # This enables direct splatting: `command(*bound_args)`.
+        #
+        # Operands declared with `skip_cli: true` are intentionally excluded.
         #
         # @return [Array<String>] the CLI arguments
         def to_ary
@@ -2918,7 +2950,9 @@ module Git
         # Returns the CLI arguments array for splatting
         #
         # Ruby's splat operator in array literals uses `to_a` for expansion.
-        # This enables: `['git', 'branch', *bound_args]`
+        # This enables: `['git', 'branch', *bound_args]`.
+        #
+        # Operands declared with `skip_cli: true` are intentionally excluded.
         #
         # @return [Array<String>] the CLI arguments
         def to_a
@@ -3146,6 +3180,12 @@ module Git
           @consumed = 0
         end
 
+        # Allocates leading positional values and returns consumed non-nil count
+        #
+        # @param allocation [Hash{Symbol => Object}] allocation hash to populate
+        #
+        # @return [Integer] number of non-nil positional values consumed
+        #
         def allocate(allocation)
           @definitions.each { |definition| allocate_one(allocation, definition) }
           @consumed

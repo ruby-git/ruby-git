@@ -73,6 +73,9 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   `allow_exit_status 0..1`, test that exit codes 0 and 1 succeed, and that exit
   codes 2 and 128 raise `FailedError`.
 - Input validation (`ArgumentError`) for unsupported/conflicting/missing args
+- For validation declared in the Arguments DSL (`conflicts`, `requires_one_of`,
+  `forbid_values`), assert the DSL-generated behavior/message shape rather than
+  command-specific custom wording
 
 ### Expectations for command invocation
 
@@ -119,6 +122,11 @@ end
 it 'includes --batch-all-objects and writes nothing to stdin' do
   expect_batch_command('--batch-all-objects', stdin_content: '')
   command.call(batch_all_objects: true)
+end
+
+it 'raises when mutually exclusive DSL inputs are combined' do
+  expect { command.call('HEAD', batch_all_objects: true) }
+    .to raise_error(ArgumentError, /cannot specify :objects and :batch_all_objects/)
 end
 ```
 
