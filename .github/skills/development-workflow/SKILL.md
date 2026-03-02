@@ -374,6 +374,38 @@ These guidelines supplement the TDD process:
   expectations are ambiguous.
 - **Do NOT Update CHANGELOG.md:** The CHANGELOG is auto-generated from commit
   messages. Never edit it manually.
+- **Bulk File Text Substitutions:** When renaming classes, methods, or files across
+  many files simultaneously, avoid complex chained `sed` commands — the terminal tool
+  can mangle multi-pattern substitutions with non-trivial quoting or multi-line
+  heredocs. Instead, write the substitution logic to a temporary Ruby script and
+  execute it:
+
+  ```ruby
+  # tmp_rename.rb
+  files = Dir.glob('lib/**/*.rb') +
+          Dir.glob('spec/**/*.rb') +
+          Dir.glob('tests/**/*.rb')
+  files.each do |f|
+    src = File.read(f)
+    # Apply most-specific patterns first to avoid partial matches
+    new_src = src
+      .gsub('OldClassName', 'NewClassName')
+      .gsub("require_relative 'old_path'", "require_relative 'new_path'")
+    File.write(f, new_src) if new_src != src
+  end
+  ```
+
+  Run the script, then delete it:
+
+  ```
+  ruby tmp_rename.rb
+  rm tmp_rename.rb          # macOS/Linux
+  del tmp_rename.rb         # Windows (cmd)
+  Remove-Item tmp_rename.rb # Windows (PowerShell)
+  ```
+
+  Apply substitutions from most-specific to least-specific to prevent partial
+  matches (e.g., replace `FooBarBaz` before `FooBar`).
 
 ## Example TDD Cycle
 
