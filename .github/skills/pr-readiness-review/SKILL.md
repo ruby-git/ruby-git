@@ -135,6 +135,14 @@ Provide a comprehensive report with:
   - Breaking changes (if any)
   - Checklist from .github/pull_request_template.md
 
+**PR Body Editing Safety:**
+- Prefer file-based updates for non-trivial markdown bodies:
+  - `gh pr create --body-file <path>` when opening
+  - `gh pr edit <number> --body-file <path>` when updating
+- Avoid long inline `--body "..."` strings for multiline markdown
+- After any body update, verify the stored text with:
+  - `gh pr view <number> --json body`
+
 **Next Steps:**
 - Any remaining items to address before PR submission
 - Confirmation that all checklist items are complete
