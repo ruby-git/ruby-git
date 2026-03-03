@@ -646,7 +646,23 @@ module Git
       lib.tag(name, { d: true })
     end
 
-    # creates an archive file of the given tree-ish
+    # Creates an archive of the given tree-ish and writes it to a file
+    #
+    # @api public
+    #
+    # @param treeish [String] the commit, tag, branch, or tree to archive
+    #
+    # @param file [String, nil] destination file path; a temp file is created if `nil`
+    #
+    # @param opts [Hash] archive options (see {Git::Lib#archive})
+    #
+    # @return [String] the path to the written archive file
+    #
+    # @raise [Git::FailedError] if `git archive` fails
+    #
+    # @example Archive HEAD to a zip file
+    #   git.archive('HEAD', '/tmp/release.zip', format: 'zip')
+    #
     def archive(treeish, file = nil, opts = {})
       object(treeish).archive(file, opts)
     end
