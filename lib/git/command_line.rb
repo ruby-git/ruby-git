@@ -241,6 +241,12 @@ module Git
     # @option options_hash [#write, nil] :out the IO/object to stream stdout into.
     #   Stdout is NOT buffered in the returned result; this is the only way to read it.
     #
+    # @option options_hash [#write, nil] :err an optional additional destination to receive stderr
+    #   output in real time (e.g. `$stderr` or a `File`). Stderr is always captured internally
+    #   in a `StringIO` for error diagnostics. When `err:` is provided, writes are teed to both
+    #   the internal buffer and this destination. `result.stderr` always reflects what was
+    #   captured in the internal buffer, regardless of whether `err:` is supplied.
+    #
     # @option options_hash [String, nil] :chdir the directory to run the command in
     #
     # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
@@ -276,9 +282,12 @@ module Git
       extra_options = options_hash.keys - RUN_STREAMING_ARGS.keys
       raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
 
-      err_io = options_hash[:err] || StringIO.new
-      result = execute(*, err_io:, **options_hash)
-      process_streaming_result(result, err_io, options_hash[:timeout], options_hash[:raise_on_failure])
+      internal_err = StringIO.new
+      # Tee stderr to the caller-provided destination (if any) AND the internal StringIO.
+      # This ensures result.stderr is always available even when err: is a non-StringIO IO.
+      err_dest = options_hash[:err] ? build_stderr_tee(internal_err, options_hash[:err]) : internal_err
+      result = execute(*, err_io: err_dest, **options_hash)
+      process_streaming_result(result, internal_err, options_hash[:timeout], options_hash[:raise_on_failure])
     end
 
     RUN_STREAMING_ARGS = {
@@ -323,6 +332,26 @@ module Git
       { chdir:, timeout_after:, raise_errors: false, err: err_io }.tap do |options|
         options[:in] = options_hash[:in] unless options_hash[:in].nil?
         options[:out] = options_hash[:out] unless options_hash[:out].nil?
+      end
+    end
+
+    # Build a tee writer that forwards #write calls to two destinations simultaneously.
+    #
+    # Used to capture stderr in an internal StringIO while also streaming to a
+    # caller-provided destination.
+    #
+    # @param primary [StringIO] the internal capture buffer
+    # @param secondary [#write] the caller-supplied destination
+    # @return [#write] an object whose #write method delegates to both destinations
+    # @api private
+    #
+    def build_stderr_tee(primary, secondary)
+      ::Object.new.tap do |tee|
+        tee.define_singleton_method(:write) do |data|
+          primary.write(data)
+          secondary.write(data)
+          data.bytesize
+        end
       end
     end
 

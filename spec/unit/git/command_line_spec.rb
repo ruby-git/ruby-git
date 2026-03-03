@@ -39,31 +39,40 @@ RSpec.describe Git::CommandLine do
 
   describe '#run (streaming path)' do
     context 'when command succeeds' do
-      let(:stderr_io) { StringIO.new }
-
       before do
         mocked_result = mock_streaming_result(command: %w[git status], success?: true)
         allow(ProcessExecuter).to receive(:run).and_return(mocked_result)
       end
 
       it 'returns a CommandLineResult with empty stdout' do
-        result = command_line.run('status', err: StringIO.new)
+        result = command_line.run('status')
 
         expect(result).to be_a(Git::CommandLineResult)
         expect(result.stdout).to eq('')
       end
 
-      it 'captures stderr from the provided StringIO' do
+      it 'captures stderr written during execution in result.stderr' do
+        allow(ProcessExecuter).to receive(:run) do |*_args, err:, **_opts|
+          err.write('warning from git')
+          mock_streaming_result(command: %w[git status])
+        end
+
+        result = command_line.run('status')
+
+        expect(result.stderr).to eq('warning from git')
+      end
+
+      it 'tees stderr to caller-provided err: destination' do
         err_io = StringIO.new
-        err_io << 'some warning'
-        allow(ProcessExecuter).to receive(:run) do
-          err_io << 'warning text'
+        allow(ProcessExecuter).to receive(:run) do |*_args, err:, **_opts|
+          err.write('warning from git')
           mock_streaming_result(command: %w[git status])
         end
 
         result = command_line.run('status', err: err_io)
 
-        expect(result.stderr).to eq('some warningwarning text')
+        expect(result.stderr).to eq('warning from git')
+        expect(err_io.string).to eq('warning from git')
       end
     end
 
