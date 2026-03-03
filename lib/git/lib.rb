@@ -9,6 +9,10 @@ require_relative 'commands/branch/show_current'
 require_relative 'commands/checkout/branch'
 require_relative 'commands/checkout/files'
 require_relative 'commands/checkout_index'
+require_relative 'commands/cat_file/full'
+require_relative 'commands/cat_file/meta'
+require_relative 'commands/cat_file/pretty'
+require_relative 'commands/cat_file/typed'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -443,18 +447,14 @@ module Git
     def cat_file_contents(object)
       assert_args_are_not_options('object', object)
 
-      if block_given?
-        Tempfile.create do |file|
-          # If a block is given, write the output from the process to a temporary
-          # file and then yield the file to the block
-          #
-          command('cat-file', '-p', object, out: file, err: file)
-          file.rewind
-          yield file
-        end
-      else
-        # If a block is not given, return the file contents as a string
-        command('cat-file', '-p', object).stdout
+      object_content = Git::Commands::CatFile::Pretty.new(self).call(object).stdout
+
+      return object_content unless block_given?
+
+      Tempfile.create do |file|
+        file.write(object_content)
+        file.rewind
+        yield file
       end
     end
 
@@ -473,7 +473,7 @@ module Git
     def cat_file_type(object)
       assert_args_are_not_options('object', object)
 
-      command('cat-file', '-t', object).stdout
+      cat_file_object_meta(object)[:type]
     end
 
     alias object_type cat_file_type
@@ -482,16 +482,16 @@ module Git
     #
     # @see https://git-scm.com/docs/git-cat-file git-cat-file
     #
-    # @param object [String] the object to get the type
+    # @param object [String] the object to get the size of
     #
-    # @return [String] the object type
+    # @return [Integer] the object size in bytes
     #
     # @raise [ArgumentError] if object is a string starting with a hyphen
     #
     def cat_file_size(object)
       assert_args_are_not_options('object', object)
 
-      command('cat-file', '-s', object).stdout.to_i
+      cat_file_object_meta(object)[:size]
     end
 
     alias object_size cat_file_size
@@ -517,7 +517,7 @@ module Git
     def cat_file_commit(object)
       assert_args_are_not_options('object', object)
 
-      cdata = command('cat-file', 'commit', object).stdout.split("\n")
+      cdata = Git::Commands::CatFile::Typed.new(self).call('commit', object).stdout.split("\n")
       process_commit_data(cdata, object)
     end
 
@@ -534,6 +534,26 @@ module Git
 
     CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
 
+    # Yields parsed header key/value pairs from `git cat-file` output lines
+    #
+    # Consumes header lines from the front of `data` until a non-header line is
+    # encountered. Continuation lines that begin with a space are folded into the
+    # previous header value using newline separators.
+    #
+    # @param data [Array<String>] mutable output lines from a cat-file response
+    #
+    # @yield [key, value] each parsed header pair
+    #
+    # @yieldparam key [String] header field name
+    #
+    # @yieldparam value [String] unfolded header value text
+    #
+    # @yieldreturn [void]
+    #
+    # @return [void]
+    #
+    # @raise [NoMethodError] if `data` contains non-string entries
+    #
     def each_cat_file_header(data)
       while (match = CAT_FILE_HEADER_LINE.match(data.shift))
         key = match[:key]
@@ -586,11 +606,38 @@ module Git
     def cat_file_tag(object)
       assert_args_are_not_options('object', object)
 
-      tdata = command('cat-file', 'tag', object).stdout.split("\n")
+      tdata = Git::Commands::CatFile::Typed.new(self).call('tag', object).stdout.split("\n")
       process_tag_data(tdata, object)
     end
 
     alias tag_data cat_file_tag
+
+    def cat_file_object_meta(object)
+      stdout = Git::Commands::CatFile::Meta.new(self).call(object).stdout
+      parse_cat_file_meta(stdout, object)
+    end
+
+    def parse_cat_file_meta(output, object)
+      line = output.to_s.lines.first.to_s.chomp
+
+      request_object_to_raise_error!(object) if line == "#{object} missing"
+
+      match = /\A\S+ (?<type>\S+) (?<size>\d+)\z/.match(line)
+      raise Git::UnexpectedResultError, "unexpected git cat-file metadata output: #{line.inspect}" if match.nil?
+
+      {
+        type: match[:type],
+        size: match[:size].to_i
+      }
+    end
+
+    # Re-request the missing object via non-batch cat-file so git produces a
+    # real non-zero exit and a FailedError with an accurate stderr message.
+    def request_object_to_raise_error!(object)
+      Git::Commands::CatFile::Pretty.new(self).call(object)
+      raise Git::UnexpectedResultError,
+            "expected git cat-file to raise Git::FailedError for missing object #{object.inspect}"
+    end
 
     def process_tag_data(data, name)
       hsh = { 'name' => name }

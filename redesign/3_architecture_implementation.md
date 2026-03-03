@@ -786,7 +786,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [ ] `rev_parse` → `Git::Commands::RevParse` — `git rev-parse`
 - [ ] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
-- [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `ObjectContent` and `ObjectMeta`)
+- [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `Full`, `Meta`, `Pretty`, and `Typed`, with `Git::Lib#cat_file_*` delegating through these classes)
 - [ ] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
 - [ ] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
 - [ ] `update_ref` → `Git::Commands::UpdateRef` — `git update-ref`

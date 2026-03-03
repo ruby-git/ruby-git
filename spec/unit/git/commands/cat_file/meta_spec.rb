@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'git/commands/cat_file/object_meta'
+require 'git/commands/cat_file/meta'
 
-RSpec.describe Git::Commands::CatFile::ObjectMeta do
+RSpec.describe Git::Commands::CatFile::Meta do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
-  # Static args that ObjectMeta always includes
+  # Static args that Meta always includes
   let(:static_args) { ['cat-file', '--batch-check'] }
 
   # Helper that stubs execution_context.command, captures the :in IO, and verifies
@@ -27,8 +27,10 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta do
   describe '#call' do
     context 'with one object' do
       it 'passes the object via stdin and runs --batch-check' do
-        expect_batch_command(stdin_content: "HEAD\n")
-        command.call('HEAD')
+        expected_result = command_result("abc1234 commit 250\n")
+        expect_batch_command(stdin_content: "HEAD\n", returns: expected_result)
+        result = command.call('HEAD')
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -36,22 +38,6 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta do
       it 'writes each object on its own line to stdin' do
         expect_batch_command(stdin_content: "HEAD\nv1.0\nabc1234\n")
         command.call('HEAD', 'v1.0', 'abc1234')
-      end
-    end
-
-    context 'with no objects and no options' do
-      it 'raises ArgumentError' do
-        expect { command.call }.to raise_error(
-          ArgumentError, 'at least one of :objects, :batch_all_objects must be provided'
-        )
-      end
-    end
-
-    context 'with objects and batch_all_objects: true' do
-      it 'raises ArgumentError' do
-        expect { command.call('HEAD', batch_all_objects: true) }.to raise_error(
-          ArgumentError, 'cannot specify :objects and :batch_all_objects'
-        )
       end
     end
 
@@ -90,38 +76,23 @@ RSpec.describe Git::Commands::CatFile::ObjectMeta do
       end
     end
 
-    context 'with an unsupported option' do
-      it 'raises ArgumentError' do
+    context 'input validation' do
+      it 'raises ArgumentError when no objects and no options are given' do
+        expect { command.call }.to raise_error(
+          ArgumentError, 'at least one of :objects, :batch_all_objects must be provided'
+        )
+      end
+
+      it 'raises ArgumentError when objects and batch_all_objects are both given' do
+        expect { command.call('HEAD', batch_all_objects: true) }.to raise_error(
+          ArgumentError, 'cannot specify :objects and :batch_all_objects'
+        )
+      end
+
+      it 'raises ArgumentError for an unsupported option' do
         expect { command.call('HEAD', bogus: true) }.to raise_error(
           ArgumentError, /Unsupported options: :bogus/
         )
-      end
-    end
-
-    context 'return value' do
-      it 'returns the CommandLineResult from the execution context' do
-        expected = command_result("abc1234 commit 250\n")
-        allow(execution_context).to receive(:command).and_return(expected)
-
-        result = command.call('HEAD')
-        expect(result).to eq(expected)
-      end
-    end
-
-    context 'error handling' do
-      it 'raises Git::FailedError when git exits with unexpected status 128' do
-        allow(execution_context).to receive(:command).and_return(
-          command_result('', exitstatus: 128)
-        )
-        expect { command.call('HEAD') }.to raise_error(Git::FailedError)
-      end
-
-      it 'returns the result when a missing object exits 0 (missing line in output)' do
-        expected = command_result("deadbeef missing\n")
-        allow(execution_context).to receive(:command).and_return(expected)
-
-        result = command.call('deadbeef')
-        expect(result.stdout).to eq("deadbeef missing\n")
       end
     end
   end

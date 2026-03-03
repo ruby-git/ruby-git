@@ -508,4 +508,151 @@ RSpec.describe Git::Lib do
         .to raise_error(ArgumentError, /Unknown options: bogus/)
     end
   end
+
+  describe '#cat_file_contents' do
+    let(:pretty_print_command) { instance_double(Git::Commands::CatFile::Pretty) }
+
+    before do
+      allow(Git::Commands::CatFile::Pretty).to receive(:new).with(lib).and_return(pretty_print_command)
+    end
+
+    it 'delegates to CatFile::Pretty and returns object content' do
+      allow(pretty_print_command).to receive(:call)
+        .with('HEAD')
+        .and_return(command_result('hello'))
+
+      result = lib.cat_file_contents('HEAD')
+
+      expect(pretty_print_command).to have_received(:call).with('HEAD')
+      expect(result).to eq('hello')
+    end
+
+    it 'yields a tempfile containing object content when given a block' do
+      allow(pretty_print_command).to receive(:call)
+        .with('HEAD')
+        .and_return(command_result('hello'))
+
+      yielded = nil
+      lib.cat_file_contents('HEAD') { |file| yielded = file.read }
+
+      expect(yielded).to eq('hello')
+    end
+
+    it 'rejects object values that look like options' do
+      expect { lib.cat_file_contents('--all') }
+        .to raise_error(ArgumentError)
+    end
+  end
+
+  describe '#cat_file_type' do
+    let(:object_meta_command) { instance_double(Git::Commands::CatFile::Meta) }
+
+    before do
+      allow(Git::Commands::CatFile::Meta).to receive(:new).with(lib).and_return(object_meta_command)
+    end
+
+    it 'delegates to CatFile::Meta and returns object type' do
+      allow(object_meta_command).to receive(:call)
+        .with('HEAD')
+        .and_return(command_result("abc123 commit 265\n"))
+
+      result = lib.cat_file_type('HEAD')
+
+      expect(object_meta_command).to have_received(:call).with('HEAD')
+      expect(result).to eq('commit')
+    end
+
+    it 'raises FailedError with a clear message when the object is missing' do
+      allow(object_meta_command).to receive(:call)
+        .with('nonexistent')
+        .and_return(command_result("nonexistent missing\n"))
+
+      pretty_command = instance_double(Git::Commands::CatFile::Pretty)
+      allow(Git::Commands::CatFile::Pretty).to receive(:new).with(lib).and_return(pretty_command)
+      allow(pretty_command).to receive(:call).with('nonexistent').and_raise(
+        Git::FailedError.new(
+          Git::CommandLineResult.new(
+            %w[git cat-file -p nonexistent], nil,
+            '', "fatal: Not a valid object name 'nonexistent'"
+          )
+        )
+      )
+
+      expect { lib.cat_file_type('nonexistent') }.to raise_error(Git::FailedError) do |error|
+        expect(error.result.stderr).to include("Not a valid object name 'nonexistent'")
+      end
+    end
+  end
+
+  describe '#cat_file_size' do
+    let(:object_meta_command) { instance_double(Git::Commands::CatFile::Meta) }
+
+    before do
+      allow(Git::Commands::CatFile::Meta).to receive(:new).with(lib).and_return(object_meta_command)
+    end
+
+    it 'delegates to CatFile::Meta and returns object size as Integer' do
+      allow(object_meta_command).to receive(:call)
+        .with('HEAD')
+        .and_return(command_result("abc123 commit 265\n"))
+
+      result = lib.cat_file_size('HEAD')
+
+      expect(object_meta_command).to have_received(:call).with('HEAD')
+      expect(result).to eq(265)
+    end
+  end
+
+  describe '#cat_file_commit' do
+    let(:typed_object_command) { instance_double(Git::Commands::CatFile::Typed) }
+
+    before do
+      allow(Git::Commands::CatFile::Typed).to receive(:new).with(lib).and_return(typed_object_command)
+    end
+
+    it 'delegates to CatFile::Typed and parses commit headers and message' do
+      commit_body = "tree deadbeef\nauthor A <a@example.com> 1 +0000\ncommitter A <a@example.com> 1 +0000\n\nmessage"
+      allow(typed_object_command).to receive(:call)
+        .with('commit', 'HEAD')
+        .and_return(command_result(commit_body))
+
+      result = lib.cat_file_commit('HEAD')
+
+      expect(typed_object_command).to have_received(:call).with('commit', 'HEAD')
+      expect(result).to include(
+        'sha' => 'HEAD',
+        'tree' => 'deadbeef',
+        'author' => 'A <a@example.com> 1 +0000',
+        'committer' => 'A <a@example.com> 1 +0000',
+        'message' => "message\n"
+      )
+    end
+  end
+
+  describe '#cat_file_tag' do
+    let(:typed_object_command) { instance_double(Git::Commands::CatFile::Typed) }
+
+    before do
+      allow(Git::Commands::CatFile::Typed).to receive(:new).with(lib).and_return(typed_object_command)
+    end
+
+    it 'delegates to CatFile::Typed and parses tag headers and message' do
+      tag_body = "object deadbeef\ntype commit\ntag v1.0\ntagger A <a@example.com> 1 +0000\n\nrelease"
+      allow(typed_object_command).to receive(:call)
+        .with('tag', 'v1.0')
+        .and_return(command_result(tag_body))
+
+      result = lib.cat_file_tag('v1.0')
+
+      expect(typed_object_command).to have_received(:call).with('tag', 'v1.0')
+      expect(result).to include(
+        'name' => 'v1.0',
+        'object' => 'deadbeef',
+        'type' => 'commit',
+        'tag' => 'v1.0',
+        'tagger' => 'A <a@example.com> 1 +0000',
+        'message' => "release\n"
+      )
+    end
+  end
 end
