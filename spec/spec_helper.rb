@@ -91,13 +91,13 @@ end
 # @return [RSpec::Mocks::MessageExpectation] the expectation object for chaining
 #
 # @example
-#   expect_command('stash', 'apply').and_return(command_result(''))
-#   expect_command('stash', 'push', '--all').and_return(command_result(''))
-#   expect_command('fetch', 'origin', timeout: 30).and_return(command_result(''))
-#   expect_command('fetch', 'origin', timeout: -1).and_raise(ArgumentError, 'Invalid timeout value')
+#   expect_command_with_capture('stash', 'apply').and_return(command_result(''))
+#   expect_command_with_capture('stash', 'push', '--all').and_return(command_result(''))
+#   expect_command_with_capture('fetch', 'origin', timeout: 30).and_return(command_result(''))
+#   expect_command_with_capture('fetch', 'origin', timeout: -1).and_raise(ArgumentError, 'Invalid timeout value')
 #
-def expect_command(*, **execution_options)
+def expect_command_with_capture(*, **execution_options)
   expect(execution_context).to(
-    receive(:command).with(*, **execution_options, raise_on_failure: false)
+    receive(:command_with_capture).with(*, **execution_options, raise_on_failure: false)
   )
 end

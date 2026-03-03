@@ -15,7 +15,7 @@ class TestCommandRaisesOnFailure < Test::Unit::TestCase
       Dir.chdir('test_project') do
         # Try to show a non-existent ref - this should fail with exit code 128
         assert_raise(Git::FailedError) do
-          git.lib.command('show', 'nonexistent-ref-that-does-not-exist')
+          git.lib.command_with_capture('show', 'nonexistent-ref-that-does-not-exist')
         end
       end
     end
@@ -26,7 +26,7 @@ class TestCommandRaisesOnFailure < Test::Unit::TestCase
       git = Git.init('test_project')
 
       Dir.chdir('test_project') do
-        git.lib.command('show', 'nonexistent-ref-that-does-not-exist')
+        git.lib.command_with_capture('show', 'nonexistent-ref-that-does-not-exist')
         flunk 'Expected Git::FailedError to be raised'
       rescue Git::FailedError => e
         assert_not_nil e.result
@@ -42,7 +42,7 @@ class TestCommandRaisesOnFailure < Test::Unit::TestCase
 
       Dir.chdir('test_project') do
         # This should NOT raise - raise_on_failure: false suppresses the error
-        result = git.lib.command('show', 'nonexistent-ref-that-does-not-exist', raise_on_failure: false)
+        result = git.lib.command_with_capture('show', 'nonexistent-ref-that-does-not-exist', raise_on_failure: false)
 
         assert_instance_of Git::CommandLineResult, result
         assert_equal false, result.status.success?

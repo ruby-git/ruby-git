@@ -34,14 +34,14 @@ RSpec.describe Git::CommandLine do
     context 'when raise_on_failure is true (default)' do
       it 'raises FailedError on non-zero exit status' do
         expect do
-          command_line.run('status')
+          command_line.run_with_capture('status')
         end.to raise_error(Git::FailedError)
       end
     end
 
     context 'when raise_on_failure is false' do
       it 'returns CommandLineResult on non-zero exit status without raising' do
-        result = command_line.run('status', raise_on_failure: false)
+        result = command_line.run_with_capture('status', raise_on_failure: false)
 
         expect(result).to be_a(Git::CommandLineResult)
         expect(result.status.success?).to be false
@@ -54,7 +54,7 @@ RSpec.describe Git::CommandLine do
         end
 
         it 'returns CommandLineResult on success' do
-          result = command_line.run('--version', raise_on_failure: false)
+          result = command_line.run_with_capture('--version', raise_on_failure: false)
 
           expect(result).to be_a(Git::CommandLineResult)
           expect(result.status.success?).to be true
@@ -71,7 +71,7 @@ RSpec.describe Git::CommandLine do
 
         it 'raises TimeoutError even with raise_on_failure: false' do
           expect do
-            command_line.run('status', raise_on_failure: false, timeout: 1)
+            command_line.run_with_capture('status', raise_on_failure: false, timeout: 1)
           end.to raise_error(Git::TimeoutError)
         end
       end
@@ -84,7 +84,7 @@ RSpec.describe Git::CommandLine do
 
         it 'raises SignaledError even with raise_on_failure: false' do
           expect do
-            command_line.run('status', raise_on_failure: false)
+            command_line.run_with_capture('status', raise_on_failure: false)
           end.to raise_error(Git::SignaledError)
         end
       end

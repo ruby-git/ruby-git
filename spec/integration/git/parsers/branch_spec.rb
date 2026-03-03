@@ -17,7 +17,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
   # Helper to run git branch --list with the parser's format and return raw output
   def git_branch_output(*args)
     format_arg = "--format=#{described_class::FORMAT_STRING}"
-    repo.lib.command('branch', '--list', format_arg, *args).stdout
+    repo.lib.command_with_capture('branch', '--list', format_arg, *args).stdout
   end
 
   describe 'FORMAT_STRING validation' do
@@ -154,7 +154,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         Git.init(bare_dir, bare: true)
         repo.add_remote('origin', bare_dir)
         repo.push('origin', 'main')
-        repo.lib.command('branch', '-u', 'origin/main', 'main')
+        repo.lib.command_with_capture('branch', '-u', 'origin/main', 'main')
       end
 
       it 'populates upstream as BranchInfo with refname' do

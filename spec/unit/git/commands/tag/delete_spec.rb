@@ -12,7 +12,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
     context 'with single tag name' do
       it 'deletes the tag' do
-        expect_command('tag', '--delete', 'v1.0.0').and_return(command_result(delete_output))
+        expect_command_with_capture('tag', '--delete', 'v1.0.0').and_return(command_result(delete_output))
 
         result = command.call('v1.0.0')
 
@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'deletes all specified tags in one command' do
-        expect_command('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0')
+        expect_command_with_capture('tag', '--delete', 'v1.0.0', 'v2.0.0', 'v3.0.0')
           .and_return(command_result(multi_delete_output))
 
         result = command.call('v1.0.0', 'v2.0.0', 'v3.0.0')
@@ -41,7 +41,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
     context 'with various tag name formats' do
       it 'handles semver tags' do
-        expect_command('tag', '--delete', 'v1.2.3')
+        expect_command_with_capture('tag', '--delete', 'v1.2.3')
           .and_return(command_result("Deleted tag 'v1.2.3' (was abc)\n"))
 
         result = command.call('v1.2.3')
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'handles tags with slashes' do
-        expect_command('tag', '--delete', 'release/v1.0')
+        expect_command_with_capture('tag', '--delete', 'release/v1.0')
           .and_return(command_result("Deleted tag 'release/v1.0' (was abc)\n"))
 
         result = command.call('release/v1.0')
@@ -59,7 +59,7 @@ RSpec.describe Git::Commands::Tag::Delete do
       end
 
       it 'handles tags with hyphens and underscores' do
-        expect_command('tag', '--delete', 'my-tag_name')
+        expect_command_with_capture('tag', '--delete', 'my-tag_name')
           .and_return(command_result("Deleted tag 'my-tag_name' (was abc)\n"))
 
         result = command.call('my-tag_name')
@@ -70,7 +70,7 @@ RSpec.describe Git::Commands::Tag::Delete do
 
     context 'exit code handling' do
       it 'returns result for exit code 0 (all deleted)' do
-        allow(execution_context).to receive(:command)
+        allow(execution_context).to receive(:command_with_capture)
           .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
           .and_return(command_result(delete_output))
 
@@ -86,7 +86,7 @@ RSpec.describe Git::Commands::Tag::Delete do
           stderr: "error: tag 'nonexistent' not found.",
           exitstatus: 1
         )
-        allow(execution_context).to receive(:command)
+        allow(execution_context).to receive(:command_with_capture)
           .with('tag', '--delete', 'v1.0.0', 'nonexistent', raise_on_failure: false)
           .and_return(partial_result)
 
@@ -102,7 +102,7 @@ RSpec.describe Git::Commands::Tag::Delete do
           stderr: 'fatal: some unexpected error',
           exitstatus: 128
         )
-        allow(execution_context).to receive(:command)
+        allow(execution_context).to receive(:command_with_capture)
           .with('tag', '--delete', 'v1.0.0', raise_on_failure: false)
           .and_return(fatal_result)
 

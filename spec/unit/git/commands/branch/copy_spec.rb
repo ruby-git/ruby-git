@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Branch::Copy do
   describe '#call' do
     context 'with only new_branch (copy current branch)' do
       it 'runs branch --copy with only the new branch name' do
-        expect_command('branch', '--copy', 'new-name')
+        expect_command_with_capture('branch', '--copy', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name')
@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Branch::Copy do
 
     context 'with old_branch and new_branch' do
       it 'runs branch --copy with both branch names' do
-        expect_command('branch', '--copy', 'old-name', 'new-name')
+        expect_command_with_capture('branch', '--copy', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name')
@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Branch::Copy do
 
     context 'with :force option' do
       it 'adds --force flag when copying current branch' do
-        expect_command('branch', '--copy', '--force', 'new-name')
+        expect_command_with_capture('branch', '--copy', '--force', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', force: true)
@@ -42,7 +42,7 @@ RSpec.describe Git::Commands::Branch::Copy do
       end
 
       it 'adds --force flag when copying specific branch' do
-        expect_command('branch', '--copy', '--force', 'old-name', 'new-name')
+        expect_command_with_capture('branch', '--copy', '--force', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name', force: true)
@@ -51,7 +51,7 @@ RSpec.describe Git::Commands::Branch::Copy do
       end
 
       it 'does not add flag when false' do
-        expect_command('branch', '--copy', 'new-name')
+        expect_command_with_capture('branch', '--copy', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', force: false)
@@ -62,7 +62,7 @@ RSpec.describe Git::Commands::Branch::Copy do
 
     context 'with :f short option alias' do
       it 'adds --force flag when copying current branch' do
-        expect_command('branch', '--copy', '--force', 'new-name')
+        expect_command_with_capture('branch', '--copy', '--force', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', f: true)
@@ -71,7 +71,7 @@ RSpec.describe Git::Commands::Branch::Copy do
       end
 
       it 'adds --force flag when copying specific branch' do
-        expect_command('branch', '--copy', '--force', 'old-name', 'new-name')
+        expect_command_with_capture('branch', '--copy', '--force', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name', f: true)

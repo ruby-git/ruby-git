@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe 'CommandLine#run raise_on_failure integration' do
+RSpec.describe 'CommandLine#run_with_capture raise_on_failure integration' do
   include_context 'in an empty repository'
 
   let(:command_line) do
@@ -11,7 +11,7 @@ RSpec.describe 'CommandLine#run raise_on_failure integration' do
 
   describe 'raise_on_failure: false' do
     it 'returns CommandLineResult without raising on non-zero exit' do
-      result = command_line.run('rev-parse', 'nonexistent-ref', chdir: repo_dir, raise_on_failure: false)
+      result = command_line.run_with_capture('rev-parse', 'nonexistent-ref', chdir: repo_dir, raise_on_failure: false)
 
       expect(result).to be_a(Git::CommandLineResult)
       expect(result.status.success?).to be false
@@ -22,7 +22,7 @@ RSpec.describe 'CommandLine#run raise_on_failure integration' do
   describe 'raise_on_failure: true (default)' do
     it 'raises FailedError on non-zero exit' do
       expect do
-        command_line.run('rev-parse', 'nonexistent-ref', chdir: repo_dir)
+        command_line.run_with_capture('rev-parse', 'nonexistent-ref', chdir: repo_dir)
       end.to raise_error(Git::FailedError)
     end
   end

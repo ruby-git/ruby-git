@@ -140,8 +140,8 @@ module Test
       #   expected_command_line = ['fetch', '--depth', '2', '--', 'origin', 'master']
       #   assert_command_line_eq(expected_command_line) { |git| git.fetch('origin', { ref: 'master', depth: '2' }) }
       #
-      # @param expected_command_line [Array<String>] The expected arguments to be sent to Git::Lib#command
-      # @param git_output [String] The mocked output to be returned by the Git::Lib#command method
+      # @param expected_command_line [Array<String>] The expected arguments to be sent to Git::Lib#command_with_capture
+      # @param mocked_output [String] The mocked output to be returned by the Git::Lib#command_with_capture method
       #
       # @yield [git] a block to call the method to be tested
       # @yieldparam git [Git::Base] The Git::Base object resulting from initializing the test project
@@ -149,7 +149,7 @@ module Test
       #
       # @return [void]
       #
-      def assert_command_line_eq(expected_command_line, _method: :command, mocked_output: '', include_env: false)
+      def assert_command_line_eq(expected_command_line, method: :command_with_capture, mocked_output: '', include_env: false)
         actual_command_line = nil
 
         # Internal options that should not be included in command line comparisons
@@ -174,7 +174,7 @@ module Test
             Git::CommandLineResult.new(['git', *cmd], status, mocked_output, '')
           end
 
-          git.lib.define_singleton_method(:command, &mock_command)
+          git.lib.define_singleton_method(method, &mock_command)
 
           Dir.chdir 'test_project' do
             yield(git) if block_given?
@@ -205,7 +205,7 @@ module Test
 
       # Build a mock CommandLineResult for clone commands
       #
-      # Used in tests that mock Git::Lib#command to capture command line args.
+      # Used in tests that mock Git::Lib#command_with_capture to capture command line args.
       # Returns a CommandLineResult with realistic stderr so that
       # Lib#build_clone_result can parse the clone directory.
       #

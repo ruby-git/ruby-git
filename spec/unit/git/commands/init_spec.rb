@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Init do
     context 'with default arguments' do
       it 'runs git init in the current directory' do
         expected_result = command_result
-        expect_command('init').and_return(expected_result)
+        expect_command_with_capture('init').and_return(expected_result)
 
         result = command.call
 
@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Init do
 
     context 'with a directory argument' do
       it 'initializes in the specified directory' do
-        expect_command('init', 'my-repo').and_return(command_result)
+        expect_command_with_capture('init', 'my-repo').and_return(command_result)
 
         command.call('my-repo')
       end
@@ -28,13 +28,13 @@ RSpec.describe Git::Commands::Init do
 
     context 'with the :bare option' do
       it 'includes the --bare flag when true' do
-        expect_command('init', '--bare', 'my-repo.git').and_return(command_result)
+        expect_command_with_capture('init', '--bare', 'my-repo.git').and_return(command_result)
 
         command.call('my-repo.git', bare: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command('init', 'my-repo').and_return(command_result)
+        expect_command_with_capture('init', 'my-repo').and_return(command_result)
 
         command.call('my-repo', bare: false)
       end
@@ -42,13 +42,13 @@ RSpec.describe Git::Commands::Init do
 
     context 'with the :initial_branch option' do
       it 'includes the --initial-branch flag with the specified value' do
-        expect_command('init', '--initial-branch=main', 'my-repo').and_return(command_result)
+        expect_command_with_capture('init', '--initial-branch=main', 'my-repo').and_return(command_result)
 
         command.call('my-repo', initial_branch: 'main')
       end
 
       it 'handles branch names with special characters' do
-        expect_command('init', '--initial-branch=feature/my-branch', 'my-repo').and_return(command_result)
+        expect_command_with_capture('init', '--initial-branch=feature/my-branch', 'my-repo').and_return(command_result)
 
         command.call('my-repo', initial_branch: 'feature/my-branch')
       end
@@ -57,7 +57,7 @@ RSpec.describe Git::Commands::Init do
     context 'with the :separate_git_dir option' do
       it 'uses --separate-git-dir for the repository path' do
         # The repository path is passed through as-is (not expanded by the command)
-        expect_command('init', '--separate-git-dir=repo.git', 'work').and_return(command_result)
+        expect_command_with_capture('init', '--separate-git-dir=repo.git', 'work').and_return(command_result)
 
         command.call('work', separate_git_dir: 'repo.git')
       end
@@ -71,7 +71,7 @@ RSpec.describe Git::Commands::Init do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command('init', '--bare', '--initial-branch=develop', 'bare.git').and_return(command_result)
+        expect_command_with_capture('init', '--bare', '--initial-branch=develop', 'bare.git').and_return(command_result)
 
         command.call('bare.git', bare: true, initial_branch: 'develop')
       end

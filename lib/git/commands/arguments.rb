@@ -1620,7 +1620,7 @@ module Git
       #
       # @example Simple splatting (same behavior as build)
       #   def call(*, **)
-      #     @execution_context.command(*ARGS.bind(*, **))
+      #     @execution_context.command_with_capture(*ARGS.bind(*, **))
       #   end
       #
       # @example Inspecting options before command execution

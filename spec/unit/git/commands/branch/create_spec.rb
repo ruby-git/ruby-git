@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Branch::Create do
   describe '#call' do
     context 'with branch name only (basic creation)' do
       it 'runs branch with the branch name' do
-        expect_command('branch', 'feature-branch')
+        expect_command_with_capture('branch', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch')
@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with start_point' do
       it 'adds the start point after the branch name' do
-        expect_command('branch', 'feature-branch', 'main')
+        expect_command_with_capture('branch', 'feature-branch', 'main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'main')
@@ -31,7 +31,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'accepts a commit SHA as start point' do
-        expect_command('branch', 'feature-branch', 'abc123')
+        expect_command_with_capture('branch', 'feature-branch', 'abc123')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'abc123')
@@ -40,7 +40,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'accepts a tag as start point' do
-        expect_command('branch', 'feature-branch', 'v1.0.0')
+        expect_command_with_capture('branch', 'feature-branch', 'v1.0.0')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'v1.0.0')
@@ -49,7 +49,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'accepts a remote branch as start point' do
-        expect_command('branch', 'feature-branch', 'origin/main')
+        expect_command_with_capture('branch', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'origin/main')
@@ -60,7 +60,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with :force option' do
       it 'adds --force flag' do
-        expect_command('branch', '--force', 'feature-branch')
+        expect_command_with_capture('branch', '--force', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', force: true)
@@ -69,7 +69,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'allows resetting an existing branch to a new start point' do
-        expect_command('branch', '--force', 'feature-branch', 'main')
+        expect_command_with_capture('branch', '--force', 'feature-branch', 'main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'main', force: true)
@@ -78,7 +78,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'does not add flag when false' do
-        expect_command('branch', 'feature-branch')
+        expect_command_with_capture('branch', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', force: false)
@@ -89,7 +89,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with :f short option alias' do
       it 'adds --force flag' do
-        expect_command('branch', '--force', 'feature-branch')
+        expect_command_with_capture('branch', '--force', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', f: true)
@@ -100,7 +100,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with :create_reflog option' do
       it 'adds --create-reflog flag' do
-        expect_command('branch', '--create-reflog', 'feature-branch')
+        expect_command_with_capture('branch', '--create-reflog', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', create_reflog: true)
@@ -109,7 +109,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'adds --no-create-reflog flag when false' do
-        expect_command('branch', '--no-create-reflog', 'feature-branch')
+        expect_command_with_capture('branch', '--no-create-reflog', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', create_reflog: false)
@@ -120,7 +120,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with :recurse_submodules option' do
       it 'adds --recurse-submodules flag' do
-        expect_command('branch', '--recurse-submodules', 'feature-branch')
+        expect_command_with_capture('branch', '--recurse-submodules', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', recurse_submodules: true)
@@ -129,7 +129,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'does not add flag when false' do
-        expect_command('branch', 'feature-branch')
+        expect_command_with_capture('branch', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', recurse_submodules: false)
@@ -141,7 +141,7 @@ RSpec.describe Git::Commands::Branch::Create do
     context 'with :track option' do
       context 'when true' do
         it 'adds --track flag' do
-          expect_command('branch', '--track', 'feature-branch', 'origin/main')
+          expect_command_with_capture('branch', '--track', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
           result = command.call('feature-branch', 'origin/main', track: true)
@@ -152,7 +152,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
       context 'when false' do
         it 'adds --no-track flag' do
-          expect_command('branch', '--no-track', 'feature-branch', 'origin/main')
+          expect_command_with_capture('branch', '--no-track', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
           result = command.call('feature-branch', 'origin/main', track: false)
@@ -163,7 +163,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
       context 'when "direct"' do
         it 'adds --track=direct flag' do
-          expect_command('branch', '--track=direct', 'feature-branch', 'origin/main')
+          expect_command_with_capture('branch', '--track=direct', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
           result = command.call('feature-branch', 'origin/main', track: 'direct')
@@ -174,7 +174,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
       context 'when "inherit"' do
         it 'adds --track=inherit flag' do
-          expect_command('branch', '--track=inherit', 'feature-branch', 'origin/main')
+          expect_command_with_capture('branch', '--track=inherit', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
           result = command.call('feature-branch', 'origin/main', track: 'inherit')
@@ -186,7 +186,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with :t short option alias' do
       it 'adds --track flag when true' do
-        expect_command('branch', '--track', 'feature-branch', 'origin/main')
+        expect_command_with_capture('branch', '--track', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'origin/main', t: true)
@@ -195,7 +195,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'adds --track=inherit when string value' do
-        expect_command('branch', '--track=inherit', 'feature-branch', 'origin/main')
+        expect_command_with_capture('branch', '--track=inherit', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'origin/main', t: 'inherit')
@@ -206,7 +206,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect_command('branch', '--track', '--force', '--create-reflog', 'feature-branch', 'origin/main')
+        expect_command_with_capture('branch', '--track', '--force', '--create-reflog', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'origin/main', force: true, create_reflog: true, track: true)
@@ -215,7 +215,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'combines force with no-track' do
-        expect_command('branch', '--no-track', '--force', 'feature-branch', 'main')
+        expect_command_with_capture('branch', '--no-track', '--force', 'feature-branch', 'main')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', 'main', force: true, track: false)
@@ -226,7 +226,7 @@ RSpec.describe Git::Commands::Branch::Create do
 
     context 'with nil start_point' do
       it 'omits the start point from the command' do
-        expect_command('branch', 'feature-branch')
+        expect_command_with_capture('branch', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', nil)
@@ -235,7 +235,7 @@ RSpec.describe Git::Commands::Branch::Create do
       end
 
       it 'omits the start point when options are provided' do
-        expect_command('branch', '--force', 'feature-branch')
+        expect_command_with_capture('branch', '--force', 'feature-branch')
           .and_return(command_result(''))
 
         result = command.call('feature-branch', nil, force: true)
