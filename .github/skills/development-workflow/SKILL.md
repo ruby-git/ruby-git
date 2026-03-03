@@ -258,6 +258,15 @@ moving to the next task.
 - **Run Linters:** Run `bundle exec rubocop` and `bundle exec rake yard` to verify
   code style and documentation standards.
 - **Check Code Quality:** Confirm the code is clean and well-factored.
+- **Audit Command Tests (command tasks only):** If this task added or modified tests
+  for any `Git::Commands::*` class, apply the
+  [Review Command Tests](../review-command-tests/SKILL.md) skill to every new or
+  changed spec file before committing. Fix any violations found before moving to the
+  COMMIT step.
+- **Audit Command YARD Docs (command tasks only):** If this task added or modified
+  any `Git::Commands::*` source file, apply the
+  [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+  skill to each changed source file. Fix any documentation gaps before committing.
 - **STOP on Unexpected Failure:** If any test unexpectedly fails during VERIFY, STOP
   immediately and report the failure to the user. Do not attempt to fix the failure
   without first explaining what went wrong and getting confirmation to proceed.
@@ -336,6 +345,21 @@ commit and complete the feature or bug fix.
      `git commit` command needs to be re-run.
    - If the commit fails 3 times, STOP and report the issue to the user with the
      exact error message.
+9. **Create the Pull Request:** Push the branch and open the PR. **CRITICAL:** The
+   terminal tool mangles multi-line markdown (backticks, asterisks, newlines) in any
+   shell command — including heredocs and inline `--body "..."` arguments. Always
+   write the PR body using the **`create_file` tool** (not the terminal), then
+   reference that file:
+   - Use `create_file` to write the body to `./pr_body.md` (repo-relative path,
+     works on all platforms)
+   - Then run in the terminal: `git push origin <branch>`
+   - Then run in the terminal: `gh pr create --title "<title>" --base <target-branch> --body-file ./pr_body.md`
+     (choose `main` or `4.x` per the [branch strategy](/CONTRIBUTING.md))
+
+   After creating the PR, verify the stored body with
+   `gh pr view <number> --json body --jq '.body'`. If it is garbled, rewrite
+   `./pr_body.md` with `create_file` and fix with
+   `gh pr edit <number> --body-file ./pr_body.md`.
 
 
 ### Per-Task Commits

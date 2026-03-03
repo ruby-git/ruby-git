@@ -59,11 +59,20 @@ Execute and report results for:
 - [ ] No redundancy - don't duplicate what unit tests already cover
 - [ ] Follow CONTRIBUTING.md guidelines: test gem's interaction with git, not git itself
 
+**Command Tests (if any `Git::Commands::*` specs are included):**
+- [ ] Apply the [Review Command Tests](../review-command-tests/SKILL.md) skill to
+  every new or modified unit and integration spec file for command classes. Resolve
+  all findings before proceeding.
+
 ## 3. Review Code Quality
 
 - [ ] YARD documentation complete for all public methods/classes
 - [ ] Include `@api public` or `@api private` tags appropriately
 - [ ] Usage examples in YARD docs show common patterns
+- [ ] **Command YARD Docs (if any `Git::Commands::*` source files are included):**
+  Apply the [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+  skill to every new or modified command source file. Resolve all findings before
+  proceeding.
 - [ ] No breaking changes (or properly marked with `!` in commits)
 - [ ] Cross-platform compatible on all supported OSes; any platform-specific logic is properly guarded and tested
 - [ ] No security issues (command injection, path traversal, etc.)
@@ -142,12 +151,16 @@ Provide a comprehensive report with:
   - Checklist from .github/pull_request_template.md
 
 **PR Body Editing Safety:**
-- Prefer file-based updates for non-trivial markdown bodies:
+- The terminal tool mangles multi-line markdown (backticks, asterisks, newlines) in
+  any shell command, including heredocs. Always write the PR body using the
+  **`create_file` tool** (the VS Code Copilot agent tool that writes file content
+  directly, bypassing the terminal entirely), then reference the file:
   - `gh pr create --body-file <path>` when opening
   - `gh pr edit <number> --body-file <path>` when updating
-- Avoid long inline `--body "..."` strings for multiline markdown
+- **Never** use inline `--body "..."` or `cat > file << 'EOF'` heredocs for PR bodies
 - After any body update, verify the stored text with:
-  - `gh pr view <number> --json body`
+  - `gh pr view <number> --json body --jq '.body'`
+- If the body is garbled, rewrite the file with `create_file` and re-run `gh pr edit`
 
 **Next Steps:**
 - Any remaining items to address before PR submission
