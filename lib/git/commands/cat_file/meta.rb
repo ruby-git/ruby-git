@@ -5,11 +5,11 @@ require 'git/commands/base'
 module Git
   module Commands
     module CatFile
-      # Runs `git cat-file --batch` to retrieve content for one or more git objects
+      # Runs `git cat-file --batch-check` to retrieve metadata for one or more git objects
       #
       # Accepts object names via stdin using the batch protocol. For each named object,
-      # git writes a header line `<sha> <type> <size>` followed by the raw object content
-      # and a trailing newline. If an object is not found, the line is `<name> missing`.
+      # git writes one line to stdout in the format `<sha> <type> <size>`.
+      # If an object is not found, the line is `<name> missing`.
       #
       # @see Git::Commands::CatFile Git::Commands::CatFile
       #
@@ -17,24 +17,20 @@ module Git
       #
       # @api private
       #
-      # @example Fetch the raw content of a commit
-      #   cmd = Git::Commands::CatFile::ObjectContent.new(execution_context)
-      #   result = cmd.call('HEAD')
+      # @example Query metadata for commit objects
+      #   cmd = Git::Commands::CatFile::Meta.new(execution_context)
+      #   result = cmd.call('HEAD', 'HEAD~1', 'v2.3.0')
       #   result.stdout
-      #   # => "abc1234... commit 250\ntree def5678...\nauthor ...\n\nCommit message\n\n"
+      #   # => "abc1234... commit 250\ndef5678... commit 198\nghi9012... commit 301\n"
       #
-      # @example Fetch content of a blob by path reference
-      #   cmd = Git::Commands::CatFile::ObjectContent.new(execution_context)
-      #   result = cmd.call('HEAD:README.md')
-      #
-      # @example Enumerate all objects with their content
-      #   cmd = Git::Commands::CatFile::ObjectContent.new(execution_context)
+      # @example Enumerate all objects in the repository
+      #   cmd = Git::Commands::CatFile::Meta.new(execution_context)
       #   result = cmd.call(batch_all_objects: true)
       #
-      class ObjectContent < Base
+      class Meta < Base
         arguments do
           literal 'cat-file'
-          literal '--batch'
+          literal '--batch-check'
 
           # Output all objects in the repository without requiring stdin input
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-all-objects
@@ -60,13 +56,13 @@ module Git
           requires_one_of :objects, :batch_all_objects
         end
 
-        # Returns the full content (header + raw bytes) for each named git object
+        # Returns metadata (sha, type, size) for each named git object
         #
-        # Object names are passed to the git process's stdin using the `--batch`
+        # Object names are passed to the git process's stdin using the `--batch-check`
         # streaming protocol.
         #
         # @overload call(*objects, **options)
-        #   Returns the full content for one or more named git objects
+        #   Returns metadata for one or more named git objects
         #
         #   @param objects [Array<String>] One or more object names (SHAs, refs, `HEAD`, etc.)
         #
@@ -81,8 +77,13 @@ module Git
         #   @option options [Boolean] :allow_unknown_type (false) Suppress errors for
         #     objects of unknown type
         #
+        #   @return [Git::CommandLineResult] the result of calling `git cat-file --batch-check`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero status (catastrophic failure
+        #     only; missing objects are reported inline as `<name> missing\n`, not as errors)
+        #
         # @overload call(batch_all_objects: true, **options)
-        #   Returns full content for every object in the repository without reading stdin
+        #   Returns metadata for every object in the repository without reading stdin
         #
         #   @param options [Hash] command options
         #
@@ -98,11 +99,12 @@ module Git
         #   @option options [Boolean] :allow_unknown_type (false) Suppress errors for
         #     objects of unknown type
         #
-        # @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
+        #   @return [Git::CommandLineResult] the result of calling `git cat-file --batch-check`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero status (catastrophic failure
+        #     only; missing objects are reported inline as `<name> missing\n`, not as errors)
         #
         # @raise [ArgumentError] when `objects` is empty and `batch_all_objects` is not set
-        #
-        # @raise [Git::FailedError] if git exits with a non-zero status
         #
         def call(*, **)
           bound = args_definition.bind(*, **)
@@ -125,12 +127,7 @@ module Git
         #
         def run_batch(bound, reader)
           result = @execution_context.command(
-            *bound,
-            in: reader,
-            **bound.execution_options,
-            normalize: false,
-            chomp: false,
-            raise_on_failure: false
+            *bound, in: reader, **bound.execution_options, raise_on_failure: false
           )
           validate_exit_status!(result)
           result
