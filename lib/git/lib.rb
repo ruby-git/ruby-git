@@ -2096,7 +2096,9 @@ module Git
     #
     # @option options_hash [IO, nil] :in stdin IO object
     # @option options_hash [#write, nil] :out destination for streamed stdout
-    # @option options_hash [#write, nil] :err destination for stderr (defaults to internal StringIO)
+    # @option options_hash [#write, nil] :err an optional additional destination to receive stderr output
+    #   in real time. Stderr is always captured internally; when `err:` is supplied, writes are teed
+    #   to both the internal buffer and this destination. `result.stderr` always reflects the internal capture.
     # @option options_hash [String, nil] :chdir the directory to run the command in
     # @option options_hash [Hash] :env additional environment variable overrides for this command
     # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
