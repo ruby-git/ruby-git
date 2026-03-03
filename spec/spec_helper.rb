@@ -101,3 +101,23 @@ def expect_command_with_capture(*, **execution_options)
     receive(:command_with_capture).with(*, **execution_options, raise_on_failure: false)
   )
 end
+
+# Helper to expect a streaming command call (non-capturing path)
+#
+# This helper simplifies testing commands that use the streaming execution path via
+# Commands::Base, which always passes raise_on_failure: false to the execution context.
+#
+# @param args [Array] the command arguments to expect
+#
+# @param execution_options [Hash] additional execution options to expect
+#
+# @return [RSpec::Mocks::MessageExpectation] the expectation object for chaining
+#
+# @example
+#   expect_command('cat-file', '--batch', out: StringIO.new).and_return(command_result(''))
+#
+def expect_command(*, **execution_options)
+  expect(execution_context).to(
+    receive(:command).with(*, **execution_options, raise_on_failure: false)
+  )
+end
