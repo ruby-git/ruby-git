@@ -428,31 +428,62 @@ module Git
 
     alias namerev name_rev
 
-    # Output the contents or other properties of one or more objects.
+    # Returns the raw content of a git object, or streams it into a tempfile
+    #
+    # Without a block, the full content is buffered in memory and returned as a
+    # `String`. With a block, git output is streamed directly to disk without memory
+    # buffering — safe for large blobs.
     #
     # @see https://git-scm.com/docs/git-cat-file git-cat-file
     #
-    # @example Get the contents of a file without a block
-    #   lib.cat_file_contents('README.md') # => "This is a README file\n"
+    # @overload cat_file_contents(object)
+    #   Returns the object's raw content as a string.
     #
-    # @example Get the contents of a file with a block
-    #  lib.cat_file_contents('README.md') { |f| f.read } # => "This is a README file\n"
+    #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
     #
-    # @param object [String] the object whose contents to return
+    #   @return [String] the raw content of the object
     #
-    # @return [String] the object contents
+    #   @raise [ArgumentError] if `object` starts with a hyphen
     #
-    # @raise [ArgumentError] if object is a string starting with a hyphen
+    #   @raise [Git::FailedError] if the object does not exist or the command fails
+    #
+    #   @example Get the contents of a blob
+    #     lib.cat_file_contents('HEAD:README.md') # => "This is a README file\n"
+    #
+    # @overload cat_file_contents(object, &block)
+    #   Streams the object's raw content to a temporary file and yields it.
+    #
+    #   Git output is written directly to a file on disk without being
+    #   buffered in memory first, then the file is rewound and yielded to the block.
+    #   The return value is whatever the block returns.
+    #
+    #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+    #
+    #   @yield [file] the temporary file containing the streamed content, positioned at the start
+    #
+    #   @yieldparam file [File] readable `IO` object positioned at the beginning of the content
+    #
+    #   @yieldreturn [Object] the value to return from this method
+    #
+    #   @return [Object] the value returned by the block
+    #
+    #   @raise [ArgumentError] if `object` starts with a hyphen
+    #
+    #   @raise [Git::FailedError] if the object does not exist or the command fails
+    #
+    #   @example Read a large blob without buffering it in memory
+    #     lib.cat_file_contents('HEAD:large_file.bin') { |f| process(f) }
     #
     def cat_file_contents(object)
       assert_args_are_not_options('object', object)
 
-      object_content = Git::Commands::CatFile::Pretty.new(self).call(object).stdout
+      return Git::Commands::CatFile::Pretty.new(self).call(object).stdout unless block_given?
 
-      return object_content unless block_given?
-
+      # Stream git output directly to a tempfile to avoid buffering large
+      # object content in memory when a block is given.
       Tempfile.create do |file|
-        file.write(object_content)
+        file.binmode
+        command('cat-file', '-p', object, out: file)
         file.rewind
         yield file
       end
@@ -1879,6 +1910,37 @@ module Git
       { keys: [:add_gzip],   type: :validate_only }
     ].freeze
 
+    # Creates an archive of the given tree-ish and writes it to a file
+    #
+    # Runs `git archive` and streams its output directly to disk rather than
+    # accumulating it in memory. When `:add_gzip` is `true` or the format is
+    # `'tgz'`, the written archive is then read back into memory for gzip
+    # compression. Returns the path to the written archive file.
+    #
+    # @see https://git-scm.com/docs/git-archive git-archive
+    #
+    # @param sha [String] tree-ish to archive (commit, tag, branch, or tree SHA)
+    #
+    # @param file [String, nil] destination file path; a unique temp file is
+    #   created and returned if `nil`
+    #
+    # @param opts [Hash] archive options
+    #
+    # @option opts [String] :prefix prefix to prepend to each filename in the archive
+    #
+    # @option opts [String] :remote URL of a remote repository to archive from
+    #
+    # @option opts [String] :path limit the archive to a path within the tree
+    #
+    # @option opts [String] :format archive format — `'tar'`, `'tgz'`, or `'zip'`
+    #   (default: `'zip'`)
+    #
+    # @option opts [Boolean] :add_gzip wrap the archive in gzip compression
+    #
+    # @return [String] the path to the written archive file
+    #
+    # @raise [Git::FailedError] if `git archive` fails
+    #
     def archive(sha, file = nil, opts = {})
       ArgsBuilder.validate!(opts, ARCHIVE_OPTION_MAP)
       file ||= temp_file_name
@@ -1889,7 +1951,7 @@ module Git
       args << sha
       args.push('--', opts[:path]) if opts[:path]
 
-      File.open(file, 'wb') { |f| command_with_capture('archive', *args, out: f) }
+      File.open(file, 'wb') { |f| command('archive', *args, out: f) }
       apply_gzip(file) if gzip
 
       file
@@ -2485,18 +2547,27 @@ module Git
       [index, message.strip]
     end
 
-    # Writes the staged content of a conflicted file to an IO stream
+    # Streams the staged content of a file at a given index stage to an IO object
+    #
+    # Uses the streaming execution path so content is written directly to `out_io`
+    # without being buffered in memory.
+    #
+    # @api private
     #
     # @param path [String] the path to the file in the index
     #
-    # @param stage [Integer] the stage of the file to show (e.g., 2 for 'ours', 3 for 'theirs')
+    # @param stage [Integer] the index stage to read (e.g., `1` ancestor, `2` ours, `3` theirs)
     #
-    # @param out_io [IO] the IO object to write the staged content to
+    # @param out_io [IO] the `IO` object to stream the staged content into
     #
-    # @return [IO] the IO object that was written to
+    # @return [IO] `out_io`, as passed in
+    #
+    # @raise [Git::FailedError] if the object does not exist or git exits non-zero
+    #
+    # @raise [Git::TimeoutError] if the command exceeds the configured timeout
     #
     def write_staged_content(path, stage, out_io)
-      command_with_capture('show', ":#{stage}:#{path}", out: out_io)
+      command('show', ":#{stage}:#{path}", out: out_io)
       out_io
     end
 

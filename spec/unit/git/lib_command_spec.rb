@@ -610,20 +610,93 @@ RSpec.describe Git::Lib do
       expect(result).to eq('hello')
     end
 
-    it 'yields a tempfile containing object content when given a block' do
-      allow(pretty_print_command).to receive(:call)
-        .with('HEAD')
-        .and_return(command_result('hello'))
+    it 'streams content directly to a tempfile via the streaming path when given a block' do
+      allow(command_line).to receive(:run) do |*_args, **kwargs|
+        kwargs[:out].write('hello')
+        command_result('')
+      end
 
       yielded = nil
       lib.cat_file_contents('HEAD') { |file| yielded = file.read }
 
+      expect(command_line).to have_received(:run).with(
+        'cat-file', '-p', 'HEAD',
+        hash_including(out: instance_of(File))
+      )
       expect(yielded).to eq('hello')
+    end
+
+    it 'does not buffer content via CatFile::Pretty when a block is given' do
+      allow(command_line).to receive(:run) do |*_args, **kwargs|
+        kwargs[:out].write('hello')
+        command_result('')
+      end
+
+      lib.cat_file_contents('HEAD', &:read)
+
+      expect(Git::Commands::CatFile::Pretty).not_to have_received(:new)
     end
 
     it 'rejects object values that look like options' do
       expect { lib.cat_file_contents('--all') }
         .to raise_error(ArgumentError)
+    end
+  end
+
+  describe '#archive' do
+    it 'uses the streaming execution path (not capturing) to write archive content' do
+      Tempfile.create('archive_test') do |out_file|
+        out_file.close
+        allow(command_line).to receive(:run).and_return(command_result(''))
+
+        lib.archive('HEAD', out_file.path)
+
+        expect(command_line).to have_received(:run).with(
+          'archive', anything, anything,
+          hash_including(out: instance_of(File))
+        )
+      end
+    end
+
+    it 'does not use the capturing path to write archive content' do
+      Tempfile.create('archive_test') do |out_file|
+        out_file.close
+        allow(command_line).to receive(:run).and_return(command_result(''))
+        allow(command_line).to receive(:run_with_capture)
+
+        lib.archive('HEAD', out_file.path)
+
+        expect(command_line).not_to have_received(:run_with_capture)
+      end
+    end
+  end
+
+  describe '#write_staged_content (private)' do
+    it 'uses the streaming execution path to write staged content to the given IO' do
+      out_io = StringIO.new
+
+      allow(command_line).to receive(:run) do |*_args, **kwargs|
+        kwargs[:out].write('staged content')
+        command_result('')
+      end
+
+      result = lib.send(:write_staged_content, 'file.txt', 2, out_io)
+
+      expect(command_line).to have_received(:run).with(
+        'show', ':2:file.txt',
+        hash_including(out: out_io)
+      )
+      expect(result).to be(out_io)
+    end
+
+    it 'does not use the capturing path for write_staged_content' do
+      out_io = StringIO.new
+      allow(command_line).to receive(:run).and_return(command_result(''))
+      allow(command_line).to receive(:run_with_capture)
+
+      lib.send(:write_staged_content, 'file.txt', 3, out_io)
+
+      expect(command_line).not_to have_received(:run_with_capture)
     end
   end
 

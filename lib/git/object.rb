@@ -31,12 +31,43 @@ module Git
         @size ||= @base.lib.cat_file_size(@objectish)
       end
 
-      # Get the object's contents.
-      # If no block is given, the contents are cached in memory and returned as a string.
-      # If a block is given, it yields an IO object (via IO::popen) which could be used to
-      # read a large file in chunks.
+      # Returns the raw content of this git object or streams it into a temporary file
       #
-      # Use this for large files so that they are not held in memory.
+      # Without a block, the full content is buffered in memory and cached, then
+      # returned as a `String`. With a block, git output is streamed directly to a
+      # temporary file on disk — suitable for large objects.
+      #
+      # @api public
+      #
+      # @overload contents
+      #   Returns the cached content as a string.
+      #
+      #   @return [String] the raw content of the object, cached after first call
+      #
+      #   @raise [Git::FailedError] if the object does not exist or the command fails
+      #
+      #   @example Get the contents of a blob
+      #     git.object('HEAD:README.md').contents # => "This is a README file\n"
+      #
+      # @overload contents(&block)
+      #   Streams the content to a temporary file and yields it.
+      #
+      #   Git output is written directly to a file without buffering in
+      #   memory. Use this form for large blobs to avoid memory pressure.
+      #
+      #   @yield [file] the temporary file, positioned at the start of the content
+      #
+      #   @yieldparam file [File] readable `IO` object positioned at the beginning
+      #
+      #   @yieldreturn [Object] the value to return from this method
+      #
+      #   @return [Object] the value returned by the block
+      #
+      #   @raise [Git::FailedError] if the object does not exist or the command fails
+      #
+      #   @example Read a large blob without loading it into memory
+      #     git.object('HEAD:large_file.bin').contents { |f| upload(f) }
+      #
       def contents(&)
         if block_given?
           @base.lib.cat_file_contents(@objectish, &)
@@ -66,7 +97,21 @@ module Git
         Git::Log.new(@base, count).object(@objectish)
       end
 
-      # creates an archive of this object (tree)
+      # Creates an archive of this object and writes it to a file
+      #
+      # @api public
+      #
+      # @param file [String, nil] destination file path; a temp file is created if `nil`
+      #
+      # @param opts [Hash] archive options (see {Git::Lib#archive})
+      #
+      # @return [String] the path to the written archive file
+      #
+      # @raise [Git::FailedError] if `git archive` fails
+      #
+      # @example Archive a tree to a zip file
+      #   git.object('v1.0').archive('/tmp/release.zip', format: 'zip')
+      #
       def archive(file = nil, opts = {})
         @base.lib.archive(@objectish, file, opts)
       end
