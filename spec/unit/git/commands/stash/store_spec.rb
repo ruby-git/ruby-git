@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::Stash::Store do
     context 'with commit SHA only' do
       it 'calls git stash store with commit' do
         expected_result = command_result('')
-        expect_command('stash', 'store', 'abc123def456789')
+        expect_command_with_capture('stash', 'store', 'abc123def456789')
           .and_return(expected_result)
 
         result = command.call('abc123def456789')
@@ -22,28 +22,28 @@ RSpec.describe Git::Commands::Stash::Store do
 
     context 'with :message option' do
       it 'adds --message flag with value' do
-        expect_command('stash', 'store', '--message', 'WIP: my changes', 'abc123')
+        expect_command_with_capture('stash', 'store', '--message', 'WIP: my changes', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'WIP: my changes')
       end
 
       it 'accepts :m alias' do
-        expect_command('stash', 'store', '--message', 'WIP', 'abc123')
+        expect_command_with_capture('stash', 'store', '--message', 'WIP', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', m: 'WIP')
       end
 
       it 'handles message with special characters' do
-        expect_command('stash', 'store', '--message', 'Fix "bug" in code', 'abc123')
+        expect_command_with_capture('stash', 'store', '--message', 'Fix "bug" in code', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'Fix "bug" in code')
       end
 
       it 'handles message with spaces' do
-        expect_command('stash', 'store', '--message', 'work in progress', 'abc123')
+        expect_command_with_capture('stash', 'store', '--message', 'work in progress', 'abc123')
           .and_return(command_result(''))
 
         command.call('abc123', message: 'work in progress')
@@ -53,7 +53,7 @@ RSpec.describe Git::Commands::Stash::Store do
     context 'with full SHA' do
       it 'handles 40-character SHA' do
         sha = 'a' * 40
-        expect_command('stash', 'store', sha)
+        expect_command_with_capture('stash', 'store', sha)
           .and_return(command_result(''))
 
         command.call(sha)

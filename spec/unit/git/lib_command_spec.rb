@@ -13,7 +13,7 @@ RSpec.describe Git::Lib do
     allow(lib).to receive(:command_line).and_return(command_line)
   end
 
-  describe '#command' do
+  describe '#command_with_capture' do
     let(:successful_result) do
       instance_double(
         Git::CommandLineResult,
@@ -35,9 +35,9 @@ RSpec.describe Git::Lib do
 
     context 'when command succeeds' do
       it 'returns a CommandLineResult' do
-        allow(command_line).to receive(:run).and_return(successful_result)
+        allow(command_line).to receive(:run_with_capture).and_return(successful_result)
 
-        result = lib.command('version')
+        result = lib.command_with_capture('version')
 
         expect(result).to be(successful_result)
       end
@@ -45,19 +45,19 @@ RSpec.describe Git::Lib do
 
     context 'when command fails with non-zero exit (default behavior)' do
       it 'raises Git::FailedError' do
-        allow(command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
+        allow(command_line).to receive(:run_with_capture).and_raise(Git::FailedError.new(failed_result))
 
         expect do
-          lib.command('rev-parse', 'nonexistent')
+          lib.command_with_capture('rev-parse', 'nonexistent')
         end.to raise_error(Git::FailedError)
       end
     end
 
     context 'when command fails with raise_on_failure: false' do
       it 'returns CommandLineResult without raising' do
-        allow(command_line).to receive(:run).and_return(failed_result)
+        allow(command_line).to receive(:run_with_capture).and_return(failed_result)
 
-        result = lib.command('rev-parse', 'nonexistent', raise_on_failure: false)
+        result = lib.command_with_capture('rev-parse', 'nonexistent', raise_on_failure: false)
 
         expect(result).to be(failed_result)
         expect(result.status.success?).to be false
@@ -66,11 +66,11 @@ RSpec.describe Git::Lib do
 
     context 'with env: option' do
       it 'merges env into the command_line call' do
-        allow(command_line).to receive(:run).and_return(successful_result)
+        allow(command_line).to receive(:run_with_capture).and_return(successful_result)
 
-        lib.command('rev-parse', '--git-dir', env: { 'GIT_DIR' => '/custom/path' })
+        lib.command_with_capture('rev-parse', '--git-dir', env: { 'GIT_DIR' => '/custom/path' })
 
-        expect(command_line).to have_received(:run).with(
+        expect(command_line).to have_received(:run_with_capture).with(
           'rev-parse', '--git-dir',
           hash_including(env: { 'GIT_DIR' => '/custom/path' })
         )

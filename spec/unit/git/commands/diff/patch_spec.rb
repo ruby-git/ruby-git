@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Diff::Patch do
     context 'with no arguments (working tree vs index)' do
       it 'runs diff with --patch, --numstat, --shortstat, prefix options, and -M flag' do
         expected_result = command_result(patch_output)
-        expect_command(*static_args)
+        expect_command_with_capture(*static_args)
           .and_return(expected_result)
 
         result = command.call
@@ -41,7 +41,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with single commit' do
       it 'passes the commit as an operand' do
-        expect_command(*static_args, 'abc123')
+        expect_command_with_capture(*static_args, 'abc123')
           .and_return(command_result(patch_output))
 
         command.call('abc123')
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with two commits' do
       it 'passes both commits as operands' do
-        expect_command(*static_args, 'abc123', 'def456')
+        expect_command_with_capture(*static_args, 'abc123', 'def456')
           .and_return(command_result(patch_output))
 
         command.call('abc123', 'def456')
@@ -59,14 +59,14 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with :cached option' do
       it 'includes the --cached flag' do
-        expect_command(*static_args, '--cached')
+        expect_command_with_capture(*static_args, '--cached')
           .and_return(command_result(patch_output))
 
         command.call(cached: true)
       end
 
       it 'accepts :staged alias' do
-        expect_command(*static_args, '--cached')
+        expect_command_with_capture(*static_args, '--cached')
           .and_return(command_result(patch_output))
 
         command.call(staged: true)
@@ -75,7 +75,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with :find_copies option' do
       it 'includes the -C flag' do
-        expect_command(*static_args, '--find-copies')
+        expect_command_with_capture(*static_args, '--find-copies')
           .and_return(command_result(patch_output))
 
         command.call(find_copies: true)
@@ -84,14 +84,14 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with :merge_base option' do
       it 'includes the --merge-base flag' do
-        expect_command(*static_args, '--merge-base', 'feature')
+        expect_command_with_capture(*static_args, '--merge-base', 'feature')
           .and_return(command_result(patch_output))
 
         command.call('feature', merge_base: true)
       end
 
       it 'includes --merge-base with two commits' do
-        expect_command(*static_args, '--merge-base', 'main', 'feature')
+        expect_command_with_capture(*static_args, '--merge-base', 'main', 'feature')
           .and_return(command_result(patch_output))
 
         command.call('main', 'feature', merge_base: true)
@@ -100,7 +100,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with :no_index option' do
       it 'includes the --no-index flag' do
-        expect_command(*static_args, '--no-index', '/path/a', '/path/b')
+        expect_command_with_capture(*static_args, '--no-index', '/path/a', '/path/b')
           .and_return(command_result(patch_output))
 
         command.call('/path/a', '/path/b', no_index: true)
@@ -109,14 +109,14 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'with pathspec limiting' do
       it 'adds pathspecs after the -- separator' do
-        expect_command(*static_args, '--', 'lib/', 'spec/')
+        expect_command_with_capture(*static_args, '--', 'lib/', 'spec/')
           .and_return(command_result(patch_output))
 
         command.call(pathspecs: ['lib/', 'spec/'])
       end
 
       it 'combines commit with pathspecs' do
-        expect_command(*static_args, 'HEAD~3', '--', 'lib/')
+        expect_command_with_capture(*static_args, 'HEAD~3', '--', 'lib/')
           .and_return(command_result(patch_output))
 
         command.call('HEAD~3', pathspecs: ['lib/'])
@@ -140,7 +140,7 @@ RSpec.describe Git::Commands::Diff::Patch do
       end
 
       it 'includes the --dirstat flag when true' do
-        expect_command(*static_args, '--dirstat')
+        expect_command_with_capture(*static_args, '--dirstat')
           .and_return(command_result(dirstat_output))
 
         result = command.call(dirstat: true)
@@ -149,7 +149,7 @@ RSpec.describe Git::Commands::Diff::Patch do
       end
 
       it 'passes dirstat options when string' do
-        expect_command(*static_args, '--dirstat=lines,cumulative')
+        expect_command_with_capture(*static_args, '--dirstat=lines,cumulative')
           .and_return(command_result(dirstat_output))
 
         command.call(dirstat: 'lines,cumulative')
@@ -158,7 +158,7 @@ RSpec.describe Git::Commands::Diff::Patch do
 
     context 'exit code handling' do
       it 'returns successfully with exit code 0 when no differences' do
-        expect_command(*static_args)
+        expect_command_with_capture(*static_args)
           .and_return(command_result('', exitstatus: 0))
 
         result = command.call
@@ -169,7 +169,7 @@ RSpec.describe Git::Commands::Diff::Patch do
       end
 
       it 'returns successfully with exit code 1 when differences found' do
-        expect_command(*static_args)
+        expect_command_with_capture(*static_args)
           .and_return(command_result(patch_output, exitstatus: 1))
 
         result = command.call
@@ -180,14 +180,14 @@ RSpec.describe Git::Commands::Diff::Patch do
       end
 
       it 'raises FailedError with exit code 2 (error)' do
-        expect_command(*static_args)
+        expect_command_with_capture(*static_args)
           .and_return(command_result('', stderr: 'fatal: bad revision', exitstatus: 2))
 
         expect { command.call }.to raise_error(Git::FailedError)
       end
 
       it 'raises FailedError with exit code 128 (git error)' do
-        expect_command(*static_args)
+        expect_command_with_capture(*static_args)
           .and_return(command_result('', stderr: 'fatal: not a git repository', exitstatus: 128))
 
         expect { command.call }.to raise_error(Git::FailedError)

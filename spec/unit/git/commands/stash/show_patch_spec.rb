@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Stash::ShowPatch do
     context 'with no arguments (latest stash)' do
       it 'calls git stash show --patch --numstat --shortstat' do
         expected_result = command_result(patch_output)
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat')
           .and_return(expected_result)
 
         result = command.call
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::Stash::ShowPatch do
 
     context 'with specific stash reference' do
       it 'passes stash reference to command' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat', 'stash@{2}')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat', 'stash@{2}')
           .and_return(command_result(patch_output))
 
         command.call('stash@{2}')
@@ -59,22 +59,22 @@ RSpec.describe Git::Commands::Stash::ShowPatch do
 
     context 'with :include_untracked option' do
       it 'adds --include-untracked flag when true' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat', '--include-untracked')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(patch_output))
 
         command.call(include_untracked: true)
       end
 
       it 'adds --no-include-untracked flag when false' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat',
-                       '--no-include-untracked')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat',
+                                    '--no-include-untracked')
           .and_return(command_result(patch_output))
 
         command.call(include_untracked: false)
       end
 
       it 'accepts :u alias' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat', '--include-untracked')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(patch_output))
 
         command.call(u: true)
@@ -83,7 +83,7 @@ RSpec.describe Git::Commands::Stash::ShowPatch do
 
     context 'with :only_untracked option' do
       it 'adds --only-untracked flag' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat', '--only-untracked')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat', '--only-untracked')
           .and_return(command_result(patch_output))
 
         command.call(only_untracked: true)
@@ -92,15 +92,15 @@ RSpec.describe Git::Commands::Stash::ShowPatch do
 
     context 'with :dirstat option' do
       it 'adds --dirstat flag when true' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat', '--dirstat')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat', '--dirstat')
           .and_return(command_result(patch_output))
 
         command.call(dirstat: true)
       end
 
       it 'passes dirstat options when string' do
-        expect_command('stash', 'show', '--patch', '--numstat', '--shortstat',
-                       '--dirstat=lines,cumulative')
+        expect_command_with_capture('stash', 'show', '--patch', '--numstat', '--shortstat',
+                                    '--dirstat=lines,cumulative')
           .and_return(command_result(patch_output))
 
         command.call(dirstat: 'lines,cumulative')

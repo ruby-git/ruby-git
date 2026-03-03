@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::Fsck, :integration do
 
       context 'with specific objects' do
         it 'checks specific objects by oid' do
-          head_sha = execution_context.command('rev-parse', 'HEAD').stdout.strip
+          head_sha = execution_context.command_with_capture('rev-parse', 'HEAD').stdout.strip
           result = command.call(head_sha)
 
           expect(result).to be_a(Git::CommandLineResult)

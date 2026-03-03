@@ -12,7 +12,7 @@ RSpec.describe Git::Parsers::Fsck, :integration do
 
   # Helper to run git fsck and return raw output
   def git_fsck_output(*args)
-    result = repo.lib.command('fsck', '--no-progress', *args, raise_on_failure: false)
+    result = repo.lib.command_with_capture('fsck', '--no-progress', *args, raise_on_failure: false)
     result.stdout
   end
 

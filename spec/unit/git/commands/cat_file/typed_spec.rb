@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::CatFile::Typed do
     context 'with type and object arguments' do
       it 'runs git cat-file with type then object' do
         expected_result = command_result('')
-        expect_command('cat-file', 'commit', 'HEAD').and_return(expected_result)
+        expect_command_with_capture('cat-file', 'commit', 'HEAD').and_return(expected_result)
         result = command.call('commit', 'HEAD')
         expect(result).to eq(expected_result)
       end

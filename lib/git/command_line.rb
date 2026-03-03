@@ -19,7 +19,7 @@ module Git
     #   global_opts = %w[--git-dir /path/to/git/dir]
     #   logger = Logger.new(STDOUT)
     #   cli = CommandLine.new(env, binary_path, global_opts, logger)
-    #   cli.run('version') #=> #<Git::CommandLineResult:0x00007f9b0c0b0e00
+    #   cli.run_with_capture('version') #=> #<Git::CommandLineResult:0x00007f9b0c0b0e00
     #
     # @param env [Hash<String, String>] environment variables to set
     # @param global_opts [Array<String>] global options to pass to git
@@ -111,28 +111,31 @@ module Git
     # UTF-8 string. It uses the `rchardet` gem to detect the encoding of the binary
     # output and then converts it to UTF-8.
     #
-    # Normalization is not enabled by default. Pass `normalize: true` to Git::CommandLine#run
-    # to enable it. Normalization will only be performed on stdout and only if the `out:`` option
+    # Normalization is not enabled by default. Pass `normalize: true` to Git::CommandLine#run_with_capture
+    # to enable it. Normalization will only be performed on stdout and only if the `out:` option
     # is nil or is a StringIO object. If the out: option is set to a file or other IO object,
     # the normalize option will be ignored.
     #
     # @example Run a command and return the output
-    #   cli.run('version') #=> "git version 2.39.1\n"
+    #   result = cli.run_with_capture('version')
+    #   result.stdout #=> "git version 2.39.1\n"
     #
     # @example The args array should be splatted into the parameter list
     #   args = %w[log -n 1 --oneline]
-    #   cli.run(*args) #=> "f5baa11 beginning of Ruby/Git project\n"
+    #   result = cli.run_with_capture(*args)
+    #   result.stdout #=> "f5baa11 beginning of Ruby/Git project\n"
     #
     # @example Run a command and return the chomped output
-    #   cli.run('version', chomp: true) #=> "git version 2.39.1"
+    #   result = cli.run_with_capture('version', chomp: true)
+    #   result.stdout #=> "git version 2.39.1"
     #
     # @example Run a command and without normalizing the output
-    #   cli.run('version', normalize: false) #=> "git version 2.39.1\n"
+    #   cli.run_with_capture('version', normalize: false) #=> "git version 2.39.1\n"
     #
     # @example Capture stdout in a temporary file
     #   require 'tempfile'
     #   tempfile = Tempfile.create('git') do |file|
-    #     cli.run('version', out: file)
+    #     cli.run_with_capture('version', out: file)
     #     file.rewind
     #     file.read #=> "git version 2.39.1\n"
     #   end
@@ -141,7 +144,7 @@ module Git
     #   require 'stringio'
     #   stderr = StringIO.new
     #   begin
-    #     cli.run('log', 'nonexistent-branch', err: stderr)
+    #     cli.run_with_capture('log', 'nonexistent-branch', err: stderr)
     #   rescue Git::FailedError => e
     #     stderr.string #=> "unknown revision or path not in the working tree.\n"
     #   end
@@ -206,37 +209,14 @@ module Git
     #
     # @raise [Git::TimeoutError] if the command times out
     #
-    def run(*, **options_hash)
+    def run_with_capture(*, **options_hash)
       options_hash = RUN_ARGS.merge(options_hash)
       extra_options = options_hash.keys - RUN_ARGS.keys
       raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
 
-      result = run_with_capture(*, **options_hash)
+      result = execute_with_capture(*, **options_hash)
       process_result(result, options_hash[:normalize], options_hash[:chomp], options_hash[:timeout],
                      options_hash[:raise_on_failure])
-    end
-
-    # @return [Git::CommandLineResult] the result of running the command
-    #
-    # @api private
-    #
-    def run_with_capture(*args, **options_hash)
-      git_cmd = build_git_cmd(args)
-      options = run_with_capture_options(**options_hash)
-      merged_env = env.merge(options_hash[:env] || {})
-      ProcessExecuter.run_with_capture(merged_env, *git_cmd, **options)
-    rescue ProcessExecuter::ProcessIOError => e
-      raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
-    end
-
-    def run_with_capture_options(**options_hash)
-      chdir = options_hash[:chdir] || :not_set
-      timeout_after = options_hash[:timeout]
-      merge_output = options_hash[:merge] || false
-
-      { chdir:, timeout_after:, merge_output:, raise_errors: false }.tap do |options|
-        redirect_options(options_hash).each { |k, v| options[k] = v }
-      end
     end
 
     RUN_ARGS = {
@@ -253,6 +233,26 @@ module Git
     }.freeze
 
     private
+
+    # @return [Git::CommandLineResult] the result of running the command
+    def execute_with_capture(*args, **options_hash)
+      git_cmd = build_git_cmd(args)
+      options = execute_with_capture_options(**options_hash)
+      merged_env = env.merge(options_hash[:env] || {})
+      ProcessExecuter.run_with_capture(merged_env, *git_cmd, **options)
+    rescue ProcessExecuter::ProcessIOError => e
+      raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
+    end
+
+    def execute_with_capture_options(**options_hash)
+      chdir = options_hash[:chdir] || :not_set
+      timeout_after = options_hash[:timeout]
+      merge_output = options_hash[:merge] || false
+
+      { chdir:, timeout_after:, merge_output:, raise_errors: false }.tap do |options|
+        redirect_options(options_hash).each { |k, v| options[k] = v }
+      end
+    end
 
     def redirect_options(options_hash)
       %i[in out err].filter_map do |key|

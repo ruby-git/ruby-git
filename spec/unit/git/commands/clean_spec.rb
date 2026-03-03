@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Clean do
     context 'with no arguments' do
       it 'runs git clean without any flags' do
         expected_result = command_result
-        expect_command('clean').and_return(expected_result)
+        expect_command_with_capture('clean').and_return(expected_result)
 
         result = command.call
 
@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Clean do
 
     context 'with the :force argument' do
       it 'adds --force to the command line' do
-        expect_command('clean', '--force').and_return(command_result)
+        expect_command_with_capture('clean', '--force').and_return(command_result)
 
         command.call(force: true)
       end
@@ -28,26 +28,26 @@ RSpec.describe Git::Commands::Clean do
 
     context 'with the :force_force argument' do
       it 'adds -ff to the command line' do
-        expect_command('clean', '-ff').and_return(command_result)
+        expect_command_with_capture('clean', '-ff').and_return(command_result)
         command.call(force_force: true)
       end
     end
 
     context 'with both :force and :force_force arguments' do
       it 'allows force: true with force_force: false' do
-        expect_command('clean', '--force').and_return(command_result)
+        expect_command_with_capture('clean', '--force').and_return(command_result)
         command.call(force: true, force_force: false)
       end
 
       it 'allows force_force: true with force: false' do
-        expect_command('clean', '-ff').and_return(command_result)
+        expect_command_with_capture('clean', '-ff').and_return(command_result)
         command.call(force_force: true, force: false)
       end
     end
 
     context 'with the :d argument' do
       it 'adds -d to the command line' do
-        expect_command('clean', '-d').and_return(command_result)
+        expect_command_with_capture('clean', '-d').and_return(command_result)
 
         command.call(d: true)
       end
@@ -55,7 +55,7 @@ RSpec.describe Git::Commands::Clean do
 
     context 'with the :x argument' do
       it 'adds -x to the command line' do
-        expect_command('clean', '-x').and_return(command_result)
+        expect_command_with_capture('clean', '-x').and_return(command_result)
 
         command.call(x: true)
       end
@@ -63,7 +63,7 @@ RSpec.describe Git::Commands::Clean do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command('clean', '-d', '--force', '-x').and_return(command_result)
+        expect_command_with_capture('clean', '-d', '--force', '-x').and_return(command_result)
         command.call(force: true, d: true, x: true)
       end
     end

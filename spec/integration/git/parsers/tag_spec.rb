@@ -14,7 +14,7 @@ RSpec.describe Git::Parsers::Tag, :integration do
   # Helper to run git tag --list with the parser's format and return raw output
   def git_tag_output(*args)
     format_arg = "--format=#{described_class::FORMAT_STRING}"
-    repo.lib.command('tag', '--list', format_arg, *args).stdout
+    repo.lib.command_with_capture('tag', '--list', format_arg, *args).stdout
   end
 
   describe '.parse_list' do

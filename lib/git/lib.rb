@@ -203,7 +203,7 @@ module Git
     # @return [String] the name of the default branch
     #
     def repository_default_branch(repository)
-      output = command('ls-remote', '--symref', '--', repository, 'HEAD').stdout
+      output = command_with_capture('ls-remote', '--symref', '--', repository, 'HEAD').stdout
 
       match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
       return match_data[:default_branch] if match_data
@@ -269,7 +269,7 @@ module Git
       args = build_args(opts, DESCRIBE_OPTION_MAP)
       args << commit_ish if commit_ish
 
-      command('describe', *args).stdout
+      command_with_capture('describe', *args).stdout
     end
 
     # Return the commits that are within the given revision range
@@ -310,7 +310,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
+      command_with_capture('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
     end
 
     FULL_LOG_EXTRA_OPTIONS_MAP = [
@@ -381,7 +381,7 @@ module Git
       args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
       args += log_path_options(opts)
 
-      full_log = command('log', *args).stdout.split("\n")
+      full_log = command_with_capture('log', *args).stdout.split("\n")
       process_commit_log_data(full_log)
     end
 
@@ -406,7 +406,7 @@ module Git
     def rev_parse(revision)
       assert_args_are_not_options('rev', revision)
 
-      command('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
+      command_with_capture('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
     end
 
     # For backwards compatibility with the old method name
@@ -423,7 +423,7 @@ module Git
     def name_rev(commit_ish)
       assert_args_are_not_options('commit_ish', commit_ish)
 
-      command('name-rev', commit_ish).stdout.split[1]
+      command_with_capture('name-rev', commit_ish).stdout.split[1]
     end
 
     alias namerev name_rev
@@ -724,7 +724,7 @@ module Git
       args.unshift(sha)
       args << opts[:path] if opts[:path]
 
-      command('ls-tree', *args).stdout.split("\n").each do |line|
+      command_with_capture('ls-tree', *args).stdout.split("\n").each do |line|
         (info, filenm) = split_status_line(line)
         (mode, type, sha) = info.split
         data[type][filenm] = { mode: mode, sha: sha }
@@ -740,7 +740,7 @@ module Git
     end
 
     def full_tree(sha)
-      command('ls-tree', '-r', sha).stdout.split("\n")
+      command_with_capture('ls-tree', '-r', sha).stdout.split("\n")
     end
 
     def tree_depth(sha)
@@ -748,7 +748,7 @@ module Git
     end
 
     def change_head_branch(branch_name)
-      command('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
+      command_with_capture('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
     end
 
     def branches_all
@@ -768,7 +768,7 @@ module Git
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
       #
-      command('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
+      command_with_capture('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
         s = w.split
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
@@ -782,17 +782,17 @@ module Git
     WORKTREE_ENV = { 'GIT_INDEX_FILE' => nil }.freeze
 
     def worktree_add(dir, commitish = nil)
-      return command('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
+      return command_with_capture('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
 
-      command('worktree', 'add', dir, env: WORKTREE_ENV).stdout
+      command_with_capture('worktree', 'add', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_remove(dir)
-      command('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
+      command_with_capture('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_prune
-      command('worktree', 'prune', env: WORKTREE_ENV).stdout
+      command_with_capture('worktree', 'prune', env: WORKTREE_ENV).stdout
     end
 
     def list_files(ref_dir)
@@ -1076,7 +1076,7 @@ module Git
     def ls_files(location = nil)
       location ||= '.'
       {}.tap do |files|
-        command('ls-files', '--stage', location).stdout.split("\n").each do |line|
+        command_with_capture('ls-files', '--stage', location).stdout.split("\n").each do |line|
           (info, file) = split_status_line(line)
           (mode, sha, stage) = info.split
           files[file] = {
@@ -1119,18 +1119,19 @@ module Git
       flags = build_args(opts, LS_REMOTE_OPTION_MAP)
       positional_arg = location || '.'
 
-      output_lines = command('ls-remote', *flags, positional_arg).stdout.split("\n")
+      output_lines = command_with_capture('ls-remote', *flags, positional_arg).stdout.split("\n")
       parse_ls_remote_output(output_lines)
     end
 
     def ignored_files
-      command('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
+      command_with_capture('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
         unescape_quoted_path(f)
       end
     end
 
     def untracked_files
-      command('ls-files', '--others', '--exclude-standard', chdir: @git_work_dir).stdout.split("\n").map do |f|
+      command_with_capture('ls-files', '--others', '--exclude-standard',
+                           chdir: @git_work_dir).stdout.split("\n").map do |f|
         unescape_quoted_path(f)
       end
     end
@@ -1144,19 +1145,19 @@ module Git
     end
 
     def config_get(name)
-      command('config', '--get', name, chdir: @git_dir).stdout
+      command_with_capture('config', '--get', name, chdir: @git_dir).stdout
     end
 
     def global_config_get(name)
-      command('config', '--global', '--get', name).stdout
+      command_with_capture('config', '--global', '--get', name).stdout
     end
 
     def config_list
-      parse_config_list command('config', '--list', chdir: @git_dir).stdout.split("\n")
+      parse_config_list command_with_capture('config', '--list', chdir: @git_dir).stdout.split("\n")
     end
 
     def global_config_list
-      parse_config_list command('config', '--global', '--list').stdout.split("\n")
+      parse_config_list command_with_capture('config', '--global', '--list').stdout.split("\n")
     end
 
     def parse_config_list(lines)
@@ -1169,7 +1170,7 @@ module Git
     end
 
     def parse_config(file)
-      parse_config_list command('config', '--list', '--file', file).stdout.split("\n")
+      parse_config_list command_with_capture('config', '--list', '--file', file).stdout.split("\n")
     end
 
     # Shows objects
@@ -1182,7 +1183,7 @@ module Git
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
 
-      command('show', *arr_opts.compact, chomp: false).stdout
+      command_with_capture('show', *arr_opts.compact, chomp: false).stdout
     end
 
     ## WRITE COMMANDS ##
@@ -1194,11 +1195,11 @@ module Git
     def config_set(name, value, options = {})
       ArgsBuilder.validate!(options, CONFIG_SET_OPTION_MAP)
       flags = build_args(options, CONFIG_SET_OPTION_MAP)
-      command('config', *flags, name, value)
+      command_with_capture('config', *flags, name, value)
     end
 
     def global_config_set(name, value)
-      command('config', '--global', name, value)
+      command_with_capture('config', '--global', name, value)
     end
 
     # Update the index from the current worktree to prepare the for the next commit
@@ -1240,7 +1241,7 @@ module Git
     # @return [Boolean]
     #
     def empty?
-      command('rev-parse', '--verify', 'HEAD')
+      command_with_capture('rev-parse', '--verify', 'HEAD')
       false
     rescue Git::FailedError => e
       raise unless e.result.status.exitstatus == 128 &&
@@ -1312,19 +1313,19 @@ module Git
       args = build_args(opts, REVERT_OPTION_MAP)
       args << commitish
 
-      command('revert', *args)
+      command_with_capture('revert', *args)
     end
 
     def apply(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command('apply', *arr_opts)
+      command_with_capture('apply', *arr_opts)
     end
 
     def apply_mail(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command('am', *arr_opts)
+      command_with_capture('am', *arr_opts)
     end
 
     # Returns all stash entries as an array of index and message pairs
@@ -1556,7 +1557,7 @@ module Git
 
     def unmerged
       unmerged = []
-      command('diff', '--cached').stdout.split("\n").each do |line|
+      command_with_capture('diff', '--cached').stdout.split("\n").each do |line|
         unmerged << ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
       end
       unmerged
@@ -1587,7 +1588,7 @@ module Git
       positional_args = ['--', name, url]
       command_args = ['add'] + flags + positional_args
 
-      command('remote', *command_args)
+      command_with_capture('remote', *command_args)
     end
 
     REMOTE_SET_BRANCHES_OPTION_MAP = [
@@ -1601,7 +1602,7 @@ module Git
       branch_args = Array(branches).flatten
       command_args = ['set-branches'] + flags + [name] + branch_args
 
-      command('remote', *command_args)
+      command_with_capture('remote', *command_args)
     end
 
     def remote_set_url(name, url)
@@ -1609,15 +1610,15 @@ module Git
       arr_opts << name
       arr_opts << url
 
-      command('remote', *arr_opts)
+      command_with_capture('remote', *arr_opts)
     end
 
     def remote_remove(name)
-      command('remote', 'rm', name)
+      command_with_capture('remote', 'rm', name)
     end
 
     def remotes
-      command('remote').stdout.split("\n")
+      command_with_capture('remote').stdout.split("\n")
     end
 
     # List all tags in the repository
@@ -1745,7 +1746,7 @@ module Git
         args << opts[:ref] if opts[:ref]
       end
 
-      command('fetch', *args, merge: true).stdout
+      command_with_capture('fetch', *args, merge: true).stdout
     end
 
     PUSH_OPTION_MAP = [
@@ -1766,10 +1767,10 @@ module Git
       args = build_push_args(remote, branch, opts)
 
       if opts[:mirror]
-        command('push', *args)
+        command_with_capture('push', *args)
       else
-        command('push', *args)
-        command('push', '--tags', *(args - [branch].compact)) if opts[:tags]
+        command_with_capture('push', *args)
+        command_with_capture('push', '--tags', *(args - [branch].compact)) if opts[:tags]
       end
     end
 
@@ -1785,7 +1786,7 @@ module Git
       flags = build_args(opts, PULL_OPTION_MAP)
       positional_args = [remote, branch].compact
 
-      command('pull', *flags, *positional_args).stdout
+      command_with_capture('pull', *flags, *positional_args).stdout
     end
 
     # Return the SHA of a tag reference
@@ -1802,7 +1803,7 @@ module Git
       return File.read(head).chomp if File.exist?(head)
 
       begin
-        command('show-ref', '--tags', '-s', tag_name).stdout
+        command_with_capture('show-ref', '--tags', '-s', tag_name).stdout
       rescue Git::FailedError => e
         raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
 
@@ -1811,11 +1812,11 @@ module Git
     end
 
     def repack
-      command('repack', '-a', '-d')
+      command_with_capture('repack', '-a', '-d')
     end
 
     def gc
-      command('gc', '--prune', '--aggressive', '--auto')
+      command_with_capture('gc', '--prune', '--aggressive', '--auto')
     end
 
     # Execute git fsck to verify repository integrity
@@ -1839,11 +1840,11 @@ module Git
     def read_tree(treeish, opts = {})
       ArgsBuilder.validate!(opts, READ_TREE_OPTION_MAP)
       flags = build_args(opts, READ_TREE_OPTION_MAP)
-      command('read-tree', *flags, treeish)
+      command_with_capture('read-tree', *flags, treeish)
     end
 
     def write_tree
-      command('write-tree').stdout
+      command_with_capture('write-tree').stdout
     end
 
     COMMIT_TREE_OPTION_MAP = [
@@ -1856,11 +1857,11 @@ module Git
       ArgsBuilder.validate!(opts, COMMIT_TREE_OPTION_MAP)
 
       flags = build_args(opts, COMMIT_TREE_OPTION_MAP)
-      command('commit-tree', tree, *flags).stdout
+      command_with_capture('commit-tree', tree, *flags).stdout
     end
 
     def update_ref(ref, commit)
-      command('update-ref', ref, commit)
+      command_with_capture('update-ref', ref, commit)
     end
 
     def checkout_index(opts = {})
@@ -1888,7 +1889,7 @@ module Git
       args << sha
       args.push('--', opts[:path]) if opts[:path]
 
-      File.open(file, 'wb') { |f| command('archive', *args, out: f) }
+      File.open(file, 'wb') { |f| command_with_capture('archive', *args, out: f) }
       apply_gzip(file) if gzip
 
       file
@@ -1896,7 +1897,7 @@ module Git
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
-      output = command('version').stdout
+      output = command_with_capture('version').stdout
       version = output[/\d+(\.\d+)+/]
       version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
@@ -1983,22 +1984,22 @@ module Git
     # By default, raises {Git::FailedError} if the command exits with a non-zero
     # status. Pass `raise_on_failure: false` to suppress this behavior.
     #
-    # @overload command(*args, **options_hash)
+    # @overload command_with_capture(*args, **options_hash)
     #   Runs a git command and returns the result
     #
     #   Args should exclude the 'git' command itself and global options.
     #   Remember to splat the arguments if given as an array.
     #
     #   @example Run git log
-    #     result = command('log', '--pretty=oneline')
+    #     result = command_with_capture('log', '--pretty=oneline')
     #     result.stdout #=> "abc123 First commit\ndef456 Second commit\n"
     #
     #   @example Using an array of arguments
     #     args = ['log', '--pretty=oneline']
-    #     result = command(*args)
+    #     result = command_with_capture(*args)
     #
     #   @example Suppress raising on failure
-    #     result = command('show', 'nonexistent', raise_on_failure: false)
+    #     result = command_with_capture('show', 'nonexistent', raise_on_failure: false)
     #     result.status.success? #=> false
     #
     #   @param args [Array<String>] the command and its arguments
@@ -2040,7 +2041,7 @@ module Git
     #   them to this method. See {Git::Commands::Clone#call} for an example
     #   of a command that exposes `:timeout`.
     #
-    # @see Git::CommandLine#run
+    # @see Git::CommandLine#run_with_capture
     #
     # @return [Git::CommandLineResult] the result of the command
     #
@@ -2058,9 +2059,7 @@ module Git
     #   contain the result of the command including the exit status, stdout, and
     #   stderr.
     #
-    # @api private
-    #
-    def command(*, **options_hash)
+    def command_with_capture(*, **options_hash)
       options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
 
@@ -2069,7 +2068,7 @@ module Git
 
       env_overrides = options_hash.delete(:env)
       raise_on_failure = options_hash.delete(:raise_on_failure)
-      command_line.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+      command_line.run_with_capture(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
     end
 
     private
@@ -2316,7 +2315,7 @@ module Git
     end
 
     def get_branch_state(branch_name)
-      command('rev-parse', '--verify', '--quiet', branch_name)
+      command_with_capture('rev-parse', '--verify', '--quiet', branch_name)
       :active
     rescue Git::FailedError => e
       # An exit status of 1 with empty stderr from `rev-parse --verify`
@@ -2327,7 +2326,7 @@ module Git
     end
 
     def execute_grep_command(args)
-      command('grep', *args).stdout.split("\n")
+      command_with_capture('grep', *args).stdout.split("\n")
     rescue Git::FailedError => e
       # `git grep` returns 1 when no lines are selected.
       raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
@@ -2441,7 +2440,7 @@ module Git
     # @return [IO] the IO object that was written to
     #
     def write_staged_content(path, stage, out_io)
-      command('show', ":#{stage}:#{path}", out: out_io)
+      command_with_capture('show', ":#{stage}:#{path}", out: out_io)
       out_io
     end
 
@@ -2570,8 +2569,8 @@ module Git
     # @return [Hash] the diff as Hash
     def diff_as_hash(diff_command, opts = [])
       # update index before diffing to avoid spurious diffs
-      command('status')
-      command(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
+      command_with_capture('status')
+      command_with_capture(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
         info, file = split_status_line(line)
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 
