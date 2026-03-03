@@ -2071,6 +2071,60 @@ module Git
       command_line.run_with_capture(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
     end
 
+    COMMAND_STREAMING_ARG_DEFAULTS = {
+      in: nil,
+      out: nil,
+      err: nil,
+      chdir: nil,
+      timeout: nil,
+      env: {},
+      raise_on_failure: true
+    }.freeze
+
+    # Runs a git command using the streaming (non-capturing) execution path
+    #
+    # Unlike {#command_with_capture}, stdout is NOT buffered in memory. It is
+    # written only to the IO object provided via the `out:` option. Stderr is
+    # captured internally via a StringIO for error diagnostics.
+    #
+    # Use this entry point when you want to stream large output (e.g. blob
+    # content from cat-file) without creating memory pressure.
+    #
+    # @overload command(*args, **options_hash)
+    #   @param args [Array<String>] the git command and its arguments
+    #   @param options_hash [Hash] the options to pass to the command
+    #
+    # @option options_hash [IO, nil] :in stdin IO object
+    # @option options_hash [#write, nil] :out destination for streamed stdout
+    # @option options_hash [#write, nil] :err destination for stderr (defaults to internal StringIO)
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    # @option options_hash [Hash] :env additional environment variable overrides for this command
+    # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command
+    #   If nil, the global timeout from {Git::Config} is used.
+    #
+    # @return [Git::CommandLineResult] the result of the command
+    #   `result.stdout` will always be `''` — stdout was streamed to `out:`.
+    #   `result.stderr` contains any stderr output captured for diagnostics.
+    #
+    # @raise [ArgumentError] if an unknown option is passed
+    # @raise [Git::FailedError] if the command failed (when raise_on_failure is true)
+    # @raise [Git::SignaledError] if the command was signaled
+    # @raise [Git::TimeoutError] if the command times out
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
+    #
+    def command(*, **options_hash)
+      options_hash = COMMAND_STREAMING_ARG_DEFAULTS.merge(options_hash)
+      options_hash[:timeout] ||= Git.config.timeout
+
+      extra_options = options_hash.keys - COMMAND_STREAMING_ARG_DEFAULTS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      env_overrides = options_hash.delete(:env)
+      raise_on_failure = options_hash.delete(:raise_on_failure)
+      command_line.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+    end
+
     private
 
     # Build a result hash from clone options for Git::Base.new

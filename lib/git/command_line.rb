@@ -10,6 +10,7 @@ module Git
   #
   # @api public
   #
+  # rubocop:disable Metrics/ClassLength
   class CommandLine
     # Create a Git::CommandLine object
     #
@@ -219,6 +220,77 @@ module Git
                      options_hash[:raise_on_failure])
     end
 
+    # Execute a git command in streaming mode and return the result
+    #
+    # Unlike {#run_with_capture}, this method does NOT buffer stdout in memory.
+    # Stdout is written only to the IO object provided via the `out:` option.
+    # Stderr is captured internally via a +StringIO+ for error diagnostics.
+    #
+    # Use this entry point for commands that stream large content (e.g. blobs)
+    # where capturing stdout in memory would be unacceptable.
+    #
+    # @example Stream a blob to a file
+    #   file = File.open('/tmp/blob', 'wb')
+    #   cli.run('cat-file', 'blob', sha, out: file)
+    #
+    # @param options_hash [Hash] the options to pass to the command
+    #
+    # @option options_hash [IO, nil] :in the IO object to use as stdin for the command, or nil to
+    #   inherit the parent process stdin. Must be a real IO object with a file descriptor (not StringIO).
+    #
+    # @option options_hash [#write, nil] :out the IO/object to stream stdout into.
+    #   Stdout is NOT buffered in the returned result; this is the only way to read it.
+    #
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    #
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
+    #
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and `Git::TimeoutError` is raised.
+    #
+    # @option options_hash [Boolean] :raise_on_failure whether to raise Git::FailedError on non-zero exit status
+    #
+    #   Defaults to `true`. When `false`, non-zero exit status will not raise an exception,
+    #   but Git::TimeoutError and Git::SignaledError are always raised regardless of this setting.
+    #
+    # @option options_hash [Hash] :env additional environment variable overrides for this command
+    #
+    # @return [Git::CommandLineResult] the result of the command
+    #
+    #   `result.stdout` will always be `''` (empty) — stdout was streamed to `out:`.
+    #   `result.stderr` contains any stderr output captured for diagnostics.
+    #
+    # @raise [ArgumentError] if `args` is not an array of strings
+    #
+    # @raise [Git::SignaledError] if the command was terminated because of an uncaught signal
+    #
+    # @raise [Git::FailedError] if the command returned a non-zero exitstatus
+    #
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
+    #
+    # @raise [Git::TimeoutError] if the command times out
+    #
+    def run(*, **options_hash)
+      options_hash = RUN_STREAMING_ARGS.merge(options_hash)
+      extra_options = options_hash.keys - RUN_STREAMING_ARGS.keys
+      raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
+
+      err_io = options_hash[:err] || StringIO.new
+      result = execute(*, err_io:, **options_hash)
+      process_streaming_result(result, err_io, options_hash[:timeout], options_hash[:raise_on_failure])
+    end
+
+    RUN_STREAMING_ARGS = {
+      in: nil,
+      out: nil,
+      err: nil,
+      chdir: nil,
+      timeout: nil,
+      raise_on_failure: true,
+      env: {}
+    }.freeze
+
     RUN_ARGS = {
       normalize: false,
       chomp: false,
@@ -233,6 +305,39 @@ module Git
     }.freeze
 
     private
+
+    # @return [ProcessExecuter::Result] the result of running the command (non-capturing)
+    def execute(*args, err_io:, **options_hash)
+      git_cmd = build_git_cmd(args)
+      options = execute_options(err_io:, **options_hash)
+      merged_env = env.merge(options_hash[:env] || {})
+      ProcessExecuter.run(merged_env, *git_cmd, **options)
+    rescue ProcessExecuter::ProcessIOError => e
+      raise Git::ProcessIOError.new(e.message), cause: e.exception.cause
+    end
+
+    def execute_options(err_io:, **options_hash)
+      chdir = options_hash[:chdir] || :not_set
+      timeout_after = options_hash[:timeout]
+
+      { chdir:, timeout_after:, raise_errors: false, err: err_io }.tap do |options|
+        options[:in] = options_hash[:in] unless options_hash[:in].nil?
+        options[:out] = options_hash[:out] unless options_hash[:out].nil?
+      end
+    end
+
+    # Process the result of a streaming command and return a Git::CommandLineResult
+    #
+    # Constructs stdout as '' (not captured) and stderr from the internal StringIO.
+    #
+    # @api private
+    #
+    def process_streaming_result(result, err_io, timeout, raise_on_failure)
+      command = result.command
+      stderr = err_io.string
+      log_result(result, command, '', stderr)
+      command_line_result(command, result, '', stderr, timeout, raise_on_failure)
+    end
 
     # @return [Git::CommandLineResult] the result of running the command
     def execute_with_capture(*args, **options_hash)
@@ -353,4 +458,5 @@ module Git
       end
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

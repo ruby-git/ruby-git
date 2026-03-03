@@ -78,6 +78,89 @@ RSpec.describe Git::Lib do
     end
   end
 
+  describe '#command (streaming path)' do
+    let(:successful_result) do
+      instance_double(
+        Git::CommandLineResult,
+        stdout: '',
+        stderr: '',
+        status: instance_double(Process::Status, success?: true)
+      )
+    end
+
+    let(:failed_result) do
+      instance_double(
+        Git::CommandLineResult,
+        git_cmd: %w[git cat-file --batch],
+        stdout: '',
+        stderr: 'fatal: not a git repository',
+        status: instance_double(Process::Status, success?: false)
+      )
+    end
+
+    context 'when command succeeds' do
+      it 'delegates to CommandLine#run and returns a CommandLineResult' do
+        allow(command_line).to receive(:run).and_return(successful_result)
+
+        result = lib.command('cat-file', '--batch', out: StringIO.new)
+
+        expect(result).to be(successful_result)
+        expect(command_line).to have_received(:run).with(
+          'cat-file', '--batch',
+          hash_including(out: instance_of(StringIO))
+        )
+      end
+    end
+
+    context 'when command fails with non-zero exit (default behavior)' do
+      it 'raises Git::FailedError' do
+        allow(command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
+
+        expect do
+          lib.command('cat-file', '--batch', out: StringIO.new)
+        end.to raise_error(Git::FailedError)
+      end
+    end
+
+    context 'when command fails with raise_on_failure: false' do
+      it 'returns CommandLineResult without raising' do
+        allow(command_line).to receive(:run).and_return(failed_result)
+
+        result = lib.command('cat-file', '--batch', out: StringIO.new, raise_on_failure: false)
+
+        expect(result).to be(failed_result)
+        expect(result.status.success?).to be false
+      end
+    end
+
+    context 'with env: option' do
+      it 'passes env into the command_line call' do
+        allow(command_line).to receive(:run).and_return(successful_result)
+
+        lib.command('cat-file', out: StringIO.new, env: { 'GIT_DIR' => '/custom/path' })
+
+        expect(command_line).to have_received(:run).with(
+          'cat-file',
+          hash_including(env: { 'GIT_DIR' => '/custom/path' })
+        )
+      end
+    end
+
+    context 'with out: option' do
+      it 'passes out: to CommandLine#run' do
+        out_io = StringIO.new
+        allow(command_line).to receive(:run).and_return(successful_result)
+
+        lib.command('show', 'HEAD:README', out: out_io)
+
+        expect(command_line).to have_received(:run).with(
+          'show', 'HEAD:README',
+          hash_including(out: out_io)
+        )
+      end
+    end
+  end
+
   describe '#clone' do
     let(:repository_url) { 'https://github.com/ruby-git/ruby-git.git' }
     let(:directory) { 'ruby-git' }
