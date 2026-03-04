@@ -8,7 +8,7 @@ RSpec.describe Git::Commands::Fsck do
 
   # Helper to mock command call - accepts any keyword arguments
   def mock_command(*args, stdout: '', stderr: '', exitstatus: 0)
-    allow(execution_context).to receive(:command_with_capture)
+    allow(execution_context).to receive(:command_capturing)
       .with(*args, raise_on_failure: false)
       .and_return(command_result(stdout, stderr: stderr, exitstatus: exitstatus))
   end
@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Fsck do
     context 'with default arguments' do
       it 'runs fsck with --no-progress' do
         expected_result = command_result('')
-        expect_command_with_capture('fsck', '--no-progress').and_return(expected_result)
+        expect_command_capturing('fsck', '--no-progress').and_return(expected_result)
 
         result = command.call
 
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with specific objects' do
       it 'includes the object identifiers' do
-        expect_command_with_capture('fsck', '--no-progress', 'abc1234', 'def5678').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', 'abc1234', 'def5678').and_return(command_result(''))
 
         command.call('abc1234', 'def5678')
       end
@@ -35,7 +35,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :unreachable option' do
       it 'includes the --unreachable flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--unreachable').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--unreachable').and_return(command_result(''))
 
         command.call(unreachable: true)
       end
@@ -43,7 +43,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :strict option' do
       it 'includes the --strict flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--strict').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--strict').and_return(command_result(''))
 
         command.call(strict: true)
       end
@@ -51,7 +51,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :connectivity_only option' do
       it 'includes the --connectivity-only flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--connectivity-only').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--connectivity-only').and_return(command_result(''))
 
         command.call(connectivity_only: true)
       end
@@ -59,7 +59,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :root option' do
       it 'includes the --root flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--root').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--root').and_return(command_result(''))
 
         command.call(root: true)
       end
@@ -67,7 +67,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :tags option' do
       it 'includes the --tags flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--tags').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--tags').and_return(command_result(''))
 
         command.call(tags: true)
       end
@@ -75,7 +75,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :cache option' do
       it 'includes the --cache flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--cache').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--cache').and_return(command_result(''))
 
         command.call(cache: true)
       end
@@ -83,7 +83,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :no_reflogs option' do
       it 'includes the --no-reflogs flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--no-reflogs').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--no-reflogs').and_return(command_result(''))
 
         command.call(no_reflogs: true)
       end
@@ -91,7 +91,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with the :lost_found option' do
       it 'includes the --lost-found flag' do
-        expect_command_with_capture('fsck', '--no-progress', '--lost-found').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--lost-found').and_return(command_result(''))
 
         command.call(lost_found: true)
       end
@@ -100,13 +100,13 @@ RSpec.describe Git::Commands::Fsck do
     context 'with boolean_negatable options' do
       context ':dangling' do
         it 'includes --dangling when true' do
-          expect_command_with_capture('fsck', '--no-progress', '--dangling').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--dangling').and_return(command_result(''))
 
           command.call(dangling: true)
         end
 
         it 'includes --no-dangling when false' do
-          expect_command_with_capture('fsck', '--no-progress', '--no-dangling').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--no-dangling').and_return(command_result(''))
 
           command.call(dangling: false)
         end
@@ -114,13 +114,13 @@ RSpec.describe Git::Commands::Fsck do
 
       context ':full' do
         it 'includes --full when true' do
-          expect_command_with_capture('fsck', '--no-progress', '--full').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--full').and_return(command_result(''))
 
           command.call(full: true)
         end
 
         it 'includes --no-full when false' do
-          expect_command_with_capture('fsck', '--no-progress', '--no-full').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--no-full').and_return(command_result(''))
 
           command.call(full: false)
         end
@@ -128,13 +128,13 @@ RSpec.describe Git::Commands::Fsck do
 
       context ':name_objects' do
         it 'includes --name-objects when true' do
-          expect_command_with_capture('fsck', '--no-progress', '--name-objects').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--name-objects').and_return(command_result(''))
 
           command.call(name_objects: true)
         end
 
         it 'includes --no-name-objects when false' do
-          expect_command_with_capture('fsck', '--no-progress', '--no-name-objects').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--no-name-objects').and_return(command_result(''))
 
           command.call(name_objects: false)
         end
@@ -142,13 +142,13 @@ RSpec.describe Git::Commands::Fsck do
 
       context ':references' do
         it 'includes --references when true' do
-          expect_command_with_capture('fsck', '--no-progress', '--references').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--references').and_return(command_result(''))
 
           command.call(references: true)
         end
 
         it 'includes --no-references when false' do
-          expect_command_with_capture('fsck', '--no-progress', '--no-references').and_return(command_result(''))
+          expect_command_capturing('fsck', '--no-progress', '--no-references').and_return(command_result(''))
 
           command.call(references: false)
         end
@@ -157,8 +157,8 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command_with_capture('fsck', '--no-progress', '--unreachable', '--full',
-                                    '--strict').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--unreachable', '--full',
+                                 '--strict').and_return(command_result(''))
 
         command.call(unreachable: true, strict: true, full: true)
       end
@@ -166,7 +166,7 @@ RSpec.describe Git::Commands::Fsck do
 
     context 'with objects and options combined' do
       it 'includes both objects and flags' do
-        expect_command_with_capture('fsck', '--no-progress', '--strict', 'abc1234').and_return(command_result(''))
+        expect_command_capturing('fsck', '--no-progress', '--strict', 'abc1234').and_return(command_result(''))
 
         command.call('abc1234', strict: true)
       end

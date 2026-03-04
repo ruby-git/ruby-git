@@ -10,10 +10,11 @@ RSpec.describe Git::Lib do
   subject(:lib) { described_class.new(base, logger) }
 
   before do
-    allow(lib).to receive(:command_line).and_return(command_line)
+    allow(lib).to receive(:command_line_capturing).and_return(command_line)
+    allow(lib).to receive(:command_line_streaming).and_return(command_line)
   end
 
-  describe '#command_with_capture' do
+  describe '#command_capturing' do
     let(:successful_result) do
       instance_double(
         Git::CommandLineResult,
@@ -37,7 +38,7 @@ RSpec.describe Git::Lib do
       it 'returns a CommandLineResult' do
         allow(command_line).to receive(:run_with_capture).and_return(successful_result)
 
-        result = lib.command_with_capture('version')
+        result = lib.command_capturing('version')
 
         expect(result).to be(successful_result)
       end
@@ -48,7 +49,7 @@ RSpec.describe Git::Lib do
         allow(command_line).to receive(:run_with_capture).and_raise(Git::FailedError.new(failed_result))
 
         expect do
-          lib.command_with_capture('rev-parse', 'nonexistent')
+          lib.command_capturing('rev-parse', 'nonexistent')
         end.to raise_error(Git::FailedError)
       end
     end
@@ -57,7 +58,7 @@ RSpec.describe Git::Lib do
       it 'returns CommandLineResult without raising' do
         allow(command_line).to receive(:run_with_capture).and_return(failed_result)
 
-        result = lib.command_with_capture('rev-parse', 'nonexistent', raise_on_failure: false)
+        result = lib.command_capturing('rev-parse', 'nonexistent', raise_on_failure: false)
 
         expect(result).to be(failed_result)
         expect(result.status.success?).to be false
@@ -68,7 +69,7 @@ RSpec.describe Git::Lib do
       it 'merges env into the command_line call' do
         allow(command_line).to receive(:run_with_capture).and_return(successful_result)
 
-        lib.command_with_capture('rev-parse', '--git-dir', env: { 'GIT_DIR' => '/custom/path' })
+        lib.command_capturing('rev-parse', '--git-dir', env: { 'GIT_DIR' => '/custom/path' })
 
         expect(command_line).to have_received(:run_with_capture).with(
           'rev-parse', '--git-dir',
@@ -78,7 +79,7 @@ RSpec.describe Git::Lib do
     end
   end
 
-  describe '#command (streaming path)' do
+  describe '#command_streaming (streaming path)' do
     let(:successful_result) do
       instance_double(
         Git::CommandLineResult,
@@ -102,7 +103,7 @@ RSpec.describe Git::Lib do
       it 'delegates to CommandLine#run and returns a CommandLineResult' do
         allow(command_line).to receive(:run).and_return(successful_result)
 
-        result = lib.command('cat-file', '--batch', out: StringIO.new)
+        result = lib.command_streaming('cat-file', '--batch', out: StringIO.new)
 
         expect(result).to be(successful_result)
         expect(command_line).to have_received(:run).with(
@@ -117,7 +118,7 @@ RSpec.describe Git::Lib do
         allow(command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
 
         expect do
-          lib.command('cat-file', '--batch', out: StringIO.new)
+          lib.command_streaming('cat-file', '--batch', out: StringIO.new)
         end.to raise_error(Git::FailedError)
       end
     end
@@ -126,7 +127,7 @@ RSpec.describe Git::Lib do
       it 'returns CommandLineResult without raising' do
         allow(command_line).to receive(:run).and_return(failed_result)
 
-        result = lib.command('cat-file', '--batch', out: StringIO.new, raise_on_failure: false)
+        result = lib.command_streaming('cat-file', '--batch', out: StringIO.new, raise_on_failure: false)
 
         expect(result).to be(failed_result)
         expect(result.status.success?).to be false
@@ -137,7 +138,7 @@ RSpec.describe Git::Lib do
       it 'passes env into the command_line call' do
         allow(command_line).to receive(:run).and_return(successful_result)
 
-        lib.command('cat-file', out: StringIO.new, env: { 'GIT_DIR' => '/custom/path' })
+        lib.command_streaming('cat-file', out: StringIO.new, env: { 'GIT_DIR' => '/custom/path' })
 
         expect(command_line).to have_received(:run).with(
           'cat-file',
@@ -151,7 +152,7 @@ RSpec.describe Git::Lib do
         out_io = StringIO.new
         allow(command_line).to receive(:run).and_return(successful_result)
 
-        lib.command('show', 'HEAD:README', out: out_io)
+        lib.command_streaming('show', 'HEAD:README', out: out_io)
 
         expect(command_line).to have_received(:run).with(
           'show', 'HEAD:README',

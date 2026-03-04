@@ -33,7 +33,7 @@ class TestLibMeetsRequiredVersion < Test::Unit::TestCase
 
     lib.instance_variable_set(:@next_version_index, 0)
 
-    lib.define_singleton_method(:command_with_capture) do |cmd, *_opts|
+    lib.define_singleton_method(:command_capturing) do |cmd, *_opts|
       raise ArgumentError unless cmd == 'version'
 
       version_string = versions_to_test[@next_version_index][:version_string]

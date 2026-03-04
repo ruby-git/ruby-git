@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
   describe '#call' do
     context 'with only set_upstream_to (set upstream for current branch)' do
       it 'runs branch --set-upstream-to=<upstream>' do
-        expect_command_with_capture('branch', '--set-upstream-to=origin/main')
+        expect_command_capturing('branch', '--set-upstream-to=origin/main')
           .and_return(command_result("branch 'main' set up to track 'origin/main'.\n"))
 
         result = command.call(set_upstream_to: 'origin/main')
@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
     context 'with -u short alias' do
       it 'runs branch --set-upstream-to=<upstream>' do
-        expect_command_with_capture('branch', '--set-upstream-to=origin/main')
+        expect_command_capturing('branch', '--set-upstream-to=origin/main')
           .and_return(command_result(''))
 
         result = command.call(u: 'origin/main')
@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
     context 'with set_upstream_to and branch_name' do
       it 'runs branch --set-upstream-to=<upstream> <branch>' do
-        expect_command_with_capture('branch', '--set-upstream-to=origin/main', 'feature')
+        expect_command_capturing('branch', '--set-upstream-to=origin/main', 'feature')
           .and_return(command_result(''))
 
         result = command.call('feature', set_upstream_to: 'origin/main')
@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
     context 'with remote-tracking branch as upstream' do
       it 'accepts various remote-tracking branch formats' do
-        expect_command_with_capture('branch', '--set-upstream-to=upstream/develop')
+        expect_command_capturing('branch', '--set-upstream-to=upstream/develop')
           .and_return(command_result(''))
 
         result = command.call(set_upstream_to: 'upstream/develop')

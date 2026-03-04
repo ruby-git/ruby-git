@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Add do
     context 'with default arguments' do
       it 'adds nothing' do
         expected_result = command_result
-        expect_command_with_capture('add').and_return(expected_result)
+        expect_command_capturing('add').and_return(expected_result)
 
         result = command.call
 
@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with a single file path' do
       it 'adds the specified file' do
-        expect_command_with_capture('add', '--', 'path/to/file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'path/to/file.rb').and_return(command_result)
 
         command.call('path/to/file.rb')
       end
@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with multiple file paths as an array' do
       it 'adds all specified files' do
-        expect_command_with_capture('add', '--', 'file1.rb', 'file2.rb', 'file3.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file1.rb', 'file2.rb', 'file3.rb').and_return(command_result)
 
         command.call(%w[file1.rb file2.rb file3.rb])
       end
@@ -36,19 +36,19 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :dry_run option' do
       it 'includes the --dry-run flag' do
-        expect_command_with_capture('add', '--dry-run', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--dry-run', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', dry_run: true)
       end
 
       it 'accepts the :n alias' do
-        expect_command_with_capture('add', '--dry-run', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--dry-run', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', n: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', dry_run: false)
       end
@@ -56,13 +56,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :force option' do
       it 'includes the --force flag' do
-        expect_command_with_capture('add', '--force', '--', 'ignored_file.txt').and_return(command_result)
+        expect_command_capturing('add', '--force', '--', 'ignored_file.txt').and_return(command_result)
 
         command.call('ignored_file.txt', force: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.txt').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', force: false)
       end
@@ -70,19 +70,19 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :update option' do
       it 'includes the --update flag' do
-        expect_command_with_capture('add', '--update', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--update', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', update: true)
       end
 
       it 'accepts the :u alias' do
-        expect_command_with_capture('add', '--update', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--update', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', u: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', update: false)
       end
@@ -90,19 +90,19 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :all option' do
       it 'includes the --all flag when true' do
-        expect_command_with_capture('add', '--all', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--all', '--', '.').and_return(command_result)
 
         command.call('.', all: true)
       end
 
       it 'includes --no-all when false (negatable flag)' do
-        expect_command_with_capture('add', '--no-all', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--no-all', '--', '.').and_return(command_result)
 
         command.call('.', all: false)
       end
 
       it 'omits the flag when not provided' do
-        expect_command_with_capture('add', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--', '.').and_return(command_result)
 
         command.call('.')
       end
@@ -110,19 +110,19 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :ignore_removal option' do
       it 'includes the --ignore-removal flag when true' do
-        expect_command_with_capture('add', '--ignore-removal', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--ignore-removal', '--', '.').and_return(command_result)
 
         command.call('.', ignore_removal: true)
       end
 
       it 'includes --no-ignore-removal when false (negatable flag)' do
-        expect_command_with_capture('add', '--no-ignore-removal', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--no-ignore-removal', '--', '.').and_return(command_result)
 
         command.call('.', ignore_removal: false)
       end
 
       it 'omits the flag when not provided' do
-        expect_command_with_capture('add', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--', '.').and_return(command_result)
 
         command.call('.')
       end
@@ -130,19 +130,19 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :intent_to_add option' do
       it 'includes the --intent-to-add flag' do
-        expect_command_with_capture('add', '--intent-to-add', '--', 'new_file.rb').and_return(command_result)
+        expect_command_capturing('add', '--intent-to-add', '--', 'new_file.rb').and_return(command_result)
 
         command.call('new_file.rb', intent_to_add: true)
       end
 
       it 'accepts the :N alias' do
-        expect_command_with_capture('add', '--intent-to-add', '--', 'new_file.rb').and_return(command_result)
+        expect_command_capturing('add', '--intent-to-add', '--', 'new_file.rb').and_return(command_result)
 
         command.call('new_file.rb', N: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'new_file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'new_file.rb').and_return(command_result)
 
         command.call('new_file.rb', intent_to_add: false)
       end
@@ -150,13 +150,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :ignore_errors option' do
       it 'includes the --ignore-errors flag' do
-        expect_command_with_capture('add', '--ignore-errors', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--ignore-errors', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', ignore_errors: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', ignore_errors: false)
       end
@@ -164,13 +164,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :sparse option' do
       it 'includes the --sparse flag' do
-        expect_command_with_capture('add', '--sparse', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--sparse', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', sparse: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', sparse: false)
       end
@@ -178,13 +178,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :refresh option' do
       it 'includes the --refresh flag' do
-        expect_command_with_capture('add', '--refresh').and_return(command_result)
+        expect_command_capturing('add', '--refresh').and_return(command_result)
 
         command.call(refresh: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add').and_return(command_result)
+        expect_command_capturing('add').and_return(command_result)
 
         command.call(refresh: false)
       end
@@ -192,13 +192,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :ignore_missing option' do
       it 'includes the --ignore-missing flag' do
-        expect_command_with_capture('add', '--dry-run', '--ignore-missing', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--dry-run', '--ignore-missing', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', dry_run: true, ignore_missing: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', ignore_missing: false)
       end
@@ -206,13 +206,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :no_warn_embedded_repo option' do
       it 'includes the --no-warn-embedded-repo flag' do
-        expect_command_with_capture('add', '--no-warn-embedded-repo', '--', 'repo-dir').and_return(command_result)
+        expect_command_capturing('add', '--no-warn-embedded-repo', '--', 'repo-dir').and_return(command_result)
 
         command.call('repo-dir', no_warn_embedded_repo: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add', '--', 'repo-dir').and_return(command_result)
+        expect_command_capturing('add', '--', 'repo-dir').and_return(command_result)
 
         command.call('repo-dir', no_warn_embedded_repo: false)
       end
@@ -220,13 +220,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :renormalize option' do
       it 'includes the --renormalize flag' do
-        expect_command_with_capture('add', '--renormalize').and_return(command_result)
+        expect_command_capturing('add', '--renormalize').and_return(command_result)
 
         command.call(renormalize: true)
       end
 
       it 'does not include the flag when false' do
-        expect_command_with_capture('add').and_return(command_result)
+        expect_command_capturing('add').and_return(command_result)
 
         command.call(renormalize: false)
       end
@@ -234,13 +234,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :chmod option' do
       it 'includes --chmod=+x' do
-        expect_command_with_capture('add', '--chmod=+x', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--chmod=+x', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', chmod: '+x')
       end
 
       it 'includes --chmod=-x' do
-        expect_command_with_capture('add', '--chmod=-x', '--', 'file.rb').and_return(command_result)
+        expect_command_capturing('add', '--chmod=-x', '--', 'file.rb').and_return(command_result)
 
         command.call('file.rb', chmod: '-x')
       end
@@ -248,13 +248,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :pathspec_from_file option' do
       it 'includes --pathspec-from-file with the given path' do
-        expect_command_with_capture('add', '--pathspec-from-file=paths.txt').and_return(command_result)
+        expect_command_capturing('add', '--pathspec-from-file=paths.txt').and_return(command_result)
 
         command.call(pathspec_from_file: 'paths.txt')
       end
 
       it 'accepts stdin via -' do
-        expect_command_with_capture('add', '--pathspec-from-file=-').and_return(command_result)
+        expect_command_capturing('add', '--pathspec-from-file=-').and_return(command_result)
 
         command.call(pathspec_from_file: '-')
       end
@@ -262,8 +262,8 @@ RSpec.describe Git::Commands::Add do
 
     context 'with the :pathspec_file_nul option' do
       it 'includes --pathspec-file-nul alongside --pathspec-from-file' do
-        expect_command_with_capture('add', '--pathspec-from-file=paths.txt',
-                                    '--pathspec-file-nul').and_return(command_result)
+        expect_command_capturing('add', '--pathspec-from-file=paths.txt',
+                                 '--pathspec-file-nul').and_return(command_result)
 
         command.call(pathspec_from_file: 'paths.txt', pathspec_file_nul: true)
       end
@@ -291,13 +291,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with equivalent all/ignore_removal combinations' do
       it 'allows :all false with :ignore_removal true' do
-        expect_command_with_capture('add', '--no-all', '--ignore-removal', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--no-all', '--ignore-removal', '--', '.').and_return(command_result)
 
         command.call('.', all: false, ignore_removal: true)
       end
 
       it 'allows :all true with :ignore_removal false' do
-        expect_command_with_capture('add', '--all', '--no-ignore-removal', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--all', '--no-ignore-removal', '--', '.').and_return(command_result)
 
         command.call('.', all: true, ignore_removal: false)
       end
@@ -331,7 +331,7 @@ RSpec.describe Git::Commands::Add do
 
     context 'with multiple options combined' do
       it 'includes all specified flags' do
-        expect_command_with_capture('add', '--force', '--all', '--', '.').and_return(command_result)
+        expect_command_capturing('add', '--force', '--all', '--', '.').and_return(command_result)
 
         command.call('.', all: true, force: true)
       end
@@ -339,13 +339,13 @@ RSpec.describe Git::Commands::Add do
 
     context 'with paths containing special characters' do
       it 'handles paths with spaces' do
-        expect_command_with_capture('add', '--', 'path/to/my file.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'path/to/my file.rb').and_return(command_result)
 
         command.call('path/to/my file.rb')
       end
 
       it 'handles paths with unicode characters' do
-        expect_command_with_capture('add', '--', 'path/to/файл.rb').and_return(command_result)
+        expect_command_capturing('add', '--', 'path/to/файл.rb').and_return(command_result)
 
         command.call('path/to/файл.rb')
       end

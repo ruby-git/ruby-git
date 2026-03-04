@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::CatFile::Meta do
   # Helper that stubs execution_context.command, captures the :in IO, and verifies
   # the stdin content matches expected_stdin. Returns the given result.
   def expect_batch_command(*extra_args, stdin_content: nil, **extra_opts) # rubocop:disable Metrics/AbcSize
-    expect(execution_context).to receive(:command_with_capture) do |*args, **kwargs|
+    expect(execution_context).to receive(:command_capturing) do |*args, **kwargs|
       expect(args).to eq([*static_args, *extra_args])
       expect(kwargs).to include(raise_on_failure: false)
       if stdin_content

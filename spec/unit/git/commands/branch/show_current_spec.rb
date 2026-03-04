@@ -12,7 +12,7 @@ RSpec.describe Git::Commands::Branch::ShowCurrent do
     context 'with no arguments' do
       it 'runs branch --show-current' do
         expected_result = command_result("main\n")
-        expect_command_with_capture('branch', '--show-current')
+        expect_command_capturing('branch', '--show-current')
           .and_return(expected_result)
 
         result = command.call

@@ -91,14 +91,14 @@ end
 # @return [RSpec::Mocks::MessageExpectation] the expectation object for chaining
 #
 # @example
-#   expect_command_with_capture('stash', 'apply').and_return(command_result(''))
-#   expect_command_with_capture('stash', 'push', '--all').and_return(command_result(''))
-#   expect_command_with_capture('fetch', 'origin', timeout: 30).and_return(command_result(''))
-#   expect_command_with_capture('fetch', 'origin', timeout: -1).and_raise(ArgumentError, 'Invalid timeout value')
+#   expect_command_capturing('stash', 'apply').and_return(command_result(''))
+#   expect_command_capturing('stash', 'push', '--all').and_return(command_result(''))
+#   expect_command_capturing('fetch', 'origin', timeout: 30).and_return(command_result(''))
+#   expect_command_capturing('fetch', 'origin', timeout: -1).and_raise(ArgumentError, 'Invalid timeout value')
 #
-def expect_command_with_capture(*, **execution_options)
+def expect_command_capturing(*, **execution_options)
   expect(execution_context).to(
-    receive(:command_with_capture).with(*, **execution_options, raise_on_failure: false)
+    receive(:command_capturing).with(*, **execution_options, raise_on_failure: false)
   )
 end
 
@@ -114,10 +114,10 @@ end
 # @return [RSpec::Mocks::MessageExpectation] the expectation object for chaining
 #
 # @example
-#   expect_command('cat-file', '--batch', out: StringIO.new).and_return(command_result(''))
+#   expect_command_streaming('cat-file', '--batch', out: StringIO.new).and_return(command_result(''))
 #
-def expect_command(*, **execution_options)
+def expect_command_streaming(*, **execution_options)
   expect(execution_context).to(
-    receive(:command).with(*, **execution_options, raise_on_failure: false)
+    receive(:command_streaming).with(*, **execution_options, raise_on_failure: false)
   )
 end

@@ -97,7 +97,7 @@ class TestGitClone < Test::Unit::TestCase
 
       # Mock the Git::Lib#command! method to capture the actual command line args
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -124,7 +124,7 @@ class TestGitClone < Test::Unit::TestCase
 
       # Mock the Git::Lib#command! method to capture the actual command line args
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -153,7 +153,7 @@ class TestGitClone < Test::Unit::TestCase
 
       # Mock the Git::Lib#command! method to capture the actual command line args
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -180,7 +180,7 @@ class TestGitClone < Test::Unit::TestCase
       git = Git.init('.')
 
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -206,7 +206,7 @@ class TestGitClone < Test::Unit::TestCase
       git = Git.init('.')
 
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -233,7 +233,7 @@ class TestGitClone < Test::Unit::TestCase
       git = Git.init('.')
 
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -260,7 +260,7 @@ class TestGitClone < Test::Unit::TestCase
       git = Git.init('.')
 
       clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts|
+      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
         actual_command_line = [cmd, *opts.flatten]
         clone_result
       end
@@ -327,7 +327,7 @@ class TestGitClone < Test::Unit::TestCase
     #   git = Git.init('.')
 
     #   # Mock the Git::Lib#command method to capture the actual command line args
-    #   git.lib.define_singleton_method(:command_with_capture) do |cmd, *opts, &block|
+    #   git.lib.define_singleton_method(:command_capturing) do |cmd, *opts, &block|
     #     actual_command_line = [cmd, *opts.flatten]
     #   end
 

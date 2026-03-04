@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Stash::Clear do
   describe '#call' do
     it 'calls git stash clear' do
       expected_result = command_result
-      expect_command_with_capture('stash', 'clear').and_return(expected_result)
+      expect_command_capturing('stash', 'clear').and_return(expected_result)
 
       result = command.call
 
