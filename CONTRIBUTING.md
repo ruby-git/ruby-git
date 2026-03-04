@@ -30,6 +30,7 @@
   - [Commit message guidelines](#commit-message-guidelines)
     - [What does this mean for contributors?](#what-does-this-mean-for-contributors)
     - [What to know about Conventional Commits](#what-to-know-about-conventional-commits)
+    - [Issue and PR references](#issue-and-pr-references)
   - [Unit tests](#unit-tests)
     - [RSpec best practices](#rspec-best-practices)
     - [Unit tests vs Integration tests](#unit-tests-vs-integration-tests)
@@ -706,6 +707,40 @@ by not acted upon.
 
 See [the Conventional Commits
 specification](https://www.conventionalcommits.org/en/v1.0.0/) for more details.
+
+#### Issue and PR references
+
+Due to a parser limitation in commitlint, using `#<number>` anywhere in the commit
+**body** causes everything from that line onward to be treated as a footer, which
+triggers a `footer-leading-blank` error.
+
+To avoid this:
+
+- **In the body**, omit the `#` when mentioning an issue or PR — write `issue 1000`
+  not `issue #1000`.
+- **In the footer**, always include `#` for closing references:
+  `Closes #1000`, `Fixes #1000`, or `Resolves #1000`.
+- If you only want to mention an issue for context (not close it), omit the `#` in
+  the body — no footer line is needed.
+
+To validate a commit message before committing:
+
+```bash
+npx commitlint --format @commitlint/format < commit_msg.txt
+```
+
+To see how commitlint has parsed a commit message:
+
+```bash
+cat commit_msg.txt | node -e "
+const parse = require('@commitlint/parse');
+let msg = '';
+process.stdin.on('data', d => msg += d);
+process.stdin.on('end', () =>
+  parse.default(msg.trim()).then(r => console.log(JSON.stringify(r, null, 2)))
+);
+" | jq
+```
 
 ### Unit tests
 

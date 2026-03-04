@@ -261,6 +261,13 @@ PR, follow the repository finalize workflow (see
 [Development Workflow](../development-workflow/SKILL.md)) and squash commits as
 required.
 
+**Issue and PR references in commit bodies:** Do not use `#<number>` in the
+commit body — write `issue 1000` not `issue #1000`. A commitlint parser flaw
+treats any line containing `#<number>` as a footer token, breaking the
+body/footer split. To close an issue/PR, use `Closes`/`Fixes`/`Resolves #<number>`
+in the footer. To merely mention one for context, omit the `#` and no footer line
+is needed.
+
 If further changes are needed after task commits are created:
 
 - Amend the change to the **appropriate commit** (e.g., a command class fix goes
