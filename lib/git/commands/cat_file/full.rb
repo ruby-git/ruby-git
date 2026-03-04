@@ -134,7 +134,7 @@ module Git
         # @return [Git::CommandLineResult]
         #
         def run_batch(bound, reader)
-          result = @execution_context.command_with_capture(
+          result = @execution_context.command_capturing(
             *bound,
             in: reader,
             **bound.execution_options,

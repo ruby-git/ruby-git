@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Merge::Quit do
   describe '#call' do
     it 'calls git merge --quit' do
       expected_result = command_result('')
-      expect_command_with_capture('merge', '--quit').and_return(expected_result)
+      expect_command_capturing('merge', '--quit').and_return(expected_result)
 
       result = command.call
 

@@ -69,7 +69,7 @@ RSpec.describe Git::Commands::Base do
     let(:command) { command_class.new(execution_context) }
 
     it 'raises on non-zero exit status by default' do
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_return(command_result('', exitstatus: 1))
 
@@ -79,7 +79,7 @@ RSpec.describe Git::Commands::Base do
 
     it 'accepts status 1 when allow_exit_status 0..1 is configured' do
       command_class.allow_exit_status(0..1)
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_return(command_result('', exitstatus: 1))
 
@@ -92,7 +92,7 @@ RSpec.describe Git::Commands::Base do
       command_class.allow_exit_status(0..7)
 
       (1..7).each do |exitstatus|
-        allow(execution_context).to receive(:command_with_capture)
+        allow(execution_context).to receive(:command_capturing)
           .with('status', raise_on_failure: false)
           .and_return(command_result('', exitstatus: exitstatus))
 
@@ -103,7 +103,7 @@ RSpec.describe Git::Commands::Base do
 
     it 'accepts exit status only when included in declared range' do
       command_class.allow_exit_status(0..1)
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_return(command_result('', exitstatus: 2))
 
@@ -121,7 +121,7 @@ RSpec.describe Git::Commands::Base do
 
     it 'propagates timeout errors from execution context' do
       timeout_error = Git::TimeoutError.new(command_result('', stderr: 'timed out'), 1)
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_raise(timeout_error)
 
@@ -131,7 +131,7 @@ RSpec.describe Git::Commands::Base do
 
     it 'propagates signal errors from execution context' do
       signaled_error = Git::SignaledError.new(command_result('', stderr: 'killed'))
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_raise(signaled_error)
 
@@ -140,7 +140,7 @@ RSpec.describe Git::Commands::Base do
     end
 
     it 'forwards execution options extracted from bound arguments' do
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', timeout: 30, raise_on_failure: false)
         .and_return(command_result)
 
@@ -148,7 +148,7 @@ RSpec.describe Git::Commands::Base do
     end
 
     it 'does not forward execution option keywords when none are provided' do
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_return(command_result)
 
@@ -163,7 +163,7 @@ RSpec.describe Git::Commands::Base do
       end
       no_exec_opts_command = no_exec_opts_class.new(execution_context)
 
-      allow(execution_context).to receive(:command_with_capture)
+      allow(execution_context).to receive(:command_capturing)
         .with('status', raise_on_failure: false)
         .and_return(command_result)
 

@@ -203,7 +203,7 @@ module Git
     # @return [String] the name of the default branch
     #
     def repository_default_branch(repository)
-      output = command_with_capture('ls-remote', '--symref', '--', repository, 'HEAD').stdout
+      output = command_capturing('ls-remote', '--symref', '--', repository, 'HEAD').stdout
 
       match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
       return match_data[:default_branch] if match_data
@@ -269,7 +269,7 @@ module Git
       args = build_args(opts, DESCRIBE_OPTION_MAP)
       args << commit_ish if commit_ish
 
-      command_with_capture('describe', *args).stdout
+      command_capturing('describe', *args).stdout
     end
 
     # Return the commits that are within the given revision range
@@ -310,7 +310,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command_with_capture('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
+      command_capturing('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
     end
 
     FULL_LOG_EXTRA_OPTIONS_MAP = [
@@ -381,7 +381,7 @@ module Git
       args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
       args += log_path_options(opts)
 
-      full_log = command_with_capture('log', *args).stdout.split("\n")
+      full_log = command_capturing('log', *args).stdout.split("\n")
       process_commit_log_data(full_log)
     end
 
@@ -406,7 +406,7 @@ module Git
     def rev_parse(revision)
       assert_args_are_not_options('rev', revision)
 
-      command_with_capture('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
+      command_capturing('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
     end
 
     # For backwards compatibility with the old method name
@@ -423,7 +423,7 @@ module Git
     def name_rev(commit_ish)
       assert_args_are_not_options('commit_ish', commit_ish)
 
-      command_with_capture('name-rev', commit_ish).stdout.split[1]
+      command_capturing('name-rev', commit_ish).stdout.split[1]
     end
 
     alias namerev name_rev
@@ -483,7 +483,7 @@ module Git
       # object content in memory when a block is given.
       Tempfile.create do |file|
         file.binmode
-        command('cat-file', '-p', object, out: file)
+        command_streaming('cat-file', '-p', object, out: file)
         file.rewind
         yield file
       end
@@ -755,7 +755,7 @@ module Git
       args.unshift(sha)
       args << opts[:path] if opts[:path]
 
-      command_with_capture('ls-tree', *args).stdout.split("\n").each do |line|
+      command_capturing('ls-tree', *args).stdout.split("\n").each do |line|
         (info, filenm) = split_status_line(line)
         (mode, type, sha) = info.split
         data[type][filenm] = { mode: mode, sha: sha }
@@ -771,7 +771,7 @@ module Git
     end
 
     def full_tree(sha)
-      command_with_capture('ls-tree', '-r', sha).stdout.split("\n")
+      command_capturing('ls-tree', '-r', sha).stdout.split("\n")
     end
 
     def tree_depth(sha)
@@ -779,7 +779,7 @@ module Git
     end
 
     def change_head_branch(branch_name)
-      command_with_capture('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
+      command_capturing('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
     end
 
     def branches_all
@@ -799,7 +799,7 @@ module Git
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
       #
-      command_with_capture('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
+      command_capturing('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
         s = w.split
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
@@ -813,17 +813,17 @@ module Git
     WORKTREE_ENV = { 'GIT_INDEX_FILE' => nil }.freeze
 
     def worktree_add(dir, commitish = nil)
-      return command_with_capture('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
+      return command_capturing('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
 
-      command_with_capture('worktree', 'add', dir, env: WORKTREE_ENV).stdout
+      command_capturing('worktree', 'add', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_remove(dir)
-      command_with_capture('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
+      command_capturing('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
     end
 
     def worktree_prune
-      command_with_capture('worktree', 'prune', env: WORKTREE_ENV).stdout
+      command_capturing('worktree', 'prune', env: WORKTREE_ENV).stdout
     end
 
     def list_files(ref_dir)
@@ -1107,7 +1107,7 @@ module Git
     def ls_files(location = nil)
       location ||= '.'
       {}.tap do |files|
-        command_with_capture('ls-files', '--stage', location).stdout.split("\n").each do |line|
+        command_capturing('ls-files', '--stage', location).stdout.split("\n").each do |line|
           (info, file) = split_status_line(line)
           (mode, sha, stage) = info.split
           files[file] = {
@@ -1150,19 +1150,19 @@ module Git
       flags = build_args(opts, LS_REMOTE_OPTION_MAP)
       positional_arg = location || '.'
 
-      output_lines = command_with_capture('ls-remote', *flags, positional_arg).stdout.split("\n")
+      output_lines = command_capturing('ls-remote', *flags, positional_arg).stdout.split("\n")
       parse_ls_remote_output(output_lines)
     end
 
     def ignored_files
-      command_with_capture('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
+      command_capturing('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
         unescape_quoted_path(f)
       end
     end
 
     def untracked_files
-      command_with_capture('ls-files', '--others', '--exclude-standard',
-                           chdir: @git_work_dir).stdout.split("\n").map do |f|
+      command_capturing('ls-files', '--others', '--exclude-standard',
+                        chdir: @git_work_dir).stdout.split("\n").map do |f|
         unescape_quoted_path(f)
       end
     end
@@ -1176,19 +1176,19 @@ module Git
     end
 
     def config_get(name)
-      command_with_capture('config', '--get', name, chdir: @git_dir).stdout
+      command_capturing('config', '--get', name, chdir: @git_dir).stdout
     end
 
     def global_config_get(name)
-      command_with_capture('config', '--global', '--get', name).stdout
+      command_capturing('config', '--global', '--get', name).stdout
     end
 
     def config_list
-      parse_config_list command_with_capture('config', '--list', chdir: @git_dir).stdout.split("\n")
+      parse_config_list command_capturing('config', '--list', chdir: @git_dir).stdout.split("\n")
     end
 
     def global_config_list
-      parse_config_list command_with_capture('config', '--global', '--list').stdout.split("\n")
+      parse_config_list command_capturing('config', '--global', '--list').stdout.split("\n")
     end
 
     def parse_config_list(lines)
@@ -1201,7 +1201,7 @@ module Git
     end
 
     def parse_config(file)
-      parse_config_list command_with_capture('config', '--list', '--file', file).stdout.split("\n")
+      parse_config_list command_capturing('config', '--list', '--file', file).stdout.split("\n")
     end
 
     # Shows objects
@@ -1214,7 +1214,7 @@ module Git
 
       arr_opts << (path ? "#{objectish}:#{path}" : objectish)
 
-      command_with_capture('show', *arr_opts.compact, chomp: false).stdout
+      command_capturing('show', *arr_opts.compact, chomp: false).stdout
     end
 
     ## WRITE COMMANDS ##
@@ -1226,11 +1226,11 @@ module Git
     def config_set(name, value, options = {})
       ArgsBuilder.validate!(options, CONFIG_SET_OPTION_MAP)
       flags = build_args(options, CONFIG_SET_OPTION_MAP)
-      command_with_capture('config', *flags, name, value)
+      command_capturing('config', *flags, name, value)
     end
 
     def global_config_set(name, value)
-      command_with_capture('config', '--global', name, value)
+      command_capturing('config', '--global', name, value)
     end
 
     # Update the index from the current worktree to prepare the for the next commit
@@ -1272,7 +1272,7 @@ module Git
     # @return [Boolean]
     #
     def empty?
-      command_with_capture('rev-parse', '--verify', 'HEAD')
+      command_capturing('rev-parse', '--verify', 'HEAD')
       false
     rescue Git::FailedError => e
       raise unless e.result.status.exitstatus == 128 &&
@@ -1344,19 +1344,19 @@ module Git
       args = build_args(opts, REVERT_OPTION_MAP)
       args << commitish
 
-      command_with_capture('revert', *args)
+      command_capturing('revert', *args)
     end
 
     def apply(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command_with_capture('apply', *arr_opts)
+      command_capturing('apply', *arr_opts)
     end
 
     def apply_mail(patch_file)
       arr_opts = []
       arr_opts << '--' << patch_file if patch_file
-      command_with_capture('am', *arr_opts)
+      command_capturing('am', *arr_opts)
     end
 
     # Returns all stash entries as an array of index and message pairs
@@ -1588,7 +1588,7 @@ module Git
 
     def unmerged
       unmerged = []
-      command_with_capture('diff', '--cached').stdout.split("\n").each do |line|
+      command_capturing('diff', '--cached').stdout.split("\n").each do |line|
         unmerged << ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
       end
       unmerged
@@ -1619,7 +1619,7 @@ module Git
       positional_args = ['--', name, url]
       command_args = ['add'] + flags + positional_args
 
-      command_with_capture('remote', *command_args)
+      command_capturing('remote', *command_args)
     end
 
     REMOTE_SET_BRANCHES_OPTION_MAP = [
@@ -1633,7 +1633,7 @@ module Git
       branch_args = Array(branches).flatten
       command_args = ['set-branches'] + flags + [name] + branch_args
 
-      command_with_capture('remote', *command_args)
+      command_capturing('remote', *command_args)
     end
 
     def remote_set_url(name, url)
@@ -1641,15 +1641,15 @@ module Git
       arr_opts << name
       arr_opts << url
 
-      command_with_capture('remote', *arr_opts)
+      command_capturing('remote', *arr_opts)
     end
 
     def remote_remove(name)
-      command_with_capture('remote', 'rm', name)
+      command_capturing('remote', 'rm', name)
     end
 
     def remotes
-      command_with_capture('remote').stdout.split("\n")
+      command_capturing('remote').stdout.split("\n")
     end
 
     # List all tags in the repository
@@ -1777,7 +1777,7 @@ module Git
         args << opts[:ref] if opts[:ref]
       end
 
-      command_with_capture('fetch', *args, merge: true).stdout
+      command_capturing('fetch', *args, merge: true).stdout
     end
 
     PUSH_OPTION_MAP = [
@@ -1798,10 +1798,10 @@ module Git
       args = build_push_args(remote, branch, opts)
 
       if opts[:mirror]
-        command_with_capture('push', *args)
+        command_capturing('push', *args)
       else
-        command_with_capture('push', *args)
-        command_with_capture('push', '--tags', *(args - [branch].compact)) if opts[:tags]
+        command_capturing('push', *args)
+        command_capturing('push', '--tags', *(args - [branch].compact)) if opts[:tags]
       end
     end
 
@@ -1817,7 +1817,7 @@ module Git
       flags = build_args(opts, PULL_OPTION_MAP)
       positional_args = [remote, branch].compact
 
-      command_with_capture('pull', *flags, *positional_args).stdout
+      command_capturing('pull', *flags, *positional_args).stdout
     end
 
     # Return the SHA of a tag reference
@@ -1834,7 +1834,7 @@ module Git
       return File.read(head).chomp if File.exist?(head)
 
       begin
-        command_with_capture('show-ref', '--tags', '-s', tag_name).stdout
+        command_capturing('show-ref', '--tags', '-s', tag_name).stdout
       rescue Git::FailedError => e
         raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
 
@@ -1843,11 +1843,11 @@ module Git
     end
 
     def repack
-      command_with_capture('repack', '-a', '-d')
+      command_capturing('repack', '-a', '-d')
     end
 
     def gc
-      command_with_capture('gc', '--prune', '--aggressive', '--auto')
+      command_capturing('gc', '--prune', '--aggressive', '--auto')
     end
 
     # Execute git fsck to verify repository integrity
@@ -1871,11 +1871,11 @@ module Git
     def read_tree(treeish, opts = {})
       ArgsBuilder.validate!(opts, READ_TREE_OPTION_MAP)
       flags = build_args(opts, READ_TREE_OPTION_MAP)
-      command_with_capture('read-tree', *flags, treeish)
+      command_capturing('read-tree', *flags, treeish)
     end
 
     def write_tree
-      command_with_capture('write-tree').stdout
+      command_capturing('write-tree').stdout
     end
 
     COMMIT_TREE_OPTION_MAP = [
@@ -1888,11 +1888,11 @@ module Git
       ArgsBuilder.validate!(opts, COMMIT_TREE_OPTION_MAP)
 
       flags = build_args(opts, COMMIT_TREE_OPTION_MAP)
-      command_with_capture('commit-tree', tree, *flags).stdout
+      command_capturing('commit-tree', tree, *flags).stdout
     end
 
     def update_ref(ref, commit)
-      command_with_capture('update-ref', ref, commit)
+      command_capturing('update-ref', ref, commit)
     end
 
     def checkout_index(opts = {})
@@ -1951,7 +1951,7 @@ module Git
       args << sha
       args.push('--', opts[:path]) if opts[:path]
 
-      File.open(file, 'wb') { |f| command('archive', *args, out: f) }
+      File.open(file, 'wb') { |f| command_streaming('archive', *args, out: f) }
       apply_gzip(file) if gzip
 
       file
@@ -1959,7 +1959,7 @@ module Git
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
-      output = command_with_capture('version').stdout
+      output = command_capturing('version').stdout
       version = output[/\d+(\.\d+)+/]
       version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
@@ -2002,7 +2002,7 @@ module Git
       true
     end
 
-    COMMAND_ARG_DEFAULTS = {
+    COMMAND_CAPTURING_ARG_DEFAULTS = {
       in: nil,
       out: nil,
       err: nil,
@@ -2046,22 +2046,22 @@ module Git
     # By default, raises {Git::FailedError} if the command exits with a non-zero
     # status. Pass `raise_on_failure: false` to suppress this behavior.
     #
-    # @overload command_with_capture(*args, **options_hash)
+    # @overload command_capturing(*args, **options_hash)
     #   Runs a git command and returns the result
     #
     #   Args should exclude the 'git' command itself and global options.
     #   Remember to splat the arguments if given as an array.
     #
     #   @example Run git log
-    #     result = command_with_capture('log', '--pretty=oneline')
+    #     result = command_capturing('log', '--pretty=oneline')
     #     result.stdout #=> "abc123 First commit\ndef456 Second commit\n"
     #
     #   @example Using an array of arguments
     #     args = ['log', '--pretty=oneline']
-    #     result = command_with_capture(*args)
+    #     result = command_capturing(*args)
     #
     #   @example Suppress raising on failure
-    #     result = command_with_capture('show', 'nonexistent', raise_on_failure: false)
+    #     result = command_capturing('show', 'nonexistent', raise_on_failure: false)
     #     result.status.success? #=> false
     #
     #   @param args [Array<String>] the command and its arguments
@@ -2104,6 +2104,7 @@ module Git
     #   of a command that exposes `:timeout`.
     #
     # @see Git::CommandLine#run_with_capture
+    # @see #command_line_capturing
     #
     # @return [Git::CommandLineResult] the result of the command
     #
@@ -2121,16 +2122,16 @@ module Git
     #   contain the result of the command including the exit status, stdout, and
     #   stderr.
     #
-    def command_with_capture(*, **options_hash)
-      options_hash = COMMAND_ARG_DEFAULTS.merge(options_hash)
+    def command_capturing(*, **options_hash)
+      options_hash = COMMAND_CAPTURING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
 
-      extra_options = options_hash.keys - COMMAND_ARG_DEFAULTS.keys
+      extra_options = options_hash.keys - COMMAND_CAPTURING_ARG_DEFAULTS.keys
       raise ArgumentError, "Unknown options: #{extra_options.join(', ')}" if extra_options.any?
 
       env_overrides = options_hash.delete(:env)
       raise_on_failure = options_hash.delete(:raise_on_failure)
-      command_line.run_with_capture(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+      command_line_capturing.run_with_capture(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
     end
 
     COMMAND_STREAMING_ARG_DEFAULTS = {
@@ -2145,14 +2146,14 @@ module Git
 
     # Runs a git command using the streaming (non-capturing) execution path
     #
-    # Unlike {#command_with_capture}, stdout is NOT buffered in memory. It is
+    # Unlike {#command_capturing}, stdout is NOT buffered in memory. It is
     # written only to the IO object provided via the `out:` option. Stderr is
     # captured internally via a StringIO for error diagnostics.
     #
     # Use this entry point when you want to stream large output (e.g. blob
     # content from cat-file) without creating memory pressure.
     #
-    # @overload command(*args, **options_hash)
+    # @overload command_streaming(*args, **options_hash)
     #   @param args [Array<String>] the git command and its arguments
     #   @param options_hash [Hash] the options to pass to the command
     #
@@ -2177,7 +2178,10 @@ module Git
     # @raise [Git::TimeoutError] if the command times out
     # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
-    def command(*, **options_hash)
+    # @see Git::CommandLine#run
+    # @see #command_line_streaming
+    #
+    def command_streaming(*, **options_hash)
       options_hash = COMMAND_STREAMING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
 
@@ -2186,7 +2190,7 @@ module Git
 
       env_overrides = options_hash.delete(:env)
       raise_on_failure = options_hash.delete(:raise_on_failure)
-      command_line.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+      command_line_streaming.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
     end
 
     private
@@ -2433,7 +2437,7 @@ module Git
     end
 
     def get_branch_state(branch_name)
-      command_with_capture('rev-parse', '--verify', '--quiet', branch_name)
+      command_capturing('rev-parse', '--verify', '--quiet', branch_name)
       :active
     rescue Git::FailedError => e
       # An exit status of 1 with empty stderr from `rev-parse --verify`
@@ -2444,7 +2448,7 @@ module Git
     end
 
     def execute_grep_command(args)
-      command_with_capture('grep', *args).stdout.split("\n")
+      command_capturing('grep', *args).stdout.split("\n")
     rescue Git::FailedError => e
       # `git grep` returns 1 when no lines are selected.
       raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
@@ -2567,7 +2571,7 @@ module Git
     # @raise [Git::TimeoutError] if the command exceeds the configured timeout
     #
     def write_staged_content(path, stage, out_io)
-      command('show', ":#{stage}:#{path}", out: out_io)
+      command_streaming('show', ":#{stage}:#{path}", out: out_io)
       out_io
     end
 
@@ -2684,8 +2688,35 @@ module Git
       end
     end
 
-    def command_line
-      @command_line ||=
+    # Returns the {Git::CommandLine} instance used for capturing execution
+    #
+    # Memoized factory for the capturing execution path. Wired to
+    # {#command_capturing} and will be replaced with a
+    # `Git::CommandLine::Capturing` instance once that subclass is extracted
+    # in a follow-up refactor.
+    #
+    # @return [Git::CommandLine]
+    #
+    # @see Git::CommandLine#run_with_capture
+    #
+    def command_line_capturing
+      @command_line_capturing ||=
+        Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+    end
+
+    # Returns the {Git::CommandLine} instance used for streaming execution
+    #
+    # Memoized factory for the streaming execution path. Wired to
+    # {#command_streaming} and will be replaced with a
+    # `Git::CommandLine::Streaming` instance once that subclass is extracted
+    # in a follow-up refactor.
+    #
+    # @return [Git::CommandLine]
+    #
+    # @see Git::CommandLine#run
+    #
+    def command_line_streaming
+      @command_line_streaming ||=
         Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
     end
 
@@ -2696,8 +2727,8 @@ module Git
     # @return [Hash] the diff as Hash
     def diff_as_hash(diff_command, opts = [])
       # update index before diffing to avoid spurious diffs
-      command_with_capture('status')
-      command_with_capture(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
+      command_capturing('status')
+      command_capturing(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
         info, file = split_status_line(line)
         mode_src, mode_dest, sha_src, sha_dest, type = info.split
 

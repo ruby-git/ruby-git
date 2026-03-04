@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Branch::Move do
   describe '#call' do
     context 'with only new_branch (rename current branch)' do
       it 'runs branch --move with only the new branch name' do
-        expect_command_with_capture('branch', '--move', 'new-name')
+        expect_command_capturing('branch', '--move', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name')
@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
     context 'with old_branch and new_branch' do
       it 'runs branch --move with both branch names' do
-        expect_command_with_capture('branch', '--move', 'old-name', 'new-name')
+        expect_command_capturing('branch', '--move', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name')
@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
     context 'with :force option' do
       it 'adds --force flag when renaming current branch' do
-        expect_command_with_capture('branch', '--move', '--force', 'new-name')
+        expect_command_capturing('branch', '--move', '--force', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', force: true)
@@ -42,7 +42,7 @@ RSpec.describe Git::Commands::Branch::Move do
       end
 
       it 'adds --force flag when renaming specific branch' do
-        expect_command_with_capture('branch', '--move', '--force', 'old-name', 'new-name')
+        expect_command_capturing('branch', '--move', '--force', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name', force: true)
@@ -51,7 +51,7 @@ RSpec.describe Git::Commands::Branch::Move do
       end
 
       it 'does not add flag when false' do
-        expect_command_with_capture('branch', '--move', 'new-name')
+        expect_command_capturing('branch', '--move', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', force: false)
@@ -62,7 +62,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
     context 'with :f short option alias' do
       it 'adds --force flag when renaming current branch' do
-        expect_command_with_capture('branch', '--move', '--force', 'new-name')
+        expect_command_capturing('branch', '--move', '--force', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('new-name', f: true)
@@ -71,7 +71,7 @@ RSpec.describe Git::Commands::Branch::Move do
       end
 
       it 'adds --force flag when renaming specific branch' do
-        expect_command_with_capture('branch', '--move', '--force', 'old-name', 'new-name')
+        expect_command_capturing('branch', '--move', '--force', 'old-name', 'new-name')
           .and_return(command_result(''))
 
         result = command.call('old-name', 'new-name', f: true)

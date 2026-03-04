@@ -31,7 +31,7 @@ class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
 
   def mock_command(lib, repository, response)
     test_case = self
-    lib.define_singleton_method(:command_with_capture) do |cmd, *opts, &_block|
+    lib.define_singleton_method(:command_capturing) do |cmd, *opts, &_block|
       test_case.assert_equal('ls-remote', cmd)
       test_case.assert_equal(['--symref', '--', repository, 'HEAD'], opts.flatten)
       status = Struct.new(:success?).new(true)

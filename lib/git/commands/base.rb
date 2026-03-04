@@ -89,7 +89,7 @@ module Git
         end
       end
 
-      # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides {Git::Lib#command_with_capture}
+      # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides {Git::Lib#command_capturing}
       def initialize(execution_context)
         @execution_context = execution_context
       end
@@ -102,7 +102,7 @@ module Git
       #   Execution options (declared via `execution_option` in the Arguments
       #   DSL) are extracted from the bound arguments via
       #   {Git::Commands::Arguments::Bound#execution_options} and forwarded as
-      #   keyword arguments to `@execution_context.command_with_capture`.
+      #   keyword arguments to `@execution_context.command_capturing`.
       #
       #   @example
       #     # In a command subclass:
@@ -120,7 +120,7 @@ module Git
       def call(*, **)
         args = args_definition.bind(*, **)
 
-        result = @execution_context.command_with_capture(*args, **args.execution_options, raise_on_failure: false)
+        result = @execution_context.command_capturing(*args, **args.execution_options, raise_on_failure: false)
         validate_exit_status!(result)
         result
       end
@@ -144,7 +144,7 @@ module Git
       # the read end. The write and close happen concurrently with the block.
       #
       # The read end can be passed as the `in:` keyword to
-      # {Git::Lib#command_with_capture} / {Git::CommandLine#run_with_capture}, connecting it directly to
+      # {Git::Lib#command_capturing} / {Git::CommandLine#run_with_capture}, connecting it directly to
       # the spawned git process's stdin without an intermediate file or shell
       # heredoc. This is required because `Process.spawn` only accepts real IO
       # objects with a file descriptor — `StringIO` does not work.
@@ -160,7 +160,7 @@ module Git
       #   bound = args_definition.bind(*, **)
       #   stdin_content = Array(bound.objects).map { |object| "#{object}\n" }.join
       #   with_stdin(stdin_content) do |reader|
-      #     @execution_context.command_with_capture('cat-file', '--batch-check', in: reader, raise_on_failure: false)
+      #     @execution_context.command_capturing('cat-file', '--batch-check', in: reader, raise_on_failure: false)
       #   end
       #
       # @param content [String] text to write to the process's stdin

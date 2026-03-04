@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Merge::Abort do
   describe '#call' do
     it 'calls git merge --abort' do
       expected_result = command_result('')
-      expect_command_with_capture('merge', '--abort').and_return(expected_result)
+      expect_command_capturing('merge', '--abort').and_return(expected_result)
 
       result = command.call
 

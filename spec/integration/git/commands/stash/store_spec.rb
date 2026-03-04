@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Stash::Store, :integration do
       before { write_file('file.txt', "modified\n") }
 
       it 'returns a CommandLineResult' do
-        sha = execution_context.command_with_capture('stash', 'create').stdout.strip
+        sha = execution_context.command_capturing('stash', 'create').stdout.strip
 
         result = command.call(sha)
 

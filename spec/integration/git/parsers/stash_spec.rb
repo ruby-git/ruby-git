@@ -14,7 +14,7 @@ RSpec.describe Git::Parsers::Stash, :integration do
   # Helper to run git stash list with the parser's format and return raw output
   def git_stash_output
     format_arg = "--format=#{described_class::STASH_FORMAT}"
-    repo.lib.command_with_capture('stash', 'list', format_arg).stdout
+    repo.lib.command_capturing('stash', 'list', format_arg).stdout
   end
 
   before do
@@ -148,9 +148,9 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with custom message format (no branch prefix)' do
       before do
         write_file('file.txt', 'modified')
-        result = repo.lib.command_with_capture('stash', 'create', 'Custom message')
+        result = repo.lib.command_capturing('stash', 'create', 'Custom message')
         sha = result.is_a?(String) ? result.strip : result.stdout.strip
-        repo.lib.command_with_capture('stash', 'store', '--message=custom: my message', sha)
+        repo.lib.command_capturing('stash', 'store', '--message=custom: my message', sha)
       end
 
       it 'parses custom message correctly' do

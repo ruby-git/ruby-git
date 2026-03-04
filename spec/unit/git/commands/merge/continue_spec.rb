@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Merge::Continue do
   describe '#call' do
     it 'calls git merge --continue' do
       expected_result = command_result('')
-      expect_command_with_capture('merge', '--continue').and_return(expected_result)
+      expect_command_capturing('merge', '--continue').and_return(expected_result)
 
       result = command.call
 
