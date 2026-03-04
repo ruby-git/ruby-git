@@ -42,6 +42,7 @@ subcommand (or subcommand + sub-action) it wraps.
 
 ## Related skills
 
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline RSpec rules all generated unit specs must comply with
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI

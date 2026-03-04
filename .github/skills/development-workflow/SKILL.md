@@ -51,6 +51,8 @@ needed.
 
 ## Related skills
 
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — RSpec rules for test structure, naming,
+  setup patterns, stubbing, and coverage; apply when writing tests during TDD cycles
 - [Test Debugging](../test-debugging/SKILL.md) — focused diagnosis for failing or
   flaky tests
 - [CI/CD Troubleshooting](../ci-cd-troubleshooting/SKILL.md) — workflow for CI
