@@ -30,6 +30,7 @@ Select the skill for the task at hand and attach it to your Copilot Chat context
 | Pre-PR readiness check | [pr-readiness-review](skills/pr-readiness-review/SKILL.md) |
 | CI/CD failure diagnosis | [ci-cd-troubleshooting](skills/ci-cd-troubleshooting/SKILL.md) |
 | Debug failing / flaky tests | [test-debugging](skills/test-debugging/SKILL.md) |
+| Audit / review unit test quality | [rspec-unit-testing-standards](skills/rspec-unit-testing-standards/SKILL.md) |
 | Update dependencies / fix CVEs | [dependency-management](skills/dependency-management/SKILL.md) |
 | Prepare a release | [release-management](skills/release-management/SKILL.md) |
 | Assess breaking changes / deprecation | [breaking-change-analysis](skills/breaking-change-analysis/SKILL.md) |

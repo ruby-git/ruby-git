@@ -60,6 +60,8 @@ if ci_build?
   ]
 end
 
+SimpleCov.enable_coverage :branch
+
 SimpleCov::RSpec.start(
   coverage_threshold: 100,
   fail_on_low_coverage: false,

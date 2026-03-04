@@ -42,6 +42,8 @@ command source file provides useful context for verifying argument coverage.
 
 ## Related skills
 
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline RSpec rules that govern all unit test structure,
+  naming, setup, stubbing, and coverage; this skill adds command-specific conventions on top
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
@@ -79,28 +81,30 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
 
 ### Expectations for command invocation
 
-Use the `expect_command` helper from `spec_helper.rb` which automatically includes `raise_on_failure: false`:
+Use the `expect_command_capturing` helper from `spec_helper.rb` (or
+`expect_command_streaming` for streaming commands) which automatically includes
+`raise_on_failure: false`:
 
 ```ruby
-expect_command('clone', '--', url, dir).and_return(command_result)
+expect_command_capturing('clone', '--', url, dir).and_return(command_result)
 ```
 
 When testing execution options, include forwarded keywords:
 
 ```ruby
-expect_command('clone', '--', url, dir, timeout: 30).and_return(command_result)
+expect_command_capturing('clone', '--', url, dir, timeout: 30).and_return(command_result)
 ```
 
 #### Expectations for stdin-feeding commands
 
 Commands that use `Base#with_stdin` pass an `IO` pipe read end as `in:` to
-`execution_context.command`. Unit tests must capture that IO object and assert its
+`execution_context.command_capturing`. Unit tests must capture that IO object and assert its
 content. Use a block form on the `expect` to intercept keyword arguments:
 
 ```ruby
 # Helper defined in the spec file:
 def expect_batch_command(*extra_args, stdin_content: nil, **extra_opts) # rubocop:disable Metrics/AbcSize
-  expect(execution_context).to receive(:command) do |*args, **kwargs|
+  expect(execution_context).to receive(:command_capturing) do |*args, **kwargs|
     expect(args).to eq(['cat-file', '--batch-check', *extra_args])
     expect(kwargs).to include(raise_on_failure: false, **extra_opts)
     expect(kwargs[:in].read).to eq(stdin_content) if stdin_content
@@ -193,6 +197,8 @@ with pathspecs".
 
 ```ruby
 RSpec.describe Git::Commands::Branch::Delete do
+  # Duck-type collaborator: command specs depend on the #command interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -201,7 +207,7 @@ RSpec.describe Git::Commands::Branch::Delete do
     context 'with single branch name' do
       it 'passes the branch name' do
         expected_result = command_result('Deleted branch feature.')
-        expect_command('branch', '-d', 'feature').and_return(expected_result)
+        expect_command_capturing('branch', '-d', 'feature').and_return(expected_result)
         result = command.call('feature')
         expect(result).to eq(expected_result)
       end
@@ -241,6 +247,8 @@ end
 
 ```ruby
 RSpec.describe Git::Commands::Stash::Pop do
+  # Duck-type collaborator: command specs depend on the #command interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 

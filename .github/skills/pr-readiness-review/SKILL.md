@@ -30,6 +30,8 @@ final quality gate and reporting template.
 
 ## Related skills
 
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline rules that all unit tests must
+  comply with, including testing only via public interfaces; these standards take precedence over any older guidance
 - [Development Workflow](../development-workflow/SKILL.md) — primary
   implementation process prior to readiness checks
 - [Review Command Tests](../review-command-tests/SKILL.md) — audit unit and
@@ -50,7 +52,7 @@ Execute and report results for:
 - [ ] All external dependencies properly mocked (execution_context, git commands)
 - [ ] Each test verifies one specific behavior
 - [ ] Comprehensive coverage: success paths, failures, edge cases, error handling
-- [ ] Test both public API and private methods where complexity exists
+- [ ] Test only through public interfaces (see RSpec Unit Testing Standards Rule 6)
 
 **Integration Tests (Essential Only):**
 - [ ] **Minimal and purposeful** - only test what unit tests cannot verify

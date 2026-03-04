@@ -27,6 +27,9 @@ requests unless the user asks for implementation.
 
 ## Related skills
 
+- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — rules
+  governing test isolation, determinism, and order independence (Rules 25–28); consult
+  when flakiness is caused by a test design violation rather than a production bug
 - [Development Workflow](../development-workflow/SKILL.md) — required TDD process
    when fixes involve production code
 - [CI/CD Troubleshooting](../ci-cd-troubleshooting/SKILL.md) — investigate
