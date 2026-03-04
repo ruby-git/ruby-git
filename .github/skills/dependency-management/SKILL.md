@@ -56,5 +56,17 @@ version constraints so updates remain consistent with gem project rules.
 ## Commit Guidelines
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/). A
-commit hook enforces the format. See the Git Commit Conventions section in
-`copilot-instructions.md` for the full format and allowed types.
+commit hook enforces the format. See the "Commit message guidelines" section in
+`CONTRIBUTING.md` for the full format and allowed types.
+
+**Issue and PR references in the body:** Do not use `#<number>` in the commit
+body — write `issue 1000` not `issue #1000`. A commitlint parser flaw treats any
+line containing `#<number>` as a footer token, breaking the body/footer split. To
+close an issue/PR, use `Closes`/`Fixes`/`Resolves #<number>` in the footer. To
+merely mention one for context, omit the `#` and no footer line is needed.
+
+To validate a commit message file before committing:
+
+```bash
+npx commitlint --format @commitlint/format < commit_msg.txt
+```

@@ -340,6 +340,22 @@ commit and complete the feature or bug fix.
 8. **Handle Commit Hook Failure:** If the commit fails due to a `commit-msg` hook
    rejection (e.g., commitlint error):
    - Read the error message carefully to identify the formatting issue.
+   - To validate a message file before committing:
+     ```bash
+     npx commitlint --format @commitlint/format < commit_msg.txt
+     ```
+   - To diagnose *why* a message is rejected (e.g., unexpected body/footer split),
+     inspect how the parser tokenizes it:
+     ```bash
+     cat commit_msg.txt | node -e "
+     const parse = require('@commitlint/parse');
+     let msg = '';
+     process.stdin.on('data', d => msg += d);
+     process.stdin.on('end', () =>
+       parse.default(msg.trim()).then(r => console.log(JSON.stringify(r, null, 2)))
+     );
+     " | jq
+     ```
    - Fix the commit message to comply with the project's commit conventions.
    - Retry the commit. The changes remain staged after a hook failure, so only the
      `git commit` command needs to be re-run.
@@ -377,6 +393,14 @@ guidelines:
   (e.g., `feat(branch):`, `test(remote):`).
 - **Write Clear Subjects:** Use imperative mood, lowercase, no period (e.g.,
   `feat(branch): add create method`).
+- **Issue and PR References in the Body:** Do not use `#<number>` in the commit
+  body — write `issue 1000` not `issue #1000`. A commitlint parser flaw treats
+  any line containing `#<number>` as a footer token, permanently breaking the
+  body/footer split for all subsequent lines.
+  - To **close** an issue/PR, use `Closes`/`Fixes`/`Resolves` with `#` in the
+    footer — e.g. `Closes #1000`.
+  - To **mention** an issue for context only, omit the `#` in the body and no
+    footer line is needed.
 
 ## Additional Guidelines
 
