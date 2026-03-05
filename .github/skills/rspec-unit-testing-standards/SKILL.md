@@ -18,8 +18,6 @@ Use RFC-style priority words to reduce ambiguity for AI behavior:
 
 ## Contents
 
-- [Priority Levels](#priority-levels)
-- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Structure](#structure)
@@ -41,7 +39,7 @@ Use RFC-style priority words to reduce ambiguity for AI behavior:
   - [Rule 14 (SHOULD): Prefer `subject` to represent the method call result](#rule-14-should-prefer-subject-to-represent-the-method-call-result)
   - [Rule 15 (SHOULD): Do not use `subject` when testing side effects](#rule-15-should-do-not-use-subject-when-testing-side-effects)
   - [Rule 16 (MUST): Use `let`/`let!` for inputs and shared setup; use `before` only for side effects](#rule-16-must-use-letlet-for-inputs-and-shared-setup-use-before-only-for-side-effects)
-  - [Rule 17 (SHOULD): Use `shared_context` only for substantial cross-file setup](#rule-17-should-use-shared_context-only-for-substantial-cross-file-setup)
+  - [Rule 17 (SHOULD): Keep test setup local; extract only for substantial cross-file reuse](#rule-17-should-keep-test-setup-local-extract-only-for-substantial-cross-file-reuse)
 - [Doubles and Stubbing](#doubles-and-stubbing)
   - [Rule 18 (MUST): Stub calls to non-trivial external objects](#rule-18-must-stub-calls-to-non-trivial-external-objects)
   - [Rule 19 (MUST): Use `allow` for incidental stubs; use `expect` for behavioral assertions](#rule-19-must-use-allow-for-incidental-stubs-use-expect-for-behavioral-assertions)
@@ -51,6 +49,7 @@ Use RFC-style priority words to reduce ambiguity for AI behavior:
   - [Rule 22 (MUST): Error assertions must specify both the error class and a message pattern](#rule-22-must-error-assertions-must-specify-both-the-error-class-and-a-message-pattern)
   - [Rule 23 (MUST): Test edge cases within the relevant `context` block](#rule-23-must-test-edge-cases-within-the-relevant-context-block)
   - [Rule 24 (MUST): Assert observable behavior, not implementation details](#rule-24-must-assert-observable-behavior-not-implementation-details)
+    - [Anti-pattern: structural identity and constant-existence tests](#anti-pattern-structural-identity-and-constant-existence-tests)
 - [Test Reliability](#test-reliability)
   - [Rule 25 (MUST): Keep unit tests deterministic](#rule-25-must-keep-unit-tests-deterministic)
   - [Rule 26 (MUST): Isolate and restore global/process state](#rule-26-must-isolate-and-restore-globalprocess-state)
@@ -61,17 +60,8 @@ Use RFC-style priority words to reduce ambiguity for AI behavior:
 
 ## How to use this skill
 
-Attach this file to your Copilot Chat context when writing, reviewing, or auditing
-unit tests. These rules apply to all RSpec unit specs under `spec/unit/`. Extend
-this baseline with domain-specific rules from related skills as needed — for
-example, `review-command-tests` adds additional conventions specific to
-`Git::Commands::*` specs.
-
-Example prompts:
-
-- "Using the rspec-unit-testing-standards skill, write unit tests for lib/git/commands/version.rb."
-- "Using the rspec-unit-testing-standards skill, review spec/unit/git/commands/version_spec.rb."
-- "Using the rspec-unit-testing-standards skill, audit all specs under spec/unit/git/commands/."
+These rules apply to all RSpec unit specs under `spec/unit/`. Extend this baseline
+with domain-specific rules from related skills as needed.
 
 Adoption and enforcement notes:
 
@@ -103,6 +93,30 @@ Use the class constant directly:
 RSpec.describe Git::CommandLine::Capturing do
 ```
 
+Never use a string in place of the constant, even for backward-compat aliases:
+
+```ruby
+# Bad — string describe; described_class is unavailable, coverage tooling may not
+# map the spec to the source file, and typos go undetected at load time.
+RSpec.describe 'Git::CommandLineResult' do
+```
+
+If the constant is a backward-compat alias (e.g. `Git::CommandLineResult =
+Git::CommandLine::Result`), use the alias constant itself as the describe argument —
+the alias is a real Ruby constant and loads without issue. The test content should
+verify that the alias points to the correct target using object identity (`be`),
+which would not be caught implicitly by a `NameError` on the canonical constant:
+
+```ruby
+RSpec.describe Git::CommandLineResult do
+  it 'is a backward-compatible alias for Git::CommandLine::Result' do
+    expect(described_class).to be(Git::CommandLine::Result)
+  end
+end
+```
+
+Do not test `#initialize` or other behavior here — that is already covered by the spec for the canonical class.
+
 ### Rule 2 (MUST): One `describe` block per public method
 
 Use `#method_name` for instance methods and `.method_name` for class methods.
@@ -113,6 +127,22 @@ describe '#call' do ...
 describe '.build' do ...
 describe '#initialize' do ...
 ```
+
+**Inherited `#initialize` in concrete subclasses (SHOULD):** If a class is
+directly instantiated by callers but does not override `#initialize`, its spec
+SHOULD still include a `describe '#initialize'` block using the minimal
+`have_attributes` form (see Rule 13). This serves two purposes:
+
+1. The spec is self-contained documentation of the constructor signature — a reader
+   does not need to consult the ancestor's spec to know what arguments the class
+   accepts or what attributes it exposes.
+2. It guards against an accidental `def initialize` override in the subclass that
+   silently drops or misroutes an argument, which the ancestor's spec would not
+   catch.
+
+Omit the inherited `#initialize` block only for abstract or internal classes that
+callers never instantiate directly — those are sufficiently covered by the
+ancestor's spec alone.
 
 ### Rule 3 (SHOULD): Add `# frozen_string_literal: true` at the top of every spec file
 
@@ -167,7 +197,22 @@ context 'without a timeout' do ...
 Each example tests a single logical behavior. A test described as "raises
 ArgumentError when options conflict" must verify both the error class and a message
 pattern — not just that any error was raised. Multiple `expect` calls are acceptable
-if they all verify the same behavior.
+if they all verify the same behavior — that is, a single application code change
+would cause them all to fail together. For example, asserting the type, status, and
+contents of a single return value is one concept ("the result carries the right
+data"), not five separate behaviors:
+
+```ruby
+# Good — all assertions verify one concept: the returned result is correct
+it 'returns a result with the failure details' do
+  result = described_instance.run('status', raise_on_failure: false)
+  expect(result).to be_a(Git::CommandLineResult)
+  expect(result.status.success?).to be false
+  expect(result.status.exitstatus).to eq(1)
+  expect(result.stdout).to eq("modified: foo.rb\n")
+  expect(result.stderr).to eq('fatal: not a git repository')
+end
+```
 
 ### Rule 10 (SHOULD): Use the standard nesting pattern
 
@@ -201,11 +246,16 @@ more descriptive examples. Do not override `subject` in nested `context` blocks
 
 ### Rule 12 (SHOULD): Immediately follow `subject` with `let` defaults
 
-Define `let` defaults for all inputs and arguments. Nested `context` blocks override
-only the `let` values relevant to that scenario — leave everything else at its
-default:
+`subject` must be the first declaration in a `describe` block. Do not place `let`
+declarations above `subject` — doing so buries the call under test and inverts the
+natural reading order (what is being tested → what inputs it receives).
+
+Define `let` defaults for all inputs and arguments immediately after `subject`.
+Nested `context` blocks override only the `let` values relevant to that scenario —
+leave everything else at its default:
 
 ```ruby
+# Good — subject first, then let defaults
 describe '#call' do
   subject(:result) { described_class.new(command, options).call }
 
@@ -216,6 +266,13 @@ describe '#call' do
     let(:options) { { timeout: 10 } }
     it { is_expected.to ... }
   end
+end
+
+# Bad — let declarations above subject obscure what is under test
+describe '#call' do
+  let(:command) { ['git', 'status'] }
+  let(:options) { {} }
+  subject(:result) { described_class.new(command, options).call }
 end
 ```
 
@@ -251,6 +308,27 @@ Guidelines:
   must be able to override individual inputs.
 - **Omit when construction is trivial** or varies between methods.
 - For `#initialize`, alias it: `subject(:instance) { described_instance }`.
+- **When `#initialize` only stores arguments via `attr_reader`, use a single
+  `have_attributes` example** — separate `it` blocks for each attribute add noise
+  without isolation benefit when there is no conditional logic to branch on:
+
+  ```ruby
+  describe '#initialize' do
+    subject(:instance) { described_instance }
+
+    it 'stores all constructor arguments' do
+      expect(instance).to have_attributes(
+        env: env,
+        binary_path: binary_path,
+        global_opts: global_opts,
+        logger: logger
+      )
+    end
+  end
+  ```
+
+  Use separate `it` blocks only when `#initialize` performs validation or
+  conditional logic — each branch then deserves its own example.
 
 ### Rule 14 (SHOULD): Prefer `subject` to represent the method call result
 
@@ -295,13 +373,21 @@ precondition that other code depends on). Use `before` only for imperative side
 effects (e.g., creating files, setting env vars). Avoid instance variables set in
 `before` blocks.
 
-### Rule 17 (SHOULD): Use `shared_context` only for substantial cross-file setup
+### Rule 17 (SHOULD): Keep test setup local; extract only for substantial cross-file reuse
 
 `shared_context` is appropriate when identical multi-step environment setup must be
 shared across multiple spec files and duplicating it inline would be substantial.
 Do not use `shared_context` within a single spec file — use the `let` hierarchy
 instead. A unit test that needs a `shared_context` to run is almost certainly an
 integration test; move it to `spec/integration/`.
+
+The same restraint applies to shared helper methods. Do not extract a helper to a
+support file solely because two spec files contain methods with similar structure.
+If the helpers construct different doubles, mock different classes, or carry
+different default attributes, the similarity is incidental — not meaningful
+duplication. Each spec file should be self-contained and readable without jumping
+to external helpers. Extract only when the helpers are truly identical and used
+across three or more spec files.
 
 Defining shared contexts:
 
@@ -339,6 +425,15 @@ expect(subject).to eq(expected)
 # Good — the call itself is what's being verified
 expect(executer).to receive(:run).with('git', 'status')
 subject
+
+# Good — the call is behavioral and arguments require destructuring;
+# use a block with nested expects when .with() cannot cleanly express
+# the assertion (e.g., complex kwargs mixed with positional args)
+expect(executer).to receive(:run) do |*args, **opts|
+  expect(opts[:timeout_after]).to eq(5)
+  mock_result
+end
+subject
 ```
 
 ### Rule 20 (MUST): Use verifying doubles
@@ -361,14 +456,24 @@ let(:process_executer) { double('ProcessExecuter') }
 > - Plain `double` is acceptable for duck-type collaborators where there is no
 >   single concrete class to verify against (e.g., `execution_context` in
 >   command specs implements a duck-type interface, not one specific class).
+> - Plain `double` is acceptable when the class delegates methods via
+>   `SimpleDelegator`, `Delegator`, or `method_missing`.  `instance_double`
+>   only verifies methods that `method_defined?` returns `true` for, so
+>   delegated methods (e.g., `signaled?`, `exitstatus` forwarded from
+>   `Process::Status`) would be incorrectly rejected.
 >
-> In both cases, document the reason with an inline comment so the use of
+> In all cases, document the reason with an inline comment so the use of
 > `double` is not mistaken for carelessness:
 >
 > ```ruby
 > # Duck-type collaborator: command specs depend on the #command_capturing
 > # interface, not a single concrete ExecutionContext class.
 > let(:execution_context) { double('ExecutionContext') }
+>
+> # Plain double: ProcessExecuter result classes delegate to Process::Status
+> # via SimpleDelegator/method_missing, so instance_double cannot verify the
+> # delegated interface (signaled?, exitstatus, etc.).
+> double('ProcessExecuter::ResultWithCapture', success?: true, signaled?: false)
 > ```
 
 ## Coverage
@@ -387,14 +492,27 @@ design smell.
 ### Rule 22 (MUST): Error assertions must specify both the error class and a message pattern
 
 `raise_error(ErrorClass)` alone is underspecified — any instance of that class
-satisfies it regardless of cause:
+satisfies it regardless of cause. This applies equally when using the block form
+to verify properties of the raised error object: the block does not substitute for
+a message check, and RSpec allows both together.
 
 ```ruby
-# Good
+# Good — class + message pattern only
 expect { action }.to raise_error(ArgumentError, /cannot combine :force and :dry_run/)
+
+# Good — class + message pattern + block to verify error properties
+expect { action }.to raise_error(Git::FailedError, /git.*status/) do |error|
+  expect(error.result.status.exitstatus).to eq(1)
+end
 
 # Bad — passes for any ArgumentError, even unrelated ones
 expect { action }.to raise_error(ArgumentError)
+
+# Bad — block form is not an exception to the message requirement;
+# still passes for any Git::FailedError regardless of cause
+expect { action }.to raise_error(Git::FailedError) do |error|
+  expect(error.result.status.exitstatus).to eq(1)
+end
 ```
 
 > **Exception:** When the error message is produced by an external library or by git
@@ -420,6 +538,33 @@ expect(subject).to eq('v2.43.0')
 # Bad — passes for any non-nil return, verifies nothing useful
 expect(subject).not_to be_nil
 ```
+
+**Decision test — independent failure mode:** Before writing or approving an
+assertion, ask: "What application code change would cause *only this test* to fail?"
+If the answer is "nothing — every other test would also fail first," the assertion
+is redundant and should be removed.
+
+#### Anti-pattern: structural identity and constant-existence tests
+
+Do not write tests that only verify a constant exists, that a `require` loaded
+successfully, or that a namespace is a `Module` vs a `Class`:
+
+```ruby
+# Bad — proves nothing about behavior; any real test that uses the class
+# would fail with NameError first if the constant were missing
+it 'exposes Capturing' do
+  expect(Git::CommandLine::Capturing).to be_a(Class)
+end
+
+# Bad — structural choice, not observable behavior from a caller's perspective
+it 'is a module (not a class)' do
+  expect(described_class).to be_a(Module)
+end
+```
+
+Constant presence is proven implicitly by every test that instantiates or calls
+the class. These tests add no coverage of behavior and should not be written or
+approved in review.
 
 ## Test Reliability
 
