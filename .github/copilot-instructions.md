@@ -38,6 +38,26 @@ Select the skill for the task at hand and attach it to your Copilot Chat context
 | Audit or create a Copilot skill | [reviewing-skills](skills/reviewing-skills/SKILL.md) / [make-skill-template](skills/make-skill-template/SKILL.md) |
 | Code review / explain code | *(no skill needed)* |
 
+## Skill Loading Enforcement
+
+When a skill applies to a request, the agent MUST read the entire `SKILL.md` file
+before taking any other action on that request.
+
+- Read from line 1 through EOF.
+- If a single read is not enough, perform sequential reads that cover all lines
+  with no gaps.
+- Do not begin analysis, edits, commands, or review output until the full file is
+  read.
+
+Before proceeding, the agent MUST provide a short completion check that includes:
+
+- Total line count of the `SKILL.md` file.
+- The final heading in the file.
+- Confirmation that all lines were read.
+- The last non-empty line in the file.
+
+If full-file reading is incomplete, the agent MUST stop and finish reading first.
+
 ### Command-Migration Skills
 
 | Skill | File |
