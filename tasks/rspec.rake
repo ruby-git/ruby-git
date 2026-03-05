@@ -17,6 +17,24 @@ RSpec::Core::RakeTask.new('spec:integration') do |t|
   t.pattern = 'spec/integration/**/*_spec.rb'
 end
 
+# Run all specs in parallel
+desc 'Run all specs in parallel'
+task 'spec:parallel' do
+  sh 'bundle exec parallel_rspec spec/'
+end
+
+# Run only unit specs in parallel
+desc 'Run unit specs in parallel'
+task 'spec:unit:parallel' do
+  sh 'bundle exec parallel_rspec spec/unit/'
+end
+
+# Run only integration specs in parallel
+desc 'Run integration specs in parallel'
+task 'spec:integration:parallel' do
+  sh 'bundle exec parallel_rspec spec/integration/'
+end
+
 CLEAN << 'coverage'
 CLEAN << '.rspec_status'
 CLEAN << 'rspec-report.xml'

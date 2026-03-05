@@ -45,7 +45,7 @@ module Test
 
       teardown
       def git_teardown
-        FileUtils.rm_r(@tmp_path) if instance_variable_defined?(:@tmp_path)
+        FileUtils.rm_rf(@tmp_path) if instance_variable_defined?(:@tmp_path)
       end
 
       def in_bare_repo_clone
@@ -64,10 +64,7 @@ module Test
 
       def create_temp_repo(clone_name)
         clone_path = File.join(TEST_FIXTURES, clone_name)
-        filename = "git_test#{Time.now.to_i}#{rand(300).to_s.rjust(3, '0')}"
-        path = File.expand_path(File.join(Dir.tmpdir, filename))
-        FileUtils.mkdir_p(path)
-        @tmp_path = File.realpath(path)
+        @tmp_path = File.realpath(Dir.mktmpdir('git_test'))
         FileUtils.cp_r(clone_path, @tmp_path)
         tmp_path = File.join(@tmp_path, File.basename(clone_path))
         FileUtils.cd tmp_path do
