@@ -47,10 +47,32 @@ apply to all documentation regardless of element type:
 
 **Blank lines around tags**
 
-Every YARD tag (`@param`, `@return`, `@raise`, `@example`, `@api`, etc.) must be
-preceded by a blank comment line (`#`). Tags of the same kind may be grouped
-together without blank lines between them, but the group as a whole must be preceded
-by a blank line.
+Every individual YARD tag must be preceded by a blank comment line (`#`), except
+that the first tag in a doc comment may follow directly after the description.
+A YARD tag is any comment token matching `@!?[a-z_]+` — that is, `@word` (regular
+tags such as `@param`, `@return`, `@raise`, `@api`, `@abstract`, `@deprecated`,
+etc.) or `@!word` (directives such as `@!attribute`, `@!method`, `@!scope`, etc.).
+
+Within the tag block there are no other exceptions: consecutive same-kind tags (e.g.
+multiple `@param` lines) each require their own preceding blank line.
+
+Correct:
+
+```ruby
+# @param foo [String] the first argument
+#
+# @param bar [Integer] the second argument
+#
+# @return [String] the result
+```
+
+Incorrect:
+
+```ruby
+# @param foo [String] the first argument
+# @param bar [Integer] the second argument
+# @return [String] the result
+```
 
 **Short descriptions**
 
@@ -64,6 +86,45 @@ The short description (the first line of any doc comment, or the inline text of 
 If more explanation is needed, use additional paragraphs after the short description.
 Separate each paragraph from the next with a blank comment line (`#`). Wrap
 individual lines at 90 characters.
+
+**`@return` must always include a type**
+
+Every `@return` tag must include a `[Type]` specifier. `@return the value` is
+incorrect; write `@return [Object] the value` (or a more specific type). If the
+return value is the block's return value, use `@return [Object]`.
+
+**No shell calls in `@example` blocks**
+
+Never use backtick shell calls (`` `true` ``, `` `git version` ``) or process-status
+globals (`$?`, `$CHILD_STATUS`) in `@example` blocks. They are side-effecting,
+environment-dependent, and confuse readers about the type of object being
+demonstrated. Construct example objects directly in Ruby instead:
+
+Incorrect:
+
+```ruby
+# @example
+#   `true`
+#   result = Git::CommandLine::Result.new([], $?, '', '')
+```
+
+Correct:
+
+```ruby
+# @example
+#   status = instance_double(ProcessExecuter::Result)
+#   result = Git::CommandLine::Result.new([], status, '', '')
+```
+
+**Cross-reference links only resolve to documented public objects**
+
+YARD renders `{ClassName#method}` as a hyperlink only when the target method is
+included in the generated documentation. Private methods are excluded by default.
+Do not write `{Git::Lib#some_private_method}` — it will render as plain text and
+may generate an unresolved reference warning.
+
+If you need to refer to a private method, describe it in prose instead, or link to
+the public method that callers should use.
 
 **Inline code formatting**
 
