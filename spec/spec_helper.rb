@@ -66,7 +66,9 @@ SimpleCov::RSpec.start(
   coverage_threshold: 100,
   fail_on_low_coverage: false,
   list_uncovered_lines: false
-)
+) do
+  command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
+end
 
 require 'git'
 

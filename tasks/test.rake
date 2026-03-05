@@ -12,5 +12,8 @@ task :test do
   # $ bin/test test_archive.rb test_object.rb
 end
 
-desc 'Run all tests (TestUnit and RSpec)'
-task test_all: %i[test spec]
+desc 'Run Test::Unit tests in parallel'
+task 'test:parallel' do
+  sh({ 'PARALLEL_TESTS_EXECUTABLE' => 'ruby -Itests' },
+     "bundle exec parallel_test tests/units/ --suffix 'test_.+\\.rb$'")
+end

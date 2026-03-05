@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'main_branch_shared_rubocop_config', '~> 0.1'
   spec.add_development_dependency 'minitar', '~> 1.1'
   spec.add_development_dependency 'mocha', '~> 2.8'
+  spec.add_development_dependency 'parallel_tests', '~> 5.6'
   spec.add_development_dependency 'rake', '~> 13.3'
   spec.add_development_dependency 'rspec', '~> 3.13'
   spec.add_development_dependency 'rubocop', '~> 1.82'
