@@ -705,12 +705,12 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `clean` | `Git::Commands::Clean` | `spec/unit/git/commands/clean_spec.rb` | `git clean` |
 | `branches_all` | `Git::Commands::Branch::List` | `spec/unit/git/commands/branch/list_spec.rb` | `git branch --list` |
 | `branch_new` | `Git::Commands::Branch::Create` | `spec/unit/git/commands/branch/create_spec.rb` | `git branch <name>` |
-| `branch_delete` | `Git::Commands::Branch::Delete` | `spec/unit/git/commands/branch/delete_spec.rb` | `git branch --delete` |
-| N/A (new) | `Git::Commands::Branch::Move` | `spec/unit/git/commands/branch/move_spec.rb` | `git branch --move` |
+| `branch_delete` | `Git::Commands::Branch::Delete` | `spec/unit/git/commands/branch/delete_spec.rb` | `git branch --delete <branch>` |
+| N/A (new) | `Git::Commands::Branch::Move` | `spec/unit/git/commands/branch/move_spec.rb` | `git branch --move <old-name> <new-name>` |
 | `branch_current` | `Git::Commands::Branch::ShowCurrent` | `spec/unit/git/commands/branch/show_current_spec.rb` | `git branch --show-current` |
-| N/A (new) | `Git::Commands::Branch::Copy` | `spec/unit/git/commands/branch/copy_spec.rb` | `git branch --copy` |
-| N/A (new) | `Git::Commands::Branch::SetUpstream` | `spec/unit/git/commands/branch/set_upstream_spec.rb` | `git branch --set-upstream-to` |
-| N/A (new) | `Git::Commands::Branch::UnsetUpstream` | `spec/unit/git/commands/branch/unset_upstream_spec.rb` | `git branch --unset-upstream` |
+| N/A (new) | `Git::Commands::Branch::Copy` | `spec/unit/git/commands/branch/copy_spec.rb` | `git branch --copy <old-name> <new-name>` |
+| N/A (new) | `Git::Commands::Branch::SetUpstream` | `spec/unit/git/commands/branch/set_upstream_spec.rb` | `git branch --set-upstream-to <upstream> [<branch>]` |
+| N/A (new) | `Git::Commands::Branch::UnsetUpstream` | `spec/unit/git/commands/branch/unset_upstream_spec.rb` | `git branch --unset-upstream [<branch>]` |
 | `diff_full` | `Git::Commands::Diff::Patch` | `spec/unit/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
 | `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/unit/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
 | `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/unit/git/commands/diff/raw_spec.rb` | `git diff --raw` |
@@ -726,7 +726,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Merge::Abort` | `spec/unit/git/commands/merge/abort_spec.rb` | `git merge --abort` |
 | N/A (new) | `Git::Commands::Merge::Continue` | `spec/unit/git/commands/merge/continue_spec.rb` | `git merge --continue` |
 | N/A (new) | `Git::Commands::Merge::Quit` | `spec/unit/git/commands/merge/quit_spec.rb` | `git merge --quit` |
-| `merge_base` | `Git::Commands::MergeBase` | `spec/unit/git/commands/merge_base_spec.rb` | `git merge-base` |
+| `merge_base` | `Git::Commands::MergeBase` | `spec/unit/git/commands/merge_base_spec.rb` | `git merge-base <commit> <commit>...` |
 | N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
 | N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
 | N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
@@ -753,13 +753,13 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [x] `branches_all` → `Git::Commands::Branch::List` — `git branch --list` (returns `BranchInfo` value objects)
 - [x] `branch_new` → `Git::Commands::Branch::Create` — `git branch <name> [start-point]`
-- [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete`
-- [x] N/A (new) → `Git::Commands::Branch::Move` — `git branch --move`
+- [x] `branch_delete` → `Git::Commands::Branch::Delete` — `git branch --delete <branch>`
+- [x] N/A (new) → `Git::Commands::Branch::Move` — `git branch --move <old-name> <new-name>`
 - [x] `branch_current` → `Git::Commands::Branch::ShowCurrent` — `git branch --show-current`
-- [x] N/A (new) → `Git::Commands::Branch::Copy` — `git branch --copy`
-- [x] N/A (new) → `Git::Commands::Branch::SetUpstream` — `git branch --set-upstream-to`
-- [x] N/A (new) → `Git::Commands::Branch::UnsetUpstream` — `git branch --unset-upstream`
-- [x] `merge_base` → `Git::Commands::MergeBase` — `git merge-base`
+- [x] N/A (new) → `Git::Commands::Branch::Copy` — `git branch --copy <old-name> <new-name>`
+- [x] N/A (new) → `Git::Commands::Branch::SetUpstream` — `git branch --set-upstream-to <upstream> [<branch>]`
+- [x] N/A (new) → `Git::Commands::Branch::UnsetUpstream` — `git branch --unset-upstream [<branch>]`
+- [x] `merge_base` → `Git::Commands::MergeBase` — `git merge-base <commit> <commit>...`
 - [x] `checkout` / `checkout_file` → `Git::Commands::Checkout::Branch` / `Git::Commands::Checkout::Files` — `git checkout`
 - [x] `merge` → `Git::Commands::Merge::Start` — `git merge`
 - [x] N/A (new) → `Git::Commands::Merge::Abort` / `Git::Commands::Merge::Continue` / `Git::Commands::Merge::Quit` — `git merge --abort/--continue/--quit`
