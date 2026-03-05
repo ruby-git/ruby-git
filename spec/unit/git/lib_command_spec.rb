@@ -5,13 +5,14 @@ require 'spec_helper'
 RSpec.describe Git::Lib do
   let(:base) { instance_double(Git::Base) }
   let(:logger) { Logger.new(nil) }
-  let(:command_line) { instance_double(Git::CommandLine) }
+  let(:capturing_command_line) { instance_double(Git::CommandLine::Capturing) }
+  let(:streaming_command_line) { instance_double(Git::CommandLine::Streaming) }
 
   subject(:lib) { described_class.new(base, logger) }
 
   before do
-    allow(lib).to receive(:command_line_capturing).and_return(command_line)
-    allow(lib).to receive(:command_line_streaming).and_return(command_line)
+    allow(lib).to receive(:command_line_capturing).and_return(capturing_command_line)
+    allow(lib).to receive(:command_line_streaming).and_return(streaming_command_line)
   end
 
   describe '#command_capturing' do
@@ -36,7 +37,7 @@ RSpec.describe Git::Lib do
 
     context 'when command succeeds' do
       it 'returns a CommandLineResult' do
-        allow(command_line).to receive(:run_with_capture).and_return(successful_result)
+        allow(capturing_command_line).to receive(:run).and_return(successful_result)
 
         result = lib.command_capturing('version')
 
@@ -46,7 +47,7 @@ RSpec.describe Git::Lib do
 
     context 'when command fails with non-zero exit (default behavior)' do
       it 'raises Git::FailedError' do
-        allow(command_line).to receive(:run_with_capture).and_raise(Git::FailedError.new(failed_result))
+        allow(capturing_command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
 
         expect do
           lib.command_capturing('rev-parse', 'nonexistent')
@@ -56,7 +57,7 @@ RSpec.describe Git::Lib do
 
     context 'when command fails with raise_on_failure: false' do
       it 'returns CommandLineResult without raising' do
-        allow(command_line).to receive(:run_with_capture).and_return(failed_result)
+        allow(capturing_command_line).to receive(:run).and_return(failed_result)
 
         result = lib.command_capturing('rev-parse', 'nonexistent', raise_on_failure: false)
 
@@ -67,11 +68,11 @@ RSpec.describe Git::Lib do
 
     context 'with env: option' do
       it 'merges env into the command_line call' do
-        allow(command_line).to receive(:run_with_capture).and_return(successful_result)
+        allow(capturing_command_line).to receive(:run).and_return(successful_result)
 
         lib.command_capturing('rev-parse', '--git-dir', env: { 'GIT_DIR' => '/custom/path' })
 
-        expect(command_line).to have_received(:run_with_capture).with(
+        expect(capturing_command_line).to have_received(:run).with(
           'rev-parse', '--git-dir',
           hash_including(env: { 'GIT_DIR' => '/custom/path' })
         )
@@ -101,12 +102,12 @@ RSpec.describe Git::Lib do
 
     context 'when command succeeds' do
       it 'delegates to CommandLine#run and returns a CommandLineResult' do
-        allow(command_line).to receive(:run).and_return(successful_result)
+        allow(streaming_command_line).to receive(:run).and_return(successful_result)
 
         result = lib.command_streaming('cat-file', '--batch', out: StringIO.new)
 
         expect(result).to be(successful_result)
-        expect(command_line).to have_received(:run).with(
+        expect(streaming_command_line).to have_received(:run).with(
           'cat-file', '--batch',
           hash_including(out: instance_of(StringIO))
         )
@@ -115,7 +116,7 @@ RSpec.describe Git::Lib do
 
     context 'when command fails with non-zero exit (default behavior)' do
       it 'raises Git::FailedError' do
-        allow(command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
+        allow(streaming_command_line).to receive(:run).and_raise(Git::FailedError.new(failed_result))
 
         expect do
           lib.command_streaming('cat-file', '--batch', out: StringIO.new)
@@ -125,7 +126,7 @@ RSpec.describe Git::Lib do
 
     context 'when command fails with raise_on_failure: false' do
       it 'returns CommandLineResult without raising' do
-        allow(command_line).to receive(:run).and_return(failed_result)
+        allow(streaming_command_line).to receive(:run).and_return(failed_result)
 
         result = lib.command_streaming('cat-file', '--batch', out: StringIO.new, raise_on_failure: false)
 
@@ -136,11 +137,11 @@ RSpec.describe Git::Lib do
 
     context 'with env: option' do
       it 'passes env into the command_line call' do
-        allow(command_line).to receive(:run).and_return(successful_result)
+        allow(streaming_command_line).to receive(:run).and_return(successful_result)
 
         lib.command_streaming('cat-file', out: StringIO.new, env: { 'GIT_DIR' => '/custom/path' })
 
-        expect(command_line).to have_received(:run).with(
+        expect(streaming_command_line).to have_received(:run).with(
           'cat-file',
           hash_including(env: { 'GIT_DIR' => '/custom/path' })
         )
@@ -150,11 +151,11 @@ RSpec.describe Git::Lib do
     context 'with out: option' do
       it 'passes out: to CommandLine#run' do
         out_io = StringIO.new
-        allow(command_line).to receive(:run).and_return(successful_result)
+        allow(streaming_command_line).to receive(:run).and_return(successful_result)
 
         lib.command_streaming('show', 'HEAD:README', out: out_io)
 
-        expect(command_line).to have_received(:run).with(
+        expect(streaming_command_line).to have_received(:run).with(
           'show', 'HEAD:README',
           hash_including(out: out_io)
         )
@@ -612,7 +613,7 @@ RSpec.describe Git::Lib do
     end
 
     it 'streams content directly to a tempfile via the streaming path when given a block' do
-      allow(command_line).to receive(:run) do |*_args, **kwargs|
+      allow(streaming_command_line).to receive(:run) do |*_args, **kwargs|
         kwargs[:out].write('hello')
         command_result('')
       end
@@ -620,7 +621,7 @@ RSpec.describe Git::Lib do
       yielded = nil
       lib.cat_file_contents('HEAD') { |file| yielded = file.read }
 
-      expect(command_line).to have_received(:run).with(
+      expect(streaming_command_line).to have_received(:run).with(
         'cat-file', '-p', 'HEAD',
         hash_including(out: instance_of(File))
       )
@@ -628,7 +629,7 @@ RSpec.describe Git::Lib do
     end
 
     it 'does not buffer content via CatFile::Pretty when a block is given' do
-      allow(command_line).to receive(:run) do |*_args, **kwargs|
+      allow(streaming_command_line).to receive(:run) do |*_args, **kwargs|
         kwargs[:out].write('hello')
         command_result('')
       end
@@ -648,11 +649,11 @@ RSpec.describe Git::Lib do
     it 'uses the streaming execution path (not capturing) to write archive content' do
       Tempfile.create('archive_test') do |out_file|
         out_file.close
-        allow(command_line).to receive(:run).and_return(command_result(''))
+        allow(streaming_command_line).to receive(:run).and_return(command_result(''))
 
         lib.archive('HEAD', out_file.path)
 
-        expect(command_line).to have_received(:run).with(
+        expect(streaming_command_line).to have_received(:run).with(
           'archive', anything, anything,
           hash_including(out: instance_of(File))
         )
@@ -662,12 +663,12 @@ RSpec.describe Git::Lib do
     it 'does not use the capturing path to write archive content' do
       Tempfile.create('archive_test') do |out_file|
         out_file.close
-        allow(command_line).to receive(:run).and_return(command_result(''))
-        allow(command_line).to receive(:run_with_capture)
+        allow(streaming_command_line).to receive(:run).and_return(command_result(''))
+        allow(capturing_command_line).to receive(:run)
 
         lib.archive('HEAD', out_file.path)
 
-        expect(command_line).not_to have_received(:run_with_capture)
+        expect(capturing_command_line).not_to have_received(:run)
       end
     end
   end
@@ -676,14 +677,14 @@ RSpec.describe Git::Lib do
     it 'uses the streaming execution path to write staged content to the given IO' do
       out_io = StringIO.new
 
-      allow(command_line).to receive(:run) do |*_args, **kwargs|
+      allow(streaming_command_line).to receive(:run) do |*_args, **kwargs|
         kwargs[:out].write('staged content')
         command_result('')
       end
 
       result = lib.send(:write_staged_content, 'file.txt', 2, out_io)
 
-      expect(command_line).to have_received(:run).with(
+      expect(streaming_command_line).to have_received(:run).with(
         'show', ':2:file.txt',
         hash_including(out: out_io)
       )
@@ -692,12 +693,12 @@ RSpec.describe Git::Lib do
 
     it 'does not use the capturing path for write_staged_content' do
       out_io = StringIO.new
-      allow(command_line).to receive(:run).and_return(command_result(''))
-      allow(command_line).to receive(:run_with_capture)
+      allow(streaming_command_line).to receive(:run).and_return(command_result(''))
+      allow(capturing_command_line).to receive(:run)
 
       lib.send(:write_staged_content, 'file.txt', 3, out_io)
 
-      expect(command_line).not_to have_received(:run_with_capture)
+      expect(capturing_command_line).not_to have_received(:run)
     end
   end
 

@@ -2103,7 +2103,7 @@ module Git
     #   them to this method. See {Git::Commands::Clone#call} for an example
     #   of a command that exposes `:timeout`.
     #
-    # @see Git::CommandLine#run_with_capture
+    # @see Git::CommandLine::Capturing#run
     # @see #command_line_capturing
     #
     # @return [Git::CommandLineResult] the result of the command
@@ -2131,7 +2131,7 @@ module Git
 
       env_overrides = options_hash.delete(:env)
       raise_on_failure = options_hash.delete(:raise_on_failure)
-      command_line_capturing.run_with_capture(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
+      command_line_capturing.run(*, raise_on_failure: raise_on_failure, env: env_overrides, **options_hash)
     end
 
     COMMAND_STREAMING_ARG_DEFAULTS = {
@@ -2178,7 +2178,7 @@ module Git
     # @raise [Git::TimeoutError] if the command times out
     # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
-    # @see Git::CommandLine#run
+    # @see Git::CommandLine::Streaming#run
     # @see #command_line_streaming
     #
     def command_streaming(*, **options_hash)
@@ -2688,36 +2688,34 @@ module Git
       end
     end
 
-    # Returns the {Git::CommandLine} instance used for capturing execution
+    # Returns the {Git::CommandLine::Capturing} instance used for capturing execution
     #
-    # Memoized factory for the capturing execution path. Wired to
-    # {#command_capturing} and will be replaced with a
-    # `Git::CommandLine::Capturing` instance once that subclass is extracted
-    # in a follow-up refactor.
+    # Memoized factory for the capturing execution path.  Instantiates
+    # {Git::CommandLine::Capturing} with the current environment, binary path,
+    # global options, and logger.
     #
-    # @return [Git::CommandLine]
+    # @return [Git::CommandLine::Capturing]
     #
-    # @see Git::CommandLine#run_with_capture
+    # @see Git::CommandLine::Capturing#run
     #
     def command_line_capturing
       @command_line_capturing ||=
-        Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+        Git::CommandLine::Capturing.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
     end
 
-    # Returns the {Git::CommandLine} instance used for streaming execution
+    # Returns the {Git::CommandLine::Streaming} instance used for streaming execution
     #
-    # Memoized factory for the streaming execution path. Wired to
-    # {#command_streaming} and will be replaced with a
-    # `Git::CommandLine::Streaming` instance once that subclass is extracted
-    # in a follow-up refactor.
+    # Memoized factory for the streaming execution path.  Instantiates
+    # {Git::CommandLine::Streaming} with the current environment, binary path,
+    # global options, and logger.
     #
-    # @return [Git::CommandLine]
+    # @return [Git::CommandLine::Streaming]
     #
-    # @see Git::CommandLine#run
+    # @see Git::CommandLine::Streaming#run
     #
     def command_line_streaming
       @command_line_streaming ||=
-        Git::CommandLine.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+        Git::CommandLine::Streaming.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
     end
 
     # Takes the diff command line output (as Array) and parse it into a Hash
