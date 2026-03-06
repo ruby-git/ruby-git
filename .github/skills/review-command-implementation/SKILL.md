@@ -180,6 +180,11 @@ automatically during `args_definition.bind(...)` — do not set defaults manuall
 - [ ] `operand ... skip_cli: true` is used only for domain inputs that must bind/validate
   but must not emit to argv (for example, stdin-fed object lists)
 - [ ] `execution_option` is used for execution kwargs (`timeout:`, `chdir:`), not `skip_cli`
+- [ ] `execution_option` is **not** used for kwargs whose value must be unconditionally
+      fixed regardless of caller input. If a kwarg always has a specific required value
+      (e.g. `chomp: false` for commands returning raw content where trailing newlines are
+      data), hardcode it in a `def call` override instead — exposing it via
+      `execution_option` would allow callers to override a value that must never change.
 
 ### 5. Internal compatibility contract
 
