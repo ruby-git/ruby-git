@@ -78,6 +78,11 @@ class SomeCommand < Git::Commands::Base
 end
 ```
 
+The `@!method` directive is the correct YARD form when the class contains **no
+explicit `def call`** — YARD uses it to render per-command docs on the inherited
+`call` method. When the class **does** define `def call` explicitly, place YARD
+docs directly above `def call` and omit the `@!method` directive.
+
 Shared behavior lives in `Base`:
 
 - binds arguments
@@ -102,6 +107,7 @@ Shared behavior lives in `Base`:
 - [ ] Does not parse output in command class
 
 **Commands with legitimate `call` overrides** (input validation, stdin protocol, non-trivial option routing):
+- [ ] YARD docs are placed **directly above** `def call` (no `@!method` directive)
 - [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
 - [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
 - [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
