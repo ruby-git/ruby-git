@@ -22,17 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (41/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (42/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `log_commits` / `full_log_commits`** → `Git::Commands::Log`
+**Migrate `show`** → `Git::Commands::Show`
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def log_commits` and `def full_log_commits`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def show`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -147,7 +147,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-  - `bundle exec rspec spec/unit/git/commands/log_spec.rb` — new tests pass
+  - `bundle exec rspec spec/unit/git/commands/show_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -735,6 +735,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
 | `cat_file_*` | `Git::Commands::CatFile::*` | `spec/unit/git/commands/cat_file/*_spec.rb` | `git cat-file` |
 | `checkout_index` | `Git::Commands::CheckoutIndex` | `spec/unit/git/commands/checkout_index_spec.rb` | `git checkout-index` |
+| `log_commits` / `full_log_commits` | `Git::Commands::Log` | `spec/unit/git/commands/log_spec.rb` | `git log` |
 
 #### ⏳ Commands To Migrate
 
@@ -768,7 +769,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Inspection & Comparison:**
 
-- [ ] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
+- [x] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
 - [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
 - [ ] `show` → `Git::Commands::Show` — `git show`
