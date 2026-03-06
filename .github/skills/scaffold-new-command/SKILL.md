@@ -375,6 +375,11 @@ type, alias conventions, `as:` usage, modifier rules, constraint declarations
   (`value_option :pathspec, as_operand: true, separator: '--'`) for the post-`--`
   group
 - When the SYNOPSIS has pure nesting (`[<a> [<b>]]`), use plain `operand` entries
+- For each operand, derive `required:` and `repeatable:` directly from the SYNOPSIS
+  notation — `[<arg>]` → optional (default), `<arg>` → `required: true`,
+  `[<arg>…]` → `repeatable: true`, `<arg>…` → `required: true, repeatable: true`.
+  See [CHECKLIST.md section 4](../review-arguments-dsl/CHECKLIST.md#4-correct-modifiers)
+  for the complete table.
 - Avoid `as:` unless it's a Ruby keyword conflict, combined short flag, or
   multi-token flag
 
