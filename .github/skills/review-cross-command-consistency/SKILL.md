@@ -54,8 +54,8 @@ The invocation needs two or more sibling command files from the same family.
 - [ ] all classes use `class < Git::Commands::Base`
 - [ ] all require `git/commands/base`
 - [ ] all use `arguments do ... end` (no legacy `ARGS =` constants)
-- [ ] all use YARD directive `# @!method call(*, **)` with nested `@overload` blocks
-- [ ] all use YARD shim `def call(...) = super # rubocop:disable Lint/UselessMethodDefinition`, OR have a legitimate `call` override (stdin protocol, input validation, non-trivial option routing) — not both
+- [ ] simple commands carry YARD directive `# @!method call(*, **)` with nested `@overload` blocks and have no explicit `def call` definition
+- [ ] commands with legitimate `call` overrides (stdin protocol, input validation, non-trivial option routing) use explicit YARD docs instead and do **not** carry the `# @!method` directive
 - [ ] commands with `call` overrides use `Base#with_stdin` for stdin feeding and delegate exit-status validation to `validate_exit_status!`
 
 ### 2. Arguments DSL consistency

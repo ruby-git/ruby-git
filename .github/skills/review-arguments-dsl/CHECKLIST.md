@@ -12,6 +12,24 @@
 | pathspec-style operands (keyword arg) | `value_option ... as_operand: true, separator: '--'` | `value_option :pathspec, as_operand: true, separator: '--', repeatable: true` — caller passes `pathspec: ['f1', 'f2']` |
 | pathspec-style operands (positional arg) | `operand ... separator: '--'` | `operand :pathspec, repeatable: true, separator: '--'` — caller passes positionals `cmd.call('f1', 'f2')` |
 
+#### Recognizing `flag_or_value_option` from the git man page
+
+The git-scm.com man page uses **`[=<value>]`** (square-bracketed `=<value>`)
+to mark an option's value as optional. That notation maps directly to
+`flag_or_value_option`:
+
+| Man-page signature | DSL method |
+|---|---|
+| `--foo` | `flag_option :foo` |
+| `--foo=<value>` | `value_option :foo, inline: true` |
+| `--foo[=<value>]` | `flag_or_value_option :foo, inline: true` |
+
+Common examples: `--branches[=<pattern>]`, `--tags[=<pattern>]`,
+`--remotes[=<pattern>]`, `--dirstat[=<param>...]`.
+
+**Do not** use `flag_option` for these — it silently drops the value when one
+is supplied.
+
 #### Choosing the correct pathspec form
 
 The two pathspec-style rows above look similar but represent meaningfully different
@@ -99,6 +117,23 @@ Flag any use of `as:` unless one of these three conditions applies:
 
 Outside these three cases, `as:` is a red flag. A DSL entry that uses `as:` where
 a plain symbol or alias would suffice should be corrected.
+
+#### Short-flag alias completeness
+
+Every option that the git man page documents with a short form must have an alias
+with the long name first:
+
+```ruby
+flag_option %i[regexp_ignore_case i]   # -i / --regexp-ignore-case
+flag_option %i[extended_regexp E]      # -E / --extended-regexp
+flag_option %i[fixed_strings F]        # -F / --fixed-strings
+```
+
+When reviewing, scan the man page's option headings for lines of the form
+`-X` / `--long-name` and verify each has a corresponding `%i[long_name X]`
+alias in the DSL. Missing short aliases are a completeness defect, not just
+a convenience omission — callers who pass the short key `:E` will get an
+`ArgumentError` rather than the expected flag.
 
 ### 3. Correct ordering
 
@@ -206,7 +241,56 @@ Examples of options to **include** (do not affect stdout):
 **Default assumption for `--verbose` and `--quiet`:** their absence is intentional.
 Do **not** flag them as missing.
 
-### 6. Conflicts
+#### Constraint identification from the man page
+
+After deciding which options to include, re-read the man page a second time
+specifically looking for constraint relationships. Do **not** skip this pass — the
+DSL machinery that enforces constraints exists to protect callers from invalid
+combinations that git itself will reject, and the review/scaffold phase is the only
+automated checkpoint where the man page is being read.
+
+Look for these specific language patterns and map them to DSL declarations:
+
+**Mutual exclusion → `conflicts`** (or `requires_exactly_one_of` if also required):
+
+| Man-page signal | Example |
+|---|---|
+| "Cannot be combined with `--foo`" | `conflicts :this, :foo` |
+| "Synonym for `--a --b --no-c`" | `conflicts :this, :a`; `conflicts :this, :b`; `conflicts :this, :c` |
+| "Same as `--foo`" (exact synonym) | The synonym adds redundancy — either alias it or note the conflict with the long form |
+| Options in a "choose one" list | `conflicts :opt_a, :opt_b` for each pair; or `requires_exactly_one_of` if exactly one is also required |
+| Sorting/ordering modes (`--date-order`, `--topo-order`, `--author-date-order`) | One ordering mode at a time → `conflicts` each pair |
+| Regexp engine flags (`-E`, `-F`, `-P`) | Choose one engine → `conflicts` each pair |
+
+**Conditional requirement → `requires` or `requires_one_of ... when:`**:
+
+| Man-page signal | Example |
+|---|---|
+| "Works only for a single file" | `requires :option, :path` — and note in YARD that `:path` must have exactly one element |
+| "Only meaningful when `--foo` is in use" | `requires :this, when: :foo` |
+| "Only takes effect when" | `requires :this, when: :other` |
+| "It is an error to use this option unless `--foo`" | `requires :this, when: :foo` |
+| "Only when `<path>` is given" | `requires :option, :path` |
+
+**Implication → `literal` or `conflicts`**:
+
+When git says an option "implies" another (e.g. `--cherry` is "a synonym for
+`--right-only --cherry-mark --no-merges`"), the implied flags are not always
+safe to also accept as keyword arguments:
+- If the implied flag is already a keyword option in the DSL, add `conflicts`
+  between the implying option and any keyword option whose value would contradict
+  the implication.
+- If the implied flag has no keyword representation (output-affecting, excluded),
+  no action is needed.
+
+**"No effect without" / value-mode flags**: when a flag only changes its
+behavior depending on a value another option receives, use `requires` with a
+`when:` trigger rather than an unconditional `requires`.
+
+After this pass, any identified constraint should be added as DSL declarations
+placed in the correct order (§3: after all arguments they reference, positions 6–10).
+
+
 
 If arguments are mutually exclusive — whether option vs option, option vs operand,
 or operand vs operand — verify `conflicts ...` declarations exist. Names in a

@@ -15,8 +15,9 @@ docs using the `Git::Commands::Base` architecture.
 - [Files to generate](#files-to-generate)
 - [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
 - [Command template (Base pattern)](#command-template-base-pattern)
+- [Options completeness — consult the man page first](#options-completeness--consult-the-man-page-first)
 - [Output-format options are intentionally omitted](#output-format-options-are-intentionally-omitted)
-- [DSL ordering convention](#dsl-ordering-convention)
+- [DSL ordering and argument conventions](#dsl-ordering-and-argument-conventions)
 - [Exit status guidance](#exit-status-guidance)
 - [Unit tests](#unit-tests)
 - [Integration tests](#integration-tests)
@@ -205,7 +206,7 @@ in the Review Command Implementation skill.
 
 When `def call(...) = super` is not enough, override `call` explicitly. Call
 `args_definition.bind(...)` directly rather than `super`, and invoke
-`@execution_context.command` yourself:
+`@execution_context.command_capturing` yourself:
 
 ```ruby
 def call(*objects, **options)
@@ -218,7 +219,7 @@ end
 private
 
 def run_batch(bound, reader)
-  result = @execution_context.command(*bound, in: reader, **bound.execution_options, raise_on_failure: false)
+  result = @execution_context.command_capturing(*bound, in: reader, **bound.execution_options, raise_on_failure: false)
   validate_exit_status!(result)
   result
 end
@@ -269,6 +270,57 @@ Key points:
 - **Extract helpers** like `run_batch` to stay within Rubocop `Metrics/MethodLength`
   and `Metrics/AbcSize` thresholds. Aim to keep `call` under ~10 lines.
 
+## Options completeness — consult the man page first
+
+**Before writing any DSL entries**, fetch the git-scm.com man page for the
+subcommand and enumerate every option it documents:
+
+```text
+https://git-scm.com/docs/git-<subcommand>
+```
+
+For each option, make one of three decisions:
+
+| Decision | Reason | Action |
+|---|---|---|
+| **Include** | Behavioral — controls which objects are operated on or how the operation runs; does **not** affect stdout format | Add to `arguments do` |
+| **Exclude (format)** | Changes the structure or content of stdout (e.g. `--pretty=`, `--stat`, `--patch`, `--name-only`) | Omit — see "Output-format options are intentionally omitted" below |
+| **Exclude (inappropriate)** | Stdin/stdout redirection, scripting-only plumbing, or too niche to be useful via the Ruby API | Omit with a brief comment if the reasoning isn't obvious |
+
+Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
+filtering`, `# Commit ordering`). Follow the section groupings from the man page —
+this makes it easy for a reviewer to cross-check against the docs.
+
+**Pairs and opposites:** when the man page documents `--foo` / `--no-foo` as
+explicit flags, model them as a single `flag_option :foo, negatable: true` rather
+than two separate entries. This prevents contradictory combinations and makes the
+three-state semantics (`true` / `false` / `nil`) explicit.
+
+**Second pass — constraint identification:** after the include/exclude decisions,
+re-read the man page looking specifically for constraint relationships between the
+options you chose to include. This pass is required — constraint declarations
+(`conflicts`, `requires`, `requires_one_of`) must be added during scaffolding,
+not discovered later during a review. Look for these signals:
+
+- **Mutual exclusion** — "cannot be combined with", "synonym for `--a --b`",
+  mutually exclusive mode flags (e.g. ordering modes, regexp-engine flags) →
+  `conflicts :a, :b` for each conflicting pair
+- **Conditional requirement** — "works only for a single file / path", "only
+  meaningful when `--foo` is in use", "it is an error to use this unless `--bar`"
+  → `requires :this, when: :trigger`
+- **Optional-value options** — option signature `--foo[=<value>]` in the man page
+  → use `flag_or_value_option`, not `flag_option`
+- **Short-flag aliases** — every `-X` / `--long-form` pair → alias with long name
+  first: `%i[long_name X]`
+
+For the full translation table mapping man-page language to DSL declarations,
+see the [Constraint identification section of the Arguments DSL Checklist](../review-arguments-dsl/CHECKLIST.md#constraint-identification-from-the-man-page).
+
+This step is required. A command class that only exposes the options that happen
+to be used today in `Git::Lib` is incomplete — callers of the future API should
+not need to re-open the man page just because the scaffold only covered current
+usage.
+
 ## Output-format options are intentionally omitted
 
 The library requires **deterministic, parseable output** from each command class.
@@ -297,6 +349,8 @@ type, alias conventions, `as:` usage, modifier rules, constraint declarations
 
 **Key principles (summary):**
 
+- Fetch the git-scm.com man page and enumerate all options before writing DSL entries
+  (see "Options completeness" above)
 - Define arguments in the order they appear in the git-scm.com SYNOPSIS
 - Within unordered groups: literals → flag options → flag-or-value options → value
   options → operands → pathspecs → constraint declarations
@@ -329,7 +383,7 @@ allow_exit_status 0..7
 
 Command unit tests should verify:
 
-- exact arguments passed to `execution_context.command`
+- exact arguments passed to `execution_context.command_capturing`
 - inclusion of `raise_on_failure: false` (from `Base` behavior)
 - execution-option forwarding where relevant (`timeout:`, etc.)
 - allow-exit-status behavior where declared

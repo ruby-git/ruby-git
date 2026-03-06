@@ -104,9 +104,9 @@ open a pull request — do not merge or push directly into `main`.
    - Return value type (String, Array, Hash, Boolean, etc.)
    - Exact return value format (e.g., `Array<[Integer, String]>`, `String` with specific content)
 
-4. Return to the main branch:
+4. Return to your feature branch:
    ```bash
-   git checkout main
+   git checkout -
    ```
 
 5. Search for the same command methods in the current version:

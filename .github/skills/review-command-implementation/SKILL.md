@@ -81,7 +81,7 @@ end
 Shared behavior lives in `Base`:
 
 - binds arguments
-- calls `@execution_context.command(*args, **args.execution_options, raise_on_failure: false)`
+- calls `@execution_context.command_capturing(*args, **args.execution_options, raise_on_failure: false)`
 - raises `Git::FailedError` unless exit status is in allowed range (`0..0` default)
 
 ## What to Check
@@ -129,7 +129,7 @@ Most commands use `def call(...) = super`, which forwards all arguments to
 
 - Bind arguments via `args_definition.bind(...)` — do not reimplement binding
 - Delegate exit-status handling to `validate_exit_status!` — do not reimplement
-- Do not call `super` after manual binding; use `@execution_context.command` directly
+- Do not call `super` after manual binding; use `@execution_context.command_capturing` directly
 
 **`Base#with_stdin(content)` mechanics:**
 
