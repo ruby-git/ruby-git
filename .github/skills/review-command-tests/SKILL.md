@@ -17,10 +17,11 @@ conventions.
   - [Expectations for command invocation](#expectations-for-command-invocation)
     - [Expectations for stdin-feeding commands](#expectations-for-stdin-feeding-commands)
     - [What not to test](#what-not-to-test)
-  - [Test grouping](#test-grouping)
+  - [Unit test grouping](#unit-test-grouping)
 - [Integration tests](#integration-tests)
-  - [Test grouping](#test-grouping)
+  - [Integration test grouping](#integration-test-grouping)
 - [General guidelines](#general-guidelines)
+- [Output](#output)
 
 ## How to use this skill
 
@@ -40,6 +41,8 @@ Review Command Tests: spec/unit/git/commands/stash/push_spec.rb
 The invocation needs the spec file(s) to review. Including the corresponding
 command source file provides useful context for verifying argument coverage.
 
+For a complete review, also read the **entire** [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) skill (line 1 through EOF) before beginning. It defines the baseline Rules 1–28 that this skill extends. Without it, MUST-level structural, naming, stubbing, and coverage checks will not be applied.
+
 ## Related skills
 
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline RSpec rules that govern all unit test structure,
@@ -58,7 +61,7 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
 - Base invocation (no options): verify literals and return pass-through. Store the
   `.and_return` value in an `expected_result` variable and assert
   `expect(result).to eq(expected_result)` to verify that `#call` passes through what
-  `execution_context.command` returns. This assertion belongs only in the base
+  `execution_context.command_capturing` returns. This assertion belongs only in the base
   invocation test — do not repeat it in every test.
 - Each positional operand variation (e.g., single value, multiple values)
 - Each flag option, including aliases (e.g., `:force` and `:f`)
@@ -69,11 +72,13 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
 - Pathspecs or other repeatable/separator-based options, both alone and combined with
   operands
 - Execution options forwarding where applicable (e.g., `timeout:`)
-- Exit-status behavior for commands using `allow_exit_status`: test that exit codes
-  within the declared range return a result without raising, and that exit codes
-  outside the range raise `FailedError`. For example, if the command declares
-  `allow_exit_status 0..1`, test that exit codes 0 and 1 succeed, and that exit
-  codes 2 and 128 raise `FailedError`.
+- Exit-status behavior for commands using `allow_exit_status` with a non-default range:
+  test that exit codes within the declared range return a result without raising, and
+  that exit codes outside the range raise `FailedError`. For example, if the command
+  declares `allow_exit_status 0..1`, test that exit codes 0 and 1 succeed, and that
+  exit codes 2 and 128 raise `FailedError`. Commands that only succeed at exit code 0
+  (the default) do not need a unit-level exit code test — the integration
+  error-handling test covers that path.
 - Input validation (`ArgumentError`) for unsupported/conflicting/missing args
 - For validation declared in the Arguments DSL (`conflicts`, `requires_one_of`,
   `forbid_values`), assert the DSL-generated behavior/message shape rather than
@@ -94,6 +99,8 @@ When testing execution options, include forwarded keywords:
 ```ruby
 expect_command_capturing('clone', '--', url, dir, timeout: 30).and_return(command_result)
 ```
+
+These helpers expand to `expect(execution_context).to receive(:command_capturing)...` — `expect` rather than `allow` because the call itself (the correct arguments reaching git) is the behavior under test. See [Rule 19](../rspec-unit-testing-standards/SKILL.md#rule-19-must-use-allow-for-incidental-stubs-use-expect-for-behavioral-assertions) in RSpec Unit Testing Standards.
 
 #### Expectations for stdin-feeding commands
 
@@ -169,10 +176,10 @@ Unit tests should exercise each **code path** through the command, not each poss
 The `Arguments` DSL has its own comprehensive spec (`arguments_spec.rb`) that tests
 flag handling, value options, positionals, separators, edge cases, and error
 conditions. Command specs should test that the command **uses** the DSL correctly
-(i.e., the right arguments reach `execution_context.command`), not re-test the DSL's
+(i.e., the right arguments reach `execution_context.command_capturing`), not re-test the DSL's
 own behavior.
 
-### Test grouping
+### Unit test grouping
 
 Unit tests are organized under `describe '#call'` with three sections:
 
@@ -193,11 +200,18 @@ Unit test descriptions should be concise and action-oriented. Use descriptions l
 "includes the --cached flag", "passes both commits as operands", "combines commit
 with pathspecs".
 
+> **Exception to RSpec Unit Testing Standards Rules 11–12 (subject and let ordering):**
+> Command unit tests intentionally omit `subject` within `describe '#call'`. Because
+> each test exercises a different argument combination, there is no single fixed call
+> expressible as a shared `subject`. Use `let(:command)` at the `RSpec.describe` level
+> and call `command.call(...)` directly inside each `it` block, overriding `let` inputs
+> per `context` block as needed.
+
 **Example with all three sections:**
 
 ```ruby
 RSpec.describe Git::Commands::Branch::Delete do
-  # Duck-type collaborator: command specs depend on the #command interface,
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
   # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
@@ -247,7 +261,7 @@ end
 
 ```ruby
 RSpec.describe Git::Commands::Stash::Pop do
-  # Duck-type collaborator: command specs depend on the #command interface,
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
   # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
@@ -304,13 +318,13 @@ unit test.
 > commit or push directly to `main` — open a pull request when changes are ready to
 > merge.
 
-### Test grouping
+### Integration test grouping
 
-Integration tests must be organized into two `describe` blocks under `#call`:
+Integration tests must be organized into two `context` blocks under `#call`:
 
-- `describe 'when the command succeeds'` — smoke tests, option variations, and exit
+- `context 'when the command succeeds'` — smoke tests, option variations, and exit
   code variants
-- `describe 'when the command fails'` — error handling tests (`FailedError`)
+- `context 'when the command fails'` — error handling tests (`FailedError`)
 
 This grouping provides a consistent structure across all command specs and makes it
 immediately clear which tests cover the happy path vs. error conditions.
@@ -324,14 +338,15 @@ RSpec.describe Git::Commands::Add, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    describe 'when the command succeeds' do
+    context 'when the command succeeds' do
       it 'returns a CommandLineResult' do
         # ... valid invocation ...
       end
     end
 
-    describe 'when the command fails' do
+    context 'when the command fails' do
       it 'raises FailedError with a nonexistent path' do
+        # git's error message varies by version — Rule 22 version-variance exception applies
         expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
       end
     end
@@ -348,7 +363,7 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    describe 'when the command succeeds' do
+    context 'when the command succeeds' do
       it 'returns exit code 0 with no differences' do
         result = command.call('initial', 'initial')
         expect(result.status.exitstatus).to eq(0)
@@ -362,8 +377,9 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
       end
     end
 
-    describe 'when the command fails' do
+    context 'when the command fails' do
       it 'raises FailedError for invalid revision' do
+        # git's error message varies by version — Rule 22 version-variance exception applies
         expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
       end
     end
@@ -374,15 +390,15 @@ end
 ## General guidelines
 
 **No shell-outs in tests.** Never use backticks, `system()`, or `%x[]` in tests. For
-git commands (including setup steps), use `execution_context.command` — it is
+git commands (including setup steps), use `execution_context.command_capturing` — it is
 portable across platforms, handles paths with spaces, and uses the same mechanism the
-command classes themselves use. For example: `execution_context.command('rev-parse',
+command classes themselves use. For example: `execution_context.command_capturing('rev-parse',
 'HEAD').stdout.strip`. For non-git operations (file creation, directory manipulation,
 etc.), use Ruby's standard library (`FileUtils`, `File`, `Dir`) instead of shelling
 out.
 
 **Do not use other Commands classes in tests.** Each spec tests exactly one command
-class. Use `execution_context.command`, `repo`, or standard library methods for setup
+class. Use `execution_context.command_capturing`, `repo`, or standard library methods for setup
 instead of instantiating other Commands classes. This maintains test isolation and
 prevents bugs in one command from breaking another command's tests.
 
@@ -404,15 +420,29 @@ it 'succeeds when no merge is in progress (git 2.35+)' do
 end
 ```
 
-**Test descriptions must match assertions.** Every `it` block should assert what its
-description claims. A test described as "returns the branch name" that only asserts
-`eq(command_result)` is misleading — it passes without verifying the
-described behavior.
+**Test descriptions must match assertions.** See [Rule 9](../rspec-unit-testing-standards/SKILL.md#rule-9-must-it-blocks-assert-one-concept-and-the-description-must-match-the-assertion) in RSpec Unit Testing Standards (MUST). This applies equally to command specs: a test described as "includes the --force flag" must assert that the flag appears in the arguments, not merely that `#call` returns a result.
 
-**Require only the command under test.** Each integration spec should only `require`
-the command class it describes. Do not require other command classes, even if they are
-not instantiated — unused requires create false coupling between specs.
+**Require only the command under test.** See [Rule 5](../rspec-unit-testing-standards/SKILL.md#rule-5-must-require-spec_helper-and-only-the-files-under-test) in RSpec Unit Testing Standards (MUST). For command specs specifically: do not require other command classes even if they are not instantiated — unused requires create false coupling between specs.
 
 **Regex patterns** in test assertions should not use Ruby's `/m` modifier unless
 intentionally matching across newlines. Git output is line-based, so patterns should
 match within single lines.
+
+## Output
+
+Report only anomalies — skip items that comply. For each issue found, provide:
+
+- **Rule or guideline violated** — cite by name and source skill (e.g., "Rule 22,
+  RSpec Unit Testing Standards" or "What not to test, Review Command Tests")
+- **Location** — spec file and block path (e.g.,
+  `describe '#call' > context 'with :force option' > it '...'`)
+- **Issue** — one sentence describing what is wrong
+- **Fix** — the minimal change needed
+
+Group findings under two headings:
+
+**Required fixes** — MUST-level violations from either skill
+
+**Suggested improvements** — SHOULD-level deviations, ordered by impact
+
+If no issues are found, say so in one sentence and stop.

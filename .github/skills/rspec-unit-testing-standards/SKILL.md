@@ -608,8 +608,10 @@ Repeat until all checks pass.
 
 ## Output
 
-When this skill is used to **review or audit** existing tests (rather than write
-new ones), produce the following:
+**When writing new tests**, produce the spec file and run through the Verification
+checklist above. No additional structured output is required.
+
+**When reviewing or auditing** existing tests, produce the following:
 
 1. A per-rule compliance table:
 
