@@ -1,0 +1,468 @@
+# frozen_string_literal: true
+
+require 'spec_helper'
+require 'git/commands/log'
+
+RSpec.describe Git::Commands::Log do
+  let(:execution_context) { double('ExecutionContext') }
+  let(:command) { described_class.new(execution_context) }
+
+  describe '#call' do
+    context 'with no arguments' do
+      it 'runs git log with --no-color and --pretty=raw' do
+        expected_result = command_result
+        expect_command_capturing('log', '--no-color', '--pretty=raw').and_return(expected_result)
+
+        result = command.call
+
+        expect(result).to eq(expected_result)
+      end
+    end
+
+    context 'with the :all option' do
+      it 'includes the --all flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--all').and_return(command_result)
+
+        command.call(all: true)
+      end
+    end
+
+    context 'with the :branches option' do
+      it 'includes the bare --branches flag when true' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--branches').and_return(command_result)
+
+        command.call(branches: true)
+      end
+
+      it 'includes --branches=<pattern> when a pattern is given' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--branches=feature*').and_return(command_result)
+
+        command.call(branches: 'feature*')
+      end
+    end
+
+    context 'with the :tags option' do
+      it 'includes the bare --tags flag when true' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--tags').and_return(command_result)
+
+        command.call(tags: true)
+      end
+
+      it 'includes --tags=<pattern> when a pattern is given' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--tags=v*').and_return(command_result)
+
+        command.call(tags: 'v*')
+      end
+    end
+
+    context 'with the :remotes option' do
+      it 'includes the bare --remotes flag when true' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--remotes').and_return(command_result)
+
+        command.call(remotes: true)
+      end
+
+      it 'includes --remotes=<pattern> when a pattern is given' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--remotes=origin/*').and_return(command_result)
+
+        command.call(remotes: 'origin/*')
+      end
+    end
+
+    context 'with the :cherry option' do
+      it 'includes the --cherry flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--cherry').and_return(command_result)
+
+        command.call(cherry: true)
+      end
+    end
+
+    context 'with the :cherry_mark option' do
+      it 'includes the --cherry-mark flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--cherry-mark').and_return(command_result)
+
+        command.call(cherry_mark: true)
+      end
+    end
+
+    context 'with the :cherry_pick option' do
+      it 'includes the --cherry-pick flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--cherry-pick').and_return(command_result)
+
+        command.call(cherry_pick: true)
+      end
+    end
+
+    context 'with the :left_right option' do
+      it 'includes the --left-right flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--left-right').and_return(command_result)
+
+        command.call(left_right: true)
+      end
+    end
+
+    context 'with the :merges option' do
+      it 'includes the --merges flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--merges').and_return(command_result)
+
+        command.call(merges: true)
+      end
+
+      it 'includes the --no-merges flag when false' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--no-merges').and_return(command_result)
+
+        command.call(merges: false)
+      end
+    end
+
+    context 'with the :first_parent option' do
+      it 'includes the --first-parent flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--first-parent').and_return(command_result)
+
+        command.call(first_parent: true)
+      end
+    end
+
+    context 'with the :min_parents option' do
+      it 'includes --min-parents=<n>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--min-parents=2').and_return(command_result)
+
+        command.call(min_parents: 2)
+      end
+    end
+
+    context 'with the :max_parents option' do
+      it 'includes --max-parents=<n>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--max-parents=1').and_return(command_result)
+
+        command.call(max_parents: 1)
+      end
+    end
+
+    context 'with the :since option' do
+      it 'includes --since=<value>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--since=1 week ago').and_return(command_result)
+
+        command.call(since: '1 week ago')
+      end
+    end
+
+    context 'with the :after option' do
+      it 'includes --after=<value>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--after=2024-01-01').and_return(command_result)
+
+        command.call(after: '2024-01-01')
+      end
+    end
+
+    context 'with the :until option' do
+      it 'includes --until=<value>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--until=2024-01-01').and_return(command_result)
+
+        command.call(until: '2024-01-01')
+      end
+    end
+
+    context 'with the :before option' do
+      it 'includes --before=<value>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--before=2024-06-01').and_return(command_result)
+
+        command.call(before: '2024-06-01')
+      end
+    end
+
+    context 'with the :grep option' do
+      it 'includes --grep=<value>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--grep=fix bug').and_return(command_result)
+
+        command.call(grep: 'fix bug')
+      end
+    end
+
+    context 'with the :author option' do
+      it 'includes --author=<value>' do
+        expect_command_capturing(
+          'log', '--no-color', '--pretty=raw', '--author=Jane Doe'
+        ).and_return(command_result)
+
+        command.call(author: 'Jane Doe')
+      end
+    end
+
+    context 'with the :committer option' do
+      it 'includes --committer=<value>' do
+        expect_command_capturing(
+          'log', '--no-color', '--pretty=raw', '--committer=Jane Doe'
+        ).and_return(command_result)
+
+        command.call(committer: 'Jane Doe')
+      end
+    end
+
+    context 'with the :max_count option' do
+      it 'includes --max-count=<n>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--max-count=10').and_return(command_result)
+
+        command.call(max_count: 10)
+      end
+    end
+
+    context 'with the :skip option' do
+      it 'includes --skip=<n>' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--skip=5').and_return(command_result)
+
+        command.call(skip: 5)
+      end
+    end
+
+    context 'with the :full_history option' do
+      it 'includes the --full-history flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--full-history').and_return(command_result)
+
+        command.call(full_history: true)
+      end
+    end
+
+    context 'with the :date_order option' do
+      it 'includes the --date-order flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--date-order').and_return(command_result)
+
+        command.call(date_order: true)
+      end
+    end
+
+    context 'with the :author_date_order option' do
+      it 'includes the --author-date-order flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--author-date-order').and_return(command_result)
+
+        command.call(author_date_order: true)
+      end
+    end
+
+    context 'with the :topo_order option' do
+      it 'includes the --topo-order flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--topo-order').and_return(command_result)
+
+        command.call(topo_order: true)
+      end
+    end
+
+    context 'with the :reverse option' do
+      it 'includes the --reverse flag' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--reverse').and_return(command_result)
+
+        command.call(reverse: true)
+      end
+    end
+
+    context 'with a :revision_range operand' do
+      it 'appends a single revision range directly' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', 'v1.0..v2.0').and_return(command_result)
+
+        command.call('v1.0..v2.0')
+      end
+
+      it 'appends multiple revision specifiers as separate arguments' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', 'v1.0', 'v2.0',
+                                 '^v0.9').and_return(command_result)
+
+        command.call('v1.0', 'v2.0', '^v0.9')
+      end
+    end
+
+    context 'with a :path option' do
+      it 'appends -- and the path(s)' do
+        expect_command_capturing(
+          'log', '--no-color', '--pretty=raw', '--', 'lib/'
+        ).and_return(command_result)
+
+        command.call(path: ['lib/'])
+      end
+
+      it 'supports multiple paths' do
+        expect_command_capturing(
+          'log', '--no-color', '--pretty=raw', '--', 'lib/', 'spec/'
+        ).and_return(command_result)
+
+        command.call(path: %w[lib/ spec/])
+      end
+    end
+
+    context 'with combined options' do
+      it 'includes all specified options in DSL order' do
+        expect_command_capturing(
+          'log', '--no-color', '--pretty=raw',
+          '--all', '--since=2 weeks ago', '--max-count=20',
+          'v1.0', '--', 'lib/'
+        ).and_return(command_result)
+
+        command.call('v1.0', all: true, max_count: 20, since: '2 weeks ago', path: ['lib/'])
+      end
+    end
+
+    context 'with regexp flag aliases' do
+      it 'accepts :regexp_ignore_case for --regexp-ignore-case' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--regexp-ignore-case').and_return(command_result)
+
+        command.call(regexp_ignore_case: true)
+      end
+
+      it 'accepts :i as an alias for :regexp_ignore_case' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--regexp-ignore-case').and_return(command_result)
+
+        command.call(i: true)
+      end
+
+      it 'accepts :extended_regexp for --extended-regexp' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--extended-regexp').and_return(command_result)
+
+        command.call(extended_regexp: true)
+      end
+
+      it 'accepts :E as an alias for :extended_regexp' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--extended-regexp').and_return(command_result)
+
+        command.call(E: true)
+      end
+
+      it 'accepts :fixed_strings for --fixed-strings' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--fixed-strings').and_return(command_result)
+
+        command.call(fixed_strings: true)
+      end
+
+      it 'accepts :F as an alias for :fixed_strings' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--fixed-strings').and_return(command_result)
+
+        command.call(F: true)
+      end
+
+      it 'accepts :perl_regexp for --perl-regexp' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--perl-regexp').and_return(command_result)
+
+        command.call(perl_regexp: true)
+      end
+
+      it 'accepts :P as an alias for :perl_regexp' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', '--perl-regexp').and_return(command_result)
+
+        command.call(P: true)
+      end
+    end
+
+    context 'with execution options' do
+      it 'forwards the timeout option' do
+        expect_command_capturing('log', '--no-color', '--pretty=raw', timeout: 30).and_return(command_result)
+
+        command.call(timeout: 30)
+      end
+    end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(bogus: true) }.to raise_error(ArgumentError)
+      end
+
+      context 'conflicts: cherry-pick filtering' do
+        it 'raises ArgumentError when :cherry and :cherry_pick are combined' do
+          expect { command.call(cherry: true, cherry_pick: true) }
+            .to raise_error(ArgumentError, /cannot specify :cherry and :cherry_pick/)
+        end
+
+        it 'raises ArgumentError when :cherry and :cherry_mark are combined' do
+          expect { command.call(cherry: true, cherry_mark: true) }
+            .to raise_error(ArgumentError, /cannot specify :cherry and :cherry_mark/)
+        end
+
+        it 'allows :cherry_pick and :cherry_mark to be combined' do
+          expect_command_capturing('log', '--no-color', '--pretty=raw', '--cherry-mark', '--cherry-pick')
+            .and_return(command_result)
+
+          command.call(cherry_mark: true, cherry_pick: true)
+        end
+      end
+
+      context 'conflicts: regexp engine selection' do
+        it 'raises ArgumentError when :extended_regexp and :fixed_strings are combined' do
+          expect { command.call(extended_regexp: true, fixed_strings: true) }
+            .to raise_error(ArgumentError, /cannot specify :extended_regexp and :fixed_strings/)
+        end
+
+        it 'raises ArgumentError when :extended_regexp and :perl_regexp are combined' do
+          expect { command.call(extended_regexp: true, perl_regexp: true) }
+            .to raise_error(ArgumentError, /cannot specify :extended_regexp and :perl_regexp/)
+        end
+
+        it 'raises ArgumentError when :fixed_strings and :perl_regexp are combined' do
+          expect { command.call(fixed_strings: true, perl_regexp: true) }
+            .to raise_error(ArgumentError, /cannot specify :fixed_strings and :perl_regexp/)
+        end
+      end
+
+      context 'conflicts: commit ordering modes' do
+        it 'raises ArgumentError when :date_order and :author_date_order are combined' do
+          expect { command.call(date_order: true, author_date_order: true) }
+            .to raise_error(ArgumentError, /cannot specify :date_order and :author_date_order/)
+        end
+
+        it 'raises ArgumentError when :date_order and :topo_order are combined' do
+          expect { command.call(date_order: true, topo_order: true) }
+            .to raise_error(ArgumentError, /cannot specify :date_order and :topo_order/)
+        end
+
+        it 'raises ArgumentError when :author_date_order and :topo_order are combined' do
+          expect { command.call(author_date_order: true, topo_order: true) }
+            .to raise_error(ArgumentError, /cannot specify :author_date_order and :topo_order/)
+        end
+      end
+
+      context 'requires: grep-dependent flags' do
+        it 'raises ArgumentError when :all_match is given without :grep' do
+          expect { command.call(all_match: true) }
+            .to raise_error(ArgumentError, /:all_match requires :grep/)
+        end
+
+        it 'raises ArgumentError when :invert_grep is given without :grep' do
+          expect { command.call(invert_grep: true) }
+            .to raise_error(ArgumentError, /:invert_grep requires :grep/)
+        end
+
+        it 'allows :all_match when :grep is also given' do
+          expect_command_capturing(
+            'log', '--no-color', '--pretty=raw', '--grep=fix', '--all-match'
+          ).and_return(command_result)
+
+          command.call(grep: 'fix', all_match: true)
+        end
+
+        it 'allows :invert_grep when :grep is also given' do
+          expect_command_capturing(
+            'log', '--no-color', '--pretty=raw', '--grep=wip', '--invert-grep'
+          ).and_return(command_result)
+
+          command.call(grep: 'wip', invert_grep: true)
+        end
+      end
+
+      context 'requires: follow needs a path' do
+        it 'raises ArgumentError when :follow is given without :path' do
+          expect { command.call(follow: true) }
+            .to raise_error(ArgumentError, /:follow requires :path/)
+        end
+
+        it 'allows :follow when :path is also given' do
+          expect_command_capturing(
+            'log', '--no-color', '--pretty=raw', '--follow', '--', 'lib/foo.rb'
+          ).and_return(command_result)
+
+          command.call(follow: true, path: ['lib/foo.rb'])
+        end
+
+        it 'raises ArgumentError when :follow is given with multiple paths' do
+          expect { command.call(follow: true, path: ['lib/foo.rb', 'lib/bar.rb']) }
+            .to raise_error(ArgumentError, /--follow requires exactly one path/)
+        end
+      end
+    end
+  end
+end

@@ -18,9 +18,9 @@ class TestLib < Test::Unit::TestCase
   def test_fetch_unshallow
     in_temp_dir do |dir|
       git = Git.clone("file://#{@wdir}", 'shallow', chdir: dir, depth: 1).lib
-      assert_equal(1, git.log_commits.length)
+      assert_equal(1, git.full_log_commits.length)
       git.fetch("file://#{@wdir}", unshallow: true)
-      assert_equal(72, git.log_commits.length)
+      assert_equal(72, git.full_log_commits.length)
     end
   end
 
@@ -102,45 +102,9 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
-  # takes parameters, returns array of appropriate commit objects
-  # :count
-  # :since
-  # :between
-  # :object
-  def test_log_commits
-    a = @lib.log_commits count: 10
-    assert(a.first.is_a?(String))
-    assert_equal(10, a.size)
-
-    a = @lib.log_commits count: 20, since: "#{Date.today.year - 2006} years ago"
-    assert(a.first.is_a?(String))
-    assert_equal(20, a.size)
-
-    a = @lib.log_commits count: 20, since: '1 second ago'
-    assert_equal(0, a.size)
-
-    a = @lib.log_commits count: 20, between: ['v2.5', 'v2.6']
-    assert_equal(2, a.size)
-
-    a = @lib.log_commits count: 20, path_limiter: 'ex_dir/'
-    assert_equal(1, a.size)
-
+  def test_full_log_commits
     a = @lib.full_log_commits count: 20
     assert_equal(20, a.size)
-  end
-
-  def test_log_commits_invalid_between
-    # between can not start with a hyphen
-    assert_raise ArgumentError do
-      @lib.log_commits count: 20, between: ['-v2.5', 'v2.6']
-    end
-  end
-
-  def test_log_commits_invalid_object
-    # :object can not start with a hyphen
-    assert_raise ArgumentError do
-      @lib.log_commits count: 20, object: '--all'
-    end
   end
 
   def test_full_log_commits_invalid_between

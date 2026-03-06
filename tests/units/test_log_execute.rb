@@ -132,7 +132,7 @@ class TestLogExecute < Test::Unit::TestCase
   end
 
   def test_log_merges
-    expected_command_line = ['log', '--no-color', '--max-count=30', '--pretty=raw', '--merges', {}]
+    expected_command_line = ['log', '--no-color', '--pretty=raw', '--merges', '--max-count=30', {}]
     assert_command_line_eq(expected_command_line) { |git| git.log.merges.execute }
   end
 

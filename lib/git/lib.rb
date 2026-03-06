@@ -21,6 +21,7 @@ require_relative 'commands/diff/patch'
 require_relative 'commands/diff/raw'
 require_relative 'commands/fsck'
 require_relative 'commands/init'
+require_relative 'commands/log'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
@@ -278,53 +279,6 @@ module Git
     #
     # @param opts [Hash] the given options
     #
-    # @option opts :count [Integer] the maximum number of commits to return (maps to max-count)
-    # @option opts :all [Boolean]
-    # @option opts :cherry [Boolean]
-    # @option opts :since [String]
-    # @option opts :until [String]
-    # @option opts :grep [String]
-    # @option opts :author [String]
-    # @option opts :between [Array<String>] an array of two commit-ish strings to specify a revision range
-    #
-    #   Only :between or :object options can be used, not both.
-    #
-    # @option opts :object [String] the revision range for the git log command
-    #
-    #   Only :between or :object options can be used, not both.
-    #
-    # @option opts :path_limiter [String, Pathname, Array<String, Pathname>] only
-    #   include commits that impact files from the specified paths
-    #
-    # @return [Array<String>] the log output
-    #
-    # @raise [ArgumentError] if the resulting revision range is a string starting with a hyphen
-    #
-    def log_commits(opts = {})
-      assert_args_are_not_options('between', opts[:between]&.first)
-      assert_args_are_not_options('object', opts[:object])
-
-      arr_opts = log_common_options(opts)
-
-      arr_opts << '--pretty=oneline'
-
-      arr_opts += log_path_options(opts)
-
-      command_capturing('log', *arr_opts).stdout.split("\n").map { |l| l.split.first }
-    end
-
-    FULL_LOG_EXTRA_OPTIONS_MAP = [
-      { type: :static, flag: '--pretty=raw' },
-      { keys: [:skip], flag: '--skip', type: :valued_equals },
-      { keys: [:merges], flag: '--merges', type: :boolean }
-    ].freeze
-
-    # Return the commits that are within the given revision range
-    #
-    # @see https://git-scm.com/docs/git-log git-log
-    #
-    # @param opts [Hash] the given options
-    #
     # @option opts :count [Integer] the maximum number of commits to return (maps to
     #   max-count)
     #
@@ -376,13 +330,11 @@ module Git
     def full_log_commits(opts = {})
       assert_args_are_not_options('between', opts[:between]&.first)
       assert_args_are_not_options('object', opts[:object])
+      validate_log_count_option!(opts)
 
-      args = log_common_options(opts)
-      args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
-      args += log_path_options(opts)
-
-      full_log = command_capturing('log', *args).stdout.split("\n")
-      process_commit_log_data(full_log)
+      call_opts = log_base_call_options(opts, skip: opts[:skip], merges: opts[:merges])
+      result = Git::Commands::Log.new(self).call(*log_revision_range_args(opts), **call_opts)
+      process_commit_log_data(result.stdout.split("\n"))
     end
 
     # Verify and resolve a Git revision to its full SHA
@@ -2029,18 +1981,6 @@ module Git
       -c color.transport=false
     ].freeze
 
-    LOG_OPTION_MAP = [
-      { type: :static, flag: '--no-color' },
-      { keys: [:all],    flag: '--all',    type: :boolean },
-      { keys: [:cherry], flag: '--cherry', type: :boolean },
-      { keys: [:since],  flag: '--since',     type: :valued_equals },
-      { keys: [:until],  flag: '--until',     type: :valued_equals },
-      { keys: [:grep],   flag: '--grep',      type: :valued_equals },
-      { keys: [:author], flag: '--author',    type: :valued_equals },
-      { keys: [:count],  flag: '--max-count', type: :valued_equals },
-      { keys: [:between], type: :custom, builder: ->(value) { "#{value[0]}..#{value[1]}" if value } }
-    ].freeze
-
     # Runs a git command and returns the result
     #
     # By default, raises {Git::FailedError} if the command exits with a non-zero
@@ -2738,31 +2678,44 @@ module Git
       end
     end
 
-    # Returns an array holding the common options for the log commands
+    # Validates the :count option for log commands.
     #
-    # @param [Hash] opts the given options
-    # @return [Array] the set of common options that the log command will use
-    def log_common_options(opts)
-      if opts[:count] && !opts[:count].is_a?(Integer)
-        raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
-      end
+    def validate_log_count_option!(opts)
+      return unless opts[:count] && !opts[:count].is_a?(Integer)
 
-      build_args(opts, LOG_OPTION_MAP)
+      raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
     end
 
-    # Retrurns an array holding path options for the log commands
+    # Builds the positional revision range argument(s) from opts for Git::Commands::Log
     #
-    # @param [Hash] opts the given options
-    # @return [Array] the set of path options that the log command will use
-    def log_path_options(opts)
-      arr_opts = []
-
-      arr_opts << opts[:object] if opts[:object].is_a? String
-      if opts[:path_limiter]
-        arr_opts << '--'
-        arr_opts += Array(opts[:path_limiter])
+    # @param opts [Hash]
+    # @return [Array<String>] zero or one element array with the revision range expression
+    def log_revision_range_args(opts)
+      if opts[:between]
+        ["#{opts[:between][0]}..#{opts[:between][1]}"]
+      elsif opts[:object].is_a?(String)
+        [opts[:object]]
+      else
+        []
       end
-      arr_opts
+    end
+
+    # Builds the common keyword options for Git::Commands::Log from opts
+    #
+    # @param opts [Hash]
+    # @param extra [Hash] additional options to merge in (caller-specific)
+    # @return [Hash] keyword arguments for Git::Commands::Log#call
+    def log_base_call_options(opts, extra = {})
+      {
+        all: opts[:all],
+        cherry: opts[:cherry],
+        since: opts[:since],
+        until: opts[:until],
+        grep: opts[:grep],
+        author: opts[:author],
+        max_count: opts[:count],
+        path: opts[:path_limiter] ? Array(opts[:path_limiter]) : nil
+      }.merge(extra).compact
     end
   end
 end
