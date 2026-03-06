@@ -195,20 +195,36 @@ module Git
 end
 ```
 
-The template above uses the default `def call(...) = super` implicitly — no explicit
-`call` definition is needed in the common case. For commands that require validation
-the DSL cannot express, stdin feeding (`Base#with_stdin`), or non-trivial option
-routing, see
-the [`#call` override guidance](../review-command-implementation/SKILL.md#2-call-implementation)
+This template uses no explicit `def call` — the `@!method` YARD directive
+attaches per-command docs to the inherited `call` method. Use this form for
+simple commands where no pre-call logic is needed.
+
+When the command requires an explicit `def call` override (input validation,
+stdin feeding, non-trivial option routing), place YARD docs **directly above**
+`def call` instead of using `@!method`. See the
+[`#call` override guidance](../review-command-implementation/SKILL.md#2-call-implementation)
 in the Review Command Implementation skill.
 
 ### Overriding `call` — inline example
 
-When `def call(...) = super` is not enough, override `call` explicitly. Call
-`args_definition.bind(...)` directly rather than `super`, and invoke
-`@execution_context.command_capturing` yourself:
+When `def call(...) = super` is not enough, override `call` explicitly. Place
+YARD doc comments **directly above** `def call` — do **not** use
+`# @!method call(*, **)` alongside an explicit override:
 
 ```ruby
+# @overload call(*objects, **options)
+#
+#   Execute the `git cat-file --batch` command.
+#
+#   @param objects [Array<String>] one or more object names
+#
+#   @param options [Hash] command options
+#
+#   @option options [Boolean] :unordered (false) Unordered output
+#
+#   @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
+#
+#   @raise [Git::FailedError] if git exits with a non-zero status
 def call(*objects, **options)
   bound = args_definition.bind(*objects, **options)
   with_stdin(Array(bound.objects).map { |o| "#{o}\n" }.join) do |reader|

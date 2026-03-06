@@ -56,12 +56,19 @@ One or more command files from `lib/git/commands/` containing:
 - `class < Git::Commands::Base`
 - `arguments do ... end`
 - optional `allow_exit_status`
-- `# @!method call(*, **)` YARD directive with nested `@overload` blocks
+- either a `# @!method call(*, **)` YARD directive (when no `def call` override)
+  or YARD doc comments directly above an explicit `def call` override
 
 ## Required documentation model
 
-Each command must use the `@!method` YARD directive to attach per-command
-documentation to the inherited `call` method:
+The placement of `call` documentation depends on whether the command class
+overrides `def call`.
+
+### No `def call` override (simple commands)
+
+When the class does **not** define `def call`, use the `# @!method call(*, **)`
+YARD directive. This tells YARD to attach per-command docs to the inherited
+`call` method without a method definition in the subclass:
 
 ```ruby
 # @!method call(*, **)
@@ -77,9 +84,41 @@ documentation to the inherited `call` method:
 #     @return [Git::CommandLineResult]
 ```
 
-This directive is documentation scaffolding — YARD uses it to render per-command
-docs on the inherited `call` method without requiring a method definition in the
-subclass.
+Place the directive inside the class body, after the `arguments do` block (and
+after `allow_exit_status` when present). Do **not** combine `@!method` with an
+explicit `def call`.
+
+### Explicit `def call` override
+
+When the class defines `def call` explicitly (for input validation, stdin
+feeding, or non-trivial option routing), place YARD docs **directly above** the
+`def call` method. Do **not** use `@!method` — YARD will read the normal doc
+comment on the real method:
+
+```ruby
+# @overload call(*revision_range, **options)
+#
+#   Execute the `git log` command.
+#
+#   @param revision_range [Array<String>] zero or more revision specifiers
+#
+#   @param options [Hash] command options
+#
+#   @option options [Boolean] :all (nil) ...
+#
+#   @return [Git::CommandLineResult] the result of calling `git log`
+#
+#   @raise [ArgumentError] if conflicting options are given
+#
+#   @raise [Git::FailedError] if git exits with a non-zero exit status
+def call(*, **kwargs)
+  # custom logic …
+  super
+end
+```
+
+Using `@!method` when `def call` already exists causes YARD to generate
+duplicate or conflicting documentation for the method.
 
 ## What to Check
 
@@ -155,7 +194,11 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
 
 ## Common issues
 
-- Missing `# @!method call(*, **)` directive (loses child-specific docs in generated YARD)
+- Using `# @!method call(*, **)` when an explicit `def call` override exists —
+  causes YARD to generate duplicate or conflicting documentation; remove the
+  `@!method` directive and place the `@overload` docs directly above `def call`
+- Missing `# @!method call(*, **)` directive when there is no `def call` override
+  (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
