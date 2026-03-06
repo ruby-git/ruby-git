@@ -27,6 +27,7 @@ require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/reset'
 require_relative 'commands/rm'
+require_relative 'commands/show'
 require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
@@ -1162,11 +1163,8 @@ module Git
     # @param [String|NilClass] path the path of the file to be shown
     # @return [String] the object information
     def show(objectish = nil, path = nil)
-      arr_opts = []
-
-      arr_opts << (path ? "#{objectish}:#{path}" : objectish)
-
-      command_capturing('show', *arr_opts.compact, chomp: false).stdout
+      object = path ? "#{objectish}:#{path}" : objectish
+      Git::Commands::Show.new(self).call(*[object].compact).stdout
     end
 
     ## WRITE COMMANDS ##

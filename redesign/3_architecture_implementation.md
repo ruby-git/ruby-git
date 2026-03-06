@@ -22,17 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (42/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (43/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `show`** → `Git::Commands::Show`
+**Migrate `describe`** → `Git::Commands::Describe`
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def show`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def describe`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -147,7 +147,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-  - `bundle exec rspec spec/unit/git/commands/show_spec.rb` — new tests pass
+  - `bundle exec rspec spec/unit/git/commands/describe_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -772,7 +772,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
 - [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
-- [ ] `show` → `Git::Commands::Show` — `git show`
+- [x] `show` → `Git::Commands::Show` — `git show`
 - [ ] `describe` → `Git::Commands::Describe` — `git describe`
 - [ ] `grep` → `Git::Commands::Grep` — `git grep`
 - [ ] `ls_files` → `Git::Commands::LsFiles` — `git ls-files`
