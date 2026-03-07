@@ -424,6 +424,10 @@ Include at least one failure case per command.
 - use `# @!method call(*, **)` YARD directive with nested `@overload` blocks for per-command docs
 - add `@overload` blocks for valid call shapes, indented under `@!method`
 - keep tags aligned with `arguments do` and `allow_exit_status` behavior
+- tag short descriptions must not end with punctuation (no trailing period, comma,
+  or colon)
+- multi-paragraph tag descriptions must have a blank comment line (`#`) between the
+  short description and each continuation paragraph
 
 ## Phased rollout, compatibility, and quality gates
 
