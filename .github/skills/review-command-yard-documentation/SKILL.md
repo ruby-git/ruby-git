@@ -169,6 +169,10 @@ When command declares non-default exit range:
 ### 5. Formatting consistency
 
 - [ ] all general formatting rules from [Write YARD Documentation](../write-yard-documentation/SKILL.md) are satisfied
+- [ ] tag short descriptions (the first sentence of each `@param`, `@option`,
+      `@return`, `@raise`, etc.) do not end with punctuation
+- [ ] multi-paragraph tag descriptions have a blank comment line (`#`) between the
+      short description and each continuation paragraph
 - [ ] `@option` description text starts with a capital letter (sentence case)
 - [ ] consistent option wording and defaults across sibling commands
 - [ ] no stale references to removed per-command implementation details
