@@ -22,17 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (44/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (45/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `grep`** → `Git::Commands::Grep`
+**Migrate `ls_files`** → `Git::Commands::LsFiles`
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def grep`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def ls_files`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -147,7 +147,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-  - `bundle exec rspec spec/unit/git/commands/grep_spec.rb` — new tests pass
+   - `bundle exec rspec spec/unit/git/commands/ls_files_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -735,6 +735,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
 | `cat_file_*` | `Git::Commands::CatFile::*` | `spec/unit/git/commands/cat_file/*_spec.rb` | `git cat-file` |
 | `checkout_index` | `Git::Commands::CheckoutIndex` | `spec/unit/git/commands/checkout_index_spec.rb` | `git checkout-index` |
+| `grep` | `Git::Commands::Grep` | `spec/unit/git/commands/grep_spec.rb` | `git grep` |
 | `log_commits` / `full_log_commits` | `Git::Commands::Log` | `spec/unit/git/commands/log_spec.rb` | `git log` |
 | `show` | `Git::Commands::Show` | `spec/unit/git/commands/show_spec.rb` | `git show` |
 | `describe` | `Git::Commands::Describe` | `spec/unit/git/commands/describe_spec.rb` | `git describe` |
@@ -776,7 +777,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
 - [x] `show` → `Git::Commands::Show` — `git show`
 - [x] `describe` → `Git::Commands::Describe` — `git describe`
-- [ ] `grep` → `Git::Commands::Grep` — `git grep`
+- [x] `grep` → `Git::Commands::Grep` — `git grep`
 - [ ] `ls_files` → `Git::Commands::LsFiles` — `git ls-files`
 - [ ] `ls_tree` / `full_tree` / `tree_depth` → `Git::Commands::LsTree` — `git
   ls-tree`
