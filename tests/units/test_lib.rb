@@ -353,6 +353,10 @@ class TestLib < Test::Unit::TestCase
     assert_equal("Grep regex doesn't like this:4342: because it is bad",
                  match['grep_colon_numbers:colon_numbers.txt'].first[1])
     assert_equal(1, match.size)
+
+    assert_raise(ArgumentError) do
+      @lib.grep('search', object: 'gitsearch1', line_number: false)
+    end
   end
 
   def test_show
