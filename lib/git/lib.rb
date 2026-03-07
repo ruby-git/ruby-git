@@ -16,6 +16,7 @@ require_relative 'commands/cat_file/typed'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
+require_relative 'commands/describe'
 require_relative 'commands/diff/numstat'
 require_relative 'commands/diff/patch'
 require_relative 'commands/diff/raw'
@@ -218,29 +219,6 @@ module Git
 
     ## READ COMMANDS ##
 
-    # The map defining how to translate user options to git command arguments.
-    DESCRIBE_OPTION_MAP = [
-      { keys: [:all], flag: '--all', type: :boolean },
-      { keys: [:tags], flag: '--tags', type: :boolean },
-      { keys: [:contains], flag: '--contains', type: :boolean },
-      { keys: [:debug], flag: '--debug', type: :boolean },
-      { keys: [:long], flag: '--long', type: :boolean },
-      { keys: [:always], flag: '--always', type: :boolean },
-      { keys: %i[exact_match exact-match], flag: '--exact-match', type: :boolean },
-      { keys: [:abbrev], flag: '--abbrev', type: :valued_equals },
-      { keys: [:candidates], flag: '--candidates', type: :valued_equals },
-      { keys: [:match], flag: '--match', type: :valued_equals },
-      {
-        keys: [:dirty],
-        type: :custom,
-        builder: lambda do |value|
-          return '--dirty' if value == true
-
-          "--dirty=#{value}" if value.is_a?(String)
-        end
-      }
-    ].freeze
-
     # Finds most recent tag that is reachable from a commit
     #
     # @see https://git-scm.com/docs/git-describe git-describe
@@ -268,10 +246,12 @@ module Git
     def describe(commit_ish = nil, opts = {})
       assert_args_are_not_options('commit-ish object', commit_ish)
 
-      args = build_args(opts, DESCRIBE_OPTION_MAP)
-      args << commit_ish if commit_ish
+      # Translate legacy :"exact-match" (hyphenated) key to :exact_match (underscored)
+      opts = opts.dup
+      opts[:exact_match] ||= opts.delete(:'exact-match') if opts.key?(:'exact-match')
 
-      command_capturing('describe', *args).stdout
+      commit_ishes = Array(commit_ish).compact
+      Git::Commands::Describe.new(self).call(*commit_ishes, **opts).stdout
     end
 
     # Return the commits that are within the given revision range
