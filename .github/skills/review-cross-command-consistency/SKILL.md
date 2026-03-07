@@ -75,6 +75,9 @@ The invocation needs two or more sibling command files from the same family.
 - [ ] consistent class summaries and `@api private`
 - [ ] `@overload` coverage consistent for equivalent call shapes
 - [ ] `@return` and `@raise` wording consistent across siblings
+- [ ] tag short descriptions do not end with punctuation
+- [ ] multi-paragraph tag descriptions have a blank comment line between the short
+      description and each continuation paragraph
 
 ### 5. Unit spec consistency
 
