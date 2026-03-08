@@ -87,6 +87,44 @@ If more explanation is needed, use additional paragraphs after the short descrip
 Separate each paragraph from the next with a blank comment line (`#`). Wrap
 individual lines at 90 characters.
 
+These rules apply equally to the inline text of tags (`@param`, `@option`,
+`@return`, `@raise`, etc.). The first sentence of a tag is its short description
+and must not end with punctuation. Any continuation paragraph within a tag must be
+separated from the preceding text by a blank comment line.
+
+Correct — tag title without punctuation, blank line before continuation:
+
+```ruby
+# @option options [Boolean] :ignore_case (nil) Ignore case
+#   distinctions in both the pattern and the file contents
+#
+#   Alias: :i
+#
+# @option options [String, Array<String>] :pattern The search pattern
+#   (required; must not be nil)
+#
+#   Pass a String for a simple pattern (emitted as `-e <pattern>`).
+#   Pass an Array of raw CLI arguments for compound boolean
+#   expressions.
+#
+# @return [Git::CommandLineResult] the result of calling `git grep`
+#
+#   Exit status 0 means matches were found; exit status 1 means no
+#   lines were selected (not an error).
+```
+
+Incorrect — trailing period on title, missing blank line before continuation:
+
+```ruby
+# @option options [Boolean] :ignore_case (nil) Ignore case
+#   distinctions in both the pattern and the file contents.
+#   Alias: :i
+#
+# @return [Git::CommandLineResult] the result of calling `git grep`.
+#   Exit status 0 means matches were found; exit status 1 means no
+#   lines were selected (not an error).
+```
+
 **`@return` must always include a type**
 
 Every `@return` tag must include a `[Type]` specifier. `@return the value` is

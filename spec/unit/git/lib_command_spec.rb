@@ -787,6 +787,49 @@ RSpec.describe Git::Lib do
     end
   end
 
+  describe '#grep' do
+    let(:grep_command) { instance_double(Git::Commands::Grep) }
+
+    before do
+      allow(Git::Commands::Grep).to receive(:new).with(lib).and_return(grep_command)
+    end
+
+    it 'delegates to Grep and returns parsed matches' do
+      output = "HEAD:lib/foo.rb:10:found it\nHEAD:lib/bar.rb:3:found it again\n"
+      allow(grep_command).to receive(:call)
+        .with('HEAD', pattern: 'found', line_number: true)
+        .and_return(command_result(output, exitstatus: 0))
+
+      result = lib.grep('found', object: 'HEAD')
+
+      expect(grep_command).to have_received(:call).with('HEAD', pattern: 'found', line_number: true)
+      expect(result).to eq(
+        'HEAD:lib/foo.rb' => [[10, 'found it']],
+        'HEAD:lib/bar.rb' => [[3, 'found it again']]
+      )
+    end
+
+    it 'returns {} when exit status is 1 and stderr is empty (no matches)' do
+      allow(grep_command).to receive(:call)
+        .with('HEAD', pattern: 'nomatch', line_number: true)
+        .and_return(command_result('', exitstatus: 1))
+
+      result = lib.grep('nomatch')
+
+      expect(result).to eq({})
+    end
+
+    it 'raises Git::FailedError when exit status is 1 and stderr is non-empty (real error)' do
+      allow(grep_command).to receive(:call)
+        .with('HEAD', pattern: 'search', line_number: true)
+        .and_return(command_result('', stderr: 'fatal: bad object HEAD', exitstatus: 1))
+
+      expect { lib.grep('search') }.to raise_error(Git::FailedError) do |error|
+        expect(error.result.stderr).to include('fatal: bad object HEAD')
+      end
+    end
+  end
+
   describe '#cat_file_tag' do
     let(:typed_object_command) { instance_double(Git::Commands::CatFile::Typed) }
 

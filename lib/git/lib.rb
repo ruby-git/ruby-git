@@ -21,6 +21,7 @@ require_relative 'commands/diff/numstat'
 require_relative 'commands/diff/patch'
 require_relative 'commands/diff/raw'
 require_relative 'commands/fsck'
+require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
 require_relative 'commands/merge/start'
@@ -812,31 +813,19 @@ module Git
       Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit).stdout
     end
 
-    GREP_OPTION_MAP = [
-      { keys: [:ignore_case],     flag: '-i', type: :boolean },
-      { keys: [:invert_match],    flag: '-v', type: :boolean },
-      { keys: [:extended_regexp], flag: '-E', type: :boolean },
-      # For validation only, as these are handled manually
-      { keys: [:object],       type: :validate_only },
-      { keys: [:path_limiter], type: :validate_only }
-    ].freeze
-
-    # returns hash
-    # [tree-ish] = [[line_no, match], [line_no, match2]]
-    # [tree-ish] = [[line_no, match], [line_no, match2]]
     def grep(string, opts = {})
-      opts[:object] ||= 'HEAD'
-      ArgsBuilder.validate!(opts, GREP_OPTION_MAP)
+      opts = opts.dup
+      object = opts.delete(:object) || 'HEAD'
+      opts[:line_number] = true
+      result = Git::Commands::Grep.new(self).call(object, pattern: string, **opts)
 
-      boolean_flags = build_args(opts, GREP_OPTION_MAP)
-      args = ['-n', *boolean_flags, '-e', string, opts[:object]]
+      # Exit status 1 with empty stderr means no lines matched (not an error)
+      return {} if result.status.exitstatus == 1 && result.stderr.empty?
 
-      if (limiter = opts[:path_limiter])
-        args.push('--', *Array(limiter))
-      end
+      # Exit status 1 with non-empty stderr is a real error (e.g. bad object reference)
+      raise Git::FailedError, result if result.status.exitstatus == 1
 
-      lines = execute_grep_command(args)
-      parse_grep_output(lines)
+      parse_grep_output(result.stdout.split("\n"))
     end
 
     # Validate that the given arguments cannot be mistaken for a command-line option
@@ -2363,15 +2352,6 @@ module Git
       raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
 
       :unborn
-    end
-
-    def execute_grep_command(args)
-      command_capturing('grep', *args).stdout.split("\n")
-    rescue Git::FailedError => e
-      # `git grep` returns 1 when no lines are selected.
-      raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
-
-      [] # Return an empty array for "no matches found"
     end
 
     def parse_grep_output(lines)

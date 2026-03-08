@@ -98,6 +98,10 @@ end
 - update `@return` to `Git::CommandLineResult`
 - keep command-specific `@overload` docs nested under `# @!method call(*, **)` directive
 - ensure `@raise` wording reflects allowed range behavior
+- tag short descriptions must not end with punctuation (no trailing period, comma,
+  or colon)
+- multi-paragraph tag descriptions must have a blank comment line (`#`) between the
+  short description and each continuation paragraph
 
 ## Migration process and internal compatibility
 
