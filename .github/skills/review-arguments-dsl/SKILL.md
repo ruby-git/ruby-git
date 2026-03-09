@@ -91,16 +91,32 @@ Key behaviors:
 
 ## What to Check
 
-See [CHECKLIST.md](CHECKLIST.md) for the complete 8-point review checklist covering:
+See [CHECKLIST.md](CHECKLIST.md) for the complete review checklist covering:
 
 1. Correct DSL method per option type
 2. Correct alias and `as:` usage
 3. Correct ordering
 4. Correct modifiers
 5. Completeness
-6. Conflicts
-7. Conditional and unconditional argument requirements
-8. Exit-status declaration consistency
+6. Exit-status declaration consistency
+
+**Validation delegation policy:** Command classes generally do **not** declare
+cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
+`requires_exactly_one_of`, `forbid_values`, `allowed_values`). Git is the single
+source of truth for its own option semantics. There are two narrow exceptions:
+
+1. **`skip_cli: true` arguments** — the argument never appears in git's argv, so
+   git cannot detect incompatibilities and Ruby must enforce them. Example:
+   `cat-file --batch` declares `conflicts :objects, :batch_all_objects` and
+   `requires_one_of :objects, :batch_all_objects` because `:objects` is
+   `skip_cli: true` and never reaches git's argv.
+2. **Git-visible arguments that cause silent data loss** — if a combination of
+   git-visible arguments causes git to silently discard data (no error, wrong
+   result), a `conflicts` declaration MAY be added with: a code comment explaining
+   why, a reference to the git version(s) where the behavior was verified, and a
+   test. As of this writing, no such case has been identified.
+
+See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
 
 ## Verification Chain
 

@@ -111,8 +111,14 @@ Shared behavior lives in `Base`:
 - [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
 - [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
 - [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
-- [ ] Validation expressible in the DSL is declared in `arguments do` (`conflicts`,
-      `requires_one_of`, `forbid_values`, etc.) rather than manually raised in `call`
+- [ ] Any `ArgumentError` raised manually or via DSL constraint covers only what
+      git cannot validate: per-argument failures and constraints on `skip_cli: true`
+      arguments. Cross-argument constraint methods are **not** declared for
+      git-visible arguments — the narrow exception is arguments git cannot observe
+      in its argv (e.g., `skip_cli: true` operands: `conflicts :objects,
+      :batch_all_objects` and `requires_one_of :objects, :batch_all_objects`).
+      See the validation delegation policy in
+      `redesign/3_architecture_implementation.md` Insight 6.
 - [ ] Bulk of override is extracted into a private helper (`run_batch`, etc.) to satisfy Rubocop `Metrics` thresholds
 - [ ] Does not parse output in command class
 
@@ -123,9 +129,15 @@ Most commands use `def call(...) = super`, which forwards all arguments to
 
 **Override `call` only when the command needs:**
 
-1. **Input validation the DSL cannot express** — prefer declarative constraints in
-  `arguments do` (`conflicts`, `requires_one_of`, `forbid_values`, etc.) and only
-  raise `ArgumentError` manually when needed
+1. **Input validation the DSL cannot express** — per-argument validation parameters
+  (`required:`, `type:`, `allow_nil:`, etc.) and operand format validation belong
+  in `arguments do`. Cross-argument constraint methods are generally **not** declared;
+  git validates its own option semantics. The narrow exception is **arguments git
+  cannot observe in its argv**: if an argument is `skip_cli: true` and never
+  reaches git's argv, git cannot detect incompatibilities — use `conflicts` and/or
+  `requires_one_of` in the DSL (e.g., `cat-file --batch` uses both because
+  `:objects` is `skip_cli: true`). Do not raise `ArgumentError` manually for things
+  the DSL can express via a constraint declaration.
 2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
    `Base#with_stdin`
 3. **Non-trivial option routing** — build different argument sets based on

@@ -79,10 +79,16 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   exit codes 2 and 128 raise `FailedError`. Commands that only succeed at exit code 0
   (the default) do not need a unit-level exit code test — the integration
   error-handling test covers that path.
-- Input validation (`ArgumentError`) for unsupported/conflicting/missing args
-- For validation declared in the Arguments DSL (`conflicts`, `requires_one_of`,
-  `forbid_values`), assert the DSL-generated behavior/message shape rather than
-  command-specific custom wording
+- Input validation (`ArgumentError`) for per-argument validation failures: unknown
+  options, `required:` violations, `type:` mismatches, etc. Command classes
+  generally do **not** declare cross-argument constraint methods (`conflicts`,
+  `requires`, `requires_one_of`, `requires_exactly_one_of`, `forbid_values`,
+  `allowed_values`, etc.) — git validates its
+  own option semantics. The narrow exception is **arguments git cannot observe in
+  its argv**: if an argument is `skip_cli: true`, it never reaches git's argv and
+  git cannot detect incompatibilities — constraint declarations are appropriate and
+  the resulting `ArgumentError` should be tested. See the validation delegation
+  policy in `redesign/3_architecture_implementation.md` Insight 6.
 
 ### Expectations for command invocation
 
@@ -135,6 +141,9 @@ it 'includes --batch-all-objects and writes nothing to stdin' do
   command.call(batch_all_objects: true)
 end
 
+# git-invisible argument exception: :objects is skip_cli: true, so git never sees
+# it in argv and cannot detect these incompatibilities. Ruby must enforce them.
+# conflicts: can't pass objects AND bypass stdin; requires_one_of: must choose one.
 it 'raises when mutually exclusive DSL inputs are combined' do
   expect { command.call('HEAD', batch_all_objects: true) }
     .to raise_error(ArgumentError, /cannot specify :objects and :batch_all_objects/)
@@ -190,8 +199,11 @@ Unit tests are organized under `describe '#call'` with three sections:
    that exit codes within the allowed range return a result and exit codes outside
    the range raise `FailedError`.
 3. **`context 'input validation'`** — only for commands with validation rules. Covers
-   unsupported options, conflicting options, at-least-one-required groups, and
-   required arguments that raise `ArgumentError`.
+   unsupported options and required arguments that raise `ArgumentError`. Cross-argument
+   constraints for git-visible arguments are not tested because command classes do not
+   declare them. The exception is constraints on `skip_cli: true` arguments (e.g.,
+   `conflicts :objects, :batch_all_objects` and `requires_one_of :objects,
+   :batch_all_objects`), which should be tested.
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.
