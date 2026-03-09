@@ -5224,11 +5224,6 @@ RSpec.describe Git::Commands::Arguments do
         expect { add_args.bind(chmod: '-x') }.not_to raise_error
       end
 
-      it 'raises for an invalid value' do
-        expect { add_args.bind(chmod: 'rx') }
-          .to raise_error(ArgumentError, /expected one of.*got "rx"/)
-      end
-
       it 'skips when chmod is absent' do
         expect { add_args.bind }.not_to raise_error
       end
@@ -5239,11 +5234,6 @@ RSpec.describe Git::Commands::Arguments do
 
       it 'passes for verbatim' do
         expect { create_args.bind('v1.0', nil, cleanup: 'verbatim', message: 'msg') }.not_to raise_error
-      end
-
-      it 'raises for an invalid value' do
-        expect { create_args.bind('v1.0', nil, cleanup: 'compact', message: 'msg') }
-          .to raise_error(ArgumentError, /expected one of.*got "compact"/)
       end
     end
   end

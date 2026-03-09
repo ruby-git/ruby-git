@@ -52,8 +52,6 @@ module Git
           flag_option :ignore_other_worktrees
           flag_option :recurse_submodules, negatable: true
 
-          conflicts :b, :B, :orphan
-
           # Positional arguments
           operand :branch
         end

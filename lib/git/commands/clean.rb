@@ -52,7 +52,6 @@ module Git
         flag_option :x
         flag_option :X
         value_option :pathspec, as_operand: true, separator: '--', repeatable: true
-        conflicts :x, :X
       end
 
       # @!method call(*, **)

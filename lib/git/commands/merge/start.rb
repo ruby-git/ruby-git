@@ -71,8 +71,6 @@ module Git
 
           # Positional: commits to merge (variadic, required)
           operand :commit, repeatable: true, required: true
-          conflicts :ff, :ff_only
-          conflicts :m, :file
         end
 
         # @!method call(*, **)

@@ -42,7 +42,6 @@ module Git
           flag_option :find_copies_harder
           flag_or_value_option :dirstat, inline: true
           operand :stash
-          conflicts :include_untracked, :only_untracked
         end
 
         # @!method call(*, **)

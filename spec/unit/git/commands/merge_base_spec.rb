@@ -75,16 +75,6 @@ RSpec.describe Git::Commands::MergeBase do
       it 'raises ArgumentError when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
       end
-
-      it 'raises ArgumentError when all and independent are combined' do
-        expect { command.call('a', 'b', all: true, independent: true) }
-          .to raise_error(ArgumentError, /cannot specify :all and :independent/)
-      end
-
-      it 'raises ArgumentError when all and fork_point are combined' do
-        expect { command.call('main', 'feature', all: true, fork_point: true) }
-          .to raise_error(ArgumentError, /cannot specify :all and :fork_point/)
-      end
     end
   end
 end

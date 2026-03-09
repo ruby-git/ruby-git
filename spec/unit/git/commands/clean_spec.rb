@@ -69,12 +69,6 @@ RSpec.describe Git::Commands::Clean do
     end
 
     context 'input validation' do
-      it 'raises an ArgumentError when both :x and :X are true' do
-        expect { command.call(x: true, X: true) }.to(
-          raise_error(ArgumentError, /cannot specify :x and :X/)
-        )
-      end
-
       it 'raises an ArgumentError for unexpected options' do
         expect { command.call(unexpected: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :unexpected/)

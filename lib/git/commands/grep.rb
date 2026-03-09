@@ -122,14 +122,6 @@ module Git
 
         operand :tree, repeatable: true
         value_option :pathspec, as_operand: true, separator: '--', repeatable: true
-
-        conflicts :extended_regexp, :basic_regexp, :perl_regexp, :fixed_strings
-        conflicts :no_index, :cached
-        conflicts :no_index, :untracked
-        conflicts :cached, :tree
-        conflicts :untracked, :tree
-        conflicts :no_index, :tree
-        requires_one_of :untracked, :no_index, when: :exclude_standard
       end
 
       # `git grep` exits with 1 when no lines are selected — not an error

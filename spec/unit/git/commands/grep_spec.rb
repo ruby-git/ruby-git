@@ -727,56 +727,5 @@ RSpec.describe Git::Commands::Grep do
           .to raise_error(ArgumentError)
       end
     end
-
-    context 'conflicting options' do
-      it 'raises ArgumentError when conflicting regexp flavour options are combined' do
-        expect { command.call('HEAD', pattern: 'x', extended_regexp: true, basic_regexp: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :no_index and :cached are both provided' do
-        expect { command.call('HEAD', pattern: 'x', no_index: true, cached: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :no_index and :untracked are both provided' do
-        expect { command.call('HEAD', pattern: 'x', no_index: true, untracked: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :cached and a tree operand are both provided' do
-        expect { command.call('HEAD', pattern: 'x', cached: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :untracked and a tree operand are both provided' do
-        expect { command.call('HEAD', pattern: 'x', untracked: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :no_index and a tree operand are both provided' do
-        expect { command.call('HEAD', pattern: 'x', no_index: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when :exclude_standard is given without :untracked or :no_index' do
-        expect { command.call(pattern: 'x', exclude_standard: true) }
-          .to raise_error(ArgumentError)
-      end
-
-      it 'allows :exclude_standard with :untracked' do
-        expect_command_capturing('grep', '--no-color', '--exclude-standard', '--untracked', '-e', 'x')
-          .and_return(command_result(''))
-
-        command.call(pattern: 'x', exclude_standard: true, untracked: true)
-      end
-
-      it 'allows :exclude_standard with :no_index' do
-        expect_command_capturing('grep', '--no-color', '--no-exclude-standard', '--no-index', '-e', 'x')
-          .and_return(command_result(''))
-
-        command.call(pattern: 'x', exclude_standard: false, no_index: true)
-      end
-    end
   end
 end

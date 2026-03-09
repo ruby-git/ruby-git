@@ -325,11 +325,6 @@ RSpec.describe Git::Commands::Merge::Start do
       it 'raises an error when no commits provided' do
         expect { command.call }.to raise_error(ArgumentError)
       end
-
-      it 'raises ArgumentError when both ff and ff_only are provided' do
-        expect { command.call('feature', ff: true, ff_only: true) }
-          .to raise_error(ArgumentError, /cannot specify :ff and :ff_only/)
-      end
     end
   end
 end

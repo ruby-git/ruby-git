@@ -57,15 +57,6 @@ module Git
         operand :directory
         execution_option :timeout
         execution_option :chdir
-
-        conflicts :revision, :branch
-        conflicts :revision, :mirror
-        conflicts :bundle_uri, :depth
-        conflicts :bundle_uri, :shallow_since
-        conflicts :bundle_uri, :shallow_exclude
-        requires :filter,             when: :also_filter_submodules
-        requires :recurse_submodules, when: :also_filter_submodules
-        allowed_values :ref_format, in: %w[files reftable]
       end
 
       # @!method call(*, **)
@@ -185,11 +176,8 @@ module Git
       #
       #     @return [Git::CommandLineResult] the result of the git clone command
       #
-      #     @raise [ArgumentError] if unsupported options are provided, if :single_branch is not
-      #       true, false, or nil, if :also_filter_submodules is given without :filter or
-      #       :recurse_submodules, if :revision is combined with :branch or :mirror, if :bundle_uri
-      #       is combined with :depth, :shallow_since, or :shallow_exclude, or if any option fails
-      #       validation
+      #     @raise [ArgumentError] if argument validation fails (e.g., unsupported options
+      #       are provided or option values are invalid)
       #
       #     @see Git::Lib#command for details on timeout behavior and other execution options
     end

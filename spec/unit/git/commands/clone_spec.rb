@@ -485,54 +485,6 @@ RSpec.describe Git::Commands::Clone do
         expect { command.call(repository_url, directory, single_branch: 'yes') }
           .to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
       end
-
-      it 'raises ArgumentError for invalid ref_format values' do
-        expect { command.call(repository_url, directory, ref_format: 'invalid') }
-          .to raise_error(ArgumentError, /Invalid value for :ref_format/)
-      end
-
-      it 'raises ArgumentError when :also_filter_submodules is given without :filter' do
-        expect { command.call(repository_url, directory, recurse_submodules: true, also_filter_submodules: true) }
-          .to raise_error(ArgumentError, /:also_filter_submodules requires :filter/)
-      end
-
-      it 'raises ArgumentError when :also_filter_submodules is given without :recurse_submodules' do
-        expect do
-          command.call(repository_url, directory, filter: 'blob:none', also_filter_submodules: true)
-        end.to raise_error(ArgumentError, /:also_filter_submodules requires :recurse_submodules/)
-      end
-
-      it 'raises ArgumentError when :revision and :branch are both given' do
-        expect do
-          command.call(repository_url, directory, revision: 'refs/heads/main', branch: 'main')
-        end.to raise_error(ArgumentError, /:revision.*:branch|:branch.*:revision/)
-      end
-
-      it 'raises ArgumentError when :revision and :mirror are both given' do
-        expect do
-          command.call(repository_url, directory, revision: 'refs/heads/main', mirror: true)
-        end.to raise_error(ArgumentError, /:revision.*:mirror|:mirror.*:revision/)
-      end
-
-      it 'raises ArgumentError when :bundle_uri and :depth are both given' do
-        expect do
-          command.call(repository_url, directory, bundle_uri: 'https://example.com/bundle', depth: 1)
-        end.to raise_error(ArgumentError, /:bundle_uri.*:depth|:depth.*:bundle_uri/)
-      end
-
-      it 'raises ArgumentError when :bundle_uri and :shallow_since are both given' do
-        expect do
-          command.call(repository_url, directory, bundle_uri: 'https://example.com/bundle',
-                                                  shallow_since: '2020-01-01')
-        end.to raise_error(ArgumentError, /:bundle_uri.*:shallow_since|:shallow_since.*:bundle_uri/)
-      end
-
-      it 'raises ArgumentError when :bundle_uri and :shallow_exclude are both given' do
-        expect do
-          command.call(repository_url, directory, bundle_uri: 'https://example.com/bundle',
-                                                  shallow_exclude: 'v1.0')
-        end.to raise_error(ArgumentError, /:bundle_uri.*:shallow_exclude|:shallow_exclude.*:bundle_uri/)
-      end
     end
   end
 end

@@ -51,9 +51,6 @@ module Git
         value_option :match, repeatable: true
         value_option :exclude, repeatable: true
         operand :commit_ish, repeatable: true
-        conflicts :exact_match, :candidates
-        conflicts :dirty, :commit_ish
-        conflicts :broken, :commit_ish
       end
 
       # @!method call(*, **)
