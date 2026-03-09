@@ -39,7 +39,6 @@ module Git
         flag_option :merge
         flag_option :keep
         operand :commit, required: false
-        conflicts :soft, :mixed, :hard, :merge, :keep
       end
 
       # @!method call(*, **)
@@ -71,7 +70,8 @@ module Git
       #
       #     @return [Git::CommandLineResult] the result of calling `git reset`
       #
-      #     @raise [ArgumentError] if more than one of :soft, :mixed, :hard, :merge, or :keep is specified
+      #     @raise [ArgumentError] if argument validation fails (e.g., unsupported options
+      #       are provided or option values are invalid)
       #
       #     @raise [Git::FailedError] if the command returns a non-zero exit status
     end

@@ -39,9 +39,6 @@ module Git
 
         # Positional: commits to find common ancestor(s) of
         operand :commit, repeatable: true, required: true
-        conflicts :octopus, :independent, :fork_point
-        conflicts :all, :independent
-        conflicts :all, :fork_point
       end
 
       # git merge-base --fork-point returns exit code 1 when no fork point is found (not an error)

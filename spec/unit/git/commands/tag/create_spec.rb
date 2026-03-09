@@ -328,52 +328,5 @@ RSpec.describe Git::Commands::Tag::Create do
         expect(result).to be_a(Git::CommandLineResult)
       end
     end
-
-    context 'input validation' do
-      it 'raises an error when both annotate and sign are provided' do
-        expect { command.call('v1.0.0', annotate: true, sign: true, message: 'Release') }.to(
-          raise_error(ArgumentError, /cannot specify :annotate and :sign/)
-        )
-      end
-
-      it 'raises an error when both annotate and local_user are provided' do
-        expect { command.call('v1.0.0', annotate: true, local_user: 'KEY', message: 'Release') }.to(
-          raise_error(ArgumentError, /cannot specify :annotate and :local_user/)
-        )
-      end
-
-      it 'raises an error when both sign and local_user are provided' do
-        expect { command.call('v1.0.0', sign: true, local_user: 'KEY', message: 'Release') }.to(
-          raise_error(ArgumentError, /cannot specify :sign and :local_user/)
-        )
-      end
-
-      it 'raises an error when annotate, sign, and local_user are all provided' do
-        expect { command.call('v1.0.0', annotate: true, sign: true, local_user: 'KEY', message: 'Release') }.to(
-          raise_error(ArgumentError, /cannot specify/)
-        )
-      end
-
-      it 'raises an error when both message and file are provided' do
-        expect { command.call('v1.0.0', message: 'Release', file: '/path/to/file') }.to(
-          raise_error(ArgumentError, /cannot specify :message and :file/)
-        )
-      end
-
-      it 'raises ArgumentError when :annotate is given without :message or :file' do
-        expect { command.call('v1.0.0', annotate: true) }
-          .to raise_error(ArgumentError, /:annotate requires at least one of :message, :file/)
-      end
-
-      it 'raises ArgumentError when :sign is given without :message or :file' do
-        expect { command.call('v1.0.0', sign: true) }
-          .to raise_error(ArgumentError, /:sign requires at least one of :message, :file/)
-      end
-
-      it 'raises ArgumentError when :local_user is given without :message or :file' do
-        expect { command.call('v1.0.0', local_user: 'KEY') }
-          .to raise_error(ArgumentError, /:local_user requires at least one of :message, :file/)
-      end
-    end
   end
 end

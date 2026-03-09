@@ -90,21 +90,6 @@ module Git
         operand :revision_range, repeatable: true
         value_option :path, as_operand: true, separator: '--', repeatable: true
         execution_option :timeout
-
-        # Mutual exclusion: cherry-pick filtering
-        conflicts :cherry, :cherry_pick
-        conflicts :cherry, :cherry_mark
-
-        # Mutual exclusion: regexp engine selection
-        conflicts :extended_regexp, :fixed_strings, :perl_regexp
-
-        # Mutual exclusion: commit ordering modes
-        conflicts :date_order, :author_date_order, :topo_order
-
-        # Conditional requirements
-        requires :grep, when: :all_match
-        requires :grep, when: :invert_grep
-        requires :path, when: :follow
       end
 
       # @overload call(*revision_range, **options)
@@ -249,18 +234,9 @@ module Git
       #
       #   @return [Git::CommandLineResult] the result of calling `git log`
       #
-      #   @raise [ArgumentError] if unsupported options are provided, conflicting
-      #     options are combined (e.g. `:cherry` with `:cherry_pick`), or a
-      #     required dependency is not satisfied (e.g. `:all_match` without `:grep`)
+      #   @raise [ArgumentError] if unsupported options are provided
       #
       #   @raise [Git::FailedError] if the command returns a non-zero exit status
-      def call(*, **kwargs)
-        if kwargs[:follow] && kwargs.key?(:path) && Array(kwargs[:path]).size != 1
-          raise ArgumentError, "--follow requires exactly one path (got #{Array(kwargs[:path]).size})"
-        end
-
-        super
-      end
     end
   end
 end

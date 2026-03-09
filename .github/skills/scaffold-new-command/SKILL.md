@@ -355,9 +355,7 @@ it. Do not assume verbosity flags are safe sidechannel options; verify first.
 ## DSL ordering and argument conventions
 
 For the full DSL reference including ordering rules, correct DSL methods per option
-type, alias conventions, `as:` usage, modifier rules, constraint declarations
-(`conflicts`, `forbid_values`, `requires_exactly_one_of`, `requires_one_of`,
-`requires`), and pathspec conventions, see the
+type, alias conventions, `as:` usage, modifier rules, and pathspec conventions, see the
 [Arguments DSL Checklist](../review-arguments-dsl/CHECKLIST.md).
 
 **Key principles (summary):**
@@ -366,7 +364,7 @@ type, alias conventions, `as:` usage, modifier rules, constraint declarations
   (see "Options completeness" above)
 - Define arguments in the order they appear in the git-scm.com SYNOPSIS
 - Within unordered groups: literals → flag options → flag-or-value options → value
-  options → operands → pathspecs → constraint declarations
+  options → operands → pathspecs
 - Use aliases for long/short forms (`%i[force f]`), long name first
 - When the git SYNOPSIS has `[<tree-ish>] [--] [<pathspec>...]`, use keyword form
   (`value_option :pathspec, as_operand: true, separator: '--'`) for the post-`--`

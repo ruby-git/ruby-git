@@ -584,12 +584,14 @@ future work:
     catch-all signature `def call(*, **)` and let `ARGS.bind(*, **)` handle
     all validation.
 
-    Note: `ARGS.bind` validates per-argument parameters — unknown options,
-    `required:`, `type:`, `allow_nil:`, and operand format (option-like operand
-    rejection). Cross-argument constraint methods (`conflicts`, `requires`,
-    `requires_one_of`, `requires_exactly_one_of`, `forbid_values`, `allowed_values`)
-    are also evaluated by `bind` when declared, but command classes generally do not
-    declare them (see Insight 6 validation delegation policy).
+    Note: `ARGS.bind` validates per-argument parameters (unknown options,
+    `required:`, `type:`, `allow_nil:`, and operand format) and also evaluates
+    any declared cross-argument constraints (`conflicts`, `requires`,
+    `requires_one_of`, `requires_exactly_one_of`, `forbid_values`, `allowed_values`).
+    Command classes generally do not declare cross-argument constraints (see Insight
+    6 validation delegation policy) — inter-option constraint enforcement is
+    delegated to git, with the exception of `skip_cli: true` arguments that never
+    reach git's argv (see the `cat-file --batch` example above).
 
     ```ruby
     # git branch -m [<old-branch>] <new-branch>

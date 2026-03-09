@@ -52,6 +52,8 @@ module Git
           # Object names are passed via stdin batch protocol, not argv
           operand :objects, repeatable: true, skip_cli: true
 
+          # :objects is skip_cli: true — it never reaches git's argv, so git
+          # cannot detect these incompatibilities. Ruby must enforce them.
           conflicts :objects, :batch_all_objects
           requires_one_of :objects, :batch_all_objects
         end

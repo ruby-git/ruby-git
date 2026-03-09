@@ -41,7 +41,6 @@ module Git
           operand :commit1
           operand :commit2
           value_option :pathspecs, as_operand: true, separator: '--', repeatable: true
-          conflicts :cached, :no_index
         end
 
         # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error

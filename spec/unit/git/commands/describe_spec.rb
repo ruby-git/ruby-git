@@ -222,32 +222,6 @@ RSpec.describe Git::Commands::Describe do
       end
     end
 
-    context 'with conflicting :exact_match and :candidates' do
-      it 'raises ArgumentError because --exact-match is a synonym for --candidates=0' do
-        expect { command.call(exact_match: true, candidates: '5') }.to raise_error(ArgumentError)
-      end
-    end
-
-    context 'with conflicting :dirty and commit_ish' do
-      it 'raises ArgumentError when dirty is true and a commit-ish is given' do
-        expect { command.call('abc123', dirty: true) }.to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when dirty is a string and a commit-ish is given' do
-        expect { command.call('abc123', dirty: '-wip') }.to raise_error(ArgumentError)
-      end
-    end
-
-    context 'with conflicting :broken and commit_ish' do
-      it 'raises ArgumentError when broken is true and a commit-ish is given' do
-        expect { command.call('abc123', broken: true) }.to raise_error(ArgumentError)
-      end
-
-      it 'raises ArgumentError when broken is a string and a commit-ish is given' do
-        expect { command.call('abc123', broken: '-invalid') }.to raise_error(ArgumentError)
-      end
-    end
-
     context 'with an unrecognised keyword argument' do
       it 'raises ArgumentError' do
         expect { command.call(foo: true) }.to raise_error(ArgumentError)

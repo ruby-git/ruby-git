@@ -99,30 +99,6 @@ RSpec.describe Git::Commands::Reset do
     end
 
     context 'input validation' do
-      it 'raises an error when both hard and soft are true' do
-        expect { command.call(hard: true, soft: true) }.to(
-          raise_error(ArgumentError, /cannot specify :soft and :hard/)
-        )
-      end
-
-      it 'raises an error when both hard and mixed are true' do
-        expect { command.call(hard: true, mixed: true) }.to(
-          raise_error(ArgumentError, /cannot specify :mixed and :hard/)
-        )
-      end
-
-      it 'raises an error when both soft and mixed are true' do
-        expect { command.call(soft: true, mixed: true) }.to(
-          raise_error(ArgumentError, /cannot specify :soft and :mixed/)
-        )
-      end
-
-      it 'raises an error when all three are true' do
-        expect { command.call(hard: true, soft: true, mixed: true) }.to(
-          raise_error(ArgumentError, /cannot specify/)
-        )
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('HEAD', invalid_option: true) }.to(
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)

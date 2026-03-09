@@ -179,24 +179,6 @@ RSpec.describe Git::Commands::CheckoutIndex do
           raise_error(ArgumentError, /Unsupported options: :invalid_option/)
         )
       end
-
-      it 'raises ArgumentError when :all and :file are both given' do
-        expect { command.call('file.txt', all: true) }.to(
-          raise_error(ArgumentError, /cannot specify :all and :file/)
-        )
-      end
-
-      it 'raises ArgumentError for an invalid :stage value' do
-        expect { command.call(stage: '4') }.to(
-          raise_error(ArgumentError, /Invalid value for :stage/)
-        )
-      end
-
-      it 'raises ArgumentError for a non-numeric, non-"all" :stage value' do
-        expect { command.call(stage: 'other') }.to(
-          raise_error(ArgumentError, /Invalid value for :stage/)
-        )
-      end
     end
   end
 end
