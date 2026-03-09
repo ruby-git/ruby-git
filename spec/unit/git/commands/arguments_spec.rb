@@ -1232,28 +1232,6 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'with validator on flag' do
-      let(:args) do
-        described_class.define do
-          flag_option :force, validator: ->(v) { [true, false].include?(v) }
-        end
-      end
-
-      it 'allows valid true value' do
-        expect(args.bind(force: true).to_ary).to eq(['--force'])
-      end
-
-      it 'allows valid false value' do
-        expect(args.bind(force: false).to_ary).to eq([])
-      end
-
-      it 'raises ArgumentError for invalid values' do
-        expect { args.bind(force: 'yes') }.to(
-          raise_error(ArgumentError, /Invalid value for option: force/)
-        )
-      end
-    end
-
     context 'with option aliases' do
       let(:args) do
         described_class.define do
@@ -1506,15 +1484,15 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
       end
+    end
 
-      context 'when type: and validator: are both specified' do
-        it 'raises an error at definition time' do
-          expect do
-            described_class.define do
-              flag_option :single_branch, negatable: true, type: String, validator: ->(v) { [true, false].include?(v) }
-            end
-          end.to raise_error(ArgumentError, /cannot specify both type: and validator: for :single_branch/)
-        end
+    context 'when validator: is passed to flag_option' do
+      it 'raises ArgumentError at definition time' do
+        expect do
+          described_class.define do
+            flag_option :force, validator: ->(v) { [true, false].include?(v) }
+          end
+        end.to raise_error(ArgumentError, /unknown keyword: :validator/)
       end
     end
 
