@@ -240,8 +240,9 @@ module Git
     # - **type:** - Validates the value is an instance of the specified class(es).
     #   Accepts a single class or an array of classes. Raises ArgumentError if type
     #   doesn't match. This parameter only performs type checking during validation;
-    #   conversion of values to CLI argument strings happens later during the build
-    #   phase (for example, via #to_s in {Bound#to_a}). Defaults to nil (no validation).
+    #   the conversion of values to CLI argument strings is handled separately during
+    #   the build phase — see the *String Conversion* section below. Defaults to nil (no
+    #   validation).
     #
     #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
@@ -413,6 +414,39 @@ module Git
     #
     # The `type:` parameter cannot be combined with a custom `validator:` parameter.
     # Attempting to use both will raise an ArgumentError during definition.
+    #
+    # Passing a non-`String` type (such as `Integer` or `Float`) is valid as long as
+    # its `#to_s` output is the intended CLI string. The `type:` check validates the
+    # Ruby class; `#to_s` handles the conversion (see the *String Conversion* section below).
+    #
+    # ## String Conversion
+    #
+    # During the build phase, value-bearing option types (`value_option`,
+    # `flag_or_value_option`, `key_value_option`) and `operand` definitions convert
+    # their bound values to CLI argument strings by calling `#to_s`. This means any
+    # object with a meaningful `#to_s` implementation — `Integer`, `Float`,
+    # `Pathname`, etc. — can be passed as a value without the DSL needing to know
+    # about the type.
+    #
+    # Note: `flag_option` values control *presence or absence* of a flag and are not
+    # stringified. `custom_option` builders receive the raw value and are responsible
+    # for producing CLI strings themselves.
+    #
+    # The `type:` parameter does not affect this conversion; it only validates the
+    # Ruby class of the value *before* stringification.
+    #
+    # @example Numeric values are stringified automatically
+    #   args_def = Arguments.define do
+    #     value_option :depth, inline: true
+    #     value_option :jobs,  inline: true
+    #   end
+    #   args_def.bind(depth: 5, jobs: 4).to_a  # => ['--depth=5', '--jobs=4']
+    #
+    # @example Pathname is also accepted (no type: needed)
+    #   args_def = Arguments.define do
+    #     operand :path, required: true
+    #   end
+    #   args_def.bind(Pathname.new('/tmp/foo')).to_a  # => ['/tmp/foo']
     #
     # ## Conflict Detection
     #
