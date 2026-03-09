@@ -24,6 +24,7 @@ require_relative 'commands/fsck'
 require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
+require_relative 'commands/ls_files'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
@@ -1031,14 +1032,12 @@ module Git
     #     * :stage [String] the file stage
     #
     def ls_files(location = nil)
-      location ||= '.'
+      result = Git::Commands::LsFiles.new(self).call(location || '.', stage: true)
       {}.tap do |files|
-        command_capturing('ls-files', '--stage', location).stdout.split("\n").each do |line|
-          (info, file) = split_status_line(line)
-          (mode, sha, stage) = info.split
-          files[file] = {
-            path: file, mode_index: mode, sha_index: sha, stage: stage
-          }
+        result.stdout.split("\n").each do |line|
+          info, file = split_status_line(line)
+          mode, sha, stage = info.split
+          files[file] = { path: file, mode_index: mode, sha_index: sha, stage: stage }
         end
       end
     end
