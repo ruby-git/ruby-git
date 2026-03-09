@@ -412,13 +412,6 @@ module Git
     #   args_def.bind(timeout: "30")
     #   #=> raise ArgumentError, "The :timeout option must be a Integer or Float, but was a String"
     #
-    # The `type:` parameter cannot be combined with a custom `validator:` parameter.
-    # Attempting to use both will raise an ArgumentError during definition.
-    #
-    # Passing a non-`String` type (such as `Integer` or `Float`) is valid as long as
-    # its `#to_s` output is the intended CLI string. The `type:` check validates the
-    # Ruby class; `#to_s` handles the conversion (see the *String Conversion* section below).
-    #
     # ## String Conversion
     #
     # During the build phase, value-bearing option types (`value_option`,
@@ -575,8 +568,7 @@ module Git
     # raises ArgumentError with a descriptive message.
     #
     # This is typically used to model git options that accept only a fixed list of
-    # modes or strategies, and supersedes ad-hoc `validator:` lambdas for simple
-    # set-membership checks.
+    # modes or strategies.
     #
     # @example Restricting option values
     #   args_def = Arguments.define do
@@ -631,12 +623,6 @@ module Git
       # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
       #   descriptive message if value doesn't match.
       #
-      # @param validator [Proc, nil] optional validator proc; receives the bound value and
-      #   must return +true+ to indicate the value is valid, or return
-      #   a +String+ to raise ArgumentError using that string as the message, or return any
-      #   other non-true value to raise ArgumentError with a generic message. The proc may
-      #   also raise ArgumentError directly. Cannot be combined with type:.
-      #
       # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
       #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
@@ -675,9 +661,9 @@ module Git
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :force"
       #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
-      def flag_option(names, as: nil, type: nil, validator: nil, negatable: false, required: false, allow_nil: true)
+      def flag_option(names, as: nil, type: nil, negatable: false, required: false, allow_nil: true)
         option_type = negatable ? :negatable_flag : :flag
-        register_option(names, type: option_type, as: as, expected_type: type, validator: validator,
+        register_option(names, type: option_type, as: as, expected_type: type, validator: nil,
                                required: required, allow_nil: allow_nil)
       end
 
