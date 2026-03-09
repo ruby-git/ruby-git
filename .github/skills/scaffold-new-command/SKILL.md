@@ -312,25 +312,22 @@ explicit flags, model them as a single `flag_option :foo, negatable: true` rathe
 than two separate entries. This prevents contradictory combinations and makes the
 three-state semantics (`true` / `false` / `nil`) explicit.
 
-**Second pass — constraint identification:** after the include/exclude decisions,
-re-read the man page looking specifically for constraint relationships between the
-options you chose to include. This pass is required — constraint declarations
-(`conflicts`, `requires`, `requires_one_of`) must be added during scaffolding,
-not discovered later during a review. Look for these signals:
+**Constraint declarations are generally not used in command classes.** Do not add
+`conflicts`, `requires`, `requires_one_of`, `requires_exactly_one_of`,
+`forbid_values`, or `allowed_values` declarations to command classes. Git is the
+single source of truth for its own option semantics. There are two narrow exceptions:
 
-- **Mutual exclusion** — "cannot be combined with", "synonym for `--a --b`",
-  mutually exclusive mode flags (e.g. ordering modes, regexp-engine flags) →
-  `conflicts :a, :b` for each conflicting pair
-- **Conditional requirement** — "works only for a single file / path", "only
-  meaningful when `--foo` is in use", "it is an error to use this unless `--bar`"
-  → `requires :this, when: :trigger`
-- **Optional-value options** — option signature `--foo[=<value>]` in the man page
-  → use `flag_or_value_option`, not `flag_option`
-- **Short-flag aliases** — every `-X` / `--long-form` pair → alias with long name
-  first: `%i[long_name X]`
+1. **`skip_cli: true` arguments** — the argument never reaches git's argv, so git
+   cannot detect incompatibilities and constraint declarations are appropriate (see
+   the `cat-file --batch` example above: `:objects` is `skip_cli: true`, so git
+   never sees it and cannot detect the conflict or the absent-both case).
+2. **Git-visible arguments that cause silent data loss** — if a combination of
+   git-visible arguments causes git to silently discard data (no error, wrong
+   result), a `conflicts` declaration MAY be added with: a code comment explaining
+   why, a reference to the git version(s) where the behavior was verified, and a
+   test. As of this writing, no such case has been identified.
 
-For the full translation table mapping man-page language to DSL declarations,
-see the [Constraint identification section of the Arguments DSL Checklist](../review-arguments-dsl/CHECKLIST.md#constraint-identification-from-the-man-page).
+See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
 
 This step is required. A command class that only exposes the options that happen
 to be used today in `Git::Lib` is incomplete — callers of the future API should
@@ -380,6 +377,16 @@ type, alias conventions, `as:` usage, modifier rules, constraint declarations
   `[<arg>…]` → `repeatable: true`, `<arg>…` → `required: true, repeatable: true`.
   See [CHECKLIST.md section 4](../review-arguments-dsl/CHECKLIST.md#4-correct-modifiers)
   for the complete table.
+- For each option and operand, actively evaluate whether per-argument validation
+  parameters apply:
+  - `required: true` — does the command fail outright if this argument is absent?
+  - `allow_nil: false` — when required, does passing `nil` make no sense?
+  - `type: <Class>` — is there a single expected Ruby type that catching early
+    would produce a clearer error than git's own output?
+  - `validator:` — is there a simple predicate (not a cross-argument rule) that
+    git cannot express clearly in its error output?
+  Omit these only if there is no meaningful per-argument constraint to express;
+  don't leave them out by default.
 - Avoid `as:` unless it's a Ruby keyword conflict, combined short flag, or
   multi-token flag
 

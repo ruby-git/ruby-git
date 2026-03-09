@@ -149,14 +149,6 @@ short flags), prefer:
 4. value options
 5. operands (positional args / pathspecs after `--`)
 
-   Constraint declarations always come after all arguments they reference are defined:
-
-6. `conflicts` declarations
-7. `forbid_values` declarations (exact-value tuple constraints for negatable flags)
-8. `requires_exactly_one_of` declarations (when a group needs exactly-one semantics)
-9. `requires_one_of` declarations (unconditional and `when:` conditional forms)
-10. `requires` declarations (single-argument conditional form)
-
 ### 4. Correct modifiers
 
 Derive `required:` and `repeatable:` directly from the git-scm.com SYNOPSIS
@@ -241,234 +233,35 @@ Examples of options to **include** (do not affect stdout):
 **Default assumption for `--verbose` and `--quiet`:** their absence is intentional.
 Do **not** flag them as missing.
 
-#### Constraint identification from the man page
+#### Per-argument validation completeness
 
-After deciding which options to include, re-read the man page a second time
-specifically looking for constraint relationships. Do **not** skip this pass — the
-DSL machinery that enforces constraints exists to protect callers from invalid
-combinations that git itself will reject, and the review/scaffold phase is the only
-automated checkpoint where the man page is being read.
+For every `flag_option`, `value_option`, `flag_or_value_option`, and `operand`
+declaration, check whether per-argument validation parameters have been considered:
 
-Look for these specific language patterns and map them to DSL declarations:
-
-**Mutual exclusion → `conflicts`** (or `requires_exactly_one_of` if also required):
-
-| Man-page signal | Example |
+| Parameter | Flag it missing if… |
 |---|---|
-| "Cannot be combined with `--foo`" | `conflicts :this, :foo` |
-| "Synonym for `--a --b --no-c`" | `conflicts :this, :a`; `conflicts :this, :b`; `conflicts :this, :c` |
-| "Same as `--foo`" (exact synonym) | The synonym adds redundancy — either alias it or note the conflict with the long form |
-| Options in a "choose one" list | `conflicts :opt_a, :opt_b` for each pair; or `requires_exactly_one_of` if exactly one is also required |
-| Sorting/ordering modes (`--date-order`, `--topo-order`, `--author-date-order`) | One ordering mode at a time → `conflicts` each pair |
-| Regexp engine flags (`-E`, `-F`, `-P`) | Choose one engine → `conflicts` each pair |
+| `required: true` | The command always fails without this argument, making the Ruby caller's error clearer before spawning a process |
+| `allow_nil: false` | The argument is `required:` and a `nil` value is meaningless (not just absent) |
+| `type: <Class>` | A wrong Ruby type would produce a confusing git error or silent coercion |
+| `validator:` | A simple per-argument predicate exists that git expresses poorly in its error output |
 
-**Conditional requirement → `requires` or `requires_one_of ... when:`**:
+Do **not** flag the absence of these parameters as issues when no meaningful
+constraint exists for that argument — omitting them is correct in that case.
 
-| Man-page signal | Example |
-|---|---|
-| "Works only for a single file" | `requires :option, :path` — and note in YARD that `:path` must have exactly one element |
-| "Only meaningful when `--foo` is in use" | `requires :this, when: :foo` |
-| "Only takes effect when" | `requires :this, when: :other` |
-| "It is an error to use this option unless `--foo`" | `requires :this, when: :foo` |
-| "Only when `<path>` is given" | `requires :option, :path` |
+**Cross-argument constraint methods are generally not used in command classes.** Do not flag
+the absence of `conflicts`, `requires`, `requires_one_of`, `requires_exactly_one_of`,
+`forbid_values`, or `allowed_values` as a completeness issue. Command classes use
+per-argument validation parameters (`required:`, `type:`, `allow_nil:`, etc.) and
+operand format validation. Git validates its own option semantics. The narrow
+exception is **arguments git cannot observe in its argv** — the test is: does this
+argument appear in git's argv? If no (e.g., `skip_cli: true` operands routed via
+stdin), git cannot detect incompatibilities and constraint declarations are
+appropriate and should not be flagged as policy violations. Example: `cat-file
+--batch` declares `conflicts :objects, :batch_all_objects` and `requires_one_of
+:objects, :batch_all_objects` because `:objects` is `skip_cli: true`. See the
+validation delegation policy in `redesign/3_architecture_implementation.md` Insight 6.
 
-**Implication → `literal` or `conflicts`**:
-
-When git says an option "implies" another (e.g. `--cherry` is "a synonym for
-`--right-only --cherry-mark --no-merges`"), the implied flags are not always
-safe to also accept as keyword arguments:
-- If the implied flag is already a keyword option in the DSL, add `conflicts`
-  between the implying option and any keyword option whose value would contradict
-  the implication.
-- If the implied flag has no keyword representation (output-affecting, excluded),
-  no action is needed.
-
-**"No effect without" / value-mode flags**: when a flag only changes its
-behavior depending on a value another option receives, use `requires` with a
-`when:` trigger rather than an unconditional `requires`.
-
-After this pass, any identified constraint should be added as DSL declarations
-placed in the correct order (§3: after all arguments they reference, positions 6–10).
-
-
-
-If arguments are mutually exclusive — whether option vs option, option vs operand,
-or operand vs operand — verify `conflicts ...` declarations exist. Names in a
-`conflicts` group may be any mix of option names and operand names. Unknown names
-raise `ArgumentError` at definition time, so any typo is caught early.
-
-**Presence semantics for conflicts:** a value is considered present when it is not
-`nil`, `[]`, or `''`. For **negatable flag options** (`negatable: true`), an explicit
-`false` also counts as present because it emits `--no-flag` — a real CLI token that
-can conflict with other options. Non-negatable `false` is absent.
-
-**`conflicts` vs `forbid_values`:** `conflicts` is presence-based — it fires whenever
-more than one member of the group is "present", regardless of value. For **negatable
-flags** where some value-pairings are semantically equivalent rather than contradictory,
-`conflicts` is too coarse: it would block valid combinations like `--no-all
---ignore-removal`. In those cases use `forbid_values` (see §7e) instead of (or in
-place of) `conflicts`. Flag any `conflicts` declaration between two or more negatable
-flags as a candidate for replacement with targeted `forbid_values` declarations.
-
-**Preferred single declaration when a group is both required and mutually exclusive:**
-If a `conflicts` group also has a corresponding bare `requires_one_of` for the
-identical argument list, the two declarations should be collapsed into a single
-`requires_exactly_one_of` call (see §7a below). Flag any command where a bare
-`requires_one_of` and a `conflicts` share the same names as a candidate for this
-consolidation.
-
-### 7. Conditional and Unconditional Argument Requirements
-
-#### 7a. Unconditional at-least-one (`requires_one_of`) and exactly-one (`requires_exactly_one_of`)
-
-If a command requires at least one argument from a group to be present — options,
-operands, or a mix — verify `requires_one_of ...` declarations exist. As with
-`conflicts`, names may be any mix of option names and operand names. Alias
-resolution applies before the check, so supplying an alias counts as its canonical
-argument being present. Unknown names raise `ArgumentError` at definition time.
-
-**Presence semantics (satisfied-by):** same rule as `conflicts` — negatable `false`
-counts as present (the caller explicitly provided `--no-flag`).
-
-The error at bind time has the form:
-
-  "at least one of :name1, :name2 must be provided"
-
-When the group must have **exactly one** member present (both at-least-one and
-at-most-one), prefer `requires_exactly_one_of` over separate `requires_one_of` +
-`conflicts` declarations for the same names:
-
-```ruby
-# Preferred — single declaration for exactly-one semantics:
-requires_exactly_one_of :mode_a, :mode_b, :mode_c
-
-# Equivalent but verbose — two declarations that must stay in sync:
-requires_one_of :mode_a, :mode_b, :mode_c
-conflicts       :mode_a, :mode_b, :mode_c
-```
-
-`requires_exactly_one_of` raises at definition time for unknown names (typo guard),
-and at bind time:
-- zero members present → `"at least one of :a, :b, :c must be provided"`
-- two or more present → `"cannot specify :a and :b"`
-
-#### 7b. Conditional single requirement (`requires`)
-
-If an argument is only required when another specific argument is present, verify a
-`requires :name, when: :trigger` declaration exists. The check is skipped entirely
-when the trigger is absent. Unknown names (including the trigger) raise
-`ArgumentError` at definition time.
-
-**Presence semantics (trigger):** the trigger fires when its value is not `nil`,
-`false`, `[]`, or `''`. A negatable flag set to `false` means the feature is **off**,
-so the trigger does **not** fire and no dependency check is performed.
-
-The error at bind time has the form:
-
-  ":trigger requires :name"
-
-Example in `git add`:
-
-```ruby
-requires :pathspec_from_file, when: :pathspec_file_nul
-requires :dry_run,            when: :ignore_missing
-```
-
-#### 7c. Conditional at-least-one-of group (`requires_one_of ... when:`)
-
-If at least one of a group must be present only when another argument is present,
-verify a `requires_one_of :a, :b, when: :trigger` declaration exists. Like the
-unconditional form, names may be any mix of option/operand names. The check is
-skipped when the trigger is absent. Unknown names (including the trigger) raise
-`ArgumentError` at definition time.
-
-**Presence semantics (trigger):** same rule as `requires` — a negatable trigger set
-to `false` means the feature is off; the group check is skipped.
-
-The error at bind time has the form:
-
-  ":trigger requires at least one of :name1, :name2"
-
-Example in `git tag --create`:
-
-```ruby
-requires_one_of :message, :file, when: :annotate
-requires_one_of :message, :file, when: :sign
-requires_one_of :message, :file, when: :local_user
-```
-
-#### 7d. Forbidden value combinations
-
-`forbid_values` declares **exact-value tuples** that are invalid at bind time.
-Each call declares one forbidden tuple; a tuple matches only when every listed
-name is bound and each bound value equals the declared value (`==`). Non-matching
-tuples are allowed through without error.
-
-This fills the gap left by `conflicts` (which is presence-based and cannot
-distinguish equivalent from contradictory value-pairings of negatable flags):
-
-```ruby
-flag_option :all,            negatable: true
-flag_option :ignore_removal, negatable: true
-forbid_values all: true,  ignore_removal: true   # contradictory
-forbid_values all: false, ignore_removal: false  # contradictory
-# Equivalent pairs (all: true + ignore_removal: false, etc.) are allowed
-```
-
-Points to check:
-
-- Each `forbid_values` declaration uses keyword-pair syntax only (`name: value`).
-- All names must be known options or operands; an unknown name raises
-  `ArgumentError` at definition time.
-- Alias names are accepted and canonicalized to primary names.
-- `conflicts :a, :b` plus `forbid_values a: true, b: true` is **not** equivalent:
-  `conflicts` catches any presence combination; `forbid_values` catches only the
-  specific value tuple. When the intent is to block a specific value pairing (not
-  all co-presence), use `forbid_values` not `conflicts`.
-- For negatable flags that may share semantically equivalent combinations, prefer
-  `forbid_values` over `conflicts` so equivalent pairings (e.g. `--no-all
-  --ignore-removal`) remain valid.
-
-Error form at bind time:
-
-```
-cannot specify :name1=value1 with :name2=value2
-```
-
-#### 7e. Allowed-values constraints
-
-If a `value_option`, `flag_or_value_option`, or `flag_or_inline_value_option`
-accepts a fixed, enumerated set of strings, verify an `allowed_values` declaration
-exists for that option:
-
-```ruby
-value_option :cleanup, inline: true
-allowed_values :cleanup, in: %w[verbatim whitespace strip]
-```
-
-Points to check:
-
-- `allowed_values` supersedes ad-hoc `validator:` lambdas for enumerated-string
-  cases — flag any `validator:` doing a simple set-membership test as a
-  candidate for replacement.
-- The declaration must reference a name already defined in `arguments do`; an
-  unknown name raises `ArgumentError` at load time.
-- Validation is **skipped** for `nil` / absent values; callers that want a
-  non-nil value must add a separate `required:` or `requires_one_of` check.
-- Validation is also skipped for empty strings when the option is declared with
-  `allow_empty: true`.
-- For `repeatable: true` options each element in the array is checked
-  individually.
-- Aliases are resolved before the check, so the declaration may use either the
-  primary name or any alias.
-
-Error form at bind time:
-
-```
-Invalid value for :name: expected one of ["a", "b"], got "actual"
-```
-
-### 8. Exit-status declaration consistency (class-level, outside the DSL)
+### 6. Exit-status declaration consistency (class-level, outside the DSL)
 
 `allow_exit_status` is a class-level declaration, not part of the `arguments do`
 block. It is included here because it should be validated alongside DSL entries for

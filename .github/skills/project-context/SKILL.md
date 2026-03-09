@@ -94,6 +94,38 @@ Git::Base (facade)
 Command classes that need non-zero successful exits declare
 `allow_exit_status <Range>` with a rationale comment.
 
+### Validation Boundaries
+
+Command classes use per-argument validation parameters (`required:`, `type:`,
+`allow_nil:`, etc.) and operand format validation. They generally do **not** declare
+cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
+`requires_exactly_one_of`, `forbid_values`, `allowed_values`) — git is the single source of truth for its
+own option semantics. The narrow exception is **arguments git cannot observe in
+its argv**: if an argument is `skip_cli: true`, git never sees it and cannot detect
+incompatibilities — `conflicts` and/or `requires_one_of` are appropriate. Example:
+`cat-file --batch` uses both because `:objects` is `skip_cli: true`:
+
+| Validated by Commands | Mechanism |
+|---|---|
+| Unknown options | `validate_unsupported_options!` in Arguments DSL |
+| Required options | `required: true` in Arguments DSL |
+| Type checking | `type:` in Arguments DSL |
+| Option-like operand rejection | Automatic for operands before `--` |
+
+| Delegated to git (semantic) | Surfaced as |
+|---|---|
+| Option conflicts (`--soft` vs `--hard`) | `Git::FailedError` |
+| Option dependencies (`--all-match` requires `--grep`) | `Git::FailedError` |
+| At-least-one-of groups | `Git::FailedError` |
+| Value-set membership | `Git::FailedError` |
+| Forbidden value combinations | `Git::FailedError` |
+
+The constraint DSL infrastructure (`conflicts`, `requires`, `requires_one_of`,
+`requires_exactly_one_of`, `forbid_values`, `allowed_values`) remains available in `Git::Commands::Arguments`
+and is used only for `skip_cli: true` argument constraints, and in narrow documented cases for
+git-visible arguments whose combination causes silent data loss (no error, wrong result).
+See `redesign/3_architecture_implementation.md` Insight 6 for the full policy and exception criteria.
+
 ## Coding Standards
 
 ### Ruby Style

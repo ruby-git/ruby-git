@@ -411,6 +411,84 @@ future work:
    conflicts :track, :no_track
    ```
 
+   **Validation delegation policy — constraint DSL declarations are not used in
+   command classes.** The Arguments DSL provides `conflicts`, `requires`,
+   `requires_one_of`, `requires_exactly_one_of`, `forbid_values`, and
+   `allowed_values` for declaring inter-option constraints. Command classes
+   generally do **not** use these declarations. Git is the single source of truth
+   for its own option semantics. Command classes use per-argument validation
+   parameters (`required:`, `type:`, `allow_nil:`, etc.) and operand format
+   validation (option-like operand rejection before `--`). The narrow exception is
+   arguments that git cannot observe — see the exception policy below.
+
+   **What command classes validate:**
+
+   | Validation | Mechanism | Rationale |
+   |---|---|---|
+   | Unknown options | `validate_unsupported_options!` in Arguments DSL | Catches typos/misspellings before spawning a process. Git would also reject these, but the error message would be less clear about the Ruby-side fix needed. |
+   | Required options | `required: true` in Arguments DSL | Enforces the minimum contract for a command to be meaningful. Avoids spawning a process that will certainly fail. |
+   | Type checking | `type:` in Arguments DSL | Catches programming errors (e.g., passing an Integer where a String is expected) that would produce confusing git errors or silent coercion. |
+   | Option-like operand rejection | Automatic for operands before `--` | Security concern: prevents user-supplied strings like `'-s'` from being misinterpreted as git flags. |
+
+   **What command classes do NOT validate (semantic concerns — delegated to git):**
+
+   | Validation | Delegated to | Rationale |
+   |---|---|---|
+   | Option conflicts (`--soft` vs `--hard`) | Git (stderr → `Git::FailedError`) | Git is the authority on which options conflict. Constraints drift as git evolves. |
+   | Option dependencies (`--all-match` requires `--grep`) | Git (stderr or silent behavior) | Same drift risk. Some dependencies are version-specific. |
+   | At-least-one-of groups | Git (stderr → `Git::FailedError`) | Git enforces its own required-argument semantics. |
+   | Value-set membership (`--chmod` only accepts `+x`/`-x`) | Git (stderr → `Git::FailedError`) | Git may expand accepted values in future versions. |
+   | Forbidden value combinations | Git (stderr → `Git::FailedError`) | Specific to git's internal semantics. |
+
+   **Design rationale:**
+
+   1. **Git is the single source of truth.** Git validates its own option
+      interactions and reports clear errors via stderr, surfaced as
+      `Git::FailedError`. Ruby-side constraints duplicate this validation and risk
+      becoming stale — potentially blocking valid usage when git relaxes a
+      restriction in a newer version.
+
+   2. **Partial coverage is worse than none.** Inconsistent constraint coverage
+      creates a false promise of safety: users can't know whether the absence of
+      an `ArgumentError` means "this combination is valid" or "this command
+      doesn't have constraints."
+
+   3. **Constraint violations are programming errors.** When a developer passes
+      conflicting options, they must stop and fix their code regardless of whether
+      the error is `ArgumentError` or `Git::FailedError`. The cost difference is
+      negligible.
+
+   4. **Uniform error semantics.** All invalid-option errors surface uniformly as
+      `Git::FailedError` with git's actual error message, rather than a mix of
+      `ArgumentError` (Ruby constraint) and `Git::FailedError` (git rejection).
+
+   5. **The DSL infrastructure remains available.** The constraint methods in
+      `Git::Commands::Arguments` are kept intact. If a compelling case arises for
+      a specific constraint (e.g., preventing data loss that git silently allows),
+      it can be added on a case-by-case basis with documented justification.
+
+   **Exception policy — declare constraints only for arguments git cannot observe:**
+
+   The test: *does this argument appear in git's argv?*
+   - **Yes** (normal `flag_option`, `value_option`, etc.) → git can observe it and
+     report the error → do not declare a constraint.
+   - **No** (`skip_cli: true` arguments, or arguments transformed before reaching
+     argv) → git has no mechanism to detect incompatibilities → Ruby must enforce
+     them with a constraint declaration.
+
+   The canonical case is `skip_cli: true` operands routed via stdin. `cat-file
+   --batch` commands declare both `conflicts :objects, :batch_all_objects` and
+   `requires_one_of :objects, :batch_all_objects`. `:objects` is `skip_cli: true`
+   — git never sees it, only `:batch_all_objects` reaches argv. Git cannot detect
+   that you passed both (silent wrong result: dumps entire object database) or
+   neither (empty output with exit 0), so Ruby must enforce those constraints.
+
+   A secondary exception: if a combination of **git-visible** arguments causes
+   git to **silently discard data** (no error, wrong result), a `conflicts`
+   declaration MAY be added with: a code comment explaining why, a reference to
+   the git version(s) where the behavior was verified, and a test. As of this
+   writing, no such case has been identified.
+
 7. **Adapter methods should forward all positional arguments, not just options**
 
    **BUT ONLY IF BACKWARD COMPATIBILITY IS MAINTAINED**
@@ -504,7 +582,14 @@ future work:
     When using the Arguments DSL with patterns where optional positionals precede
     required ones (matching Ruby's parameter binding semantics), prefer the
     catch-all signature `def call(*, **)` and let `ARGS.bind(*, **)` handle
-    all validation:
+    all validation.
+
+    Note: `ARGS.bind` validates per-argument parameters — unknown options,
+    `required:`, `type:`, `allow_nil:`, and operand format (option-like operand
+    rejection). Cross-argument constraint methods (`conflicts`, `requires`,
+    `requires_one_of`, `requires_exactly_one_of`, `forbid_values`, `allowed_values`)
+    are also evaluated by `bind` when declared, but command classes generally do not
+    declare them (see Insight 6 validation delegation policy).
 
     ```ruby
     # git branch -m [<old-branch>] <new-branch>
