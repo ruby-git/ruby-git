@@ -13,14 +13,14 @@ RSpec.describe Git::Commands::Branch::List do
 
   let(:sample_output) { "refs/heads/main|abc123|*|||\n" }
 
-  # Helper to build expected command arguments
+  # Helper to build expected command arguments (format is now passed by the facade)
   def expected_args(*extra_args)
-    ['branch', '--list', "--format=#{format_string}", *extra_args]
+    ['branch', '--list', *extra_args]
   end
 
   describe '#call' do
     context 'with no options (basic list)' do
-      it 'runs branch with --list and format flags' do
+      it 'runs branch --list with no format flag by default' do
         expect_command_capturing(*expected_args)
           .and_return(command_result(sample_output))
 
@@ -28,6 +28,15 @@ RSpec.describe Git::Commands::Branch::List do
 
         expect(result).to be_a(Git::CommandLineResult)
         expect(result.stdout).to eq(sample_output)
+      end
+    end
+
+    context 'with parser-contract options (format:)' do
+      it 'includes --format=<string> when format: is given' do
+        expect_command_capturing(*expected_args("--format=#{format_string}"))
+          .and_return(command_result(sample_output))
+
+        command.call(format: format_string)
       end
     end
 

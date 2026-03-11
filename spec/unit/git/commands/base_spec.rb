@@ -170,4 +170,43 @@ RSpec.describe Git::Commands::Base do
       no_exec_opts_command.call
     end
   end
+
+  describe '#with_stdin' do
+    let(:command_class) do
+      Class.new(described_class) do
+        arguments { literal 'test' }
+
+        def call(content)
+          with_stdin(content, &:close)
+        end
+      end
+    end
+    let(:command) { command_class.new(execution_context) }
+
+    context 'when the block closes the reader before the writer thread runs (simulates EPIPE)' do
+      it 'handles EPIPE without raising' do
+        expect { command.call('some content') }.not_to raise_error
+      end
+    end
+
+    context 'when Thread.new raises before writer_thread can be assigned' do
+      it 'handles nil writer_thread in ensure without raising' do
+        # Thread.new raises before writer_thread can be assigned, so writer_thread
+        # is nil in the ensure block — covers the else branch of writer_thread&.join
+        allow(Thread).to receive(:new).and_raise(ThreadError, "can't alloc thread")
+        expect { command.call('content') }.to raise_error(ThreadError)
+      end
+    end
+
+    context 'when the writer is already closed when the thread ensure runs' do
+      it 'skips writer.close when writer.closed? is true' do
+        # Pre-close the writer so writer.closed? is true in start_stdin_writer's ensure,
+        # covering the else branch of `writer.close unless writer.closed?`
+        real_reader, real_writer = IO.pipe
+        real_writer.close
+        allow(IO).to receive(:pipe).and_return([real_reader, real_writer])
+        expect { command.call('') }.not_to raise_error
+      end
+    end
+  end
 end

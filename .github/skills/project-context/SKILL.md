@@ -82,11 +82,21 @@ Git::Base (facade)
 
 - **Commands layer** (`Git::Commands::*`): Owns the git CLI contract. Declares
   arguments via DSL, executes command, returns `CommandLineResult`. No parsing.
+  - `literal` entries are **only** for operation selectors (subcommand names,
+    mode flags like `--delete` that define what the class does). Output-format
+    flags, parser-contract options, and other caller-controlled options belong as
+    `flag_option` / `value_option` — not as `literal` entries.
+  - Each command class represents **one operation**, not one output format.
+    Output-mode flags (`--patch`, `--numstat`, `--raw`, `--format=…`) are options
+    declared in the DSL; the facade chooses which to pass. Separate subclasses
+    for the same operation with different output modes are an anti-pattern.
 - **Parser layer** (`Git::Parsers::*`): Transforms raw stdout/stderr into structured
   Ruby data. No execution.
 - **Facade layer** (`Git::Lib`): Pre-processes caller arguments, invokes the right
-  command class, calls parsers, constructs rich response objects. Being incrementally
-  migrated to `Git::Repository`.
+  command class, calls parsers, constructs rich response objects. **Parser-contract
+  options** (e.g. `no_color: true`, `pretty: 'raw'`, `format: FORMAT_STRING`) are
+  passed explicitly at the facade call site — this makes the parser contract
+  auditable by reading `Git::Lib`. Being incrementally migrated to `Git::Repository`.
 - **Interface layer** (`Git::Base`): User-facing API. Delegates to `Git::Lib`.
   Returns domain objects.
 

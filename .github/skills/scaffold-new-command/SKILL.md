@@ -66,8 +66,7 @@ Optional (first command in module):
 
 Most git commands map to a single class. Split into a namespace module with
 multiple sub-command classes when the git command surfaces **meaningfully
-different concerns** that have distinct call shapes, output formats, or
-protocols.
+different operations** that have distinct call shapes or protocols.
 
 ### When to use sub-commands
 
@@ -81,31 +80,55 @@ git tag --create / --delete / --list
 git worktree add / list / remove / move
 ```
 
-**Split by output type / protocol** — when the same underlying git command
-produces structurally different output depending on a mode flag, and callers
-will always use one mode or the other (never both):
-
-```
-git diff --numstat  → Diff::Numstat   (integer line counts per file)
-git diff --raw      → Diff::Raw       (file metadata, modes, status codes)
-git diff            → Diff::Patch     (full unified patch text)
-
-git cat-file --batch-check → CatFile::ObjectMeta    (sha + type + size per object)
-git cat-file --batch       → CatFile::ObjectContent (sha + type + size + raw content)
-```
-
 **Split by stdin protocol** — when one variant reads from stdin and another
 does not (even if the git command is the same). The stdin variant needs a
 `call` override that uses `Base#with_stdin`; mixing that with a no-stdin path
 in one class produces an awkward interface.
 
+### Do NOT split by output format / output mode
+
+**Output-mode flags are NOT a reason to create separate subclasses.** When a
+git command supports multiple output formats via flags (`--patch`, `--numstat`,
+`--raw`, `--format=…`, etc.), express them as `flag_option` or `value_option`
+entries in a **single class**. The facade passes the desired format flags
+explicitly at call time:
+
+```ruby
+# ❌ Anti-pattern: one class per output format
+class Diff::Patch < Git::Commands::Base; end    # literal '--patch'
+class Diff::Numstat < Git::Commands::Base; end  # literal '--numstat'
+class Diff::Raw < Git::Commands::Base; end      # literal '--raw'
+
+# ✅ Correct: one class, output mode as options
+class Diff < Git::Commands::Base
+  arguments do
+    literal 'diff'
+    flag_option :patch    # facade passes patch: true when it needs patch output
+    flag_option :numstat  # facade passes numstat: true for stats
+    flag_option :raw      # facade passes raw: true for raw output
+    ...
+  end
+end
+
+# lib/git/lib.rb — parser contract is visible and auditable:
+Git::Commands::Diff.new(self).call(patch: true, numstat: true, ...)
+```
+
+The same applies for `--format=<string>`, `--pretty=<fmt>`, `--no-color`, and
+all other parser-contract options. Declare them in the DSL; the facade passes them.
+
+Remember: **`literal` entries are only for operation selectors** — fixed flags
+that define which git sub-operation the class represents (e.g., `literal 'stash'`,
+`literal 'show'`, `literal '--delete'`). Output-format flags are not operation
+selectors.
+
 ### When to keep a single class
 
-- Minor option variations that share the same output format and argument set.
-- When the "different modes" are just 1–2 flags that can be `@overload`-documented
-  naturally and all callers supply the same operands.
-- When callers would always need both modes together (rare: consider a facade
-  instead).
+- Different output modes (`--patch`, `--numstat`, `--raw`): **always** use a
+  single class; expose modes as DSL options.
+- Minor option variations that share the same argument set.
+- When the "special mode" is just 1–2 flags — use `flag_option`/`value_option`.
+- When callers would always need multiple modes together (the facade composes them).
 
 ### Naming sub-command classes
 

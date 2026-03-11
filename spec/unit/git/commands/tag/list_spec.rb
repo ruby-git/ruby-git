@@ -13,8 +13,8 @@ RSpec.describe Git::Commands::Tag::List do
     let(:sample_output) { "v1.0.0\x1fabc123\x1f111222\x1ftag\x1fJohn\x1f<j@e.com>\x1f2024-01-15\x1fRelease\n" }
 
     context 'with no options (basic list)' do
-      it 'includes tag and --list literals with format' do
-        expect_command_capturing('tag', '--list', format_arg)
+      it 'runs tag --list with no format flag by default' do
+        expect_command_capturing('tag', '--list')
           .and_return(command_result(sample_output))
 
         result = command.call
@@ -24,9 +24,18 @@ RSpec.describe Git::Commands::Tag::List do
       end
     end
 
+    context 'with parser-contract options (format:)' do
+      it 'includes --format=<string> when format: is given' do
+        expect_command_capturing('tag', '--list', format_arg)
+          .and_return(command_result(sample_output))
+
+        command.call(format: Git::Parsers::Tag::FORMAT_STRING)
+      end
+    end
+
     context 'with patterns' do
       it 'adds a single pattern argument' do
-        expect_command_capturing('tag', '--list', format_arg, 'v1.*').and_return(command_result)
+        expect_command_capturing('tag', '--list', 'v1.*').and_return(command_result)
 
         result = command.call('v1.*')
 
@@ -34,7 +43,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'adds multiple pattern arguments' do
-        expect_command_capturing('tag', '--list', format_arg, 'v1.*', 'v2.*').and_return(command_result)
+        expect_command_capturing('tag', '--list', 'v1.*', 'v2.*').and_return(command_result)
 
         result = command.call('v1.*', 'v2.*')
 
@@ -44,7 +53,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :sort option' do
       it 'includes --sort with single key' do
-        expect_command_capturing('tag', '--list', format_arg, '--sort=refname').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--sort=refname').and_return(command_result)
 
         result = command.call(sort: 'refname')
 
@@ -52,7 +61,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes multiple --sort flags for array' do
-        expect_command_capturing('tag', '--list', format_arg, '--sort=refname', '--sort=-creatordate')
+        expect_command_capturing('tag', '--list', '--sort=refname', '--sort=-creatordate')
           .and_return(command_result)
 
         result = command.call(sort: ['refname', '-creatordate'])
@@ -61,7 +70,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'supports version:refname sort key' do
-        expect_command_capturing('tag', '--list', format_arg, '--sort=version:refname').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--sort=version:refname').and_return(command_result)
 
         result = command.call(sort: 'version:refname')
 
@@ -71,7 +80,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :contains option' do
       it 'includes --contains with commit value' do
-        expect_command_capturing('tag', '--list', format_arg, '--contains', 'abc123').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--contains', 'abc123').and_return(command_result)
 
         result = command.call(contains: 'abc123')
 
@@ -79,7 +88,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes --contains flag when true' do
-        expect_command_capturing('tag', '--list', format_arg, '--contains').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--contains').and_return(command_result)
 
         result = command.call(contains: true)
 
@@ -89,7 +98,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :no_contains option' do
       it 'includes --no-contains with commit value' do
-        expect_command_capturing('tag', '--list', format_arg, '--no-contains', 'abc123').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--no-contains', 'abc123').and_return(command_result)
 
         result = command.call(no_contains: 'abc123')
 
@@ -97,7 +106,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes --no-contains flag when true' do
-        expect_command_capturing('tag', '--list', format_arg, '--no-contains').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--no-contains').and_return(command_result)
 
         result = command.call(no_contains: true)
 
@@ -107,7 +116,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :merged option' do
       it 'includes --merged with commit value' do
-        expect_command_capturing('tag', '--list', format_arg, '--merged', 'main').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--merged', 'main').and_return(command_result)
 
         result = command.call(merged: 'main')
 
@@ -115,7 +124,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes --merged flag when true' do
-        expect_command_capturing('tag', '--list', format_arg, '--merged').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--merged').and_return(command_result)
 
         result = command.call(merged: true)
 
@@ -125,7 +134,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :no_merged option' do
       it 'includes --no-merged with commit value' do
-        expect_command_capturing('tag', '--list', format_arg, '--no-merged', 'main').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--no-merged', 'main').and_return(command_result)
 
         result = command.call(no_merged: 'main')
 
@@ -133,7 +142,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes --no-merged flag when true' do
-        expect_command_capturing('tag', '--list', format_arg, '--no-merged').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--no-merged').and_return(command_result)
 
         result = command.call(no_merged: true)
 
@@ -143,7 +152,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :points_at option' do
       it 'includes --points-at with object value' do
-        expect_command_capturing('tag', '--list', format_arg, '--points-at', 'HEAD').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--points-at', 'HEAD').and_return(command_result)
 
         result = command.call(points_at: 'HEAD')
 
@@ -151,7 +160,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'includes --points-at flag when true' do
-        expect_command_capturing('tag', '--list', format_arg, '--points-at').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--points-at').and_return(command_result)
 
         result = command.call(points_at: true)
 
@@ -161,7 +170,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with :ignore_case option' do
       it 'includes --ignore-case flag' do
-        expect_command_capturing('tag', '--list', format_arg, '--ignore-case').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--ignore-case').and_return(command_result)
 
         result = command.call(ignore_case: true)
 
@@ -169,7 +178,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'accepts :i alias' do
-        expect_command_capturing('tag', '--list', format_arg, '--ignore-case').and_return(command_result)
+        expect_command_capturing('tag', '--list', '--ignore-case').and_return(command_result)
 
         result = command.call(i: true)
 
@@ -177,7 +186,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'does not add flag when false' do
-        expect_command_capturing('tag', '--list', format_arg).and_return(command_result)
+        expect_command_capturing('tag', '--list').and_return(command_result)
 
         result = command.call(ignore_case: false)
 
@@ -187,7 +196,7 @@ RSpec.describe Git::Commands::Tag::List do
 
     context 'with multiple options combined' do
       it 'combines flags correctly' do
-        expect_command_capturing('tag', '--list', format_arg, '--contains', 'abc123', '--sort=refname', 'v1.*')
+        expect_command_capturing('tag', '--list', '--contains', 'abc123', '--sort=refname', 'v1.*')
           .and_return(command_result)
 
         result = command.call('v1.*', sort: 'refname', contains: 'abc123')
@@ -196,7 +205,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'combines multiple patterns with options' do
-        expect_command_capturing('tag', '--list', format_arg, '--merged', 'main', 'release-*', 'v*')
+        expect_command_capturing('tag', '--list', '--merged', 'main', 'release-*', 'v*')
           .and_return(command_result)
 
         result = command.call('release-*', 'v*', merged: 'main')

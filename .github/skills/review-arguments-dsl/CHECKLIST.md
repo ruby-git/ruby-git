@@ -3,7 +3,7 @@
 
 | Git behavior | DSL method | Example |
 |---|---|---|
-| fixed flag always present | `literal` | `literal '--numstat'` |
+| fixed flag always present | `literal` | `literal 'stash'` — **only** for operation selectors (subcommand names, mode flags like `--delete` that define what the class does) |
 | boolean flag | `flag_option` | `flag_option :cached` |
 | boolean-or-value | `flag_or_value_option` | `flag_or_value_option :dirstat, inline: true` |
 | value option | `value_option` | `value_option :message` |
@@ -98,6 +98,7 @@ Flag any use of `as:` unless one of these three conditions applies:
 1. **Ruby keyword conflict** — the git flag's natural name is a Ruby keyword and
    cannot be used as a symbol literal. The alias is renamed, and `as:` supplies
    the real flag:
+
    ```ruby
    flag_option %i[begin_rev], as: '--begin'
    ```
@@ -105,12 +106,14 @@ Flag any use of `as:` unless one of these three conditions applies:
 2. **Combined short flag** — git accepts a repeated short flag in combined form
    (e.g. `--force --force` → `-ff`) and there is no single long-form equivalent.
    This is the only idiomatic way to express it:
+
    ```ruby
    flag_option %i[force_force ff], as: '-ff'
    ```
 
 3. **Multi-token flag** — the option must emit two or more CLI tokens that cannot
    be derived from a single symbol. Pass an array (valid on `flag_option` only):
+
    ```ruby
    flag_option :double_force, as: ['--force', '--force']
    ```
@@ -208,30 +211,58 @@ Cross-check against:
 Every supported **behavioral** option should be represented in `arguments do`, and
 every DSL entry should be covered by tests.
 
-#### Options that affect stdout are intentionally omitted
+#### Options excluded due to execution-model conflicts
 
-The library depends on **deterministic, parseable stdout** from every command.
-Any option that adds, removes, or reformats content on stdout must be
-**excluded** from the DSL — whether it is a format option, a verbosity flag,
-or anything else. Do **not** flag these as missing.
+Include ALL git options in the DSL by default — including output-format flags
+such as `--patch`, `--numstat`, `--raw`, `--format=…`, `--pretty=…`,
+`--no-color`, etc.
 
-The test is simple: run the command with and without the option and diff stdout.
-If stdout changes → exclude the option.
+The only options that should be **excluded** are those that conflict with the
+subprocess execution model: options that require TTY input, open an external
+editor, or otherwise make the command incompatible with non-interactive
+subprocess execution:
 
-Examples of options to **exclude** (stdout-affecting):
-- `--format=<fmt>`, `--pretty=<fmt>`, `--porcelain`
-- `--patch` / `-p`, `--stat`, `--numstat`, `--shortstat`, `--raw`
-- `--name-only`, `--name-status`, `--diff-stat`
-- `--long` / `--short` (where they change output structure)
-- `--verbose` / `-v`, `--quiet` / `-q` — nearly always add or suppress stdout lines
+Examples of options to **exclude** (execution-model conflicts):
 
-Examples of options to **include** (do not affect stdout):
-- `--dry-run` / `-n` — changes what git *does*; stdout is still deterministic
-- `--force`, `--ignore-errors` — control whether/how the operation runs
-- Any flag that controls *which* objects are operated on or *whether* something happens
+- `--interactive` / `-i` — opens an interactive menu; requires a TTY
+- `--edit` / `-e` — opens an editor ($EDITOR); incompatible with subprocess
+- `--patch` (interactive form, e.g. `git add -p`) — requires TTY prompts
+- Any option whose git implementation requires stdin/TTY interaction the library
+  cannot provide
 
-**Default assumption for `--verbose` and `--quiet`:** their absence is intentional.
-Do **not** flag them as missing.
+Examples of options to **include** (no execution-model conflict):
+
+- `--format=<fmt>`, `--pretty=<fmt>`, `--porcelain` — output format flags; the
+  facade passes these explicitly when the parser requires a specific format
+- `--patch` (diff output mode, e.g. `git diff --patch`), `--numstat`, `--shortstat`, `--raw` — output
+  mode flags used by the facade to select a parseable format
+
+> **Note on `--patch`:** it appears in both lists because the flag has two
+> different git behaviors depending on the command. In `git add -p` it opens an
+> interactive session (exclude). In `git diff --patch` it selects a non-interactive
+> output format (include). Evaluate per-command, not globally.
+
+- `--no-color` — facade passes this to prevent ANSI escape codes from breaking
+  parsing
+- `--verbose` / `-v`, `--quiet` / `-q` — include these unless they open a TTY
+
+**Default assumption for `--verbose` and `--quiet`:** include unless their git
+implementation requires interactive I/O.
+
+**The `--no-edit` edge case:** `--no-edit` is a safe, non-interactive flag —
+it suppresses editor opening, which is the opposite of an execution-model
+conflict. If the facade always passes `--no-edit` to prevent interactive editor
+invocations (e.g., for `git commit --amend --no-edit`), include `--no-edit` in
+the DSL using `flag_option :no_edit`. Do **not** hardcode it as `literal
+'--no-edit'` — that prevents callers from omitting it.
+
+**Output-format options belong at the facade call site, not as `literal` entries:**
+When a parser requires specific output flags (e.g. `--pretty=raw`, `--numstat`),
+declare those flags in the DSL with `flag_option` or `value_option`, and pass
+them explicitly from `Git::Lib`. Never hardcode them as `literal` entries inside
+the command class — that hides the parser contract and prevents the facade from
+choosing the format. See Insight 16 in
+`redesign/3_architecture_implementation.md`.
 
 #### Per-argument validation completeness
 
@@ -241,9 +272,17 @@ declaration, check whether per-argument validation parameters have been consider
 | Parameter | Flag it missing if… |
 |---|---|
 | `required: true` | The command always fails without this argument, making the Ruby caller's error clearer before spawning a process |
-| `allow_nil: false` | The argument is `required:` and a `nil` value is meaningless (not just absent) |
+| `allow_nil: false` | The argument is optional in Ruby (no `required: true`), but `nil` should be rejected rather than treated as "not provided" — for example, passing `nil` would produce an invalid CLI argument or ambiguous behavior |
 | `type: <Class>` | A wrong Ruby type would produce a confusing git error or silent coercion |
 | `validator:` | A simple per-argument predicate exists that git expresses poorly in its error output |
+
+`value_option` and `flag_or_value_option` default to `allow_nil: true`. Specify
+`allow_nil: false` when nil must be rejected explicitly. Only specify `allow_nil: true`
+when distinguishing an explicit `nil` from "not provided" is semantically important;
+do not flag its absence when the default is correct.
+
+**`allow_nil: true` on `required:` arguments:** flag as suspicious — allowing nil
+on a required argument is rarely correct.
 
 Do **not** flag the absence of these parameters as issues when no meaningful
 constraint exists for that argument — omitting them is correct in that case.
@@ -265,8 +304,8 @@ validation delegation policy in `redesign/3_architecture_implementation.md` Insi
 
 `allow_exit_status` is a class-level declaration, not part of the `arguments do`
 block. It is included here because it should be validated alongside DSL entries for
-completeness. See [Review Command Implementation](../review-command-implementation/SKILL.md) for the full class-shape
-checklist.
+completeness. See [Review Command Implementation](../review-command-implementation/SKILL.md)
+for the full class-shape checklist.
 
 When command behavior expects non-zero success exits, verify:
 
@@ -279,3 +318,4 @@ Example:
 ```ruby
 # git diff exits 1 when differences are found (not an error)
 allow_exit_status 0..1
+```

@@ -17,9 +17,7 @@ require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
 require_relative 'commands/describe'
-require_relative 'commands/diff/numstat'
-require_relative 'commands/diff/patch'
-require_relative 'commands/diff/raw'
+require_relative 'commands/diff'
 require_relative 'commands/fsck'
 require_relative 'commands/grep'
 require_relative 'commands/init'
@@ -310,14 +308,22 @@ module Git
     #   :object) is a string starting with a hyphen
     #
     def full_log_commits(opts = {})
-      assert_args_are_not_options('between', opts[:between]&.first)
-      assert_args_are_not_options('object', opts[:object])
+      assert_valid_opts(opts, FULL_LOG_ALLOWED_OPTS)
       validate_log_count_option!(opts)
 
       call_opts = log_base_call_options(opts, skip: opts[:skip], merges: opts[:merges])
-      result = Git::Commands::Log.new(self).call(*log_revision_range_args(opts), **call_opts)
+      run_log_command(log_revision_range_args(opts), call_opts)
+    end
+
+    def run_log_command(revision_range_args, call_opts)
+      result = Git::Commands::Log.new(self).call(
+        *revision_range_args,
+        no_color: true, pretty: 'raw',
+        **call_opts
+      )
       process_commit_log_data(result.stdout.split("\n"))
     end
+    private :run_log_command
 
     # Verify and resolve a Git revision to its full SHA
     #
@@ -717,7 +723,7 @@ module Git
     end
 
     def branches_all
-      result = Git::Commands::Branch::List.new(self).call(all: true)
+      result = Git::Commands::Branch::List.new(self).call(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
       Git::Parsers::Branch.parse_list(result.stdout)
     end
 
@@ -810,7 +816,7 @@ module Git
     def branch_contains(commit, branch_name = '')
       branch_name = branch_name.to_s
       pattern = branch_name.empty? ? nil : branch_name
-      Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit).stdout
+      Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit, format: Git::Parsers::Branch::FORMAT_STRING).stdout
     end
 
     GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E object path_limiter].freeze
@@ -820,7 +826,7 @@ module Git
 
       opts = normalize_grep_opts(opts)
       object = opts.delete(:object) || 'HEAD'
-      result = Git::Commands::Grep.new(self).call(object, pattern:, **opts, line_number: true)
+      result = Git::Commands::Grep.new(self).call(object, pattern:, **opts, no_color: true, line_number: true)
       exitstatus = result.status.exitstatus
 
       # Exit status 1 with empty stderr means no lines matched (not an error)
@@ -882,6 +888,9 @@ module Git
       raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
     end
 
+    # Allowed option keys for {#full_log_commits}
+    FULL_LOG_ALLOWED_OPTS = %i[count all cherry since until grep author between object path_limiter skip merges].freeze
+
     # Allowed option keys for {#diff_full}
     DIFF_FULL_ALLOWED_OPTS = %i[path_limiter].freeze
 
@@ -923,7 +932,7 @@ module Git
 
     # Show full diff patch output between commits or the working tree
     #
-    # Delegates to {Git::Commands::Diff::Patch}.
+    # Delegates to {Git::Commands::Diff}.
     #
     # @param obj1 [String] first commit reference (default: 'HEAD')
     #
@@ -938,18 +947,23 @@ module Git
     #
     # @raise [Git::FailedError] if git returns exit code >= 2
     #
-    # @see Git::Commands::Diff::Patch
+    # @see Git::Commands::Diff
     #
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_FULL_ALLOWED_OPTS)
       pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
-      result = Git::Commands::Diff::Patch.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
+      result = Git::Commands::Diff.new(self).call(
+        *[obj1, obj2].compact,
+        patch: true, numstat: true, shortstat: true,
+        src_prefix: 'a/', dst_prefix: 'b/',
+        pathspecs: pathspecs
+      )
       extract_patch_text(result.stdout)
     end
 
     # Show numstat diff output between commits or the working tree
     #
-    # Delegates to {Git::Commands::Diff::Numstat}.
+    # Delegates to {Git::Commands::Diff}.
     #
     # @param obj1 [String] first commit reference (default: 'HEAD')
     #
@@ -965,19 +979,24 @@ module Git
     #
     # @raise [Git::FailedError] if git returns exit code >= 2
     #
-    # @see Git::Commands::Diff::Numstat
+    # @see Git::Commands::Diff
     #
     def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_STATS_ALLOWED_OPTS)
       pathspecs = normalize_pathspecs(opts[:path_limiter], 'path limiter')
-      result = Git::Commands::Diff::Numstat.new(self).call(*[obj1, obj2].compact, pathspecs: pathspecs)
+      result = Git::Commands::Diff.new(self).call(
+        *[obj1, obj2].compact,
+        numstat: true, shortstat: true,
+        src_prefix: 'a/', dst_prefix: 'b/',
+        pathspecs: pathspecs
+      )
       output_lines = extract_numstat_lines(result.stdout)
       parse_diff_stats_output(output_lines)
     end
 
     # Show path status (name-status) for diff between commits or the working tree
     #
-    # Delegates to {Git::Commands::Diff::Raw} and extracts status letters and
+    # Delegates to {Git::Commands::Diff} and extracts status letters and
     # paths from the raw output lines.
     #
     # @param reference1 [String, nil] first commit reference (default: nil)
@@ -997,14 +1016,19 @@ module Git
     #
     # @raise [Git::FailedError] if git returns exit code >= 2
     #
-    # @see Git::Commands::Diff::Raw
+    # @see Git::Commands::Diff
     #
     def diff_path_status(reference1 = nil, reference2 = nil, opts = {})
       assert_valid_opts(opts, DIFF_PATH_STATUS_ALLOWED_OPTS)
 
       path_limiter = handle_deprecated_path_option(opts)
       pathspecs = normalize_pathspecs(path_limiter, 'path limiter')
-      result = Git::Commands::Diff::Raw.new(self).call(*[reference1, reference2].compact, pathspecs: pathspecs)
+      result = Git::Commands::Diff.new(self).call(
+        *[reference1, reference2].compact,
+        raw: true, numstat: true, shortstat: true,
+        src_prefix: 'a/', dst_prefix: 'b/',
+        pathspecs: pathspecs
+      )
       extract_name_status_from_raw(result.stdout)
     end
 
@@ -1582,7 +1606,7 @@ module Git
     # @return [Array<String>] tag names
     #
     def tags
-      result = Git::Commands::Tag::List.new(self).call
+      result = Git::Commands::Tag::List.new(self).call(format: Git::Parsers::Tag::FORMAT_STRING)
       Git::Parsers::Tag.parse_list(result.stdout).map(&:name)
     end
 
@@ -2271,8 +2295,9 @@ module Git
 
     # Extract only the patch text from combined numstat + shortstat + patch output
     #
-    # The Diff::Patch command produces output containing numstat, shortstat, and patch
-    # sections. This method extracts only the patch portion (starting at "diff --git").
+    # When {Git::Commands::Diff} is called with `patch: true, numstat: true, shortstat: true`,
+    # the output contains numstat, shortstat, and patch sections. This method extracts
+    # only the patch portion (starting at "diff --git").
     #
     # @param output [String] combined command output
     #
@@ -2285,9 +2310,9 @@ module Git
 
     # Extract only the numstat lines from combined numstat + shortstat output
     #
-    # The Diff::Numstat command produces output containing numstat lines followed by
-    # a shortstat summary line. This method filters out the shortstat line and
-    # empty lines, returning only the numstat lines.
+    # When {Git::Commands::Diff} is called with `numstat: true, shortstat: true`,
+    # the output contains numstat lines followed by a shortstat summary line. This method
+    # filters out the shortstat line and empty lines, returning only the numstat lines.
     #
     # @param output [String] combined command output
     #
