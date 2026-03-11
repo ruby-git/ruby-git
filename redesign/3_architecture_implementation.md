@@ -727,6 +727,68 @@ future work:
     `Branch::Delete` operate on the same conceptual entity (a branch) with the same
     core argument (branch name).
 
+16. **Subclass by operation, not output mode; `literal` is for operation selectors only**
+
+    Early command migrations created output-mode subclasses (`Diff::Patch`,
+    `Diff::Numstat`, `Diff::Raw`, `Stash::ShowPatch`, etc.) that hardcoded format
+    flags as `literal` entries. This was an anti-pattern: those subclasses were
+    differentiated only by which output format they requested, not by which git
+    operation they performed. The result was that every format change required a
+    new class, the facade had to choose between them by type, and the parser
+    contract was invisible.
+
+    **Correct subclass criterion:** Create a subclass (or a separate class in a
+    namespace) only when the git operation itself differs — e.g.,
+    `Branch::Create` vs `Branch::Delete` (different `--delete` flag makes them
+    different operations). Do **not** create subclasses for the same operation
+    with different `--format`, `--patch`, `--numstat`, `--raw`, etc. flags.
+
+    **Correct `literal` criterion:** A `literal` entry is justified only when it
+    is an operation selector that defines what the class does — e.g.,
+    `literal 'stash'` and `literal 'show'` in `Stash::Show`, or
+    `literal '--delete'` in `Branch::Delete`. Output-mode flags (`--patch`,
+    `--numstat`, `--raw`, `--no-color`, `--format=…`) are never operation
+    selectors; they are options the facade passes to fulfill its own parsing or
+    display requirements.
+
+    **Correct option placement:** Output-mode flags and parser-contract options
+    belong at the facade call site, not inside the command class as `literal`
+    entries. Declare them with `flag_option` or `value_option` in the DSL so the
+    facade can pass them explicitly:
+
+    ```ruby
+    # ❌ Anti-pattern: output mode hardcoded as literal
+    class Diff::Patch < Git::Commands::Base
+      arguments do
+        literal 'diff'
+        literal '--patch'   # ← hides the parser contract; wrong layer
+        ...
+      end
+    end
+
+    # ✅ Correct: single class; facade controls output mode
+    class Diff < Git::Commands::Base
+      arguments do
+        literal 'diff'
+        flag_option :patch     # facade passes patch: true when it needs patch output
+        flag_option :numstat   # facade passes numstat: true when it needs numstat
+        flag_option :raw       # facade passes raw: true when it needs raw output
+        ...
+      end
+    end
+
+    # lib/git/lib.rb — parser contract is now explicit and auditable:
+    Git::Commands::Diff.new(self).call(patch: true, numstat: true, ...)
+    ```
+
+    **Known anti-patterns (now fixed):** `Git::Commands::Diff::Patch`,
+    `Git::Commands::Diff::Numstat`, `Git::Commands::Diff::Raw`,
+    `Git::Commands::Stash::ShowPatch`, `Git::Commands::Stash::ShowNumstat`,
+    `Git::Commands::Stash::ShowRaw` — all collapsed in this refactor.
+    Additionally, `literal '--no-color'` in `Log` and `Grep`, and
+    `literal "--format=…"` in `Branch::List` and `Tag::List` were moved to
+    their respective facade call sites.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the

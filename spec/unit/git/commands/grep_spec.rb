@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::Grep do
     context 'with a tree operand' do
       it 'runs git grep with -e <pattern> <tree> and passes the result through' do
         expected_result = command_result('HEAD:file.txt:5:to search')
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD')
           .and_return(expected_result)
 
         result = command.call('HEAD', pattern: 'search')
@@ -20,9 +20,18 @@ RSpec.describe Git::Commands::Grep do
       end
     end
 
+    context 'with parser-contract options (no_color:)' do
+      it 'includes --no-color when no_color: true' do
+        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+          .and_return(command_result('HEAD:file.txt:5:to search'))
+
+        command.call('HEAD', pattern: 'search', no_color: true)
+      end
+    end
+
     context 'with multiple tree operands' do
       it 'passes all trees to the command' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'main', 'feature')
+        expect_command_capturing('grep', '-e', 'search', 'main', 'feature')
           .and_return(command_result('main:file.txt:1:search'))
 
         command.call('main', 'feature', pattern: 'search')
@@ -31,7 +40,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'without a tree operand' do
       it 'runs git grep with -e <pattern> only' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search')
           .and_return(command_result('HEAD:file.txt:5:to search'))
 
         command.call(pattern: 'search')
@@ -40,7 +49,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :ignore_case option' do
       it 'includes --ignore-case flag' do
-        expect_command_capturing('grep', '--no-color', '--ignore-case', '-e', 'SEARCH', 'HEAD')
+        expect_command_capturing('grep', '--ignore-case', '-e', 'SEARCH', 'HEAD')
           .and_return(command_result('HEAD:file.txt:5:to search'))
 
         command.call('HEAD', pattern: 'SEARCH', ignore_case: true)
@@ -49,7 +58,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :i alias' do
       it 'accepts :i as alias for :ignore_case' do
-        expect_command_capturing('grep', '--no-color', '--ignore-case', '-e', 'SEARCH', 'HEAD')
+        expect_command_capturing('grep', '--ignore-case', '-e', 'SEARCH', 'HEAD')
           .and_return(command_result('HEAD:file.txt:5:to search'))
 
         command.call('HEAD', pattern: 'SEARCH', i: true)
@@ -58,7 +67,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :invert_match option' do
       it 'includes --invert-match flag' do
-        expect_command_capturing('grep', '--no-color', '--invert-match', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--invert-match', '-e', 'search', 'HEAD')
           .and_return(command_result('HEAD:file.txt:1:other line'))
 
         command.call('HEAD', pattern: 'search', invert_match: true)
@@ -67,7 +76,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :v alias' do
       it 'accepts :v as alias for :invert_match' do
-        expect_command_capturing('grep', '--no-color', '--invert-match', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--invert-match', '-e', 'search', 'HEAD')
           .and_return(command_result('HEAD:file.txt:1:other line'))
 
         command.call('HEAD', pattern: 'search', v: true)
@@ -76,7 +85,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :extended_regexp option' do
       it 'includes --extended-regexp flag' do
-        expect_command_capturing('grep', '--no-color', '--extended-regexp', '-e', 'foo|bar', 'HEAD')
+        expect_command_capturing('grep', '--extended-regexp', '-e', 'foo|bar', 'HEAD')
           .and_return(command_result('HEAD:file.txt:1:foo'))
 
         command.call('HEAD', pattern: 'foo|bar', extended_regexp: true)
@@ -85,7 +94,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :E alias' do
       it 'accepts :E as alias for :extended_regexp' do
-        expect_command_capturing('grep', '--no-color', '--extended-regexp', '-e', 'foo|bar', 'HEAD')
+        expect_command_capturing('grep', '--extended-regexp', '-e', 'foo|bar', 'HEAD')
           .and_return(command_result('HEAD:file.txt:1:foo'))
 
         command.call('HEAD', pattern: 'foo|bar', E: true)
@@ -96,7 +105,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :text option' do
       it 'includes --text flag' do
-        expect_command_capturing('grep', '--no-color', '--text', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--text', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', text: true)
@@ -105,7 +114,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :a alias' do
       it 'accepts :a as alias for :text' do
-        expect_command_capturing('grep', '--no-color', '--text', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--text', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', a: true)
@@ -114,7 +123,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :I option' do
       it 'includes -I flag' do
-        expect_command_capturing('grep', '--no-color', '-I', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-I', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', I: true)
@@ -123,7 +132,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :textconv option' do
       it 'includes --textconv flag' do
-        expect_command_capturing('grep', '--no-color', '--textconv', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--textconv', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', textconv: true)
@@ -132,7 +141,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :textconv false' do
       it 'includes --no-textconv flag' do
-        expect_command_capturing('grep', '--no-color', '--no-textconv', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--no-textconv', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', textconv: false)
@@ -143,7 +152,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :word_regexp option' do
       it 'includes --word-regexp flag' do
-        expect_command_capturing('grep', '--no-color', '--word-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--word-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', word_regexp: true)
@@ -152,7 +161,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :w alias' do
       it 'accepts :w as alias for :word_regexp' do
-        expect_command_capturing('grep', '--no-color', '--word-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--word-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', w: true)
@@ -161,7 +170,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :full_name option' do
       it 'includes --full-name flag' do
-        expect_command_capturing('grep', '--no-color', '--full-name', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--full-name', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', full_name: true)
@@ -172,7 +181,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :basic_regexp option' do
       it 'includes --basic-regexp flag' do
-        expect_command_capturing('grep', '--no-color', '--basic-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--basic-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', basic_regexp: true)
@@ -181,7 +190,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :G alias' do
       it 'accepts :G as alias for :basic_regexp' do
-        expect_command_capturing('grep', '--no-color', '--basic-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--basic-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', G: true)
@@ -190,7 +199,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :perl_regexp option' do
       it 'includes --perl-regexp flag' do
-        expect_command_capturing('grep', '--no-color', '--perl-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--perl-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', perl_regexp: true)
@@ -199,7 +208,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :P alias' do
       it 'accepts :P as alias for :perl_regexp' do
-        expect_command_capturing('grep', '--no-color', '--perl-regexp', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--perl-regexp', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', P: true)
@@ -208,7 +217,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :fixed_strings option' do
       it 'includes --fixed-strings flag' do
-        expect_command_capturing('grep', '--no-color', '--fixed-strings', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--fixed-strings', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', fixed_strings: true)
@@ -217,7 +226,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :F alias' do
       it 'accepts :F as alias for :fixed_strings' do
-        expect_command_capturing('grep', '--no-color', '--fixed-strings', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--fixed-strings', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', F: true)
@@ -228,7 +237,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :line_number option' do
       it 'includes --line-number flag' do
-        expect_command_capturing('grep', '--no-color', '--line-number', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--line-number', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', line_number: true)
@@ -237,7 +246,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :n alias' do
       it 'accepts :n as alias for :line_number' do
-        expect_command_capturing('grep', '--no-color', '--line-number', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--line-number', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', n: true)
@@ -246,7 +255,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :H option' do
       it 'includes -H flag' do
-        expect_command_capturing('grep', '--no-color', '-H', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-H', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', H: true)
@@ -255,7 +264,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :h option' do
       it 'includes -h flag' do
-        expect_command_capturing('grep', '--no-color', '-h', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-h', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', h: true)
@@ -264,7 +273,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :column option' do
       it 'includes --column flag' do
-        expect_command_capturing('grep', '--no-color', '--column', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--column', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', column: true)
@@ -273,7 +282,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :break option' do
       it 'includes --break flag' do
-        expect_command_capturing('grep', '--no-color', '--break', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--break', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', break: true)
@@ -282,7 +291,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :heading option' do
       it 'includes --heading flag' do
-        expect_command_capturing('grep', '--no-color', '--heading', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--heading', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', heading: true)
@@ -291,7 +300,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :files_with_matches option' do
       it 'includes --files-with-matches flag' do
-        expect_command_capturing('grep', '--no-color', '--files-with-matches', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--files-with-matches', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', files_with_matches: true)
@@ -300,7 +309,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :name_only alias' do
       it 'accepts :name_only as alias for :files_with_matches' do
-        expect_command_capturing('grep', '--no-color', '--files-with-matches', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--files-with-matches', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', name_only: true)
@@ -309,7 +318,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :l alias' do
       it 'accepts :l as alias for :files_with_matches' do
-        expect_command_capturing('grep', '--no-color', '--files-with-matches', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--files-with-matches', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', l: true)
@@ -318,7 +327,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :files_without_match option' do
       it 'includes --files-without-match flag' do
-        expect_command_capturing('grep', '--no-color', '--files-without-match', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--files-without-match', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', files_without_match: true)
@@ -327,7 +336,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :L alias' do
       it 'accepts :L as alias for :files_without_match' do
-        expect_command_capturing('grep', '--no-color', '--files-without-match', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--files-without-match', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', L: true)
@@ -336,7 +345,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :only_matching option' do
       it 'includes --only-matching flag' do
-        expect_command_capturing('grep', '--no-color', '--only-matching', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--only-matching', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', only_matching: true)
@@ -345,7 +354,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :o alias' do
       it 'accepts :o as alias for :only_matching' do
-        expect_command_capturing('grep', '--no-color', '--only-matching', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--only-matching', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', o: true)
@@ -354,7 +363,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :count option' do
       it 'includes --count flag' do
-        expect_command_capturing('grep', '--no-color', '--count', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--count', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', count: true)
@@ -363,7 +372,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :c alias' do
       it 'accepts :c as alias for :count' do
-        expect_command_capturing('grep', '--no-color', '--count', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--count', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', c: true)
@@ -372,7 +381,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :all_match option' do
       it 'includes --all-match flag' do
-        expect_command_capturing('grep', '--no-color', '--all-match', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--all-match', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', all_match: true)
@@ -381,7 +390,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :quiet option' do
       it 'includes --quiet flag' do
-        expect_command_capturing('grep', '--no-color', '--quiet', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--quiet', '-e', 'search', 'HEAD')
           .and_return(command_result('', exitstatus: 1))
 
         command.call('HEAD', pattern: 'search', quiet: true)
@@ -390,7 +399,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :q alias' do
       it 'accepts :q as alias for :quiet' do
-        expect_command_capturing('grep', '--no-color', '--quiet', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--quiet', '-e', 'search', 'HEAD')
           .and_return(command_result('', exitstatus: 1))
 
         command.call('HEAD', pattern: 'search', q: true)
@@ -401,7 +410,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :max_depth option' do
       it 'includes --max-depth with the given value' do
-        expect_command_capturing('grep', '--no-color', '--max-depth', '3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--max-depth', '3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', max_depth: '3')
@@ -410,7 +419,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :recursive option' do
       it 'includes --recursive flag' do
-        expect_command_capturing('grep', '--no-color', '--recursive', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--recursive', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', recursive: true)
@@ -419,7 +428,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :recursive false' do
       it 'includes --no-recursive flag' do
-        expect_command_capturing('grep', '--no-color', '--no-recursive', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--no-recursive', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', recursive: false)
@@ -428,7 +437,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :r alias' do
       it 'accepts :r as alias for :recursive' do
-        expect_command_capturing('grep', '--no-color', '--recursive', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--recursive', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', r: true)
@@ -439,7 +448,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :show_function option' do
       it 'includes --show-function flag' do
-        expect_command_capturing('grep', '--no-color', '--show-function', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--show-function', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', show_function: true)
@@ -448,7 +457,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :p alias' do
       it 'accepts :p as alias for :show_function' do
-        expect_command_capturing('grep', '--no-color', '--show-function', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--show-function', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', p: true)
@@ -459,7 +468,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :after_context option' do
       it 'includes --after-context=<n> with the given value' do
-        expect_command_capturing('grep', '--no-color', '--after-context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--after-context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', after_context: '3')
@@ -468,7 +477,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :A alias' do
       it 'accepts :A as alias for :after_context' do
-        expect_command_capturing('grep', '--no-color', '--after-context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--after-context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', A: '3')
@@ -477,7 +486,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :before_context option' do
       it 'includes --before-context=<n> with the given value' do
-        expect_command_capturing('grep', '--no-color', '--before-context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--before-context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', before_context: '3')
@@ -486,7 +495,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :B alias' do
       it 'accepts :B as alias for :before_context' do
-        expect_command_capturing('grep', '--no-color', '--before-context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--before-context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', B: '3')
@@ -495,7 +504,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :context option' do
       it 'includes --context=<n> with the given value' do
-        expect_command_capturing('grep', '--no-color', '--context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', context: '3')
@@ -504,7 +513,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :C alias' do
       it 'accepts :C as alias for :context' do
-        expect_command_capturing('grep', '--no-color', '--context=3', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--context=3', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', C: '3')
@@ -513,7 +522,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :function_context option' do
       it 'includes --function-context flag' do
-        expect_command_capturing('grep', '--no-color', '--function-context', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--function-context', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', function_context: true)
@@ -522,7 +531,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :W alias' do
       it 'accepts :W as alias for :function_context' do
-        expect_command_capturing('grep', '--no-color', '--function-context', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--function-context', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', W: true)
@@ -533,7 +542,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :max_count option' do
       it 'includes --max-count with the given value' do
-        expect_command_capturing('grep', '--no-color', '--max-count', '10', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--max-count', '10', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', max_count: '10')
@@ -542,7 +551,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :m alias' do
       it 'accepts :m as alias for :max_count' do
-        expect_command_capturing('grep', '--no-color', '--max-count', '10', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--max-count', '10', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', m: '10')
@@ -551,7 +560,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :threads option' do
       it 'includes --threads with the given value' do
-        expect_command_capturing('grep', '--no-color', '--threads', '4', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--threads', '4', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', threads: '4')
@@ -562,7 +571,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :recurse_submodules option' do
       it 'includes --recurse-submodules flag' do
-        expect_command_capturing('grep', '--no-color', '--recurse-submodules', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '--recurse-submodules', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', recurse_submodules: true)
@@ -571,7 +580,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :exclude_standard option' do
       it 'includes --exclude-standard flag' do
-        expect_command_capturing('grep', '--no-color', '--exclude-standard', '--untracked', '-e', 'search')
+        expect_command_capturing('grep', '--exclude-standard', '--untracked', '-e', 'search')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', exclude_standard: true, untracked: true)
@@ -580,7 +589,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :exclude_standard false' do
       it 'includes --no-exclude-standard flag' do
-        expect_command_capturing('grep', '--no-color', '--no-exclude-standard', '--no-index', '-e', 'search')
+        expect_command_capturing('grep', '--no-exclude-standard', '--no-index', '-e', 'search')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', exclude_standard: false, no_index: true)
@@ -589,7 +598,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :cached option' do
       it 'includes --cached flag' do
-        expect_command_capturing('grep', '--no-color', '--cached', '-e', 'search')
+        expect_command_capturing('grep', '--cached', '-e', 'search')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', cached: true)
@@ -598,7 +607,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :untracked option' do
       it 'includes --untracked flag' do
-        expect_command_capturing('grep', '--no-color', '--untracked', '-e', 'search')
+        expect_command_capturing('grep', '--untracked', '-e', 'search')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', untracked: true)
@@ -607,7 +616,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :no_index option' do
       it 'includes --no-index flag' do
-        expect_command_capturing('grep', '--no-color', '--no-index', '-e', 'search')
+        expect_command_capturing('grep', '--no-index', '-e', 'search')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', no_index: true)
@@ -618,14 +627,14 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :f option' do
       it 'includes -f with the given file path' do
-        expect_command_capturing('grep', '--no-color', '-f', 'patterns.txt', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-f', 'patterns.txt', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', f: 'patterns.txt')
       end
 
       it 'repeats -f for each file when given an array' do
-        expect_command_capturing('grep', '--no-color', '-f', 'a.txt', '-f', 'b.txt', '-e', 'search',
+        expect_command_capturing('grep', '-f', 'a.txt', '-f', 'b.txt', '-e', 'search',
                                  'HEAD')
           .and_return(command_result(''))
 
@@ -637,7 +646,6 @@ RSpec.describe Git::Commands::Grep do
       it 'includes all flags in definition order' do
         expect_command_capturing(
           'grep',
-          '--no-color',
           '--ignore-case',
           '--invert-match',
           '--extended-regexp',
@@ -651,14 +659,14 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :pathspec option' do
       it 'appends -- and the pathspec after the tree operand' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD', '--', 'lib/**')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD', '--', 'lib/**')
           .and_return(command_result('HEAD:lib/file.rb:3:search'))
 
         command.call('HEAD', pattern: 'search', pathspec: 'lib/**')
       end
 
       it 'appends -- and multiple pathspecs when given an array' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD', '--', 'lib/**',
+        expect_command_capturing('grep', '-e', 'search', 'HEAD', '--', 'lib/**',
                                  'spec/**')
           .and_return(command_result('HEAD:lib/file.rb:3:search'))
 
@@ -666,7 +674,7 @@ RSpec.describe Git::Commands::Grep do
       end
 
       it 'omits -- separator when pathspec is nil' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', pathspec: nil)
@@ -676,7 +684,7 @@ RSpec.describe Git::Commands::Grep do
     context 'exit code handling' do
       it 'returns the result without raising when exit status is 1 (no matches)' do
         no_match_result = command_result('', exitstatus: 1)
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD')
           .and_return(no_match_result)
 
         result = command.call('HEAD', pattern: 'search')
@@ -685,14 +693,14 @@ RSpec.describe Git::Commands::Grep do
       end
 
       it 'raises Git::FailedError when exit status is 2' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD')
           .and_return(command_result('', stderr: 'fatal: bad object', exitstatus: 2))
 
         expect { command.call('HEAD', pattern: 'search') }.to raise_error(Git::FailedError)
       end
 
       it 'raises Git::FailedError when exit status is 128' do
-        expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', 'HEAD')
           .and_return(command_result('', stderr: 'fatal: not a git repository', exitstatus: 128))
 
         expect { command.call('HEAD', pattern: 'search') }.to raise_error(Git::FailedError)
@@ -701,7 +709,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with an Array pattern (raw args passthrough)' do
       it 'passes the array elements directly as CLI arguments' do
-        expect_command_capturing('grep', '--no-color', '-e', 'foo', '--and', '-e', 'bar', 'HEAD')
+        expect_command_capturing('grep', '-e', 'foo', '--and', '-e', 'bar', 'HEAD')
           .and_return(command_result('HEAD:file.txt:1:foo bar'))
 
         command.call('HEAD', pattern: ['-e', 'foo', '--and', '-e', 'bar'])

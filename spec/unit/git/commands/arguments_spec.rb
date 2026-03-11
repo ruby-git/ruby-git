@@ -1232,6 +1232,30 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
+    context 'with custom options returning a string' do
+      let(:args) do
+        described_class.define do
+          custom_option(:since) { |v| "--since=#{v}" }
+        end
+      end
+
+      it 'appends the string result directly' do
+        expect(args.bind(since: '2024-01-01').to_ary).to eq(['--since=2024-01-01'])
+      end
+    end
+
+    context 'with custom options with no builder block' do
+      let(:args) do
+        described_class.define do
+          custom_option(:no_op)
+        end
+      end
+
+      it 'appends nothing when builder is nil' do
+        expect(args.bind(no_op: 'ignored').to_ary).to eq([])
+      end
+    end
+
     context 'with option aliases' do
       let(:args) do
         described_class.define do
@@ -1484,6 +1508,19 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
       end
+
+      context 'when both expected_type: and validator: are specified in the underlying definition' do
+        it 'raises ArgumentError at definition time' do
+          # The public DSL methods never pass both; this guard exists for defensive
+          # correctness. Access register_option directly through instance_eval.
+          expect do
+            described_class.define do
+              register_option :message, type: :value, expected_type: String,
+                                        validator: ->(v) { v.is_a?(String) }
+            end
+          end.to raise_error(ArgumentError, /cannot specify both type: and validator: for :message/)
+        end
+      end
     end
 
     context 'when validator: is passed to flag_option' do
@@ -1493,6 +1530,21 @@ RSpec.describe Git::Commands::Arguments do
             flag_option :force, validator: ->(v) { [true, false].include?(v) }
           end
         end.to raise_error(ArgumentError, /unknown keyword: :validator/)
+      end
+    end
+
+    context 'when a custom validator returns a non-String falsy value' do
+      let(:args) do
+        described_class.define do
+          register_option :score, type: :value, validator: ->(v) { v.to_i >= 0 }
+        end
+      end
+
+      it 'raises with generic error message when validator returns false' do
+        expect { args.bind(score: '-1') }.to raise_error(
+          ArgumentError,
+          'Invalid value for option: score'
+        )
       end
     end
 
@@ -1704,6 +1756,17 @@ RSpec.describe Git::Commands::Arguments do
           it 'does not raise when negatable flag_or_value is false and no conflicting option' do
             expect { fov_args_def.bind(sign: false) }.not_to raise_error
           end
+        end
+      end
+
+      context 'typo guard — definition-time errors' do
+        it 'raises ArgumentError for an unknown argument name in conflicts declaration' do
+          expect do
+            described_class.define do
+              flag_option :patch
+              conflicts :patch, :typo
+            end
+          end.to raise_error(ArgumentError, /unknown argument :typo in conflicts declaration/)
         end
       end
     end
@@ -2079,6 +2142,15 @@ RSpec.describe Git::Commands::Arguments do
           end.to raise_error(ArgumentError, 'requires_one_of must be given at least one argument name')
         end
 
+        it 'raises ArgumentError for unknown keyword arguments' do
+          expect do
+            described_class.define do
+              flag_option :force
+              requires_one_of :force, unknown_kwarg: :value
+            end
+          end.to raise_error(ArgumentError, /requires_one_of: unknown keyword arguments: \[:unknown_kwarg\]/)
+        end
+
         it 'raises ArgumentError for an unknown option name' do
           expect do
             described_class.define do
@@ -2402,6 +2474,38 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
+      context 'trigger (when:) check: empty string and empty array are treated as absent' do
+        let(:args_def) do
+          described_class.define do
+            value_option :label, inline: true
+            value_option :message, inline: true
+            value_option :tags, inline: true, repeatable: true
+            requires :message, when: :label
+            requires :message, when: :tags
+          end
+        end
+
+        it 'skips check when trigger is an empty string' do
+          # '' is treated as absent — covers `return false if value == ''` in argument_present?
+          expect { args_def.bind(label: '') }.not_to raise_error
+        end
+
+        it 'skips check when trigger is an empty array' do
+          # [] is treated as absent — covers `return false if value == []` in argument_present?
+          expect { args_def.bind(tags: []) }.not_to raise_error
+        end
+
+        it 'fires the trigger when value_option trigger has a non-empty string' do
+          expect { args_def.bind(label: 'v1.0') }
+            .to raise_error(ArgumentError, /:label requires :message/)
+        end
+
+        it 'fires the trigger when repeatable trigger has a non-empty array' do
+          expect { args_def.bind(tags: ['v1.0']) }
+            .to raise_error(ArgumentError, /:tags requires :message/)
+        end
+      end
+
       context 'typo guard — definition-time errors' do
         it 'raises at definition time for unknown required name' do
           expect do
@@ -2428,6 +2532,16 @@ RSpec.describe Git::Commands::Arguments do
               requires :verbose
             end
           end.to raise_error(ArgumentError, /requires: `when:` keyword is required/)
+        end
+
+        it 'raises for unknown keyword arguments passed to requires' do
+          expect do
+            described_class.define do
+              flag_option :verbose
+              flag_option :force
+              requires :force, when: :verbose, unknown_kwarg: :value
+            end
+          end.to raise_error(ArgumentError, /requires: unknown keyword arguments: \[:unknown_kwarg\]/)
         end
 
         it 'raises at definition time for unknown name in requires_one_of when: form' do
@@ -2672,6 +2786,14 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'works when tree_ish is provided with no paths' do
           expect(args.bind('HEAD').to_ary).to eq(['HEAD'])
+        end
+
+        it 'works when no arguments are provided at all' do
+          # allocate_required is called for tree_ish but @values is empty,
+          # so @val_idx >= @values.size — the required slot is filled with the
+          # default (nil) without incrementing @consumed (else branch of line 3236)
+          expect(args.bind.to_ary).to eq([])
+          expect(args.bind.tree_ish).to be_nil
         end
       end
 
@@ -3449,6 +3571,18 @@ RSpec.describe Git::Commands::Arguments do
             /Invalid value for flag_or_value: 1 \(Integer\); expected true, false, or a String/
           )
         end
+
+        context 'with repeatable: true' do
+          let(:args) do
+            described_class.define do
+              flag_or_value_option :contains, repeatable: true
+            end
+          end
+
+          it 'skips false entries in a repeatable array' do
+            expect(args.bind(contains: [false, 'abc123']).to_ary).to eq(['--contains', 'abc123'])
+          end
+        end
       end
 
       context 'with flag_or_value inline: true' do
@@ -3475,6 +3609,18 @@ RSpec.describe Git::Commands::Arguments do
             ArgumentError,
             /Invalid value for flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
           )
+        end
+
+        context 'with repeatable: true' do
+          let(:args) do
+            described_class.define do
+              flag_or_value_option :gpg_sign, inline: true, repeatable: true
+            end
+          end
+
+          it 'skips false entries in a repeatable array' do
+            expect(args.bind(gpg_sign: [false, 'key-id']).to_ary).to eq(['--gpg-sign=key-id'])
+          end
         end
       end
 
@@ -5123,6 +5269,27 @@ RSpec.describe Git::Commands::Arguments do
         expect { args_def.bind(sign: true) }.not_to raise_error
         expect { args_def.bind(sign: false) }.not_to raise_error
         expect(args_def.bind(sign: false).to_a).to eq(['--no-sign'])
+      end
+    end
+
+    describe 'with repeatable flag_or_value_option' do
+      let(:args_def) do
+        described_class.define do
+          flag_or_value_option :sign, inline: true, repeatable: true
+          allowed_values :sign, in: %w[yes no]
+        end
+      end
+
+      it 'skips allowed_values check for boolean elements in a repeatable array' do
+        # true triggers the flag and skips the allowed_values check (covers the `next` branch
+        # in check_repeatable_allowed_values! for boolean elements in FLAG_OR_VALUE_OPTION_TYPES)
+        expect { args_def.bind(sign: [true, 'yes']) }.not_to raise_error
+        expect(args_def.bind(sign: [true, 'yes']).to_a).to eq(['--sign', '--sign=yes'])
+      end
+
+      it 'still raises for invalid string elements in a repeatable array' do
+        expect { args_def.bind(sign: [true, 'maybe']) }
+          .to raise_error(ArgumentError, /expected one of.*got "maybe"/)
       end
     end
 

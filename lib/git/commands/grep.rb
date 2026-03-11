@@ -50,7 +50,8 @@ module Git
     class Grep < Git::Commands::Base
       arguments do
         literal 'grep'
-        literal '--no-color'
+
+        flag_option :no_color
 
         # Encoding and binary handling
         flag_option %i[text a]
@@ -129,7 +130,7 @@ module Git
 
       # @!method call(*, **)
       #
-      #   Execute the `git grep` command.
+      #   Execute the `git grep` command
       #
       #   @overload call(*tree, **options)
       #
@@ -138,6 +139,8 @@ module Git
       #       searches the working tree
       #
       #     @param options [Hash] command options
+      #
+      #     @option options [Boolean] :no_color (nil) Suppress color output
       #
       #     @option options [Boolean] :text (nil) Process binary files as if they
       #       were text
@@ -149,7 +152,7 @@ module Git
       #
       #     @option options [Boolean] :textconv (nil) Honor textconv filter settings
       #
-      #       Pass +false+ to emit +--no-textconv+.
+      #       Pass `false` to emit `--no-textconv`.
       #
       #     @option options [Boolean] :ignore_case (nil) Ignore case
       #       distinctions in both the pattern and the file contents
@@ -228,7 +231,7 @@ module Git
       #
       #       Alias: :c
       #
-      #     @option options [Boolean] :all_match (nil) When using multiple +--or+
+      #     @option options [Boolean] :all_match (nil) When using multiple `--or`
       #       patterns, limit matches to files that have lines matching all of them
       #
       #     @option options [Boolean] :quiet (nil) Do not output matching lines;
@@ -240,9 +243,9 @@ module Git
       #       number of directory levels for each pathspec argument
       #
       #     @option options [Boolean] :recursive (nil) Recurse into subdirectories
-      #       (same as +--max-depth=-1+; this is the default)
+      #       (same as `--max-depth=-1`; this is the default)
       #
-      #       Pass +false+ to emit +--no-recursive+ (+--max-depth=0+).
+      #       Pass `false` to emit `--no-recursive` (`--max-depth=0`).
       #
       #       Alias: :r
       #
@@ -283,11 +286,11 @@ module Git
       #     @option options [Boolean] :recurse_submodules (nil) Recursively search
       #       in each active, checked-out submodule
       #
-      #     @option options [Boolean] :exclude_standard (nil) Honor the +.gitignore+
+      #     @option options [Boolean] :exclude_standard (nil) Honor the `.gitignore`
       #       mechanism when searching untracked files
       #
-      #       Pass +false+ to emit +--no-exclude-standard+ and also search ignored
-      #       files. Only useful with +:untracked+ or +:no_index+.
+      #       Pass `false` to emit `--no-exclude-standard` and also search ignored
+      #       files. Only useful with `:untracked` or `:no_index`.
       #
       #     @option options [Boolean] :cached (nil) Search blobs registered in the
       #       index instead of tracked files in the working tree

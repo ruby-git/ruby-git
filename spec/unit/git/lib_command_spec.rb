@@ -443,17 +443,17 @@ RSpec.describe Git::Lib do
   end
 
   describe '#diff_full' do
-    let(:patch_command) { instance_double(Git::Commands::Diff::Patch) }
+    let(:diff_command) { instance_double(Git::Commands::Diff) }
 
     before do
-      allow(Git::Commands::Diff::Patch).to receive(:new).with(lib).and_return(patch_command)
+      allow(Git::Commands::Diff).to receive(:new).with(lib).and_return(diff_command)
     end
 
     it 'returns only the patch text from the combined output' do
       combined_output =
         "10\t2\tfile.rb\n 1 file changed, 10 insertions(+), 2 deletions(-)\n\n" \
         "diff --git a/file.rb b/file.rb\n--- a/file.rb\n+++ b/file.rb\n"
-      allow(patch_command).to receive(:call)
+      allow(diff_command).to receive(:call)
         .and_return(command_result(combined_output))
 
       result = lib.diff_full
@@ -462,36 +462,42 @@ RSpec.describe Git::Lib do
     end
 
     it 'forwards obj1 and obj2 to the command' do
-      allow(patch_command).to receive(:call)
-        .with('HEAD~3', 'HEAD', pathspecs: nil)
+      allow(diff_command).to receive(:call)
+        .with('HEAD~3', 'HEAD', patch: true, numstat: true, shortstat: true,
+                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: nil)
         .and_return(command_result(''))
 
       lib.diff_full('HEAD~3', 'HEAD')
 
-      expect(patch_command).to have_received(:call)
-        .with('HEAD~3', 'HEAD', pathspecs: nil)
+      expect(diff_command).to have_received(:call)
+        .with('HEAD~3', 'HEAD', patch: true, numstat: true, shortstat: true,
+                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: nil)
     end
 
     it 'forwards path_limiter as pathspecs' do
-      allow(patch_command).to receive(:call)
-        .with('HEAD', pathspecs: ['lib/'])
+      allow(diff_command).to receive(:call)
+        .with('HEAD', patch: true, numstat: true, shortstat: true,
+                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_full('HEAD', nil, path_limiter: ['lib/'])
 
-      expect(patch_command).to have_received(:call)
-        .with('HEAD', pathspecs: ['lib/'])
+      expect(diff_command).to have_received(:call)
+        .with('HEAD', patch: true, numstat: true, shortstat: true,
+                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
     end
 
     it 'wraps a string path_limiter in an array' do
-      allow(patch_command).to receive(:call)
-        .with('HEAD', pathspecs: ['lib/foo.rb'])
+      allow(diff_command).to receive(:call)
+        .with('HEAD', patch: true, numstat: true, shortstat: true,
+                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/foo.rb'])
         .and_return(command_result(''))
 
       lib.diff_full('HEAD', nil, path_limiter: 'lib/foo.rb')
 
-      expect(patch_command).to have_received(:call)
-        .with('HEAD', pathspecs: ['lib/foo.rb'])
+      expect(diff_command).to have_received(:call)
+        .with('HEAD', patch: true, numstat: true, shortstat: true,
+                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/foo.rb'])
     end
 
     it 'rejects unknown options' do
@@ -501,15 +507,15 @@ RSpec.describe Git::Lib do
   end
 
   describe '#diff_stats' do
-    let(:numstat_command) { instance_double(Git::Commands::Diff::Numstat) }
+    let(:diff_command) { instance_double(Git::Commands::Diff) }
 
     before do
-      allow(Git::Commands::Diff::Numstat).to receive(:new).with(lib).and_return(numstat_command)
+      allow(Git::Commands::Diff).to receive(:new).with(lib).and_return(diff_command)
     end
 
     it 'parses the numstat output into a stats hash' do
       numstat_output = "10\t2\tlib/foo.rb\n3\t0\tREADME.md\n 2 files changed, 13 insertions(+), 2 deletions(-)\n"
-      allow(numstat_command).to receive(:call)
+      allow(diff_command).to receive(:call)
         .and_return(command_result(numstat_output))
 
       result = lib.diff_stats
@@ -523,14 +529,16 @@ RSpec.describe Git::Lib do
     end
 
     it 'forwards obj1, obj2, and path_limiter to the command' do
-      allow(numstat_command).to receive(:call)
-        .with('HEAD~3', 'HEAD', pathspecs: ['lib/'])
+      allow(diff_command).to receive(:call)
+        .with('HEAD~3', 'HEAD', numstat: true, shortstat: true,
+                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_stats('HEAD~3', 'HEAD', path_limiter: ['lib/'])
 
-      expect(numstat_command).to have_received(:call)
-        .with('HEAD~3', 'HEAD', pathspecs: ['lib/'])
+      expect(diff_command).to have_received(:call)
+        .with('HEAD~3', 'HEAD', numstat: true, shortstat: true,
+                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
     end
 
     it 'rejects unknown options' do
@@ -540,16 +548,16 @@ RSpec.describe Git::Lib do
   end
 
   describe '#diff_path_status' do
-    let(:raw_command) { instance_double(Git::Commands::Diff::Raw) }
+    let(:diff_command) { instance_double(Git::Commands::Diff) }
 
     before do
-      allow(Git::Commands::Diff::Raw).to receive(:new).with(lib).and_return(raw_command)
+      allow(Git::Commands::Diff).to receive(:new).with(lib).and_return(diff_command)
     end
 
     it 'extracts name-status from raw output into a hash' do
       raw_output = ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
                    ":000000 100644 0000000 abc1234 A\tREADME.md\n"
-      allow(raw_command).to receive(:call)
+      allow(diff_command).to receive(:call)
         .and_return(command_result(raw_output))
 
       result = lib.diff_path_status('HEAD~1', 'HEAD')
@@ -559,7 +567,7 @@ RSpec.describe Git::Lib do
 
     it 'handles renames by using the destination path' do
       raw_output = ":100644 100644 abc1234 def5678 R100\told.rb\tnew.rb\n"
-      allow(raw_command).to receive(:call)
+      allow(diff_command).to receive(:call)
         .and_return(command_result(raw_output))
 
       result = lib.diff_path_status('HEAD~1', 'HEAD')
@@ -568,19 +576,21 @@ RSpec.describe Git::Lib do
     end
 
     it 'forwards references and path_limiter to the command' do
-      allow(raw_command).to receive(:call)
-        .with('abc123', 'def456', pathspecs: ['lib/'])
+      allow(diff_command).to receive(:call)
+        .with('abc123', 'def456', raw: true, numstat: true, shortstat: true,
+                                  src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_path_status('abc123', 'def456', path_limiter: ['lib/'])
 
-      expect(raw_command).to have_received(:call)
-        .with('abc123', 'def456', pathspecs: ['lib/'])
+      expect(diff_command).to have_received(:call)
+        .with('abc123', 'def456', raw: true, numstat: true, shortstat: true,
+                                  src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
     end
 
     it 'supports the deprecated :path option' do
       allow(Git::Deprecation).to receive(:warn)
-      allow(raw_command).to receive(:call)
+      allow(diff_command).to receive(:call)
         .and_return(command_result(''))
 
       lib.diff_path_status('HEAD', nil, path: 'lib/foo.rb')
@@ -787,6 +797,52 @@ RSpec.describe Git::Lib do
     end
   end
 
+  describe '#full_log_commits' do
+    let(:log_command) { instance_double(Git::Commands::Log) }
+
+    before do
+      allow(Git::Commands::Log).to receive(:new).with(lib).and_return(log_command)
+    end
+
+    it 'passes no_color: true and pretty: "raw" as hardcoded parser-contract options' do
+      allow(log_command).to receive(:call)
+        .with(no_color: true, pretty: 'raw')
+        .and_return(command_result(''))
+
+      lib.full_log_commits
+
+      expect(log_command).to have_received(:call).with(no_color: true, pretty: 'raw')
+    end
+
+    it 'forwards documented options to the command' do
+      allow(log_command).to receive(:call)
+        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
+        .and_return(command_result(''))
+
+      lib.full_log_commits(count: 5, all: true)
+
+      expect(log_command).to have_received(:call)
+        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
+    end
+
+    context 'with parser-contract options the facade owns' do
+      it 'rejects :no_color because the facade always sets it' do
+        expect { lib.full_log_commits(no_color: false) }
+          .to raise_error(ArgumentError, /Unknown options: no_color/)
+      end
+
+      it 'rejects :pretty because the facade always sets it' do
+        expect { lib.full_log_commits(pretty: 'oneline') }
+          .to raise_error(ArgumentError, /Unknown options: pretty/)
+      end
+    end
+
+    it 'rejects unknown options' do
+      expect { lib.full_log_commits(bogus: true) }
+        .to raise_error(ArgumentError, /Unknown options: bogus/)
+    end
+  end
+
   describe '#grep' do
     let(:grep_command) { instance_double(Git::Commands::Grep) }
 
@@ -797,12 +853,12 @@ RSpec.describe Git::Lib do
     it 'delegates to Grep and returns parsed matches' do
       output = "HEAD:lib/foo.rb:10:found it\nHEAD:lib/bar.rb:3:found it again\n"
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'found', line_number: true)
+        .with('HEAD', pattern: 'found', no_color: true, line_number: true)
         .and_return(command_result(output, exitstatus: 0))
 
       result = lib.grep('found', object: 'HEAD')
 
-      expect(grep_command).to have_received(:call).with('HEAD', pattern: 'found', line_number: true)
+      expect(grep_command).to have_received(:call).with('HEAD', pattern: 'found', no_color: true, line_number: true)
       expect(result).to eq(
         'HEAD:lib/foo.rb' => [[10, 'found it']],
         'HEAD:lib/bar.rb' => [[3, 'found it again']]
@@ -811,7 +867,7 @@ RSpec.describe Git::Lib do
 
     it 'returns {} when exit status is 1 and stderr is empty (no matches)' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'nomatch', line_number: true)
+        .with('HEAD', pattern: 'nomatch', no_color: true, line_number: true)
         .and_return(command_result('', exitstatus: 1))
 
       result = lib.grep('nomatch')
@@ -821,7 +877,7 @@ RSpec.describe Git::Lib do
 
     it 'raises Git::FailedError when exit status is 1 and stderr is non-empty (real error)' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'search', line_number: true)
+        .with('HEAD', pattern: 'search', no_color: true, line_number: true)
         .and_return(command_result('', stderr: 'fatal: bad object HEAD', exitstatus: 1))
 
       expect { lib.grep('search') }.to raise_error(Git::FailedError) do |error|
@@ -831,13 +887,13 @@ RSpec.describe Git::Lib do
 
     it 'forwards :path_limiter as :pathspec to the Grep command' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'search', pathspec: 'lib/**', line_number: true)
+        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true)
         .and_return(command_result('', exitstatus: 0))
 
       lib.grep('search', path_limiter: 'lib/**')
 
       expect(grep_command).to have_received(:call)
-        .with('HEAD', pattern: 'search', pathspec: 'lib/**', line_number: true)
+        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true)
     end
 
     it 'rejects unknown options' do

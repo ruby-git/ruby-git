@@ -1901,7 +1901,11 @@ module Git
           build_option(args, entry[:name], @option_definitions[entry[:name]], normalized_opts[entry[:name]])
         when :operand
           build_single_positional(args, entry[:name], allocated_positionals)
+        # :nocov: this case should be unreachable
+        else
+          raise ArgumentError, "unknown entry kind: #{entry[:kind].inspect}"
         end
+        # :nocov:
       end
 
       # Allocate positionals and perform validation, returning the allocation hash
@@ -2022,7 +2026,7 @@ module Git
         if builder.is_a?(Symbol)
           send(builder, args, arg_spec, value, definition)
         else
-          builder&.call(args, arg_spec, value, definition)
+          builder.call(args, arg_spec, value, definition)
         end
       end
 
@@ -2418,7 +2422,7 @@ module Git
       #
       def operand_skip_cli?(name)
         operand_def = @operand_definitions.find { |d| d[:name] == name }
-        operand_def&.dig(:skip_cli) == true
+        operand_def[:skip_cli] == true
       end
 
       # Check if a definition represents an active '--' separator boundary
@@ -2448,7 +2452,7 @@ module Git
       #
       def operand_separator_active?(name, allocation)
         operand_def = @operand_definitions.find { |d| d[:name] == name }
-        return false unless operand_def&.dig(:separator) == '--'
+        return false unless operand_def[:separator] == '--'
 
         !positional_value_empty?(allocation[name], operand_def)
       end
@@ -2461,7 +2465,7 @@ module Git
       #
       def option_separator_active?(name, normalized_opts)
         option_def = @option_definitions[name]
-        return false unless option_def&.dig(:separator) == '--'
+        return false unless option_def[:separator] == '--'
 
         !should_skip_option?(normalized_opts[name], option_def)
       end
@@ -2869,7 +2873,7 @@ module Git
       def negatable_option?(name)
         canonical = @alias_map[name] || name
         defn = @option_definitions[canonical]
-        %i[negatable_flag negatable_flag_or_value negatable_flag_or_inline_value].include?(defn&.dig(:type))
+        %i[negatable_flag negatable_flag_or_value negatable_flag_or_inline_value].include?(defn[:type])
       end
 
       # Bound arguments object returned by {Arguments#bind}
@@ -3029,7 +3033,6 @@ module Git
           flag_names.each do |name|
             predicate_name = :"#{name}?"
             next if RESERVED_NAMES.include?(predicate_name)
-            next unless @options.key?(name)
 
             define_singleton_method(predicate_name) { @options[name] }
           end
@@ -3230,7 +3233,7 @@ module Git
         def allocate_optional(allocation, definition)
           if @opt_idx < @extra_for_optionals
             allocation[definition[:name]] = value_or_default(definition)
-            @consumed += 1 if @val_idx < @values.size
+            @consumed += 1
             @val_idx += 1
           else
             allocation[definition[:name]] = definition[:default]

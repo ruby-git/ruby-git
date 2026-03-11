@@ -36,7 +36,9 @@ module Git
         arguments do
           literal 'tag'
           literal '--list'
-          literal "--format=#{Git::Parsers::Tag::FORMAT_STRING}"
+
+          value_option :format, inline: true
+
           flag_or_value_option :contains
           flag_or_value_option :no_contains
           flag_or_value_option :points_at
@@ -53,33 +55,50 @@ module Git
         #
         #   @overload call(*pattern, **options)
         #
-        #     @param pattern [Array<String>] Shell wildcard patterns to filter tags.
+        #     @param pattern [Array<String>] Shell wildcard patterns to filter tags
+        #
         #       Multiple patterns can be provided; a tag is shown if it matches any pattern.
         #
         #     @param options [Hash] command options
         #
+        #     @option options [String] :format (nil) Output format string for each tag
+        #
         #     @option options [Boolean, String] :contains (nil) List only tags that contain the
-        #       specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #       specified commit
+        #
+        #       Pass `true` to use HEAD, or a commit reference string.
         #
         #     @option options [Boolean, String] :no_contains (nil) List only tags that don't contain
-        #       the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #       the specified commit
+        #
+        #       Pass `true` to use HEAD, or a commit reference string.
         #
         #     @option options [Boolean, String] :points_at (nil) List only tags that point at the
-        #       specified object. Pass `true` to use HEAD, or an object reference string.
+        #       specified object
+        #
+        #       Pass `true` to use HEAD, or an object reference string.
         #
         #     @option options [String, Array<String>] :sort (nil) Sort tags by the specified
-        #       key(s). Prefix `-` to sort in descending order. Common keys: 'refname',
+        #       key(s)
+        #
+        #       Prefix `-` to sort in descending order. Common keys: 'refname',
         #       '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
         #       version sorting).
         #
         #     @option options [Boolean, String] :merged (nil) List only tags whose commits are
-        #       reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #       reachable from the specified commit
+        #
+        #       Pass `true` to use HEAD, or a commit reference string.
         #
         #     @option options [Boolean, String] :no_merged (nil) List only tags whose commits are
-        #       not reachable from the specified commit. Pass `true` to use HEAD, or a commit reference string.
+        #       not reachable from the specified commit
+        #
+        #       Pass `true` to use HEAD, or a commit reference string.
         #
         #     @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
-        #       case insensitive. Also available as `:i`.
+        #       case insensitive
+        #
+        #       Alias: :i
         #
         #     @return [Git::CommandLineResult] the result of calling `git tag --list`
         #

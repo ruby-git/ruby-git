@@ -4,10 +4,9 @@ require 'git/commands/base'
 
 module Git
   module Commands
-    # Implements the `git log` command with raw output format
+    # Implements the `git log` command
     #
-    # Returns commit history in `--pretty=raw` format, which is machine-parseable
-    # and contains the full commit metadata needed to reconstruct commit objects.
+    # Returns commit history.
     #
     # @see https://git-scm.com/docs/git-log git-log documentation
     # @see Git::Commands
@@ -33,8 +32,9 @@ module Git
     class Log < Git::Commands::Base
       arguments do
         literal 'log'
-        literal '--no-color'
-        literal '--pretty=raw'
+
+        flag_option :no_color
+        value_option :pretty, inline: true
 
         # Ref inclusion
         flag_option :all
@@ -92,9 +92,9 @@ module Git
         execution_option :timeout
       end
 
-      # @overload call(*revision_range, **options)
+      # @!method call(*revision_range, **options)
       #
-      #   Execute the `git log` command.
+      #   Execute the `git log` command
       #
       #   @param revision_range [Array<String>] zero or more revision specifiers,
       #     e.g. `'v1.0..v2.0'`, `'abc123'`, `'^v0.9'`, or any expression
@@ -103,6 +103,10 @@ module Git
       #     revision constraint (i.e. all reachable commits).
       #
       #   @param options [Hash] command options
+      #
+      #   @option options [Boolean] :no_color (nil) Suppress color output
+      #
+      #   @option options [String] :pretty (nil) Format the commit log output
       #
       #   @option options [Boolean] :all (nil) Pretend all refs in refs/, along
       #     with HEAD, are listed on the command line
@@ -135,7 +139,7 @@ module Git
       #     symmetric difference a commit is reachable from (`<` for left,
       #     `>` for right)
       #
-      #   @option options [Boolean] :merges (nil) Filter by merge status.
+      #   @option options [Boolean] :merges (nil) Filter by merge status
       #
       #     `true` → `--merges` (only merge commits); `false` → `--no-merges`
       #     (exclude merge commits); `nil` → no filter.

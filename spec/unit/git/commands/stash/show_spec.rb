@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'git/commands/stash/show_numstat'
+require 'git/commands/stash/show'
 
-RSpec.describe Git::Commands::Stash::ShowNumstat do
+RSpec.describe Git::Commands::Stash::Show do
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -17,9 +17,9 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
 
   describe '#call' do
     context 'with no arguments (latest stash)' do
-      it 'calls git stash show --numstat --shortstat -M' do
+      it 'runs git stash show with no output-mode flags by default' do
         expected_result = command_result(numstat_output)
-        expect_command_capturing('stash', 'show', '--numstat', '--shortstat')
+        expect_command_capturing('stash', 'show')
           .and_return(expected_result)
 
         result = command.call
@@ -28,12 +28,49 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
       end
     end
 
+    context 'with output mode options' do
+      it 'includes --patch when patch: true' do
+        expect_command_capturing('stash', 'show', '--patch')
+          .and_return(command_result(''))
+
+        command.call(patch: true)
+      end
+
+      it 'includes --numstat when numstat: true' do
+        expect_command_capturing('stash', 'show', '--numstat')
+          .and_return(command_result(numstat_output))
+
+        command.call(numstat: true)
+      end
+
+      it 'includes --raw when raw: true' do
+        expect_command_capturing('stash', 'show', '--raw')
+          .and_return(command_result(''))
+
+        command.call(raw: true)
+      end
+
+      it 'includes --shortstat when shortstat: true' do
+        expect_command_capturing('stash', 'show', '--shortstat')
+          .and_return(command_result(''))
+
+        command.call(shortstat: true)
+      end
+
+      it 'combines multiple output mode flags in DSL order' do
+        expect_command_capturing('stash', 'show', '--patch', '--numstat', '--shortstat')
+          .and_return(command_result(numstat_output))
+
+        command.call(patch: true, numstat: true, shortstat: true)
+      end
+    end
+
     context 'with specific stash reference' do
       it 'passes stash reference to command' do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', 'stash@{2}')
           .and_return(command_result(numstat_output))
 
-        command.call('stash@{2}')
+        command.call('stash@{2}', numstat: true, shortstat: true)
       end
     end
 
@@ -42,21 +79,21 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(numstat_output))
 
-        command.call(include_untracked: true)
+        command.call(numstat: true, shortstat: true, include_untracked: true)
       end
 
       it 'adds --no-include-untracked flag when false' do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--no-include-untracked')
           .and_return(command_result(numstat_output))
 
-        command.call(include_untracked: false)
+        command.call(numstat: true, shortstat: true, include_untracked: false)
       end
 
       it 'accepts :u alias' do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--include-untracked')
           .and_return(command_result(numstat_output))
 
-        command.call(u: true)
+        command.call(numstat: true, shortstat: true, u: true)
       end
     end
 
@@ -65,7 +102,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--only-untracked')
           .and_return(command_result(numstat_output))
 
-        command.call(only_untracked: true)
+        command.call(numstat: true, shortstat: true, only_untracked: true)
       end
     end
 
@@ -74,7 +111,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--dirstat')
           .and_return(command_result(numstat_output))
 
-        command.call(dirstat: true)
+        command.call(numstat: true, shortstat: true, dirstat: true)
       end
 
       it 'passes dirstat options when string' do
@@ -82,7 +119,7 @@ RSpec.describe Git::Commands::Stash::ShowNumstat do
                                  '--dirstat=lines,cumulative')
           .and_return(command_result(numstat_output))
 
-        command.call(dirstat: 'lines,cumulative')
+        command.call(numstat: true, shortstat: true, dirstat: 'lines,cumulative')
       end
     end
   end

@@ -5,36 +5,34 @@ require 'git/commands/base'
 module Git
   module Commands
     module Stash
-      # Show full patch output for changes recorded in a stash entry
+      # Implements the `git stash show` command
       #
-      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      # Shows the changes recorded in a stash entry as a diff.
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
       #
-      # @example Show patch for the latest stash
-      #   Git::Commands::Stash::ShowPatch.new(execution_context).call
+      # @example Show numstat for the latest stash
+      #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true)
       #
       # @example Show patch for a specific stash
-      #   Git::Commands::Stash::ShowPatch.new(execution_context).call('stash@\\{2}')
+      #   Git::Commands::Stash::Show.new(ctx).call('stash@{2}', patch: true, numstat: true, shortstat: true)
       #
       # @example Show with directory statistics
-      #   Git::Commands::Stash::ShowPatch.new(execution_context).call(dirstat: true)
-      #   Git::Commands::Stash::ShowPatch.new(execution_context).call(dirstat: 'lines,cumulative')
+      #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: true)
+      #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: 'lines,cumulative')
       #
-      class ShowPatch < Git::Commands::Base
+      class Show < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'show'
-          # These three format literals are always emitted together. The stash diff parser
-          # expects all three sections to be present in every stash show command's output:
-          # --patch for per-file unified diffs, --numstat for per-file line counts, and
-          # --shortstat for aggregate totals. Fixing them here keeps the parser contract
-          # simple and unconditional.
-          literal '--patch'
-          literal '--numstat'    # always present alongside --patch: parser requires per-file counts
-          literal '--shortstat'  # always present alongside --patch: parser requires aggregate totals
+
+          flag_option :patch
+          flag_option :numstat
+          flag_option :raw
+          flag_option :shortstat
+
           flag_option %i[include_untracked u], negatable: true
           flag_option :only_untracked
           flag_or_value_option %i[find_renames M], inline: true
@@ -46,15 +44,23 @@ module Git
 
         # @!method call(*, **)
         #
-        #   Show stash patch
+        #   Show stash diff
         #
         #   @overload call(**options)
         #
-        #     Show patch for the latest stash
+        #     Show diff for the latest stash
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files.
+        #     @option options [Boolean] :patch (nil) include unified diff patches per file
+        #
+        #     @option options [Boolean] :numstat (nil) include per-file insertion/deletion counts
+        #
+        #     @option options [Boolean] :raw (nil) include per-file mode/SHA/status metadata
+        #
+        #     @option options [Boolean] :shortstat (nil) include aggregate totals line
+        #
+        #     @option options [Boolean] :include_untracked (nil) include untracked files
         #
         #       Alias: :u
         #
@@ -68,18 +74,27 @@ module Git
         #
         #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
-        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #       Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics
+        #
+        #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
         #
         #   @overload call(stash, **options)
         #
-        #     Show patch for a specific stash
+        #     Show diff for a specific stash
         #
         #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files.
+        #     @option options [Boolean] :patch (nil) include unified diff patches per file
+        #
+        #     @option options [Boolean] :numstat (nil) include per-file insertion/deletion counts
+        #
+        #     @option options [Boolean] :raw (nil) include per-file mode/SHA/status metadata
+        #
+        #     @option options [Boolean] :shortstat (nil) include aggregate totals line
+        #
+        #     @option options [Boolean] :include_untracked (nil) include untracked files
         #
         #       Alias: :u
         #
@@ -93,10 +108,13 @@ module Git
         #
         #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
         #
-        #     @option options [Boolean, String] :dirstat (nil) include directory statistics.
-        #       Pass true for default, or a string like 'lines,cumulative' for options.
+        #     @option options [Boolean, String] :dirstat (nil) include directory statistics
         #
-        #   @return [Git::CommandLineResult] the result of calling `git stash show --patch`
+        #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
+        #
+        #   @return [Git::CommandLineResult] the result of calling `git stash show`
+        #
+        #   @raise [Git::FailedError] if git returns a non-zero exit status
       end
     end
   end

@@ -1,57 +1,151 @@
 # frozen_string_literal: true
 
+require 'git/commands/base'
+
 module Git
   module Commands
-    # Commands for showing differences between commits, trees, and the working tree
+    # Implements the `git diff` command
     #
-    # This module contains command classes for different diff output formats:
-    # - {Diff::Numstat} - Line counts per file (machine-readable)
-    # - {Diff::Raw} - File metadata with modes, SHAs, and status
-    # - {Diff::Patch} - Full unified diff patches
+    # Compares commits, the index, and the working tree.
     #
     # @see https://git-scm.com/docs/git-diff git-diff documentation
     #
-    # Examples use {Diff::Numstat}, but the same patterns apply to all diff commands.
-    # `ctx` is the execution context used to run git commands.
+    # @api private
     #
-    # @example Compare the index to the working tree
-    #   # git diff [--] [<path>...]
-    #   Numstat.new(ctx).call
-    #   Numstat.new(ctx).call(path: ['lib/', '*.rb'])
+    # @example Compare the index to the working tree (numstat output)
+    #   # git diff --numstat --shortstat --src-prefix=a/ --dst-prefix=b/
+    #   Git::Commands::Diff.new(ctx).call(numstat: true, shortstat: true, src_prefix: 'a/', dst_prefix: 'b/')
     #
     # @example Compare two paths on the filesystem (outside git)
-    #   # git diff --no-index [--] <path> <path>
-    #   Numstat.new(ctx).call('/path/a', '/path/b', no_index: true)
+    #   # git diff --patch --no-index -- <path> <path>
+    #   Git::Commands::Diff.new(ctx).call(patch: true, no_index: true, path: ['/path/a', '/path/b'])
     #
-    # @example Compare the index to HEAD or the named commit
-    #   # git diff --cached [<commit>] [--] [<path>...]
-    #   Numstat.new(ctx).call(cached: true)
-    #   Numstat.new(ctx).call('HEAD~3', cached: true, path: ['lib/'])
+    # @example Compare the index to HEAD (patch output)
+    #   # git diff --patch --cached
+    #   Git::Commands::Diff.new(ctx).call(patch: true, cached: true)
     #
-    # @example Compare the working tree to the named commit
-    #   # git diff <commit> [--] [<path>...]
-    #   Numstat.new(ctx).call('HEAD~3')
-    #   Numstat.new(ctx).call('abc123', path: ['lib/', '*.rb'])
+    # @example Compare two commits (raw output)
+    #   # git diff --raw --numstat --shortstat 'abc123' 'def456'
+    #   Git::Commands::Diff.new(ctx).call('abc123', 'def456', raw: true, numstat: true, shortstat: true)
     #
-    # @example Compare two commits
-    #   # git diff <commit> <commit> [--] [<path>...]
-    #   # git diff <commit>..<commit> [--] [<path>...]
-    #   # git diff <commit>...<commit> [--] [<path>...]
-    #   Numstat.new(ctx).call('abc123', 'def456')
-    #   Numstat.new(ctx).call('v1.0..v2.0')   # two-dot range syntax
-    #   Numstat.new(ctx).call('main...feature')  # three-dot (merge-base) syntax
-    #
-    # @example Show changes introduced by a merge commit beyond the merged branches
-    #   # git diff <merge-commit> <commit>...<commit> [--] [<path>...]
-    #   Numstat.new(ctx).call('merge_commit', 'main...feature')
-    #
-    # @note Combined/merge diffs (e.g., `git diff --cc`, `git show <merge>`) are not
-    #   currently supported. Combined diffs have a different format with multiple columns
-    #   of +/- markers (one per parent) and require specialized parsing. Standard two-way
-    #   diffs cover the primary use cases. Combined diff support may be added in a future
-    #   version if there is demand.
-    #
-    module Diff
+    class Diff < Git::Commands::Base
+      arguments do
+        literal 'diff'
+
+        flag_option :patch
+        flag_option :numstat
+        flag_option :raw
+        flag_option :shortstat
+
+        value_option :src_prefix, inline: true
+        value_option :dst_prefix, inline: true
+
+        flag_option %i[cached staged]
+        flag_option :merge_base
+        flag_option :no_index
+        flag_or_value_option %i[find_renames M], inline: true
+        flag_or_value_option %i[find_copies C], inline: true
+        flag_option :find_copies_harder
+        flag_or_value_option :dirstat, inline: true
+        operand :commit, repeatable: true
+        value_option %i[path pathspecs], as_operand: true, separator: '--', repeatable: true
+      end
+
+      # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
+      allow_exit_status 0..1
+
+      # @!method call(*, **)
+      #
+      #   Show diff output
+      #
+      #   @overload call(**options)
+      #     Compare the index to the working tree
+      #
+      #     @example
+      #       # git diff [--numstat] [--shortstat] [--src-prefix=a/] [--dst-prefix=b/]
+      #       Diff.new(ctx).call(numstat: true, shortstat: true, src_prefix: 'a/', dst_prefix: 'b/')
+      #
+      #   @overload call(no_index: true, path:, **options)
+      #     Compare two paths on the filesystem (outside git)
+      #
+      #     Always use the +path:+ keyword for the two filesystem paths so that
+      #     paths beginning with +-+ are safely separated by +--+ and cannot be
+      #     mistaken for flags by git.
+      #
+      #     @example
+      #       # git diff --patch --no-index -- <path> <path>
+      #       Diff.new(ctx).call(patch: true, no_index: true, path: ['/path/a', '/path/b'])
+      #
+      #   @overload call(commit = nil, cached:, **options)
+      #     Compare the index to HEAD or the named commit
+      #
+      #     @example
+      #       # git diff --patch --cached [<commit>]
+      #       Diff.new(ctx).call(patch: true, cached: true)
+      #       Diff.new(ctx).call('HEAD~3', patch: true, cached: true)
+      #
+      #   @overload call(commit, **options)
+      #     Compare the working tree to the named commit
+      #
+      #     @example
+      #       # git diff --numstat --shortstat <commit>
+      #       Diff.new(ctx).call('HEAD~3', numstat: true, shortstat: true)
+      #
+      #   @overload call(commit, *commits, **options)
+      #     Compare two or more commits, or show a combined diff for a merge commit
+      #
+      #     @example Compare two commits
+      #       # git diff --raw --numstat --shortstat <commit> <commit>
+      #       Diff.new(ctx).call('abc123', 'def456', raw: true, numstat: true, shortstat: true)
+      #       Diff.new(ctx).call('v1.0..v2.0', raw: true, numstat: true, shortstat: true)
+      #
+      #     @example Combined diff of a merge commit (three or more commits)
+      #       # git diff [--merge-base] <commit> [<commit>...] <commit>
+      #       Diff.new(ctx).call('main', 'feature-a', 'feature-b', merge_base: true)
+      #
+      #     @param commit [String] first commit reference
+      #     @param commits [Array<String>] additional commit references
+      #     @param options [Hash] command options
+      #
+      #     @option options [Boolean] :patch (nil) include unified diff patches per file
+      #
+      #     @option options [Boolean] :numstat (nil) include per-file insertion/deletion counts
+      #
+      #     @option options [Boolean] :raw (nil) include per-file mode/SHA/status metadata
+      #
+      #     @option options [Boolean] :shortstat (nil) include aggregate totals line
+      #
+      #     @option options [String] :src_prefix (nil) source prefix for diff headers (e.g. `'a/'`)
+      #
+      #     @option options [String] :dst_prefix (nil) destination prefix for diff headers (e.g. `'b/'`)
+      #
+      #     @option options [Boolean] :cached (nil) compare the index to HEAD or a named commit
+      #
+      #       Alias: :staged
+      #
+      #     @option options [Boolean] :merge_base (nil) use merge base of commits
+      #
+      #     @option options [Boolean] :no_index (nil) compare two filesystem paths outside a repo
+      #
+      #     @option options [Boolean, String] :find_renames (nil) detect renames; optionally pass
+      #       a similarity threshold string (e.g., '50' for 50%). Alias: :M
+      #
+      #     @option options [Boolean, String] :find_copies (nil) detect copies as well as renames;
+      #       optionally pass a similarity threshold string (e.g., '75' for 75%). Alias: :C
+      #
+      #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources
+      #
+      #     @option options [Boolean, String] :dirstat (nil) include directory statistics
+      #
+      #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
+      #
+      #     @option options [Array<String>] :path (nil) zero or more paths to limit diff to
+      #
+      #       Alias: :pathspecs
+      #
+      #     @return [Git::CommandLineResult] the result of calling `git diff`
+      #
+      #     @raise [Git::FailedError] if git returns exit code >= 2 (actual error)
     end
   end
 end
