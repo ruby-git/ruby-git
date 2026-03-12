@@ -11,6 +11,8 @@ module Git
     #
     # @see https://git-scm.com/docs/git-clean git-clean
     #
+    # @see Git::Commands
+    #
     # @api private
     #
     # @example Clean untracked files
@@ -51,45 +53,52 @@ module Git
         value_option %i[exclude e], inline: true, repeatable: true
         flag_option :x
         flag_option :X
-        value_option :pathspec, as_operand: true, separator: '--', repeatable: true
+        end_of_options
+        value_option :pathspec, as_operand: true, repeatable: true
       end
 
       # @!method call(*, **)
       #
-      #   Execute the git clean command
-      #
       #   @overload call(**options)
+      #
+      #     Execute the git clean command
       #
       #     @param options [Hash] command options
       #
       #     @option options [Boolean] :d (nil) Recurse into untracked directories
       #
-      #     @option options [Boolean] :force (nil) Force the clean operation when clean.requireForce is
-      #       not set to false. If the Git configuration variable `clean.requireForce` is not set to `false`,
-      #       git clean will refuse to delete files or directories unless given `-f`.
-      #       Alias: :f
+      #     @option options [Boolean] :force (nil) Force the removal of untracked files
       #
-      #     @option options [Boolean] :force_force (nil) Remove untracked nested git repositories
-      #       (directories with a .git subdirectory). Alias: :ff
+      #       When `clean.requireForce` is not set to `false`, git-clean will refuse to
+      #       delete files or directories unless this option is given
       #
-      #     @option options [Boolean] :dry_run (nil) Don't actually remove anything, just show what
-      #       would be done. Alias: :n
+      #     @option options [Boolean] :force_force (nil) Remove untracked nested git
+      #       repositories (directories with a `.git` subdirectory)
       #
-      #     @option options [String, Array<String>] :exclude (nil) Use the given exclude pattern in
-      #       addition to the standard ignore rules. May be specified multiple times. Alias: :e
+      #     @option options [Boolean] :dry_run (nil) Don't actually remove anything, just
+      #       show what would be done
       #
-      #     @option options [Boolean] :x (nil) Don't use the standard ignore rules (see gitignore).
-      #       Mutually exclusive with :X
+      #     @option options [String, Array<String>] :exclude (nil) Use the given exclude pattern
+      #       in addition to the standard ignore rules
       #
-      #     @option options [Boolean] :X (nil) Remove only files ignored by Git.
-      #       Mutually exclusive with :x
+      #       May be specified multiple times
+      #
+      #     @option options [Boolean] :x (nil) Don't use the standard ignore rules
+      #
+      #       Mutually exclusive with `:X`
+      #
+      #     @option options [Boolean] :X (nil) Remove only files ignored by Git
+      #
+      #       Mutually exclusive with `:x`
       #
       #     @option options [String, Array<String>] :pathspec (nil) Limit cleaning to files
       #       matching the given pathspec(s)
       #
       #     @return [Git::CommandLineResult] the result of calling `git clean`
       #
-      #     @raise [Git::FailedError] if the command returns a non-zero exit status
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      #   @api public
     end
   end
 end

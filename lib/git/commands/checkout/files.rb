@@ -13,6 +13,8 @@ module Git
       #
       # @see https://git-scm.com/docs/git-checkout git-checkout
       #
+      # @see Git::Commands
+      #
       # @api private
       #
       # @example Restore a file from the index (discard uncommitted changes)
@@ -47,52 +49,60 @@ module Git
           flag_option :pathspec_file_nul
 
           operand :tree_ish
-          value_option :pathspec, as_operand: true, repeatable: true, separator: '--'
+          end_of_options
+          value_option :pathspec, as_operand: true, repeatable: true
         end
 
         # @!method call(*, **)
         #
-        #   Execute the git checkout command for restoring files
+        #   @overload call(tree_ish = nil, **options)
         #
-        #   @overload call(tree_ish = nil, pathspec: nil, **options)
+        #     Execute the git checkout command for restoring files
         #
         #     @param tree_ish [String, nil] The commit, branch, or tree to restore
-        #       files from. When nil, files are restored from the index.
+        #       files from
         #
-        #     @param pathspec [String, Array<String>, nil] The files or directories
-        #       to restore. Required unless pathspec_from_file is provided.
+        #       When `nil`, files are restored from the index
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Array<String>, String] :pathspec The files or directories
-        #       to restore. Required unless :pathspec_from_file is provided.
+        #     @option options [Boolean] :force (nil) Ignore unmerged entries
         #
-        #     @option options [Boolean] :force (nil) Ignore unmerged entries. Alias: :f
+        #       Alias: `:f`
         #
         #     @option options [Boolean] :ours (nil) For unmerged paths, use stage #2
         #
         #     @option options [Boolean] :theirs (nil) For unmerged paths, use stage #3
         #
-        #     @option options [Boolean] :merge (nil) Recreate the conflicted merge.
-        #       Alias: :m
+        #     @option options [Boolean] :merge (nil) Recreate the conflicted merge
         #
-        #     @option options [String] :conflict (nil) Conflict marker style: 'merge',
-        #       'diff3', 'zdiff3'
+        #       Alias: `:m`
         #
-        #     @option options [Boolean] :overlay (nil) true for --overlay, false for
-        #       --no-overlay
+        #     @option options [String] :conflict (nil) Conflict marker style:
+        #       `merge`, `diff3`, or `zdiff3`
+        #
+        #     @option options [Boolean] :overlay (nil) Use `true` for `--overlay`,
+        #       `false` for `--no-overlay`
         #
         #     @option options [String] :pathspec_from_file (nil) Read paths from file
-        #       ('-' for stdin). Required unless :pathspec is provided.
+        #       (`'-'` for stdin)
+        #
+        #       Required unless `:pathspec` is provided
         #
         #     @option options [Boolean] :pathspec_file_nul (nil) NUL-separated paths in
         #       pathspec file
         #
-        #     @return [Git::CommandLineResult] the result of the command
+        #     @option options [Array<String>, String] :pathspec The files or directories
+        #       to restore
         #
-        #     @raise [ArgumentError] if neither :pathspec nor :pathspec_from_file is provided
+        #       Required unless `:pathspec_from_file` is provided
         #
-        #     @raise [Git::FailedError] if the checkout fails
+        #     @return [Git::CommandLineResult] the result of calling `git checkout`
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
+        #
       end
     end
   end

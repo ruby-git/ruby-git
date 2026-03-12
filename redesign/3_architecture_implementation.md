@@ -516,17 +516,19 @@ future work:
    The Arguments DSL outputs arguments in the exact order they are defined,
    regardless of type. This allows precise control over argument positioning,
    which is important for commands like `git checkout` where `--` must appear
-   between options and pathspecs:
+   between options and pathspecs only when pathspecs are present:
 
    ```ruby
-   # Arguments render in definition order
+   # Arguments render in definition order; end_of_options emits '--' only when
+   # at least one following operand produces output
    ARGS = Arguments.define do
      flag_option :force
      operand :tree_ish
-     literal '--'
+     end_of_options
      operand :paths, repeatable: true
    end
-   # build('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
+   # bind('HEAD', 'file.txt', force: true) => ['--force', 'HEAD', '--', 'file.txt']
+   # bind('HEAD', force: true)             => ['--force', 'HEAD']  (no trailing --)
 
    # Common pattern: static flags first for subcommands like branch --delete
    ARGS = Arguments.define do
@@ -690,7 +692,8 @@ future work:
     ```ruby
     ARGS = Arguments.define do
       operand :tree_ish, required: true, allow_nil: true
-      operand :paths, repeatable: true, separator: '--'
+      end_of_options
+      operand :paths, repeatable: true
     end
 
     # Restore from index (tree_ish intentionally nil)

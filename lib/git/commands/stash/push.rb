@@ -41,48 +41,54 @@ module Git
           value_option %i[message m]
           value_option :pathspec_from_file, inline: true
           flag_option :pathspec_file_nul
-          operand :pathspec, repeatable: true, separator: '--'
+          end_of_options
+          operand :pathspec, repeatable: true
         end
 
         # @!method call(*, **)
         #
-        #   Stash changes in the working directory
-        #
         #   @overload call(*pathspec, **options)
+        #
+        #     Stash changes in the working directory
         #
         #     @param pathspec [Array<String>] optional paths to limit what gets stashed
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :message (nil) descriptive message for the stash.
-        #
-        #       Alias: :m
-        #
-        #     @option options [Boolean] :patch (nil) interactively select hunks to stash.
+        #     @option options [Boolean] :patch (nil) Interactively select hunks to stash
         #
         #       Alias: :p
         #
-        #     @option options [Boolean] :staged (nil) stash only staged changes.
+        #     @option options [Boolean] :staged (nil) Stash only staged changes
         #
         #       Alias: :S
         #
-        #     @option options [Boolean, nil] :keep_index (nil) keep staged changes in index.
+        #     @option options [Boolean] :keep_index (nil) Keep staged changes in the index
         #
         #       Alias: :k
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files.
+        #     @option options [Boolean] :include_untracked (nil) Include untracked files in the stash
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :all (nil) include untracked and ignored files.
+        #     @option options [Boolean] :all (nil) Include untracked and ignored files in the stash
         #
         #       Alias: :a
         #
-        #     @option options [String] :pathspec_from_file (nil) read pathspecs from file
+        #     @option options [String] :message (nil) Descriptive message for the stash
         #
-        #     @option options [Boolean] :pathspec_file_nul (nil) pathspecs are NUL separated
+        #       Alias: :m
+        #
+        #     @option options [String] :pathspec_from_file (nil) Read pathspecs from the given file
+        #
+        #     @option options [Boolean] :pathspec_file_nul (nil) Pathspecs in the file are NUL-separated
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash push`
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
+        #
       end
     end
   end

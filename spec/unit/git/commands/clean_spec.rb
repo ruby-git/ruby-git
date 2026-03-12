@@ -53,11 +53,73 @@ RSpec.describe Git::Commands::Clean do
       end
     end
 
+    context 'with the :dry_run option' do
+      it 'adds --dry-run to the command line' do
+        expect_command_capturing('clean', '--dry-run').and_return(command_result)
+
+        command.call(dry_run: true)
+      end
+
+      it 'accepts :n as an alias' do
+        expect_command_capturing('clean', '--dry-run').and_return(command_result)
+
+        command.call(n: true)
+      end
+    end
+
+    context 'with the :exclude option' do
+      it 'adds --exclude=<pattern> to the command line' do
+        expect_command_capturing('clean', '--exclude=*.log').and_return(command_result)
+
+        command.call(exclude: '*.log')
+      end
+
+      it 'repeats --exclude= for each pattern when given an array' do
+        expect_command_capturing('clean', '--exclude=*.log', '--exclude=tmp/').and_return(command_result)
+
+        command.call(exclude: %w[*.log tmp/])
+      end
+
+      it 'accepts :e as an alias' do
+        expect_command_capturing('clean', '--exclude=*.log').and_return(command_result)
+
+        command.call(e: '*.log')
+      end
+    end
+
     context 'with the :x argument' do
       it 'adds -x to the command line' do
         expect_command_capturing('clean', '-x').and_return(command_result)
 
         command.call(x: true)
+      end
+    end
+
+    context 'with the :X option' do
+      it 'adds -X to the command line' do
+        expect_command_capturing('clean', '-X').and_return(command_result)
+
+        command.call(X: true)
+      end
+    end
+
+    context 'with the :pathspec option' do
+      it 'appends pathspec after -- separator' do
+        expect_command_capturing('clean', '--', 'tmp/').and_return(command_result)
+
+        command.call(pathspec: 'tmp/')
+      end
+
+      it 'appends multiple pathspecs after -- separator' do
+        expect_command_capturing('clean', '--', 'tmp/', 'build/').and_return(command_result)
+
+        command.call(pathspec: %w[tmp/ build/])
+      end
+
+      it 'combines pathspec with other options' do
+        expect_command_capturing('clean', '--force', '--', 'tmp/').and_return(command_result)
+
+        command.call(force: true, pathspec: 'tmp/')
       end
     end
 

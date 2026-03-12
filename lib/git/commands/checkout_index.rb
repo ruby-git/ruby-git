@@ -13,6 +13,8 @@ module Git
     #
     # @see https://git-scm.com/docs/git-checkout-index git-checkout-index
     #
+    # @see Git::Commands
+    #
     # @api private
     #
     # @example Copy all indexed files to the working directory
@@ -42,38 +44,47 @@ module Git
         value_option :stage, inline: true
         flag_option :temp
         flag_option :ignore_skip_worktree_bits
-        operand :file, required: false, repeatable: true, separator: '--'
+        end_of_options
+        operand :file, required: false, repeatable: true
       end
 
       # @!method call(*, **)
       #
-      #   Execute the git checkout-index command
-      #
       #   @overload call(*file, **options)
       #
-      #     @param file [Array<String>] Zero or more file paths to check out.
-      #       Appended after `--` to distinguish them from options. When empty, no
-      #       path separator is appended (use `:all` to check out everything).
+      #     Execute the `git checkout-index` command
+      #
+      #     @param file [Array<String>] Zero or more file paths to check out
+      #
+      #       When empty, no files are checked out individually (use `:all` to check
+      #       out everything).
       #
       #     @param options [Hash] command options
       #
       #     @option options [Boolean] :index (nil) Update the index rather than
-      #       checking out files to the working directory. Alias: :u
+      #       checking out files to the working directory
       #
-      #     @option options [Boolean] :all (nil) Check out all files in the index.
-      #       Alias: :a
+      #       Alias: `:u`
+      #
+      #     @option options [Boolean] :all (nil) Check out all files in the index
+      #
+      #       Alias: `:a`
       #
       #     @option options [Boolean] :force (nil) Force checkout even if
-      #       file already exists in the output location. Alias: :f
+      #       file already exists in the output location
+      #
+      #       Alias: `:f`
       #
       #     @option options [Boolean] :no_create (nil) Don't checkout new files,
-      #       only refresh files already checked out. Alias: :n
+      #       only refresh files already checked out
+      #
+      #       Alias: `:n`
       #
       #     @option options [String] :prefix (nil) Write the content to files under
       #       the given directory prefix instead of the working directory root
       #
       #     @option options [String] :stage (nil) Check out from the named stage:
-      #       a number (1, 2, or 3) or the string 'all'
+      #       a number (1, 2, or 3) or the string `all`
       #
       #     @option options [Boolean] :temp (nil) Instead of checking the files out,
       #       write the content to temporary files near the target location
@@ -81,9 +92,12 @@ module Git
       #     @option options [Boolean] :ignore_skip_worktree_bits (nil) Ignore the
       #       skip-worktree bits when checking out files
       #
-      #     @return [Git::CommandLineResult] the result of the command
+      #     @return [Git::CommandLineResult] the result of calling `git checkout-index`
       #
-      #     @raise [Git::FailedError] if the git command fails
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      #   @api public
+      #
     end
   end
 end

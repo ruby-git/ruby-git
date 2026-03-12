@@ -122,7 +122,8 @@ module Git
         end
 
         operand :tree, repeatable: true
-        value_option :pathspec, as_operand: true, separator: '--', repeatable: true
+        end_of_options
+        value_option :pathspec, as_operand: true, repeatable: true
       end
 
       # `git grep` exits with 1 when no lines are selected — not an error
@@ -130,9 +131,9 @@ module Git
 
       # @!method call(*, **)
       #
-      #   Execute the `git grep` command
-      #
       #   @overload call(*tree, **options)
+      #
+      #     Execute the `git grep` command
       #
       #     @param tree [String] one or more tree-ish references to search
       #       (e.g. commit SHAs, tags, or branch names); when omitted, git
@@ -323,12 +324,15 @@ module Git
       #       Exit status 0 means matches were found; exit status 1 means no
       #       lines were selected (not an error).
       #
-      #     @raise [ArgumentError] if +:pattern+ is missing or nil
+      #     @raise [ArgumentError] if `:pattern` is missing or nil
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if the command returns exit status greater
       #       than 1
+      #
+      #   @api public
+      #
     end
   end
 end

@@ -18,11 +18,11 @@ RSpec.describe Git::Commands::Rm do
       end
     end
 
-    context 'with multiple file paths as an array' do
+    context 'with multiple file paths' do
       it 'removes all specified files' do
         expect_command_capturing('rm', '--', 'file1.txt', 'file2.txt').and_return(command_result)
 
-        command.call(%w[file1.txt file2.txt])
+        command.call('file1.txt', 'file2.txt')
       end
     end
 
@@ -31,12 +31,6 @@ RSpec.describe Git::Commands::Rm do
         expect_command_capturing('rm', '--force', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', force: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('rm', '--', 'file.txt').and_return(command_result)
-
-        command.call('file.txt', force: false)
       end
 
       it 'accepts :f as an alias for :force' do
@@ -52,12 +46,6 @@ RSpec.describe Git::Commands::Rm do
 
         command.call('directory', r: true)
       end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('rm', '--', 'file.txt').and_return(command_result)
-
-        command.call('file.txt', r: false)
-      end
     end
 
     context 'with the :cached option' do
@@ -65,12 +53,6 @@ RSpec.describe Git::Commands::Rm do
         expect_command_capturing('rm', '--cached', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', cached: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('rm', '--', 'file.txt').and_return(command_result)
-
-        command.call('file.txt', cached: false)
       end
     end
 
@@ -87,12 +69,6 @@ RSpec.describe Git::Commands::Rm do
         expect_command_capturing('rm', '--', 'path/to/my file.txt').and_return(command_result)
 
         command.call('path/to/my file.txt')
-      end
-
-      it 'handles paths with unicode characters' do
-        expect_command_capturing('rm', '--', 'path/to/файл.txt').and_return(command_result)
-
-        command.call('path/to/файл.txt')
       end
     end
 

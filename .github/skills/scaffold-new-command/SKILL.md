@@ -293,8 +293,6 @@ Use `operand ..., skip_cli: true` when all of the following are true:
 Do **not** use `skip_cli` for execution-engine kwargs (`timeout:`, `chdir:`,
 etc.) — those belong to `execution_option`.
 
-`skip_cli: true` cannot be combined with `separator:` on `operand`.
-
 Key points:
 
 - **`in:` requires a real IO object.** `Process.spawn` only accepts objects with
@@ -389,8 +387,8 @@ type, alias conventions, `as:` usage, modifier rules, and pathspec conventions, 
 - Within unordered groups: literals → flag options → flag-or-value options → value
   options → operands → pathspecs
 - Use aliases for long/short forms (`%i[force f]`), long name first
-- When the git SYNOPSIS has `[<tree-ish>] [--] [<pathspec>...]`, use keyword form
-  (`value_option :pathspec, as_operand: true, separator: '--'`) for the post-`--`
+- When the git SYNOPSIS has `[<tree-ish>] [--] [<pathspec>...]`, use
+  `end_of_options` + `value_option :pathspec, as_operand: true` for the post-`--`
   group
 - When the SYNOPSIS has pure nesting (`[<a> [<b>]]`), use plain `operand` entries
 - For each operand, derive `required:` and `repeatable:` directly from the SYNOPSIS
