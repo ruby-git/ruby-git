@@ -8,6 +8,8 @@ module Git
     #
     # This command clones a repository into a newly created directory.
     #
+    # @see https://git-scm.com/docs/git-clone git-clone
+    #
     # @api private
     #
     # @example Basic usage
@@ -53,7 +55,8 @@ module Git
         value_option %i[config c], repeatable: true
         value_option :bundle_uri, inline: true
         value_option :ref_format, inline: true
-        operand :repository, required: true, separator: '--'
+        end_of_options
+        operand :repository, required: true
         operand :directory
         execution_option :timeout
         execution_option :chdir
@@ -174,12 +177,12 @@ module Git
       #     @option options [String, nil] :chdir (nil) the directory to run the git clone
       #       command in. When given, the clone is created relative to this directory.
       #
-      #     @return [Git::CommandLineResult] the result of the git clone command
+      #     @return [Git::CommandLineResult] the result of calling `git clone`
       #
       #     @raise [ArgumentError] if argument validation fails (e.g., unsupported options
       #       are provided or option values are invalid)
       #
-      #     @see Git::Lib#command for details on timeout behavior and other execution options
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
     end
   end
 end

@@ -67,11 +67,6 @@ RSpec.describe Git::Commands::Checkout::Files do
         command.call('HEAD', pathspec: ['file.txt'], force: true)
       end
 
-      it 'does not add flag when false' do
-        expect_command_capturing('checkout', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['file.txt'], force: false)
-      end
-
       it 'works with :f alias' do
         expect_command_capturing('checkout', '--force', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', pathspec: ['file.txt'], f: true)
@@ -83,22 +78,12 @@ RSpec.describe Git::Commands::Checkout::Files do
         expect_command_capturing('checkout', '--ours', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', pathspec: ['conflicted.txt'], ours: true)
       end
-
-      it 'does not add flag when false' do
-        expect_command_capturing('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['conflicted.txt'], ours: false)
-      end
     end
 
     context 'with :theirs option (for merge conflicts)' do
       it 'adds --theirs flag' do
         expect_command_capturing('checkout', '--theirs', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', pathspec: ['conflicted.txt'], theirs: true)
-      end
-
-      it 'does not add flag when false' do
-        expect_command_capturing('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['conflicted.txt'], theirs: false)
       end
     end
 
@@ -108,11 +93,6 @@ RSpec.describe Git::Commands::Checkout::Files do
         command.call('HEAD', pathspec: ['conflicted.txt'], merge: true)
       end
 
-      it 'does not add flag when false' do
-        expect_command_capturing('checkout', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['conflicted.txt'], merge: false)
-      end
-
       it 'works with :m alias' do
         expect_command_capturing('checkout', '--merge', 'HEAD', '--', 'conflicted.txt').and_return(command_result)
         command.call('HEAD', pathspec: ['conflicted.txt'], m: true)
@@ -120,20 +100,9 @@ RSpec.describe Git::Commands::Checkout::Files do
     end
 
     context 'with :conflict option' do
-      it 'adds --conflict=merge flag' do
+      it 'adds --conflict=<value> flag' do
         expect_command_capturing('checkout', '--conflict=merge', 'HEAD', '--', 'file.txt').and_return(command_result)
         command.call('HEAD', pathspec: ['file.txt'], conflict: 'merge')
-      end
-
-      it 'adds --conflict=diff3 flag' do
-        expect_command_capturing('checkout', '--conflict=diff3', 'HEAD', '--', 'file.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['file.txt'], conflict: 'diff3')
-      end
-
-      it 'adds --conflict=zdiff3 flag' do
-        expect_command_capturing('checkout', '--conflict=zdiff3', 'HEAD', '--',
-                                 'file.txt').and_return(command_result)
-        command.call('HEAD', pathspec: ['file.txt'], conflict: 'zdiff3')
       end
     end
 

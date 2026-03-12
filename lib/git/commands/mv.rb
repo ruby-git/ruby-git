@@ -11,6 +11,8 @@ module Git
     #
     # @see https://git-scm.com/docs/git-mv git-mv
     #
+    # @see Git::Commands
+    #
     # @api private
     #
     # @example Move a single file
@@ -30,15 +32,18 @@ module Git
         flag_option %i[force f]
         flag_option %i[dry_run n]
         flag_option :k
-        operand :source, repeatable: true, required: true, separator: '--'
+        end_of_options
+        operand :source, repeatable: true, required: true
         operand :destination, required: true
       end
 
       # @!method call(*, **)
       #
-      #   Execute the git mv command
+      #   @api public
       #
       #   @overload call(*source, destination, **options)
+      #
+      #     Execute the git mv command
       #
       #     @param source [Array<String>] one or more source file(s) or directories to move
       #
@@ -46,15 +51,19 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists.
-      #       Alias: :f
+      #     @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists
       #
-      #     @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen.
-      #       Alias: :n
+      #       Alias: `:f`
+      #
+      #     @option options [Boolean] :dry_run (nil) Do nothing; only show what would happen
+      #
+      #       Alias: `:n`
       #
       #     @option options [Boolean] :k (nil) Skip move or rename actions which would lead to an error
       #
       #     @return [Git::CommandLineResult] the result of calling `git mv`
+      #
+      #     @raise [ArgumentError] if required source or destination arguments are missing
       #
       #     @raise [Git::FailedError] if the command returns a non-zero exit status
     end

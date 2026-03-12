@@ -35,12 +35,6 @@ RSpec.describe Git::Commands::Mv do
 
         command.call('source.rb', 'dest.rb', force: true)
       end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', force: false)
-      end
     end
 
     context 'with the :dry_run option' do
@@ -50,12 +44,6 @@ RSpec.describe Git::Commands::Mv do
 
         command.call('source.rb', 'dest.rb', dry_run: true)
       end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', dry_run: false)
-      end
     end
 
     context 'with the :k option' do
@@ -63,12 +51,6 @@ RSpec.describe Git::Commands::Mv do
         expect_command_capturing('mv', '--verbose', '-k', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', k: true)
-      end
-
-      it 'does not include the flag when false' do
-        expect_command_capturing('mv', '--verbose', '--', 'source.rb', 'dest.rb').and_return(command_result)
-
-        command.call('source.rb', 'dest.rb', k: false)
       end
     end
 
@@ -95,18 +77,6 @@ RSpec.describe Git::Commands::Mv do
         expect_command_capturing('mv', '--verbose', '--', 'old file.rb', 'new file.rb').and_return(command_result)
 
         command.call('old file.rb', 'new file.rb')
-      end
-
-      it 'handles paths with unicode characters' do
-        expect_command_capturing('mv', '--verbose', '--', 'старый.rb', 'новый.rb').and_return(command_result)
-
-        command.call('старый.rb', 'новый.rb')
-      end
-
-      it 'handles paths with special characters' do
-        expect_command_capturing('mv', '--verbose', '--', 'file[1].rb', 'file(2).rb').and_return(command_result)
-
-        command.call('file[1].rb', 'file(2).rb')
       end
     end
 

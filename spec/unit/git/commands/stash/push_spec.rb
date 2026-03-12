@@ -10,12 +10,12 @@ RSpec.describe Git::Commands::Stash::Push do
   describe '#call' do
     context 'with no arguments' do
       it 'runs stash push' do
-        expect_command_capturing('stash', 'push').and_return(command_result(''))
+        expected_result = command_result('')
+        expect_command_capturing('stash', 'push').and_return(expected_result)
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq('')
+        expect(result).to eq(expected_result)
       end
     end
 
@@ -29,11 +29,6 @@ RSpec.describe Git::Commands::Stash::Push do
         expect_command_capturing('stash', 'push', '--message', 'WIP').and_return(command_result(''))
         command.call(m: 'WIP')
       end
-
-      it 'handles message with special characters' do
-        expect_command_capturing('stash', 'push', '--message', 'Fix "bug" in code').and_return(command_result(''))
-        command.call(message: 'Fix "bug" in code')
-      end
     end
 
     context 'with :patch option' do
@@ -45,11 +40,6 @@ RSpec.describe Git::Commands::Stash::Push do
       it 'accepts :p alias' do
         expect_command_capturing('stash', 'push', '--patch').and_return(command_result(''))
         command.call(p: true)
-      end
-
-      it 'does not add flag when false' do
-        expect_command_capturing('stash', 'push').and_return(command_result(''))
-        command.call(patch: false)
       end
     end
 
@@ -111,11 +101,6 @@ RSpec.describe Git::Commands::Stash::Push do
         expect_command_capturing('stash', 'push', '--pathspec-from-file=paths.txt')
           .and_return(command_result(''))
         command.call(pathspec_from_file: 'paths.txt')
-      end
-
-      it 'supports reading from stdin with -' do
-        expect_command_capturing('stash', 'push', '--pathspec-from-file=-').and_return(command_result(''))
-        command.call(pathspec_from_file: '-')
       end
     end
 

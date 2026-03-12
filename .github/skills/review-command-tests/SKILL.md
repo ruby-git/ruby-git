@@ -69,8 +69,8 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   how operands are interpreted)
 - Value options with each accepted form (e.g., boolean `true` vs a string value like
   `'lines,cumulative'`)
-- Pathspecs or other repeatable/separator-based options, both alone and combined with
-  operands
+- Pathspecs or other repeatable/`end_of_options`-based operands, both alone and combined
+  with preceding operands
 - Execution options forwarding where applicable (e.g., `timeout:`)
 - Exit-status behavior for commands using `allow_exit_status` with a non-default range:
   test that exit codes within the declared range return a result without raising, and
@@ -183,7 +183,7 @@ Unit tests should exercise each **code path** through the command, not each poss
   the output.
 
 The `Arguments` DSL has its own comprehensive spec (`arguments_spec.rb`) that tests
-flag handling, value options, positionals, separators, edge cases, and error
+flag handling, value options, positionals, `end_of_options`, edge cases, and error
 conditions. Command specs should test that the command **uses** the DSL correctly
 (i.e., the right arguments reach `execution_context.command_capturing`), not re-test the DSL's
 own behavior.

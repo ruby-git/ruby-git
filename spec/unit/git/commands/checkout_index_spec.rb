@@ -31,12 +31,6 @@ RSpec.describe Git::Commands::CheckoutIndex do
 
         command.call(a: true)
       end
-
-      it 'does not include --all when false' do
-        expect_command_capturing('checkout-index').and_return(command_result)
-
-        command.call(all: false)
-      end
     end
 
     context 'with the :force option' do
@@ -50,12 +44,6 @@ RSpec.describe Git::Commands::CheckoutIndex do
         expect_command_capturing('checkout-index', '--force').and_return(command_result)
 
         command.call(f: true)
-      end
-
-      it 'does not include --force when false' do
-        expect_command_capturing('checkout-index').and_return(command_result)
-
-        command.call(force: false)
       end
     end
 
@@ -96,28 +84,10 @@ RSpec.describe Git::Commands::CheckoutIndex do
     end
 
     context 'with the :stage option' do
-      it 'includes --stage=1 for stage 1' do
+      it 'includes --stage=<value>' do
         expect_command_capturing('checkout-index', '--stage=1').and_return(command_result)
 
         command.call(stage: '1')
-      end
-
-      it 'includes --stage=2 for stage 2' do
-        expect_command_capturing('checkout-index', '--stage=2').and_return(command_result)
-
-        command.call(stage: '2')
-      end
-
-      it 'includes --stage=3 for stage 3' do
-        expect_command_capturing('checkout-index', '--stage=3').and_return(command_result)
-
-        command.call(stage: '3')
-      end
-
-      it 'accepts "all" as the stage value' do
-        expect_command_capturing('checkout-index', '--stage=all').and_return(command_result)
-
-        command.call(stage: 'all')
       end
     end
 

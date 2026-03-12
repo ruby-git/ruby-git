@@ -16,7 +16,8 @@ module Git
     #       literal 'add'
     #       flag_option :all
     #       flag_option :force
-    #       operand :paths, repeatable: true, default: [], separator: '--'
+    #       end_of_options
+    #       operand :paths, repeatable: true
     #     end
     #
     #     # Execute the git add command

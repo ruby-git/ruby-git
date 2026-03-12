@@ -10,6 +10,8 @@ module Git
     #
     # @see https://git-scm.com/docs/git-rm git-rm
     #
+    # @see Git::Commands
+    #
     # @api private
     #
     # @example Basic usage
@@ -35,31 +37,43 @@ module Git
         flag_option %i[force f]
         flag_option :r
         flag_option :cached
-        operand :pathspec, repeatable: true, required: true, separator: '--'
+        end_of_options
+        operand :pathspec, repeatable: true, required: true
       end
 
       # @!method call(*, **)
       #
-      #   Execute the git rm command
-      #
       #   @overload call(*pathspec, **options)
       #
-      #     @param pathspec [Array<String>] files or directories to be removed from the repository
-      #       (relative to the worktree root). At least one pathspec is required.
+      #     Execute the git rm command
+      #
+      #     @param pathspec [Array<String>] Files or directories to be removed from the
+      #       repository (relative to the worktree root)
+      #
+      #       At least one pathspec is required
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :force (nil) Override the up-to-date check and remove files with
-      #       local modifications. Without this, git rm will refuse to remove files that have
-      #       uncommitted changes. Alias: :f
+      #     @option options [Boolean] :force (nil) Override the up-to-date check and
+      #       remove files with local modifications
       #
-      #     @option options [Boolean] :r (nil) Remove directories and their contents recursively
+      #       Without this, git rm will refuse to remove files that have uncommitted
+      #       changes. Alias: :f
       #
-      #     @option options [Boolean] :cached (nil) Only remove from the index, keeping the working tree files
+      #     @option options [Boolean] :r (nil) Remove directories and their contents
+      #       recursively
+      #
+      #     @option options [Boolean] :cached (nil) Only remove from the index, keeping
+      #       the working tree files
       #
       #     @return [Git::CommandLineResult] the result of calling `git rm`
       #
-      #     @raise [Git::FailedError] if the git command fails (e.g., no paths provided)
+      #     @raise [ArgumentError] if no pathspec values are provided
+      #
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      #   @api public
+      #
     end
   end
 end
