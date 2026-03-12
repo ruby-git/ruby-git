@@ -5,20 +5,24 @@ description: "Verifies YARD documentation for command classes is complete, accur
 
 # Review Command YARD Documentation
 
-Verify YARD documentation for command classes is complete, accurate, and aligned
-with the `Git::Commands::Base` pattern.
+Verify YARD documentation for command classes is complete, accurate, and aligned with
+the `Git::Commands::Base` pattern.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Required documentation model](#required-documentation-model)
+  - [No `def call` override (simple commands)](#no-def-call-override-simple-commands)
+  - [Explicit `def call` override](#explicit-def-call-override)
 - [What to Check](#what-to-check)
   - [1. Class-level docs](#1-class-level-docs)
   - [2. Arguments docs](#2-arguments-docs)
   - [3. Return and raise tags](#3-return-and-raise-tags)
-  - [4. `allow_exit_status` rationale consistency](#4-allow-exit-status-rationale-consistency)
+  - [4. `allow_exit_status` rationale consistency](#4-allow_exit_status-rationale-consistency)
   - [5. Formatting consistency](#5-formatting-consistency)
   - [6. Avoid internal implementation detail leakage](#6-avoid-internal-implementation-detail-leakage)
 - [Common issues](#common-issues)
@@ -41,13 +45,23 @@ lib/git/commands/stash/pop.rb
 
 The invocation needs the command file(s) to review.
 
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
+
 ## Related skills
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative source for general YARD formatting rules and writing standards
-- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
-  internal compatibility contracts
-- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for general YARD formatting rules and writing standards
+- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
+  match git CLI
+- [Review Command Implementation](../review-command-implementation/SKILL.md) — class
+  structure, phased rollout gates, and internal compatibility contracts
+- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test
+  expectations for command classes
 
 ## Input
 
@@ -56,19 +70,19 @@ One or more command files from `lib/git/commands/` containing:
 - `class < Git::Commands::Base`
 - `arguments do ... end`
 - optional `allow_exit_status`
-- either a `# @!method call(*, **)` YARD directive (when no `def call` override)
-  or YARD doc comments directly above an explicit `def call` override
+- either a `# @!method call(*, **)` YARD directive (when no `def call` override) or
+  YARD doc comments directly above an explicit `def call` override
 
 ## Required documentation model
 
-The placement of `call` documentation depends on whether the command class
-overrides `def call`.
+The placement of `call` documentation depends on whether the command class overrides
+`def call`.
 
 ### No `def call` override (simple commands)
 
-When the class does **not** define `def call`, use the `# @!method call(*, **)`
-YARD directive. This tells YARD to attach per-command docs to the inherited
-`call` method without a method definition in the subclass:
+When the class does **not** define `def call`, use the `# @!method call(*, **)` YARD
+directive. This tells YARD to attach per-command docs to the inherited `call` method
+without a method definition in the subclass:
 
 ```ruby
 # @!method call(*, **)
@@ -84,16 +98,16 @@ YARD directive. This tells YARD to attach per-command docs to the inherited
 #     @return [Git::CommandLineResult]
 ```
 
-Place the directive inside the class body, after the `arguments do` block (and
-after `allow_exit_status` when present). Do **not** combine `@!method` with an
-explicit `def call`.
+Place the directive inside the class body, after the `arguments do` block (and after
+`allow_exit_status` when present). Do **not** combine `@!method` with an explicit
+`def call`.
 
 ### Explicit `def call` override
 
-When the class defines `def call` explicitly (for input validation, stdin
-feeding, or non-trivial option routing), place YARD docs **directly above** the
-`def call` method. Do **not** use `@!method` — YARD will read the normal doc
-comment on the real method:
+When the class defines `def call` explicitly (for input validation, stdin feeding, or
+non-trivial option routing), place YARD docs **directly above** the `def call`
+method. Do **not** use `@!method` — YARD will read the normal doc comment on the real
+method:
 
 ```ruby
 # @overload call(*revision_range, **options)
@@ -117,8 +131,8 @@ def call(*, **kwargs)
 end
 ```
 
-Using `@!method` when `def call` already exists causes YARD to generate
-duplicate or conflicting documentation for the method.
+Using `@!method` when `def call` already exists causes YARD to generate duplicate or
+conflicting documentation for the method.
 
 ## What to Check
 
@@ -135,12 +149,12 @@ duplicate or conflicting documentation for the method.
 - [ ] `@overload` blocks cover valid call shapes
 - [ ] every positional arg has `@param`
 - [ ] every applicable option has `@option`
-- [ ] `@option` entries appear in the same order as the corresponding entries in
-      the `arguments do` block
+- [ ] `@option` entries appear in the same order as the corresponding entries in the
+      `arguments do` block
 - [ ] `@option` types match the DSL method used to define the option:
 
   | DSL method | YARD type |
-  |---|---|
+  | --- | --- |
   | `flag_option` | `[Boolean]` |
   | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
   | `value_option` | `[String]` (or a more specific type where known) |
@@ -149,15 +163,16 @@ duplicate or conflicting documentation for the method.
 
 - [ ] option defaults/types are consistent with DSL definitions
 - [ ] `@option` descriptions for options that have an `allowed_values` declaration
-      enumerate the accepted values in the description text, e.g.:
-      `@option options [String] :cleanup (nil) Cleanup mode — one of `verbatim`, `whitespace`, `strip``
+      enumerate the accepted values in the description text, e.g.: `@option options
+      [String] :cleanup (nil) Cleanup mode — one of verbatim, whitespace, or
+      strip`
 
 ### 3. Return and raise tags
 
-- [ ] `@return [Git::CommandLineResult]` with wording:
-      `the result of calling \`git <subcommand>\``
-- [ ] `@raise [Git::FailedError]` reflects range-based behavior
-      (outside default `0..0` or declared `allow_exit_status` range)
+- [ ] `@return [Git::CommandLineResult]` with wording: "the result of calling `git
+      <subcommand>`"
+- [ ] `@raise [Git::FailedError]` reflects range-based behavior (outside default
+      `0..0` or declared `allow_exit_status` range)
 
 ### 4. `allow_exit_status` rationale consistency
 
@@ -168,7 +183,8 @@ When command declares non-default exit range:
 
 ### 5. Formatting consistency
 
-- [ ] all general formatting rules from [Write YARD Documentation](../write-yard-documentation/SKILL.md) are satisfied
+- [ ] all general formatting rules from [Write YARD
+  Documentation](../write-yard-documentation/SKILL.md) are satisfied
 - [ ] tag short descriptions (the first sentence of each `@param`, `@option`,
       `@return`, `@raise`, etc.) do not end with punctuation
 - [ ] multi-paragraph tag descriptions have a blank comment line (`#`) between the
@@ -193,20 +209,22 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
 ```
 
 - [ ] description does not mention `IO.pipe`, threads, or pipe buffer management
-- [ ] description does not reference internal method names (`with_stdin`, `run_batch`)
+- [ ] description does not reference internal method names (`with_stdin`,
+  `run_batch`)
 - [ ] description describes what the caller passes and what they get back
 
 ## Common issues
 
-- Using `# @!method call(*, **)` when an explicit `def call` override exists —
-  causes YARD to generate duplicate or conflicting documentation; remove the
-  `@!method` directive and place the `@overload` docs directly above `def call`
+- Using `# @!method call(*, **)` when an explicit `def call` override exists — causes
+  YARD to generate duplicate or conflicting documentation; remove the `@!method`
+  directive and place the `@overload` docs directly above `def call`
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
-- Description leaks internal mechanics (e.g., "written via IO pipe") instead of describing caller-facing behavior
+- Description leaks internal mechanics (e.g., "written via IO pipe") instead of
+  describing caller-facing behavior
 
 ## Output
 
@@ -219,5 +237,5 @@ For each file, provide:
 
 2. corrected doc block snippets (only where needed)
 
-> **Branch workflow:** Implement any fixes on a feature branch. Never commit or
-> push directly to `main` — open a pull request when changes are ready to merge.
+> **Branch workflow:** Implement any fixes on a feature branch. Never commit or push
+> directly to `main` — open a pull request when changes are ready to merge.

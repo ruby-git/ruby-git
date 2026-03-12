@@ -11,6 +11,7 @@ docs using the `Git::Commands::Base` architecture.
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Files to generate](#files-to-generate)
 - [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
@@ -40,6 +41,13 @@ Scaffold New Command: Git::Commands::LsTree for `git ls-tree`.
 
 The invocation needs the target `Git::Commands::*` class name and the git
 subcommand (or subcommand + sub-action) it wraps.
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 

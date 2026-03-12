@@ -12,6 +12,7 @@ Migrate a command that still performs parsing or custom execution logic to the
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Target end state](#target-end-state)
 - [Refactor steps](#refactor-steps)
@@ -36,6 +37,13 @@ Refactor Command to CommandLineResult: lib/git/commands/branch/delete.rb
 
 The invocation needs the command class name or file path of the command to
 refactor.
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 

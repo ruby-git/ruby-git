@@ -11,6 +11,7 @@ contains no duplicated execution behavior.
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Architecture Contract (Current)](#architecture-contract-current)
@@ -40,6 +41,13 @@ lib/git/commands/diff/numstat.rb
 ```
 
 The invocation needs the command file(s) to review.
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 

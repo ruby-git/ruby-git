@@ -11,6 +11,7 @@ documentation, testing, and exit-status conventions under the `Base` architectur
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [What to Check](#what-to-check)
   - [1. Class structure consistency](#1-class-structure-consistency)
@@ -38,6 +39,13 @@ Review Cross-Command Consistency: all files under lib/git/commands/stash/
 ```
 
 The invocation needs two or more sibling command files from the same family.
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 
