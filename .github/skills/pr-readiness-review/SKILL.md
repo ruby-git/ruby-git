@@ -12,6 +12,7 @@ Use this at the end of implementation to prepare for PR submission:
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [1. Run Final Validation](#1-run-final-validation)
 - [2. Verify Testing Quality](#2-verify-testing-quality)
@@ -27,6 +28,13 @@ Use this at the end of implementation to prepare for PR submission:
 Attach this file to your Copilot Chat context, then invoke it after
 implementation is complete and before opening a pull request. This workflow is a
 final quality gate and reporting template.
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 

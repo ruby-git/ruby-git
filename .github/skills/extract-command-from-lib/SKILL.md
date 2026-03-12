@@ -12,6 +12,7 @@ class. The git subcommand is determined by the first (or first few) arguments to
 ## Contents
 
 - [How to use this skill](#how-to-use-this-skill)
+- [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Workflow](#workflow)
@@ -47,6 +48,13 @@ Extract Command from Lib: command('ls-tree', ...)
 
 The invocation needs either the `Git::Lib` method name or the git subcommand string
 from the `#command` call (or both).
+
+## Prerequisites
+
+Before starting, you **MUST** load the following skill(s) in their entirety:
+
+- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+  source for YARD formatting rules and writing standards;
 
 ## Related skills
 

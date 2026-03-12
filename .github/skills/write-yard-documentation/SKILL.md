@@ -47,8 +47,7 @@ apply to all documentation regardless of element type:
 
 **Blank lines around tags**
 
-Every individual YARD tag must be preceded by a blank comment line (`#`), except
-that the first tag in a doc comment may follow directly after the description.
+Every individual YARD tag must be preceded by a blank comment line (`#`).
 A YARD tag is any comment token matching `@!?[a-z_]+` — that is, `@word` (regular
 tags such as `@param`, `@return`, `@raise`, `@api`, `@abstract`, `@deprecated`,
 etc.) or `@!word` (directives such as `@!attribute`, `@!method`, `@!scope`, etc.).
@@ -80,8 +79,19 @@ The short description (the first line of any doc comment, or the inline text of 
 `@param`, `@return`, `@raise`, etc. tag) must:
 
 - Be a single sentence
-- Be fewer than 80 characters
-- Not end with punctuation (no trailing period, comma, or colon)
+- Be at most 90 characters long
+- Not end with punctuation (no trailing period, comma, semicolon, or colon)
+
+For tags, the 90-character limit applies only to the **summary text** — the
+descriptive prose that follows the tag name, type specifier, option name, and
+default. The tag name, `[Type]`, option key, and `(default)` components do not
+count toward the limit. For example, in:
+
+```
+@option options [Boolean] :ignore_case (nil) Ignore case distinctions
+```
+
+the summary is `Ignore case distinctions` (22 characters).
 
 If more explanation is needed, use additional paragraphs after the short description.
 Separate each paragraph from the next with a blank comment line (`#`). Wrap
@@ -313,13 +323,21 @@ Follow the YARD documentation template:
 # @yieldreturn [void]
 #
 # @overload method_name(arg)
+#
 #   Single-argument form description
+#
 #   @param arg [String] the argument
+#
 #   @return [String] the result
+#
 # @overload method_name(arg, options)
+#
 #   Two-argument form description
+#
 #   @param arg [String] the argument
+#
 #   @param options [Hash] additional options
+#
 #   @return [Array<String>] the results
 #
 # @note This method is not thread-safe
