@@ -90,7 +90,8 @@ module Git
         end
       end
 
-      # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides {Git::Lib#command_capturing}
+      # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides
+      #   {Git::Lib#command_capturing} and {Git::Lib#command_streaming}
       def initialize(execution_context)
         @execution_context = execution_context
       end
@@ -103,7 +104,11 @@ module Git
       #   Execution options (declared via `execution_option` in the Arguments
       #   DSL) are extracted from the bound arguments via
       #   {Git::Commands::Arguments::Bound#execution_options} and forwarded as
-      #   keyword arguments to `@execution_context.command_capturing`.
+      #   keyword arguments to the execution context via {#execute_command}.
+      #
+      #   When the `:out` execution option is present, stdout is streamed using
+      #   `@execution_context.command_streaming`. Otherwise, stdout is captured
+      #   using `@execution_context.command_capturing`.
       #
       #   @example
       #     # In a command subclass:
@@ -119,9 +124,8 @@ module Git
       #
       # @raise [Git::FailedError] if git returns an exit code outside the allowed range
       def call(*, **)
-        args = args_definition.bind(*, **)
-
-        result = @execution_context.command_capturing(*args, **args.execution_options, raise_on_failure: false)
+        bound = args_definition.bind(*, **)
+        result = execute_command(bound)
         validate_exit_status!(result)
         result
       end
@@ -130,6 +134,14 @@ module Git
 
       def args_definition
         self.class.args_definition || raise(ArgumentError, "arguments not defined for #{self.class.name}")
+      end
+
+      def execute_command(bound)
+        if bound.execution_options.key?(:out)
+          @execution_context.command_streaming(*bound, **bound.execution_options, raise_on_failure: false)
+        else
+          @execution_context.command_capturing(*bound, **bound.execution_options, raise_on_failure: false)
+        end
       end
 
       def allowed_exit_status_range

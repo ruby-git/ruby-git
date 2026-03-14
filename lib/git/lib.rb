@@ -9,10 +9,9 @@ require_relative 'commands/branch/show_current'
 require_relative 'commands/checkout/branch'
 require_relative 'commands/checkout/files'
 require_relative 'commands/checkout_index'
-require_relative 'commands/cat_file/full'
-require_relative 'commands/cat_file/meta'
-require_relative 'commands/cat_file/pretty'
-require_relative 'commands/cat_file/typed'
+require_relative 'commands/cat_file/batch'
+require_relative 'commands/cat_file/filtered'
+require_relative 'commands/cat_file/raw'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
@@ -417,13 +416,13 @@ module Git
     def cat_file_contents(object)
       assert_args_are_not_options('object', object)
 
-      return Git::Commands::CatFile::Pretty.new(self).call(object).stdout unless block_given?
+      return Git::Commands::CatFile::Raw.new(self).call(object, p: true).stdout unless block_given?
 
       # Stream git output directly to a tempfile to avoid buffering large
       # object content in memory when a block is given.
       Tempfile.create do |file|
         file.binmode
-        command_streaming('cat-file', '-p', object, out: file)
+        Git::Commands::CatFile::Raw.new(self).call(object, p: true, out: file)
         file.rewind
         yield file
       end
@@ -488,7 +487,7 @@ module Git
     def cat_file_commit(object)
       assert_args_are_not_options('object', object)
 
-      cdata = Git::Commands::CatFile::Typed.new(self).call('commit', object).stdout.split("\n")
+      cdata = Git::Commands::CatFile::Raw.new(self).call('commit', object).stdout.split("\n")
       process_commit_data(cdata, object)
     end
 
@@ -577,14 +576,14 @@ module Git
     def cat_file_tag(object)
       assert_args_are_not_options('object', object)
 
-      tdata = Git::Commands::CatFile::Typed.new(self).call('tag', object).stdout.split("\n")
+      tdata = Git::Commands::CatFile::Raw.new(self).call('tag', object).stdout.split("\n")
       process_tag_data(tdata, object)
     end
 
     alias tag_data cat_file_tag
 
     def cat_file_object_meta(object)
-      stdout = Git::Commands::CatFile::Meta.new(self).call(object).stdout
+      stdout = Git::Commands::CatFile::Batch.new(self).call(object, batch_check: true).stdout
       parse_cat_file_meta(stdout, object)
     end
 
@@ -605,7 +604,7 @@ module Git
     # Re-request the missing object via non-batch cat-file so git produces a
     # real non-zero exit and a FailedError with an accurate stderr message.
     def request_object_to_raise_error!(object)
-      Git::Commands::CatFile::Pretty.new(self).call(object)
+      Git::Commands::CatFile::Raw.new(self).call(object, p: true)
       raise Git::UnexpectedResultError,
             "expected git cat-file to raise Git::FailedError for missing object #{object.inspect}"
     end

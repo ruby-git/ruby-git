@@ -414,6 +414,10 @@ type, alias conventions, `as:` usage, modifier rules, and pathspec conventions, 
     git cannot express clearly in its error output?
   Omit these only if there is no meaningful per-argument constraint to express;
   don't leave them out by default.
+- Name flag options after the git flag itself: single-char flags use the flag
+  character as the symbol (`:p` for `-p`, `:v` for `-v`); multi-char flags use the
+  flag name as the symbol (`:patch` for `--patch`). Never invent a descriptive Ruby
+  name and compensate with `as:` (e.g. `flag_option :pretty, as: '-p'` is wrong)
 - Avoid `as:` unless it's a Ruby keyword conflict, combined short flag, or
   multi-token flag
 
