@@ -169,6 +169,45 @@ RSpec.describe Git::Commands::Base do
 
       no_exec_opts_command.call
     end
+
+    context 'when execution_option :out is declared and provided' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments do
+            literal 'cat-file'
+            flag_option :p
+            execution_option :out
+            operand :object, required: true
+          end
+        end
+      end
+      let(:command) { command_class.new(execution_context) }
+
+      it 'dispatches to command_streaming instead of command_capturing' do
+        out_io = instance_double(File)
+        allow(execution_context).to receive(:command_streaming)
+          .with('cat-file', '-p', 'HEAD', out: out_io, raise_on_failure: false)
+          .and_return(command_result(''))
+        allow(execution_context).to receive(:command_capturing)
+
+        command.call('HEAD', p: true, out: out_io)
+
+        expect(execution_context).to have_received(:command_streaming)
+        expect(execution_context).not_to have_received(:command_capturing)
+      end
+
+      it 'still dispatches to command_capturing when out: is not provided' do
+        allow(execution_context).to receive(:command_capturing)
+          .with('cat-file', '-p', 'HEAD', raise_on_failure: false)
+          .and_return(command_result('content'))
+        allow(execution_context).to receive(:command_streaming)
+
+        command.call('HEAD', p: true)
+
+        expect(execution_context).to have_received(:command_capturing)
+        expect(execution_context).not_to have_received(:command_streaming)
+      end
+    end
   end
 
   describe '#with_stdin' do

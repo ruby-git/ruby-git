@@ -605,25 +605,25 @@ RSpec.describe Git::Lib do
   end
 
   describe '#cat_file_contents' do
-    let(:pretty_print_command) { instance_double(Git::Commands::CatFile::Pretty) }
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
     before do
-      allow(Git::Commands::CatFile::Pretty).to receive(:new).with(lib).and_return(pretty_print_command)
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(lib).and_return(raw_command)
     end
 
-    it 'delegates to CatFile::Pretty and returns object content' do
-      allow(pretty_print_command).to receive(:call)
-        .with('HEAD')
+    it 'delegates to CatFile::Raw with -p and returns object content' do
+      allow(raw_command).to receive(:call)
+        .with('HEAD', p: true)
         .and_return(command_result('hello'))
 
       result = lib.cat_file_contents('HEAD')
 
-      expect(pretty_print_command).to have_received(:call).with('HEAD')
+      expect(raw_command).to have_received(:call).with('HEAD', p: true)
       expect(result).to eq('hello')
     end
 
     it 'streams content directly to a tempfile via the streaming path when given a block' do
-      allow(streaming_command_line).to receive(:run) do |*_args, **kwargs|
+      allow(raw_command).to receive(:call) do |_object, **kwargs|
         kwargs[:out].write('hello')
         command_result('')
       end
@@ -631,22 +631,20 @@ RSpec.describe Git::Lib do
       yielded = nil
       lib.cat_file_contents('HEAD') { |file| yielded = file.read }
 
-      expect(streaming_command_line).to have_received(:run).with(
-        'cat-file', '-p', 'HEAD',
-        hash_including(out: instance_of(File))
-      )
+      expect(raw_command).to have_received(:call).with('HEAD', p: true, out: instance_of(File))
       expect(yielded).to eq('hello')
     end
 
-    it 'does not buffer content via CatFile::Pretty when a block is given' do
-      allow(streaming_command_line).to receive(:run) do |*_args, **kwargs|
+    it 'does not buffer via the capturing path when a block is given' do
+      allow(raw_command).to receive(:call) do |_object, **kwargs|
         kwargs[:out].write('hello')
         command_result('')
       end
+      allow(capturing_command_line).to receive(:run)
 
       lib.cat_file_contents('HEAD', &:read)
 
-      expect(Git::Commands::CatFile::Pretty).not_to have_received(:new)
+      expect(capturing_command_line).not_to have_received(:run)
     end
 
     it 'rejects object values that look like options' do
@@ -713,31 +711,31 @@ RSpec.describe Git::Lib do
   end
 
   describe '#cat_file_type' do
-    let(:object_meta_command) { instance_double(Git::Commands::CatFile::Meta) }
+    let(:batch_command) { instance_double(Git::Commands::CatFile::Batch) }
 
     before do
-      allow(Git::Commands::CatFile::Meta).to receive(:new).with(lib).and_return(object_meta_command)
+      allow(Git::Commands::CatFile::Batch).to receive(:new).with(lib).and_return(batch_command)
     end
 
-    it 'delegates to CatFile::Meta and returns object type' do
-      allow(object_meta_command).to receive(:call)
-        .with('HEAD')
+    it 'delegates to CatFile::Batch with batch_check: and returns object type' do
+      allow(batch_command).to receive(:call)
+        .with('HEAD', batch_check: true)
         .and_return(command_result("abc123 commit 265\n"))
 
       result = lib.cat_file_type('HEAD')
 
-      expect(object_meta_command).to have_received(:call).with('HEAD')
+      expect(batch_command).to have_received(:call).with('HEAD', batch_check: true)
       expect(result).to eq('commit')
     end
 
     it 'raises FailedError with a clear message when the object is missing' do
-      allow(object_meta_command).to receive(:call)
-        .with('nonexistent')
+      allow(batch_command).to receive(:call)
+        .with('nonexistent', batch_check: true)
         .and_return(command_result("nonexistent missing\n"))
 
-      pretty_command = instance_double(Git::Commands::CatFile::Pretty)
-      allow(Git::Commands::CatFile::Pretty).to receive(:new).with(lib).and_return(pretty_command)
-      allow(pretty_command).to receive(:call).with('nonexistent').and_raise(
+      raw_command = instance_double(Git::Commands::CatFile::Raw)
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(lib).and_return(raw_command)
+      allow(raw_command).to receive(:call).with('nonexistent', p: true).and_raise(
         Git::FailedError.new(
           Git::CommandLineResult.new(
             %w[git cat-file -p nonexistent], nil,
@@ -753,40 +751,40 @@ RSpec.describe Git::Lib do
   end
 
   describe '#cat_file_size' do
-    let(:object_meta_command) { instance_double(Git::Commands::CatFile::Meta) }
+    let(:batch_command) { instance_double(Git::Commands::CatFile::Batch) }
 
     before do
-      allow(Git::Commands::CatFile::Meta).to receive(:new).with(lib).and_return(object_meta_command)
+      allow(Git::Commands::CatFile::Batch).to receive(:new).with(lib).and_return(batch_command)
     end
 
-    it 'delegates to CatFile::Meta and returns object size as Integer' do
-      allow(object_meta_command).to receive(:call)
-        .with('HEAD')
+    it 'delegates to CatFile::Batch with batch_check: and returns object size as Integer' do
+      allow(batch_command).to receive(:call)
+        .with('HEAD', batch_check: true)
         .and_return(command_result("abc123 commit 265\n"))
 
       result = lib.cat_file_size('HEAD')
 
-      expect(object_meta_command).to have_received(:call).with('HEAD')
+      expect(batch_command).to have_received(:call).with('HEAD', batch_check: true)
       expect(result).to eq(265)
     end
   end
 
   describe '#cat_file_commit' do
-    let(:typed_object_command) { instance_double(Git::Commands::CatFile::Typed) }
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
     before do
-      allow(Git::Commands::CatFile::Typed).to receive(:new).with(lib).and_return(typed_object_command)
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(lib).and_return(raw_command)
     end
 
-    it 'delegates to CatFile::Typed and parses commit headers and message' do
+    it 'delegates to CatFile::Raw with type commit and parses commit headers and message' do
       commit_body = "tree deadbeef\nauthor A <a@example.com> 1 +0000\ncommitter A <a@example.com> 1 +0000\n\nmessage"
-      allow(typed_object_command).to receive(:call)
+      allow(raw_command).to receive(:call)
         .with('commit', 'HEAD')
         .and_return(command_result(commit_body))
 
       result = lib.cat_file_commit('HEAD')
 
-      expect(typed_object_command).to have_received(:call).with('commit', 'HEAD')
+      expect(raw_command).to have_received(:call).with('commit', 'HEAD')
       expect(result).to include(
         'sha' => 'HEAD',
         'tree' => 'deadbeef',
@@ -905,21 +903,21 @@ RSpec.describe Git::Lib do
   end
 
   describe '#cat_file_tag' do
-    let(:typed_object_command) { instance_double(Git::Commands::CatFile::Typed) }
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
     before do
-      allow(Git::Commands::CatFile::Typed).to receive(:new).with(lib).and_return(typed_object_command)
+      allow(Git::Commands::CatFile::Raw).to receive(:new).with(lib).and_return(raw_command)
     end
 
-    it 'delegates to CatFile::Typed and parses tag headers and message' do
+    it 'delegates to CatFile::Raw with type tag and parses tag headers and message' do
       tag_body = "object deadbeef\ntype commit\ntag v1.0\ntagger A <a@example.com> 1 +0000\n\nrelease"
-      allow(typed_object_command).to receive(:call)
+      allow(raw_command).to receive(:call)
         .with('tag', 'v1.0')
         .and_return(command_result(tag_body))
 
       result = lib.cat_file_tag('v1.0')
 
-      expect(typed_object_command).to have_received(:call).with('tag', 'v1.0')
+      expect(raw_command).to have_received(:call).with('tag', 'v1.0')
       expect(result).to include(
         'name' => 'v1.0',
         'object' => 'deadbeef',

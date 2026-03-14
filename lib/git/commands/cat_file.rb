@@ -4,32 +4,40 @@ module Git
   module Commands
     # Commands for reading git object store content via `git cat-file`
     #
-    # This module contains command classes for querying repository objects.
-    # {CatFile::Meta} and {CatFile::Full} use the `--batch` protocol, accepting
-    # object names via stdin and returning one result line (and optionally content)
-    # per object. {CatFile::Pretty} and {CatFile::Typed} use single-object mode,
-    # taking one object as a command-line argument.
+    # This module contains command classes split by invocation protocol:
     #
-    # - {CatFile::Pretty} - Pretty-printed object content (`git cat-file -p`)
-    # - {CatFile::Typed} - Object content constrained by expected type (`git cat-file <type> <object>`)
-    # - {CatFile::Meta} - Object metadata only (sha, type, size)
-    # - {CatFile::Full} - Object metadata plus raw content
+    # - {CatFile::Raw} — single object as a CLI argument; raw content, type, size, or
+    #   existence check (`-e`, `-t`, `-s`, `-p`, `<type>`)
+    # - {CatFile::Filtered} — single object as a CLI argument; content after
+    #   `.gitattributes` filter processing (`--textconv`, `--filters`)
+    # - {CatFile::Batch} — objects fed via stdin; all batch streaming modes
+    #   (`--batch`, `--batch-check`, `--batch-command`)
     #
     # @api private
     #
     # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
     #
-    # @example Query type and size for several objects
-    #   info = Git::Commands::CatFile::Meta.new(lib)
-    #   result = info.call('HEAD', 'v1.0', 'abc123')
-    #   result.stdout
-    #   # => "abc1234... commit 250\nabc5678... commit 198\n...\n"
+    # @example Check whether an object exists
+    #   cmd = Git::Commands::CatFile::Raw.new(lib)
+    #   result = cmd.call('HEAD', e: true)
+    #   result.status.exitstatus  # => 0 (exists) or 1 (not found)
     #
-    # @example Fetch full content of a single commit
-    #   content = Git::Commands::CatFile::Full.new(lib)
-    #   result = content.call('HEAD')
+    # @example Pretty-print a single object
+    #   cmd = Git::Commands::CatFile::Raw.new(lib)
+    #   result = cmd.call('HEAD', p: true)
     #   result.stdout
-    #   # => "abc1234... commit 250\ntree ...\nauthor ...\n\nCommit message\n\n"
+    #   # => "tree abc1234...\nauthor ...\n\nCommit message\n"
+    #
+    # @example Fetch content after working-tree filters
+    #   cmd = Git::Commands::CatFile::Filtered.new(lib)
+    #   result = cmd.call('HEAD:README.md', filters: true)
+    #   result.stdout
+    #
+    # @example Fetch metadata for several objects via batch
+    #   cmd = Git::Commands::CatFile::Batch.new(lib)
+    #   result = cmd.call('HEAD', 'v1.0', batch_check: true)
+    #   result.stdout
+    #   # => "abc1234... commit 250\nabc5678... tag 143\n"
     #
     module CatFile
     end

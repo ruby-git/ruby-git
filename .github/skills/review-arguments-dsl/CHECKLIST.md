@@ -121,6 +121,25 @@ Flag any use of `as:` unless one of these three conditions applies:
 Outside these three cases, `as:` is a red flag. A DSL entry that uses `as:` where a
 plain symbol or alias would suffice should be corrected.
 
+#### Single-char flags never need `as:`
+
+When git documents a flag as a bare short flag (e.g. `-p`, `-v`, `-q`), name the
+symbol after the flag character directly — do **not** invent a descriptive name and
+compensate with `as:`:
+
+```ruby
+# ❌ Wrong — descriptive name masking the real flag
+flag_option :pretty, as: '-p'
+flag_option :verbose, as: '-v'
+
+# ✅ Correct — symbol IS the flag; no as: needed
+flag_option :p
+flag_option :v
+```
+
+The caller passes `p: true` or `v: true`. The symbol name is the single source of
+truth and can be verified at a glance without auditing the `as:` string.
+
 ### Short-flag alias completeness
 
 Every option that the git man page documents with a short form must have an alias
