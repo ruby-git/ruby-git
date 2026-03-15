@@ -816,7 +816,8 @@ module Git
       # This is a flexible option type that outputs:
       # - Just the flag (--flag) when value is true
       # - Nothing when value is false (or --no-flag if negatable: true)
-      # - Flag with value when value is a string (--flag value or --flag=value if inline: true)
+      # - Flag with value when value is any non-boolean, non-nil object (stringified via #to_s;
+      #   e.g., --flag value or --flag=value if inline: true)
       # - Nothing when value is nil
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
@@ -830,9 +831,9 @@ module Git
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
       #
       # @param repeatable [Boolean] when true, accepts an Array of values and repeats the option
-      #   for each element. Each element must be +true+, +false+, or a +String+; nil elements
-      #   raise ArgumentError at bind time. A single (non-Array) value is also accepted.
-      #   Default false.
+      #   for each element. Each element must be +true+, +false+, or a non-nil object (which is
+      #   stringified via +#to_s+); nil elements raise ArgumentError at bind time.
+      #   A single (non-Array) value is also accepted. Default false.
       #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
       #
@@ -840,9 +841,8 @@ module Git
       #
       # @return [void]
       #
-      # @raise [ArgumentError] at bind time if a non-Array bound value is not
-      #   true, false, nil, or a String; or if +repeatable: true+ is used and any
-      #   Array element is not true, false, or a String (including nil elements)
+      # @raise [ArgumentError] at bind time if +repeatable: true+ is used and any
+      #   Array element is nil
       #
       # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
       #
@@ -2206,14 +2206,19 @@ module Git
         end
       end
 
-      # Validate that a value is a valid flag_or_value type (true, false, or String)
+      # Validate that a flag_or_value element is not nil.
+      #
+      # Boolean values (true/false) control flag presence/absence. Any other non-nil
+      # object is accepted and converted to a CLI argument string via +#to_s+.
+      # Nil is rejected only within repeatable arrays — non-repeatable nil values are
+      # filtered out earlier by +should_skip_option?+ and never reach here.
       #
       def validate_flag_or_value_type!(value, option_type)
-        return if value.is_a?(TrueClass) || value.is_a?(FalseClass) || value.is_a?(String)
+        return unless value.nil?
 
         raise ArgumentError,
-              "Invalid value for #{option_type}: #{value.inspect} (#{value.class}); " \
-              'expected true, false, or a String'
+              "Invalid value for #{option_type}: nil is not allowed as an array element; " \
+              'expected true, false, or a non-nil object that responds to #to_s'
       end
 
       # Determine the separator to use for inline values based on option type
