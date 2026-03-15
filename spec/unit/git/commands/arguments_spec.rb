@@ -1510,8 +1510,7 @@ RSpec.describe Git::Commands::Arguments do
           # correctness. Access register_option directly through instance_eval.
           expect do
             described_class.define do
-              register_option :message, type: :value, expected_type: String,
-                                        validator: ->(v) { v.is_a?(String) }
+              register_option :message, type: :value, expected_type: String, validator: ->(v) { v.is_a?(String) }
             end
           end.to raise_error(ArgumentError, /cannot specify both type: and validator: for :message/)
         end
@@ -2979,6 +2978,14 @@ RSpec.describe Git::Commands::Arguments do
         it 'accepts value' do
           expect(args.bind(special: 'foo').to_ary).to eq(['--special=foo'])
         end
+
+        it 'accepts nil value and emits nothing' do
+          expect(args.bind(special: nil).to_ary).to eq([])
+        end
+
+        it 'accepts a falsy non-nil value and the builder returns nil' do
+          expect(args.bind(special: false).to_ary).to eq([])
+        end
       end
 
       context 'with multiple required options' do
@@ -3234,6 +3241,10 @@ RSpec.describe Git::Commands::Arguments do
 
         it 'accepts non-nil value' do
           expect(args.bind(special: 'foo').to_ary).to eq(['--special=foo'])
+        end
+
+        it 'accepts a falsy non-nil value and emits nothing' do
+          expect(args.bind(special: false).to_ary).to eq([])
         end
       end
     end
@@ -3561,11 +3572,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind.to_ary).to eq([])
         end
 
-        it 'raises an error when value is not true, false, or a String' do
-          expect { args.bind(contains: 1) }.to raise_error(
-            ArgumentError,
-            /Invalid value for flag_or_value: 1 \(Integer\); expected true, false, or a String/
-          )
+        it 'accepts any non-nil non-boolean value and stringifies it via #to_s' do
+          expect(args.bind(contains: 10).to_ary).to eq(['--contains', '10'])
         end
 
         context 'with repeatable: true' do
@@ -3577,6 +3585,13 @@ RSpec.describe Git::Commands::Arguments do
 
           it 'skips false entries in a repeatable array' do
             expect(args.bind(contains: [false, 'abc123']).to_ary).to eq(['--contains', 'abc123'])
+          end
+
+          it 'raises an error when an array element is nil' do
+            expect { args.bind(contains: [nil]) }.to raise_error(
+              ArgumentError,
+              /Invalid value for flag_or_value: nil is not allowed as an array element/
+            )
           end
         end
       end
@@ -3600,11 +3615,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(gpg_sign: 'key-id').to_ary).to eq(['--gpg-sign=key-id'])
         end
 
-        it 'raises an error when value is not true, false, or a String' do
-          expect { args.bind(gpg_sign: 1) }.to raise_error(
-            ArgumentError,
-            /Invalid value for flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
-          )
+        it 'accepts any non-nil non-boolean value and stringifies it via #to_s' do
+          expect(args.bind(gpg_sign: 10).to_ary).to eq(['--gpg-sign=10'])
         end
 
         context 'with repeatable: true' do
@@ -3616,6 +3628,13 @@ RSpec.describe Git::Commands::Arguments do
 
           it 'skips false entries in a repeatable array' do
             expect(args.bind(gpg_sign: [false, 'key-id']).to_ary).to eq(['--gpg-sign=key-id'])
+          end
+
+          it 'raises an error when an array element is nil' do
+            expect { args.bind(gpg_sign: [nil]) }.to raise_error(
+              ArgumentError,
+              /Invalid value for flag_or_inline_value: nil is not allowed as an array element/
+            )
           end
         end
       end
@@ -3639,11 +3658,23 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(verify: 'KEYID').to_ary).to eq(['--verify', 'KEYID'])
         end
 
-        it 'raises an error when value is not true, false, or a String' do
-          expect { args.bind(verify: 1) }.to raise_error(
-            ArgumentError,
-            /Invalid value for negatable_flag_or_value: 1 \(Integer\); expected true, false, or a String/
-          )
+        it 'accepts any non-nil non-boolean value and stringifies it via #to_s' do
+          expect(args.bind(verify: 10).to_ary).to eq(['--verify', '10'])
+        end
+
+        context 'with repeatable: true' do
+          let(:args) do
+            described_class.define do
+              flag_or_value_option :verify, negatable: true, repeatable: true
+            end
+          end
+
+          it 'raises an error when an array element is nil' do
+            expect { args.bind(verify: [nil]) }.to raise_error(
+              ArgumentError,
+              /Invalid value for negatable_flag_or_value: nil is not allowed as an array element/
+            )
+          end
         end
       end
 
@@ -3666,11 +3697,23 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(sign: 'key-id').to_ary).to eq(['--sign=key-id'])
         end
 
-        it 'raises an error when value is not true, false, or a String' do
-          expect { args.bind(sign: 1) }.to raise_error(
-            ArgumentError,
-            /Invalid value for negatable_flag_or_inline_value: 1 \(Integer\); expected true, false, or a String/
-          )
+        it 'accepts any non-nil non-boolean value and stringifies it via #to_s' do
+          expect(args.bind(sign: 10).to_ary).to eq(['--sign=10'])
+        end
+
+        context 'with repeatable: true' do
+          let(:args) do
+            described_class.define do
+              flag_or_value_option :sign, negatable: true, inline: true, repeatable: true
+            end
+          end
+
+          it 'raises an error when an array element is nil' do
+            expect { args.bind(sign: [nil]) }.to raise_error(
+              ArgumentError,
+              /Invalid value for negatable_flag_or_inline_value: nil is not allowed as an array element/
+            )
+          end
         end
       end
     end
