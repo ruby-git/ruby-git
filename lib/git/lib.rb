@@ -21,6 +21,7 @@ require_relative 'commands/fsck'
 require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
+require_relative 'commands/ls_files'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
@@ -1056,7 +1057,7 @@ module Git
     def ls_files(location = nil)
       location ||= '.'
       {}.tap do |files|
-        command_capturing('ls-files', '--stage', location).stdout.split("\n").each do |line|
+        Git::Commands::LsFiles.new(self).call(location, stage: true).stdout.split("\n").each do |line|
           (info, file) = split_status_line(line)
           (mode, sha, stage) = info.split
           files[file] = {
@@ -1104,16 +1105,15 @@ module Git
     end
 
     def ignored_files
-      command_capturing('ls-files', '--others', '-i', '--exclude-standard').stdout.split("\n").map do |f|
-        unescape_quoted_path(f)
-      end
+      Git::Commands::LsFiles.new(self).call(
+        others: true, ignored: true, exclude_standard: true
+      ).stdout.split("\n").map { |f| unescape_quoted_path(f) }
     end
 
     def untracked_files
-      command_capturing('ls-files', '--others', '--exclude-standard',
-                        chdir: @git_work_dir).stdout.split("\n").map do |f|
-        unescape_quoted_path(f)
-      end
+      Git::Commands::LsFiles.new(self).call(
+        others: true, exclude_standard: true, chdir: @git_work_dir
+      ).stdout.split("\n").map { |f| unescape_quoted_path(f) }
     end
 
     def config_remote(name)
