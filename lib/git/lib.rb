@@ -22,6 +22,7 @@ require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
 require_relative 'commands/ls_files'
+require_relative 'commands/ls_tree'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
@@ -684,25 +685,29 @@ module Git
     end
     private_constant :RawLogParser
 
-    LS_TREE_OPTION_MAP = [
-      { keys: [:recursive], flag: '-r', type: :boolean }
-    ].freeze
+    # Allowed option keys for {#ls_tree}
+    LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze
 
     def ls_tree(sha, opts = {})
+      assert_valid_opts(opts, LS_TREE_ALLOWED_OPTS)
+      r_value = opts[:recursive]
+      paths = Array(opts[:path]).compact
+      safe_options = {}
+      safe_options[:r] = r_value unless r_value.nil?
+      result = Git::Commands::LsTree.new(self).call(sha, *paths, **safe_options)
+      parse_ls_tree_output(result.stdout)
+    end
+
+    def parse_ls_tree_output(output)
       data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
-      args = build_args(opts, LS_TREE_OPTION_MAP)
-
-      args.unshift(sha)
-      args << opts[:path] if opts[:path]
-
-      command_capturing('ls-tree', *args).stdout.split("\n").each do |line|
+      output.split("\n").each do |line|
         (info, filenm) = split_status_line(line)
-        (mode, type, sha) = info.split
-        data[type][filenm] = { mode: mode, sha: sha }
+        (mode, type, entry_sha) = info.split
+        data[type][filenm] = { mode: mode, sha: entry_sha }
       end
-
       data
     end
+    private :parse_ls_tree_output
 
     # @return [String] the command output
     #
@@ -711,7 +716,7 @@ module Git
     end
 
     def full_tree(sha)
-      command_capturing('ls-tree', '-r', sha).stdout.split("\n")
+      Git::Commands::LsTree.new(self).call(sha, r: true).stdout.split("\n")
     end
 
     def tree_depth(sha)
