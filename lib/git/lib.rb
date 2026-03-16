@@ -17,6 +17,7 @@ require_relative 'commands/clone'
 require_relative 'commands/commit'
 require_relative 'commands/describe'
 require_relative 'commands/diff'
+require_relative 'commands/fetch'
 require_relative 'commands/fsck'
 require_relative 'commands/grep'
 require_relative 'commands/init'
@@ -1706,29 +1707,16 @@ module Git
       end
     end
 
-    FETCH_OPTION_MAP = [
-      { keys: [:all], flag: '--all', type: :boolean },
-      { keys: %i[tags t],            flag: '--tags',           type: :boolean },
-      { keys: %i[prune p],           flag: '--prune',          type: :boolean },
-      { keys: %i[prune-tags P], flag: '--prune-tags', type: :boolean },
-      { keys: %i[force f], flag: '--force', type: :boolean },
-      { keys: %i[update-head-ok u], flag: '--update-head-ok', type: :boolean },
-      { keys: [:unshallow],           flag: '--unshallow',      type: :boolean },
-      { keys: [:depth],               flag: '--depth',          type: :valued_space },
-      { keys: [:ref],                 type: :validate_only }
-    ].freeze
+    FETCH_KEY_NORMALIZATIONS = { 'update-head-ok': :update_head_ok, 'prune-tags': :prune_tags }.freeze
 
     def fetch(remote, opts)
-      ArgsBuilder.validate!(opts, FETCH_OPTION_MAP)
-      args = build_args(opts, FETCH_OPTION_MAP)
-
-      if remote || opts[:ref]
-        args << '--'
-        args << remote if remote
-        args << opts[:ref] if opts[:ref]
+      opts = opts.transform_keys do |k|
+        sym = k.is_a?(Symbol) ? k : k.to_sym
+        FETCH_KEY_NORMALIZATIONS.fetch(sym, sym)
       end
-
-      command_capturing('fetch', *args, merge: true).stdout
+      refspecs = Array(opts.delete(:ref)).compact
+      positionals = [*([remote] if remote), *refspecs]
+      Git::Commands::Fetch.new(self).call(*positionals, **opts, merge: true).stdout
     end
 
     PUSH_OPTION_MAP = [
