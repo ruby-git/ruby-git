@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (47/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (48/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `fetch`** → `Git::Commands::Fetch`
+**Migrate `pull`** → `Git::Commands::Pull`
 
 #### Workflow
 
@@ -147,7 +147,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-   - `bundle exec rspec spec/unit/git/commands/fetch_spec.rb` — new tests pass
+   - `bundle exec rspec spec/unit/git/commands/pull_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -892,6 +892,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `show` | `Git::Commands::Show` | `spec/unit/git/commands/show_spec.rb` | `git show` |
 | `describe` | `Git::Commands::Describe` | `spec/unit/git/commands/describe_spec.rb` | `git describe` |
 | `ls_tree` / `full_tree` / `tree_depth` | `Git::Commands::LsTree` | `spec/unit/git/commands/ls_tree_spec.rb` | `git ls-tree` |
+| `fetch` | `Git::Commands::Fetch` | `spec/unit/git/commands/fetch_spec.rb` | `git fetch` |
 
 #### ⏳ Commands To Migrate
 
@@ -936,7 +937,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Sharing & Updating:**
 
-- [ ] `fetch` → `Git::Commands::Fetch` — `git fetch`
+- [x] `fetch` → `Git::Commands::Fetch` — `git fetch`
 - [ ] `pull` → `Git::Commands::Pull` — `git pull`
 - [ ] `push` → `Git::Commands::Push` — `git push`
 - [ ] `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches` →
