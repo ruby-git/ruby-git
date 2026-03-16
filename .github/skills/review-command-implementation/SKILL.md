@@ -132,8 +132,11 @@ Shared behavior lives in `Base`:
 
 #### `#call` override guidance
 
-Most commands use `def call(...) = super`, which forwards all arguments to
-`Base#call` for binding, execution, and exit-status validation.
+Most commands use only a `# @!method call(*, **)` YARD directive with no
+explicit `def call` — the inherited `Base#call` handles binding, execution,
+and exit-status validation automatically. Do **not** add `def call(*, **) = super`
+or `def call(*, **) / super / end` for commands that need no custom logic; it
+adds no behavior and conflicts with the `@!method` directive.
 
 **Override `call` only when the command needs:**
 

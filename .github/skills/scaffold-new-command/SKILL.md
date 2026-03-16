@@ -26,6 +26,9 @@ docs using the `Git::Commands::Base` architecture.
 - [Options completeness — consult the man page first](#options-completeness--consult-the-man-page-first)
 - [Execution-model conflicts are intentionally omitted](#execution-model-conflicts-are-intentionally-omitted)
 - [Exit status guidance](#exit-status-guidance)
+- [Common test generation mistakes](#common-test-generation-mistakes)
+  - [Unit tests](#unit-tests)
+  - [Integration tests](#integration-tests)
 - [Required review steps](#required-review-steps)
   - [Step 1 — Review Arguments DSL](#step-1--review-arguments-dsl)
   - [Step 2 — Review Command Tests](#step-2--review-command-tests)
@@ -420,6 +423,70 @@ allow_exit_status 0..1
 ```ruby
 # fsck uses exit codes 0-7 as bit flags for findings
 allow_exit_status 0..7
+```
+
+## Common test generation mistakes
+
+Apply these checks immediately after writing tests, before running the review skills.
+These are recurring mistakes that the review step should catch — but catching them at
+generation time avoids a rework loop.
+
+### Unit tests
+
+**Do not write string-variant pass-through tests for operands.** If the command
+accepts a positional operand (e.g. `tree_ish`, `stash_ref`, `commit`), write exactly
+one base-invocation test with a representative value (e.g. `'HEAD'`). Do not add a
+second test passing a different string (e.g. a SHA, a tag name, or a branch name) — it
+exercises the same code path as the base test. The DSL passes strings unchanged; there
+is nothing new to cover.
+
+**Put all validation cases in a single `context 'input validation'` block.** This
+means both required-argument violations and unsupported-option errors. Do **not** use
+a separate `context 'when X is missing'` block outside of `context 'input validation'`
+— it produces the same structure split across two places.
+
+```ruby
+# Correct — one 'input validation' block with all validation examples
+context 'input validation' do
+  it 'raises ArgumentError when tree_ish is missing' do
+    expect { command.call }.to raise_error(ArgumentError, /tree_ish/)
+  end
+
+  it 'raises ArgumentError for unsupported options' do
+    expect { command.call('HEAD', unknown: true) }
+      .to raise_error(ArgumentError, /Unsupported options/)
+  end
+end
+```
+
+### Integration tests
+
+**Do not assert on git's output content.** Integration tests confirm that the command
+executes against a real git repository — they are smoke tests, not output validators.
+Testing specific file names, SHA patterns, line counts, or any stdout content asserts
+git's formatting behavior, not the command's behavior. Every integration test in
+`context 'when the command succeeds'` should look like this:
+
+```ruby
+it 'returns a CommandLineResult' do
+  result = command.call('HEAD')
+  expect(result).to be_a(Git::CommandLineResult)
+end
+```
+
+When verifying that a command produces *some* output (e.g. for a listing command), it
+is acceptable to assert `expect(result.stdout).not_to be_empty` — but do not go
+further and assert what the content contains.
+
+**Add the Rule 22 version-variance comment on every bare `FailedError` assertion.**
+When a `raise_error(Git::FailedError)` assertion intentionally omits a message pattern
+(because the message varies by git version), add the required comment:
+
+```ruby
+it 'raises Git::FailedError for a nonexistent ref' do
+  # git's error message varies by version — Rule 22 version-variance exception applies
+  expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
+end
 ```
 
 ## Required review steps

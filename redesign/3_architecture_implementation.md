@@ -22,17 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (46/~50 commands migrated) |
+| Phase 2 | 🔄 In Progress | Migrating commands (47/~50 commands migrated) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `ls_tree`** → `Git::Commands::LsTree`
+**Migrate `fetch`** → `Git::Commands::Fetch`
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def ls_files`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def fetch`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -147,7 +147,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
    Parser classes and Result factories.
 
 6. **Verify**:
-   - `bundle exec rspec spec/unit/git/commands/ls_tree_spec.rb` — new tests pass
+   - `bundle exec rspec spec/unit/git/commands/fetch_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
@@ -891,6 +891,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `log_commits` / `full_log_commits` | `Git::Commands::Log` | `spec/unit/git/commands/log_spec.rb` | `git log` |
 | `show` | `Git::Commands::Show` | `spec/unit/git/commands/show_spec.rb` | `git show` |
 | `describe` | `Git::Commands::Describe` | `spec/unit/git/commands/describe_spec.rb` | `git describe` |
+| `ls_tree` / `full_tree` / `tree_depth` | `Git::Commands::LsTree` | `spec/unit/git/commands/ls_tree_spec.rb` | `git ls-tree` |
 
 #### ⏳ Commands To Migrate
 
@@ -931,8 +932,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `describe` → `Git::Commands::Describe` — `git describe`
 - [x] `grep` → `Git::Commands::Grep` — `git grep`
 - [x] `ls_files` → `Git::Commands::LsFiles` — `git ls-files`
-- [ ] `ls_tree` / `full_tree` / `tree_depth` → `Git::Commands::LsTree` — `git
-  ls-tree`
+- [x] `ls_tree` / `full_tree` / `tree_depth` → `Git::Commands::LsTree` — `git ls-tree`
 
 **Sharing & Updating:**
 
