@@ -891,6 +891,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `log_commits` / `full_log_commits` | `Git::Commands::Log` | `spec/unit/git/commands/log_spec.rb` | `git log` |
 | `show` | `Git::Commands::Show` | `spec/unit/git/commands/show_spec.rb` | `git show` |
 | `describe` | `Git::Commands::Describe` | `spec/unit/git/commands/describe_spec.rb` | `git describe` |
+| `ls_files` | `Git::Commands::LsFiles` | `spec/unit/git/commands/ls_files_spec.rb` | `git ls-files` |
 | `ls_tree` / `full_tree` / `tree_depth` | `Git::Commands::LsTree` | `spec/unit/git/commands/ls_tree_spec.rb` | `git ls-tree` |
 | `fetch` | `Git::Commands::Fetch` | `spec/unit/git/commands/fetch_spec.rb` | `git fetch` |
 
@@ -929,6 +930,13 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
 - [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
+- [ ] `unmerged` → (use existing `Git::Commands::Diff` class) — `git diff`
+  (one unmigrated call site in `Git::Lib#unmerged`; command class already exists)
+- [ ] `diff_as_hash` (private) → (use existing `Git::Commands::Diff` class or dedicated
+  subcommand classes) — `git diff-files` / `git diff-index`
+  (one unmigrated call site in `Git::Lib#diff_as_hash`; command class already exists)
+- [ ] `status` → `Git::Commands::Status` — `git status`
+- [ ] `tag_sha` (uses `show-ref` internally) → `Git::Commands::ShowRef` — `git show-ref`
 - [x] `show` → `Git::Commands::Show` — `git show`
 - [x] `describe` → `Git::Commands::Describe` — `git describe`
 - [x] `grep` → `Git::Commands::Grep` — `git grep`
@@ -959,6 +967,12 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [ ] `update_ref` → `Git::Commands::UpdateRef` — `git update-ref`
 - [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
 - [ ] `archive` → `Git::Commands::Archive` — `git archive`
+- [ ] `write_tree` → `Git::Commands::WriteTree` — `git write-tree`
+
+**Administration:**
+
+- [ ] `gc` → `Git::Commands::Gc` — `git gc`
+- [ ] `repack` → `Git::Commands::Repack` — `git repack`
 
 **Setup & Config:**
 
@@ -971,6 +985,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [ ] `branch_contains` → (part of `Git::Commands::Branch`)
 - [ ] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 - [ ] `repository_default_branch` → (part of `Git::Commands::LsRemote`)
+- [ ] `current_command_version` → `Git::Commands::Version` — `git version`
 
 ## Phase 3: Refactoring the Public Interface
 
