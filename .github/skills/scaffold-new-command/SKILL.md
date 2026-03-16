@@ -10,19 +10,26 @@ docs using the `Git::Commands::Base` architecture.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
-- [Prerequisites](#prerequisites)
-- [Related skills](#related-skills)
+- [Prerequisites and required reviews](#prerequisites-and-required-reviews)
 - [Files to generate](#files-to-generate)
 - [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
+  - [When to use sub-commands](#when-to-use-sub-commands)
+  - [Do NOT split by output format / output mode](#do-not-split-by-output-format--output-mode)
+  - [When to keep a single class](#when-to-keep-a-single-class)
+  - [Naming sub-command classes](#naming-sub-command-classes)
+  - [Namespace module template](#namespace-module-template)
 - [Command template (Base pattern)](#command-template-base-pattern)
+  - [Overriding `call` — inline example](#overriding-call--inline-example)
+    - [When to use `skip_cli` on `operand`](#when-to-use-skip_cli-on-operand)
 - [Options completeness — consult the man page first](#options-completeness--consult-the-man-page-first)
-- [Output-format options are intentionally omitted](#output-format-options-are-intentionally-omitted)
-- [DSL ordering and argument conventions](#dsl-ordering-and-argument-conventions)
+- [Execution-model conflicts are intentionally omitted](#execution-model-conflicts-are-intentionally-omitted)
 - [Exit status guidance](#exit-status-guidance)
-- [Unit tests](#unit-tests)
-- [Integration tests](#integration-tests)
-- [YARD requirements](#yard-requirements)
+- [Required review steps](#required-review-steps)
+  - [Step 1 — Review Arguments DSL](#step-1--review-arguments-dsl)
+  - [Step 2 — Review Command Tests](#step-2--review-command-tests)
+  - [Step 3 — Review Command YARD Documentation](#step-3--review-command-yard-documentation)
 - [Phased rollout, compatibility, and quality gates](#phased-rollout-compatibility-and-quality-gates)
 
 ## How to use this skill
@@ -42,21 +49,29 @@ Scaffold New Command: Git::Commands::LsTree for `git ls-tree`.
 The invocation needs the target `Git::Commands::*` class name and the git
 subcommand (or subcommand + sub-action) it wraps.
 
-## Prerequisites
+## Prerequisites and required reviews
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
 - [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
-  source for YARD formatting rules and writing standards;
+  source for YARD formatting rules and writing standards
 
-## Related skills
+After scaffolding, you **MUST** run the following reviews in order before
+committing:
+
+1. [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verify every DSL
+   entry is correct and complete; run this **before** writing tests or YARD docs,
+   because DSL changes ripple into both
+2. [Review Command Tests](../review-command-tests/SKILL.md) — verify unit and
+   integration test coverage and structure
+3. [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+   — verify documentation completeness and formatting
+
+Additional references (load when needed):
 
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline RSpec rules all generated unit specs must comply with
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
-- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
-- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
 
 ## Files to generate
 
@@ -324,13 +339,12 @@ subcommand and enumerate every option it documents:
 https://git-scm.com/docs/git-<subcommand>
 ```
 
-For each option, make one of three decisions:
+For each option, make one of two decisions:
 
 | Decision | Reason | Action |
 |---|---|---|
-| **Include** | Behavioral — controls which objects are operated on or how the operation runs; does **not** affect stdout format | Add to `arguments do` |
-| **Exclude (format)** | Changes the structure or content of stdout (e.g. `--pretty=`, `--stat`, `--patch`, `--name-only`) | Omit — see "Output-format options are intentionally omitted" below |
-| **Exclude (inappropriate)** | Stdin/stdout redirection, scripting-only plumbing, or too niche to be useful via the Ruby API | Omit with a brief comment if the reasoning isn't obvious |
+| **Include** | All behavioral options — including output-format flags (`--pretty=`, `--patch`, `--numstat`, `--name-only`, etc.) and filtering/selection flags | Add to `arguments do` |
+| **Exclude (execution-model conflict)** | Requires TTY input, opens an external editor, or otherwise makes the command incompatible with non-interactive subprocess execution | Omit — see "Execution-model conflicts are intentionally omitted" below |
 
 Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
 filtering`, `# Commit ordering`). Follow the section groupings from the man page —
@@ -363,63 +377,33 @@ to be used today in `Git::Lib` is incomplete — callers of the future API shoul
 not need to re-open the man page just because the scaffold only covered current
 usage.
 
-## Output-format options are intentionally omitted
+## Execution-model conflicts are intentionally omitted
 
-The library requires **deterministic, parseable output** from each command class.
-For this reason, options that change the **structure or format** of a command's
-primary output are **deliberately excluded** from the DSL.
+Include **all** git options in the DSL by default — including output-format flags
+such as `--patch`, `--numstat`, `--raw`, `--format=…`, `--pretty=…`, `--no-color`,
+etc. The facade passes these explicitly when a parser requires a specific format;
+excluding them from the DSL would force callers to re-read the man page.
 
-Do **not** add options such as `--format=`, `--pretty=`, `--porcelain`,
-`--patch`, `--stat`, `--numstat`, `--shortstat`, `--raw`, `--name-only`, or
-`--name-status`. Including them would allow callers to produce output that a
-parser cannot handle.
+The **only** options to exclude are those that conflict with non-interactive
+subprocess execution:
 
-**Do** include options that do not affect stdout — for example `--dry-run`/`-n`,
-`--force`, `--ignore-errors`, etc.
+- `--interactive` / `-i` — opens an interactive menu; requires a TTY
+- `--edit` / `-e` — opens `$EDITOR`; incompatible with subprocess execution
+- `--patch` (interactive form, e.g. `git add -p`) — requires TTY prompts
+- Any option whose git implementation requires stdin/TTY interaction the
+  library cannot provide
 
-The test for any option, including `--verbose`/`-v` and `--quiet`/`-q`: run the
-command with and without the option and diff stdout. If stdout changes → exclude
-it. Do not assume verbosity flags are safe sidechannel options; verify first.
+> **Note on `--patch`:** it appears in both include and exclude categories
+> depending on the command. In `git add -p` it opens an interactive session
+> (exclude). In `git diff --patch` it selects a non-interactive output format
+> (include). Evaluate per-command, not globally.
 
-## DSL ordering and argument conventions
+**`--verbose`/`-v` and `--quiet`/`-q`:** include these unless their git
+implementation requires interactive I/O.
 
-For the full DSL reference including ordering rules, correct DSL methods per option
-type, alias conventions, `as:` usage, modifier rules, and pathspec conventions, see the
-[Arguments DSL Checklist](../review-arguments-dsl/CHECKLIST.md).
-
-**Key principles (summary):**
-
-- Fetch the git-scm.com man page and enumerate all options before writing DSL entries
-  (see "Options completeness" above)
-- Define arguments in the order they appear in the git-scm.com SYNOPSIS
-- Within unordered groups: literals → flag options → flag-or-value options → value
-  options → operands → pathspecs
-- Use aliases for long/short forms (`%i[force f]`), long name first
-- When the git SYNOPSIS has `[<tree-ish>] [--] [<pathspec>...]`, use
-  `end_of_options` + `value_option :pathspec, as_operand: true` for the post-`--`
-  group
-- When the SYNOPSIS has pure nesting (`[<a> [<b>]]`), use plain `operand` entries
-- For each operand, derive `required:` and `repeatable:` directly from the SYNOPSIS
-  notation — `[<arg>]` → optional (default), `<arg>` → `required: true`,
-  `[<arg>…]` → `repeatable: true`, `<arg>…` → `required: true, repeatable: true`.
-  See [CHECKLIST.md section 4](../review-arguments-dsl/CHECKLIST.md#4-correct-modifiers)
-  for the complete table.
-- For each option and operand, actively evaluate whether per-argument validation
-  parameters apply:
-  - `required: true` — does the command fail outright if this argument is absent?
-  - `allow_nil: false` — when required, does passing `nil` make no sense?
-  - `type: <Class>` — is there a single expected Ruby type that catching early
-    would produce a clearer error than git's own output?
-  - `validator:` — is there a simple predicate (not a cross-argument rule) that
-    git cannot express clearly in its error output?
-  Omit these only if there is no meaningful per-argument constraint to express;
-  don't leave them out by default.
-- Name flag options after the git flag itself: single-char flags use the flag
-  character as the symbol (`:p` for `-p`, `:v` for `-v`); multi-char flags use the
-  flag name as the symbol (`:patch` for `--patch`). Never invent a descriptive Ruby
-  name and compensate with `as:` (e.g. `flag_option :pretty, as: '-p'` is wrong)
-- Avoid `as:` unless it's a Ruby keyword conflict, combined short flag, or
-  multi-token flag
+**The `--no-edit` edge case:** `--no-edit` suppresses editor opening — it is the
+opposite of an execution-model conflict. Use `flag_option :no_edit`; do **not**
+hardcode it as `literal '--no-edit'`, which prevents callers from omitting it.
 
 ## Exit status guidance
 
@@ -438,34 +422,31 @@ allow_exit_status 0..1
 allow_exit_status 0..7
 ```
 
-## Unit tests
+## Required review steps
 
-Command unit tests should verify:
+After generating all files, run these three reviews **in order** before
+committing. Load each skill in full and apply every checklist item — do not
+rely on the summaries in this file.
 
-- exact arguments passed to `execution_context.command_capturing`
-- inclusion of `raise_on_failure: false` (from `Base` behavior)
-- execution-option forwarding where relevant (`timeout:`, etc.)
-- allow-exit-status behavior where declared
-- input validation (`ArgumentError`)
+### Step 1 — Review Arguments DSL
 
-## Integration tests
+Load and apply **[Review Arguments DSL](../review-arguments-dsl/SKILL.md)**
+(and its [CHECKLIST.md](../review-arguments-dsl/CHECKLIST.md)) against the
+newly written `arguments do` block. Fix all issues before proceeding.
 
-Minimal structure:
+Run this step **first** — DSL corrections change the CLI arguments that tests
+and YARD docs must reflect, so reviewing DSL after writing tests creates
+rework.
 
-- `describe 'when the command succeeds'`
-- `describe 'when the command fails'`
+### Step 2 — Review Command Tests
 
-Include at least one failure case per command.
+Load and apply **[Review Command Tests](../review-command-tests/SKILL.md)**
+against the unit and integration spec files. Fix all issues before proceeding.
 
-## YARD requirements
+### Step 3 — Review Command YARD Documentation
 
-- use `# @!method call(*, **)` YARD directive with nested `@overload` blocks for per-command docs
-- add `@overload` blocks for valid call shapes, indented under `@!method`
-- keep tags aligned with `arguments do` and `allow_exit_status` behavior
-- tag short descriptions must not end with punctuation (no trailing period, comma,
-  or colon)
-- multi-paragraph tag descriptions must have a blank comment line (`#`) between the
-  short description and each continuation paragraph
+Load and apply **[Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)**
+against the command class. Fix all issues before proceeding.
 
 ## Phased rollout, compatibility, and quality gates
 
