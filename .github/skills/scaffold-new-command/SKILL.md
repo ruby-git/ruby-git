@@ -78,11 +78,11 @@ Additional references (load when needed):
 
 ## Files to generate
 
-For `Git::Commands::Foo::Bar`:
+For `Git::Commands::Foo::Bar`, **all three files are required and must be created**:
 
-- `lib/git/commands/foo/bar.rb`
-- `spec/unit/git/commands/foo/bar_spec.rb`
-- `spec/integration/git/commands/foo/bar_spec.rb`
+- `lib/git/commands/foo/bar.rb` — the command class
+- `spec/unit/git/commands/foo/bar_spec.rb` — unit tests
+- `spec/integration/git/commands/foo/bar_spec.rb` — integration tests (mandatory, not optional)
 
 Optional (first command in module):
 
@@ -231,9 +231,25 @@ module Git
 
         # @!method call(*, **)
         #
-        #   @overload ...
+        #   @overload call(operand = nil, *rest, **options)
         #
         #     Execute the git ... command.
+        #
+        #     @param operand [String, nil] (nil) Short description without trailing period
+        #
+        #       Continuation paragraph separated by a blank comment line. Only needed
+        #       when the short description alone is insufficient.
+        #
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :simple_flag (nil) One-sentence description without period
+        #
+        #     @option options [Boolean, String, nil] :complex_flag (nil) Short description without period
+        #
+        #       Continuation: explain the `true`/`false`/string forms here, each separated by
+        #       a blank comment line from the short description above.
+        #
+        #       Alias: :f
         #
         #     @return [Git::CommandLineResult] the result of calling `git ...`
         #
@@ -247,6 +263,29 @@ end
 This template uses no explicit `def call` — the `@!method` YARD directive
 attaches per-command docs to the inherited `call` method. Use this form for
 simple commands where no pre-call logic is needed.
+
+**YARD tag formatting rules enforced by the review step:**
+
+- Short description (the inline text after the type and option key) must be a
+  **single sentence** and must **not end with punctuation** (no trailing period).
+- If more detail is needed, put it in a **continuation paragraph** separated from
+  the short description by a blank comment line (`#`).
+- This applies to every `@param`, `@option`, `@return`, and `@raise` tag.
+
+```ruby
+# ✅ Correct — no period on short desc; blank line before continuation
+# @option options [Boolean, String, nil] :recurse_submodules (nil) Control whether
+#   submodule commits are fetched
+#
+#   When `true`, uses `--recurse-submodules`. When a string (`'yes'`,
+#   `'on-demand'`, `'no'`), passes that value. When `false`, emits
+#   `--no-recurse-submodules`.
+
+# ❌ Incorrect — trailing period; continuation run in without blank line
+# @option options [Boolean, String, nil] :recurse_submodules (nil) Control whether
+#   submodule commits are fetched. When true, uses --recurse-submodules. When a
+#   string, passes that value.
+```
 
 When the command requires an explicit `def call` override (input validation,
 stdin feeding, non-trivial option routing), place YARD docs **directly above**
@@ -352,6 +391,20 @@ For each option, make one of two decisions:
 Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
 filtering`, `# Commit ordering`). Follow the section groupings from the man page —
 this makes it easy for a reviewer to cross-check against the docs.
+
+**Alias inline comments:** When a DSL entry uses an alias array, annotate it with
+an inline comment showing the long flag name and the alias. Use the `; alias: :x`
+format — **not** the `/ -x` format:
+
+```ruby
+flag_option %i[append a]     # --append; alias: :a   ✅
+flag_option %i[append a]     # --append / -a          ❌  (implies -a is emitted)
+```
+
+The `/ -x` notation looks like a git man-page short-option alternative, suggesting
+that passing `:a` emits `-a`. This is wrong — `alias_array` entries always emit
+the primary (long) flag regardless of which alias the caller uses. The `; alias: :x`
+form correctly signals that `:a` is a Ruby-level call alias, not an independent CLI flag.
 
 **Pairs and opposites:** when the man page documents `--foo` / `--no-foo` as
 explicit flags, model them as a single `flag_option :foo, negatable: true` rather
@@ -460,6 +513,55 @@ end
 ```
 
 ### Integration tests
+
+**Creating the integration test file is mandatory.** Every new command MUST have a
+corresponding file at `spec/integration/git/commands/<path>_spec.rb`. Do not skip
+this file — it is listed in [Files to generate](#files-to-generate) for a reason.
+
+**Integration test template** — copy and adapt this for every new command:
+
+```ruby
+# frozen_string_literal: true
+
+require 'spec_helper'
+require 'git/commands/foo'  # adjust path to match the command file
+
+RSpec.describe Git::Commands::Foo, :integration do
+  include_context 'in an empty repository'
+
+  subject(:command) { described_class.new(execution_context) }
+
+  before do
+    # Set up a minimal repository state that the command needs.
+    # Use the helpers from the shared context: write_file, repo.add, repo.commit, etc.
+    write_file('file.txt', "content\n")
+    repo.add('file.txt')
+    repo.commit('Initial commit')
+  end
+
+  describe '#call' do
+    context 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
+        result = command.call('HEAD')  # use the simplest valid invocation
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
+    context 'when the command fails' do
+      it 'raises FailedError for an invalid argument' do
+        # git's error message varies by version — Rule 22 version-variance exception applies
+        expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
+      end
+    end
+  end
+end
+```
+
+Adapt the `before` block and the call arguments to the specific command. Add extra
+`context` blocks inside `'when the command succeeds'` only for genuinely distinct
+execution paths (e.g. a flag that changes how git parses the request), not for
+different string values passed to the same operand.
 
 **Do not assert on git's output content.** Integration tests confirm that the command
 executes against a real git repository — they are smoke tests, not output validators.
