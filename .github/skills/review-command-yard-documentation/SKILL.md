@@ -225,6 +225,21 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
 - Legacy references to `ARGS` constant or command-specific `initialize`
 - Description leaks internal mechanics (e.g., "written via IO pipe") instead of
   describing caller-facing behavior
+- **Trailing period on `@option` short description** — the inline text after the
+  type and option key must not end with a period. This is easy to miss when
+  transcribing from the git man page, which ends flag descriptions with periods.
+  Run `bundle exec rake yard` to catch this — YARD treats any failure as fatal.
+- **Multi-sentence short description without a blank comment line** — when an
+  `@option` needs more than one sentence, the first sentence is the short description
+  and all additional detail must go in a continuation paragraph separated by a blank
+  `#` line. Writing both sentences on the same run-in line violates YARD's
+  short-description rule. Correct form:
+
+  ```ruby
+  # @option options [Boolean] :update_head_ok (false) Allow updating HEAD ref
+  #
+  #   When true, passes --update-head-ok. By default git fetch refuses to update HEAD.
+  ```
 
 ## Output
 

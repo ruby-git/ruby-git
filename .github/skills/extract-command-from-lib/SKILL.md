@@ -29,6 +29,7 @@ class. The git subcommand is determined by the first (or first few) arguments to
   - [Simple delegation (stdout passthrough)](#simple-delegation-stdout-passthrough)
   - [Delegation with post-processing](#delegation-with-post-processing)
   - [Delegation with parsed return value](#delegation-with-parsed-return-value)
+  - [Delegation with opts-hash key normalization](#delegation-with-opts-hash-key-normalization)
 - [What stays in `Git::Lib`](#what-stays-in-gitlib)
 - [What moves to `Git::Commands::*`](#what-moves-to-gitcommands)
 
@@ -370,6 +371,37 @@ def worktree_list
   worktrees
 end
 ```
+
+### Delegation with opts-hash key normalization
+
+When the legacy method accepted a flat `opts` hash and uses a `KEY_NORMALIZATIONS`
+constant to rename option keys before forwarding them, the constant's keys must be
+the same type as the keys callers actually pass.
+
+**Ruby's `'key':` symbol-literal syntax creates a *symbol* key** — `{ 'update-head-ok': :x }`
+stores the key `:'update-head-ok'`, not the string `'update-head-ok'`. If legacy
+callers pass string keys, the lookup misses and the raw key is forwarded unchanged,
+causing a git "unsupported option" error at runtime.
+
+Always symbolize keys before the normalization lookup:
+
+```ruby
+# ❌ Bug — string key 'update-head-ok' misses the symbol key :'update-head-ok'
+opts = opts.transform_keys { |k| KEY_NORMALIZATIONS.fetch(k, k) }
+
+# ✅ Correct — symbolize first so both string and symbol callers match
+opts = opts.transform_keys do |k|
+  sym = k.is_a?(Symbol) ? k : k.to_sym
+  KEY_NORMALIZATIONS.fetch(sym, sym)
+end
+```
+
+**When to apply this pattern:** Whenever `transform_keys` is combined with a
+normalization constant whose keys use the `'hyphenated-name':` symbol-literal
+syntax. Scan the constant's definition to confirm its keys are symbols, then
+confirm whether existing callers pass strings or symbols. If callers are a mix —
+or if callers are `Git::Base` or `Git::Lib` methods that forward user-supplied
+hashes — add the symbolization guard.
 
 ## What stays in `Git::Lib`
 
