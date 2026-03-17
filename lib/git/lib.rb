@@ -27,6 +27,7 @@ require_relative 'commands/ls_tree'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
+require_relative 'commands/pull'
 require_relative 'commands/reset'
 require_relative 'commands/rm'
 require_relative 'commands/show'
@@ -1744,19 +1745,15 @@ module Git
       end
     end
 
-    PULL_OPTION_MAP = [
-      { keys: [:allow_unrelated_histories], flag: '--allow-unrelated-histories', type: :boolean }
-    ].freeze
+    PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
 
     def pull(remote = nil, branch = nil, opts = {})
       raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
 
-      ArgsBuilder.validate!(opts, PULL_OPTION_MAP)
-
-      flags = build_args(opts, PULL_OPTION_MAP)
+      assert_valid_opts(opts, PULL_ALLOWED_OPTS)
+      allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
       positional_args = [remote, branch].compact
-
-      command_capturing('pull', *flags, *positional_args).stdout
+      Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
     end
 
     # Return the SHA of a tag reference
