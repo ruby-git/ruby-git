@@ -157,36 +157,6 @@ Missing short aliases are a completeness defect, not just a convenience omission
 callers who pass the short key `:E` will get an `ArgumentError` rather than the
 expected flag.
 
-### Inline comment convention for aliases
-
-DSL entries that use an alias array should carry an inline comment that identifies
-the long flag name and the alias. The correct format is:
-
-```
-# --long-flag-name; alias: :x
-```
-
-**Do not** use the `/ -x` format:
-
-```ruby
-flag_option %i[append a]    # --append; alias: :a    ✅ correct
-flag_option %i[append a]    # --append / -a          ❌ incorrect
-```
-
-The `/ -x` format implies the short flag `-a` is emitted at the CLI level, which
-is never true — `alias_array` entries always emit the primary (long) flag regardless
-of which alias the caller uses. The `; alias: :x` format correctly conveys that `:a`
-is a Ruby-level alias for the key, not an independent CLI flag.
-
-Negatable flag pairs use a different convention — separating two git flags with `/`:
-
-```ruby
-flag_option :all, negatable: true    # --all / --no-all    ✅ correct for negatable pair
-```
-
-This is permissible because `--all` and `--no-all` are both real CLI flags, not
-Ruby aliases.
-
 ## 3. Correct ordering
 
 Mirror the order options appear in the git-scm.com SYNOPSIS for the command. This
