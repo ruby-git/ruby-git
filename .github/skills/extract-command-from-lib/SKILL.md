@@ -30,6 +30,7 @@ class. The git subcommand is determined by the first (or first few) arguments to
   - [Delegation with post-processing](#delegation-with-post-processing)
   - [Delegation with parsed return value](#delegation-with-parsed-return-value)
   - [Delegation with opts-hash key normalization](#delegation-with-opts-hash-key-normalization)
+  - [Delegation with option filtering (preventing API expansion)](#delegation-with-option-filtering-preventing-api-expansion)
 - [What stays in `Git::Lib`](#what-stays-in-gitlib)
 - [What moves to `Git::Commands::*`](#what-moves-to-gitcommands)
 
@@ -232,7 +233,28 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
    transformation after `.stdout` / `.stderr` / `.status` to match the original
    return type.
 
-3. Add the appropriate `require_relative` at the top of `lib/git/lib.rb` if not
+3. **Prevent API expansion** — the command class may accept many more options than
+   the legacy `Git::Lib` method ever exposed. Only forward the options that were
+   part of the original `Git::Lib` method's public API. Use a `<COMMAND>_ALLOWED_OPTS`
+   constant to whitelist permitted option keys, call `assert_valid_opts` to raise
+   on unknown keys, then filter with `opts.slice` before forwarding:
+
+   ```ruby
+   PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
+
+   def pull(remote = nil, branch = nil, opts = {})
+     assert_valid_opts(opts, PULL_ALLOWED_OPTS)
+     allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
+     Git::Commands::Pull.new(self).call(remote, branch, **allowed_opts).stdout
+   end
+   ```
+
+   `assert_valid_opts` raises `ArgumentError` for any unrecognised key, giving
+   callers a clear error instead of silently ignoring unknown options. This
+   ensures that callers cannot accidentally pass options that happen to match
+   command DSL option names but were never part of the public contract.
+
+4. Add the appropriate `require_relative` at the top of `lib/git/lib.rb` if not
    already present.
 
 4. Verify:
@@ -403,10 +425,44 @@ confirm whether existing callers pass strings or symbols. If callers are a mix �
 or if callers are `Git::Base` or `Git::Lib` methods that forward user-supplied
 hashes — add the symbolization guard.
 
+### Delegation with option filtering (preventing API expansion)
+
+A command class may expose many more options than the legacy `Git::Lib` method
+ever accepted. Without filtering, callers could accidentally pass options that
+happen to match command DSL names but were never part of the public contract.
+
+Declare an `<COMMAND>_ALLOWED_OPTS` constant listing only the options that were
+present in the original method. Call `assert_valid_opts` first to raise
+`ArgumentError` on unrecognised keys, then use `opts.slice` to filter before
+forwarding:
+
+```ruby
+# Only :allow_unrelated_histories was accepted by the original Git::Lib#pull
+PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
+
+def pull(remote = nil, branch = nil, opts = {})
+  raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
+
+  assert_valid_opts(opts, PULL_ALLOWED_OPTS)
+  allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
+  positional_args = [remote, branch].compact
+  Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
+end
+```
+
+`assert_valid_opts` is a private helper already defined in `Git::Lib` — no extra
+require is needed. It raises `ArgumentError: Unknown options: <key>` when any
+unrecognised key is present, giving callers a clear error rather than silently
+dropping the option.
+
+Name the constant after the git subcommand (`PULL_ALLOWED_OPTS`, `FETCH_ALLOWED_OPTS`,
+etc.) and place it immediately before the method definition.
+
 ## What stays in `Git::Lib`
 
 - Output parsing and transformation (until a parser class is created)
 - Return-value adaptation to preserve backward compatibility
+- Option validation and filtering to prevent API expansion (see `<COMMAND>_ALLOWED_OPTS` + `assert_valid_opts` pattern)
 - Deprecation shims (e.g., option renames)
 - Method signatures and public API surface
 

@@ -515,10 +515,24 @@ expect { action }.to raise_error(Git::FailedError) do |error|
 end
 ```
 
-> **Exception:** When the error message is produced by an external library or by git
-> itself and is likely to vary by version, use the loosest pattern that still
-> distinguishes this error from unrelated ones (e.g., `/invalid ref/i`). Never omit
-> the message check entirely.
+> **Version-variance exception:** When the error message is produced by an external
+> library or by git itself and is likely to vary across git versions, use the loosest
+> regexp that still distinguishes this error from an unrelated one. Anchor the pattern
+> on something stable — the invalid input value, the subcommand name, or a keyword
+> that appears in all known git versions. Never omit the message check entirely:
+>
+> ```ruby
+> # Good — stable anchor, tolerates phrasing differences across git versions
+> expect { command.call('nonexistent.txt') }
+>   .to raise_error(Git::FailedError, /nonexistent\.txt/)
+>
+> # Good — subcommand keyword is stable across versions
+> expect { command.call('bad-ref') }
+>   .to raise_error(Git::FailedError, /bad-ref/)
+>
+> # Bad — passes for any Git::FailedError regardless of cause
+> expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
+> ```
 
 ### Rule 23 (MUST): Test edge cases within the relevant `context` block
 

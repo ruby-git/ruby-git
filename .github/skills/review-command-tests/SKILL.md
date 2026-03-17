@@ -18,6 +18,7 @@ conventions.
   - [Expectations for command invocation](#expectations-for-command-invocation)
     - [Expectations for stdin-feeding commands](#expectations-for-stdin-feeding-commands)
     - [What not to test](#what-not-to-test)
+  - [`#initialize` — omit from command specs](#initialize--omit-from-command-specs)
   - [Unit test grouping](#unit-test-grouping)
 - [Integration tests](#integration-tests)
   - [Integration test grouping](#integration-test-grouping)
@@ -198,6 +199,37 @@ conditions. Command specs should test that the command **uses** the DSL correctl
 (i.e., the right arguments reach `execution_context.command_capturing`), not re-test
 the DSL's own behavior.
 
+### `#initialize` — omit from command specs
+
+**Do not write a `describe '#initialize'` block in command specs.** This is a
+deliberate exception to Rule 2's SHOULD guidance for concrete subclasses. The full
+reasoning chain:
+
+1. **Rule 2's `have_attributes` form requires public attributes.** `Base#initialize`
+   stores `@execution_context` as a private instance variable with no `attr_reader`,
+   so there is nothing to pass to `have_attributes`. The form that Rule 2 uses cannot
+   be applied.
+
+2. **The only fallback is `not_to raise_error`, which is a Rule 24 violation.**
+   Asserting that `described_class.new(execution_context)` does not raise merely
+   confirms the code runs — it is not an observable behavioral assertion.
+
+3. **Both Rule 2 purposes are already satisfied by other means:**
+   - *Documentation:* the `let(:command) { described_class.new(execution_context) }`
+     declaration at the top of every spec documents the constructor signature
+     as clearly as a dedicated block would.
+   - *Accidental-override guard:* `let(:command)` is evaluated before every example.
+     If a subclass accidentally introduced a `def initialize` with a different
+     signature, every test in the file would immediately raise `ArgumentError` —
+     providing the same protection a dedicated block would.
+
+4. **`Base#initialize` is covered by `base_spec.rb`.** Command subclasses that do
+   not override `#initialize` gain nothing from repeating it.
+
+**Required fix if found:** Remove any `describe '#initialize'` block that contains
+only `expect { described_class.new(execution_context) }.not_to raise_error` — it is
+a Rule 24 violation and provides no coverage value.
+
 ### Unit test grouping
 
 Unit tests are organized under `describe '#call'` with three sections:
@@ -217,6 +249,13 @@ Unit tests are organized under `describe '#call'` with three sections:
 
 The exit code and input validation blocks are optional — include them only when the
 command has those behaviors. They always appear at the end of `#call`, in that order.
+
+**Required fix if found:** The section names `'exit code handling'` and `'input
+validation'` are exact string literals — do not paraphrase. A context named
+`'with an unsupported option'` or `'when the option is invalid'` instead of
+`'input validation'` MUST be renamed. These names are load-bearing identifiers: they
+signal to reviewers at a glance which structural section they are looking at and what
+it may or may not contain.
 
 Unit test descriptions should be concise and action-oriented. Use descriptions like
 "includes the --cached flag", "passes both commits as operands", "combines commit
@@ -368,8 +407,9 @@ RSpec.describe Git::Commands::Add, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError with a nonexistent path' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('nonexistent.txt') }.to raise_error(Git::FailedError)
+        # git's error message phrasing varies by version — anchor on the stable input value
+        expect { command.call('nonexistent.txt') }
+          .to raise_error(Git::FailedError, /nonexistent\.txt/)
       end
     end
   end
@@ -401,8 +441,9 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError for invalid revision' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
+        # git's error message phrasing varies by version — anchor on the stable input value
+        expect { command.call('nonexistent-ref') }
+          .to raise_error(Git::FailedError, /nonexistent-ref/)
       end
     end
   end
@@ -410,6 +451,21 @@ end
 ```
 
 ## General guidelines
+
+**Always specify `initial_branch: 'main'` when calling `Git.init` in test setup.**
+The `in an empty repository` shared context already does this for the primary repo,
+but tests that create *additional* repositories in a `before` block (e.g., a bare
+remote, a second clone target) must pass `initial_branch: 'main'` explicitly to
+`Git.init`. Without it, the repo's `HEAD` points to whatever `init.defaultBranch`
+is set to on the CI runner or developer's machine, making the test non-deterministic:
+
+```ruby
+# ❌ Fragile — HEAD points to the system default branch name
+Git.init(bare_dir, bare: true)
+
+# ✅ Correct — HEAD always points to 'main'
+Git.init(bare_dir, bare: true, initial_branch: 'main')
+```
 
 **No shell-outs in tests.** Never use backticks, `system()`, or `%x[]` in tests. For
 git commands (including setup steps), use `execution_context.command_capturing` — it

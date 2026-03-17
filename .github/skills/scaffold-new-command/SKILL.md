@@ -392,20 +392,6 @@ Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
 filtering`, `# Commit ordering`). Follow the section groupings from the man page —
 this makes it easy for a reviewer to cross-check against the docs.
 
-**Alias inline comments:** When a DSL entry uses an alias array, annotate it with
-an inline comment showing the long flag name and the alias. Use the `; alias: :x`
-format — **not** the `/ -x` format:
-
-```ruby
-flag_option %i[append a]     # --append; alias: :a   ✅
-flag_option %i[append a]     # --append / -a          ❌  (implies -a is emitted)
-```
-
-The `/ -x` notation looks like a git man-page short-option alternative, suggesting
-that passing `:a` emits `-a`. This is wrong — `alias_array` entries always emit
-the primary (long) flag regardless of which alias the caller uses. The `; alias: :x`
-form correctly signals that `:a` is a Ruby-level call alias, not an independent CLI flag.
-
 **Pairs and opposites:** when the man page documents `--foo` / `--no-foo` as
 explicit flags, model them as a single `flag_option :foo, negatable: true` rather
 than two separate entries. This prevents contradictory combinations and makes the
@@ -562,6 +548,20 @@ Adapt the `before` block and the call arguments to the specific command. Add ext
 `context` blocks inside `'when the command succeeds'` only for genuinely distinct
 execution paths (e.g. a flag that changes how git parses the request), not for
 different string values passed to the same operand.
+
+If the `before` block creates additional git repositories beyond the shared context's
+primary repo (e.g., a bare remote, a second clone target), always pass
+`initial_branch: 'main'` to `Git.init`. Without it, `HEAD` defaults to the system's
+`init.defaultBranch`, which differs across CI runners and developer machines and
+causes non-deterministic test failures:
+
+```ruby
+# ❌ Fragile — HEAD points to the system default branch name
+Git.init(bare_dir, bare: true)
+
+# ✅ Correct — HEAD always points to 'main'
+Git.init(bare_dir, bare: true, initial_branch: 'main')
+```
 
 **Do not assert on git's output content.** Integration tests confirm that the command
 executes against a real git repository — they are smoke tests, not output validators.
