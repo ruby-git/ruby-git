@@ -397,6 +397,20 @@ explicit flags, model them as a single `flag_option :foo, negatable: true` rathe
 than two separate entries. This prevents contradictory combinations and makes the
 three-state semantics (`true` / `false` / `nil`) explicit.
 
+**Short-flag aliases — cross-check the man page:** before adding any short-flag
+alias (e.g. `%i[dry_run n]`), verify the alias character appears on the same option
+heading in the man page (`-n, --dry-run`). Do **not** invent an alias that the man
+page does not document — it will generate an unknown flag that git rejects.
+Symmetrically, every option the man page documents with a short form **must** have an
+alias in the DSL (long name first: `%i[dry_run n]`).
+
+**`inline: true` for `=<value>` options:** when the man page shows `--option=<value>`
+(with an `=`), the DSL entry must include `inline: true` regardless of whether the
+DSL method is `value_option` or `flag_or_value_option`. Without it, the value is
+emitted as a separate token (`--option value`) instead of the expected inline form
+(`--option=value`). Check every `value_option` and `flag_or_value_option` entry
+against the man page signature.
+
 **Constraint declarations are generally not used in command classes.** Do not add
 `conflicts`, `requires`, `requires_one_of`, `requires_exactly_one_of`,
 `forbid_values`, or `allowed_values` declarations to command classes. Git is the
@@ -498,6 +512,53 @@ context 'input validation' do
 end
 ```
 
+**Test both `true` and `false` for every negatable option.** A `flag_option :foo,
+negatable: true` or `flag_or_value_option :foo, negatable: true` has two distinct
+code paths: `true` emits `--foo` and `false` emits `--no-foo`. Both must be tested —
+omitting the `false` case is a Rule 21 branch coverage failure. When the option also
+accepts a String, test that form too (see `force_with_lease`, `signed`,
+`recurse_submodules` for examples).
+
+```ruby
+context 'with the :verify option' do
+  it 'adds --verify when true' do
+    expect_command_capturing('push', '--verify').and_return(command_result)
+    command.call(verify: true)
+  end
+
+  it 'adds --no-verify when false' do
+    expect_command_capturing('push', '--no-verify').and_return(command_result)
+    command.call(verify: false)
+  end
+end
+```
+
+**Test every DSL alias.** When a DSL entry groups keys in an array
+(`flag_option %i[dry_run n]`, `value_option %i[receive_pack exec]`), every alias
+beyond the primary key must have its own `it` block verifying the canonical flag is
+emitted. Do not assume the primary-key test covers the alias — the DSL wires them
+independently and an alias misconfiguration would go undetected.
+
+```ruby
+# DSL: flag_option %i[dry_run n]
+# ✅ Both tested:
+it 'adds --dry-run to the command line' do
+  expect_command_capturing('push', '--dry-run').and_return(command_result)
+  command.call(dry_run: true)
+end
+
+it 'supports the :n alias' do
+  expect_command_capturing('push', '--dry-run').and_return(command_result)
+  command.call(n: true)
+end
+```
+
+**Do not test `option: false` for non-negatable flags.** Passing `false` to a
+`flag_option` declared without `negatable: true` produces no CLI output — the same
+code path as the base invocation with no options. The "no arguments" test already
+covers this path. Do not write `command.call(prune: false)` or similar for flags
+that have no `--no-<flag>` form.
+
 ### Integration tests
 
 **Creating the integration test file is mandatory.** Every new command MUST have a
@@ -536,8 +597,9 @@ RSpec.describe Git::Commands::Foo, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError for an invalid argument' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
+        # git's error message phrasing varies by version — anchor on the stable input value
+        expect { command.call('nonexistent-ref') }
+          .to raise_error(Git::FailedError, /nonexistent-ref/)
       end
     end
   end
@@ -580,13 +642,21 @@ When verifying that a command produces *some* output (e.g. for a listing command
 is acceptable to assert `expect(result.stdout).not_to be_empty` — but do not go
 further and assert what the content contains.
 
-**Add the Rule 22 version-variance comment on every bare `FailedError` assertion.**
-When a `raise_error(Git::FailedError)` assertion intentionally omits a message pattern
-(because the message varies by git version), add the required comment:
+**Always include a message pattern on `FailedError` assertions.** Rule 22 requires
+both an error class and a message pattern — the version-variance exception never
+permits omitting the pattern entirely; it only permits using a loose regexp. Use the
+stable input value you passed (e.g., `'nonexistent-ref'`) as the anchor:
 
 ```ruby
-it 'raises Git::FailedError for a nonexistent ref' do
-  # git's error message varies by version — Rule 22 version-variance exception applies
+# ✅ Correct — anchors on the stable input value, tolerates phrasing differences
+it 'raises FailedError for a nonexistent ref' do
+  # git's error message phrasing varies by version — anchor on the stable input value
+  expect { command.call('nonexistent-ref') }
+    .to raise_error(Git::FailedError, /nonexistent-ref/)
+end
+
+# ❌ Wrong — omits the message pattern; passes for any FailedError regardless of cause
+it 'raises FailedError for a nonexistent ref' do
   expect { command.call('nonexistent-ref') }.to raise_error(Git::FailedError)
 end
 ```

@@ -55,6 +55,34 @@ etc.) or `@!word` (directives such as `@!attribute`, `@!method`, `@!scope`, etc.
 Within the tag block there are no other exceptions: consecutive same-kind tags (e.g.
 multiple `@param` lines) each require their own preceding blank line.
 
+**Never use raw blank lines inside a doc comment block**
+
+A raw blank line — an empty line with no leading `#` — terminates the YARD doc
+comment block at that point. Any comment lines that follow the raw blank line are
+treated as separate, unattached comments and will not appear in the generated
+documentation. Always use a blank comment line (`#`) to separate paragraphs or
+continuation text within a YARD block:
+
+Correct — blank comment line keeps the block intact:
+
+```ruby
+# @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+#
+#   Alias: :"4"
+```
+
+Incorrect — raw blank line silently drops the alias note:
+
+```ruby
+# @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+
+#   Alias: :"4"
+```
+
+This is especially easy to miss in multi-paragraph `@option` or `@param`
+descriptions where an editor's auto-formatter strips trailing spaces and removes
+the `#` from what appeared to be a blank comment line.
+
 Correct:
 
 ```ruby

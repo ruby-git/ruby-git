@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (30/54 checklist items done, 24 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (31/54 checklist items done, 23 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `push`** → `Git::Commands::Push`
+**Migrate `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches`** → `Git::Commands::Remote`
 
 #### Workflow
 
@@ -895,6 +895,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `ls_tree` / `full_tree` / `tree_depth` | `Git::Commands::LsTree` | `spec/unit/git/commands/ls_tree_spec.rb` | `git ls-tree` |
 | `fetch` | `Git::Commands::Fetch` | `spec/unit/git/commands/fetch_spec.rb` | `git fetch` |
 | `pull` | `Git::Commands::Pull` | `spec/unit/git/commands/pull_spec.rb` | `git pull` |
+| `push` | `Git::Commands::Push` | `spec/unit/git/commands/push_spec.rb` | `git push` |
 
 #### ⏳ Commands To Migrate
 
@@ -948,7 +949,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [x] `fetch` → `Git::Commands::Fetch` — `git fetch`
 - [x] `pull` → `Git::Commands::Pull` — `git pull`
-- [ ] `push` → `Git::Commands::Push` — `git push`
+- [x] `push` → `Git::Commands::Push` — `git push`
 - [ ] `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches` →
   `Git::Commands::Remote` — `git remote`
 - [ ] `ls_remote` → `Git::Commands::LsRemote` — `git ls-remote`

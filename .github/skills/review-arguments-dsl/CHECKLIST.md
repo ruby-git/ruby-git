@@ -157,6 +157,27 @@ Missing short aliases are a completeness defect, not just a convenience omission
 callers who pass the short key `:E` will get an `ArgumentError` rather than the
 expected flag.
 
+### Spurious short-flag aliases
+
+**Never invent a short-flag alias that the man page does not document.** Check the
+actual man page (or `man git-<subcommand>`) before adding any alias entry. The
+canonical audit is: does the git man page show `-X, --long-name` on the same option
+heading? If not, do not add `:X` to the alias list.
+
+A spurious alias looks correct to a reader but generates an unknown flag when git
+rejects it:
+
+```ruby
+# ❌ Wrong — git push has no -t flag; man page shows --tags only
+flag_option %i[tags t]   # emits -t → git: error: unknown switch 't'
+
+# ✅ Correct
+flag_option :tags        # emits --tags only
+```
+
+Flag any alias whose short character cannot be found in the man page's option
+headings as an error (not just a style issue).
+
 ## 3. Correct ordering
 
 Mirror the order options appear in the git-scm.com SYNOPSIS for the command. This

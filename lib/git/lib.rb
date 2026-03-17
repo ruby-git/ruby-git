@@ -28,6 +28,7 @@ require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
 require_relative 'commands/pull'
+require_relative 'commands/push'
 require_relative 'commands/reset'
 require_relative 'commands/rm'
 require_relative 'commands/show'
@@ -1720,29 +1721,104 @@ module Git
       Git::Commands::Fetch.new(self).call(*positionals, **opts, merge: true).stdout
     end
 
-    PUSH_OPTION_MAP = [
-      { keys: [:mirror],      flag: '--mirror',      type: :boolean },
-      { keys: [:delete],      flag: '--delete',      type: :boolean },
-      { keys: %i[force f], flag: '--force', type: :boolean },
-      { keys: [:push_option], flag: '--push-option', type: :repeatable_valued_space },
-      { keys: [:all],         type: :validate_only }, # For validation purposes
-      { keys: [:tags],        type: :validate_only }  # From the `push` method's logic
-    ].freeze
+    PUSH_ALLOWED_OPTS = %i[mirror delete force f push_option all tags].freeze
 
+    # Push refs to a remote repository
+    #
+    # @overload push(options = {})
+    #   Push using the current branch's default remote and push configuration
+    #
+    #   @param options [Hash] push options
+    #
+    #   @option options [Boolean] :all (nil) Push all branches
+    #
+    #   @option options [Boolean] :mirror (nil) Push all refs
+    #
+    #   @option options [Boolean] :tags (nil) Push all tags
+    #
+    #   @option options [Boolean] :force (nil) Force updates
+    #
+    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #
+    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #
+    #   @return [String] the stdout from the final `git push` invocation
+    #
+    #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @overload push(remote, options = {})
+    #   Push to the given remote using the current branch's default push configuration
+    #
+    #   @param remote [String] the remote name or URL to push to
+    #
+    #   @param options [Hash] push options
+    #
+    #   @option options [Boolean] :all (nil) Push all branches
+    #
+    #   @option options [Boolean] :mirror (nil) Push all refs
+    #
+    #   @option options [Boolean] :tags (nil) Push all tags
+    #
+    #   @option options [Boolean] :force (nil) Force updates
+    #
+    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #
+    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #
+    #   @return [String] the stdout from the final `git push` invocation
+    #
+    #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @overload push(remote, branch, options = {})
+    #   Push a branch or refspec to the given remote
+    #
+    #   @param remote [String] the remote name or URL to push to
+    #
+    #   @param branch [String] the branch name or refspec to push
+    #
+    #   @param options [Hash] push options
+    #
+    #   @option options [Boolean] :all (nil) Push all branches
+    #
+    #   @option options [Boolean] :mirror (nil) Push all refs
+    #
+    #   @option options [Boolean] :tags (nil) Push all tags
+    #
+    #   @option options [Boolean] :force (nil) Force updates
+    #
+    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #
+    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #
+    #   @return [String] the stdout from the final `git push` invocation
+    #
+    #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    #   @raise [ArgumentError] if `remote` is nil
+    #
+    # @overload push(remote, branch, tags)
+    #   Backward-compatible shorthand for `push(remote, branch, tags: tags)`
+    #
+    #   @param remote [String] the remote name or URL to push to
+    #
+    #   @param branch [String] the branch name or refspec to push
+    #
+    #   @param tags [Boolean] whether to push all tags
+    #
+    #   @return [String] the stdout from the final `git push` invocation
+    #
+    #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    #   @raise [ArgumentError] if `remote` is nil
+    #
     def push(remote = nil, branch = nil, opts = nil)
       remote, branch, opts = normalize_push_args(remote, branch, opts)
-      ArgsBuilder.validate!(opts, PUSH_OPTION_MAP)
+      validate_push_args!(remote, branch, opts)
 
-      raise ArgumentError, 'remote is required if branch is specified' if !remote && branch
+      first_result = push_refs(remote, branch, opts)
+      return first_result.stdout unless push_tags_separately?(opts)
 
-      args = build_push_args(remote, branch, opts)
-
-      if opts[:mirror]
-        command_capturing('push', *args)
-      else
-        command_capturing('push', *args)
-        command_capturing('push', '--tags', *(args - [branch].compact)) if opts[:tags]
-      end
+      push_tags(remote, opts).stdout
     end
 
     PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
@@ -2512,15 +2588,22 @@ module Git
       [remote, branch, opts]
     end
 
-    def build_push_args(remote, branch, opts)
-      # Build the simple flags using the ArgsBuilder
-      args = build_args(opts, PUSH_OPTION_MAP)
+    def validate_push_args!(remote, branch, opts)
+      assert_valid_opts(opts, PUSH_ALLOWED_OPTS)
+      raise ArgumentError, 'remote is required if branch is specified' if !remote && branch
+    end
 
-      # Manually handle the flag with external dependencies and positional args
-      args << '--all' if opts[:all] && remote
-      args << remote if remote
-      args << branch if branch
-      args
+    def push_refs(remote, branch, opts)
+      positionals = [remote, branch].compact
+      Git::Commands::Push.new(self).call(*positionals, **opts.except(:tags))
+    end
+
+    def push_tags_separately?(opts)
+      opts[:tags] && !opts[:mirror]
+    end
+
+    def push_tags(remote, opts)
+      Git::Commands::Push.new(self).call(*[remote].compact, **opts)
     end
 
     def temp_file_name

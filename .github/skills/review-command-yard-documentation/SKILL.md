@@ -229,6 +229,18 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
   type and option key must not end with a period. This is easy to miss when
   transcribing from the git man page, which ends flag descriptions with periods.
   Run `bundle exec rake yard` to catch this — YARD treats any failure as fatal.
+- **Raw blank line inside a doc comment block** — a raw blank line (an empty line
+  with no leading `#`) silently terminates the YARD block. Any comment lines after
+  the raw blank line are dropped from generated docs. Replace every raw blank line
+  inside a block with a blank comment line (`#`). This is easy to miss in
+  continuation paragraphs and alias notes. Correct form:
+
+  ```ruby
+  # @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+  #
+  #   Alias: :"4"
+  ```
+
 - **Multi-sentence short description without a blank comment line** — when an
   `@option` needs more than one sentence, the first sentence is the short description
   and all additional detail must go in a continuation paragraph separated by a blank
