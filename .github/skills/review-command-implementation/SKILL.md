@@ -14,6 +14,7 @@ contains no duplicated execution behavior.
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
+- [Version-Aware Review Scope](#version-aware-review-scope)
 - [Architecture Contract (Current)](#architecture-contract-current)
 - [What to Check](#what-to-check)
   - [1. Class shape](#1-class-shape)
@@ -59,6 +60,22 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 ## Input
 
 Required: one or more command source files from `lib/git/commands/`.
+
+## Version-Aware Review Scope
+
+Before judging whether a command implementation or its DSL surface is correct,
+determine the repository's minimum supported Git version from project metadata.
+In this repository, `git.gemspec` declares `git 2.28.0 or greater`.
+
+For compatibility-sensitive conclusions, use sources in this order:
+
+1. Version-matched upstream documentation for the minimum supported Git version
+2. Version-matched upstream source when parser behavior is ambiguous in docs
+3. Local `git <command> -h` output only as a supplemental check for the installed Git
+
+Do not fail or require implementation changes solely because the locally
+installed Git advertises newer options or flag forms that are not confirmed for
+the minimum supported version.
 
 ## Architecture Contract (Current)
 

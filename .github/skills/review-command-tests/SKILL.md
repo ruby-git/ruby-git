@@ -13,6 +13,7 @@ conventions.
 - [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
+- [Version-Aware Test Scope](#version-aware-test-scope)
 - [Unit tests](#unit-tests)
   - [Cover these cases](#cover-these-cases)
   - [Expectations for command invocation](#expectations-for-command-invocation)
@@ -59,6 +60,22 @@ it, MUST-level structural, naming, stubbing, and coverage checks will not be app
   structure, phased rollout gates, and internal compatibility contracts
 - [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
   — documentation completeness for command classes
+
+## Version-Aware Test Scope
+
+Before deciding that test coverage is missing for an option, alias, or flag
+form, determine the repository's minimum supported Git version from project
+metadata. In this repository, `git.gemspec` declares `git 2.28.0 or greater`.
+
+Coverage expectations for CLI forms must be based on the minimum supported Git
+version, not only on the locally installed Git. Use version-matched upstream
+documentation first, version-matched upstream source when needed, and local
+`git <command> -h` output only as a supplemental check.
+
+Do not require tests for newer-version-only forms that are not supported by the
+minimum supported Git version. Symmetrically, if the local Git omits or
+abbreviates a form that is supported in the minimum version, tests should still
+cover the minimum-version behavior.
 
 ## Unit tests
 

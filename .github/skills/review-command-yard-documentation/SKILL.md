@@ -15,6 +15,7 @@ the `Git::Commands::Base` pattern.
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
+- [Version-Aware Documentation Scope](#version-aware-documentation-scope)
 - [Required documentation model](#required-documentation-model)
   - [No `def call` override (simple commands)](#no-def-call-override-simple-commands)
   - [Explicit `def call` override](#explicit-def-call-override)
@@ -72,6 +73,21 @@ One or more command files from `lib/git/commands/` containing:
 - optional `allow_exit_status`
 - either a `# @!method call(*, **)` YARD directive (when no `def call` override) or
   YARD doc comments directly above an explicit `def call` override
+
+## Version-Aware Documentation Scope
+
+Before deciding whether YARD documentation is accurate or incomplete, determine
+the repository's minimum supported Git version from project metadata. In this
+repository, `git.gemspec` declares `git 2.28.0 or greater`.
+
+Option names, aliases, negated forms, and accepted values documented in YARD
+must be validated against the minimum supported Git version first. Use
+version-matched upstream documentation as the primary source, inspect
+version-matched upstream source when exact parser behavior is ambiguous, and use
+local `git <command> -h` output only as a supplemental check.
+
+Do not flag docs as missing solely because the locally installed Git advertises
+newer forms that are unavailable in the minimum supported version.
 
 ## Required documentation model
 

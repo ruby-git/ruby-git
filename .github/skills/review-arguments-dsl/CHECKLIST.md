@@ -13,10 +13,11 @@
 | pathspec-style operands (keyword arg) | `end_of_options` + `value_option ... as_operand: true` | `end_of_options; value_option :pathspec, as_operand: true, repeatable: true` — caller passes `pathspec: ['f1', 'f2']` |
 | pathspec-style operands (positional arg) | `end_of_options` + `operand ...` | `end_of_options; operand :pathspec, repeatable: true` — caller passes positionals `cmd.call('f1', 'f2')` |
 
-### Recognizing `flag_or_value_option` from the git man page
+### Recognizing `flag_or_value_option` from version-matched git docs
 
-The git-scm.com man page uses **`[=<value>]`** (square-bracketed `=<value>`) to mark
-an option's value as optional. That notation maps directly to `flag_or_value_option`:
+Version-matched git documentation uses **`[=<value>]`** (square-bracketed
+`=<value>`) to mark an option's value as optional. That notation maps directly
+to `flag_or_value_option`:
 
 | Man-page signature | DSL method |
 | --- | --- |
@@ -33,7 +34,7 @@ supplied.
 ### Choosing the correct pathspec form
 
 The two pathspec-style rows above look similar but represent meaningfully different
-binding strategies. The choice is determined by the git-scm.com SYNOPSIS.
+binding strategies. The choice is determined by the version-matched git SYNOPSIS.
 
 **`--` present in the git SYNOPSIS → `value_option … as_operand: true` form**
 
@@ -142,7 +143,8 @@ truth and can be verified at a glance without auditing the `as:` string.
 
 ### Short-flag alias completeness
 
-Every option that the git man page documents with a short form must have an alias
+Every option that the version-matched git documentation documents with a short
+form must have an alias
 with the long name first:
 
 ```ruby
@@ -151,40 +153,43 @@ flag_option %i[extended_regexp E]      # -E / --extended-regexp
 flag_option %i[fixed_strings F]        # -F / --fixed-strings
 ```
 
-When reviewing, scan the man page's option headings for lines of the form `-X` /
-`--long-name` and verify each has a corresponding `%i[long_name X]` alias in the DSL.
+When reviewing, scan the version-matched docs' option headings for lines of the
+form `-X` / `--long-name` and verify each has a corresponding `%i[long_name X]`
+alias in the DSL.
 Missing short aliases are a completeness defect, not just a convenience omission —
 callers who pass the short key `:E` will get an `ArgumentError` rather than the
 expected flag.
 
 ### Spurious short-flag aliases
 
-**Never invent a short-flag alias that the man page does not document.** Check the
-actual man page (or `man git-<subcommand>`) before adding any alias entry. The
-canonical audit is: does the git man page show `-X, --long-name` on the same option
-heading? If not, do not add `:X` to the alias list.
+**Never invent a short-flag alias that the version-matched docs do not
+document.** Check the version-matched documentation (and tagged upstream source
+when needed) before adding any alias entry. The canonical audit is: do the
+minimum-version sources show `-X, --long-name` on the same option heading? If
+not, do not add `:X` to the alias list.
 
 A spurious alias looks correct to a reader but generates an unknown flag when git
 rejects it:
 
 ```ruby
-# ❌ Wrong — git push has no -t flag; man page shows --tags only
+# ❌ Wrong — git push has no -t flag; version-matched docs show --tags only
 flag_option %i[tags t]   # emits -t → git: error: unknown switch 't'
 
 # ✅ Correct
 flag_option :tags        # emits --tags only
 ```
 
-Flag any alias whose short character cannot be found in the man page's option
+Flag any alias whose short character cannot be found in the version-matched
+docs' option
 headings as an error (not just a style issue).
 
 ## 3. Correct ordering
 
-Mirror the order options appear in the git-scm.com SYNOPSIS for the command. This
-keeps the DSL self-documenting and makes it easy to verify completeness against the
-man page.
+Mirror the order options appear in the version-matched git SYNOPSIS for the
+command. This keeps the DSL self-documenting and makes it easy to verify
+completeness against the docs.
 
-Within a group where the man page does not impose an order (e.g., a block of short
+Within a group where the docs do not impose an order (e.g., a block of short
 flags), prefer:
 
 1. literals
@@ -195,7 +200,8 @@ flags), prefer:
 
 ## 4. Correct modifiers
 
-Derive `required:` and `repeatable:` directly from the git-scm.com SYNOPSIS notation
+Derive `required:` and `repeatable:` directly from the version-matched git
+SYNOPSIS notation
 for operands:
 
 | SYNOPSIS notation | `required:` | `repeatable:` |
