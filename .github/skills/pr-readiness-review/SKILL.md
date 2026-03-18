@@ -90,7 +90,10 @@ Execute and report results for:
 
 ## 4. Verify Against Git Documentation
 
-- [ ] Read https://git-scm.com/docs/git-[command] for the implemented command
+- [ ] Determine the repository's minimum supported Git version from project metadata
+- [ ] Read version-matched upstream documentation for the implemented command
+- [ ] Inspect version-matched upstream source when docs are ambiguous about exact option forms
+- [ ] Use local `git <command> -h` output only as a supplemental check for the installed Git
 - [ ] Confirm all documented options are considered
 - [ ] All edge cases from git documentation are tested
 - [ ] Error handling matches git's actual behavior

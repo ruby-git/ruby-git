@@ -14,6 +14,7 @@ methods and modifiers.
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
+- [Version-Aware Verification Sources](#version-aware-verification-sources)
 - [Architecture Context (Base Pattern)](#architecture-context-base-pattern)
 - [How Arguments Work](#how-arguments-work)
 - [What to Check](#what-to-check)
@@ -23,7 +24,7 @@ methods and modifiers.
 ## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with one or more
-command source files and the relevant git man page or documentation. Examples:
+command source files and the relevant version-matched git documentation. Examples:
 
 ```text
 Using the Review Arguments DSL skill, review
@@ -34,8 +35,8 @@ lib/git/commands/diff/numstat.rb against `git diff --numstat` docs.
 Review Arguments DSL: lib/git/commands/stash/push.rb
 ```
 
-The invocation needs the command file(s) to review. Providing the git man page
-or CLI documentation helps verify flag accuracy.
+The invocation needs the command file(s) to review. Providing version-matched
+git documentation helps verify flag accuracy.
 
 ## Related skills
 
@@ -49,7 +50,34 @@ or CLI documentation helps verify flag accuracy.
 Required:
 1. One or more command source files containing a `class < Git::Commands::Base` and an
    `arguments do` block
-2. The git man page or documentation for the subcommand
+2. Version-matched git documentation for the subcommand
+
+## Version-Aware Verification Sources
+
+Before auditing any DSL entry, determine the project's minimum supported Git
+version from the repository metadata. In this repository, that version is
+declared in `git.gemspec` (`git 2.28.0 or greater`).
+
+Use sources in this order:
+
+1. **Version-matched upstream documentation** for the minimum supported Git
+  version. Prefer the tagged upstream documentation or versioned man page for
+  that exact release.
+2. **Version-matched upstream source** for the same release when the docs are
+  ambiguous or abbreviated and exact parser behavior matters (for example:
+  long-option spelling, short aliases, negation support, optional values, or
+  `--option[=<value>]` forms).
+3. **Local `git <command> -h` output** only as a supplemental check for the
+  installed Git version on the current machine.
+
+Do **not** rely exclusively on local help output. The installed Git may be
+newer than the repository's minimum supported version and can advertise options
+or flag forms that are not safe to model in the DSL for older supported Git
+releases.
+
+When local help disagrees with the minimum-supported-version sources, prefer the
+minimum-supported-version behavior for the DSL and call out the newer-version
+difference explicitly in the review output.
 
 ## Architecture Context (Base Pattern)
 
@@ -84,7 +112,8 @@ Key behaviors:
 - **`skip_cli` operand behavior** — `operand ..., skip_cli: true` binds and validates
   like any other operand and remains accessible on `Bound`, but is intentionally
   excluded from argv emission
-- **Operand naming** — use the parameter name from the git-scm.com man page, in
+- **Operand naming** — use the parameter name from the version-matched git
+  documentation, in
   singular form (e.g., `<file>` → `:file`, `<tag>` → `:tag`). The `repeatable: true`
   modifier already communicates that multiple values are accepted; pluralising the
   name is unnecessary and diverges from the docs.

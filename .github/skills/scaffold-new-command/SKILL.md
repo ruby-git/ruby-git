@@ -372,13 +372,34 @@ Key points:
 - **Extract helpers** like `run_batch` to stay within Rubocop `Metrics/MethodLength`
   and `Metrics/AbcSize` thresholds. Aim to keep `call` under ~10 lines.
 
-## Options completeness — consult the man page first
+## Options completeness — consult version-matched docs first
 
-**Before writing any DSL entries**, fetch the git-scm.com man page for the
-subcommand and enumerate every option it documents:
+**Before writing any DSL entries**, determine the project's minimum supported
+Git version from the repository metadata, then fetch documentation for that
+exact version of the subcommand and enumerate every option it documents.
+
+For this repository, the minimum supported Git version is declared in
+`git.gemspec` (`git 2.28.0 or greater`).
+
+Use sources in this order:
+
+1. **Version-matched upstream documentation** for the minimum supported Git
+  version.
+2. **Version-matched upstream source** for that same release when exact parser
+  behavior is ambiguous in the docs.
+3. **Local `git <command> -h` output** only as a supplemental check for the
+  installed Git version.
+
+Do **not** scaffold from local help output alone. The installed Git may be
+newer than the minimum supported version and may expose flags, negated forms,
+or aliases that are unavailable in older supported releases.
+
+Useful documentation URLs often look like:
 
 ```text
 https://git-scm.com/docs/git-<subcommand>
+https://git-scm.com/docs/git-<subcommand>/<version>
+https://raw.githubusercontent.com/git/git/v<version>/Documentation/git-<subcommand>.txt
 ```
 
 For each option, make one of two decisions:
@@ -389,27 +410,31 @@ For each option, make one of two decisions:
 | **Exclude (execution-model conflict)** | Requires TTY input, opens an external editor, or otherwise makes the command incompatible with non-interactive subprocess execution | Omit — see "Execution-model conflicts are intentionally omitted" below |
 
 Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
-filtering`, `# Commit ordering`). Follow the section groupings from the man page —
+filtering`, `# Commit ordering`). Follow the section groupings from the
+version-matched documentation —
 this makes it easy for a reviewer to cross-check against the docs.
 
-**Pairs and opposites:** when the man page documents `--foo` / `--no-foo` as
+**Pairs and opposites:** when the version-matched docs document `--foo` /
+`--no-foo` as
 explicit flags, model them as a single `flag_option :foo, negatable: true` rather
 than two separate entries. This prevents contradictory combinations and makes the
 three-state semantics (`true` / `false` / `nil`) explicit.
 
-**Short-flag aliases — cross-check the man page:** before adding any short-flag
+**Short-flag aliases — cross-check the version-matched docs/source:** before adding any short-flag
 alias (e.g. `%i[dry_run n]`), verify the alias character appears on the same option
-heading in the man page (`-n, --dry-run`). Do **not** invent an alias that the man
-page does not document — it will generate an unknown flag that git rejects.
-Symmetrically, every option the man page documents with a short form **must** have an
+heading in the documentation or parser for the minimum supported version
+(`-n, --dry-run`). Do **not** invent an alias that the minimum-version sources do
+not document — it will generate an unknown flag that older supported git may reject.
+Symmetrically, every option the version-matched docs document with a short form
+**must** have an
 alias in the DSL (long name first: `%i[dry_run n]`).
 
-**`inline: true` for `=<value>` options:** when the man page shows `--option=<value>`
+**`inline: true` for `=<value>` options:** when the version-matched docs show `--option=<value>`
 (with an `=`), the DSL entry must include `inline: true` regardless of whether the
 DSL method is `value_option` or `flag_or_value_option`. Without it, the value is
 emitted as a separate token (`--option value`) instead of the expected inline form
 (`--option=value`). Check every `value_option` and `flag_or_value_option` entry
-against the man page signature.
+against the minimum-version signature.
 
 **Constraint declarations are generally not used in command classes.** Do not add
 `conflicts`, `requires`, `requires_one_of`, `requires_exactly_one_of`,
@@ -430,8 +455,10 @@ See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
 
 This step is required. A command class that only exposes the options that happen
 to be used today in `Git::Lib` is incomplete — callers of the future API should
-not need to re-open the man page just because the scaffold only covered current
-usage.
+not need to re-open the docs just because the scaffold only covered current
+usage. If local help output shows more options than the minimum-version sources,
+do not scaffold those newer forms into the DSL unless the repository's minimum
+supported Git version has also been raised.
 
 ## Execution-model conflicts are intentionally omitted
 

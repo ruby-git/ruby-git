@@ -13,6 +13,7 @@ documentation, testing, and exit-status conventions under the `Base` architectur
 - [How to use this skill](#how-to-use-this-skill)
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
+- [Version-Aware Comparison Scope](#version-aware-comparison-scope)
 - [What to Check](#what-to-check)
   - [1. Class structure consistency](#1-class-structure-consistency)
   - [2. Arguments DSL consistency](#2-arguments-dsl-consistency)
@@ -54,6 +55,19 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
 - [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+
+## Version-Aware Comparison Scope
+
+Before flagging siblings as inconsistent for option names, aliases, negated
+forms, or documented values, determine the repository's minimum supported Git
+version from project metadata. In this repository, `git.gemspec` declares
+`git 2.28.0 or greater`.
+
+Consistency judgments for CLI surface area must be based on the minimum
+supported Git version, not only on the locally installed Git. Use
+version-matched upstream documentation first, version-matched upstream source
+when exact parser behavior is ambiguous, and local `git <command> -h` output
+only as a supplemental check.
 
 ## What to Check
 
