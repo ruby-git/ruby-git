@@ -60,7 +60,7 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_remote_set_branches_command
-    expected_command_line = ['remote', 'set-branches', '--add', 'origin', '*', {}]
+    expected_command_line = ['remote', 'set-branches', '--add', '--', 'origin', '*', {}]
 
     assert_command_line_eq(expected_command_line) do |git|
       git.remote_set_branches('origin', '*', add: true)
@@ -68,7 +68,7 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_remote_set_branches_command_without_add
-    expected_command_line = ['remote', 'set-branches', 'origin', 'feature', {}]
+    expected_command_line = ['remote', 'set-branches', '--', 'origin', 'feature', {}]
 
     assert_command_line_eq(expected_command_line) do |git|
       git.remote_set_branches('origin', 'feature')
@@ -76,7 +76,7 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_remote_set_branches_command_with_add_false
-    expected_command_line = ['remote', 'set-branches', 'origin', 'feature', {}]
+    expected_command_line = ['remote', 'set-branches', '--', 'origin', 'feature', {}]
 
     assert_command_line_eq(expected_command_line) do |git|
       git.remote_set_branches('origin', 'feature', add: false)
@@ -84,7 +84,7 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_remote_set_branches_command_with_multiple_branches
-    expected_command_line = ['remote', 'set-branches', 'origin', 'feature', 'release/*', {}]
+    expected_command_line = ['remote', 'set-branches', '--', 'origin', 'feature', 'release/*', {}]
 
     assert_command_line_eq(expected_command_line) do |git|
       git.remote_set_branches('origin', 'feature', 'release/*')
