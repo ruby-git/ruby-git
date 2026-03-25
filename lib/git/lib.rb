@@ -23,6 +23,7 @@ require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
 require_relative 'commands/ls_files'
+require_relative 'commands/ls_remote'
 require_relative 'commands/ls_tree'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
@@ -222,7 +223,7 @@ module Git
     # @return [String] the name of the default branch
     #
     def repository_default_branch(repository)
-      output = command_capturing('ls-remote', '--symref', '--', repository, 'HEAD').stdout
+      output = Git::Commands::LsRemote.new(self).call(repository, 'HEAD', symref: true).stdout
 
       match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
       return match_data[:default_branch] if match_data
@@ -1111,17 +1112,9 @@ module Git
       end
     end
 
-    LS_REMOTE_OPTION_MAP = [
-      { keys: [:refs], flag: '--refs', type: :boolean }
-    ].freeze
-
     def ls_remote(location = nil, opts = {})
-      ArgsBuilder.validate!(opts, LS_REMOTE_OPTION_MAP)
-
-      flags = build_args(opts, LS_REMOTE_OPTION_MAP)
-      positional_arg = location || '.'
-
-      output_lines = command_capturing('ls-remote', *flags, positional_arg).stdout.split("\n")
+      repository = location || '.'
+      output_lines = Git::Commands::LsRemote.new(self).call(repository, **opts).stdout.split("\n")
       parse_ls_remote_output(output_lines)
     end
 
