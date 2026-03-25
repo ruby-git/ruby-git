@@ -198,6 +198,75 @@ flags), prefer:
 4. value options
 5. operands (positional args / pathspecs after `--`)
 
+### `end_of_options` placement
+
+Determine placement based on whether the version-matched SYNOPSIS explicitly shows `--`:
+
+#### Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS
+
+When the version-matched SYNOPSIS explicitly shows `--` between operand groups
+(e.g., `[<tree-ish>] [--] [<pathspec>...]`), place `end_of_options` in the same
+position the SYNOPSIS shows it — after the pre-`--` operands, before the post-`--`
+group. See [Choosing the correct pathspec form](#choosing-the-correct-pathspec-form)
+in section 1 for how to model the post-`--` group (`value_option ... as_operand: true`).
+
+**Do not apply Rule 2** when Rule 1 applies.
+
+```ruby
+# git diff [<tree-ish>] [--] [<pathspec>...]
+operand :tree_ish                                             # BEFORE end_of_options
+end_of_options                                                # mirrors SYNOPSIS position
+value_option :pathspec, as_operand: true, repeatable: true    # AFTER end_of_options
+```
+
+#### Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation
+
+**Insert `end_of_options` immediately before the first operand when any
+`flag_option`, `value_option`, or `flag_or_value_option` appears earlier in the
+same `arguments do` block.** This prevents operand values that start with `-`
+from being misinterpreted as flags.
+
+This applies even when the operand is unlikely to start with `-` in practice.
+Defending against pathological inputs is the correct default.
+
+`literal` entries are **never** the trigger for Rule 2 — regardless of whether their
+value is option-style (e.g. `literal '--delete'`) or a plain subcommand word
+(e.g. `literal 'remove'`). Only the three DSL option-flag methods listed above
+matter.
+
+```ruby
+# ✅ Correct — end_of_options guards the operand
+arguments do
+  literal 'remote'
+  literal 'prune'
+  flag_option %i[dry_run n]   # ← flag_option triggers Rule 2
+
+  end_of_options
+
+  operand :name, repeatable: true, required: true
+end
+
+# ❌ Missing end_of_options — flag as an error
+arguments do
+  literal 'remote'
+  literal 'prune'
+  flag_option %i[dry_run n]
+  operand :name, repeatable: true, required: true  # ← end_of_options required here
+end
+
+# ✅ Not needed — only literal entries precede the operand; no DSL option-flag methods
+arguments do
+  literal 'remote'
+  literal 'remove'
+  operand :name, required: true  # no flag_option/value_option/flag_or_value_option → not required
+end
+```
+
+`end_of_options` is always safe to add even when not strictly required — it is harmless
+when no operand can plausibly start with `-`. Omit it by convention when neither rule
+applies: it adds no defensive value and produces unnecessarily verbose command lines
+(e.g. `git remote remove -- origin` instead of `git remote remove origin`).
+
 ## 4. Correct modifiers
 
 Derive `required:` and `repeatable:` directly from the version-matched git
@@ -244,7 +313,7 @@ correctly placed on their respective DSL methods:
 | `negatable:` | `flag_option`, `flag_or_value_option` |
 | `allow_empty:` | `value_option` |
 | `as_operand:` | `value_option` only — see pathspec table above |
-| `end_of_options` | structural DSL method — always declare before pathspec operands/value_options |
+| `end_of_options` | structural DSL method — required before the first `operand` (or `value_option ... as_operand: true`) whenever any option flags appear earlier in the block; pathspec operands always require it; see section 3 for the full placement rule |
 
 ## 5. Completeness
 
