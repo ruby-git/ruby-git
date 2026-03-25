@@ -53,6 +53,8 @@ needed.
 
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — RSpec rules for test structure, naming,
   setup patterns, stubbing, and coverage; apply when writing tests during TDD cycles
+- [TDD Refactor Step](../tdd-refactor-step/SKILL.md) — detailed guidance for the
+  REFACTOR step: code smells, techniques, test cleanup, and rubocop integration
 - [Test Debugging](../test-debugging/SKILL.md) — focused diagnosis for failing or
   flaky tests
 - [CI/CD Troubleshooting](../ci-cd-troubleshooting/SKILL.md) — workflow for CI
@@ -236,6 +238,10 @@ behavior, ensuring the codebase remains clean and maintainable.
 **You must consider refactoring before starting the next task.** Remove duplication,
 improve variable names, and apply design patterns. Skip this step only if the code is
 already clean and simple—avoid over-engineering.
+
+For detailed guidance on code smells, refactoring techniques, test cleanup, and
+rubocop integration, see the
+[TDD Refactor Step](../tdd-refactor-step/SKILL.md) skill.
 
 - **Generalize the Implementation:** Ensure the code solves the general case, not
   just the specific test case. Replace hardcoded values used to pass the test with
