@@ -22,17 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (31/54 checklist items done, 23 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (32/54 checklist items done, 22 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches`** → `Git::Commands::Remote`
+**Migrate `ls_remote`** → `Git::Commands::LsRemote`
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def push`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def ls_remote`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -950,7 +950,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `fetch` → `Git::Commands::Fetch` — `git fetch`
 - [x] `pull` → `Git::Commands::Pull` — `git pull`
 - [x] `push` → `Git::Commands::Push` — `git push`
-- [ ] `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches` →
+- [x] `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches` →
   `Git::Commands::Remote` — `git remote`
 - [ ] `ls_remote` → `Git::Commands::LsRemote` — `git ls-remote`
 
