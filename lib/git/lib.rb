@@ -30,6 +30,19 @@ require_relative 'commands/mv'
 require_relative 'commands/pull'
 require_relative 'commands/push'
 require_relative 'commands/reset'
+require_relative 'commands/remote/add'
+require_relative 'commands/remote/get_url'
+require_relative 'commands/remote/list'
+require_relative 'commands/remote/prune'
+require_relative 'commands/remote/remove'
+require_relative 'commands/remote/rename'
+require_relative 'commands/remote/set_branches'
+require_relative 'commands/remote/set_head'
+require_relative 'commands/remote/set_url'
+require_relative 'commands/remote/set_url_add'
+require_relative 'commands/remote/set_url_delete'
+require_relative 'commands/remote/show'
+require_relative 'commands/remote/update'
 require_relative 'commands/rm'
 require_relative 'commands/show'
 require_relative 'commands/tag/create'
@@ -1561,49 +1574,27 @@ module Git
       end
     end
 
-    REMOTE_ADD_OPTION_MAP = [
-      { keys: %i[with_fetch fetch], flag: '-f', type: :boolean },
-      { keys: [:track], flag: '-t', type: :valued_space }
-    ].freeze
-
     def remote_add(name, url, opts = {})
-      ArgsBuilder.validate!(opts, REMOTE_ADD_OPTION_MAP)
+      translated_opts = opts.dup
+      translated_opts[:fetch] = translated_opts.delete(:with_fetch) if translated_opts.key?(:with_fetch)
 
-      flags = build_args(opts, REMOTE_ADD_OPTION_MAP)
-      positional_args = ['--', name, url]
-      command_args = ['add'] + flags + positional_args
-
-      command_capturing('remote', *command_args)
+      Git::Commands::Remote::Add.new(self).call(name, url, **translated_opts)
     end
-
-    REMOTE_SET_BRANCHES_OPTION_MAP = [
-      { keys: [:add], flag: '--add', type: :boolean }
-    ].freeze
 
     def remote_set_branches(name, branches, opts = {})
-      ArgsBuilder.validate!(opts, REMOTE_SET_BRANCHES_OPTION_MAP)
-
-      flags = build_args(opts, REMOTE_SET_BRANCHES_OPTION_MAP)
-      branch_args = Array(branches).flatten
-      command_args = ['set-branches'] + flags + [name] + branch_args
-
-      command_capturing('remote', *command_args)
+      Git::Commands::Remote::SetBranches.new(self).call(name, *Array(branches).flatten, **opts)
     end
 
-    def remote_set_url(name, url)
-      arr_opts = ['set-url']
-      arr_opts << name
-      arr_opts << url
-
-      command_capturing('remote', *arr_opts)
+    def remote_set_url(name, url, opts = {})
+      Git::Commands::Remote::SetUrl.new(self).call(name, url, **opts)
     end
 
     def remote_remove(name)
-      command_capturing('remote', 'rm', name)
+      Git::Commands::Remote::Remove.new(self).call(name)
     end
 
     def remotes
-      command_capturing('remote').stdout.split("\n")
+      Git::Commands::Remote::List.new(self).call.stdout.split("\n")
     end
 
     # List all tags in the repository
