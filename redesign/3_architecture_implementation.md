@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (34/54 checklist items done, 20 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (35/54 checklist items done, 19 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `unmerged`** → use existing `Git::Commands::Diff` class
+**Migrate `diff_as_hash`** → use existing `Git::Commands::Diff` class (or dedicated subcommand classes for `git diff-files` / `git diff-index`)
 
 #### Workflow
 
@@ -897,6 +897,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `pull` | `Git::Commands::Pull` | `spec/unit/git/commands/pull_spec.rb` | `git pull` |
 | `push` | `Git::Commands::Push` | `spec/unit/git/commands/push_spec.rb` | `git push` |
 | `ls_remote` / `repository_default_branch` | `Git::Commands::LsRemote` | `spec/unit/git/commands/ls_remote_spec.rb` | `git ls-remote` |
+| `unmerged` | `Git::Commands::Diff` (existing) | — | `git diff --cached` |
 
 #### ⏳ Commands To Migrate
 
@@ -933,7 +934,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
 - [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
-- [ ] `unmerged` → (use existing `Git::Commands::Diff` class) — `git diff`
+- [x] `unmerged` → (use existing `Git::Commands::Diff` class) — `git diff`
   (one unmigrated call site in `Git::Lib#unmerged`; command class already exists)
 - [ ] `diff_as_hash` (private) → (use existing `Git::Commands::Diff` class or dedicated
   subcommand classes) — `git diff-files` / `git diff-index`
