@@ -22,13 +22,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (35/54 checklist items done, 19 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (36/54 checklist items done, 18 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `diff_as_hash`** → use existing `Git::Commands::Diff` class (or dedicated subcommand classes for `git diff-files` / `git diff-index`)
+**Migrate `status`** → `Git::Commands::Status` — `git status`
 
 #### Workflow
 
@@ -936,9 +936,8 @@ order: Basic Snapshotting → Branching & Merging → etc.
   `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
 - [x] `unmerged` → (use existing `Git::Commands::Diff` class) — `git diff`
   (one unmigrated call site in `Git::Lib#unmerged`; command class already exists)
-- [ ] `diff_as_hash` (private) → (use existing `Git::Commands::Diff` class or dedicated
-  subcommand classes) — `git diff-files` / `git diff-index`
-  (one unmigrated call site in `Git::Lib#diff_as_hash`; command class already exists)
+- [x] `diff_as_hash` (private) → `Git::Commands::DiffFiles` / `Git::Commands::DiffIndex`
+  — `git diff-files` / `git diff-index`
 - [ ] `status` → `Git::Commands::Status` — `git status`
 - [ ] `tag_sha` (uses `show-ref` internally) → `Git::Commands::ShowRef` — `git show-ref`
 - [x] `show` → `Git::Commands::Show` — `git show`
