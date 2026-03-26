@@ -1546,12 +1546,21 @@ module Git
       result.stdout.lines.map(&:strip).reject(&:empty?)
     end
 
+    # List paths that remain unmerged after a failed or partial merge
+    #
+    # Delegates to {Git::Commands::Diff}.
+    #
+    # @return [Array<String>] paths of files with unresolved merge conflicts
+    #
+    # @raise [Git::FailedError] if git returns exit code >= 2
+    #
+    # @see Git::Commands::Diff
+    #
     def unmerged
-      unmerged = []
-      command_capturing('diff', '--cached').stdout.split("\n").each do |line|
-        unmerged << ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
+      result = Git::Commands::Diff.new(self).call(cached: true)
+      result.stdout.split("\n").filter_map do |line|
+        ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
       end
-      unmerged
     end
 
     def conflicts # :yields: file, your, their
