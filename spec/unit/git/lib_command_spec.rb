@@ -928,4 +928,139 @@ RSpec.describe Git::Lib do
       )
     end
   end
+
+  describe '#diff_files' do
+    let(:diff_files_command) { instance_double(Git::Commands::DiffFiles) }
+
+    # Raw line format: ":mode_src mode_dest sha_src sha_dest type\tpath"
+    let(:raw_diff_output) do
+      ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+        ":000000 100644 0000000 abc1234 A\tREADME.md\n"
+    end
+
+    before do
+      allow(Git::Commands::DiffFiles).to receive(:new).with(lib).and_return(diff_files_command)
+      allow(capturing_command_line).to receive(:run)
+        .with('status', anything)
+        .and_return(command_result(''))
+    end
+
+    it 'calls command_capturing("status") to refresh the index before diffing' do
+      allow(diff_files_command).to receive(:call).and_return(command_result(''))
+
+      lib.diff_files
+
+      expect(capturing_command_line).to have_received(:run)
+        .with('status', anything)
+    end
+
+    it 'delegates to Git::Commands::DiffFiles#call with no arguments' do
+      allow(diff_files_command).to receive(:call).and_return(command_result(''))
+
+      lib.diff_files
+
+      expect(diff_files_command).to have_received(:call).with(no_args)
+    end
+
+    it 'returns a Hash keyed by file path' do
+      allow(diff_files_command).to receive(:call).and_return(command_result(raw_diff_output))
+
+      result = lib.diff_files
+
+      expect(result).to be_a(Hash)
+      expect(result.keys).to contain_exactly('lib/foo.rb', 'README.md')
+    end
+
+    it 'populates all expected keys for each file' do
+      allow(diff_files_command).to receive(:call).and_return(command_result(raw_diff_output))
+
+      result = lib.diff_files
+
+      expect(result['lib/foo.rb']).to eq(
+        mode_index: '100644', mode_repo: '100644',
+        path: 'lib/foo.rb', sha_repo: 'abc1234', sha_index: 'def5678',
+        type: 'M'
+      )
+      expect(result['README.md']).to eq(
+        mode_index: '100644', mode_repo: '000000',
+        path: 'README.md', sha_repo: '0000000', sha_index: 'abc1234',
+        type: 'A'
+      )
+    end
+
+    it 'returns an empty Hash when there are no changes' do
+      allow(diff_files_command).to receive(:call).and_return(command_result(''))
+
+      result = lib.diff_files
+
+      expect(result).to eq({})
+    end
+  end
+
+  describe '#diff_index' do
+    let(:diff_index_command) { instance_double(Git::Commands::DiffIndex) }
+
+    let(:raw_diff_output) do
+      ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+        ":000000 100644 0000000 abc1234 A\tREADME.md\n"
+    end
+
+    before do
+      allow(Git::Commands::DiffIndex).to receive(:new).with(lib).and_return(diff_index_command)
+      allow(capturing_command_line).to receive(:run)
+        .with('status', anything)
+        .and_return(command_result(''))
+    end
+
+    it 'calls command_capturing("status") to refresh the index before diffing' do
+      allow(diff_index_command).to receive(:call).and_return(command_result(''))
+
+      lib.diff_index('HEAD')
+
+      expect(capturing_command_line).to have_received(:run)
+        .with('status', anything)
+    end
+
+    it 'delegates to Git::Commands::DiffIndex#call with the treeish argument' do
+      allow(diff_index_command).to receive(:call).and_return(command_result(''))
+
+      lib.diff_index('HEAD')
+
+      expect(diff_index_command).to have_received(:call).with('HEAD')
+    end
+
+    it 'returns a Hash keyed by file path' do
+      allow(diff_index_command).to receive(:call).and_return(command_result(raw_diff_output))
+
+      result = lib.diff_index('HEAD')
+
+      expect(result).to be_a(Hash)
+      expect(result.keys).to contain_exactly('lib/foo.rb', 'README.md')
+    end
+
+    it 'populates all expected keys for each file' do
+      allow(diff_index_command).to receive(:call).and_return(command_result(raw_diff_output))
+
+      result = lib.diff_index('HEAD')
+
+      expect(result['lib/foo.rb']).to eq(
+        mode_index: '100644', mode_repo: '100644',
+        path: 'lib/foo.rb', sha_repo: 'abc1234', sha_index: 'def5678',
+        type: 'M'
+      )
+      expect(result['README.md']).to eq(
+        mode_index: '100644', mode_repo: '000000',
+        path: 'README.md', sha_repo: '0000000', sha_index: 'abc1234',
+        type: 'A'
+      )
+    end
+
+    it 'returns an empty Hash when there are no changes' do
+      allow(diff_index_command).to receive(:call).and_return(command_result(''))
+
+      result = lib.diff_index('HEAD')
+
+      expect(result).to eq({})
+    end
+  end
 end

@@ -17,6 +17,8 @@ require_relative 'commands/clone'
 require_relative 'commands/commit'
 require_relative 'commands/describe'
 require_relative 'commands/diff'
+require_relative 'commands/diff_files'
+require_relative 'commands/diff_index'
 require_relative 'commands/fetch'
 require_relative 'commands/fsck'
 require_relative 'commands/grep'
@@ -1056,12 +1058,14 @@ module Git
 
     # compares the index and the working directory
     def diff_files
-      diff_as_hash('diff-files')
+      command_capturing('status')
+      parse_raw_diff_output(Git::Commands::DiffFiles.new(self).call.stdout)
     end
 
     # compares the index and the repository
     def diff_index(treeish)
-      diff_as_hash('diff-index', treeish)
+      command_capturing('status')
+      parse_raw_diff_output(Git::Commands::DiffIndex.new(self).call(treeish).stdout)
     end
 
     # List all files that are in the index
@@ -2479,6 +2483,18 @@ module Git
       parts
     end
 
+    def parse_raw_diff_output(stdout)
+      stdout.split("\n").each_with_object({}) do |line, memo|
+        info, file = split_status_line(line)
+        mode_src, mode_dest, sha_src, sha_dest, type = info.split
+        memo[file] = {
+          mode_index: mode_dest, mode_repo: mode_src.to_s[1, 7],
+          path: file, sha_repo: sha_src, sha_index: sha_dest,
+          type: type
+        }
+      end
+    end
+
     def build_final_stats_hash(file_stats)
       {
         total: build_total_stats(file_stats),
@@ -2714,26 +2730,6 @@ module Git
     def command_line_streaming
       @command_line_streaming ||=
         Git::CommandLine::Streaming.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
-    end
-
-    # Takes the diff command line output (as Array) and parse it into a Hash
-    #
-    # @param [String] diff_command the diff commadn to be used
-    # @param [Array] opts the diff options to be used
-    # @return [Hash] the diff as Hash
-    def diff_as_hash(diff_command, opts = [])
-      # update index before diffing to avoid spurious diffs
-      command_capturing('status')
-      command_capturing(diff_command, *opts).stdout.split("\n").each_with_object({}) do |line, memo|
-        info, file = split_status_line(line)
-        mode_src, mode_dest, sha_src, sha_dest, type = info.split
-
-        memo[file] = {
-          mode_index: mode_dest, mode_repo: mode_src.to_s[1, 7],
-          path: file, sha_repo: sha_src, sha_index: sha_dest,
-          type: type
-        }
-      end
     end
 
     # Validates the :count option for log commands.
