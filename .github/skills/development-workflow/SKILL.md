@@ -273,7 +273,7 @@ moving to the next task.
   COMMIT step.
 - **Audit Command YARD Docs (command tasks only):** If this task added or modified
   any `Git::Commands::*` source file, apply the
-  [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+  [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   skill to each changed source file. Fix any documentation gaps before committing.
 - **STOP on Unexpected Failure:** If any test unexpectedly fails during VERIFY, STOP
   immediately and report the failure to the user. Do not attempt to fix the failure

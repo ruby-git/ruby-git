@@ -76,7 +76,7 @@ skill is selected from potentially hundreds of available skills.
 
 ### 3. Body structure and size
 
-- [ ] SKILL.md body is **under 500 lines** (optimal performance threshold)
+- [ ] SKILL.md body is **under 600 lines** (optimal performance threshold)
 - [ ] If approaching the limit, content is split into separate reference files
 - [ ] Reference files are at most **one level deep** from SKILL.md (no
       deeply-nested chains like SKILL → A.md → B.md → actual content)
@@ -182,7 +182,7 @@ Key principles distilled:
 | No time-sensitive info | Avoid dates that will become stale |
 | Consistent terminology | One term per concept throughout |
 | One-level references | No deeply nested file chains |
-| Under 500 lines | Split if approaching the limit |
+| Under 600 lines | Split if approaching the limit |
 | Test with real usage | Iterate based on observed agent behavior |
 
 > **Branch workflow:** Implement any fixes on a feature branch. Never commit or

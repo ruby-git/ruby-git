@@ -33,7 +33,7 @@ docs using the `Git::Commands::Base` architecture.
 - [Required review steps](#required-review-steps)
   - [Step 1 — Review Arguments DSL](#step-1--review-arguments-dsl)
   - [Step 2 — Review Command Tests](#step-2--review-command-tests)
-  - [Step 3 — Review Command YARD Documentation](#step-3--review-command-yard-documentation)
+  - [Step 3 — Command YARD Documentation](#step-3--command-yard-documentation)
 - [Phased rollout, compatibility, and quality gates](#phased-rollout-compatibility-and-quality-gates)
 
 ## How to use this skill
@@ -57,7 +57,7 @@ subcommand (or subcommand + sub-action) it wraps.
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards
 
 After scaffolding, you **MUST** run the following reviews in order before
@@ -68,7 +68,7 @@ committing:
    because DSL changes ripple into both
 2. [Review Command Tests](../review-command-tests/SKILL.md) — verify unit and
    integration test coverage and structure
-3. [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+3. [Command YARD Documentation](../command-yard-documentation/SKILL.md)
    — verify documentation completeness and formatting
 
 Additional references (load when needed):
@@ -770,9 +770,9 @@ rework.
 Load and apply **[Review Command Tests](../review-command-tests/SKILL.md)**
 against the unit and integration spec files. Fix all issues before proceeding.
 
-### Step 3 — Review Command YARD Documentation
+### Step 3 — Command YARD Documentation
 
-Load and apply **[Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)**
+Load and apply **[Command YARD Documentation](../command-yard-documentation/SKILL.md)**
 against the command class. Fix all issues before proceeding.
 
 ## Phased rollout, compatibility, and quality gates

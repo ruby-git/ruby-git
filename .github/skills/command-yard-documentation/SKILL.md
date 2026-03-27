@@ -1,11 +1,11 @@
 ---
-name: review-command-yard-documentation
-description: "Verifies YARD documentation for command classes is complete, accurate, and aligned with the Git::Commands::Base pattern. Use to audit documentation quality for commands."
+name: command-yard-documentation
+description: "Command-specific YARD documentation rules for Git::Commands::Base subclasses, overriding and extending the general yard-documentation skill. Use when writing or reviewing YARD docs for command classes."
 ---
 
-# Review Command YARD Documentation
+# Command YARD Documentation
 
-Verify YARD documentation for command classes is complete, accurate, and aligned with
+Write and verify YARD documentation for command classes aligned with
 the `Git::Commands::Base` pattern.
 
 ## Contents
@@ -32,30 +32,31 @@ the `Git::Commands::Base` pattern.
 ## How to use this skill
 
 Attach this file to your Copilot Chat context, then invoke it with one or more
-command source files whose YARD docs should be reviewed. Examples:
+command source files. Use it when writing new command YARD docs or reviewing existing
+ones for completeness and correctness. Examples:
 
 ```text
-Using the Review Command YARD Documentation skill, review
+Using the Command YARD Documentation skill, review
 lib/git/commands/branch/delete.rb.
 ```
 
 ```text
-Review Command YARD Documentation: lib/git/commands/stash/push.rb
+Command YARD Documentation: lib/git/commands/stash/push.rb
 lib/git/commands/stash/pop.rb
 ```
 
-The invocation needs the command file(s) to review.
+The invocation needs the command file(s) to write or review.
 
 ## Prerequisites
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for general YARD formatting rules and writing standards
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
   match git CLI
@@ -114,9 +115,15 @@ without a method definition in the subclass:
 #     @return [Git::CommandLineResult]
 ```
 
-Place the directive inside the class body, after the `arguments do` block (and after
-`allow_exit_status` when present). Do **not** combine `@!method` with an explicit
-`def call`.
+Note the placement rules:
+
+- The `@overload` description text **must appear inside the `@overload` block** (indented
+  one extra level, as in the template above). Do **not** place the description between
+  the `@!method` line and the `@overload` tag — that level belongs to any `@!method`-scope
+  prose that is not part of any overload, which is rarely needed.
+- Place the directive inside the class body, after the `arguments do` block (and after
+  `allow_exit_status` when present). Do **not** combine `@!method` with an explicit
+  `def call`.
 
 ### Explicit `def call` override
 
@@ -158,7 +165,7 @@ conflicting documentation for the method.
 - [ ] brief behavior description
 - [ ] `@api private`
 - [ ] `@see` to parent command module where applicable
-- [ ] `@see` to relevant git docs
+- [ ] `@see` to the full documentation URL (e.g., `@see https://git-scm.com/docs/git-show-ref`)
 
 ### 2. Arguments docs
 
@@ -199,15 +206,22 @@ When command declares non-default exit range:
 
 ### 5. Formatting consistency
 
-- [ ] all general formatting rules from [Write YARD
-  Documentation](../write-yard-documentation/SKILL.md) are satisfied
+- [ ] every YARD tag (`@param`, `@option`, `@return`, `@raise`, `@overload`,
+      `@see`, `@api`, etc.) is preceded by a blank comment line (`#`)
+- [ ] no raw blank lines (lines with no leading `#`) appear inside any doc block —
+      a raw blank line silently terminates the block and drops everything after it
 - [ ] tag short descriptions (the first sentence of each `@param`, `@option`,
-      `@return`, `@raise`, etc.) do not end with punctuation
+      `@return`, `@raise`, etc.) do not end with punctuation (no `.`, `,`, `;`, `:`)
 - [ ] multi-paragraph tag descriptions have a blank comment line (`#`) between the
       short description and each continuation paragraph
-- [ ] `@option` description text starts with a capital letter (sentence case)
+- [ ] `@option`, `@param`, `@return`, and `@raise` short descriptions all start with a
+      **lowercase** letter (e.g. `show the HEAD ref even when filtered`, `the path to the
+      repository`, `the result of calling \`git show-ref\``, `if git exits with a non-zero
+      status`)
 - [ ] consistent option wording and defaults across sibling commands
 - [ ] no stale references to removed per-command implementation details
+- [ ] all other general formatting rules from [YARD
+  Documentation](../yard-documentation/SKILL.md) are satisfied
 
 ### 6. Avoid internal implementation detail leakage
 
@@ -252,7 +266,7 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
   continuation paragraphs and alias notes. Correct form:
 
   ```ruby
-  # @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+  # @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
   #
   #   Alias: :"4"
   ```
@@ -264,7 +278,7 @@ Prefer interface-level wording (what callers can pass/expect), not internals.
   short-description rule. Correct form:
 
   ```ruby
-  # @option options [Boolean] :update_head_ok (false) Allow updating HEAD ref
+  # @option options [Boolean] :update_head_ok (false) allow updating HEAD ref
   #
   #   When true, passes --update-head-ok. By default git fetch refuses to update HEAD.
   ```
@@ -279,6 +293,11 @@ For each file, provide:
    | --- | --- | --- |
 
 2. corrected doc block snippets (only where needed)
+
+3. **Self-verify before concluding** — after writing corrected snippets, re-run
+   every checklist item from [What to Check](#what-to-check) against your proposed
+   snippets. If any new issues are found, update the snippets and repeat until all
+   checks pass. Only then write the final issue table marking everything as passing.
 
 > **Branch workflow:** Implement any fixes on a feature branch. Never commit or push
 > directly to `main` — open a pull request when changes are ready to merge.

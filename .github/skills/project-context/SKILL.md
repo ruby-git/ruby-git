@@ -33,7 +33,7 @@ coding standard details, or implementation constraints.
   conventions for day-to-day work
 - [Scaffold New Command](../scaffold-new-command/SKILL.md) — generating new command
   classes in the layered architecture
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — documentation
+- [YARD Documentation](../yard-documentation/SKILL.md) — documentation
   standards
 
 ## Architecture & Module Organization

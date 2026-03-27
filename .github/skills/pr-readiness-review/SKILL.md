@@ -33,7 +33,7 @@ final quality gate and reporting template.
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
@@ -44,7 +44,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   implementation process prior to readiness checks
 - [Review Command Tests](../review-command-tests/SKILL.md) — audit unit and
   integration test quality for command changes
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+- [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   — verify command documentation completeness and consistency
 
 ## 1. Run Final Validation
@@ -80,7 +80,7 @@ Execute and report results for:
 - [ ] Include `@api public` or `@api private` tags appropriately
 - [ ] Usage examples in YARD docs show common patterns
 - [ ] **Command YARD Docs (if any `Git::Commands::*` source files are included):**
-  Apply the [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+  Apply the [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   skill to every new or modified command source file. Resolve all findings before
   proceeding.
 - [ ] No breaking changes (or properly marked with `!` in commits)

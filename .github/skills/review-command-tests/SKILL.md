@@ -58,7 +58,7 @@ it, MUST-level structural, naming, stubbing, and coverage checks will not be app
   match git CLI
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — class
   structure, phased rollout gates, and internal compatibility contracts
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md)
+- [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   — documentation completeness for command classes
 
 ## Version-Aware Test Scope

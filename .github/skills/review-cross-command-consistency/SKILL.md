@@ -45,7 +45,7 @@ The invocation needs two or more sibling command files from the same family.
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
@@ -54,7 +54,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 
 ## Version-Aware Comparison Scope
 
