@@ -931,6 +931,7 @@ RSpec.describe Git::Lib do
 
   describe '#diff_files' do
     let(:diff_files_command) { instance_double(Git::Commands::DiffFiles) }
+    let(:status_command) { instance_double(Git::Commands::Status) }
 
     # Raw line format: ":mode_src mode_dest sha_src sha_dest type\tpath"
     let(:raw_diff_output) do
@@ -940,18 +941,16 @@ RSpec.describe Git::Lib do
 
     before do
       allow(Git::Commands::DiffFiles).to receive(:new).with(lib).and_return(diff_files_command)
-      allow(capturing_command_line).to receive(:run)
-        .with('status', anything)
-        .and_return(command_result(''))
+      allow(Git::Commands::Status).to receive(:new).with(lib).and_return(status_command)
+      allow(status_command).to receive(:call).and_return(command_result(''))
     end
 
-    it 'calls command_capturing("status") to refresh the index before diffing' do
+    it 'calls Git::Commands::Status to refresh the index before diffing' do
       allow(diff_files_command).to receive(:call).and_return(command_result(''))
 
       lib.diff_files
 
-      expect(capturing_command_line).to have_received(:run)
-        .with('status', anything)
+      expect(status_command).to have_received(:call).with(no_args)
     end
 
     it 'delegates to Git::Commands::DiffFiles#call with no arguments' do
@@ -999,6 +998,7 @@ RSpec.describe Git::Lib do
 
   describe '#diff_index' do
     let(:diff_index_command) { instance_double(Git::Commands::DiffIndex) }
+    let(:status_command) { instance_double(Git::Commands::Status) }
 
     let(:raw_diff_output) do
       ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
@@ -1007,18 +1007,16 @@ RSpec.describe Git::Lib do
 
     before do
       allow(Git::Commands::DiffIndex).to receive(:new).with(lib).and_return(diff_index_command)
-      allow(capturing_command_line).to receive(:run)
-        .with('status', anything)
-        .and_return(command_result(''))
+      allow(Git::Commands::Status).to receive(:new).with(lib).and_return(status_command)
+      allow(status_command).to receive(:call).and_return(command_result(''))
     end
 
-    it 'calls command_capturing("status") to refresh the index before diffing' do
+    it 'calls Git::Commands::Status to refresh the index before diffing' do
       allow(diff_index_command).to receive(:call).and_return(command_result(''))
 
       lib.diff_index('HEAD')
 
-      expect(capturing_command_line).to have_received(:run)
-        .with('status', anything)
+      expect(status_command).to have_received(:call).with(no_args)
     end
 
     it 'delegates to Git::Commands::DiffIndex#call with the treeish argument' do
