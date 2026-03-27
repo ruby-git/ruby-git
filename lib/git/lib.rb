@@ -48,6 +48,7 @@ require_relative 'commands/remote/show'
 require_relative 'commands/remote/update'
 require_relative 'commands/rm'
 require_relative 'commands/show'
+require_relative 'commands/status'
 require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
@@ -1058,13 +1059,13 @@ module Git
 
     # compares the index and the working directory
     def diff_files
-      command_capturing('status')
+      Git::Commands::Status.new(self).call
       parse_raw_diff_output(Git::Commands::DiffFiles.new(self).call.stdout)
     end
 
     # compares the index and the repository
     def diff_index(treeish)
-      command_capturing('status')
+      Git::Commands::Status.new(self).call
       parse_raw_diff_output(Git::Commands::DiffIndex.new(self).call(treeish).stdout)
     end
 
