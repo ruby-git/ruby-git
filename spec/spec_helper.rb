@@ -51,6 +51,41 @@ require 'simplecov'
 require 'simplecov-lcov'
 require 'simplecov-rspec'
 
+# Returns `false` when git meets the minimum version, or a skip message when it does not
+#
+# Pass the return value to RSpec's `skip:` metadata key to conditionally skip
+# an example group when the installed git is too old to support the feature
+# under test.
+#
+# @param minimum_version [String] the minimum git version required (e.g., `'2.43.0'`)
+#
+#   Shorter strings are treated as if trailing `.0` components were appended, so
+#   `'2.43'` is equivalent to `'2.43.0'`.
+#
+# @param feature [String] the feature name to include in the skip reason
+#
+# @return [false, String] `false` if the installed git meets the minimum version;
+#   otherwise a human-readable skip reason string
+#
+# @example
+#   RSpec.describe MyFeature, skip: unless_git('2.43', 'git show-ref --exists') do
+#     it 'works' do
+#       # ...
+#     end
+#   end
+#
+def unless_git(minimum_version, feature)
+  minimum_version_parts = minimum_version.split('.').map(&:to_i)
+  minimum_version_parts.fill(0, minimum_version_parts.length...3)
+  actual_version_parts = Git::Lib.new(nil).current_command_version
+
+  return false if (actual_version_parts <=> minimum_version_parts) >= 0
+
+  actual_version = actual_version_parts.join('.')
+
+  "#{feature} requires git #{minimum_version} or later; your git version is #{actual_version}"
+end
+
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 
 if ci_build?
