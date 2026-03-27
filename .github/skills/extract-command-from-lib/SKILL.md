@@ -55,7 +55,7 @@ from the `#command` call (or both).
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
@@ -69,7 +69,7 @@ Run or reference these skills during the workflow:
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 - [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
 - [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 

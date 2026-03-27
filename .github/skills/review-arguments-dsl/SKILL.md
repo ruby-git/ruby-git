@@ -43,7 +43,7 @@ git documentation helps verify flag accuracy.
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
 - [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
-- [Review Command YARD Documentation](../review-command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 
 ## Input
 

@@ -34,7 +34,7 @@ Select the skill for the task at hand and attach it to your Copilot Chat context
 | Update dependencies / fix CVEs | [dependency-management](skills/dependency-management/SKILL.md) |
 | Prepare a release | [release-management](skills/release-management/SKILL.md) |
 | Assess breaking changes / deprecation | [breaking-change-analysis](skills/breaking-change-analysis/SKILL.md) |
-| YARD docs / documentation fixes | [write-yard-documentation](skills/write-yard-documentation/SKILL.md) |
+| YARD docs / documentation fixes | [yard-documentation](skills/yard-documentation/SKILL.md) |
 | Audit or create a Copilot skill | [reviewing-skills](skills/reviewing-skills/SKILL.md) / [make-skill-template](skills/make-skill-template/SKILL.md) |
 | Code review / explain code | *(no skill needed)* |
 
@@ -68,7 +68,7 @@ If full-file reading is incomplete, the agent MUST stop and finish reading first
 | Review Arguments DSL | [review-arguments-dsl](skills/review-arguments-dsl/SKILL.md) |
 | Review Command Implementation | [review-command-implementation](skills/review-command-implementation/SKILL.md) |
 | Review Command Tests | [review-command-tests](skills/review-command-tests/SKILL.md) |
-| Review Command YARD Documentation | [review-command-yard-documentation](skills/review-command-yard-documentation/SKILL.md) |
+| Review Command YARD Documentation | [command-yard-documentation](skills/command-yard-documentation/SKILL.md) |
 | Review Cross-Command Consistency | [review-cross-command-consistency](skills/review-cross-command-consistency/SKILL.md) |
 | Review Backward Compatibility | [review-backward-compatibility](skills/review-backward-compatibility/SKILL.md) |
 

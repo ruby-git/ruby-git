@@ -42,7 +42,7 @@ refactor.
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [Write YARD Documentation](../write-yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
