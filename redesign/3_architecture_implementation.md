@@ -28,7 +28,12 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 ### Next Task
 
-**Migrate `tag_sha`** → `Git::Commands::ShowRef` — `git show-ref`
+**Migrate `tag_sha`** (use `Git::Commands::ShowRef::List`) — `git show-ref`
+
+The `ShowRef::List`, `ShowRef::Verify`, `ShowRef::ExcludeExisting`, and `ShowRef::Exists`
+command classes have been created. The next step is to update `Git::Lib#tag_sha` in
+`lib/git/lib.rb` to delegate to `Git::Commands::ShowRef::List` and mark the checklist
+item done.
 
 #### Workflow
 
@@ -899,6 +904,10 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `ls_remote` / `repository_default_branch` | `Git::Commands::LsRemote` | `spec/unit/git/commands/ls_remote_spec.rb` | `git ls-remote` |
 | `unmerged` | `Git::Commands::Diff` (existing) | — | `git diff --cached` |
 | N/A (index refresh for `diff_files`/`diff_index`) | `Git::Commands::Status` | `spec/unit/git/commands/status_spec.rb` | `git status` |
+| N/A (ref listing namespace) | `Git::Commands::ShowRef::List` | `spec/unit/git/commands/show_ref/list_spec.rb` | `git show-ref` |
+| N/A (ref verification namespace) | `Git::Commands::ShowRef::Verify` | `spec/unit/git/commands/show_ref/verify_spec.rb` | `git show-ref --verify` |
+| N/A (stdin filter namespace) | `Git::Commands::ShowRef::ExcludeExisting` | `spec/unit/git/commands/show_ref/exclude_existing_spec.rb` | `git show-ref --exclude-existing` |
+| N/A (existence check namespace) | `Git::Commands::ShowRef::Exists` | `spec/unit/git/commands/show_ref/exists_spec.rb` | `git show-ref --exists` |
 
 #### ⏳ Commands To Migrate
 
