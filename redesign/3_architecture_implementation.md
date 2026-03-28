@@ -22,18 +22,17 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (37/54 checklist items done, 17 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (38/54 checklist items done, 16 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `tag_sha`** (use `Git::Commands::ShowRef::List`) — `git show-ref`
+**Migrate `apply` / `apply_mail`** → `Git::Commands::Apply` — `git apply` / `git am`
 
-The `ShowRef::List`, `ShowRef::Verify`, `ShowRef::ExcludeExisting`, and `ShowRef::Exists`
-command classes have been created. The next step is to update `Git::Lib#tag_sha` in
-`lib/git/lib.rb` to delegate to `Git::Commands::ShowRef::List` and mark the checklist
-item done.
+Create `Git::Commands::Apply` covering both `git apply` (patch files) and `git am`
+(mailbox patches). Update `Git::Lib#apply` and `Git::Lib#apply_mail` to delegate to
+the new command class and mark the checklist items done.
 
 #### Workflow
 
@@ -908,6 +907,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (ref verification namespace) | `Git::Commands::ShowRef::Verify` | `spec/unit/git/commands/show_ref/verify_spec.rb` | `git show-ref --verify` |
 | N/A (stdin filter namespace) | `Git::Commands::ShowRef::ExcludeExisting` | `spec/unit/git/commands/show_ref/exclude_existing_spec.rb` | `git show-ref --exclude-existing` |
 | N/A (existence check namespace) | `Git::Commands::ShowRef::Exists` | `spec/unit/git/commands/show_ref/exists_spec.rb` | `git show-ref --exists` |
+| `tag_sha` | `Git::Commands::ShowRef::List` | `spec/unit/git/lib_command_spec.rb` | `git show-ref --tags --hash` |
 
 #### ⏳ Commands To Migrate
 
@@ -949,7 +949,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `diff_as_hash` (private) → `Git::Commands::DiffFiles` / `Git::Commands::DiffIndex`
   — `git diff-files` / `git diff-index`
 - [x] `status` → `Git::Commands::Status` — `git status`
-- [ ] `tag_sha` (uses `show-ref` internally) → `Git::Commands::ShowRef` — `git show-ref`
+- [x] `tag_sha` (uses `show-ref` internally) → `Git::Commands::ShowRef::List` — `git show-ref`
 - [x] `show` → `Git::Commands::Show` — `git show`
 - [x] `describe` → `Git::Commands::Describe` — `git describe`
 - [x] `grep` → `Git::Commands::Grep` — `git grep`
