@@ -43,7 +43,7 @@ Metrics/BlockLength:
     - "tests/test_helper.rb"
     - "tests/units/**/*"
     - "*.gemspec"
-    - "lib/git/commands/*.rb"
+    - "lib/git/commands/**/*.rb"
 
 # Don't force every test class to be described
 Style/Documentation:

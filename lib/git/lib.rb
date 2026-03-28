@@ -2,6 +2,8 @@
 
 require_relative 'args_builder'
 require_relative 'commands/add'
+require_relative 'commands/am'
+require_relative 'commands/apply'
 require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
 require_relative 'commands/branch/list'
@@ -1317,15 +1319,11 @@ module Git
     end
 
     def apply(patch_file)
-      arr_opts = []
-      arr_opts << '--' << patch_file if patch_file
-      command_capturing('apply', *arr_opts)
+      Git::Commands::Apply.new(self).call(*[patch_file].compact, chdir: @git_work_dir).stdout
     end
 
     def apply_mail(patch_file)
-      arr_opts = []
-      arr_opts << '--' << patch_file if patch_file
-      command_capturing('am', *arr_opts)
+      Git::Commands::Am::Apply.new(self).call(*[patch_file].compact, chdir: @git_work_dir).stdout
     end
 
     # Returns all stash entries as an array of index and message pairs
