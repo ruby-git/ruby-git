@@ -1847,13 +1847,8 @@ module Git
       head = File.join(@git_dir, 'refs', 'tags', tag_name)
       return File.read(head).chomp if File.exist?(head)
 
-      begin
-        command_capturing('show-ref', '--tags', '-s', tag_name).stdout
-      rescue Git::FailedError => e
-        raise unless e.result.status.exitstatus == 1 && e.result.stderr == ''
-
-        ''
-      end
+      result = Git::Commands::ShowRef::List.new(self).call(tag_name, tags: true, hash: true)
+      result.stdout
     end
 
     def repack
