@@ -1061,4 +1061,60 @@ RSpec.describe Git::Lib do
       expect(result).to eq({})
     end
   end
+
+  describe '#tag_sha' do
+    let(:show_ref_list_command) { instance_double(Git::Commands::ShowRef::List) }
+    let(:tag_ref_path) { '/fake/.git/refs/tags/v1.0' }
+
+    before do
+      lib.instance_variable_set(:@git_dir, '/fake/.git')
+      allow(Git::Commands::ShowRef::List).to receive(:new).with(lib).and_return(show_ref_list_command)
+      allow(File).to receive(:exist?).with(tag_ref_path).and_return(false)
+    end
+
+    context 'when the tag ref file exists in the local refs directory' do
+      before do
+        allow(File).to receive(:exist?).with(tag_ref_path).and_return(true)
+        allow(File).to receive(:read).with(tag_ref_path).and_return("abc1234\n")
+      end
+
+      it 'reads the SHA directly from the file and returns it without the trailing newline' do
+        result = lib.tag_sha('v1.0')
+
+        expect(result).to eq('abc1234')
+      end
+
+      it 'does not call Git::Commands::ShowRef::List' do
+        lib.tag_sha('v1.0')
+
+        expect(Git::Commands::ShowRef::List).not_to have_received(:new)
+      end
+    end
+
+    context 'when the tag ref file does not exist' do
+      it 'delegates to Git::Commands::ShowRef::List with :tags and :hash options' do
+        allow(show_ref_list_command).to receive(:call).and_return(command_result(''))
+
+        lib.tag_sha('v1.0')
+
+        expect(show_ref_list_command).to have_received(:call).with('v1.0', tags: true, hash: true)
+      end
+
+      it 'returns the SHA from the command stdout when the tag exists' do
+        allow(show_ref_list_command).to receive(:call).and_return(command_result("abc1234\n"))
+
+        result = lib.tag_sha('v1.0')
+
+        expect(result).to eq("abc1234\n")
+      end
+
+      it 'returns an empty string when the tag is not found (exit status 1)' do
+        allow(show_ref_list_command).to receive(:call).and_return(command_result('', exitstatus: 1))
+
+        result = lib.tag_sha('v1.0')
+
+        expect(result).to eq('')
+      end
+    end
+  end
 end
