@@ -1,0 +1,13 @@
+#!/bin/sh
+
+branch=$(git branch --show-current)
+
+protected_branches="main 4.x"
+
+for protected in $protected_branches; do
+  if [ "$branch" = "$protected" ]; then
+    echo "ERROR: Direct commits to '$branch' are not allowed."
+    echo "       Create a topic branch first:  git switch -c <branch-name>"
+    exit 1
+  fi
+done

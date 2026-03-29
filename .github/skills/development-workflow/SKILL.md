@@ -1,6 +1,6 @@
 ---
 name: development-workflow
-description: "Follows a strict Test-Driven Development (TDD) workflow with four phases: triage, prepare, execute, and finalize. Use for bug fixes, feature implementation, refactoring, and maintenance tasks."
+description: "Follows a strict Test-Driven Development (TDD) workflow with four phases: triage, prepare, execute, and finalize. Use for bug fixes, feature implementation, refactoring, maintenance tasks, and issue triage / diagnosis (triage phase only for diagnosis without implementation)."
 ---
 
 # Development Workflow

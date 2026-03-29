@@ -14,90 +14,31 @@ For architecture details, coding standards, design philosophy, key technical det
 and compatibility requirements see the
 [Project Context](skills/project-context/SKILL.md) skill.
 
-## Task Routing
+## Skill Loading
 
-Select the skill for the task at hand and attach it to your Copilot Chat context.
-
-| Task | Skill |
-|---|---|
-| Triage / diagnose an issue | [development-workflow](skills/development-workflow/SKILL.md) — Phase 0 only |
-| Fix a bug | [development-workflow](skills/development-workflow/SKILL.md) — all phases |
-| Implement a feature | [development-workflow](skills/development-workflow/SKILL.md) — all phases |
-| Refactor / improve code | [development-workflow](skills/development-workflow/SKILL.md) — all phases |
-| Maintenance (linting, version bumps) | [development-workflow](skills/development-workflow/SKILL.md) — all phases |
-| Migrate a command from Git::Lib | [extract-command-from-lib](skills/extract-command-from-lib/SKILL.md) |
-| Review a pull request | [pull-request-review](skills/pull-request-review/SKILL.md) |
-| Pre-PR readiness check | [pr-readiness-review](skills/pr-readiness-review/SKILL.md) |
-| CI/CD failure diagnosis | [ci-cd-troubleshooting](skills/ci-cd-troubleshooting/SKILL.md) |
-| Debug failing / flaky tests | [test-debugging](skills/test-debugging/SKILL.md) |
-| Audit / review unit test quality | [rspec-unit-testing-standards](skills/rspec-unit-testing-standards/SKILL.md) |
-| Update dependencies / fix CVEs | [dependency-management](skills/dependency-management/SKILL.md) |
-| Prepare a release | [release-management](skills/release-management/SKILL.md) |
-| Assess breaking changes / deprecation | [breaking-change-analysis](skills/breaking-change-analysis/SKILL.md) |
-| YARD docs / documentation fixes | [yard-documentation](skills/yard-documentation/SKILL.md) |
-| Audit or create a Copilot skill | [reviewing-skills](skills/reviewing-skills/SKILL.md) / [make-skill-template](skills/make-skill-template/SKILL.md) |
-| Code review / explain code | *(no skill needed)* |
-
-## Skill Loading Enforcement
-
-When a skill applies to a request, the agent MUST read the entire `SKILL.md` file
-before taking any other action on that request.
-
-- Read from line 1 through EOF.
-- If a single read is not enough, perform sequential reads that cover all lines
-  with no gaps.
-- Do not begin analysis, edits, commands, or review output until the full file is
-  read.
-
-Before proceeding, the agent MUST provide a short completion check that includes:
-
-- Total line count of the `SKILL.md` file.
-- The final heading in the file.
-- Confirmation that all lines were read.
-- The last non-empty line in the file.
-
-If full-file reading is incomplete, the agent MUST stop and finish reading first.
-
-### Command-Migration Skills
-
-| Skill | File |
-|---|---|
-| Scaffold New Command | [scaffold-new-command](skills/scaffold-new-command/SKILL.md) |
-| Extract Command from Lib | [extract-command-from-lib](skills/extract-command-from-lib/SKILL.md) |
-| Refactor Command to CommandLineResult | [refactor-command-to-commandlineresult](skills/refactor-command-to-commandlineresult/SKILL.md) |
-| Review Arguments DSL | [review-arguments-dsl](skills/review-arguments-dsl/SKILL.md) |
-| Review Command Implementation | [review-command-implementation](skills/review-command-implementation/SKILL.md) |
-| Review Command Tests | [review-command-tests](skills/review-command-tests/SKILL.md) |
-| Review Command YARD Documentation | [command-yard-documentation](skills/command-yard-documentation/SKILL.md) |
-| Review Cross-Command Consistency | [review-cross-command-consistency](skills/review-cross-command-consistency/SKILL.md) |
-| Review Backward Compatibility | [review-backward-compatibility](skills/review-backward-compatibility/SKILL.md) |
+When a skill applies to a request, read the entire `SKILL.md` file before taking
+any other action. Read from line 1 through EOF with no gaps. Simple code review
+or explanation does not require a skill.
 
 ## Project Commands
 
 | Purpose | Command |
 |---|---|
 | First-time setup | `bin/setup` |
-| Run all tests (CI-equivalent) | `bundle exec rake default` |
-| Run all tests (both suites) | `bundle exec rake test_all` |
-| Run Test::Unit tests | `bundle exec rake test` |
-| Run all RSpec tests | `bundle exec rake spec` |
-| Run RSpec unit tests | `bundle exec rake spec:unit` |
-| Run RSpec integration tests | `bundle exec rake spec:integration` |
-| Run a specific Test::Unit test | `bundle exec bin/test <name>` (no extension) |
+| Run all tests and linters(CI-equivalent) | `bundle exec rake default:parallel` |
+| Run all tests (both suites) | `bundle exec rake test-all:parallel` |
+| Run Test::Unit tests | `bundle exec rake test:parallel` |
+| Run all RSpec tests | `bundle exec rake spec:parallel` |
+| Run RSpec unit tests | `bundle exec rake spec:unit:parallel` |
+| Run RSpec integration tests | `bundle exec rake spec:integration:parallel` |
+| Run a specific Test::Unit test | `bundle exec bin/test <test-base-name>` |
 | Run a specific RSpec spec | `bundle exec rspec <path>` |
-| Run a specific Test::Unit method | `bundle exec ruby -I lib:tests tests/units/<test_file>.rb -n <method_name>` |
-| Run tests in Docker (multi-Ruby) | `bin/test-in-docker` |
-| Run linters | `bundle exec rake rubocop yard` |
+| Run linters | `bundle exec rake rubocop yard build` |
 
-## Coding Standards Summary
-
-- `frozen_string_literal: true` on every Ruby file
-- Ruby 3.2.0+ idioms; keyword arguments for multi-parameter methods
-- `private` keyword form (not `private :method_name`)
-- Single-responsibility classes; one public class per file
-- YARD on all public methods: `@param`, `@return`, `@raise`, `@example`
-
-See [project-context](skills/project-context/SKILL.md) for full details.
+**Test suites:** `spec/` (RSpec) is the current suite — all new tests go here.
+`tests/` (Test::Unit) is legacy; only touch it when modifying existing tests there
+or adding pre-migration coverage to verify that a `Git::Lib` → `Git::Commands`
+migration doesn't break existing behaviour.
 
 ## Commit Conventions
 
@@ -123,8 +64,11 @@ footer.
 | `main` | New features, breaking changes, all active development |
 | `4.x` | Security fixes and backward-compatible bug fixes for the v4.x series |
 
-Never commit directly to `main` or `4.x`. All changes via PR from a feature branch
-named `<type>/<short-description>`.
+> **Never commit directly to `main` or `4.x`** — this rule must never be violated.
+> Always check `git branch --show-current` before committing. If on a release branch,
+> run `git switch -c <type>/<short-description>` first.
+
+All changes go via PR from a topic branch.
 
 **Creating a PR:** Use `gh pr create`. Read `.github/pull_request_template.md` for
 the body structure. Complete the [PR Readiness Review](skills/pr-readiness-review/SKILL.md)
