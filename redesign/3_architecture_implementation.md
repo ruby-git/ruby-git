@@ -22,17 +22,16 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (38/54 checklist items done, 16 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (40/54 checklist items done, 14 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `apply` / `apply_mail`** → `Git::Commands::Apply` — `git apply` / `git am`
+**Migrate `revert`** → `Git::Commands::Revert` — `git revert`
 
-Create `Git::Commands::Apply` covering both `git apply` (patch files) and `git am`
-(mailbox patches). Update `Git::Lib#apply` and `Git::Lib#apply_mail` to delegate to
-the new command class and mark the checklist items done.
+Create `Git::Commands::Revert` to wrap `git revert`. Update `Git::Lib#revert` to
+delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
@@ -908,6 +907,14 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (stdin filter namespace) | `Git::Commands::ShowRef::ExcludeExisting` | `spec/unit/git/commands/show_ref/exclude_existing_spec.rb` | `git show-ref --exclude-existing` |
 | N/A (existence check namespace) | `Git::Commands::ShowRef::Exists` | `spec/unit/git/commands/show_ref/exists_spec.rb` | `git show-ref --exists` |
 | `tag_sha` | `Git::Commands::ShowRef::List` | `spec/unit/git/lib_command_spec.rb` | `git show-ref --tags --hash` |
+| `apply` | `Git::Commands::Apply` | `spec/unit/git/commands/apply_spec.rb` | `git apply` |
+| `apply_mail` | `Git::Commands::Am::Apply` | `spec/unit/git/commands/am/apply_spec.rb` | `git am` |
+| N/A (new) | `Git::Commands::Am::Abort` | `spec/unit/git/commands/am/abort_spec.rb` | `git am --abort` |
+| N/A (new) | `Git::Commands::Am::Continue` | `spec/unit/git/commands/am/continue_spec.rb` | `git am --continue` |
+| N/A (new) | `Git::Commands::Am::Skip` | `spec/unit/git/commands/am/skip_spec.rb` | `git am --skip` |
+| N/A (new) | `Git::Commands::Am::Quit` | `spec/unit/git/commands/am/quit_spec.rb` | `git am --quit` |
+| N/A (new) | `Git::Commands::Am::Retry` | `spec/unit/git/commands/am/retry_spec.rb` | `git am --retry` |
+| N/A (new) | `Git::Commands::Am::ShowCurrentPatch` | `spec/unit/git/commands/am/show_current_patch_spec.rb` | `git am --show-current-patch` |
 
 #### ⏳ Commands To Migrate
 
@@ -967,7 +974,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Patching:**
 
-- [ ] `apply` / `apply_mail` → `Git::Commands::Apply` — `git apply` / `git am`
+- [x] `apply` / `apply_mail` → `Git::Commands::Apply` / `Git::Commands::Am::Apply` — `git apply` / `git am`
 - [ ] `revert` → `Git::Commands::Revert` — `git revert`
 
 **Plumbing:**
