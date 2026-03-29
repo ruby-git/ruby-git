@@ -22,6 +22,7 @@ docs using the `Git::Commands::Base` architecture.
   - [Namespace module template](#namespace-module-template)
 - [Command template (Base pattern)](#command-template-base-pattern)
   - [Overriding `call` — inline example](#overriding-call--inline-example)
+    - [Action-option-with-optional-value commands](#action-option-with-optional-value-commands)
     - [When to use `skip_cli` on `operand`](#when-to-use-skip_cli-on-operand)
 - [Options completeness — consult the man page first](#options-completeness--consult-the-man-page-first)
 - [Execution-model conflicts are intentionally omitted](#execution-model-conflicts-are-intentionally-omitted)
@@ -344,6 +345,46 @@ arguments do
   requires_one_of :objects, :batch_all_objects
 end
 ```
+
+#### Action-option-with-optional-value commands
+
+When a git command's primary action is an option with an optional value (man-page
+notation: `--flag[=<value>]`, e.g. `git am --show-current-patch[=(diff|raw)]`),
+use this pattern:
+
+**DSL:**
+```ruby
+arguments do
+  literal 'am'
+  flag_or_value_option :show_current_patch, inline: true, type: [TrueClass, String]
+end
+```
+
+**`#call` override** — required to give callers a natural positional API:
+```ruby
+# Show the patch currently being applied by `git am`
+#
+# @param value [true, String] When +true+ (default), emits +--show-current-patch+
+#   (git's default behavior). Pass +"diff"+ or +"raw"+ to emit
+#   +--show-current-patch=diff+ / +--show-current-patch=raw+.
+#
+# @return [Git::CommandLineResult] the result of the command
+#
+# @raise [Git::FailedError] if no am session is in progress
+#
+def call(value = true, *, **)
+  super(*, **, option_name: value)
+end
+```
+
+Where:
+- `value = true` — positional default; `true` emits `--flag`; a String emits `--flag=value`
+- `*` — forwards positional operands declared in the DSL (omit when the command has none)
+- `**` — forwards keyword options to the DSL binder; unknown keywords raise `ArgumentError`
+- `option_name: value` placed last so the positional arg always takes precedence
+
+The `type: [TrueClass, String]` on the DSL entry rejects `false` at bind time,
+removing the need for manual validation in the override.
 
 #### When to use `skip_cli` on `operand`
 

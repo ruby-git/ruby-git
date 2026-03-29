@@ -31,6 +31,48 @@ Common examples: `--branches[=<pattern>]`, `--tags[=<pattern>]`,
 **Do not** use `flag_option` for these — it silently drops the value when one is
 supplied.
 
+### Action-option-with-optional-value commands
+
+Some git commands express their **primary action** as an option with an optional
+value (man-page notation: `--flag[=<value>]`). The canonical example is
+`git am --show-current-patch[=(diff|raw)]` — there is no mode where the flag is
+*not* passed; the optional `=<value>` just refines the behavior.
+
+This situation is distinct from a normal `flag_or_value_option` used as a
+modifier: the option IS the command. Do **not** model this as `literal
+'--show-current-patch'` — that precludes passing the optional value.
+
+**DSL entry:**
+
+```ruby
+flag_or_value_option :show_current_patch, inline: true, type: [TrueClass, String]
+```
+
+**Required `#call` override** — the class must provide a positional `#call`
+override that maps the positional API onto the option keyword:
+
+```ruby
+def call(value = true, *, **)
+  super(*, **, option_name: value)
+end
+```
+
+Where:
+- `value = true` — `true` emits `--flag` alone; a String emits `--flag=value`
+- `*` — forwards any positional operands declared in the DSL (omit when none)
+- `**` — forwards keyword options; unknown keywords raise `ArgumentError`
+- `option_name: value` placed last so the positional arg always wins
+
+**Flag these as errors:**
+
+- Using `literal '--flag'` when the man page shows `--flag[=<value>]`
+- Omitting `type: [TrueClass, String]` — allows `false` to silently pass, which
+  emits nothing and produces no error
+- Omitting the `#call` override — forces callers to use the awkward keyword form
+  `.call(option_name: true)` instead of the natural `.call` or `.call('diff')`
+- Using `nil` as the default in the override instead of `true` (use
+  `value = true`, not `value = nil` with `|| true`)
+
 ### Choosing the correct pathspec form
 
 The two pathspec-style rows above look similar but represent meaningfully different
