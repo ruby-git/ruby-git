@@ -170,6 +170,20 @@ adds no behavior and conflicts with the `@!method` directive.
    `Base#with_stdin`
 3. **Non-trivial option routing** — build different argument sets based on
    which options are present
+4. **Action-option-with-optional-value** — when the command's primary action is
+   expressed as an option with an optional value (man-page notation:
+   `--flag[=<value>]`). The DSL entry uses `flag_or_value_option :name, inline:
+   true, type: [TrueClass, String]` and the override maps a positional `call` API
+   onto the keyword:
+
+   ```ruby
+   def call(value = true, *, **)
+     super(*, **, option_name: value)
+   end
+   ```
+
+   See [Action-option-with-optional-value commands](../scaffold-new-command/SKILL.md#action-option-with-optional-value-commands)
+   for the full pattern and rationale.
 
 **When overriding:**
 
