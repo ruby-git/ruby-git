@@ -431,6 +431,13 @@ A command class may expose many more options than the legacy `Git::Lib` method
 ever accepted. Without filtering, callers could accidentally pass options that
 happen to match command DSL names but were never part of the public contract.
 
+The facade is also where **policy options** are set as safe defaults — options
+that support non-interactive execution, control output format for parsing, or
+set other command-level defaults. The command class stays neutral; the facade
+makes the defaults explicit; callers may override when needed. Examples:
+`edit: false`, `verbose: true`, `progress: false`, `no_color: true`.
+See "Command-layer neutrality" in CONTRIBUTING.md.
+
 Declare an `<COMMAND>_ALLOWED_OPTS` constant listing only the options that were
 present in the original method. Call `assert_valid_opts` first to raise
 `ArgumentError` on unrecognised keys, then use `opts.slice` to filter before
@@ -446,7 +453,8 @@ def pull(remote = nil, branch = nil, opts = {})
   assert_valid_opts(opts, PULL_ALLOWED_OPTS)
   allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
   positional_args = [remote, branch].compact
-  Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
+  # edit: false is the non-interactive default (see CONTRIBUTING.md)
+  Git::Commands::Pull.new(self).call(*positional_args, edit: false, **allowed_opts).stdout
 end
 ```
 

@@ -15,6 +15,7 @@
 - [Branch strategy](#branch-strategy)
 - [AI-assisted contributions](#ai-assisted-contributions)
 - [Design philosophy](#design-philosophy)
+- [Command-layer neutrality](#command-layer-neutrality)
 - [Wrapping a git command](#wrapping-a-git-command)
   - [Method placement](#method-placement)
   - [Method naming](#method-naming)
@@ -153,6 +154,35 @@ avoiding extensions or alterations that could lead to unexpected behaviors.
 By following this philosophy, the `git` gem allows users to leverage their existing
 knowledge of Git while benefiting from the expressiveness and power of Ruby's syntax
 and paradigms.
+
+## Command-layer neutrality
+
+Command classes (`Git::Commands::*`) are **faithful, neutral representations of the
+git CLI**. They declare every option via the DSL but never embed policy choices —
+output-control flags, editor suppression, progress output, verbose mode, etc.
+Policy decisions belong to the facade (`Git::Lib`), which sets safe defaults at
+each call site. Callers may override those defaults when they have a legitimate
+reason (e.g., running in a TTY-attached environment where an editor is desired).
+
+This principle serves two purposes: it keeps the command layer a reusable, unbiased
+interface to git, and it supports this gem's **non-interactive execution model** (git
+is never allowed to prompt for input, open an editor, or wait for TTY interaction
+by default). The execution layer provides an unconditional safety net regardless of
+what the caller passes.
+
+The three architectural layers each play a distinct role:
+
+| Layer | Responsibility | Mechanism |
+|---|---|---|
+| **Command** (`Git::Commands::*`) | Neutral git CLI interface | Declares options via DSL (e.g. `flag_option :edit, negatable: true`) — no policy |
+| **Facade** (`Git::Lib`) | Safe defaults | Sets policy options at each call site (e.g. `edit: false`); callers may override |
+| **Execution** (`Git::CommandLine`) | Unconditional safety net | `GIT_EDITOR='true'` in every subprocess environment |
+
+> **Anti-pattern:** `literal '--no-edit'`, `literal '--verbose'`,
+> `literal '--no-progress'` inside a command class — embeds policy in the wrong layer.
+>
+> **Correct pattern:** `flag_option :edit, negatable: true` in the command;
+> `edit: false` passed from the facade call site.
 
 ## Wrapping a git command
 

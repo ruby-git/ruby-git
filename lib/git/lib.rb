@@ -738,7 +738,7 @@ module Git
     # @return [String] the command output
     #
     def mv(source, destination, options = {})
-      Git::Commands::Mv.new(self).call(*Array(source), destination, **options).stdout
+      Git::Commands::Mv.new(self).call(*Array(source), destination, verbose: true, **options).stdout
     end
 
     def full_tree(sha)
@@ -1284,7 +1284,7 @@ module Git
 
       deprecate_commit_add_all_option!(opts)
 
-      Git::Commands::Commit.new(self).call(**opts).stdout
+      Git::Commands::Commit.new(self).call(edit: false, **opts).stdout
     end
 
     # @return [String] the command output
@@ -1529,7 +1529,7 @@ module Git
       # Map legacy option names to new interface
       opts = translate_merge_options(opts)
 
-      Git::Commands::Merge::Start.new(self).call(*Array(branch), **opts).stdout
+      Git::Commands::Merge::Start.new(self).call(*Array(branch), edit: false, **opts).stdout
     end
 
     # Find common ancestor commit(s) for merge
@@ -1829,7 +1829,7 @@ module Git
       assert_valid_opts(opts, PULL_ALLOWED_OPTS)
       allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
       positional_args = [remote, branch].compact
-      Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
+      Git::Commands::Pull.new(self).call(*positional_args, edit: false, progress: false, **allowed_opts).stdout
     end
 
     # Return the SHA of a tag reference
@@ -1866,7 +1866,7 @@ module Git
     #
     # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
-      result = Git::Commands::Fsck.new(self).call(*objects, **opts)
+      result = Git::Commands::Fsck.new(self).call(*objects, progress: false, **opts)
       Git::Parsers::Fsck.parse(result.stdout)
     end
     # rubocop:enable Style/ArgumentsForwarding

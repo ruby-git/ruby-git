@@ -420,6 +420,7 @@ RSpec.describe Git::Lib do
     it 'parses the command output into a FsckResult' do
       fsck_output = "dangling blob 1234567890abcdef1234567890abcdef12345678\n"
       allow(fsck_command).to receive(:call)
+        .with(progress: false)
         .and_return(command_result(fsck_output))
 
       result = lib.fsck
@@ -432,12 +433,12 @@ RSpec.describe Git::Lib do
 
     it 'forwards objects and options to the command' do
       allow(fsck_command).to receive(:call)
-        .with('abc1234', strict: true)
+        .with('abc1234', progress: false, strict: true)
         .and_return(command_result(''))
 
       result = lib.fsck('abc1234', strict: true)
 
-      expect(fsck_command).to have_received(:call).with('abc1234', strict: true)
+      expect(fsck_command).to have_received(:call).with('abc1234', progress: false, strict: true)
       expect(result).to be_a(Git::FsckResult)
     end
   end

@@ -374,13 +374,12 @@ Include ALL git options in the DSL by default — including output-format flags 
 `--patch`, `--numstat`, `--raw`, `--format=…`, `--pretty=…`, `--no-color`, etc.
 
 The only options that should be **excluded** are those that conflict with the
-subprocess execution model: options that require TTY input, open an external editor,
-or otherwise make the command incompatible with non-interactive subprocess execution:
+subprocess execution model: options that require TTY input or otherwise make the
+command incompatible with non-interactive subprocess execution:
 
 Examples of options to **exclude** (execution-model conflicts):
 
 - `--interactive` / `-i` — opens an interactive menu; requires a TTY
-- `--edit` / `-e` — opens an editor ($EDITOR); incompatible with subprocess
 - `--patch` (interactive form, e.g. `git add -p`) — requires TTY prompts
 - Any option whose git implementation requires stdin/TTY interaction the library
   cannot provide
@@ -404,12 +403,20 @@ Examples of options to **include** (no execution-model conflict):
 **Default assumption for `--verbose` and `--quiet`:** include unless their git
 implementation requires interactive I/O.
 
-**The `--no-edit` edge case:** `--no-edit` is a safe, non-interactive flag — it
-suppresses editor opening, which is the opposite of an execution-model conflict. If
-the facade always passes `--no-edit` to prevent interactive editor invocations (e.g.,
-for `git commit --amend --no-edit`), include `--no-edit` in the DSL using
-`flag_option :no_edit`. Do **not** hardcode it as `literal '--no-edit'` — that
-prevents callers from omitting it.
+Command classes are neutral — they never hardcode `literal` entries for
+output-control, editor-suppression, or progress flags. Declare these as
+`flag_option` / `value_option` so the facade can pass the policy value.
+
+> **Anti-pattern:** `literal '--no-edit'`, `literal '--verbose'`,
+> `literal '--no-progress'` inside a command class.
+>
+> **Correct pattern:** `flag_option :edit, negatable: true` in the command;
+> `edit: false` passed from the facade call site.
+
+**The `--edit` / `--no-edit` pair:** Model as `flag_option :edit, negatable: true`.
+The facade (`Git::Lib`) passes `edit: false` at each call site. Do **not** hardcode
+`literal '--no-edit'` — that prevents the facade from controlling the option — and do
+**not** exclude `--edit` from the DSL.
 
 **Output-format options belong at the facade call site, not as `literal` entries:**
 When a parser requires specific output flags (e.g. `--pretty=raw`, `--numstat`),

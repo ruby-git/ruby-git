@@ -28,7 +28,7 @@ module Git
     class Mv < Git::Commands::Base
       arguments do
         literal 'mv'
-        literal '--verbose'
+        flag_option %i[verbose v]
         flag_option %i[force f]
         flag_option %i[dry_run n]
         flag_option :k
@@ -50,6 +50,10 @@ module Git
       #     @param destination [String] the destination file or directory
       #
       #     @param options [Hash] command options
+      #
+      #     @option options [Boolean] :verbose (nil) Report the names of files as they are moved
+      #
+      #       Alias: `:v`
       #
       #     @option options [Boolean] :force (nil) Force renaming or moving even if the destination exists
       #

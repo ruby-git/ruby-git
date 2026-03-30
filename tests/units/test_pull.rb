@@ -138,7 +138,7 @@ class TestPull < Test::Unit::TestCase
   end
 
   test 'pull with allow_unrelated_histories: true' do
-    expected_command_line = ['pull', '--no-edit', '--allow-unrelated-histories', '--', 'origin', 'feature1', {}]
+    expected_command_line = ['pull', '--no-edit', '--allow-unrelated-histories', '--no-progress', '--', 'origin', 'feature1', {}]
     assert_command_line_eq(expected_command_line) do |git|
       git.pull('origin', 'feature1', allow_unrelated_histories: true)
     end

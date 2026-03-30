@@ -90,6 +90,11 @@ end
 
 - parser invocations
 - output transformation logic
+- `literal` entries for policy/output-control flags (e.g. `literal '--no-edit'`,
+  `literal '--verbose'`, `literal '--no-progress'`, `literal '--no-color'`) —
+  command classes are neutral, faithful representations of the git CLI; convert to
+  `flag_option` / `value_option` so the facade can pass the policy value. See
+  "Command-layer neutrality" in CONTRIBUTING.md.
 - manual `raise_on_failure` / manual exit-code checks (unless temporarily needed in
   an unmigrated class)
 - duplicated bind/execute logic
