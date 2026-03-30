@@ -249,6 +249,9 @@ end
 3. **Remove all new methods**: Don't try to make new methods backward compatible - just remove them
 4. **Minimize changes**: Only modify what's necessary for backward compatibility
 5. **Document conversions**: Make helper methods clear and well-named
+6. **Apply policy at the facade**: `Git::Lib` methods pass policy options explicitly
+   (e.g. `edit: false`, `verbose: true`, `progress: false`) — command classes stay
+   neutral. See "Command-layer neutrality" in CONTRIBUTING.md.
 
 ## Validation Checklist
 

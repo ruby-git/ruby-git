@@ -684,11 +684,17 @@ RSpec.describe Git::Commands::Pull do
       end
     end
 
-    context 'with the :no_edit option' do
-      it 'adds --no-edit to the command line' do
+    context 'with the :edit option' do
+      it 'adds --edit when true' do
+        expect_command_capturing('pull', '--edit').and_return(command_result)
+
+        command.call(edit: true)
+      end
+
+      it 'adds --no-edit when false' do
         expect_command_capturing('pull', '--no-edit').and_return(command_result)
 
-        command.call(no_edit: true)
+        command.call(edit: false)
       end
     end
 

@@ -30,7 +30,7 @@ module Git
     class Fsck < Git::Commands::Base
       arguments do
         literal 'fsck'
-        literal '--no-progress'
+        flag_option :progress, negatable: true
         flag_option :tags
         flag_option :root
         flag_option :unreachable
@@ -57,20 +57,23 @@ module Git
       #   @overload call(*object, **options)
       #
       #     @example Check repository integrity
-      #       # git fsck --no-progress
+      #       # git fsck
       #       result = fsck.call
       #
       #     @example Check specific objects
-      #       # git fsck --no-progress abc1234 def5678
+      #       # git fsck abc1234 def5678
       #       result = fsck.call('abc1234', 'def5678')
       #
       #     @example With options
-      #       # git fsck --no-progress --unreachable --strict
+      #       # git fsck --unreachable --strict
       #       result = fsck.call(unreachable: true, strict: true)
       #
       #     @param object [Array<String>] optional object identifiers to check
       #
       #     @param options [Hash] command options
+      #
+      #     @option options [Boolean] :progress (nil) Show progress status (e.g. `--progress`).
+      #       Pass `false` to suppress progress output (e.g. `--no-progress`)
       #
       #     @option options [Boolean] :tags (nil) report tags
       #

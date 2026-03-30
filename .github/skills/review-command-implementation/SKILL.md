@@ -231,6 +231,11 @@ automatically during `args_definition.bind(...)` — do not set defaults manuall
 - [ ] DSL entries accurately describe subcommand interface
 - [ ] Option aliases and modifiers are used correctly
 - [ ] Ordering produces expected CLI argument order
+- [ ] No `literal` entries for output-control, editor-suppression, or progress flags
+      (e.g. `--no-edit`, `--verbose`, `--no-progress`, `--no-color`). Command classes
+      are neutral, faithful representations of the git CLI — these must be
+      `flag_option` / `value_option` so the facade can control them. See
+      "Command-layer neutrality" in CONTRIBUTING.md.
 - [ ] `operand ... skip_cli: true` is used only for domain inputs that must bind/validate
   but must not emit to argv (for example, stdin-fed object lists)
 - [ ] `execution_option` is used for execution kwargs (`timeout:`, `chdir:`), not `skip_cli`
@@ -268,6 +273,43 @@ For migration PRs, verify process constraints:
       `bundle exec rubocop`, `bundle exec rake yard`)
 
 ## Common Failures
+
+### Policy/output-control flag hardcoded as `literal` (neutrality violation)
+
+`literal` entries for output-control, editor-suppression, progress, or verbose
+flags inside a command class violate the neutrality principle. The command class
+must model the git CLI faithfully; the facade sets safe defaults and callers may
+override them.
+
+Symptom: the command class contains one or more of:
+
+```ruby
+# ❌ Any of these are neutrality violations
+literal '--no-edit'
+literal '--verbose'
+literal '--no-progress'
+literal '--no-color'
+literal '--porcelain'
+```
+
+Fix: convert each to a DSL option and pass the policy value from the facade:
+
+```ruby
+# ✅ In the command class — neutral DSL declaration
+flag_option :edit, negatable: true
+flag_option :progress, negatable: true
+flag_option :verbose
+value_option :format
+
+# ✅ In Git::Lib — facade passes the policy value explicitly
+Git::Commands::Pull.new(self).call(edit: false, progress: false)
+Git::Commands::Mv.new(self).call(*args, verbose: true)
+Git::Commands::Fsck.new(self).call(progress: false)
+```
+
+See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
+
+### Other common failures
 
 - lingering `ARGS = Arguments.define` constant and custom `#call`
 - command-specific duplicated exit-status checks instead of `allow_exit_status`

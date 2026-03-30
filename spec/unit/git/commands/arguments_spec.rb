@@ -1312,9 +1312,9 @@ RSpec.describe Git::Commands::Arguments do
     context 'with as: parameter arrays' do
       it 'supports arrays for flag type' do
         args = described_class.define do
-          flag_option :amend, as: ['--amend', '--no-edit']
+          flag_option :dry_run, as: ['--dry-run', '--porcelain']
         end
-        expect(args.bind(amend: true).to_ary).to eq(['--amend', '--no-edit'])
+        expect(args.bind(dry_run: true).to_ary).to eq(['--dry-run', '--porcelain'])
       end
 
       it 'rejects arrays for flag negatable: true type' do

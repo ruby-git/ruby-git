@@ -216,6 +216,44 @@ conditions. Command specs should test that the command **uses** the DSL correctl
 (i.e., the right arguments reach `execution_context.command_capturing`), not re-test
 the DSL's own behavior.
 
+**Policy vs. interface testing:** Command classes are neutral, faithful
+representations of the git CLI. Their unit tests verify CLI argument building (the
+neutral interface), not policy enforcement. Tests should **not** hardcode policy
+assumptions — for example, a command spec should not always pass `edit: false` or
+expect `--no-edit` unless the test is specifically exercising that option.
+
+> **Anti-pattern:** every `it` block in a command spec passes `edit: false`,
+> `progress: false`, or `no_color: true` — this tests the facade's policy, not
+> the command's interface.
+>
+> **Correct pattern:** test each option independently (`it 'passes --no-edit
+> when edit is false'`); test the default (no option passed) separately. Policy
+> enforcement (which options the facade passes and why) is tested at the facade
+> layer (`lib_command_spec.rb`).
+
+**Where to test policy enforcement:** Policy tests belong in the facade layer,
+not in command specs. When a `Git::Lib` method sets policy defaults like
+`edit: false` or `progress: false`, the corresponding `lib_command_spec.rb`
+(or `lib_spec.rb`) test should verify those defaults reach the command:
+
+```ruby
+# spec/unit/git/lib_command_spec.rb — facade policy-default test
+describe '#pull' do
+  it 'defaults to edit: false for non-interactive execution' do
+    expect_any_instance_of(Git::Commands::Pull)
+      .to receive(:call).with(anything, edit: false).and_call_original
+    lib.pull('origin', 'main')
+  end
+end
+```
+
+This separation ensures:
+- Command specs verify the **neutral interface** (every option works correctly)
+- Facade specs verify the **policy** (the right options are passed and why)
+- An AI sees exactly where each concern is tested and does not conflate them
+
+See "Command-layer neutrality" in CONTRIBUTING.md.
+
 ### `#initialize` — omit from command specs
 
 **Do not write a `describe '#initialize'` block in command specs.** This is a

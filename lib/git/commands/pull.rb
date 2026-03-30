@@ -36,7 +36,7 @@ module Git
     #
     # @example Pull and suppress the merge-commit editor
     #   pull = Git::Commands::Pull.new(execution_context)
-    #   pull.call('origin', no_edit: true)
+    #   pull.call('origin', edit: false)
     #
     class Pull < Git::Commands::Base
       arguments do
@@ -50,7 +50,7 @@ module Git
 
         # Merge options
         flag_option :commit, negatable: true                                 # --commit / --no-commit
-        flag_option :no_edit                                                 # --no-edit
+        flag_option :edit, negatable: true                                   # --edit / --no-edit
         value_option :cleanup, inline: true                                  # --cleanup=<mode>
         flag_option :ff_only                                                 # --ff-only
         flag_option :ff, negatable: true                                     # --ff / --no-ff
@@ -93,7 +93,7 @@ module Git
         value_option %i[jobs j], inline: true # --jobs=<n>
         flag_option :set_upstream                                            # --set-upstream
         value_option :upload_pack                                            # --upload-pack <path>
-        flag_option :progress                                                # --progress
+        flag_option :progress, negatable: true                               # --[no-]progress
         value_option %i[server_option o], inline: true, repeatable: true     # --server-option=<option>
         flag_option :show_forced_updates, negatable: true # --show-forced-updates / --no-show-forced-updates
         flag_option %i[ipv4 4]                                               # --ipv4
@@ -143,10 +143,9 @@ module Git
       #
       #       `true` for `--commit`, `false` for `--no-commit`.
       #
-      #     @option options [Boolean] :no_edit (nil) Suppress the editor for the auto-generated
-      #       merge commit message
-      #
-      #       Corresponds to `--no-edit`. The counterpart `--edit`/`-e` is not supported.
+      #     @option options [Boolean] :edit (nil) Open an editor for the merge commit message.
+      #       When false, adds --no-edit to suppress the editor. When true, adds --edit.
+      #       When nil, defers to git's default behavior.
       #
       #     @option options [String] :cleanup (nil) Merge-message cleanup mode
       #
@@ -308,8 +307,10 @@ module Git
       #
       #     @option options [String] :upload_pack (nil) Path to `git-upload-pack` on the remote
       #
-      #     @option options [Boolean] :progress (nil) Force progress reporting even if stderr
-      #       is not a terminal
+      #     @option options [Boolean] :progress (nil) Control progress reporting
+      #
+      #       `true` for `--progress` (force progress even if stderr is not a terminal),
+      #       `false` for `--no-progress` (suppress progress output).
       #
       #     @option options [String, Array<String>] :server_option (nil) Transmit the given
       #       string to the server when communicating using protocol version 2

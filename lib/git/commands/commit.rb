@@ -28,8 +28,7 @@ module Git
     class Commit < Git::Commands::Base
       arguments do
         literal 'commit'
-        # Always suppress editor (non-interactive use)
-        literal '--no-edit'
+        flag_option :edit, negatable: true
         flag_option %i[all a]
         flag_option :amend
         value_option %i[message m], inline: true, allow_empty: true
@@ -48,6 +47,10 @@ module Git
       #   @overload call(**options)
       #
       #     @param options [Hash] command options
+      #
+      #     @option options [Boolean] :edit (nil) Open an editor for the commit message. When false,
+      #       adds --no-edit to suppress the editor. When true, adds --edit. When nil, defers to
+      #       git's default behavior.
       #
       #     @option options [Boolean] :all (nil) Automatically stage all modified and deleted files
       #       before committing.

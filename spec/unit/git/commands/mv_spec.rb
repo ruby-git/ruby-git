@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Mv do
     context 'with a single file to move' do
       it 'moves the file to the destination' do
         expected_result = command_result
-        expect_command_capturing('mv', '--verbose', '--', 'old_name.rb', 'new_name.rb').and_return(expected_result)
+        expect_command_capturing('mv', '--', 'old_name.rb', 'new_name.rb').and_return(expected_result)
 
         result = command.call('old_name.rb', 'new_name.rb')
 
@@ -21,16 +21,32 @@ RSpec.describe Git::Commands::Mv do
     context 'with multiple source files' do
       it 'moves all files to the destination directory' do
         expect_command_capturing(
-          'mv', '--verbose', '--', 'file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/'
+          'mv', '--', 'file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/'
         ).and_return(command_result)
 
         command.call('file1.rb', 'file2.rb', 'file3.rb', 'destination_dir/')
       end
     end
 
+    context 'with the :verbose option' do
+      it 'includes the --verbose flag' do
+        expect_command_capturing('mv', '--verbose', '--', 'source.rb',
+                                 'dest.rb').and_return(command_result)
+
+        command.call('source.rb', 'dest.rb', verbose: true)
+      end
+
+      it 'also accepts :v as an alias' do
+        expect_command_capturing('mv', '--verbose', '--', 'source.rb',
+                                 'dest.rb').and_return(command_result)
+
+        command.call('source.rb', 'dest.rb', v: true)
+      end
+    end
+
     context 'with the :force option' do
       it 'includes the --force flag' do
-        expect_command_capturing('mv', '--verbose', '--force', '--', 'source.rb',
+        expect_command_capturing('mv', '--force', '--', 'source.rb',
                                  'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', force: true)
@@ -39,7 +55,7 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with the :dry_run option' do
       it 'includes the --dry-run flag' do
-        expect_command_capturing('mv', '--verbose', '--dry-run', '--', 'source.rb',
+        expect_command_capturing('mv', '--dry-run', '--', 'source.rb',
                                  'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', dry_run: true)
@@ -48,7 +64,7 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with the :k option' do
       it 'includes the -k flag' do
-        expect_command_capturing('mv', '--verbose', '-k', '--', 'source.rb', 'dest.rb').and_return(command_result)
+        expect_command_capturing('mv', '-k', '--', 'source.rb', 'dest.rb').and_return(command_result)
 
         command.call('source.rb', 'dest.rb', k: true)
       end
@@ -57,7 +73,7 @@ RSpec.describe Git::Commands::Mv do
     context 'with multiple options combined' do
       it 'includes all specified flags' do
         expect_command_capturing(
-          'mv', '--verbose', '--force', '--dry-run', '--', 'source.rb', 'dest.rb'
+          'mv', '--force', '--dry-run', '--', 'source.rb', 'dest.rb'
         ).and_return(command_result)
 
         command.call('source.rb', 'dest.rb', force: true, dry_run: true)
@@ -65,7 +81,7 @@ RSpec.describe Git::Commands::Mv do
 
       it 'handles force and k together' do
         expect_command_capturing(
-          'mv', '--verbose', '--force', '-k', '--', 'file1.rb', 'file2.rb', 'dest_dir/'
+          'mv', '--force', '-k', '--', 'file1.rb', 'file2.rb', 'dest_dir/'
         ).and_return(command_result)
 
         command.call('file1.rb', 'file2.rb', 'dest_dir/', force: true, k: true)
@@ -74,7 +90,7 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with paths containing special characters' do
       it 'handles paths with spaces' do
-        expect_command_capturing('mv', '--verbose', '--', 'old file.rb', 'new file.rb').and_return(command_result)
+        expect_command_capturing('mv', '--', 'old file.rb', 'new file.rb').and_return(command_result)
 
         command.call('old file.rb', 'new file.rb')
       end
@@ -82,14 +98,14 @@ RSpec.describe Git::Commands::Mv do
 
     context 'with directory paths' do
       it 'moves a directory to a new location' do
-        expect_command_capturing('mv', '--verbose', '--', 'old_dir/', 'new_dir/').and_return(command_result)
+        expect_command_capturing('mv', '--', 'old_dir/', 'new_dir/').and_return(command_result)
 
         command.call('old_dir/', 'new_dir/')
       end
 
       it 'moves files into an existing directory' do
         expect_command_capturing(
-          'mv', '--verbose', '--', 'file1.rb', 'file2.rb', 'existing_dir/'
+          'mv', '--', 'file1.rb', 'file2.rb', 'existing_dir/'
         ).and_return(command_result)
 
         command.call('file1.rb', 'file2.rb', 'existing_dir/')

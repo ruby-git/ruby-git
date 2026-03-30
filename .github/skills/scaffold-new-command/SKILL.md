@@ -35,6 +35,7 @@ docs using the `Git::Commands::Base` architecture.
   - [Step 1 — Review Arguments DSL](#step-1--review-arguments-dsl)
   - [Step 2 — Review Command Tests](#step-2--review-command-tests)
   - [Step 3 — Command YARD Documentation](#step-3--command-yard-documentation)
+- [Facade delegation and policy options](#facade-delegation-and-policy-options)
 - [Phased rollout, compatibility, and quality gates](#phased-rollout-compatibility-and-quality-gates)
 
 ## How to use this skill
@@ -449,7 +450,7 @@ For each option, make one of two decisions:
 | Decision | Reason | Action |
 |---|---|---|
 | **Include** | All behavioral options — including output-format flags (`--pretty=`, `--patch`, `--numstat`, `--name-only`, etc.) and filtering/selection flags | Add to `arguments do` |
-| **Exclude (execution-model conflict)** | Requires TTY input, opens an external editor, or otherwise makes the command incompatible with non-interactive subprocess execution | Omit — see "Execution-model conflicts are intentionally omitted" below |
+| **Exclude (execution-model conflict)** | Requires TTY input or otherwise makes the command incompatible with non-interactive subprocess execution | Omit — see "Execution-model conflicts are intentionally omitted" below |
 
 Group related options with a comment in the DSL (e.g. `# Ref inclusion`, `# Date
 filtering`, `# Commit ordering`). Follow the section groupings from the
@@ -504,6 +505,15 @@ supported Git version has also been raised.
 
 ## Execution-model conflicts are intentionally omitted
 
+Command classes are neutral — they never hardcode policy choices (output-control,
+editor suppression, progress, verbose). Those belong to the facade (`Git::Lib`).
+
+> **Anti-pattern:** `literal '--no-edit'`, `literal '--verbose'`,
+> `literal '--no-progress'` inside a command class.
+>
+> **Correct pattern:** `flag_option :edit, negatable: true` in the command;
+> `edit: false` passed from the facade call site.
+
 Include **all** git options in the DSL by default — including output-format flags
 such as `--patch`, `--numstat`, `--raw`, `--format=…`, `--pretty=…`, `--no-color`,
 etc. The facade passes these explicitly when a parser requires a specific format;
@@ -513,7 +523,6 @@ The **only** options to exclude are those that conflict with non-interactive
 subprocess execution:
 
 - `--interactive` / `-i` — opens an interactive menu; requires a TTY
-- `--edit` / `-e` — opens `$EDITOR`; incompatible with subprocess execution
 - `--patch` (interactive form, e.g. `git add -p`) — requires TTY prompts
 - Any option whose git implementation requires stdin/TTY interaction the
   library cannot provide
@@ -523,12 +532,13 @@ subprocess execution:
 > (exclude). In `git diff --patch` it selects a non-interactive output format
 > (include). Evaluate per-command, not globally.
 
+**`--edit` / `--no-edit`:** Model as `flag_option :edit, negatable: true`. The
+command class is neutral; the facade passes `edit: false` at each call site. Do
+**not** hardcode `literal '--no-edit'`. See "Command-layer neutrality" in
+CONTRIBUTING.md.
+
 **`--verbose`/`-v` and `--quiet`/`-q`:** include these unless their git
 implementation requires interactive I/O.
-
-**The `--no-edit` edge case:** `--no-edit` suppresses editor opening — it is the
-opposite of an execution-model conflict. Use `flag_option :no_edit`; do **not**
-hardcode it as `literal '--no-edit'`, which prevents callers from omitting it.
 
 ## `end_of_options` placement
 
@@ -815,6 +825,46 @@ against the unit and integration spec files. Fix all issues before proceeding.
 
 Load and apply **[Command YARD Documentation](../command-yard-documentation/SKILL.md)**
 against the command class. Fix all issues before proceeding.
+
+## Facade delegation and policy options
+
+The command class is only half the story. After scaffolding the command, you must
+also write (or update) the `Git::Lib` method that **delegates** to it. The facade
+sets safe policy defaults at each call site — `edit: false`, `verbose: true`,
+`progress: false`, etc. — not as `literal` entries inside the command class.
+Callers may override these defaults when needed.
+See "Command-layer neutrality" in CONTRIBUTING.md.
+
+```ruby
+# lib/git/lib.rb — facade method for `git pull`
+
+PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
+
+def pull(remote = nil, branch = nil, opts = {})
+  raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
+
+  assert_valid_opts(opts, PULL_ALLOWED_OPTS)
+  allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
+  positional_args = [remote, branch].compact
+  # edit: false is the non-interactive default (see CONTRIBUTING.md)
+  Git::Commands::Pull.new(self).call(*positional_args, edit: false, **allowed_opts).stdout
+end
+```
+
+Key points for the facade method:
+
+- **Filter options** — declare an `ALLOWED_OPTS` constant listing only the options
+  the public API accepted at v4.3.0. Use `assert_valid_opts` + `opts.slice` to
+  prevent accidental API expansion.
+- **Pass policy options as safe defaults** — `edit: false`, `progress: false`, etc.
+  Place them before `**opts` so the caller can override when needed.
+  Add a comment explaining *why* (e.g., `# non-interactive default`).
+- **Return the legacy type** — typically `.stdout` or a parsed struct, not
+  `CommandLineResult`.
+
+See [Extract Command from Lib](../extract-command-from-lib/SKILL.md) for the
+complete delegation workflow and additional patterns (stdout passthrough,
+parsed return values, opts-hash normalization).
 
 ## Phased rollout, compatibility, and quality gates
 

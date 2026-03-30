@@ -33,8 +33,7 @@ module Git
       class Start < Git::Commands::Base
         arguments do
           literal 'merge'
-          # Always suppress editor (non-interactive use)
-          literal '--no-edit'
+          flag_option :edit, negatable: true
 
           # Commit behavior
           flag_option :commit, negatable: true
@@ -84,6 +83,10 @@ module Git
         #       an octopus merge.
         #
         #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :edit (nil) Open an editor for the merge commit message.
+        #       When false, adds --no-edit to suppress the editor. When true, adds --edit.
+        #       When nil, defers to git's default behavior.
         #
         #     @option options [Boolean] :commit (nil) Perform merge and commit.
         #       true for --commit, false for --no-commit

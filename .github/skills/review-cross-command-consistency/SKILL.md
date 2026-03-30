@@ -85,6 +85,11 @@ only as a supplemental check.
 - [ ] shared options use same alias/modifier patterns
 - [ ] shared entries appear in same relative order
 - [ ] command-specific differences are intentional and documented
+- [ ] no `literal` entries for policy/output-control flags (`--no-edit`, `--verbose`,
+      `--no-progress`, `--no-color`, etc.) — command classes are neutral, faithful
+      representations of the git CLI; all siblings use `flag_option` /
+      `value_option` for these, leaving policy decisions to the facade. See
+      "Command-layer neutrality" in CONTRIBUTING.md.
 
 ### 3. Exit-status consistency
 

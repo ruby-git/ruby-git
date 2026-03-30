@@ -795,6 +795,39 @@ future work:
     `literal "--format=…"` in `Branch::List` and `Tag::List` were moved to
     their respective facade call sites.
 
+17. **Command classes are neutral; the facade owns policy**
+
+    Command classes are faithful, neutral representations of the git CLI. They
+    never hardcode `literal` entries for output-control, editor-suppression, or
+    progress flags. The facade (`Git::Lib`) sets safe defaults at each call site
+    (e.g. `edit: false`, `progress: false`); callers may override when needed.
+    The execution layer (`GIT_EDITOR='true'`) is an unconditional safety net.
+
+    ```ruby
+    # ❌ Anti-pattern: policy embedded in command class
+    class Pull < Git::Commands::Base
+      arguments do
+        literal 'pull'
+        literal '--no-edit'      # ← wrong layer
+        literal '--no-progress'  # ← same problem
+      end
+    end
+
+    # ✅ Correct: command is neutral; facade passes policy options
+    class Pull < Git::Commands::Base
+      arguments do
+        literal 'pull'
+        flag_option :edit, negatable: true
+        flag_option :progress, negatable: true
+      end
+    end
+
+    # lib/git/lib.rb — facade sets safe defaults:
+    Git::Commands::Pull.new(self).call(edit: false, progress: false)
+    ```
+
+    See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
+
 - **1. Migrate the First Command (`add`)**:
 
   - **Write Unit Tests First**: Write comprehensive RSpec unit tests for the
