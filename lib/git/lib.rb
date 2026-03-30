@@ -289,7 +289,7 @@ module Git
 
       arr_opts += log_path_options(opts)
 
-      command_lines('log', *arr_opts).map { |l| l.split.first }
+      log_or_empty_on_unborn { command_lines('log', *arr_opts).map { |l| l.split.first } }
     end
 
     FULL_LOG_EXTRA_OPTIONS_MAP = [
@@ -360,8 +360,10 @@ module Git
       args += build_args(opts, FULL_LOG_EXTRA_OPTIONS_MAP)
       args += log_path_options(opts)
 
-      full_log = command_lines('log', *args)
-      process_commit_log_data(full_log)
+      log_or_empty_on_unborn do
+        full_log = command_lines('log', *args)
+        process_commit_log_data(full_log)
+      end
     end
 
     # Verify and resolve a Git revision to its full SHA
@@ -2261,6 +2263,15 @@ module Git
         arr_opts += Array(opts[:path_limiter])
       end
       arr_opts
+    end
+
+    def log_or_empty_on_unborn
+      yield
+    rescue Git::FailedError => e
+      raise unless e.result.status.exitstatus == 128 &&
+                   e.result.stderr =~ /does not have any commits yet/
+
+      []
     end
   end
 end

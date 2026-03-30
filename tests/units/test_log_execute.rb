@@ -151,4 +151,13 @@ class TestLogExecute < Test::Unit::TestCase
     # The new result set should reflect the change
     assert_equal(5, new_results.size)
   end
+
+  def test_log_execute_on_empty_repo
+    Dir.mktmpdir do |dir|
+      git = Git.init(dir)
+      result = git.log.execute
+      assert_instance_of(Git::Log::Result, result)
+      assert_equal(0, result.size)
+    end
+  end
 end
