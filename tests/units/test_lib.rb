@@ -157,6 +157,14 @@ class TestLib < Test::Unit::TestCase
     end
   end
 
+  def test_log_commits_on_empty_repo
+    Dir.mktmpdir do |dir|
+      lib = Git.init(dir).lib
+      assert_equal([], lib.log_commits)
+      assert_equal([], lib.full_log_commits)
+    end
+  end
+
   def test_git_ssh_from_environment_is_passed_to_binary
     saved_binary_path = Git::Base.config.binary_path
     saved_git_ssh = Git::Base.config.git_ssh
