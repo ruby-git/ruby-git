@@ -43,7 +43,7 @@ require 'git/worktrees'
 #
 # @author Scott Chacon (mailto:schacon@gmail.com)
 #
-module Git
+module Git # rubocop:disable Style/OneClassPerFile
   # g.config('user.name', 'Scott Chacon') # sets value
   # g.config('user.email', 'email@email.com')  # sets value
   # g.config('user.name')  # returns 'Scott Chacon'

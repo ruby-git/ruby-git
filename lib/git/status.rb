@@ -80,11 +80,7 @@ module Git
     rescue Git::FailedError
       @_ignore_case = false
     end
-  end
-end
 
-module Git
-  class Status
     # Represents a single file's status in the git repository. Each instance
     # holds information about a file's state in the index and working tree.
     class StatusFile
@@ -109,11 +105,7 @@ module Git
         @base.object(sha) if sha
       end
     end
-  end
-end
 
-module Git
-  class Status
     # A factory class responsible for fetching git status data and building
     # a hash of StatusFile objects.
     # @api private

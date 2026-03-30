@@ -133,7 +133,7 @@ module Git
     private
 
     def validate_paths_not_arrays(paths)
-      return unless paths.any? { |p| p.is_a?(Array) }
+      return unless paths.any?(Array)
 
       raise ArgumentError,
             'path expects individual arguments, not arrays. ' \
