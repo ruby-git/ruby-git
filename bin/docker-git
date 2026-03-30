@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+  echo "Build and run a Docker container with a specific version of git."
+  echo ""
+  echo "Usage: $(basename "$0") <version>"
+  echo ""
+  echo "Example: $(basename "$0") 2.28.0"
+  exit 1
+}
+
+[ -z "$1" ] && usage
+
+GIT_VERSION="$1"
+SCRIPT_DIR=$(dirname "$0")
+docker build -t "local/git:$GIT_VERSION" --build-arg "GIT_VERSION=$GIT_VERSION" -f "$SCRIPT_DIR/git.dockerfile" .
+docker run -it --rm "local/git:$GIT_VERSION"
