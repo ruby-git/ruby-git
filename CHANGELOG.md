@@ -5,6 +5,19 @@
 
 # Change Log
 
+## [4.3.2](https://github.com/ruby-git/ruby-git/compare/v4.3.1...v4.3.2) (2026-03-31)
+
+
+### Bug Fixes
+
+* Return empty result from git log on repo with no commits ([d275b25](https://github.com/ruby-git/ruby-git/commit/d275b25b03201ebaca13a81a75e3295ed85c40c7)), closes [#1155](https://github.com/ruby-git/ruby-git/issues/1155)
+
+
+### Other Changes
+
+* Add docker-git script to test with specific git versions ([0cc0e80](https://github.com/ruby-git/ruby-git/commit/0cc0e804758e73520c124622a7ba49ff97f2deaf))
+* Address newly reported rubocop offenses ([a37412d](https://github.com/ruby-git/ruby-git/commit/a37412d6a1cf2b927a6173ea767a7ad9f1290af6))
+
 ## [4.3.1](https://github.com/ruby-git/ruby-git/compare/v4.3.0...v4.3.1) (2026-02-20)
 
 
