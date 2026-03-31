@@ -164,7 +164,7 @@ class TestLib < Test::Unit::TestCase
   end
 
   def test_rev_parse_with_bad_revision
-    assert_raise(ArgumentError) do
+    assert_raise_with_message(Git::FailedError, /exit 128, stderr: "fatal: bad revision '--all'"/) do
       @lib.rev_parse('--all')
     end
   end

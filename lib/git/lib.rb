@@ -35,6 +35,7 @@ require_relative 'commands/mv'
 require_relative 'commands/pull'
 require_relative 'commands/push'
 require_relative 'commands/reset'
+require_relative 'commands/rev_parse'
 require_relative 'commands/revert'
 require_relative 'commands/remote/add'
 require_relative 'commands/remote/get_url'
@@ -359,12 +360,9 @@ module Git
     # @return [String] the full commit hash
     #
     # @raise [Git::FailedError] if the revision cannot be resolved
-    # @raise [ArgumentError] if the revision is a string starting with a hyphen
     #
     def rev_parse(revision)
-      assert_args_are_not_options('rev', revision)
-
-      command_capturing('rev-parse', '--revs-only', '--end-of-options', revision, '--').stdout
+      Git::Commands::RevParse.new(self).call(revision, '--', revs_only: true).stdout
     end
 
     # For backwards compatibility with the old method name
@@ -1234,7 +1232,7 @@ module Git
     # @return [Boolean]
     #
     def empty?
-      command_capturing('rev-parse', '--verify', 'HEAD')
+      Git::Commands::RevParse.new(self).call('HEAD', verify: true)
       false
     rescue Git::FailedError => e
       raise unless e.result.status.exitstatus == 128 &&
@@ -2419,7 +2417,7 @@ module Git
     end
 
     def get_branch_state(branch_name)
-      command_capturing('rev-parse', '--verify', '--quiet', branch_name)
+      Git::Commands::RevParse.new(self).call(branch_name, verify: true, quiet: true)
       :active
     rescue Git::FailedError => e
       # An exit status of 1 with empty stderr from `rev-parse --verify`

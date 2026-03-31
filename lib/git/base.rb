@@ -4,6 +4,8 @@ require 'logger'
 require 'open3'
 require 'pathname'
 
+require 'git/commands/rev_parse'
+
 module Git
   # The main public interface for interacting with Git commands
   #
@@ -77,27 +79,18 @@ module Git
     def self.root_of_worktree(working_dir)
       raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
 
-      result, status = execute_rev_parse_toplevel(working_dir)
-      process_rev_parse_result(result, status, working_dir)
+      execute_rev_parse_toplevel(working_dir)
     end
 
     private_class_method def self.execute_rev_parse_toplevel(working_dir)
-      Open3.capture2e(
-        Git::Base.config.binary_path,
-        '-c', 'core.quotePath=true',
-        '-c', 'core.editor=false',
-        '-c', 'color.ui=false',
-        'rev-parse', '--show-toplevel',
-        chdir: File.expand_path(working_dir)
-      )
+      execution_context = Git::Lib.new(nil)
+      Git::Commands::RevParse.new(execution_context).call(
+        show_toplevel: true, chdir: File.expand_path(working_dir)
+      ).stdout
     rescue Errno::ENOENT
       raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
-    end
-
-    private_class_method def self.process_rev_parse_result(result, status, working_dir)
-      raise ArgumentError, "'#{working_dir}' is not in a git working tree" unless status.success?
-
-      result.chomp
+    rescue Git::FailedError
+      raise ArgumentError, "'#{working_dir}' is not in a git working tree"
     end
 
     # (see Git.open)
