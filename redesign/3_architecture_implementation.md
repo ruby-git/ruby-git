@@ -22,20 +22,20 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (41/54 checklist items done, 13 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (42/54 checklist items done, 12 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `rev_parse`** → `Git::Commands::RevParse` — `git rev-parse`
+**Migrate `name_rev`** → `Git::Commands::NameRev` — `git name-rev`
 
-Create `Git::Commands::RevParse` to wrap `git rev-parse`. Update `Git::Lib#rev_parse` to
+Create `Git::Commands::NameRev` to wrap `git name-rev`. Update `Git::Lib#name_rev` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def rev_parse`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def name_rev`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
