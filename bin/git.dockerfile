@@ -8,6 +8,15 @@ RUN curl -sL "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VER
     cd "git-${GIT_VERSION}" && \
     make prefix=/usr/local NO_REGEX=NeedsStartEnd NO_TCLTK=YesPlease LIBC_CONTAINS_LIBINTL= all && \
     make prefix=/usr/local NO_REGEX=NeedsStartEnd NO_TCLTK=YesPlease LIBC_CONTAINS_LIBINTL= install && \
-    cd .. && rm -rf "git-${GIT_VERSION}"
+    cd .. && rm -rf "git-${GIT_VERSION}" && \
+    apk del --no-cache curl-dev build-base expat-dev openssl-dev zlib-dev && \
+    rm -rf /var/cache/apk/* && \
+    git config --global user.name "Git User" && \
+    git config --global user.email "git@example.com" && \
+    git config --global init.defaultBranch main && \
+    git config --global core.editor "vi" && \
+    git config --global core.pager ""
+
+WORKDIR /work
 
 ENTRYPOINT ["/bin/sh"]
