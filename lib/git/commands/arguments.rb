@@ -1019,18 +1019,23 @@ module Git
         @past_separator = true if flag_string == '--'
       end
 
-      # Conditionally emit '--' only when at least one following argument produces output
+      # Conditionally emit an options terminator only when at least one following
+      # argument produces output
       #
       # This is the canonical form for declaring the options/operands boundary in a
       # command definition. Unlike {#literal} with `'--'` which always emits the
-      # separator, `end_of_options` emits `--` only when at least one argument defined
-      # after it will be emitted as part of the CLI (for example operands or
-      # `value_option ... as_operand: true`). This avoids a trailing bare `--` when no
-      # pathspecs or other post-separator arguments are provided.
+      # separator, `end_of_options` emits its terminator string only when at least one
+      # argument defined after it will be emitted as part of the CLI (for example
+      # operands or `value_option ... as_operand: true`). This avoids a trailing bare
+      # terminator when no pathspecs or other post-separator arguments are provided.
       #
       # `end_of_options` also acts as an always-active validation boundary: operands
       # defined before it are always validated for option-like values (starting with
-      # `-`), regardless of whether `--` will ultimately be emitted.
+      # `-`), regardless of whether the terminator will ultimately be emitted.
+      #
+      # @param as [String] the CLI token to emit as the options terminator
+      #   (default `'--'`). Some commands use a different terminator; for example,
+      #   `git rev-parse` uses `'--end-of-options'`.
       #
       # @return [void]
       #
@@ -1050,11 +1055,21 @@ module Git
       #   args_def.bind(nil, 'file.txt').to_a      # => ['--', 'file.txt']
       #   args_def.bind(nil).to_a                  # => []
       #
-      def end_of_options
+      # @example Custom terminator (git rev-parse --end-of-options)
+      #   args_def = Arguments.define do
+      #     flag_option :verify
+      #     end_of_options as: '--end-of-options'
+      #     operand :args, repeatable: true
+      #   end
+      #   args_def.bind('HEAD').to_a               # => ['--end-of-options', 'HEAD']
+      #   args_def.bind.to_a                       # => []
+      #
+      def end_of_options(as: '--')
         raise ArgumentError, 'end_of_options cannot be declared twice' if @end_of_options_declared
 
         @ordered_definitions << { kind: :end_of_options }
         @end_of_options_declared = true
+        @end_of_options_as = as
         @past_separator = true
       end
 
@@ -1723,7 +1738,8 @@ module Git
       OPTION_TYPES_AFTER_SEPARATOR = %i[value_as_operand execution_option].freeze
 
       # Sentinel object placed in the build array by an :end_of_options definition.
-      # It is later replaced by '--' if any element follows it, or stripped if it is last.
+      # It is later replaced by the stored `as:` value (default `'--'`) if any element
+      # follows it, or stripped if it is last.
       # Uses Object identity comparison (== is not overridden) so it can never collide
       # with the literal string '--' or any other real argument value.
       END_OF_OPTIONS_MARKER = Object.new.freeze
@@ -1958,7 +1974,8 @@ module Git
         # :nocov:
       end
 
-      # Replace the END_OF_OPTIONS_MARKER with '--' if any element follows it, or strip it
+      # Replace the END_OF_OPTIONS_MARKER with the stored `as:` value if any element
+      # follows it, or strip it
       #
       # @param args [Array] the built argument array (may contain END_OF_OPTIONS_MARKER)
       # @return [Array<String>] the argument array with the marker resolved
@@ -1970,7 +1987,7 @@ module Git
         if idx == args.size - 1
           args.delete_at(idx) # nothing follows — strip
         else
-          args[idx] = '--'    # something follows — make it real
+          args[idx] = @end_of_options_as # something follows — make it real
         end
         args
       end

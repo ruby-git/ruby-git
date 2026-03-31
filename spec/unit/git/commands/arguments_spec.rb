@@ -5680,6 +5680,100 @@ RSpec.describe Git::Commands::Arguments do
         expect(args.bind('HEAD', '-file.txt').to_a).to eq(['HEAD', '--', '-file.txt'])
       end
     end
+
+    context 'with as: option' do
+      context 'when as: is specified' do
+        let(:args) do
+          described_class.define do
+            flag_option :verify
+            end_of_options as: '--end-of-options'
+            operand :args, repeatable: true
+          end
+        end
+
+        it 'emits the custom as: value when a following operand has a value' do
+          expect(args.bind('HEAD').to_a).to eq(['--end-of-options', 'HEAD'])
+        end
+
+        it 'omits the custom as: value when no following operand has a value' do
+          expect(args.bind.to_a).to eq([])
+        end
+
+        it 'allows post-boundary operands to contain "--"' do
+          expect(args.bind('HEAD', '--', 'file.txt').to_a).to eq(['--end-of-options', 'HEAD', '--', 'file.txt'])
+        end
+
+        it 'allows post-boundary operands to contain hyphen-prefixed values' do
+          expect(args.bind('-f').to_a).to eq(['--end-of-options', '-f'])
+        end
+
+        it 'passes flags before end_of_options' do
+          expect(args.bind('HEAD', verify: true).to_a).to eq(['--verify', '--end-of-options', 'HEAD'])
+        end
+      end
+
+      context 'when as: is explicitly "--"' do
+        let(:args) do
+          described_class.define do
+            operand :commit
+            end_of_options as: '--'
+            operand :paths, repeatable: true
+          end
+        end
+
+        it 'behaves identically to the default (no as: argument)' do
+          expect(args.bind('HEAD', 'file.txt').to_a).to eq(['HEAD', '--', 'file.txt'])
+        end
+
+        it 'omits -- when no following operand has a value' do
+          expect(args.bind('HEAD').to_a).to eq(['HEAD'])
+        end
+      end
+
+      context 'boundary semantics with as:' do
+        let(:args) do
+          described_class.define do
+            operand :commit
+            end_of_options as: '--end-of-options'
+            operand :paths, repeatable: true
+          end
+        end
+
+        it 'still validates pre-boundary operands as option-like' do
+          expect { args.bind('--bad') }.to raise_error(
+            ArgumentError, "operand :commit value '--bad' looks like a command-line option"
+          )
+        end
+
+        it 'does not validate post-boundary operands' do
+          expect(args.bind('HEAD', '--something').to_a).to eq(['HEAD', '--end-of-options', '--something'])
+        end
+      end
+
+      context 'duplicate guard with as:' do
+        it 'raises ArgumentError if end_of_options is declared twice with as:' do
+          expect do
+            described_class.define do
+              end_of_options as: '--end-of-options'
+              end_of_options as: '--end-of-options'
+            end
+          end.to raise_error(ArgumentError, 'end_of_options cannot be declared twice')
+        end
+      end
+
+      context 'marker does not leak with as:' do
+        let(:args) do
+          described_class.define do
+            flag_option :force
+            end_of_options as: '--end-of-options'
+          end
+        end
+
+        it 'does not emit the custom as: value when nothing follows' do
+          expect(args.bind(force: true).to_a).to eq(['--force'])
+        end
+      end
+    end
   end
 
   describe Git::Commands::Arguments::Bound do
