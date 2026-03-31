@@ -840,6 +840,23 @@ RSpec.describe Git::Lib do
       expect { lib.full_log_commits(bogus: true) }
         .to raise_error(ArgumentError, /Unknown options: bogus/)
     end
+
+    context 'when the repository has no commits (unborn branch)' do
+      it 'returns an empty array' do
+        failed_result = command_result('', stderr: "fatal: your current branch 'main' does not have any commits yet",
+                                           exitstatus: 128)
+        allow(log_command).to receive(:call).and_raise(Git::FailedError, failed_result)
+
+        expect(lib.full_log_commits).to eq([])
+      end
+
+      it 're-raises FailedError for other exit-128 errors' do
+        failed_result = command_result('', stderr: 'fatal: bad default revision', exitstatus: 128)
+        allow(log_command).to receive(:call).and_raise(Git::FailedError, failed_result)
+
+        expect { lib.full_log_commits }.to raise_error(Git::FailedError)
+      end
+    end
   end
 
   describe '#grep' do
