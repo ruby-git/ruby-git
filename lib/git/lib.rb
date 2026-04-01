@@ -3,6 +3,7 @@
 require_relative 'args_builder'
 require_relative 'commands/add'
 require_relative 'commands/am'
+require_relative 'commands/archive'
 require_relative 'commands/apply'
 require_relative 'commands/branch/create'
 require_relative 'commands/branch/delete'
@@ -1889,21 +1890,13 @@ module Git
       Git::Commands::CheckoutIndex.new(self).call(*paths.to_a, **keyword_opts)
     end
 
-    ARCHIVE_OPTION_MAP = [
-      { keys: [:prefix],     flag: '--prefix', type: :valued_equals },
-      { keys: [:remote],     flag: '--remote', type: :valued_equals },
-      # These options are used by helpers or handled manually
-      { keys: [:path],       type: :validate_only },
-      { keys: [:format],     type: :validate_only },
-      { keys: [:add_gzip],   type: :validate_only }
-    ].freeze
+    ARCHIVE_ALLOWED_OPTS = %i[prefix remote path format add_gzip].freeze
 
     # Creates an archive of the given tree-ish and writes it to a file
     #
-    # Runs `git archive` and streams its output directly to disk rather than
-    # accumulating it in memory. When `:add_gzip` is `true` or the format is
-    # `'tgz'`, the written archive is then read back into memory for gzip
-    # compression. Returns the path to the written archive file.
+    # Delegates to {Git::Commands::Archive} for CLI execution. Format coercion
+    # (`tgz` → `tar` + gzip), temp file management, and gzip post-processing
+    # remain in this adapter.
     #
     # @see https://git-scm.com/docs/git-archive git-archive
     #
@@ -1930,16 +1923,16 @@ module Git
     # @raise [Git::FailedError] if `git archive` fails
     #
     def archive(sha, file = nil, opts = {})
-      ArgsBuilder.validate!(opts, ARCHIVE_OPTION_MAP)
+      assert_valid_opts(opts, ARCHIVE_ALLOWED_OPTS)
       file ||= temp_file_name
       format, gzip = parse_archive_format_options(opts)
 
-      args = build_args(opts, ARCHIVE_OPTION_MAP)
-      args.unshift("--format=#{format}")
-      args << sha
-      args.push('--', opts[:path]) if opts[:path]
+      command_opts = opts.slice(:prefix, :remote).merge(format: format)
+      path_args = opts[:path] ? [opts[:path]] : []
 
-      File.open(file, 'wb') { |f| command_streaming('archive', *args, out: f) }
+      File.open(file, 'wb') do |f|
+        Git::Commands::Archive.new(self).call(sha, *path_args, **command_opts, out: f)
+      end
       apply_gzip(file) if gzip
 
       file

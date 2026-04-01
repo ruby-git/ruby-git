@@ -663,7 +663,7 @@ RSpec.describe Git::Lib do
         lib.archive('HEAD', out_file.path)
 
         expect(streaming_command_line).to have_received(:run).with(
-          'archive', anything, anything,
+          'archive', '--format=zip', '--', 'HEAD',
           hash_including(out: instance_of(File))
         )
       end
