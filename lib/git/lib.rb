@@ -17,6 +17,7 @@ require_relative 'commands/cat_file/raw'
 require_relative 'commands/clean'
 require_relative 'commands/clone'
 require_relative 'commands/commit'
+require_relative 'commands/commit_tree'
 require_relative 'commands/describe'
 require_relative 'commands/diff'
 require_relative 'commands/diff_files'
@@ -1869,17 +1870,12 @@ module Git
       command_capturing('write-tree').stdout
     end
 
-    COMMIT_TREE_OPTION_MAP = [
-      { keys: %i[parent parents], flag: '-p', type: :repeatable_valued_space },
-      { keys: [:message], flag: '-m', type: :valued_space }
-    ].freeze
+    COMMIT_TREE_ALLOWED_OPTS = %i[p parent parents m message].freeze
 
     def commit_tree(tree, opts = {})
-      opts[:message] ||= "commit tree #{tree}"
-      ArgsBuilder.validate!(opts, COMMIT_TREE_OPTION_MAP)
-
-      flags = build_args(opts, COMMIT_TREE_OPTION_MAP)
-      command_capturing('commit-tree', tree, *flags).stdout
+      assert_valid_opts(opts, COMMIT_TREE_ALLOWED_OPTS)
+      actual_opts = normalize_commit_tree_opts(opts, tree)
+      Git::Commands::CommitTree.new(self).call(tree, **actual_opts).stdout
     end
 
     def update_ref(ref, commit)
@@ -2772,6 +2768,15 @@ module Git
                    e.result.stderr =~ /does not have any commits yet/
 
       []
+    end
+
+    def normalize_commit_tree_opts(opts, tree)
+      opts.dup.tap do |actual_opts|
+        actual_opts[:p] = actual_opts.delete(:parents) if actual_opts.key?(:parents)
+        actual_opts[:p] = actual_opts.delete(:parent) if actual_opts.key?(:parent)
+        actual_opts[:m] = actual_opts.delete(:message) if actual_opts.key?(:message)
+        actual_opts[:m] = "commit tree #{tree}" if actual_opts[:m].nil?
+      end
     end
   end
 end
