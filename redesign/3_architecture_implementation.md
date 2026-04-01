@@ -22,15 +22,15 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (46/54 checklist items done, 8 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (47/54 checklist items done, 7 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `archive`** → `Git::Commands::Archive` — `git archive`
+**Migrate `write_tree`** → `Git::Commands::WriteTree` — `git write-tree`
 
-Create `Git::Commands::Archive` to wrap `git archive`. Update `Git::Lib#archive` to
+Create `Git::Commands::WriteTree` to wrap `git write-tree`. Update `Git::Lib#write_tree` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
@@ -923,6 +923,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
 | `cat_file_*` | `Git::Commands::CatFile::*` | `spec/unit/git/commands/cat_file/*_spec.rb` | `git cat-file` |
 | `checkout_index` | `Git::Commands::CheckoutIndex` | `spec/unit/git/commands/checkout_index_spec.rb` | `git checkout-index` |
+| `archive` | `Git::Commands::Archive` | `spec/unit/git/commands/archive_spec.rb` | `git archive` |
 | `grep` | `Git::Commands::Grep` | `spec/unit/git/commands/grep_spec.rb` | `git grep` |
 | `log_commits` / `full_log_commits` | `Git::Commands::Log` | `spec/unit/git/commands/log_spec.rb` | `git log` |
 | `show` | `Git::Commands::Show` | `spec/unit/git/commands/show_spec.rb` | `git show` |
@@ -1024,7 +1025,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
 - [x] `update_ref` → `Git::Commands::UpdateRef::*` — `git update-ref` (implemented as `Update`, `Delete`, and `Batch`)
 - [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
-- [ ] `archive` → `Git::Commands::Archive` — `git archive`
+- [x] `archive` → `Git::Commands::Archive` — `git archive`
 - [ ] `write_tree` → `Git::Commands::WriteTree` — `git write-tree`
 
 **Administration:**
