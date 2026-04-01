@@ -22,20 +22,20 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (42/54 checklist items done, 12 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (43/54 checklist items done, 11 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `name_rev`** → `Git::Commands::NameRev` — `git name-rev`
+**Migrate `read_tree`** → `Git::Commands::ReadTree` — `git read-tree`
 
-Create `Git::Commands::NameRev` to wrap `git name-rev`. Update `Git::Lib#name_rev` to
+Create `Git::Commands::ReadTree` to wrap `git read-tree`. Update `Git::Lib#read_tree` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def name_rev`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def read_tree`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -948,6 +948,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Am::Quit` | `spec/unit/git/commands/am/quit_spec.rb` | `git am --quit` |
 | N/A (new) | `Git::Commands::Am::Retry` | `spec/unit/git/commands/am/retry_spec.rb` | `git am --retry` |
 | N/A (new) | `Git::Commands::Am::ShowCurrentPatch` | `spec/unit/git/commands/am/show_current_patch_spec.rb` | `git am --show-current-patch` |
+| `name_rev` | `Git::Commands::NameRev` | `spec/unit/git/commands/name_rev_spec.rb` | `git name-rev` |
 
 #### ⏳ Commands To Migrate
 
@@ -1013,7 +1014,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Plumbing:**
 
 - [x] `rev_parse` → `Git::Commands::RevParse` — `git rev-parse`
-- [ ] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
+- [x] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
 - [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `Full`, `Meta`, `Pretty`, and `Typed`, with `Git::Lib#cat_file_*` delegating through these classes)
 - [ ] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
 - [ ] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
