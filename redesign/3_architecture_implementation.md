@@ -22,20 +22,20 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (43/54 checklist items done, 11 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (44/54 checklist items done, 10 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `read_tree`** → `Git::Commands::ReadTree` — `git read-tree`
+**Migrate `commit_tree`** → `Git::Commands::CommitTree` — `git commit-tree`
 
-Create `Git::Commands::ReadTree` to wrap `git read-tree`. Update `Git::Lib#read_tree` to
+Create `Git::Commands::CommitTree` to wrap `git commit-tree`. Update `Git::Lib#commit_tree` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def read_tree`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def commit_tree`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -1016,7 +1016,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `rev_parse` → `Git::Commands::RevParse` — `git rev-parse`
 - [x] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
 - [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `Full`, `Meta`, `Pretty`, and `Typed`, with `Git::Lib#cat_file_*` delegating through these classes)
-- [ ] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
+- [x] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
 - [ ] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
 - [ ] `update_ref` → `Git::Commands::UpdateRef` — `git update-ref`
 - [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`

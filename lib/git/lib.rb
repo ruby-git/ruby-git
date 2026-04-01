@@ -35,6 +35,7 @@ require_relative 'commands/mv'
 require_relative 'commands/name_rev'
 require_relative 'commands/pull'
 require_relative 'commands/push'
+require_relative 'commands/read_tree'
 require_relative 'commands/reset'
 require_relative 'commands/rev_parse'
 require_relative 'commands/revert'
@@ -1856,14 +1857,12 @@ module Git
     end
     # rubocop:enable Style/ArgumentsForwarding
 
-    READ_TREE_OPTION_MAP = [
-      { keys: [:prefix], flag: '--prefix', type: :valued_equals }
-    ].freeze
+    READ_TREE_ALLOWED_OPTS = %i[prefix].freeze
 
     def read_tree(treeish, opts = {})
-      ArgsBuilder.validate!(opts, READ_TREE_OPTION_MAP)
-      flags = build_args(opts, READ_TREE_OPTION_MAP)
-      command_capturing('read-tree', *flags, treeish)
+      assert_valid_opts(opts, READ_TREE_ALLOWED_OPTS)
+      allowed_opts = opts.slice(*READ_TREE_ALLOWED_OPTS)
+      Git::Commands::ReadTree.new(self).call(treeish, **allowed_opts)
     end
 
     def write_tree
