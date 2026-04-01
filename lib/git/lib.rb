@@ -32,6 +32,7 @@ require_relative 'commands/ls_tree'
 require_relative 'commands/merge/start'
 require_relative 'commands/merge_base'
 require_relative 'commands/mv'
+require_relative 'commands/name_rev'
 require_relative 'commands/pull'
 require_relative 'commands/push'
 require_relative 'commands/reset'
@@ -379,7 +380,7 @@ module Git
     def name_rev(commit_ish)
       assert_args_are_not_options('commit_ish', commit_ish)
 
-      command_capturing('name-rev', commit_ish).stdout.split[1]
+      Git::Commands::NameRev.new(self).call(commit_ish).stdout.split[1]
     end
 
     alias namerev name_rev
