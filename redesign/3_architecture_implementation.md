@@ -22,15 +22,15 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (44/54 checklist items done, 10 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (45/54 checklist items done, 9 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `commit_tree`** → `Git::Commands::CommitTree` — `git commit-tree`
+**Migrate `update_ref`** → `Git::Commands::UpdateRef` — `git update-ref`
 
-Create `Git::Commands::CommitTree` to wrap `git commit-tree`. Update `Git::Lib#commit_tree` to
+Create `Git::Commands::UpdateRef` to wrap `git update-ref`. Update `Git::Lib#update_ref` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
@@ -949,6 +949,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Am::Retry` | `spec/unit/git/commands/am/retry_spec.rb` | `git am --retry` |
 | N/A (new) | `Git::Commands::Am::ShowCurrentPatch` | `spec/unit/git/commands/am/show_current_patch_spec.rb` | `git am --show-current-patch` |
 | `name_rev` | `Git::Commands::NameRev` | `spec/unit/git/commands/name_rev_spec.rb` | `git name-rev` |
+| `commit_tree` | `Git::Commands::CommitTree` | `spec/unit/git/commands/commit_tree_spec.rb` | `git commit-tree` |
 
 #### ⏳ Commands To Migrate
 
@@ -1017,7 +1018,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `name_rev` → `Git::Commands::NameRev` — `git name-rev`
 - [x] `cat_file_*` → `Git::Commands::CatFile::*` — `git cat-file` (implemented as `Full`, `Meta`, `Pretty`, and `Typed`, with `Git::Lib#cat_file_*` delegating through these classes)
 - [x] `read_tree` → `Git::Commands::ReadTree` — `git read-tree`
-- [ ] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
+- [x] `commit_tree` → `Git::Commands::CommitTree` — `git commit-tree`
 - [ ] `update_ref` → `Git::Commands::UpdateRef` — `git update-ref`
 - [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
 - [ ] `archive` → `Git::Commands::Archive` — `git archive`
