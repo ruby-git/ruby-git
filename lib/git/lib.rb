@@ -67,6 +67,7 @@ require_relative 'commands/show_ref/exclude_existing'
 require_relative 'commands/show_ref/exists'
 require_relative 'commands/show_ref/list'
 require_relative 'commands/show_ref/verify'
+require_relative 'commands/update_ref/update'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1879,7 +1880,7 @@ module Git
     end
 
     def update_ref(ref, commit)
-      command_capturing('update-ref', ref, commit)
+      Git::Commands::UpdateRef::Update.new(self).call(ref, commit)
     end
 
     def checkout_index(opts = {})
