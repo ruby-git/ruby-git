@@ -32,7 +32,7 @@ class TestTreeOps < Test::Unit::TestCase
     tree = 'tree-ref'
     message = 'commit tree tree-ref'
 
-    expected_command_line = ['commit-tree', tree, '-m', message, {}]
+    expected_command_line = ['commit-tree', '-m', message, '--', tree, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree) }
   end
@@ -41,7 +41,7 @@ class TestTreeOps < Test::Unit::TestCase
     tree = 'tree-ref'
     message = 'this is my message'
 
-    expected_command_line = ['commit-tree', tree, '-m', message, {}]
+    expected_command_line = ['commit-tree', '-m', message, '--', tree, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, message: message) }
   end
@@ -51,7 +51,7 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parent = 'parent-commit'
 
-    expected_command_line = ['commit-tree', tree, '-p', parent, '-m', message, {}]
+    expected_command_line = ['commit-tree', '-p', parent, '-m', message, '--', tree, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parent: parent, message: message) }
   end
@@ -61,7 +61,7 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parents = 'commit1'
 
-    expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-m', message, {}]
+    expected_command_line = ['commit-tree', '-p', 'commit1', '-m', message, '--', tree, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parents: parents, message: message) }
   end
@@ -71,7 +71,7 @@ class TestTreeOps < Test::Unit::TestCase
     message = 'this is my message'
     parents = %w[commit1 commit2]
 
-    expected_command_line = ['commit-tree', tree, '-p', 'commit1', '-p', 'commit2', '-m', message, {}]
+    expected_command_line = ['commit-tree', '-p', 'commit1', '-p', 'commit2', '-m', message, '--', tree, {}]
 
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parents: parents, message: message) }
   end
