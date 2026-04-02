@@ -22,20 +22,19 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (49/54 checklist items done, 5 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (50/54 checklist items done, 4 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `repack`** → `Git::Commands::Repack` — `git repack`
+**Migrate `config_get` / `config_set` / `global_config_*` / `config_list`** → `Git::Commands::Config` — `git config`
 
-Create `Git::Commands::Repack` to wrap `git repack`. Update `Git::Lib#repack` to
-delegate to the new command class and mark the checklist item done.
+Create `Git::Commands::Config` to wrap `git config`. Update `Git::Lib#config_get`, `Git::Lib#config_set`, `Git::Lib#global_config_*`, and `Git::Lib#config_list` to delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def commit_tree`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def config_get`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -955,6 +954,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::UpdateRef::Delete` | `spec/unit/git/commands/update_ref/delete_spec.rb` | `git update-ref -d` |
 | N/A (new) | `Git::Commands::UpdateRef::Batch` | `spec/unit/git/commands/update_ref/batch_spec.rb` | `git update-ref --stdin` |
 | `gc` | `Git::Commands::Gc` | `spec/unit/git/commands/gc_spec.rb` | `git gc` |
+| `repack` | `Git::Commands::Repack` | `spec/unit/git/commands/repack_spec.rb` | `git repack` |
 
 #### ⏳ Commands To Migrate
 
@@ -1032,7 +1032,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Administration:**
 
 - [x] `gc` → `Git::Commands::Gc` — `git gc`
-- [ ] `repack` → `Git::Commands::Repack` — `git repack`
+- [x] `repack` → `Git::Commands::Repack` — `git repack`
 
 **Setup & Config:**
 
