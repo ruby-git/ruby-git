@@ -55,6 +55,7 @@ require_relative 'commands/remote/set_url_add'
 require_relative 'commands/remote/set_url_delete'
 require_relative 'commands/remote/show'
 require_relative 'commands/remote/update'
+require_relative 'commands/repack'
 require_relative 'commands/rm'
 require_relative 'commands/show'
 require_relative 'commands/status'
@@ -1841,7 +1842,7 @@ module Git
     end
 
     def repack
-      command_capturing('repack', '-a', '-d')
+      Git::Commands::Repack.new(self).call(a: true, d: true)
     end
 
     def gc
