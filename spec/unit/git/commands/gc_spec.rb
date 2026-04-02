@@ -1,0 +1,119 @@
+# frozen_string_literal: true
+
+require 'spec_helper'
+require 'git/commands/gc'
+
+RSpec.describe Git::Commands::Gc do
+  # Duck-type collaborator: command specs depend on the #command_capturing
+  # interface, not a single concrete ExecutionContext class.
+  let(:execution_context) { double('ExecutionContext') }
+  let(:command) { described_class.new(execution_context) }
+
+  describe '#call' do
+    context 'with no options' do
+      it 'runs git gc with no extra arguments' do
+        expected_result = command_result
+        expect_command_capturing('gc').and_return(expected_result)
+
+        result = command.call
+
+        expect(result).to eq(expected_result)
+      end
+    end
+
+    context 'with the :aggressive option' do
+      it 'adds --aggressive when true' do
+        expect_command_capturing('gc', '--aggressive').and_return(command_result)
+
+        command.call(aggressive: true)
+      end
+    end
+
+    context 'with the :auto option' do
+      it 'adds --auto when true' do
+        expect_command_capturing('gc', '--auto').and_return(command_result)
+
+        command.call(auto: true)
+      end
+    end
+
+    context 'with :prune option as true' do
+      it 'passes --prune' do
+        expect_command_capturing('gc', '--prune').and_return(command_result)
+
+        command.call(prune: true)
+      end
+    end
+
+    context 'with :prune option as a date string' do
+      it 'passes --prune=<date>' do
+        expect_command_capturing('gc', '--prune=now').and_return(command_result)
+
+        command.call(prune: 'now')
+      end
+    end
+
+    context 'with :prune option as false' do
+      it 'passes --no-prune' do
+        expect_command_capturing('gc', '--no-prune').and_return(command_result)
+
+        command.call(prune: false)
+      end
+    end
+
+    context 'with the :quiet option' do
+      it 'adds --quiet when true' do
+        expect_command_capturing('gc', '--quiet').and_return(command_result)
+
+        command.call(quiet: true)
+      end
+    end
+
+    context 'with the :q alias for :quiet' do
+      it 'passes --quiet' do
+        expect_command_capturing('gc', '--quiet').and_return(command_result)
+
+        command.call(q: true)
+      end
+    end
+
+    context 'with the :force option' do
+      it 'adds --force when true' do
+        expect_command_capturing('gc', '--force').and_return(command_result)
+
+        command.call(force: true)
+      end
+    end
+
+    context 'with the :keep_largest_pack option' do
+      it 'adds --keep-largest-pack when true' do
+        expect_command_capturing('gc', '--keep-largest-pack').and_return(command_result)
+
+        command.call(keep_largest_pack: true)
+      end
+    end
+
+    context 'with :aggressive, :quiet, and :prune combined' do
+      it 'passes all three flags in DSL-defined order' do
+        expect_command_capturing('gc', '--aggressive', '--quiet', '--prune=now').and_return(command_result)
+
+        command.call(aggressive: true, prune: 'now', quiet: true)
+      end
+    end
+
+    context 'with :auto and :quiet combined' do
+      it 'passes both flags in DSL-defined order' do
+        expect_command_capturing('gc', '--auto', '--quiet').and_return(command_result)
+
+        command.call(auto: true, quiet: true)
+      end
+    end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(unknown: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
+      end
+    end
+  end
+end

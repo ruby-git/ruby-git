@@ -25,6 +25,7 @@ require_relative 'commands/diff_files'
 require_relative 'commands/diff_index'
 require_relative 'commands/fetch'
 require_relative 'commands/fsck'
+require_relative 'commands/gc'
 require_relative 'commands/grep'
 require_relative 'commands/init'
 require_relative 'commands/log'
@@ -1844,7 +1845,7 @@ module Git
     end
 
     def gc
-      command_capturing('gc', '--prune', '--aggressive', '--auto')
+      Git::Commands::Gc.new(self).call(prune: true, aggressive: true, auto: true)
     end
 
     # Execute git fsck to verify repository integrity
