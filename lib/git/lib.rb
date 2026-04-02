@@ -69,6 +69,7 @@ require_relative 'commands/show_ref/exists'
 require_relative 'commands/show_ref/list'
 require_relative 'commands/show_ref/verify'
 require_relative 'commands/update_ref/update'
+require_relative 'commands/write_tree'
 
 require 'git/command_line'
 require 'git/errors'
@@ -1869,7 +1870,7 @@ module Git
     end
 
     def write_tree
-      command_capturing('write-tree').stdout
+      Git::Commands::WriteTree.new(self).call.stdout
     end
 
     COMMIT_TREE_ALLOWED_OPTS = %i[p parent parents m message].freeze
