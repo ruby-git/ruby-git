@@ -22,15 +22,15 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (47/54 checklist items done, 7 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (48/54 checklist items done, 6 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `write_tree`** → `Git::Commands::WriteTree` — `git write-tree`
+**Migrate `gc`** → `Git::Commands::Gc` — `git gc`
 
-Create `Git::Commands::WriteTree` to wrap `git write-tree`. Update `Git::Lib#write_tree` to
+Create `Git::Commands::Gc` to wrap `git gc`. Update `Git::Lib#gc` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
@@ -1026,7 +1026,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `update_ref` → `Git::Commands::UpdateRef::*` — `git update-ref` (implemented as `Update`, `Delete`, and `Batch`)
 - [x] `checkout_index` → `Git::Commands::CheckoutIndex` — `git checkout-index`
 - [x] `archive` → `Git::Commands::Archive` — `git archive`
-- [ ] `write_tree` → `Git::Commands::WriteTree` — `git write-tree`
+- [x] `write_tree` → `Git::Commands::WriteTree` — `git write-tree`
 
 **Administration:**
 
