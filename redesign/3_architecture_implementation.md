@@ -22,15 +22,15 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (48/54 checklist items done, 6 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (49/54 checklist items done, 5 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `gc`** → `Git::Commands::Gc` — `git gc`
+**Migrate `repack`** → `Git::Commands::Repack` — `git repack`
 
-Create `Git::Commands::Gc` to wrap `git gc`. Update `Git::Lib#gc` to
+Create `Git::Commands::Repack` to wrap `git repack`. Update `Git::Lib#repack` to
 delegate to the new command class and mark the checklist item done.
 
 #### Workflow
@@ -954,6 +954,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `update_ref` | `Git::Commands::UpdateRef::Update` | `spec/unit/git/commands/update_ref/update_spec.rb` | `git update-ref` |
 | N/A (new) | `Git::Commands::UpdateRef::Delete` | `spec/unit/git/commands/update_ref/delete_spec.rb` | `git update-ref -d` |
 | N/A (new) | `Git::Commands::UpdateRef::Batch` | `spec/unit/git/commands/update_ref/batch_spec.rb` | `git update-ref --stdin` |
+| `gc` | `Git::Commands::Gc` | `spec/unit/git/commands/gc_spec.rb` | `git gc` |
 
 #### ⏳ Commands To Migrate
 
@@ -1030,7 +1031,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Administration:**
 
-- [ ] `gc` → `Git::Commands::Gc` — `git gc`
+- [x] `gc` → `Git::Commands::Gc` — `git gc`
 - [ ] `repack` → `Git::Commands::Repack` — `git repack`
 
 **Setup & Config:**
