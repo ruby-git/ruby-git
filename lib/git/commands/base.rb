@@ -137,11 +137,32 @@ module Git
       end
 
       def execute_command(bound)
-        if bound.execution_options.key?(:out)
-          @execution_context.command_streaming(*bound, **bound.execution_options, raise_on_failure: false)
+        caller_env = bound.execution_options.fetch(:env, {}) || {}
+        merged_env = caller_env.merge(env)
+        exec_opts = bound.execution_options.except(:env)
+        exec_opts = exec_opts.merge(env: merged_env) unless merged_env.empty?
+
+        if exec_opts.key?(:out)
+          @execution_context.command_streaming(*bound, **exec_opts, raise_on_failure: false)
         else
-          @execution_context.command_capturing(*bound, **bound.execution_options, raise_on_failure: false)
+          @execution_context.command_capturing(*bound, **exec_opts, raise_on_failure: false)
         end
+      end
+
+      # Environment variable overrides to pass to the subprocess.
+      #
+      # Returns an empty hash by default. Subclasses may override this method
+      # to inject process-level environment changes required for correctness
+      # (e.g. unsetting `GIT_INDEX_FILE` for worktree management commands).
+      #
+      # The returned hash is merged with any environment overrides the caller
+      # supplies via the `env:` execution option — this hook's values win on
+      # conflict so that safety invariants cannot be accidentally overridden.
+      #
+      # @return [Hash] environment variable overrides (key: variable name, value: new value or nil to unset)
+      #
+      def env
+        {}
       end
 
       def allowed_exit_status_range
