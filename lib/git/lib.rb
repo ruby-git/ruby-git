@@ -57,6 +57,9 @@ require_relative 'commands/remote/show'
 require_relative 'commands/remote/update'
 require_relative 'commands/repack'
 require_relative 'commands/rm'
+require_relative 'commands/config_option_syntax/get'
+require_relative 'commands/config_option_syntax/list'
+require_relative 'commands/config_option_syntax/set'
 require_relative 'commands/show'
 require_relative 'commands/status'
 require_relative 'commands/tag/create'
@@ -1147,19 +1150,25 @@ module Git
     end
 
     def config_get(name)
-      command_capturing('config', '--get', name, chdir: @git_dir).stdout
+      result = Git::Commands::ConfigOptionSyntax::Get.new(self).call(name)
+      raise Git::FailedError, result if result.status.exitstatus != 0
+
+      result.stdout
     end
 
     def global_config_get(name)
-      command_capturing('config', '--global', '--get', name).stdout
+      result = Git::Commands::ConfigOptionSyntax::Get.new(self).call(name, global: true)
+      raise Git::FailedError, result if result.status.exitstatus != 0
+
+      result.stdout
     end
 
     def config_list
-      parse_config_list command_capturing('config', '--list', chdir: @git_dir).stdout.split("\n")
+      parse_config_list Git::Commands::ConfigOptionSyntax::List.new(self).call.stdout.split("\n")
     end
 
     def global_config_list
-      parse_config_list command_capturing('config', '--global', '--list').stdout.split("\n")
+      parse_config_list Git::Commands::ConfigOptionSyntax::List.new(self).call(global: true).stdout.split("\n")
     end
 
     def parse_config_list(lines)
@@ -1172,7 +1181,7 @@ module Git
     end
 
     def parse_config(file)
-      parse_config_list command_capturing('config', '--list', '--file', file).stdout.split("\n")
+      parse_config_list Git::Commands::ConfigOptionSyntax::List.new(self).call(file: file).stdout.split("\n")
     end
 
     # Shows objects
@@ -1187,18 +1196,15 @@ module Git
 
     ## WRITE COMMANDS ##
 
-    CONFIG_SET_OPTION_MAP = [
-      { keys: [:file], flag: '--file', type: :valued_space }
-    ].freeze
+    CONFIG_SET_ALLOWED_OPTS = %i[file].freeze
 
     def config_set(name, value, options = {})
-      ArgsBuilder.validate!(options, CONFIG_SET_OPTION_MAP)
-      flags = build_args(options, CONFIG_SET_OPTION_MAP)
-      command_capturing('config', *flags, name, value)
+      assert_valid_opts(options, CONFIG_SET_ALLOWED_OPTS)
+      Git::Commands::ConfigOptionSyntax::Set.new(self).call(name, value, **options.slice(*CONFIG_SET_ALLOWED_OPTS))
     end
 
     def global_config_set(name, value)
-      command_capturing('config', '--global', name, value)
+      Git::Commands::ConfigOptionSyntax::Set.new(self).call(name, value, global: true)
     end
 
     # Update the index from the current worktree to prepare the for the next commit
