@@ -22,19 +22,19 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (50/54 checklist items done, 4 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (51/54 checklist items done, 3 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `config_get` / `config_set` / `global_config_*` / `config_list`** → `Git::Commands::Config` — `git config`
+**Migrate `worktree_add` / `worktree_remove`** → `Git::Commands::Worktree` — `git worktree`
 
-Create `Git::Commands::Config` to wrap `git config`. Update `Git::Lib#config_get`, `Git::Lib#config_set`, `Git::Lib#global_config_*`, and `Git::Lib#config_list` to delegate to the new command class and mark the checklist item done.
+Create `Git::Commands::Worktree::Add` and `Git::Commands::Worktree::Remove` (and any other relevant subcommands such as `List`, `Lock`, `Unlock`, `Move`, `Prune`) to wrap `git worktree`. Update `Git::Lib#worktree_add` and `Git::Lib#worktree_remove` to delegate to the new command classes and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def config_get`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def worktree_add`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -955,6 +955,20 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::UpdateRef::Batch` | `spec/unit/git/commands/update_ref/batch_spec.rb` | `git update-ref --stdin` |
 | `gc` | `Git::Commands::Gc` | `spec/unit/git/commands/gc_spec.rb` | `git gc` |
 | `repack` | `Git::Commands::Repack` | `spec/unit/git/commands/repack_spec.rb` | `git repack` |
+| `config_get` / `global_config_get` | `Git::Commands::ConfigOptionSyntax::Get` | `spec/unit/git/commands/config_option_syntax/get_spec.rb` | `git config --get` |
+| `config_list` / `global_config_list` / `parse_config` | `Git::Commands::ConfigOptionSyntax::List` | `spec/unit/git/commands/config_option_syntax/list_spec.rb` | `git config --list` |
+| `config_set` / `global_config_set` | `Git::Commands::ConfigOptionSyntax::Set` | `spec/unit/git/commands/config_option_syntax/set_spec.rb` | `git config` (set value) |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::Add` | `spec/unit/git/commands/config_option_syntax/add_spec.rb` | `git config --add` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::GetAll` | `spec/unit/git/commands/config_option_syntax/get_all_spec.rb` | `git config --get-all` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::GetColor` | `spec/unit/git/commands/config_option_syntax/get_color_spec.rb` | `git config --get-color` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::GetColorBool` | `spec/unit/git/commands/config_option_syntax/get_color_bool_spec.rb`, `spec/integration/git/commands/config_option_syntax/get_color_bool_spec.rb` | `git config --get-colorbool` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::GetRegexp` | `spec/unit/git/commands/config_option_syntax/get_regexp_spec.rb` | `git config --get-regexp` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::GetUrlmatch` | `spec/unit/git/commands/config_option_syntax/get_urlmatch_spec.rb` | `git config --get-urlmatch` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::RemoveSection` | `spec/unit/git/commands/config_option_syntax/remove_section_spec.rb` | `git config --remove-section` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::RenameSection` | `spec/unit/git/commands/config_option_syntax/rename_section_spec.rb` | `git config --rename-section` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::ReplaceAll` | `spec/unit/git/commands/config_option_syntax/replace_all_spec.rb` | `git config --replace-all` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::Unset` | `spec/unit/git/commands/config_option_syntax/unset_spec.rb` | `git config --unset` |
+| N/A (new) | `Git::Commands::ConfigOptionSyntax::UnsetAll` | `spec/unit/git/commands/config_option_syntax/unset_all_spec.rb` | `git config --unset-all` |
 
 #### ⏳ Commands To Migrate
 
@@ -1036,8 +1050,8 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Setup & Config:**
 
-- [ ] `config_get` / `config_set` / `global_config_*` / `config_list` →
-  `Git::Commands::Config` — `git config`
+- [x] `config_get` / `config_set` / `global_config_*` / `config_list` →
+  `Git::Commands::ConfigOptionSyntax::*` — `git config`
 
 **Other:**
 
