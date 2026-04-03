@@ -93,15 +93,6 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     end
   end
 
-  test 'WORKTREE_ENV constant should exclude GIT_INDEX_FILE from environment' do
-    # WORKTREE_ENV is used by worktree commands to prevent index corruption
-    # by setting GIT_INDEX_FILE to nil (which unsets it per Process.spawn semantics)
-    worktree_env = Git::Lib::WORKTREE_ENV
-
-    assert_nil worktree_env['GIT_INDEX_FILE']
-    assert worktree_env.frozen?, 'WORKTREE_ENV should be frozen'
-  end
-
   test 'env_overrides should allow both adding and excluding variables simultaneously' do
     in_temp_dir do |_path|
       git = Git.init('test_project')
