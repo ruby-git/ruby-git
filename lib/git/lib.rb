@@ -74,6 +74,15 @@ require_relative 'commands/show_ref/exists'
 require_relative 'commands/show_ref/list'
 require_relative 'commands/show_ref/verify'
 require_relative 'commands/update_ref/update'
+require_relative 'commands/worktree'
+require_relative 'commands/worktree/add'
+require_relative 'commands/worktree/list'
+require_relative 'commands/worktree/lock'
+require_relative 'commands/worktree/move'
+require_relative 'commands/worktree/prune'
+require_relative 'commands/worktree/remove'
+require_relative 'commands/worktree/repair'
+require_relative 'commands/worktree/unlock'
 require_relative 'commands/write_tree'
 
 require 'git/command_line'
@@ -770,7 +779,7 @@ module Git
       # HEAD b8c63206f8d10f57892060375a86ae911fad356e
       # detached
       #
-      command_capturing('worktree', 'list', '--porcelain').stdout.split("\n").each do |w|
+      Git::Commands::Worktree::List.new(self).call(porcelain: true).stdout.split("\n").each do |w|
         s = w.split
         directory = s[1] if s[0] == 'worktree'
         arr << [directory, s[1]] if s[0] == 'HEAD'
@@ -778,23 +787,20 @@ module Git
       arr
     end
 
-    # Environment override to exclude GIT_INDEX_FILE for worktree commands
-    # Git worktrees manage their own index files and setting GIT_INDEX_FILE
-    # causes corruption of both the main worktree and new worktree indexes.
-    WORKTREE_ENV = { 'GIT_INDEX_FILE' => nil }.freeze
-
     def worktree_add(dir, commitish = nil)
-      return command_capturing('worktree', 'add', dir, commitish, env: WORKTREE_ENV).stdout unless commitish.nil?
-
-      command_capturing('worktree', 'add', dir, env: WORKTREE_ENV).stdout
+      if commitish.nil?
+        Git::Commands::Worktree::Add.new(self).call(dir).stdout
+      else
+        Git::Commands::Worktree::Add.new(self).call(dir, commitish).stdout
+      end
     end
 
     def worktree_remove(dir)
-      command_capturing('worktree', 'remove', dir, env: WORKTREE_ENV).stdout
+      Git::Commands::Worktree::Remove.new(self).call(dir).stdout
     end
 
     def worktree_prune
-      command_capturing('worktree', 'prune', env: WORKTREE_ENV).stdout
+      Git::Commands::Worktree::Prune.new(self).call.stdout
     end
 
     def list_files(ref_dir)
