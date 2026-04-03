@@ -22,19 +22,21 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (51/54 checklist items done, 3 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (50/54 checklist items done, 4 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `worktree_add` / `worktree_remove`** → `Git::Commands::Worktree` — `git worktree`
+**Migrate `branch_contains`** → part of `Git::Commands::Branch` — `git branch --contains`
 
-Create `Git::Commands::Worktree::Add` and `Git::Commands::Worktree::Remove` (and any other relevant subcommands such as `List`, `Lock`, `Unlock`, `Move`, `Prune`) to wrap `git worktree`. Update `Git::Lib#worktree_add` and `Git::Lib#worktree_remove` to delegate to the new command classes and mark the checklist item done.
+Add a `Git::Commands::Branch::Contains` class (or extend an existing Branch command) to wrap
+`git branch --contains [<commit>]`. Update `Git::Lib#branch_contains` to delegate to the new
+command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def worktree_add`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def branch_contains`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -970,6 +972,8 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::ConfigOptionSyntax::Unset` | `spec/unit/git/commands/config_option_syntax/unset_spec.rb` | `git config --unset` |
 | N/A (new) | `Git::Commands::ConfigOptionSyntax::UnsetAll` | `spec/unit/git/commands/config_option_syntax/unset_all_spec.rb` | `git config --unset-all` |
 
+| `worktrees_all` / `worktree_add` / `worktree_remove` / `worktree_prune` | `Git::Commands::Worktree::List` / `Git::Commands::Worktree::Add` / `Git::Commands::Worktree::Remove` / `Git::Commands::Worktree::Prune` (+ `Lock`, `Unlock`, `Move`, `Repair`) | `spec/unit/git/commands/worktree/*_spec.rb` | `git worktree` |
+
 #### ⏳ Commands To Migrate
 
 Commands are listed in recommended migration order within each group. Migrate in
@@ -1055,7 +1059,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 **Other:**
 
-- [ ] `worktree_add` / `worktree_remove` → `Git::Commands::Worktree` — `git worktree`
+- [x] `worktree_add` / `worktree_remove` → `Git::Commands::Worktree` — `git worktree`
 - [ ] `branch_contains` → (part of `Git::Commands::Branch`)
 - [ ] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 - [ ] `repository_default_branch` → (part of `Git::Commands::LsRemote`)
