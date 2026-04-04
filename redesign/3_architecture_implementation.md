@@ -22,20 +22,21 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (51/54 checklist items done, 3 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (52/54 checklist items done, 2 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `change_head_branch`** → `Git::Commands::SymbolicRef` — `git symbolic-ref`
+**Migrate `repository_default_branch`** → `Git::Commands::LsRemote` — `git ls-remote`
 
-Create a `Git::Commands::SymbolicRef` class to wrap `git symbolic-ref`. Update
-`Git::Lib#change_head_branch` to delegate to the new command class and mark the checklist item done.
+The `repository_default_branch` method already delegates to `Git::Commands::LsRemote`,
+but the checklist item is not yet marked done. Review the delegation and mark the
+checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def change_head_branch`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def repository_default_branch`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -975,6 +976,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::ConfigOptionSyntax::UnsetAll` | `spec/unit/git/commands/config_option_syntax/unset_all_spec.rb` | `git config --unset-all` |
 
 | `worktrees_all` / `worktree_add` / `worktree_remove` / `worktree_prune` | `Git::Commands::Worktree::List` / `Git::Commands::Worktree::Add` / `Git::Commands::Worktree::Remove` / `Git::Commands::Worktree::Prune` (+ `Lock`, `Unlock`, `Move`, `Repair`) | `spec/unit/git/commands/worktree/*_spec.rb` | `git worktree` |
+| `change_head_branch` | `Git::Commands::SymbolicRef::Update` (+ `Read`, `Delete`) | `spec/unit/git/commands/symbolic_ref/*_spec.rb` | `git symbolic-ref` |
 
 #### ⏳ Commands To Migrate
 
@@ -1063,7 +1065,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 
 - [x] `worktree_add` / `worktree_remove` → `Git::Commands::Worktree` — `git worktree`
 - [x] `branch_contains` → (part of `Git::Commands::Branch`)
-- [ ] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
+- [x] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 - [ ] `repository_default_branch` → (part of `Git::Commands::LsRemote`)
 - [ ] `current_command_version` → `Git::Commands::Version` — `git version`
 
