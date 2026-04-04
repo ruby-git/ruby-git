@@ -10,15 +10,22 @@ require_relative 'am/skip'
 
 module Git
   module Commands
-    # Namespace module for `git am` subcommands
+    # Commands for applying patches from a mailbox via `git am`
     #
-    # `git am` applies a series of patches from a mailbox. This module contains
-    # command classes for the initial patch application ({Apply}) and session
-    # management ({Continue}, {Skip}, {Abort}, {Quit}, {Retry}, {ShowCurrentPatch}).
+    # This module contains command classes for patch application and session
+    # management:
     #
-    # @see https://git-scm.com/docs/git-am git-am
+    # - {Am::Apply} — apply a series of patches from a mailbox
+    # - {Am::Abort} — abort the current patch application (`--abort`)
+    # - {Am::Continue} — resume after resolving conflicts (`--continue`)
+    # - {Am::Quit} — drop the current patch session (`--quit`)
+    # - {Am::Retry} — retry the current patch
+    # - {Am::ShowCurrentPatch} — show the patch being applied (`--show-current-patch`)
+    # - {Am::Skip} — skip the current patch (`--skip`)
     #
     # @api private
+    #
+    # @see https://git-scm.com/docs/git-am git-am documentation
     #
     module Am
     end

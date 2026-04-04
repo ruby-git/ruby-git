@@ -8,16 +8,20 @@ require_relative 'revert/start'
 
 module Git
   module Commands
-    # Namespace module for `git revert` subcommands
+    # Commands for reverting commits via `git revert`
     #
-    # `git revert` creates new commits that undo the changes introduced by
-    # specified commits. This module contains command classes for starting a
-    # revert ({Start}) and managing in-progress revert sessions ({Continue},
-    # {Skip}, {Abort}, {Quit}).
+    # This module contains command classes for starting a revert and managing
+    # in-progress revert sessions:
     #
-    # @see https://git-scm.com/docs/git-revert git-revert
+    # - {Revert::Start} — revert one or more commits
+    # - {Revert::Continue} — resume after resolving conflicts (`--continue`)
+    # - {Revert::Skip} — skip the current commit (`--skip`)
+    # - {Revert::Abort} — abort the in-progress revert (`--abort`)
+    # - {Revert::Quit} — forget the in-progress revert (`--quit`)
     #
     # @api private
+    #
+    # @see https://git-scm.com/docs/git-revert git-revert documentation
     #
     module Revert
     end

@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'update_ref/batch'
+require_relative 'update_ref/delete'
+require_relative 'update_ref/update'
+
 module Git
   module Commands
     # Commands for safely updating ref values via `git update-ref`

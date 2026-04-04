@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+require_relative 'remote/add'
+require_relative 'remote/get_url'
+require_relative 'remote/list'
+require_relative 'remote/prune'
+require_relative 'remote/remove'
+require_relative 'remote/rename'
+require_relative 'remote/set_branches'
+require_relative 'remote/set_head'
+require_relative 'remote/set_url'
+require_relative 'remote/set_url_add'
+require_relative 'remote/set_url_delete'
+require_relative 'remote/show'
+require_relative 'remote/update'
+
 module Git
   module Commands
     # Commands for managing git remotes via `git remote`
