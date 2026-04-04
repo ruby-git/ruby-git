@@ -1135,4 +1135,74 @@ RSpec.describe Git::Lib do
       end
     end
   end
+
+  describe '#branch_contains' do
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+    let(:format_string) { Git::Parsers::Branch::FORMAT_STRING }
+
+    before do
+      allow(Git::Commands::Branch::List).to receive(:new).with(lib).and_return(list_command)
+    end
+
+    context 'when called with only a commit (no branch_name)' do
+      it 'delegates to Branch::List with contains: and format: and no pattern' do
+        allow(list_command).to receive(:call)
+          .with(contains: 'abc123', format: format_string)
+          .and_return(command_result("refs/heads/main|abc123|*|||\n"))
+
+        lib.branch_contains('abc123')
+
+        expect(list_command).to have_received(:call)
+          .with(contains: 'abc123', format: format_string)
+      end
+
+      it 'returns the stdout of the command' do
+        output = "refs/heads/main|abc123|*|||\n"
+        allow(list_command).to receive(:call).and_return(command_result(output))
+
+        result = lib.branch_contains('abc123')
+
+        expect(result).to eq(output)
+      end
+    end
+
+    context 'when called with an explicit branch_name pattern' do
+      it 'passes the branch_name as a positional pattern to Branch::List' do
+        allow(list_command).to receive(:call)
+          .with('feature/*', contains: 'abc123', format: format_string)
+          .and_return(command_result(''))
+
+        lib.branch_contains('abc123', 'feature/*')
+
+        expect(list_command).to have_received(:call)
+          .with('feature/*', contains: 'abc123', format: format_string)
+      end
+    end
+
+    context 'when branch_name is an empty string (default)' do
+      it 'does not pass a pattern argument' do
+        allow(list_command).to receive(:call)
+          .with(contains: 'abc123', format: format_string)
+          .and_return(command_result(''))
+
+        lib.branch_contains('abc123', '')
+
+        expect(list_command).to have_received(:call)
+          .with(contains: 'abc123', format: format_string)
+      end
+    end
+
+    context 'when branch_name is nil' do
+      it 'treats nil as empty string and does not pass a pattern' do
+        allow(list_command).to receive(:call)
+          .with(contains: 'abc123', format: format_string)
+          .and_return(command_result(''))
+
+        lib.branch_contains('abc123', nil)
+
+        expect(list_command).to have_received(:call)
+          .with(contains: 'abc123', format: format_string)
+      end
+    end
+  end
 end
