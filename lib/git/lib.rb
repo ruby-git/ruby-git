@@ -62,6 +62,7 @@ require_relative 'commands/config_option_syntax/list'
 require_relative 'commands/config_option_syntax/set'
 require_relative 'commands/show'
 require_relative 'commands/status'
+require_relative 'commands/symbolic_ref/update'
 require_relative 'commands/tag/create'
 require_relative 'commands/tag/delete'
 require_relative 'commands/tag/list'
@@ -759,7 +760,7 @@ module Git
     end
 
     def change_head_branch(branch_name)
-      command_capturing('symbolic-ref', 'HEAD', "refs/heads/#{branch_name}")
+      Git::Commands::SymbolicRef::Update.new(self).call('HEAD', "refs/heads/#{branch_name}")
     end
 
     def branches_all
