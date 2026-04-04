@@ -1873,7 +1873,7 @@ module Git
 
     # returns the current version of git, as an Array of Fixnums.
     def current_command_version
-      output = command_capturing('version').stdout
+      output = Git::Commands::Version.new(self).call.stdout
       version = output[/\d+(\.\d+)+/]
       version_parts = version.split('.').collect(&:to_i)
       version_parts.fill(0, version_parts.length...3)
