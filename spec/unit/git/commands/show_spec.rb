@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/show'
 
 RSpec.describe Git::Commands::Show do
+  # Duck-type collaborator: command specs depend on the #command_capturing and
+  # #command_streaming interfaces, not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -43,9 +45,18 @@ RSpec.describe Git::Commands::Show do
       end
     end
 
-    context 'with an unrecognised keyword argument' do
-      it 'raises ArgumentError' do
-        expect { command.call(foo: true) }.to raise_error(ArgumentError)
+    context 'with out: execution option (streaming)' do
+      it 'dispatches to command_streaming when out: is given' do
+        out_io = instance_double(File)
+        expect_command_streaming('show', ':2:path/to/file.txt', out: out_io).and_return(command_result)
+
+        command.call(':2:path/to/file.txt', out: out_io)
+      end
+    end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(foo: true) }.to raise_error(ArgumentError, /Unsupported options/)
       end
     end
   end
