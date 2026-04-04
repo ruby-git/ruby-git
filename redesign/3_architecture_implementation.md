@@ -22,21 +22,20 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase | Status | Description |
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | 🔄 In Progress | Migrating commands (50/54 checklist items done, 4 remaining) |
+| Phase 2 | 🔄 In Progress | Migrating commands (51/54 checklist items done, 3 remaining) |
 | Phase 3 | ⏳ Not Started | Refactoring public interface |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Migrate `branch_contains`** → part of `Git::Commands::Branch` — `git branch --contains`
+**Migrate `change_head_branch`** → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 
-Add a `Git::Commands::Branch::Contains` class (or extend an existing Branch command) to wrap
-`git branch --contains [<commit>]`. Update `Git::Lib#branch_contains` to delegate to the new
-command class and mark the checklist item done.
+Create a `Git::Commands::SymbolicRef` class to wrap `git symbolic-ref`. Update
+`Git::Lib#change_head_branch` to delegate to the new command class and mark the checklist item done.
 
 #### Workflow
 
-1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def branch_contains`). Understand all options and edge cases.
+1. **Analyze**: Read the existing implementation in `lib/git/lib.rb` (search for `def change_head_branch`). Understand all options and edge cases.
 
 2. **Design**: Create command class following the pattern in
    `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
@@ -161,7 +160,10 @@ command class and mark the checklist item done.
 
 7. **Update Checklist**: Move the command from "Commands To Migrate" to "Migrated
    Commands" table in this document, and update the "Next Task" section to point to
-   the next command in the list.
+   the next command in the list. When updating "Next Task", also update the Workflow
+   steps below it — they contain method names and search strings specific to the
+   previous task (e.g. the `def <method>` reference in step 1) that must be changed
+   to match the new task.
 
 #### Reference Files
 
@@ -1060,7 +1062,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 **Other:**
 
 - [x] `worktree_add` / `worktree_remove` → `Git::Commands::Worktree` — `git worktree`
-- [ ] `branch_contains` → (part of `Git::Commands::Branch`)
+- [x] `branch_contains` → (part of `Git::Commands::Branch`)
 - [ ] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 - [ ] `repository_default_branch` → (part of `Git::Commands::LsRemote`)
 - [ ] `current_command_version` → `Git::Commands::Version` — `git version`
