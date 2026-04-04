@@ -2483,7 +2483,7 @@ module Git
     # @raise [Git::TimeoutError] if the command exceeds the configured timeout
     #
     def write_staged_content(path, stage, out_io)
-      command_streaming('show', ":#{stage}:#{path}", out: out_io)
+      Git::Commands::Show.new(self).call(":#{stage}:#{path}", out: out_io)
       out_io
     end
 

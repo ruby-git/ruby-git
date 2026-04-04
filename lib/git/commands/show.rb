@@ -34,6 +34,11 @@ module Git
     class Show < Git::Commands::Base
       arguments do
         literal 'show'
+
+        # Stream stdout to this IO object instead of buffering in memory.
+        # When provided, the command dispatches to the streaming execution path.
+        execution_option :out
+
         operand :objects, repeatable: true
       end
 
@@ -51,16 +56,35 @@ module Git
       #
       #   @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @overload call(*objects, out:)
+      #
+      #   Streams stdout directly to `out` without buffering in memory.
+      #   Use this form when showing large blobs to avoid memory pressure.
+      #
+      #   @param objects [Array<String>] zero or more object specifiers
+      #
+      #   @param out [IO] the IO object to stream stdout into
+      #
+      #   @return [Git::CommandLineResult] the result of calling `git show`;
+      #     `result.stdout` will be `''` — stdout was streamed to `out`
+      #
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
       def call(*, **)
         bound = args_definition.bind(*, **)
-        result = @execution_context.command_capturing(
-          *bound,
-          **bound.execution_options,
-          chomp: false,
-          raise_on_failure: false
-        )
+        result = execute_command(bound)
         validate_exit_status!(result)
         result
+      end
+
+      private
+
+      def execute_command(bound)
+        if bound.execution_options.key?(:out)
+          @execution_context.command_streaming(*bound, **bound.execution_options, raise_on_failure: false)
+        else
+          @execution_context.command_capturing(*bound, **bound.execution_options, chomp: false, raise_on_failure: false)
+        end
       end
     end
   end
