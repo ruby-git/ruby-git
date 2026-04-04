@@ -4,16 +4,11 @@ require 'git/commands/base'
 
 module Git
   module Commands
-    # Implements the `git show` command
+    # Wrapper for the `git show` command
     #
     # Displays information about git objects (commits, annotated tags, trees,
     # or blobs). Output format varies by object type and is intended for human
     # consumption rather than machine parsing.
-    #
-    # @see https://git-scm.com/docs/git-show git-show documentation
-    # @see Git::Commands
-    #
-    # @api private
     #
     # @example Show the HEAD commit
     #   show = Git::Commands::Show.new(execution_context)
@@ -31,6 +26,12 @@ module Git
     #   show = Git::Commands::Show.new(execution_context)
     #   result = show.call('v1.0', 'v2.0')
     #
+    # @see https://git-scm.com/docs/git-show git-show documentation
+    #
+    # @see Git::Commands
+    #
+    # @api private
+    #
     class Show < Git::Commands::Base
       arguments do
         literal 'show'
@@ -39,53 +40,48 @@ module Git
         # When provided, the command dispatches to the streaming execution path.
         execution_option :out
 
-        operand :objects, repeatable: true
+        operand :object, repeatable: true
       end
 
-      # Execute the `git show` command.
+      # @!method call(*, **)
       #
-      # @overload call(*objects)
+      #   @overload call(*object)
       #
-      #   Trailing newlines are preserved in the result stdout. Pass the result's
-      #   `.stdout` to callers that need the raw object content unchanged.
+      #     Trailing newlines are preserved in the result stdout. Pass the result's
+      #     `.stdout` to callers that need the raw object content unchanged.
       #
-      #   @param objects [Array<String>] zero or more object specifiers (refs, SHAs,
-      #     `objectish:path` expressions, etc.). When empty, defaults to `HEAD`.
+      #     @param object [Array<String>] zero or more object specifiers (refs, SHAs,
+      #       `objectish:path` expressions, etc.)
       #
-      #   @return [Git::CommandLineResult] the result of calling `git show`
+      #       When empty, defaults to `HEAD`
       #
-      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #     @return [Git::CommandLineResult] the result of calling `git show`;
+      #       `result.stdout` will have trailing newlines preserved
       #
-      # @overload call(*objects, out:)
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #   Streams stdout directly to `out` without buffering in memory.
-      #   Use this form when showing large blobs to avoid memory pressure.
+      #   @overload call(*object, out:)
       #
-      #   @param objects [Array<String>] zero or more object specifiers
+      #     Streams stdout directly to `out` without buffering in memory.
+      #     Use this form when showing large blobs to avoid memory pressure.
       #
-      #   @param out [IO] the IO object to stream stdout into
+      #     @param object [Array<String>] zero or more object specifiers
       #
-      #   @return [Git::CommandLineResult] the result of calling `git show`;
-      #     `result.stdout` will be `''` — stdout was streamed to `out`
+      #     @param out [IO, #write] the command output is sent to the given IO object
       #
-      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #       Instead of being captured in the result; the result's
+      #       `.stdout` will be `''` in this case.
       #
-      def call(*, **)
-        bound = args_definition.bind(*, **)
-        result = execute_command(bound)
-        validate_exit_status!(result)
-        result
-      end
+      #     @return [Git::CommandLineResult] the result of calling `git show`;
+      #       `result.stdout` will be `''` — stdout was streamed to `out`
+      #
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
 
       private
 
-      def execute_command(bound)
-        if bound.execution_options.key?(:out)
-          @execution_context.command_streaming(*bound, **bound.execution_options, raise_on_failure: false)
-        else
-          @execution_context.command_capturing(*bound, **bound.execution_options, chomp: false, raise_on_failure: false)
-        end
-      end
+      # @return [false] show output preserves trailing newlines, which are significant
+      #   for blob content
+      def chomp_captured_stdout? = false
     end
   end
 end

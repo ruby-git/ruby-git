@@ -65,8 +65,7 @@ module Git
         # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---execltgit-upload-archivegt
         value_option :exec, inline: true
 
-        # Stream stdout to this IO object instead of buffering in memory.
-        # When provided, the command dispatches to the streaming execution path.
+        # Stream stdout to this IO object instead of buffering in memory
         execution_option :out
 
         conflicts :output, :out
@@ -86,73 +85,71 @@ module Git
       # `normalize` and `chomp` are disabled so stdout bytes are returned
       # unchanged. When `out:` is given, the streaming path is used and
       # these options do not apply.
+      # @!method call(*, **)
       #
-      # @overload call(tree_ish, *path, **options)
+      #   @overload call(tree_ish, *path, **options)
       #
-      #   @param tree_ish [String] the tree or commit to produce an archive for
+      #     @param tree_ish [String] the tree or commit to produce an archive for
       #
-      #   @param path [Array<String>] limit the archive to these paths
-      #     within the tree
+      #     @param path [Array<String>] limit the archive to these paths
+      #       within the tree
       #
-      #   @param options [Hash] command options
+      #     @param options [Hash] command options
       #
-      #   @option options [String] :format (nil) archive format — `tar` or
-      #     `zip`; user-defined formats are also supported
+      #     @option options [String] :format (nil) archive format — `tar` or
+      #       `zip`; user-defined formats are also supported
       #
-      #   @option options [Boolean] :verbose (nil) report progress to stderr
+      #     @option options [Boolean] :verbose (nil) report progress to stderr
       #
-      #     Alias: :v
+      #       Alias: :v
       #
-      #   @option options [String] :prefix (nil) prepend `<prefix>/` to each
-      #     filename in the archive
+      #     @option options [String] :prefix (nil) prepend `<prefix>/` to each
+      #       filename in the archive
       #
-      #   @option options [String] :output (nil) write the archive to
-      #     this file instead of stdout
+      #     @option options [String] :output (nil) write the archive to
+      #       this file instead of stdout
       #
-      #     Alias: :o
+      #       Alias: :o
       #
-      #   @option options [Boolean] :worktree_attributes (nil) look for
-      #     attributes in `.gitattributes` files in the working tree
+      #     @option options [Boolean] :worktree_attributes (nil) look for
+      #       attributes in `.gitattributes` files in the working tree
       #
-      #   @option options [String] :remote (nil) retrieve a tar archive from
-      #     a remote repository instead of the local one
+      #     @option options [String] :remote (nil) retrieve a tar archive from
+      #       a remote repository instead of the local one
       #
-      #   @option options [String] :exec (nil) path to `git-upload-archive`
-      #     on the remote side (used with `:remote`)
+      #     @option options [String] :exec (nil) path to `git-upload-archive`
+      #       on the remote side (used with `:remote`)
       #
-      #   @option options [IO] :out (nil) stream stdout to this IO object
-      #     instead of buffering in memory
+      #     @option options [IO, #write] :out the command output is sent to the
+      #       given IO object instead of being captured in the result; the
+      #       result's `.stdout` will be `''` in this case.
       #
-      #   @return [Git::CommandLineResult] the result of calling
-      #     `git archive`
+      #     @return [Git::CommandLineResult] the result of calling
+      #       `git archive`
       #
-      #   @raise [ArgumentError] if unsupported options are provided
+      #     @raise [ArgumentError] if unsupported options are provided
       #
-      #   @raise [ArgumentError] if the tree_ish operand is missing
+      #     @raise [ArgumentError] if the tree_ish operand is missing
       #
-      #   @raise [Git::FailedError] if the command returns a non-zero
-      #     exit status
-      def call(*, **)
-        bound = args_definition.bind(*, **)
-        result = execute_command(bound)
-        validate_exit_status!(result)
-        result
-      end
+      #     @raise [Git::FailedError] if the command returns a non-zero
+      #       exit status
 
-      private
+      # Archive output is intrinsically binary (tar, zip, etc.) — opt out of
+      # Ruby string normalization and trailing-newline chomping so that
+      # `result.stdout` bytes are returned unchanged. Only affects the
+      # capturing path; streaming via `out:` is never normalized or chomped
+      # regardless of these settings.
+      #
+      # @return [Boolean] `false`
+      #
+      def normalize_captured_stdout? = false
 
-      # Archive output is binary — disable normalize and chomp on the
-      # capturing path so stdout bytes are returned unchanged.
-      def execute_command(bound)
-        if bound.execution_options.key?(:out)
-          @execution_context.command_streaming(*bound, **bound.execution_options, raise_on_failure: false)
-        else
-          @execution_context.command_capturing(
-            *bound, **bound.execution_options,
-            normalize: false, chomp: false, raise_on_failure: false
-          )
-        end
-      end
+      # Archive output is binary, so preserve captured stdout byte-for-byte
+      # even when it ends with a newline.
+      #
+      # @return [Boolean] `false`
+      #
+      def chomp_captured_stdout? = false
     end
   end
 end
