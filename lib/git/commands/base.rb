@@ -137,16 +137,61 @@ module Git
       end
 
       def execute_command(bound)
-        caller_env = bound.execution_options.fetch(:env, {}) || {}
-        merged_env = caller_env.merge(env)
-        exec_opts = bound.execution_options.except(:env)
-        exec_opts = exec_opts.merge(env: merged_env) unless merged_env.empty?
+        exec_opts = execution_opts(bound)
 
         if exec_opts.key?(:out)
           @execution_context.command_streaming(*bound, **exec_opts, raise_on_failure: false)
         else
-          @execution_context.command_capturing(*bound, **exec_opts, raise_on_failure: false)
+          @execution_context.command_capturing(*bound, **capturing_opts(exec_opts), raise_on_failure: false)
         end
+      end
+
+      def execution_opts(bound)
+        caller_env = bound.execution_options.fetch(:env, {}) || {}
+        merged_env = caller_env.merge(env)
+        opts = bound.execution_options.except(:env)
+        merged_env.empty? ? opts : opts.merge(env: merged_env)
+      end
+
+      def capturing_opts(exec_opts)
+        opts = exec_opts
+        opts = opts.merge(normalize: false) unless normalize_captured_stdout?
+        opts = opts.merge(chomp: false) unless chomp_captured_stdout?
+        opts
+      end
+
+      # Whether {#execute_command} should apply Ruby string normalization to
+      # `result.stdout` on the capturing path.
+      #
+      # When `true` (the default), `command_capturing` normalizes the encoding of
+      # captured stdout. Override to return `false` in subclasses whose output is
+      # intrinsically binary (e.g. `git archive`), so that stdout bytes in
+      # `result.stdout` are returned unchanged.
+      #
+      # This hook only affects the **capturing** path — when an `out:` execution
+      # option is present, stdout is streamed directly to the caller-supplied IO
+      # object and is never normalized or chomped regardless of this setting.
+      #
+      # @return [Boolean]
+      def normalize_captured_stdout?
+        true
+      end
+
+      # Whether {#execute_command} should chomp trailing newlines from
+      # `result.stdout` on the capturing path.
+      #
+      # When `true` (the default), `command_capturing` strips the trailing
+      # newline from captured stdout. Override to return `false` in subclasses
+      # whose output must preserve trailing whitespace (e.g. `git show`, which
+      # can return blob content with significant trailing newlines).
+      #
+      # This hook only affects the **capturing** path — when an `out:` execution
+      # option is present, stdout is streamed directly to the caller-supplied IO
+      # object and is never chomped regardless of this setting.
+      #
+      # @return [Boolean]
+      def chomp_captured_stdout?
+        true
       end
 
       # Environment variable overrides to pass to the subprocess.
