@@ -1,5 +1,20 @@
 # frozen_string_literal: true
 
+require_relative 'config_option_syntax/add'
+require_relative 'config_option_syntax/get'
+require_relative 'config_option_syntax/get_all'
+require_relative 'config_option_syntax/get_color'
+require_relative 'config_option_syntax/get_color_bool'
+require_relative 'config_option_syntax/get_regexp'
+require_relative 'config_option_syntax/get_urlmatch'
+require_relative 'config_option_syntax/list'
+require_relative 'config_option_syntax/remove_section'
+require_relative 'config_option_syntax/rename_section'
+require_relative 'config_option_syntax/replace_all'
+require_relative 'config_option_syntax/set'
+require_relative 'config_option_syntax/unset'
+require_relative 'config_option_syntax/unset_all'
+
 module Git
   module Commands
     # Implements the `git config` command using the option-based interface

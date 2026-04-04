@@ -1,5 +1,15 @@
 # frozen_string_literal: true
 
+require_relative 'worktree/add'
+require_relative 'worktree/list'
+require_relative 'worktree/lock'
+require_relative 'worktree/management_base'
+require_relative 'worktree/move'
+require_relative 'worktree/prune'
+require_relative 'worktree/remove'
+require_relative 'worktree/repair'
+require_relative 'worktree/unlock'
+
 module Git
   module Commands
     # Implements `git worktree` subcommands for managing multiple working trees

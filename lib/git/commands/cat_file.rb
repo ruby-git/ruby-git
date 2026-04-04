@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'cat_file/batch'
+require_relative 'cat_file/filtered'
+require_relative 'cat_file/raw'
+
 module Git
   module Commands
     # Commands for reading git object store content via `git cat-file`

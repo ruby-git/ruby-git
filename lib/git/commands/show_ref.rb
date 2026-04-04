@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+require_relative 'show_ref/exclude_existing'
+require_relative 'show_ref/exists'
+require_relative 'show_ref/list'
+require_relative 'show_ref/verify'
+
 module Git
   module Commands
     # Commands for querying git refs via `git show-ref`
