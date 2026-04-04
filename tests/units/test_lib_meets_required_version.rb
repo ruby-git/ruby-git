@@ -33,12 +33,12 @@ class TestLibMeetsRequiredVersion < Test::Unit::TestCase
 
     lib.instance_variable_set(:@next_version_index, 0)
 
-    lib.define_singleton_method(:command_capturing) do |cmd, *_opts|
+    lib.define_singleton_method(:command_capturing) do |cmd, *_opts, **_kwargs|
       raise ArgumentError unless cmd == 'version'
 
       version_string = versions_to_test[@next_version_index][:version_string]
       @next_version_index += 1
-      status = Struct.new(:success?).new(true)
+      status = Struct.new(:success?, :exitstatus).new(true, 0)
       Git::CommandLineResult.new(['git', cmd], status, version_string, '')
     end
 
