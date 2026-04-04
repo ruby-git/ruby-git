@@ -47,6 +47,7 @@ require_relative 'commands/status'
 require_relative 'commands/symbolic_ref'
 require_relative 'commands/tag'
 require_relative 'commands/update_ref'
+require_relative 'commands/version'
 require_relative 'commands/worktree'
 require_relative 'commands/write_tree'
 
