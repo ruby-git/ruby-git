@@ -1,0 +1,489 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Generates a Markdown reference document containing the full man page for
+# every git command.
+#
+# Requires pandoc (https://pandoc.org) to convert groff man sources to
+# GitHub-Flavored Markdown. Install with: brew install pandoc
+#
+# Usage:
+#   bin/generate-git-reference [GIT_VERSION]
+#
+# Examples:
+#   bin/generate-git-reference           # uses locally installed git
+#   bin/generate-git-reference 2.48.0    # builds a Docker image and uses
+#                                        # that version's man pages
+#
+# Output is written to git-reference/git-reference-<version>.md,
+# e.g. git-reference/git-reference-2.53.0.md
+#
+# Purpose: the generated document can be fed to an AI to answer questions
+# such as "which git boolean flags can be given more than once for escalating
+# effect?" without requiring repeated live lookups against git-scm.com.
+
+require 'fileutils'
+require 'open3'
+require 'shellwords'
+require 'stringio'
+require 'zlib'
+
+# Sections in `git help -a` output that list file-format specs, interface
+# docs, and command aliases rather than executable commands. Parsing stops
+# when any of these section headings is encountered.
+STOP_SECTIONS = [
+  'User-facing repository',
+  'Developer-facing file formats',
+  'Command aliases'
+].freeze
+
+# Encapsulates how to run git commands and read man pages — either from the
+# locally installed git or from a Docker container built for a specific version.
+class GitRunner # rubocop:disable Metrics/ClassLength
+  MAN_BASE_DIR = '/usr/local/share/man'
+
+  def initialize(version = nil)
+    @version = version
+    @image = version ? "local/git:#{version}" : nil
+    @container = nil
+  end
+
+  # Build the Docker image when running in Docker mode. No-op for local mode.
+  def setup!
+    return unless @image
+
+    build_docker_image!
+    start_docker_container!
+  end
+
+  def build_docker_image!
+    dockerfile = File.join(__dir__, 'git.dockerfile')
+    project_root = File.expand_path('..', __dir__)
+    warn "Building Docker image #{@image} (this may take a few minutes)..."
+    success = system(
+      'docker', 'build', '-t', @image,
+      '--build-arg', "GIT_VERSION=#{@version}",
+      '-f', dockerfile, project_root
+    )
+    abort "ERROR: docker build failed for git #{@version}" unless success
+  end
+
+  def start_docker_container!
+    @container, status = Open3.capture2(
+      'docker', 'run', '-d', '--rm', @image, '-c', 'sleep 3600'
+    )
+    @container.strip!
+    abort 'ERROR: failed to start Docker container' unless status.success?
+    at_exit { system('docker', 'kill', @container, out: File::NULL, err: File::NULL) if @container }
+  end
+
+  # Returns the full git version string, e.g. "git version 2.53.0".
+  def version_string
+    stdout, = run('git version')
+    stdout.strip
+  end
+
+  # Returns all command names from `git help -a`, stopping before file-format
+  # and alias sections. Names are returned sorted.
+  def commands
+    stdout, status = run('git help -a --no-external-commands')
+    # Fall back for older git versions that don't support --no-external-commands.
+    stdout, _status = run('git help -a') unless status.success?
+    names = []
+    stdout.each_line do |line|
+      break if STOP_SECTIONS.any? { |s| line.start_with?(s) }
+
+      names << Regexp.last_match(1) if line =~ /\A   (\S+)/
+    end
+    names.uniq.sort
+  end
+
+  # Returns the release date from the git(1) man page's .TH header, or nil
+  # if not available. The .TH line format is:
+  #   .TH "GIT" "1" "2026-02-01" "Git 2.53.0" "Git Manual"
+  def release_date
+    groff = man_page_groff_raw('git')
+    return nil unless groff
+
+    match = groff.match(/^\.TH\s+"[^"]*"\s+"[^"]*"\s+"([^"]+)"/) # third .TH field
+    match ? match[1] : nil
+  rescue StandardError
+    nil
+  end
+
+  # Returns the raw groff source of the man page for a git command, or nil
+  # if no man page is available.
+  def man_page_groff(command)
+    man_page_groff_raw("git-#{command}", 1)
+  end
+
+  # Returns groff source for any man page by name and section.
+  def man_page_groff_raw(page, section = 1)
+    if @container
+      man_page_from_container(page, section)
+    else
+      man_page_from_local(page, section)
+    end
+  rescue StandardError
+    nil
+  end
+
+  # Discovers all git guide and configuration man pages (sections 1, 5, 7)
+  # that are not git-* command pages. Returns an array of [name, section] pairs
+  # sorted by name, e.g. [["gitattributes", 5], ["gitcli", 7]].
+  def guides
+    if @container
+      discover_guides_from_container
+    else
+      discover_guides_from_local
+    end
+  end
+
+  def man_page_from_container(page, section)
+    escaped = Shellwords.shellescape(page)
+    path = "#{MAN_BASE_DIR}/man#{section}/#{escaped}.#{section}"
+    stdout, status = run("cat #{path} 2>/dev/null")
+    status.success? && !stdout.strip.empty? ? stdout : nil
+  end
+
+  def man_page_from_local(page, section)
+    path, status = Open3.capture2('man', '-w', '-S', section.to_s, page)
+    return nil unless status.success?
+
+    read_man_file(path.strip)
+  end
+
+  def discover_guides_from_container
+    results = []
+    [1, 5, 7].each do |section|
+      stdout, status = run("ls #{MAN_BASE_DIR}/man#{section}/ 2>/dev/null")
+      next unless status.success?
+
+      parse_guide_filenames(stdout, section, results)
+    end
+    results.sort_by(&:first)
+  end
+
+  def discover_guides_from_local
+    results = []
+    man_dirs_for_local.each do |dir|
+      [1, 5, 7].each do |section|
+        section_dir = File.join(dir, "man#{section}")
+        next unless File.directory?(section_dir)
+
+        parse_guide_filenames(Dir.children(section_dir).join("\n"), section, results)
+      end
+    end
+    results.uniq.sort_by(&:first)
+  end
+
+  def man_dirs_for_local
+    stdout, status = Open3.capture2('manpath')
+    return [] unless status.success? && !stdout.strip.empty?
+
+    stdout.strip.split(':')
+  end
+
+  def parse_guide_filenames(listing, section, results)
+    listing.each_line do |filename|
+      filename = filename.strip
+      # Match pages like "gitattributes.5", "gitk.1", skip "git.1" and "git-*.1"
+      match = filename.match(/\A(git[a-z][\w.-]*?)\.#{section}(\.gz)?\z/)
+      next unless match
+
+      results << [match[1], section]
+    end
+  end
+
+  private
+
+  # Read a man page file, transparently decompressing gzip files (common on Linux).
+  def read_man_file(path)
+    if path.end_with?('.gz')
+      Zlib::GzipReader.open(path, &:read)
+    else
+      File.read(path)
+    end
+  end
+
+  # Run a shell command, either locally or inside the Docker container.
+  def run(cmd)
+    if @container
+      Open3.capture2('docker', 'exec', @container, 'sh', '-c', cmd)
+    else
+      Open3.capture2('sh', '-c', cmd)
+    end
+  end
+end
+
+# Convert groff source to GitHub-Flavored Markdown via pandoc stdin.
+# Returns an empty string if conversion fails.
+def man_to_markdown(groff_source)
+  filter = File.join(__dir__, 'pandoc-man-filter.lua')
+  stdout, status = Open3.capture2(
+    'pandoc', '-f', 'man', '-t', 'gfm', '--wrap=none', "--lua-filter=#{filter}",
+    stdin_data: groff_source
+  )
+  status.success? ? stdout : ''
+rescue StandardError
+  ''
+end
+
+# Man section labels for display in headings and TOC.
+MAN_SECTION_LABELS = {
+  1 => 'Commands',
+  5 => 'File Formats and Configuration',
+  7 => 'Guides'
+}.freeze
+
+# Extract the short description from a man page's NAME section.
+# Expects markdown with a line like "git-add - Add file contents to the index".
+def extract_description(markdown)
+  name_section = markdown[/^\#{4,}\s+NAME\s*$.+?(?=^\#{4,}\s)/m]
+  return nil unless name_section
+
+  match = name_section.match(/ - (.+)/)
+  match ? match[1].strip : nil
+end
+
+# Build a Markdown table of contents grouped by man page section.
+# sections is an ordered array of [section_number, entries_array] pairs
+# where each entry is [heading, description].
+def build_table_of_contents(sections) # rubocop:disable Metrics/MethodLength
+  lines = []
+  sections.each do |section_num, entries|
+    next if entries.empty?
+
+    label = section_num == :cli ? 'Command Line' : (MAN_SECTION_LABELS[section_num] || "Section #{section_num}")
+    anchor = section_anchor(section_num)
+    lines << "- [#{label}](##{anchor})\n"
+    entries.each do |heading, description|
+      page_anchor = heading.downcase.gsub(/[^a-z0-9\s-]/, '')
+      entry = "  - [#{heading}](##{page_anchor})"
+      entry += " \u2014 #{description}" if description
+      lines << "#{entry}\n"
+    end
+  end
+  lines.join
+end
+
+def section_anchor(section_num)
+  label = section_num == :cli ? 'Command Line' : (MAN_SECTION_LABELS[section_num] || "Section #{section_num}")
+  label.downcase.gsub(/[^a-z0-9\s]/, '').gsub(/\s+/, '-')
+end
+
+# Convert cross-references to other git pages into internal anchor links.
+# Only pages that are actually present in the document (known_commands) are
+# linked. Two patterns are handled:
+#   **git-foo**(1)       →  [**git-foo**(1)](#git-foo1)
+#   gitattributes(5)     →  [gitattributes(5)](#gitattributes5)
+#
+# Heading lines and indented/fenced code blocks are left untouched.
+def linkify_references(text, known_commands)
+  command_map, bold_re, plain_re = build_reference_patterns(known_commands)
+  linkify_lines(text, command_map, bold_re, plain_re)
+end
+
+def build_reference_patterns(known_commands)
+  command_map = build_command_map(known_commands)
+  names_pattern = command_map.keys.sort_by { |n| -n.length }.map { |n| Regexp.escape(n) }.join('|')
+  bold_re  = /(?<!\[)\*\*(#{names_pattern})\*\*\((\d+)\)/
+  plain_re = /(?<!\[)(?<!\*)\b(#{names_pattern})\((\d+)\)/
+
+  [command_map, bold_re, plain_re]
+end
+
+# Map base name → GFM anchor, e.g. "git-add" => "git-add1"
+# GFM anchor rule: lowercase, strip non-alphanumeric/hyphen/space, spaces→hyphens
+def build_command_map(known_commands)
+  known_commands.each_with_object({}) do |heading, map|
+    base   = heading.sub(/\(\d+\)$/, '')                  # "git-add"
+    anchor = heading.downcase.gsub(/[^a-z0-9\s-]/, '')    # "git-add1"
+    map[base] = anchor
+  end
+end
+
+def linkify_lines(text, command_map, bold_re, plain_re)
+  in_fence = false
+  text.lines.map do |line|
+    # Track fenced code blocks (``` or ~~~).
+    if line.match?(/\A(`{3,}|~{3,})/)
+      in_fence = !in_fence
+      next line
+    end
+    # Leave headings, fenced-block content, and indented lines (option
+    # descriptions and literal code blocks) unchanged.
+    next line if in_fence || line.start_with?('#', ' ', "\t")
+
+    line = linkify_line(line, command_map, bold_re, plain_re)
+    line
+  end.join
+end
+
+def linkify_line(line, command_map, bold_re, plain_re)
+  line = line.gsub(bold_re) do
+    name = Regexp.last_match(1)
+    sect = Regexp.last_match(2)
+    "[**#{name}**(#{sect})](##{command_map[name]})"
+  end
+  line.gsub(plain_re) do
+    name = Regexp.last_match(1)
+    sect = Regexp.last_match(2)
+    "[#{name}(#{sect})](##{command_map[name]})"
+  end
+end
+
+# Collapse groff-style admonition blocks that pandoc renders as:
+#
+#   > \          (or > > \ for nested blockquotes)
+#   >
+#   > **Note**   (or **Warning**, **Caution**, etc.)
+#   >
+#   > \
+#
+# into a single clean header line with the label uppercased:
+#
+#   > **NOTE**   (or > > **WARNING**)
+#
+def normalize_admonitions(text)
+  # Capture the blockquote prefix ("> " or "> > "), then match the five-line
+  # pattern: backslash / blank-quote / label / blank-quote / backslash.
+  # The blank-quote lines omit the trailing space, so they are matched
+  # independently rather than repeating the prefix capture group.
+  #
+  # Capture the label word directly (without the surrounding **) so that the
+  # replacement can upcase it without a nested sub call that would clobber $1.
+  text.gsub(/^(> (?:> )?)\\\n>[> ]*\n\1\*\*(\w+)\*\*\n>[> ]*\n\1\\/) do
+    "#{Regexp.last_match(1)}**#{Regexp.last_match(2).upcase}**"
+  end
+end
+
+def pandoc_available?
+  system('pandoc', '--version', out: File::NULL, err: File::NULL)
+end
+
+def docker_available?
+  system('docker', 'info', out: File::NULL, err: File::NULL)
+end
+
+# ---------------------------------------------------------------------------
+
+abort 'ERROR: pandoc is not installed. Install it with: brew install pandoc' unless pandoc_available?
+
+if ARGV[0] && !docker_available?
+  abort 'ERROR: Docker is not available. Docker is required when specifying a git version.'
+end
+
+runner = GitRunner.new(ARGV[0])
+runner.setup!
+
+version_string = runner.version_string
+version_number = version_string[/\d[\d.]*/] || 'unknown'
+
+output_dir = File.expand_path('../git-reference', __dir__)
+FileUtils.mkdir_p(output_dir)
+output_path = File.join(output_dir, "git-reference-#{version_number}.md")
+
+commands = runner.commands
+warn "Generating git reference for #{commands.size} commands → #{output_path}"
+
+buf = StringIO.new
+buf.puts "# Git Reference (#{version_number})"
+buf.puts
+buf.puts "Generated: #{Time.now.strftime('%Y-%m-%d')}"
+buf.puts
+release_date = runner.release_date
+version_line = "Git version: #{version_string}"
+version_line += " (released #{release_date})" if release_date
+buf.puts version_line
+buf.puts
+buf.puts '{{TABLE_OF_CONTENTS}}'
+
+# Collect all pages grouped by man section: { section_num => [[name, section], ...] }
+# Section 1 commands come from git help -a; sections 5/7 from guide discovery.
+section_pages = { 1 => [], 5 => [], 7 => [] }
+
+# git-* commands go into section 1.
+commands.each { |cmd| section_pages[1] << ["git-#{cmd}", 1] }
+
+# Add guides from sections 1, 5, 7.
+guides = runner.guides
+guides.each { |(page, section)| section_pages[section] << [page, section] }
+
+# The git(1) page gets its own "Command Line" section before Commands.
+cli_heading = nil
+total_pages = 1 + section_pages.values.sum(&:size)
+counter = 0
+
+counter += 1
+warn format('[%<n>d/%<total>d] %<heading>s', n: counter, total: total_pages, heading: 'git(1)')
+groff = runner.man_page_groff_raw('git', 1)
+if groff
+  markdown = man_to_markdown(groff)
+  unless markdown.strip.empty?
+    description = extract_description(markdown)
+    cli_heading = ['git(1)', description]
+    buf.puts '---'
+    buf.puts
+    buf.puts '## Command Line'
+    buf.puts
+    buf.puts '---'
+    buf.puts
+    buf.puts '### git(1)'
+    buf.puts
+    buf.puts markdown
+    buf.puts
+  end
+end
+
+# Track all included headings per section for the TOC.
+included_by_section = { 1 => [], 5 => [], 7 => [] }
+
+[1, 5, 7].each do |section_num|
+  pages = section_pages[section_num]
+  next if pages.empty?
+
+  label = MAN_SECTION_LABELS[section_num] || "Section #{section_num}"
+  buf.puts '---'
+  buf.puts
+  buf.puts "## #{label}"
+  buf.puts
+
+  pages.each do |page, section|
+    counter += 1
+    heading = "#{page}(#{section})"
+    warn format('[%<n>d/%<total>d] %<heading>s', n: counter, total: total_pages, heading: heading)
+    groff = runner.man_page_groff_raw(page, section)
+    next unless groff
+
+    markdown = man_to_markdown(groff)
+    next if markdown.strip.empty?
+
+    description = extract_description(markdown)
+    included_by_section[section_num] << [heading, description]
+    buf.puts '---'
+    buf.puts
+    buf.puts "### #{heading}"
+    buf.puts
+    buf.puts markdown
+    buf.puts
+  end
+end
+
+all_headings = included_by_section.values.flatten(1).map(&:first)
+all_headings.unshift('git(1)') if cli_heading
+
+toc_sections = []
+toc_sections << [:cli, [cli_heading].compact] if cli_heading
+[1, 5, 7].each { |s| toc_sections << [s, included_by_section[s]] }
+
+warn 'Building table of contents...'
+toc = build_table_of_contents(toc_sections)
+content = buf.string.sub("{{TABLE_OF_CONTENTS}}\n") { toc }
+warn 'Linking cross-references...'
+output = linkify_references(content, all_headings)
+warn 'Normalizing admonition blocks...'
+output = normalize_admonitions(output)
+File.write(output_path, output)
+
+warn "Done. Output written to #{output_path}"

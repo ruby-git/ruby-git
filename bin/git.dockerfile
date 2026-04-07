@@ -17,6 +17,10 @@ RUN curl -sL "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VER
     git config --global core.editor "vi" && \
     git config --global core.pager ""
 
+RUN mkdir -p /usr/local/share/man && \
+    curl -sL "https://mirrors.edge.kernel.org/pub/software/scm/git/git-manpages-${GIT_VERSION}.tar.gz" | \
+    tar -xz -C /usr/local/share/man/
+
 WORKDIR /work
 
 ENTRYPOINT ["/bin/sh"]
