@@ -15,3 +15,6 @@ rubocop-report.json
 
 # rspec failure tracking
 .rspec_status
+
+# generated git reference docs
+git-reference/
