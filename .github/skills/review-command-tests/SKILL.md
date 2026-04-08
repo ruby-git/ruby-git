@@ -90,6 +90,8 @@ Unit tests verify CLI argument building and command-layer behavior for each comm
   base invocation test — do not repeat it in every test.
 - Each positional operand variation (e.g., single value, multiple values)
 - Each flag option, including aliases (e.g., `:force` and `:f`)
+- `max_times:` flag options: test with `true` (emits once) and the maximum integer
+  (emits N times), plus each alias with `true`
 - Flag options combined with operands where meaningful (e.g., an option that modifies
   how operands are interpreted)
 - Value options with each accepted form (e.g., boolean `true` vs a string value like
@@ -197,6 +199,10 @@ Unit tests should exercise each **code path** through the command, not each poss
 - **Repeating the return value assertion.** The base invocation test asserts
   `expect(result).to eq(expected_result)` once as a contract check. Do not repeat
   this assertion in other tests — one check per file is sufficient.
+- **Intermediate integers for `max_times:` flags.** When a flag declares
+  `max_times: N`, test only `true` and the max integer N. Do not test intermediate
+  values (e.g. `force: 1` when `max_times: 2`) — the DSL handles all valid integers
+  uniformly and intermediate values exercise the same code path.
 - **String-variant pass-through tests.** Do not write multiple tests that pass
   different string values through the same positional argument or value option. Tests
   like "handles paths with spaces" and "handles paths with unicode" exercise the same
