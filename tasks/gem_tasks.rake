@@ -8,3 +8,7 @@ require 'bundler/gem_tasks'
 Rake::Task['release'].clear
 desc 'Customized release task to avoid creating a new tag'
 task release: 'release:rubygem_push'
+
+require 'rake/clean'
+CLOBBER << 'pkg'
+CLOBBER << 'Gemfile.lock'
