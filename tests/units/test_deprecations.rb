@@ -202,11 +202,53 @@ class TestDeprecations < Test::Unit::TestCase
       git.add('tempfile.txt')
 
       Git::Deprecation.expects(:warn).with(
-        ':ff option is deprecated. Use :force_force instead.'
+        ':ff option is deprecated. Use force: 2 instead.'
       )
 
       # Call clean with deprecated :ff option
       git.lib.clean(ff: true)
+    end
+  end
+
+  def test_clean_ff_false_deprecation_preserves_non_force_behavior
+    Git::Deprecation.expects(:warn).with(
+      ':ff option is deprecated. Use force: 2 instead.'
+    )
+
+    expected_command_line = ['clean', {}]
+    assert_command_line_eq(expected_command_line) do |git|
+      git.clean(ff: false)
+    end
+  end
+
+  def test_clean_ff_rejects_non_boolean_values
+    error = assert_raise(ArgumentError) do
+      @git.clean(ff: 0)
+    end
+
+    assert_match(/ff option only accepts true, false, or nil/, error.message)
+  end
+
+  def test_clean_ff_does_not_mask_invalid_force_value
+    Git::Deprecation.expects(:warn).with(
+      ':ff option is deprecated. Use force: 2 instead.'
+    )
+
+    error = assert_raise(ArgumentError) do
+      @git.clean(ff: true, force: 0)
+    end
+
+    assert_match(/force.*positive Integer/, error.message)
+  end
+
+  def test_clean_ff_true_treats_force_nil_as_unspecified
+    Git::Deprecation.expects(:warn).with(
+      ':ff option is deprecated. Use force: 2 instead.'
+    )
+
+    expected_command_line = ['clean', '--force', '--force', {}]
+    assert_command_line_eq(expected_command_line) do |git|
+      git.clean(ff: true, force: nil)
     end
   end
 end
