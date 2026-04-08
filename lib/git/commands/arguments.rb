@@ -629,9 +629,6 @@ module Git
       #
       # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       #
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match.
-      #
       # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
       #
       # @param required [Boolean] whether the option must be provided (key must exist in opts)
@@ -639,9 +636,17 @@ module Git
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
       #
+      # @param max_times [Integer, nil] maximum number of times the flag may be repeated (default: nil).
+      #   When set, the caller may pass a positive Integer up to this limit to emit the flag
+      #   multiple times (e.g. `force: 2` emits `--force --force`). Must be an Integer >= 2;
+      #   0 and 1 raise ArgumentError at definition time. When nil (the default), only boolean
+      #   values are accepted.
+      #
       # @return [void]
       #
       # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #
+      # @raise [ArgumentError] if max_times is not nil and not an Integer >= 2
       #
       # @example Basic flag
       #   args_def = Arguments.define do
@@ -657,11 +662,20 @@ module Git
       #   args_def.bind(full: true).to_a   # => ['--full']
       #   args_def.bind(full: false).to_a  # => ['--no-full']
       #
-      # @example With type validation
+      # @example Repeatable flag with max_times
       #   args_def = Arguments.define do
-      #     flag_option :force, type: [TrueClass, FalseClass]
+      #     flag_option :force, max_times: 2
       #   end
       #   args_def.bind(force: true).to_a  # => ['--force']
+      #   args_def.bind(force: 1).to_a     # => ['--force']
+      #   args_def.bind(force: 2).to_a     # => ['--force', '--force']
+      #
+      # @example Negatable flag with max_times
+      #   args_def = Arguments.define do
+      #     flag_option :force, negatable: true, max_times: 2
+      #   end
+      #   args_def.bind(force: false).to_a  # => ['--no-force']
+      #   args_def.bind(force: 2).to_a      # => ['--force', '--force']
       #
       # @example With required and allow_nil: false
       #   args_def = Arguments.define do
@@ -670,10 +684,12 @@ module Git
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :force"
       #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
-      def flag_option(names, as: nil, type: nil, negatable: false, required: false, allow_nil: true)
+      def flag_option(names, as: nil, negatable: false, required: false, allow_nil: true, max_times: nil)
         option_type = negatable ? :negatable_flag : :flag
-        register_option(names, type: option_type, as: as, expected_type: type, validator: nil,
-                               required: required, allow_nil: allow_nil)
+        validate_max_times!(Array(names).first, max_times)
+
+        register_option(names, type: option_type, as: as, expected_type: nil, validator: nil,
+                               required: required, allow_nil: allow_nil, max_times: max_times)
       end
 
       # Define a valued option (--flag value as separate arguments)
@@ -1890,6 +1906,14 @@ module Git
         @ordered_definitions << { kind: :option, name: primary }
       end
 
+      def validate_max_times!(option_name, max_times)
+        return if max_times.nil?
+
+        return if max_times.is_a?(Integer) && max_times >= 2
+
+        raise ArgumentError, "max_times for :#{option_name} must be an Integer >= 2"
+      end
+
       # Validate that flag-producing options are not defined after a '--' boundary
       #
       # @param type [Symbol] the option type
@@ -2044,11 +2068,7 @@ module Git
       end
 
       BUILDERS = {
-        flag: lambda do |args, arg_spec, value, _|
-          return unless value
-
-          arg_spec.is_a?(Array) ? args.concat(arg_spec) : args << arg_spec
-        end,
+        flag: :build_flag,
         negatable_flag: :build_negatable_flag,
         value: lambda do |args, arg_spec, value, definition|
           if definition[:repeatable]
@@ -2252,18 +2272,77 @@ module Git
         short_option?(arg_spec) ? '' : '='
       end
 
+      def build_flag(args, arg_spec, value, definition)
+        count = normalize_flag_value!(value, definition)
+        append_repeated_flag(args, arg_spec, count)
+      end
+
       # Build negatable flag with proper negation format
       #
       # For negation, always use double-dash format (--no-x) even for short options,
       # as this is the POSIX convention.
       #
-      def build_negatable_flag(args, arg_spec, value, _definition)
-        unless [true, false].include?(value)
-          raise ArgumentError,
-                "negatable_flag expects a boolean value, got #{value.inspect} (#{value.class})"
+      def build_negatable_flag(args, arg_spec, value, definition)
+        if value == false
+          args << negate_flag(arg_spec)
+          return
         end
 
-        args << (value ? arg_spec : negate_flag(arg_spec))
+        count = normalize_flag_value!(value, definition)
+        append_repeated_flag(args, arg_spec, count)
+      end
+
+      def append_repeated_flag(args, arg_spec, count)
+        return if count <= 0
+
+        count.times do
+          arg_spec.is_a?(Array) ? args.concat(arg_spec) : args << arg_spec
+        end
+      end
+
+      def normalize_flag_value!(value, definition)
+        return 1 if value == true
+        return 0 if value.nil? || value == false
+
+        option_name = definition[:aliases].first
+        max_times = definition[:max_times]
+
+        raise_flag_type_boolean_error!(value, definition) if max_times.nil?
+
+        return normalize_flag_integer_value!(value, option_name, max_times) if value.is_a?(Integer)
+
+        raise ArgumentError, "Invalid value for :#{option_name}: expected true, false, or a positive Integer"
+      end
+
+      def raise_flag_type_boolean_error!(value, definition)
+        if definition[:type] == :negatable_flag
+          raise_negatable_flag_boolean_error!(value)
+        else
+          raise_flag_boolean_error!(definition[:aliases].first, value)
+        end
+      end
+
+      def raise_flag_boolean_error!(option_name, value)
+        raise ArgumentError,
+              "flag_option :#{option_name} expects a boolean value, got #{value.inspect} (#{value.class})"
+      end
+
+      def raise_negatable_flag_boolean_error!(value)
+        raise ArgumentError,
+              "negatable_flag expects a boolean value, got #{value.inspect} (#{value.class})"
+      end
+
+      def normalize_flag_integer_value!(value, option_name, max_times)
+        raise ArgumentError, "Invalid value for :#{option_name}: expected a positive Integer" if value <= 0
+
+        raise_max_times_exceeded!(option_name, value, max_times) if value > max_times
+
+        value
+      end
+
+      def raise_max_times_exceeded!(option_name, value, max_times)
+        raise ArgumentError,
+              "#{option_name}: #{value} exceeds max_times: #{max_times} for :#{option_name}"
       end
 
       # Negate a flag by adding --no- prefix
@@ -3080,8 +3159,14 @@ module Git
             predicate_name = :"#{name}?"
             next if RESERVED_NAMES.include?(predicate_name)
 
-            define_singleton_method(predicate_name) { @options[name] }
+            define_singleton_method(predicate_name) { flag_predicate?(@options[name]) }
           end
+        end
+
+        def flag_predicate?(value)
+          return value.positive? if value.is_a?(Integer)
+
+          value == true
         end
       end
     end

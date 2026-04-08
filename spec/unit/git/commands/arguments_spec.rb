@@ -29,6 +29,156 @@ RSpec.describe Git::Commands::Arguments do
       it 'outputs nothing when option is not provided' do
         expect(args.bind.to_ary).to eq([])
       end
+
+      it 'raises an error for Integer value when max_times is not set' do
+        expect { args.bind(force: 1) }.to raise_error(ArgumentError, /flag_option :force expects a boolean value/)
+      end
+
+      it 'raises an error for String value' do
+        expect { args.bind(force: 'yes') }.to raise_error(ArgumentError, /flag_option :force expects a boolean value/)
+      end
+    end
+
+    context 'with flag options and max_times' do
+      let(:args) do
+        described_class.define do
+          flag_option :force, max_times: 2
+        end
+      end
+
+      it 'outputs nothing when value is nil' do
+        expect(args.bind(force: nil).to_ary).to eq([])
+      end
+
+      it 'outputs nothing when option is not provided' do
+        expect(args.bind.to_ary).to eq([])
+      end
+
+      it 'outputs nothing when value is false' do
+        expect(args.bind(force: false).to_ary).to eq([])
+      end
+
+      it 'outputs --flag when value is true' do
+        expect(args.bind(force: true).to_ary).to eq(['--force'])
+      end
+
+      it 'outputs --flag when value is 1' do
+        expect(args.bind(force: 1).to_ary).to eq(['--force'])
+      end
+
+      it 'outputs --flag twice when value is 2' do
+        expect(args.bind(force: 2).to_ary).to eq(['--force', '--force'])
+      end
+
+      it 'raises an error when value is 0' do
+        expect { args.bind(force: 0) }.to raise_error(ArgumentError, /force.*positive Integer/)
+      end
+
+      it 'raises an error when value exceeds max_times' do
+        expect { args.bind(force: 3) }.to raise_error(ArgumentError, /force: 3 exceeds max_times: 2 for :force/)
+      end
+
+      it 'raises an error when value is a float' do
+        expect { args.bind(force: 1.5) }.to raise_error(ArgumentError, /force.*positive Integer/)
+      end
+
+      it 'raises an error when value is negative' do
+        expect { args.bind(force: -1) }.to raise_error(ArgumentError, /force.*positive Integer/)
+      end
+    end
+
+    context 'with negatable flag options and max_times' do
+      let(:args) do
+        described_class.define do
+          flag_option :force, negatable: true, max_times: 2
+        end
+      end
+
+      it 'outputs --no-flag once when value is false' do
+        expect(args.bind(force: false).to_ary).to eq(['--no-force'])
+      end
+
+      it 'outputs --flag once when value is true' do
+        expect(args.bind(force: true).to_ary).to eq(['--force'])
+      end
+
+      it 'outputs --flag once when value is 1' do
+        expect(args.bind(force: 1).to_ary).to eq(['--force'])
+      end
+
+      it 'outputs repeated positive flags when value is an Integer' do
+        expect(args.bind(force: 2).to_ary).to eq(['--force', '--force'])
+      end
+
+      it 'raises an error when value is 0' do
+        expect { args.bind(force: 0) }.to raise_error(ArgumentError, /force.*positive Integer/)
+      end
+
+      it 'raises an error for non-boolean non-Integer value' do
+        expect { args.bind(force: 'yes') }.to raise_error(ArgumentError, /force.*true, false, or a positive Integer/)
+      end
+    end
+
+    context 'with negatable flag options without max_times' do
+      let(:args) do
+        described_class.define do
+          flag_option :force, negatable: true
+        end
+      end
+
+      it 'raises an error for Integer value' do
+        expect { args.bind(force: 1) }.to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
+      end
+    end
+
+    context 'with invalid max_times definitions for flag options' do
+      it 'rejects max_times: 0' do
+        expect do
+          described_class.define do
+            flag_option :force, max_times: 0
+          end
+        end.to raise_error(ArgumentError, /max_times.*Integer >= 2/)
+      end
+
+      it 'rejects max_times: 1' do
+        expect do
+          described_class.define do
+            flag_option :force, max_times: 1
+          end
+        end.to raise_error(ArgumentError, /max_times.*Integer >= 2/)
+      end
+
+      it 'rejects non-Integer max_times' do
+        expect do
+          described_class.define do
+            flag_option :force, max_times: 2.5
+          end
+        end.to raise_error(ArgumentError, /max_times.*Integer >= 2/)
+      end
+    end
+
+    context 'with flag options using as: array and max_times' do
+      let(:args) do
+        described_class.define do
+          flag_option :recursive, as: ['-r', '--remotes'], max_times: 2
+        end
+      end
+
+      it 'repeats the full as: array output for each count' do
+        expect(args.bind(recursive: 2).to_ary).to eq(['-r', '--remotes', '-r', '--remotes'])
+      end
+    end
+
+    context 'with flag options using as: string and max_times' do
+      let(:args) do
+        described_class.define do
+          flag_option :force, as: '-ff', max_times: 2
+        end
+      end
+
+      it 'repeats the as: string output for each count' do
+        expect(args.bind(force: 2).to_ary).to eq(['-ff', '-ff'])
+      end
     end
 
     context 'with value options' do
@@ -4468,6 +4618,39 @@ RSpec.describe Git::Commands::Arguments do
         it '? accessor returns false when negatable flag is false' do
           bound = args.bind(verbose: false)
           expect(bound.verbose?).to be false
+        end
+      end
+
+      context 'with flag_option max_times' do
+        let(:args) do
+          described_class.define do
+            flag_option :force, max_times: 2
+          end
+        end
+
+        it '? accessor returns true for positive Integer value' do
+          bound = args.bind(force: 2)
+          expect(bound.force?).to be true
+        end
+
+        it '? accessor returns true when value is true' do
+          bound = args.bind(force: true)
+          expect(bound.force?).to be true
+        end
+
+        it '? accessor returns false when value is nil' do
+          bound = args.bind(force: nil)
+          expect(bound.force?).to be false
+        end
+
+        it '? accessor returns false when option is not provided' do
+          bound = args.bind
+          expect(bound.force?).to be false
+        end
+
+        it 'plain accessor returns the raw Integer value' do
+          bound = args.bind(force: 2)
+          expect(bound.force).to eq(2)
         end
       end
 
