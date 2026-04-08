@@ -28,7 +28,7 @@ module Git
         arguments do
           literal 'worktree'
           literal 'add'
-          flag_option %i[force f]
+          flag_option %i[force f], max_times: 2
           flag_option :detach
           flag_option :checkout, negatable: true
           flag_option :guess_remote, negatable: true
@@ -57,7 +57,10 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) override safety guards
+        #     @option options [Boolean, Integer] :force (nil) override safety guards
+        #
+        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
+        #       `--force --force`, which also allows adding worktrees for locked branches.
         #
         #       Alias: :f
         #
