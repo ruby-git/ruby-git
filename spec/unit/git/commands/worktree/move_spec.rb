@@ -37,6 +37,13 @@ RSpec.describe Git::Commands::Worktree::Move do
 
         command.call('/tmp/old', '/tmp/new', f: true)
       end
+
+      it 'emits --force twice when force: 2' do
+        expect_command_capturing('worktree', 'move', '--force', '--force', '--', '/tmp/old', '/tmp/new', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/old', '/tmp/new', force: 2)
+      end
     end
   end
 end

@@ -23,7 +23,7 @@ module Git
         arguments do
           literal 'worktree'
           literal 'move'
-          flag_option %i[force f]
+          flag_option %i[force f], max_times: 2
           end_of_options
           operand :worktree, required: true
           operand :new_path, required: true
@@ -41,11 +41,10 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) allow moving a locked worktree
+        #     @option options [Boolean, Integer] :force (nil) allow moving a locked worktree
         #
-        #       Note: force-moving when the destination is also locked or missing (requires
-        #       `--force` twice) is not yet supported.
-        #       See {https://github.com/ruby-git/ruby-git/issues/1178 issue #1178}.
+        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
+        #       `--force --force`, which also handles locked or missing destinations.
         #
         #       Alias: :f
         #
