@@ -26,22 +26,16 @@ RSpec.describe Git::Commands::Clean do
       end
     end
 
-    context 'with the :force_force argument' do
-      it 'adds -ff to the command line' do
-        expect_command_capturing('clean', '-ff').and_return(command_result)
-        command.call(force_force: true)
+    context 'with force: 2' do
+      it 'emits --force twice' do
+        expect_command_capturing('clean', '--force', '--force').and_return(command_result)
+        command.call(force: 2)
       end
-    end
 
-    context 'with both :force and :force_force arguments' do
-      it 'allows force: true with force_force: false' do
+      it 'accepts :f as an alias' do
         expect_command_capturing('clean', '--force').and_return(command_result)
-        command.call(force: true, force_force: false)
-      end
 
-      it 'allows force_force: true with force: false' do
-        expect_command_capturing('clean', '-ff').and_return(command_result)
-        command.call(force_force: true, force: false)
+        command.call(f: true)
       end
     end
 
