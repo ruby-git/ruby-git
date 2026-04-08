@@ -247,6 +247,13 @@ module Git
         #
         #     @option options [Boolean] :simple_flag (nil) One-sentence description without period
         #
+        #     @option options [Boolean, Integer] :force (nil) Short description without period
+        #
+        #       When an integer is given, the flag is repeated that many times (up to the
+        #       configured `max_times:` limit).
+        #
+        #       Alias: :f
+        #
         #     @option options [Boolean, String, nil] :complex_flag (nil) Short description without period
         #
         #       Continuation: explain the `true`/`false`/string forms here, each separated by
@@ -471,6 +478,13 @@ not document — it will generate an unknown flag that older supported git may r
 Symmetrically, every option the version-matched docs document with a short form
 **must** have an
 alias in the DSL (long name first: `%i[dry_run n]`).
+
+**`as:` is an escape hatch, not a default tool:** treat `as:` as suspicious by
+default and use it only when the required argv cannot be expressed by the normal
+DSL mapping plus existing modifiers (`negatable:`, `inline:`, `as_operand:`,
+`max_times:`, etc.). If a plain symbol, alias, or first-class modifier can express
+the same behavior, prefer that. In particular, do not use `as:` to encode repeated
+flags now that `max_times:` exists.
 
 **`inline: true` for `=<value>` options:** when the version-matched docs show `--option=<value>`
 (with an `=`), the DSL entry must include `inline: true` regardless of whether the
@@ -697,6 +711,30 @@ end
 code path as the base invocation with no options. The "no arguments" test already
 covers this path. Do not write `command.call(prune: false)` or similar for flags
 that have no `--no-<flag>` form.
+
+**Test `max_times:` flags with both `true` and the maximum integer.** When a
+`flag_option` declares `max_times: N`, test two code paths: `option: true` (emits
+the flag once) and `option: N` (emits the flag N times). Also test every alias with
+`true`. Do not test intermediate integers (e.g. `force: 1` when `max_times: 2`) —
+the DSL handles all valid integers uniformly.
+
+```ruby
+# DSL: flag_option %i[force f], max_times: 2
+it 'adds --force when force: true' do
+  expect_command_capturing('clean', '--force').and_return(command_result)
+  command.call(force: true)
+end
+
+it 'emits --force twice when force: 2' do
+  expect_command_capturing('clean', '--force', '--force').and_return(command_result)
+  command.call(force: 2)
+end
+
+it 'supports the :f alias' do
+  expect_command_capturing('clean', '--force').and_return(command_result)
+  command.call(f: true)
+end
+```
 
 ### Integration tests
 

@@ -103,10 +103,11 @@ Key behaviors:
 - **`as:` override** — an escape hatch that emits the given string (or array of
   strings) verbatim instead of deriving a flag from the symbol name. Because it
   bypasses the DSL's automatic mapping it removes the guarantee that the flag can
-  be verified just by reading the symbol name, adding a manual audit burden. Use
-  it only when the DSL genuinely cannot produce the required output — see
-  section 2 for the three acceptable cases. Uppercase single-char symbols never
-  need `as:`.
+  be verified just by reading the symbol name, adding a manual audit burden. Treat
+  it as a red flag by default and allow it only when the DSL genuinely cannot
+  produce the required output any other way. Patterns now covered by first-class
+  DSL features, such as repeated flags via `max_times:`, should not use `as:`.
+  Uppercase single-char symbols never need `as:`.
 - **Aliases** — first alias is canonical and determines generated flag (long name
   first: `%i[force f]`, not `%i[f force]`)
 - **`skip_cli` operand behavior** — `operand ..., skip_cli: true` binds and validates

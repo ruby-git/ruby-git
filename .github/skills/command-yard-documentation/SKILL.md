@@ -179,6 +179,7 @@ conflicting documentation for the method.
   | DSL method | YARD type |
   | --- | --- |
   | `flag_option` | `[Boolean]` |
+  | `flag_option ..., max_times: N` | `[Boolean, Integer]` |
   | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
   | `value_option` | `[String]` (or a more specific type where known) |
   | `operand` (repeatable) | `[Array<String>]` |
@@ -219,6 +220,9 @@ When command declares non-default exit range:
       repository`, `the result of calling \`git show-ref\``, `if git exits with a non-zero
       status`)
 - [ ] consistent option wording and defaults across sibling commands
+- [ ] `max_times:` flags use `[Boolean, Integer]` type, not just `[Boolean]`, and
+      include a continuation paragraph explaining integer semantics (e.g. "When an
+      integer is given, the flag is repeated that many times")
 - [ ] no stale references to removed per-command implementation details
 - [ ] all other general formatting rules from [YARD
   Documentation](../yard-documentation/SKILL.md) are satisfied

@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | fixed flag always present | `literal` | `literal 'stash'` — **only** for operation selectors (subcommand names, mode flags like `--delete` that define what the class does) |
 | boolean flag | `flag_option` | `flag_option :cached` |
+| repeatable boolean flag | `flag_option ..., max_times: N` | `flag_option %i[force f], max_times: 2` |
 | boolean-or-value | `flag_or_value_option` | `flag_or_value_option :dirstat, inline: true` |
 | value option | `value_option` | `value_option :message` |
 | execution kwarg (not a CLI arg) | `execution_option` | `execution_option :timeout` |
@@ -136,33 +137,41 @@ This is intentional power — but it carries a cost: a reviewer can no longer ve
 the flag by reading the symbol name alone. The `as:` string must be audited
 separately, making it harder to spot typos and drift.
 
-Flag any use of `as:` unless one of these three conditions applies:
+Flag any use of `as:` unless one of these conditions applies:
 
 1. **Ruby keyword conflict** — the git flag's natural name is a Ruby keyword and
-   cannot be used as a symbol literal. The alias is renamed, and `as:` supplies the
-   real flag:
+  cannot be used as a symbol literal. The alias is renamed, and `as:` supplies the
+  real flag:
 
-   ```ruby
-   flag_option %i[begin_rev], as: '--begin'
-   ```
+  ```ruby
+  flag_option %i[begin_rev], as: '--begin'
+  ```
 
-2. **Combined short flag** — git accepts a repeated short flag in combined form (e.g.
-   `--force --force` → `-ff`) and there is no single long-form equivalent. This is
-   the only idiomatic way to express it:
+2. **The required argv cannot be expressed by the normal DSL mapping** — the
+  symbol name, aliases, and existing modifiers (`negatable:`, `inline:`,
+  `as_operand:`, `max_times:`, etc.) cannot produce the required token sequence,
+  so `as:` is the narrowest accurate escape hatch. Example:
 
-   ```ruby
-   flag_option %i[force_force ff], as: '-ff'
-   ```
+  ```ruby
+  flag_option :remotes, as: ['-r', '--remotes']
+  ```
 
-3. **Multi-token flag** — the option must emit two or more CLI tokens that cannot be
-   derived from a single symbol. Pass an array (valid on `flag_option` only):
+Outside these cases, `as:` is a red flag. A DSL entry that uses `as:` where a
+plain symbol, alias, or existing modifier would suffice should be corrected.
 
-   ```ruby
-   flag_option :double_force, as: ['--force', '--force']
-   ```
+#### Prefer first-class DSL features over `as:`
 
-Outside these three cases, `as:` is a red flag. A DSL entry that uses `as:` where a
-plain symbol or alias would suffice should be corrected.
+When the DSL now has a first-class way to express the behavior, `as:` is no longer
+justified. Repeated flags are the canonical example: use `max_times:` instead of
+encoding repetition manually.
+
+The following patterns should be flagged as errors because `max_times:` expresses
+them directly:
+
+- **Combined short flag used to emulate repetition** (e.g. `flag_option %i[force_force ff], as: '-ff'`) —
+  replace with `flag_option %i[force f], max_times: 2`
+- **Repeated identical tokens encoded as an array** (e.g. `flag_option :double_force, as: ['--force', '--force']`) —
+  replace with `flag_option %i[force f], max_times: 2`
 
 #### Single-char flags never need `as:`
 
@@ -355,6 +364,7 @@ correctly placed on their respective DSL methods:
 | `negatable:` | `flag_option`, `flag_or_value_option` |
 | `allow_empty:` | `value_option` |
 | `as_operand:` | `value_option` only — see pathspec table above |
+| `max_times:` | `flag_option` — limits how many times the flag is emitted; caller passes an integer up to N (e.g. `force: 2` emits `--force --force`) |
 | `end_of_options` | structural DSL method — required before the first `operand` (or `value_option ... as_operand: true`) whenever any option flags appear earlier in the block; pathspec operands always require it; see section 3 for the full placement rule |
 
 ## 5. Completeness
@@ -367,6 +377,23 @@ Cross-check against:
 
 Every supported **behavioral** option should be represented in `arguments do`, and
 every DSL entry should be covered by tests.
+
+### Repeatable boolean flags
+
+When the version-matched git documentation describes a flag that can be given multiple
+times to increase its effect (e.g. `--force` can be given twice for `git clean`), use
+`flag_option ..., max_times: N` where N is the documented maximum repetition count.
+The caller can then pass `true` (emit once) or an integer up to N (emit that many
+times).
+
+Flag these as errors:
+
+- Using `as:` to emulate repeated flags (e.g. `as: '-ff'` or
+  `as: ['--force', '--force']`) instead of `max_times:`
+- Using a separate symbol name for the repeated form (e.g. `:force_force`) instead of
+  `max_times:` on the same symbol
+- Missing `max_times:` when the version-matched docs explicitly describe repeatable
+  flag behavior
 
 ### Options excluded due to execution-model conflicts
 
