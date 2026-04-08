@@ -23,7 +23,7 @@ module Git
     #   clean.call(force: true)
     #
     # @example Force cleaning of untracked nested git repositories
-    #   clean.call(force_force: true)
+    #   clean.call(force: 2)
     #
     # @example Recurse into untracked directories
     #   clean.call(d: true)
@@ -47,8 +47,7 @@ module Git
       arguments do
         literal 'clean'
         flag_option :d
-        flag_option %i[force f]
-        flag_option %i[force_force ff], as: '-ff'
+        flag_option %i[force f], max_times: 2
         flag_option %i[dry_run n]
         value_option %i[exclude e], inline: true, repeatable: true
         flag_option :x
@@ -67,13 +66,16 @@ module Git
       #
       #     @option options [Boolean] :d (nil) Recurse into untracked directories
       #
-      #     @option options [Boolean] :force (nil) Force the removal of untracked files
+      #     @option options [Boolean, Integer] :force (nil) Force the removal of untracked files
       #
       #       When `clean.requireForce` is not set to `false`, git-clean will refuse to
-      #       delete files or directories unless this option is given
+      #       delete files or directories unless this option is given.
       #
-      #     @option options [Boolean] :force_force (nil) Remove untracked nested git
-      #       repositories (directories with a `.git` subdirectory)
+      #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit `--force --force`,
+      #       which also removes untracked nested git repositories (directories with a
+      #       `.git` subdirectory).
+      #
+      #       Alias: :f
       #
       #     @option options [Boolean] :dry_run (nil) Don't actually remove anything, just
       #       show what would be done
