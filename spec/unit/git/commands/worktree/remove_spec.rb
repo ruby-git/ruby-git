@@ -37,6 +37,13 @@ RSpec.describe Git::Commands::Worktree::Remove do
 
         command.call('/tmp/feature', f: true)
       end
+
+      it 'emits --force twice when force: 2' do
+        expect_command_capturing('worktree', 'remove', '--force', '--force', '--', '/tmp/feature', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/feature', force: 2)
+      end
     end
   end
 end

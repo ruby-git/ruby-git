@@ -23,7 +23,7 @@ module Git
         arguments do
           literal 'worktree'
           literal 'remove'
-          flag_option %i[force f]
+          flag_option %i[force f], max_times: 2
           end_of_options
           operand :worktree, required: true
         end
@@ -38,10 +38,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) remove even if the worktree has uncommitted changes
+        #     @option options [Boolean, Integer] :force (nil) remove even if the worktree has
+        #       uncommitted changes
         #
-        #       Note: removing locked worktrees (requires `--force` twice) is not yet supported.
-        #       See {https://github.com/ruby-git/ruby-git/issues/1178 issue #1178}.
+        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit `--force --force`,
+        #       which also removes locked worktrees.
         #
         #       Alias: :f
         #
