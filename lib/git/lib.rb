@@ -1227,35 +1227,6 @@ module Git
       Git::Commands::Clean.new(self).call(**opts).stdout
     end
 
-    def migrate_clean_legacy_options(opts)
-      opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
-      deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
-    end
-
-    def deprecate_clean_option(opts, key, message)
-      return opts unless opts.key?(key)
-
-      Git::Deprecation.warn(message)
-      opts = opts.dup
-      deprecated_value = opts.delete(key)
-      return opts unless deprecated_value
-
-      opts[:force] = merge_clean_force_option(opts[:force])
-      opts
-    end
-
-    def merge_clean_force_option(existing_force)
-      [normalize_clean_force_option(existing_force), 2].max
-    end
-
-    def normalize_clean_force_option(value)
-      case value
-      when Integer then value
-      when true then 1
-      else 0
-      end
-    end
-
     REVERT_ALLOWED_OPTS = %i[no_edit].freeze
 
     def revert(commitish, opts = {})
@@ -2122,8 +2093,6 @@ module Git
 
     private
 
-<<<<<<< HEAD
-=======
     def migrate_clean_legacy_options(opts)
       opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
       deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
@@ -2180,7 +2149,6 @@ module Git
       end
     end
 
->>>>>>> 481db6d (fixup! refactor(lib): update clean backward compat for force: 2)
     # Build a result hash from clone options for Git::Base.new
     #
     # Parses the clone directory from the git command's stderr output, which
