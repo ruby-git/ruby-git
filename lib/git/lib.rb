@@ -1223,12 +1223,37 @@ module Git
     # @return [String] the command output
     #
     def clean(opts = {})
-      if opts.key?(:ff)
-        Git::Deprecation.warn(':ff option is deprecated. Use :force_force instead.')
-        opts = opts.dup
-        opts[:force_force] = opts.delete(:ff)
-      end
+      opts = migrate_clean_legacy_options(opts)
       Git::Commands::Clean.new(self).call(**opts).stdout
+    end
+
+    def migrate_clean_legacy_options(opts)
+      opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
+      deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
+    end
+
+    def deprecate_clean_option(opts, key, message)
+      return opts unless opts.key?(key)
+
+      Git::Deprecation.warn(message)
+      opts = opts.dup
+      deprecated_value = opts.delete(key)
+      return opts unless deprecated_value
+
+      opts[:force] = merge_clean_force_option(opts[:force])
+      opts
+    end
+
+    def merge_clean_force_option(existing_force)
+      [normalize_clean_force_option(existing_force), 2].max
+    end
+
+    def normalize_clean_force_option(value)
+      case value
+      when Integer then value
+      when true then 1
+      else 0
+      end
     end
 
     REVERT_ALLOWED_OPTS = %i[no_edit].freeze
@@ -2097,6 +2122,65 @@ module Git
 
     private
 
+<<<<<<< HEAD
+=======
+    def migrate_clean_legacy_options(opts)
+      opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
+      deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
+    end
+
+    def deprecate_clean_option(opts, key, message)
+      return opts unless opts.key?(key)
+
+      opts = opts.dup
+      deprecated_value = opts.delete(key)
+      validate_deprecated_clean_option_value!(key, deprecated_value)
+
+      Git::Deprecation.warn(message)
+      return opts unless deprecated_value
+
+      opts[:force] = merge_clean_force_option(opts[:force], force_specified: force_option_specified?(opts))
+      opts
+    end
+
+    def force_option_specified?(opts)
+      opts.key?(:force) && !opts[:force].nil?
+    end
+
+    def validate_deprecated_clean_option_value!(key, value)
+      return if value.nil? || value == true || value == false
+
+      raise ArgumentError, "#{key} option only accepts true, false, or nil"
+    end
+
+    def merge_clean_force_option(existing_force, force_specified: false)
+      return 2 unless force_specified
+
+      normalized_force = normalize_clean_force_option(existing_force)
+
+      case normalized_force
+      when Integer then merge_integer_clean_force_option(normalized_force)
+      when false
+        2
+      else
+        normalized_force
+      end
+    end
+
+    def merge_integer_clean_force_option(normalized_force)
+      return normalized_force if normalized_force < 1
+
+      [normalized_force, 2].max
+    end
+
+    def normalize_clean_force_option(value)
+      case value
+      when true then 1
+      else value
+      end
+    end
+
+>>>>>>> 481db6d (fixup! refactor(lib): update clean backward compat for force: 2)
     # Build a result hash from clone options for Git::Base.new
     #
     # Parses the clone directory from the git command's stderr output, which
