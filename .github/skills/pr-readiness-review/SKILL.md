@@ -42,8 +42,8 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   comply with, including testing only via public interfaces; these standards take precedence over any older guidance
 - [Development Workflow](../development-workflow/SKILL.md) — primary
   implementation process prior to readiness checks
-- [Review Command Tests](../review-command-tests/SKILL.md) — audit unit and
-  integration test quality for command changes
+- [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration
+  test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   — verify command documentation completeness and consistency
 
@@ -70,7 +70,7 @@ Execute and report results for:
 - [ ] Follow CONTRIBUTING.md guidelines: test gem's interaction with git, not git itself
 
 **Command Tests (if any `Git::Commands::*` specs are included):**
-- [ ] Apply the [Review Command Tests](../review-command-tests/SKILL.md) skill to
+- [ ] Apply the [Command Test Conventions](../command-test-conventions/SKILL.md) skill to
   every new or modified unit and integration spec file for command classes. Resolve
   all findings before proceeding.
 

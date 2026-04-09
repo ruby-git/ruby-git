@@ -1,28 +1,12 @@
 ---
-name: review-command-tests
+name: command-test-conventions
 description: "Conventions for writing and reviewing unit and integration tests for Git::Commands::* classes. Use when scaffolding new command tests or auditing existing ones."
 ---
 
-# Review Command Tests
+# Command Test Conventions
 
 Conventions for writing and reviewing unit and integration tests for
 `Git::Commands::*` classes.
-
-- [Related skills](#related-skills)
-- [Input](#input)
-  - [Version-aware test scope](#version-aware-test-scope)
-- [Reference](#reference)
-  - [Unit tests](#unit-tests)
-    - [Cover these cases](#cover-these-cases)
-    - [Expectations for command invocation](#expectations-for-command-invocation)
-    - [`#initialize` — omit from command specs](#initialize--omit-from-command-specs)
-    - [Unit test grouping](#unit-test-grouping)
-  - [Integration tests](#integration-tests)
-    - [Integration test grouping](#integration-test-grouping)
-    - [Additional integration conventions](#additional-integration-conventions)
-  - [Shared conventions](#shared-conventions)
-- [Workflow](#workflow)
-- [Output](#output)
 
 ## Related skills
 
@@ -582,7 +566,7 @@ match within single lines.
 Report only anomalies — skip items that comply. For each issue found, provide:
 
 - **Rule or guideline violated** — cite by name and source skill (e.g., "Rule 22,
-  RSpec Unit Testing Standards" or "What not to test, Review Command Tests")
+  RSpec Unit Testing Standards" or "What not to test, Command Test Conventions")
 - **Location** — spec file and block path (e.g., `describe '#call' > context 'with
   :force option' > it '...'`)
 - **Issue** — one sentence describing what is wrong

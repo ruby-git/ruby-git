@@ -50,7 +50,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
-- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 
 ## Target end state

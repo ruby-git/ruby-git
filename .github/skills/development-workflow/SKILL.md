@@ -268,7 +268,7 @@ moving to the next task.
 - **Check Code Quality:** Confirm the code is clean and well-factored.
 - **Audit Command Tests (command tasks only):** If this task added or modified tests
   for any `Git::Commands::*` class, apply the
-  [Review Command Tests](../review-command-tests/SKILL.md) skill to every new or
+  [Command Test Conventions](../command-test-conventions/SKILL.md) skill to every new or
   changed spec file before committing. Fix any violations found before moving to the
   COMMIT step.
 - **Audit Command YARD Docs (command tasks only):** If this task added or modified

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Prints the latest Git release version from git-scm.com (e.g. "2.53.0")
+
+set -euo pipefail
+
+curl -sf https://raw.githubusercontent.com/git/git-scm.com/gh-pages/hugo.yml \
+  | sed -n 's/^ *latest_version: *//p'
