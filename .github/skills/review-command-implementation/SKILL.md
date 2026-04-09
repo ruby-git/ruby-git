@@ -10,74 +10,79 @@ contains no duplicated execution behavior.
 
 ## Contents
 
-- [How to use this skill](#how-to-use-this-skill)
-- [Prerequisites](#prerequisites)
+- [Contents](#contents)
 - [Related skills](#related-skills)
 - [Input](#input)
-- [Version-Aware Review Scope](#version-aware-review-scope)
-- [Architecture Contract (Current)](#architecture-contract-current)
-- [What to Check](#what-to-check)
-  - [1. Class shape](#1-class-shape)
-  - [2. `#call` implementation](#2-call-implementation)
-  - [3. Exit-status configuration](#3-exit-status-configuration)
-  - [4. Arguments DSL quality](#4-arguments-dsl-quality)
-  - [5. Internal compatibility contract](#5-internal-compatibility-contract)
-  - [6. Phased rollout / rollback requirements](#6-phased-rollout-rollback-requirements)
-- [Common Failures](#common-failures)
+  - [Command source code](#command-source-code)
+  - [Command test code](#command-test-code)
+  - [Git documentation for the git command](#git-documentation-for-the-git-command)
+- [Reference](#reference)
+  - [Architecture Contract](#architecture-contract)
+  - [`#call` Override Guidance](#call-override-guidance)
+  - [`Base#with_stdin` Mechanics](#basewith_stdin-mechanics)
+  - [Git Version Gating](#git-version-gating)
+  - [Internal Compatibility Contract](#internal-compatibility-contract)
+  - [Phased Rollout Requirements](#phased-rollout-requirements)
+  - [Common Failures](#common-failures)
+- [Workflow](#workflow)
 - [Output](#output)
-
-## How to use this skill
-
-Attach this file to your Copilot Chat context, then invoke it with one or more
-command source files to review. Examples:
-
-```text
-Using the Review Command Implementation skill, review
-lib/git/commands/branch/delete.rb.
-```
-
-```text
-Review Command Implementation: lib/git/commands/diff/patch.rb
-lib/git/commands/diff/numstat.rb
-```
-
-The invocation needs the command file(s) to review.
-
-## Prerequisites
-
-Before starting, you **MUST** load the following skill(s) in their entirety:
-
-- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
-  source for YARD formatting rules and writing standards;
 
 ## Related skills
 
+Before starting, you **MUST** load the following prerequisite skill(s) in their
+entirety:
+
+- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative source for
+  YARD formatting rules and writing standards
+
+Additional related skills:
+
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
-- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 - [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
 
 ## Input
 
-Required: one or more command source files from `lib/git/commands/`.
+What the agent requires to run this skill and where to get it.
 
-## Version-Aware Review Scope
+### Command source code
 
-Before judging whether a command implementation or its DSL surface is correct,
-determine the repository's minimum supported Git version from project metadata.
-In this repository, `git.gemspec` declares `git 2.28.0 or greater`.
+Read the command class from `lib/git/commands/{command}.rb` or, for subcommands,
+`lib/git/commands/{command}/{subcommand}.rb`. For subcommands, also read the
+namespace module at `lib/git/commands/{command}.rb` which lists all sibling
+subcommands and provides the module-level documentation.
 
-For compatibility-sensitive conclusions, use sources in this order:
+### Command test code
 
-1. Version-matched upstream documentation for the minimum supported Git version
-2. Version-matched upstream source when parser behavior is ambiguous in docs
-3. Local `git <command> -h` output only as a supplemental check for the installed Git
+Read unit tests matching `spec/unit/git/commands/{command}/**/*_spec.rb`.
 
-Do not fail or require implementation changes solely because the locally
-installed Git advertises newer options or flag forms that are not confirmed for
-the minimum supported version.
+### Git documentation for the git command
 
-## Architecture Contract (Current)
+- **Latest-version online command documentation**
+
+  Determine the latest released git version by running `bin/latest-git-version`
+  (it prints a version string such as `2.49.0`). Then read the **entire** official
+  git documentation online man page for that version from the URL
+  `https://git-scm.com/docs/git-{command}/{version}` (e.g.,
+  `https://git-scm.com/docs/git-push/2.49.0`). This version will be used as the
+  primary authority for DSL completeness, including the options to include in the
+  DSL, argument names, aliases, ordering, etc.
+
+- **Minimum-version online command documentation**
+
+  Read the **entire** official git documentation online man page for the command for
+  the `Git::MINIMUM_GIT_VERSION` version of git. This will be used only for
+  command-introduction and `requires_git_version` decisions. Fetch this version from
+  URL `https://git-scm.com/docs/git-{command}/{version}`.
+
+Do **not** scaffold from local `git <command> -h` output alone — the installed Git
+version is unknown and may differ from the latest supported version. Local help may
+be used as a supplemental check only.
+
+## Reference
+
+### Architecture Contract
 
 For migrated commands, the expected structure is:
 
@@ -88,6 +93,9 @@ class SomeCommand < Git::Commands::Base
   arguments do
     ...
   end
+
+  # optional — only when introduced after Git::MINIMUM_GIT_VERSION
+  requires_git_version '2.29.0'
 
   # optional for non-zero successful exits
   # reason comment
@@ -114,40 +122,7 @@ Shared behavior lives in `Base`:
 - calls `@execution_context.command_capturing(*args, **args.execution_options, raise_on_failure: false)`
 - raises `Git::FailedError` unless exit status is in allowed range (`0..0` default)
 
-## What to Check
-
-### 1. Class shape
-
-- [ ] Class inherits from `Git::Commands::Base`
-- [ ] Requires `git/commands/base` (not `git/commands/arguments`)
-- [ ] Has exactly one `arguments do` declaration
-- [ ] Does not define command-specific `initialize` that only assigns
-      `@execution_context`
-
-### 2. `#call` implementation
-
-**Simple commands** (no pre-call logic needed):
-- [ ] Uses `# @!method call(*, **)` YARD directive with nested `@overload` blocks as documentation shim
-- [ ] Contains no custom bind/execute/exit-status logic
-- [ ] Does not parse output in command class
-
-**Commands with legitimate `call` overrides** (input validation, stdin protocol, non-trivial option routing):
-- [ ] YARD docs are placed **directly above** `def call` (no `@!method` directive)
-- [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
-- [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
-- [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
-- [ ] Any `ArgumentError` raised manually or via DSL constraint covers only what
-      git cannot validate: per-argument failures and constraints on `skip_cli: true`
-      arguments. Cross-argument constraint methods are **not** declared for
-      git-visible arguments — the narrow exception is arguments git cannot observe
-      in its argv (e.g., `skip_cli: true` operands: `conflicts :objects,
-      :batch_all_objects` and `requires_one_of :objects, :batch_all_objects`).
-      See the validation delegation policy in
-      `redesign/3_architecture_implementation.md` Insight 6.
-- [ ] Bulk of override is extracted into a private helper (`run_batch`, etc.) to satisfy Rubocop `Metrics` thresholds
-- [ ] Does not parse output in command class
-
-#### `#call` override guidance
+### `#call` Override Guidance
 
 Most commands use only a `# @!method call(*, **)` YARD directive with no
 explicit `def call` — the inherited `Base#call` handles binding, execution,
@@ -158,14 +133,14 @@ adds no behavior and conflicts with the `@!method` directive.
 **Override `call` only when the command needs:**
 
 1. **Input validation the DSL cannot express** — per-argument validation parameters
-  (`required:`, `type:`, `allow_nil:`, etc.) and operand format validation belong
-  in `arguments do`. Cross-argument constraint methods are generally **not** declared;
-  git validates its own option semantics. The narrow exception is **arguments git
-  cannot observe in its argv**: if an argument is `skip_cli: true` and never
-  reaches git's argv, git cannot detect incompatibilities — use `conflicts` and/or
-  `requires_one_of` in the DSL (e.g., `cat-file --batch` uses both because
-  `:objects` is `skip_cli: true`). Do not raise `ArgumentError` manually for things
-  the DSL can express via a constraint declaration.
+   (`required:`, `type:`, `allow_nil:`, etc.) and operand format validation belong
+   in `arguments do`. Cross-argument constraint methods are generally **not** declared;
+   git validates its own option semantics. The narrow exception is **arguments git
+   cannot observe in its argv**: if an argument is `skip_cli: true` and never
+   reaches git's argv, git cannot detect incompatibilities — use `conflicts` and/or
+   `requires_one_of` in the DSL (e.g., `cat-file --batch` uses both because
+   `:objects` is `skip_cli: true`). Do not raise `ArgumentError` manually for things
+   the DSL can express via a constraint declaration.
 2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
    `Base#with_stdin`
 3. **Non-trivial option routing** — build different argument sets based on
@@ -191,7 +166,13 @@ adds no behavior and conflicts with the `@!method` directive.
 - Delegate exit-status handling to `validate_exit_status!` — do not reimplement
 - Do not call `super` after manual binding; use `@execution_context.command_capturing` directly
 
-**`Base#with_stdin(content)` mechanics:**
+**DSL defaults:**
+
+Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
+automatically during `args_definition.bind(...)` — do not set defaults manually in
+`call`.
+
+### `Base#with_stdin` Mechanics
 
 `Base#with_stdin(content)` opens an `IO.pipe`, spawns a background `Thread` that
 writes `content` to the write end (then closes it), and yields the read end as
@@ -214,67 +195,53 @@ def call(*, **)
 end
 ```
 
-**DSL defaults:**
+### Git Version Gating
 
-Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
-automatically during `args_definition.bind(...)` — do not set defaults manually in
-`call`.
+Version gating is **command-level only** — individual options do not carry version
+annotations.
 
-### 3. Exit-status configuration
+| Scenario | Expected declaration |
+| --- | --- |
+| Command exists in `Git::MINIMUM_GIT_VERSION` | No `requires_git_version` — do not add one |
+| Command was introduced after `Git::MINIMUM_GIT_VERSION` | `requires_git_version '<version>'` at the version the command was introduced |
 
-- [ ] Commands with non-zero successful exits declare `allow_exit_status <range>`
-- [ ] Declaration includes a short rationale comment explaining git semantics
-- [ ] Range values match expected command behavior
+Example:
 
-### 4. Arguments DSL quality
+```ruby
+# Git::MINIMUM_GIT_VERSION is 2.28.0 and `git maintenance` was introduced in git 2.29.0:
+requires_git_version '2.29.0'
+```
 
-- [ ] DSL entries accurately describe subcommand interface
-- [ ] Option aliases and modifiers are used correctly
-- [ ] Ordering produces expected CLI argument order
-- [ ] No `literal` entries for output-control, editor-suppression, or progress flags
-      (e.g. `--no-edit`, `--verbose`, `--no-progress`, `--no-color`). Command classes
-      are neutral, faithful representations of the git CLI — these must be
-      `flag_option` / `value_option` so the facade can control them. See
-      "Command-layer neutrality" in CONTRIBUTING.md.
-- [ ] `operand ... skip_cli: true` is used only for domain inputs that must bind/validate
-  but must not emit to argv (for example, stdin-fed object lists)
-- [ ] `execution_option` is used for execution kwargs (`timeout:`, `chdir:`), not `skip_cli`
-- [ ] `execution_option` is **not** used for kwargs whose value must be unconditionally
-      fixed regardless of caller input. If a kwarg always has a specific required value
-      (e.g. `chomp: false` for commands returning raw content where trailing newlines are
-      data), hardcode it in a `def call` override instead — exposing it via
-      `execution_option` would allow callers to override a value that must never change.
-
-### 5. Internal compatibility contract
+### Internal Compatibility Contract
 
 This is the canonical location for the internal compatibility contract. Other
 skills reference this section rather than duplicating it.
 
 Ensure refactors preserve these contract expectations:
 
-- [ ] constructor shape remains `initialize(execution_context)` (inherited from `Base`)
-- [ ] command entrypoint remains `call(*, **)` at runtime (via `Base#call`)
-- [ ] argument-definition metadata remains available via `args_definition`
+- constructor shape remains `initialize(execution_context)` (inherited from `Base`)
+- command entrypoint remains `call(*, **)` at runtime (via `Base#call`)
+- argument-definition metadata remains available via `args_definition`
 
 If an intentional deviation exists, require migration notes/changelog documentation.
 
-### 6. Phased rollout / rollback requirements
+### Phased Rollout Requirements
 
 This is the canonical location for phased rollout requirements. Other skills
 reference this section rather than duplicating the full checklist.
 
 For migration PRs, verify process constraints:
 
-- [ ] changes are on a feature branch — **never commit or push directly to `main`**
-- [ ] migration slice is scoped (pilot or one family), not all commands at once
-- [ ] each slice is independently revertible
-- [ ] refactor-only changes are not mixed with unrelated behavior changes
-- [ ] quality gates pass for the slice (`bundle exec rspec`, `bundle exec rake test`,
-      `bundle exec rubocop`, `bundle exec rake yard`)
+- changes are on a feature branch — **never commit or push directly to `main`**
+- migration slice is scoped (pilot or one family), not all commands at once
+- each slice is independently revertible
+- refactor-only changes are not mixed with unrelated behavior changes
+- quality gates pass for the slice (`bundle exec rspec`, `bundle exec rake test`,
+  `bundle exec rubocop`, `bundle exec rake yard`)
 
-## Common Failures
+### Common Failures
 
-### Policy/output-control flag hardcoded as `literal` (neutrality violation)
+#### Policy/output-control flag hardcoded as `literal` (neutrality violation)
 
 `literal` entries for output-control, editor-suppression, progress, or verbose
 flags inside a command class violate the neutrality principle. The command class
@@ -309,7 +276,7 @@ Git::Commands::Fsck.new(self).call(progress: false)
 
 See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
 
-### Other common failures
+#### Other common failures
 
 - lingering `ARGS = Arguments.define` constant and custom `#call`
 - command-specific duplicated exit-status checks instead of `allow_exit_status`
@@ -318,6 +285,89 @@ See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
 - `call` override that reimplements `Base#call` logic instead of delegating to `validate_exit_status!`
 - using a manual `IO.pipe` inline instead of `Base#with_stdin` for stdin-feeding commands
 - migration PR scope too broad (not phased)
+
+## Workflow
+
+1. **Check class shape** — verify structural requirements:
+
+   - [ ] Class inherits from `Git::Commands::Base`
+   - [ ] Requires `git/commands/base` (not `git/commands/arguments`)
+   - [ ] Has exactly one `arguments do` declaration
+   - [ ] Does not define command-specific `initialize` that only assigns
+         `@execution_context`
+
+2. **Check `#call` implementation** — verify against the
+   [`#call` Override Guidance](#call-override-guidance):
+
+   **Simple commands** (no pre-call logic needed):
+   - [ ] Uses `# @!method call(*, **)` YARD directive with nested `@overload` blocks as documentation shim
+   - [ ] Contains no custom bind/execute/exit-status logic
+   - [ ] Does not parse output in command class
+
+   **Commands with legitimate `call` overrides** (input validation, stdin protocol,
+   non-trivial option routing):
+   - [ ] YARD docs are placed **directly above** `def call` (no `@!method` directive)
+   - [ ] Override calls `args_definition.bind(...)` directly — does *not* duplicate `Base#call` logic
+   - [ ] Exit-status validation delegates to `validate_exit_status!` (not reimplemented inline)
+   - [ ] Stdin-feeding commands use `Base#with_stdin` (not a manual `IO.pipe` inline)
+   - [ ] Any `ArgumentError` raised manually or via DSL constraint covers only what
+         git cannot validate: per-argument failures and constraints on `skip_cli: true`
+         arguments. Cross-argument constraint methods are **not** declared for
+         git-visible arguments — the narrow exception is arguments git cannot observe
+         in its argv (e.g., `skip_cli: true` operands: `conflicts :objects,
+         :batch_all_objects` and `requires_one_of :objects, :batch_all_objects`).
+         See the validation delegation policy in
+         `redesign/3_architecture_implementation.md` Insight 6.
+   - [ ] Bulk of override is extracted into a private helper (`run_batch`, etc.) to satisfy Rubocop `Metrics` thresholds
+   - [ ] Does not parse output in command class
+
+3. **Check exit-status configuration** — verify `allow_exit_status` usage:
+
+   - [ ] Commands with non-zero successful exits declare `allow_exit_status <range>`
+   - [ ] Declaration includes a short rationale comment explaining git semantics
+   - [ ] Range values match expected command behavior
+
+4. **Check git version gating** — verify `requires_git_version` against the
+   [Git Version Gating](#git-version-gating) reference:
+
+   - [ ] Declaration uses a `'major.minor.patch'` string (e.g., `'2.29.0'`), not a
+         `Gem::Version` or `Range` — pre-release versions are not supported
+   - [ ] Version matches the git release that introduced the command — check the
+         command's man page history to determine when it was introduced
+   - [ ] Declaration is not present on commands that exist in `Git::MINIMUM_GIT_VERSION`
+
+5. **Check arguments DSL quality** — run the
+   [Review Arguments DSL](../review-arguments-dsl/SKILL.md) skill against the
+   command's `arguments do` block. That skill covers DSL method selection,
+   alias/modifier correctness, ordering, completeness, and class-level
+   declarations. Additionally verify:
+
+   - [ ] `execution_option` is **not** used for kwargs whose value must be unconditionally
+         fixed regardless of caller input. If a kwarg always has a specific required value
+         (e.g. `chomp: false` for commands returning raw content where trailing newlines are
+         data), hardcode it in a `def call` override instead — exposing it via
+         `execution_option` would allow callers to override a value that must never change.
+
+6. **Check internal compatibility contract** — verify the three contract
+   expectations in [Internal Compatibility Contract](#internal-compatibility-contract):
+
+   - [ ] constructor shape remains `initialize(execution_context)` (inherited from `Base`)
+   - [ ] command entrypoint remains `call(*, **)` at runtime (via `Base#call`)
+   - [ ] argument-definition metadata remains available via `args_definition`
+
+   If an intentional deviation exists, require migration notes/changelog documentation.
+
+7. **Check phased rollout / rollback requirements** — for migration PRs, verify
+   against the [Phased Rollout Requirements](#phased-rollout-requirements):
+
+   - [ ] changes are on a feature branch — **never commit or push directly to `main`**
+   - [ ] migration slice is scoped (pilot or one family), not all commands at once
+   - [ ] each slice is independently revertible
+   - [ ] refactor-only changes are not mixed with unrelated behavior changes
+   - [ ] quality gates pass for the slice (`bundle exec rspec`, `bundle exec rake test`,
+         `bundle exec rubocop`, `bundle exec rake yard`)
+
+8. **Collect issues** — record all findings for the [Output](#output).
 
 ## Output
 
@@ -329,6 +379,7 @@ For each file, produce:
 | arguments DSL | Pass/Fail | ... |
 | call shim | Pass/Fail | ... |
 | allow_exit_status usage | Pass/Fail | ... |
+| requires_git_version | Pass/Fail | ... |
 | output parsing absent | Pass/Fail | ... |
 | compatibility contract | Pass/Fail | ... |
 

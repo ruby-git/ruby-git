@@ -11,148 +11,179 @@ methods and modifiers.
 
 ## Contents
 
-- [How to use this skill](#how-to-use-this-skill)
+- [Contents](#contents)
 - [Related skills](#related-skills)
 - [Input](#input)
-- [Version-Aware Verification Sources](#version-aware-verification-sources)
-- [Architecture Context (Base Pattern)](#architecture-context-base-pattern)
-- [How Arguments Work](#how-arguments-work)
-- [What to Check](#what-to-check)
-- [Verification Chain](#verification-chain)
+  - [Command source code](#command-source-code)
+  - [Command test code](#command-test-code)
+  - [Git documentation for the git command](#git-documentation-for-the-git-command)
+- [Reference](#reference)
+  - [Architecture Context (Base Pattern)](#architecture-context-base-pattern)
+  - [DSL to CLI Mapping](#dsl-to-cli-mapping)
+- [Workflow](#workflow)
 - [Output](#output)
-
-## How to use this skill
-
-Attach this file to your Copilot Chat context, then invoke it with one or more
-command source files and the relevant version-matched git documentation. Examples:
-
-```text
-Using the Review Arguments DSL skill, review
-lib/git/commands/diff/numstat.rb against `git diff --numstat` docs.
-```
-
-```text
-Review Arguments DSL: lib/git/commands/stash/push.rb
-```
-
-The invocation needs the command file(s) to review. Providing version-matched
-git documentation helps verify flag accuracy.
 
 ## Related skills
 
 - [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
-- [Review Command Tests](../review-command-tests/SKILL.md) — unit/integration test expectations for command classes
+- [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 
 ## Input
 
-Required:
-1. One or more command source files containing a `class < Git::Commands::Base` and an
-   `arguments do` block
-2. Version-matched git documentation for the subcommand
+What the agent requires to run this skill and where to get it.
 
-## Version-Aware Verification Sources
+### Command source code
 
-Before auditing any DSL entry, determine the project's minimum supported Git
-version from the repository metadata. In this repository, that version is
-declared in `git.gemspec` (`git 2.28.0 or greater`).
+Read the command class from `lib/git/commands/{command}.rb` or, for subcommands,
+`lib/git/commands/{command}/{subcommand}.rb`. For subcommands, also read the
+namespace module at `lib/git/commands/{command}.rb` which should list all sibling
+subcommands and provide the module-level documentation.
 
-Use sources in this order:
+### Command test code
 
-1. **Version-matched upstream documentation** for the minimum supported Git
-  version. Prefer the tagged upstream documentation or versioned man page for
-  that exact release.
-2. **Version-matched upstream source** for the same release when the docs are
-  ambiguous or abbreviated and exact parser behavior matters (for example:
-  long-option spelling, short aliases, negation support, optional values, or
-  `--option[=<value>]` forms).
-3. **Local `git <command> -h` output** only as a supplemental check for the
-  installed Git version on the current machine.
+Read unit tests matching `spec/unit/git/commands/{command}/**/*_spec.rb`. Use these as
+supplemental evidence when tracing the verification chain (Ruby call → bound
+argument → expected git CLI). Coverage completeness is assessed by the
+[Command Test Conventions](../command-test-conventions/SKILL.md) skill.
 
-Do **not** rely exclusively on local help output. The installed Git may be
-newer than the repository's minimum supported version and can advertise options
-or flag forms that are not safe to model in the DSL for older supported Git
-releases.
+### Git documentation for the git command
 
-When local help disagrees with the minimum-supported-version sources, prefer the
-minimum-supported-version behavior for the DSL and call out the newer-version
-difference explicitly in the review output.
+- **Latest-version online command documentation**
 
-## Architecture Context (Base Pattern)
+  Determine the latest released git version by running `bin/latest-git-version`
+  (it prints a version string such as `2.49.0`). Then read the **entire** official
+  git documentation online man page for that version from the URL
+  `https://git-scm.com/docs/git-{command}/{version}` (e.g.,
+  `https://git-scm.com/docs/git-push/2.49.0`). This version will be used as the
+  primary authority for DSL completeness, including the options to include in the
+  DSL, argument names, aliases, ordering, etc.
 
-Command classes now follow this structure:
+- **Minimum-version online command documentation**
+
+  Read the **entire** official git documentation online man page for the command for
+  the `Git::MINIMUM_GIT_VERSION` version of git. This will be used only for
+  command-introduction and `requires_git_version` decisions. Fetch this version from
+  URL `https://git-scm.com/docs/git-{command}/{version}`.
+
+Do **not** scaffold from local `git <command> -h` output alone — the installed Git
+version is unknown and may differ from the latest supported version. Local help may
+be used as a supplemental check only.
+
+## Reference
+
+### Architecture Context (Base Pattern)
+
+Command classes follow this structure:
 
 - `class < Git::Commands::Base`
 - class-level `arguments do ... end`
-- optional `allow_exit_status <range>` for commands where non-zero exits are valid
-- YARD directive: `# @!method call(*, **)` with nested `@overload` blocks
+- optional class-level macros such as `allow_exit_status <range>` and
+  `requires_git_version <version>`
+- YARD documentation with `@overload` blocks containing `@param`, `@option`,
+  `@return`, and `@raise` tags, in one of two forms:
+  - **when `#call` is overridden:** standard YARD comments directly above `def call`
+  - **when `#call` is not overridden:** a `# @!method call(*, **)` directive with
+    nested standard YARD comments
 
 The CLI argument mapping is still defined exclusively by the Arguments DSL. The
 `Base` class handles binding and execution.
 
-## How Arguments Work
+### DSL to CLI Mapping
+
+<!--
+Purpose: gives the agent the mental model for predicting CLI output from a
+DSL definition — the mapping rules needed to execute the verification chain
+(Ruby call → bound argument → expected git CLI).
+
+CHECKLIST.md works in the reverse direction: given git man-page behavior,
+which DSL method and modifiers to use.
+-->
+
+The Arguments DSL (`arguments do ... end`) declares how Ruby keyword and positional
+arguments map to git CLI flags, options, and operands. See [CHECKLIST.md §
+Verify DSL method per option type](CHECKLIST.md#2-verify-dsl-method-per-option-type)
+for the full DSL method mapping table.
 
 Key behaviors:
 
+- **Basic emit** — `flag_option :verbose` → `--verbose`; `value_option :message` →
+  `--message <value>`; `operand :commit` → bare `<value>` in positional slot.
+- **`flag_or_value_option`** — hybrid: `true` → `--flag`; string → `--flag value`
+  (or `--flag=value` with `inline:`); `false`/`nil` → nothing. Supports `negatable:`.
+- **`key_value_option`** — accepts a Hash or Array of pairs; emits `--flag key=value`
+  per pair. `key_separator:` overrides `=`; `inline:` joins as `--flag=key=value`.
+- **`custom_option`** — block receives the raw value and returns CLI strings; String
+  is appended, Array is concatenated, `nil`/empty emits nothing.
+- **nil / false suppression** — when a non-negatable option receives `nil` or
+  `false`, nothing is emitted.
 - **Output order matches definition order** — bound arguments are emitted in the
-  order entries appear in `arguments do`
+  order entries appear in `arguments do`.
 - **Name-to-flag mapping** — underscores become hyphens, single-char names map to
-  `-x`, multi-char names map to `--name`. **Case is preserved**: `:A` → `-A`,
-  `:N` → `-N`. Uppercase short flags do not require `as:`.
-- **`as:` override** — an escape hatch that emits the given string (or array of
-  strings) verbatim instead of deriving a flag from the symbol name. Because it
-  bypasses the DSL's automatic mapping it removes the guarantee that the flag can
-  be verified just by reading the symbol name, adding a manual audit burden. Treat
-  it as a red flag by default and allow it only when the DSL genuinely cannot
-  produce the required output any other way. Patterns now covered by first-class
-  DSL features, such as repeated flags via `max_times:`, should not use `as:`.
-  Uppercase single-char symbols never need `as:`.
-- **Aliases** — first alias is canonical and determines generated flag (long name
-  first: `%i[force f]`, not `%i[f force]`)
-- **`skip_cli` operand behavior** — `operand ..., skip_cli: true` binds and validates
-  like any other operand and remains accessible on `Bound`, but is intentionally
-  excluded from argv emission
-- **Operand naming** — use the parameter name from the version-matched git
-  documentation, in
-  singular form (e.g., `<file>` → `:file`, `<tag>` → `:tag`). The `repeatable: true`
-  modifier already communicates that multiple values are accepted; pluralising the
-  name is unnecessary and diverges from the docs.
+  `-x`, multi-char names map to `--name`. **Case is preserved**: `:A` → `-A`, `:N` →
+  `-N`. Uppercase short flags do not require `as:`.
+- **`as:` override** — emits a verbatim string instead of deriving the flag from the
+  symbol name. See [CHECKLIST.md § The `as:` escape
+  hatch](CHECKLIST.md#the-as-escape-hatch) for when use is justified.
+- **Aliases** — first alias is canonical and determines the generated flag; remaining
+  aliases are accepted as caller-side synonyms. Long name first:
+  `%i[force f]`, not `%i[f force]`.
+- **`negatable:`** — `flag_option :edit, negatable: true` emits `--edit` for `true`,
+  `--no-edit` for `false`, nothing for `nil`.
+- **`inline:`** — `value_option :format, inline: true` emits `--format=value` as one
+  token; without it, `--format value` as two tokens.
+- **`max_times:`** — `flag_option :force, max_times: 2` with `force: 2` emits
+  `--force --force`.
+- **`repeatable:`** — accepts an array; emits the flag once per value
+  (e.g., `--include a --include b`).
+- **`as_operand:`** — `value_option :pathspec, as_operand: true` is passed as a
+  keyword but emitted in the operand position after `end_of_options`.
+- **`literal`** — always emits its string unconditionally; the caller has no control.
+- **`execution_option`** — never emits anything to argv; forwarded as Ruby kwargs to
+  the subprocess runner.
+- **`skip_cli:` on operands** — `operand ..., skip_cli: true` binds and validates
+  like any other operand and remains accessible on `Bound`, but is excluded from argv
+  emission.
+- **`end_of_options`** — signals end of options in the emitted argv; only operands
+  may follow (though operands may also appear before it). Emits `--` by default.
+  Override with `as:` when the command uses a different token. See [CHECKLIST.md §
+  Choosing the `as:` token](CHECKLIST.md#choosing-the-as-token) for the decision
+  rule.
 
-## What to Check
+## Workflow
 
-See [CHECKLIST.md](CHECKLIST.md) for the complete review checklist covering:
+1. **Determine scope and exclusions** — using the git documentation loaded during
+   [Input](#input), identify which options are in scope for the DSL. See
+   [CHECKLIST.md §1](CHECKLIST.md#1-determine-scope-and-exclusions).
 
-1. Correct DSL method per option type
-2. Correct alias and `as:` usage
-3. Correct ordering
-4. Correct modifiers
-5. Completeness
-6. Exit-status declaration consistency
+2. **Audit each DSL entry** — for each entry in `arguments do`, walk through
+   [CHECKLIST.md](CHECKLIST.md) §2–§5:
+   1. Verify DSL method per option type
+   2. Verify alias and `as:` usage
+   3. Verify ordering
+   4. Verify modifiers
 
-**Validation delegation policy:** Command classes generally do **not** declare
-cross-argument constraint methods (`conflicts`, `requires`, `requires_one_of`,
-`requires_exactly_one_of`, `forbid_values`, `allowed_values`). Git is the single
-source of truth for its own option semantics. There are two narrow exceptions:
+   For each entry, also trace the verification chain — confirm the full mapping:
 
-1. **`skip_cli: true` arguments** — the argument never appears in git's argv, so
-   git cannot detect incompatibilities and Ruby must enforce them. Example:
-   `cat-file --batch` declares `conflicts :objects, :batch_all_objects` and
-   `requires_one_of :objects, :batch_all_objects` because `:objects` is
-   `skip_cli: true` and never reaches git's argv.
-2. **Git-visible arguments that cause silent data loss** — if a combination of
-   git-visible arguments causes git to silently discard data (no error, wrong
-   result), a `conflicts` declaration MAY be added with: a code comment explaining
-   why, a reference to the git version(s) where the behavior was verified, and a
-   test. As of this writing, no such case has been identified.
+   `Ruby call → bound argument → expected git CLI`
 
-See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
+   Compare the expected CLI output against the git man-page documentation.
 
-## Verification Chain
+3. **Check completeness** — verify the DSL as a whole against the git man page per
+   [CHECKLIST.md §6](CHECKLIST.md#6-check-completeness): YARD↔DSL parity, missing
+   options, repeatable flags, operand naming, and per-argument validation.
 
-For each DSL entry, verify:
+4. **Check class-level declarations** — verify `allow_exit_status` and
+   `requires_git_version` per
+   [CHECKLIST.md §7](CHECKLIST.md#7-check-class-level-declarations).
 
-`Ruby call -> bound argument output -> expected git CLI`
+5. **Check the validation delegation policy** — verify that cross-argument
+   constraint methods (`conflicts`, `requires`, etc.) are used only when
+   justified. See the constraint policy in
+   [CHECKLIST.md §6 Per-argument validation completeness](CHECKLIST.md#per-argument-validation-completeness).
+
+6. **Collect issues** — record all findings for the [Output](#output).
 
 ## Output
 
@@ -164,7 +195,7 @@ Produce:
    | --- | --- | --- | --- | --- | --- |
 
 2. A list of missing options/modifier/order/conflict issues
-3. Any `allow_exit_status` mismatches or missing rationale comments
-
-> **Branch workflow:** Implement any fixes on a feature branch. Never commit or
-> push directly to `main` — open a pull request when changes are ready to merge.
+3. Any class-level declaration mismatches: `allow_exit_status` not present with
+   a `Range` and rationale comment when the command has non-zero successful
+   exits; `requires_git_version` not present only when the command was
+   introduced after `Git::MINIMUM_GIT_VERSION`

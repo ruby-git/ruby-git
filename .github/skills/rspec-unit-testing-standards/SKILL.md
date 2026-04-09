@@ -74,7 +74,7 @@ Adoption and enforcement notes:
 
 ## Related skills
 
-- [Review Command Tests](../review-command-tests/SKILL.md) — additional conventions
+- [Command Test Conventions](../command-test-conventions/SKILL.md) — additional conventions
   for `Git::Commands::*` unit and integration specs, built on top of these rules
 - [Development Workflow](../development-workflow/SKILL.md) — TDD process that governs
   when and how tests are written
