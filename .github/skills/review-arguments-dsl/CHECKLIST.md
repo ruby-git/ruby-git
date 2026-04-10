@@ -683,9 +683,10 @@ semantics. There are two narrow exceptions:
 ## 7. Check class-level declarations
 
 The following class-level declarations are **not** part of `arguments do` but should
-be verified alongside DSL entries. The canonical rules live in [Review Command
-Implementation](../review-command-implementation/SKILL.md) — see §3 (exit-status)
-and §4 (version gating). Briefly:
+be verified alongside DSL entries. The canonical rules live in [Command
+Implementation](../command-implementation/REFERENCE.md) — see
+[Exit status guidance](../command-implementation/REFERENCE.md#exit-status-guidance)
+and [`requires_git_version` convention](../command-implementation/REFERENCE.md#requires_git_version-convention). Briefly:
 
 - **`allow_exit_status`** — present with a `Range` and rationale comment when the
   command has non-zero successful exits.

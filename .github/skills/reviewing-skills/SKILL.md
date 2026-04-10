@@ -33,7 +33,7 @@ Attach this file to your Copilot Chat context, then invoke it with the skill
 folder or SKILL.md file(s) to review. Examples:
 
 ```text
-Using the Reviewing Skills skill, review .github/skills/scaffold-new-command/.
+Using the Reviewing Skills skill, review .github/skills/command-implementation/.
 ```
 
 ```text

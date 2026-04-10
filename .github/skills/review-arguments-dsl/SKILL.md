@@ -25,7 +25,7 @@ methods and modifiers.
 
 ## Related skills
 
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — class structure, phased rollout gates, and
+- [Command Implementation](../command-implementation/SKILL.md) — class structure, phased rollout gates, and
   internal compatibility contracts
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
@@ -52,13 +52,12 @@ argument → expected git CLI). Coverage completeness is assessed by the
 
 - **Latest-version online command documentation**
 
-  Determine the latest released git version by running `bin/latest-git-version`
-  (it prints a version string such as `2.49.0`). Then read the **entire** official
-  git documentation online man page for that version from the URL
-  `https://git-scm.com/docs/git-{command}/{version}` (e.g.,
-  `https://git-scm.com/docs/git-push/2.49.0`). This version will be used as the
-  primary authority for DSL completeness, including the options to include in the
+  Read the **entire** official git documentation online man page for the command
+  for the latest version of git. This version will be used as the primary
+  authority for DSL completeness, including the options to include in the
   DSL, argument names, aliases, ordering, etc.
+  Fetch this version from the URL `https://git-scm.com/docs/git-{command}`
+  (this URL always serves the latest release).
 
 - **Minimum-version online command documentation**
 
