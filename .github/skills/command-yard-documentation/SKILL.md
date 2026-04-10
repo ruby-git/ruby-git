@@ -14,7 +14,7 @@ command-specific rules.
 This skill verifies that YARD docs accurately mirror the `arguments do` block
 as-implemented. It does not re-adjudicate which options belong based on Git
 version — version gating is the domain of the DSL and the
-[Scaffold New Command](../scaffold-new-command/SKILL.md) skill, not YARD review.
+[Command Implementation](../command-implementation/SKILL.md) skill, not YARD review.
 
 ## Contents
 
@@ -44,7 +44,7 @@ version — version gating is the domain of the DSL and the
   source for general YARD formatting rules and writing standards
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
   match git CLI
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — class
+- [Command Implementation](../command-implementation/SKILL.md) — class
   structure, phased rollout gates, and internal compatibility contracts
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration
   test conventions for command classes

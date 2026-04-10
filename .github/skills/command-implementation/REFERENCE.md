@@ -1,87 +1,42 @@
----
-name: scaffold-new-command
-description: "Generates a production-ready Git::Commands::* class with unit tests, integration tests, and YARD docs using the Base architecture. Use when creating a new command from scratch."
----
+# Command Implementation — Reference
 
-# Scaffold New Command
-
-Generate a production-ready command class, unit tests, integration tests, and YARD
-docs using the `Git::Commands::Base` architecture.
+Detailed reference for `Git::Commands::Base` command classes. This file is loaded
+by subagents during the [Command Implementation](SKILL.md) workflow.
 
 ## Contents
 
 - [Contents](#contents)
-- [Related skills](#related-skills)
-- [Input](#input)
-  - [Git documentation for the git command](#git-documentation-for-the-git-command)
-- [Reference](#reference)
-  - [Files to generate](#files-to-generate)
-  - [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
-    - [When to use sub-commands](#when-to-use-sub-commands)
-    - [Do NOT split by output format / output mode](#do-not-split-by-output-format--output-mode)
-    - [When to keep a single class](#when-to-keep-a-single-class)
-    - [Naming sub-command classes](#naming-sub-command-classes)
-    - [Namespace module template](#namespace-module-template)
-  - [Command template (Base pattern)](#command-template-base-pattern)
-    - [Overriding `call` — inline example](#overriding-call--inline-example)
-  - [Options completeness — consult the latest-version docs first](#options-completeness--consult-the-latest-version-docs-first)
-    - [`requires_git_version` convention](#requires_git_version-convention)
-    - [Execution-model conflicts](#execution-model-conflicts)
-  - [`end_of_options` placement](#end_of_options-placement)
-    - [Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS](#rule-1--synopsis-shows----mirror-the-synopsis)
-    - [Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation](#rule-2--synopsis-does-not-show----protect-operands-from-flag-misinterpretation)
-  - [Exit status guidance](#exit-status-guidance)
-  - [Facade delegation and policy options](#facade-delegation-and-policy-options)
-  - [Phased rollout, compatibility, and quality gates](#phased-rollout-compatibility-and-quality-gates)
-- [Workflow](#workflow)
-- [Output](#output)
+- [Files to generate](#files-to-generate)
+- [Single class vs. sub-command namespace](#single-class-vs-sub-command-namespace)
+  - [When to use sub-commands](#when-to-use-sub-commands)
+  - [Do NOT split by output format / output mode](#do-not-split-by-output-format--output-mode)
+  - [When to keep a single class](#when-to-keep-a-single-class)
+  - [Naming sub-command classes](#naming-sub-command-classes)
+  - [Namespace module template](#namespace-module-template)
+- [Architecture contract](#architecture-contract)
+- [Command template (Base pattern)](#command-template-base-pattern)
+- [`#call` override guidance](#call-override-guidance)
+  - [Overriding `call` — inline example](#overriding-call--inline-example)
+  - [Action-option-with-optional-value commands](#action-option-with-optional-value-commands)
+  - [When to use `skip_cli` on `operand`](#when-to-use-skip_cli-on-operand)
+- [`Base#with_stdin` mechanics](#basewith_stdin-mechanics)
+- [Options completeness — consult the latest-version docs first](#options-completeness--consult-the-latest-version-docs-first)
+  - [`requires_git_version` convention](#requires_git_version-convention)
+  - [Execution-model conflicts](#execution-model-conflicts)
+- [`end_of_options` placement](#end_of_options-placement)
+  - [Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS](#rule-1--synopsis-shows----mirror-the-synopsis)
+  - [Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation](#rule-2--synopsis-does-not-show----protect-operands-from-flag-misinterpretation)
+- [Exit status guidance](#exit-status-guidance)
+- [Facade delegation and policy options](#facade-delegation-and-policy-options)
+- [Internal compatibility contract](#internal-compatibility-contract)
+- [Phased rollout requirements](#phased-rollout-requirements)
+- [Common failures](#common-failures)
+  - [Policy/output-control flag hardcoded as `literal` (neutrality violation)](#policyoutput-control-flag-hardcoded-as-literal-neutrality-violation)
+  - [Unnecessary `def call` override](#unnecessary-def-call-override)
+  - [`execution_option` for fixed kwargs](#execution_option-for-fixed-kwargs)
+  - [Other common failures](#other-common-failures)
 
-## Related skills
-
-- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verify every DSL entry
-  is correct and complete
-- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative source for
-  YARD formatting rules and writing standards (load before starting)
-- [Command YARD Documentation](../command-yard-documentation/SKILL.md) — verify
-  documentation completeness and formatting
-- [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
-  RSpec rules all generated unit specs must comply with
-- [Command Test Conventions](../command-test-conventions/SKILL.md) — conventions for
-  writing and reviewing unit and integration tests for command classes
-- [Review Command Implementation](../review-command-implementation/SKILL.md) —
-  canonical class-shape checklist, phased rollout gates, and internal compatibility
-  contracts
-
-## Input
-
-The user provides the target `Git::Commands::*` class name and the git subcommand (or
-subcommand + sub-action) it wraps. The agent gathers the following.
-
-### Git documentation for the git command
-
-- **Latest-version online command documentation**
-
-  Determine the latest released git version by running `bin/latest-git-version`
-  (it prints a version string such as `2.49.0`). Then read the **entire** official
-  git documentation online man page for that version from the URL
-  `https://git-scm.com/docs/git-{command}/{version}` (e.g.,
-  `https://git-scm.com/docs/git-push/2.49.0`). This version will be used as the
-  primary authority for DSL completeness, including the options to include in the
-  DSL, argument names, aliases, ordering, etc.
-
-- **Minimum-version online command documentation**
-
-  Read the **entire** official git documentation online man page for the command for
-  the `Git::MINIMUM_GIT_VERSION` version of git. This will be used only for
-  command-introduction and `requires_git_version` decisions. Fetch this version from
-  URL `https://git-scm.com/docs/git-{command}/{version}`.
-
-Do **not** scaffold from local `git <command> -h` output — the installed Git
-version is unknown and may differ from the latest supported version.
-
-## Reference
-
-### Files to generate
+## Files to generate
 
 For `Git::Commands::Foo::Bar`, **all three files are required and must be created**:
 
@@ -94,13 +49,13 @@ Optional (first command in module):
 
 - `lib/git/commands/foo.rb`
 
-### Single class vs. sub-command namespace
+## Single class vs. sub-command namespace
 
 Most git commands map to a single class. Split into a namespace module with multiple
 sub-command classes when the git command surfaces **meaningfully different
 operations** that have distinct call shapes or protocols.
 
-#### When to use sub-commands
+### When to use sub-commands
 
 **Split by operation** — when the git command has named sub-actions whose option sets
 have little overlap (each sub-action would have mostly dead options if they shared
@@ -117,7 +72,7 @@ git worktree add / list / remove / move
 uses `Base#with_stdin`; mixing that with a no-stdin path in one class produces an
 awkward interface.
 
-#### Do NOT split by output format / output mode
+### Do NOT split by output format / output mode
 
 **Output-mode flags are NOT a reason to create separate subclasses.** When a git
 command supports multiple output formats via flags (`--patch`, `--numstat`, `--raw`,
@@ -153,7 +108,7 @@ define which git sub-operation the class represents (e.g., `literal 'stash'`,
 `literal 'show'`, `literal '--delete'`). Output-format flags are not operation
 selectors.
 
-#### When to keep a single class
+### When to keep a single class
 
 - Different output modes (`--patch`, `--numstat`, `--raw`): **always** use a single
   class; expose modes as DSL options.
@@ -161,7 +116,7 @@ selectors.
 - When the "special mode" is just 1–2 flags — use `flag_option`/`value_option`.
 - When callers would always need multiple modes together (the facade composes them).
 
-#### Naming sub-command classes
+### Naming sub-command classes
 
 Prefer **user-oriented names** (what the caller gets back) over flag names
 (implementation detail the caller shouldn't need to know):
@@ -184,7 +139,7 @@ Two hard constraints:
   `Git::Commands::*`. A reader seeing `CommandFoo::BarInfo` expects a data struct,
   not a class that runs a subprocess.
 
-#### Namespace module template
+### Namespace module template
 
 When splitting, create a bare namespace module file (`foo.rb`) — no class — matching
 the pattern of `diff.rb` and `cat_file.rb`:
@@ -212,7 +167,55 @@ end
 Each sub-command file adds `@see Git::Commands::Foo` to link back to the parent
 module's overview.
 
-### Command template (Base pattern)
+## Architecture contract
+
+For migrated commands, the expected structure is:
+
+```ruby
+require 'git/commands/base'
+
+class SomeCommand < Git::Commands::Base
+  arguments do
+    ...
+  end
+
+  # optional — only when introduced after Git::MINIMUM_GIT_VERSION
+  requires_git_version '2.29.0'
+
+  # optional for non-zero successful exits
+  # reason comment
+  allow_exit_status 0..1
+
+  # @!method call(*, **)
+  #
+  #   @overload call(**options)
+  #
+  #     YARD docs for this command's call signature.
+  #
+  #     @return [Git::CommandLineResult]
+end
+```
+
+The `@!method` directive is the correct YARD form when the class contains **no
+explicit `def call`** — YARD uses it to render per-command docs on the inherited
+`call` method. When the class **does** define `def call` explicitly, place YARD
+docs directly above `def call` and omit the `@!method` directive.
+
+Shared behavior lives in `Base`:
+
+- binds arguments
+- calls `@execution_context.command_capturing(*args, **args.execution_options, raise_on_failure: false)`
+- raises `Git::FailedError` unless exit status is in allowed range (`0..0` default)
+
+Structural requirements:
+
+- Class inherits from `Git::Commands::Base`
+- File requires `git/commands/base` (not `git/commands/arguments`)
+- Has exactly one `arguments do` declaration
+- Does not define command-specific `initialize` that only assigns
+  `@execution_context`
+
+## Command template (Base pattern)
 
 ```ruby
 # frozen_string_literal: true
@@ -280,17 +283,58 @@ YARD tag formatting rules (short descriptions, continuation paragraphs, punctuat
 are defined in the [YARD Documentation](../yard-documentation/SKILL.md) skill. The
 template above demonstrates the correct form.
 
-When the command requires an explicit `def call` override (input validation, stdin
-feeding, non-trivial option routing), place YARD docs **directly above** `def call`
-instead of using `@!method`. See the [`#call` override
-guidance](../review-command-implementation/SKILL.md#call-override-guidance) in the
-Review Command Implementation skill.
+## `#call` override guidance
 
-#### Overriding `call` — inline example
+Most commands use only a `# @!method call(*, **)` YARD directive with no
+explicit `def call` — the inherited `Base#call` handles binding, execution,
+and exit-status validation automatically. Do **not** add `def call(*, **) = super`
+or `def call(*, **) / super / end` for commands that need no custom logic; it
+adds no behavior and conflicts with the `@!method` directive.
 
-When `def call(...) = super` is not enough, override `call` explicitly. Place YARD
-doc comments **directly above** `def call` — do **not** use `# @!method call(*, **)`
-alongside an explicit override:
+**Override `call` only when the command needs:**
+
+1. **Input validation the DSL cannot express** — per-argument validation parameters
+   (`required:`, `type:`, `allow_nil:`, etc.) and operand format validation belong
+   in `arguments do`. Cross-argument constraint methods are generally **not** declared;
+   git validates its own option semantics. The narrow exception is **arguments git
+   cannot observe in its argv**: if an argument is `skip_cli: true` and never
+   reaches git's argv, git cannot detect incompatibilities — use `conflicts` and/or
+   `requires_one_of` in the DSL (e.g., `cat-file --batch` uses both because
+   `:objects` is `skip_cli: true`). Do not raise `ArgumentError` manually for things
+   the DSL can express via a constraint declaration.
+2. **stdin feeding** — batch protocols (`--batch`, `--batch-check`) via
+   `Base#with_stdin`
+3. **Non-trivial option routing** — build different argument sets based on
+   which options are present
+4. **Action-option-with-optional-value** — when the command's primary action is
+   expressed as an option with an optional value (man-page notation:
+   `--flag[=<value>]`). The DSL entry uses `flag_or_value_option :name, inline:
+   true, type: [TrueClass, String]` and the override maps a positional `call` API
+   onto the keyword:
+
+   ```ruby
+   def call(value = true, *, **)
+     super(*, **, option_name: value)
+   end
+   ```
+
+**When overriding:**
+
+- Bind arguments via `args_definition.bind(...)` — do not reimplement binding
+- Delegate exit-status handling to `validate_exit_status!` — do not reimplement
+- Do not call `super` after manual binding; use `@execution_context.command_capturing` directly
+
+**DSL defaults:**
+
+Defaults defined in the DSL (e.g., `operand :paths, default: ['.']`) are applied
+automatically during `args_definition.bind(...)` — do not set defaults manually in
+`call`.
+
+When the command requires an explicit `def call` override, place YARD doc comments
+**directly above** `def call` — do **not** use `# @!method call(*, **)` alongside
+an explicit override.
+
+### Overriding `call` — inline example
 
 ```ruby
 # @overload call(*objects, **options)
@@ -335,7 +379,7 @@ arguments do
 end
 ```
 
-##### Action-option-with-optional-value commands
+### Action-option-with-optional-value commands
 
 When a git command's primary action is an option with an optional value (man-page
 notation: `--flag[=<value>]`, e.g. `git am --show-current-patch[=(diff|raw)]`), use
@@ -378,7 +422,7 @@ Where:
 The `type: [TrueClass, String]` on the DSL entry rejects `false` at bind time,
 removing the need for manual validation in the override.
 
-##### When to use `skip_cli` on `operand`
+### When to use `skip_cli` on `operand`
 
 Use `operand ..., skip_cli: true` when all of the following are true:
 
@@ -405,16 +449,41 @@ Key points:
 - **Extract helpers** like `run_batch` to stay within Rubocop `Metrics/MethodLength`
   and `Metrics/AbcSize` thresholds. Aim to keep `call` under ~10 lines.
 
-### Options completeness — consult the latest-version docs first
+## `Base#with_stdin` mechanics
+
+`Base#with_stdin(content)` opens an `IO.pipe`, spawns a background `Thread` that
+writes `content` to the write end (then closes it), and yields the read end as
+`in:` to the execution context. The threaded write prevents deadlocks when
+`content` exceeds the OS pipe buffer — the subprocess can drain the pipe
+concurrently. The thread also rescues `Errno::EPIPE` / `IOError` so it exits
+cleanly if the subprocess closes stdin early.
+
+Use `with_stdin` instead of manual pipe management. `StringIO` cannot be used
+because `Process.spawn` requires a real file descriptor.
+
+Example — batch stdin protocol (as used by `git cat-file --batch`):
+
+```ruby
+def call(*, **)
+  bound = args_definition.bind(*, **)
+  with_stdin(Array(bound.objects).map { |object| "#{object}\n" }.join) do |stdin_r|
+    run_batch(bound, stdin_r)
+  end
+end
+```
+
+## Options completeness — consult the latest-version docs first
 
 **Before writing any DSL entries**, use the documentation fetched during the
-[Input](#git-documentation-for-the-git-command) phase and enumerate every option the
-latest-version docs describe.
+[Input](SKILL.md#git-documentation-for-the-git-command) phase and enumerate every
+option the latest-version docs describe.
 
-#### `requires_git_version` convention
+### `requires_git_version` convention
 
 `requires_git_version` is a **class-level** declaration only. Individual options do
-**not** carry version annotations.
+**not** carry version annotations. The declaration must use a `'major.minor.patch'`
+string (e.g., `'2.29.0'`), not a `Gem::Version` or `Range` — pre-release versions
+are not supported.
 
 | Scenario | Action |
 |---|---|
@@ -488,7 +557,7 @@ This step is required. A command class that only exposes the options that happen
 be used today in `Git::Lib` is incomplete — callers of the future API should not need
 to re-open the docs just because the scaffold only covered current usage.
 
-#### Execution-model conflicts
+### Execution-model conflicts
 
 Command classes are neutral — they never hardcode policy choices. Policy defaults
 (`edit: false`, `progress: false`, etc.) belong to the facade (`Git::Lib`).
@@ -516,12 +585,12 @@ CONTRIBUTING.md.
 **`--verbose`/`-v` and `--quiet`/`-q`:** include these unless their git
 implementation requires interactive I/O.
 
-### `end_of_options` placement
+## `end_of_options` placement
 
 Determine placement based on whether the SYNOPSIS explicitly shows `--`. See the
 Review Arguments DSL checklist for the full decision tree.
 
-#### Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS
+### Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS
 
 When the SYNOPSIS explicitly shows `--` between operand groups (e.g., `[<tree-ish>]
 [--] [<pathspec>...]`), place `end_of_options` in the same position the SYNOPSIS
@@ -538,7 +607,7 @@ end_of_options                                                # mirrors SYNOPSIS
 value_option :pathspec, as_operand: true, repeatable: true    # AFTER end_of_options
 ```
 
-#### Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation
+### Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation
 
 Insert `end_of_options` immediately before the first `operand` whenever any
 `flag_option`, `value_option`, `flag_or_value_option`, `key_value_option`, or
@@ -576,7 +645,7 @@ unnecessarily verbose command lines (e.g. `git remote remove -- origin` instead 
 `git remote remove origin`). When in doubt, add it — the Review Arguments DSL skill
 flags a missing `end_of_options` as an error when options appear before operands.
 
-### Exit status guidance
+## Exit status guidance
 
 - Default: no declaration needed (`0..0` from `Base`)
 - Non-default: declare `allow_exit_status <range>` and add rationale comment
@@ -593,7 +662,7 @@ allow_exit_status 0..1
 allow_exit_status 0..7
 ```
 
-### Facade delegation and policy options
+## Facade delegation and policy options
 
 The command class is only half the story. After scaffolding the command, you must
 also write (or update) the `Git::Lib` method that **delegates** to it. The facade
@@ -633,89 +702,92 @@ See [Extract Command from Lib](../extract-command-from-lib/SKILL.md) for the com
 delegation workflow and additional patterns (stdout passthrough, parsed return
 values, opts-hash normalization).
 
-### Phased rollout, compatibility, and quality gates
+## Internal compatibility contract
 
-See [Review Command Implementation](../review-command-implementation/SKILL.md) for
-the canonical phased rollout checklist, internal compatibility contract, and quality
-gate commands. In summary:
+This is the canonical location for the internal compatibility contract. Other
+skills reference this section rather than duplicating it.
 
-- **always work on a feature branch** — never commit or push directly to `main`;
-  create a branch before starting (`git checkout -b <feature-branch-name>`) and open
-  a pull request when the slice is ready
-- migrate in small slices (pilot or family), not all commands at once
-- keep each slice independently revertible
-- pass per-slice gates: `bundle exec rspec`, `bundle exec rake test`, `bundle exec
-  rubocop`, `bundle exec rake yard`
+Ensure refactors preserve these contract expectations:
 
-## Workflow
+- constructor shape remains `initialize(execution_context)` (inherited from `Base`)
+- command entrypoint remains `call(*, **)` at runtime (via `Base#call`)
+- argument-definition metadata remains available via `args_definition`
 
-1. **Gather input** — collect the target class name and git subcommand from
-   the [Input](#input), then fetch the latest-version and minimum-version
-   git documentation per [Git documentation for the git
-   command](#git-documentation-for-the-git-command).
+If an intentional deviation exists, require migration notes/changelog documentation.
 
-2. **Determine class structure** — decide between a single class and a sub-command
-   namespace per [Single class vs. sub-command
-   namespace](#single-class-vs-sub-command-namespace).
+## Phased rollout requirements
 
-3. **For each command / sub-command class**, repeat steps 3a–3f:
+This is the canonical location for phased rollout requirements. Other skills
+reference this section rather than duplicating the full checklist.
 
-   a. **Scaffold the command class (subagent)** — delegate to a subagent: load
-      the [YARD Documentation](../yard-documentation/SKILL.md) skill, then
-      generate `lib/git/commands/{command}.rb` using the [Command
-      template](#command-template-base-pattern). Populate the `arguments do`
-      block with all options from the latest-version docs per [Options
-      completeness](#options-completeness--consult-the-latest-version-docs-first),
-      applying the [Execution-model conflicts](#execution-model-conflicts),
-      [`end_of_options` placement](#end_of_options-placement), and [Exit status
-      guidance](#exit-status-guidance) rules. Pass the fetched git documentation
-      to the subagent.
+For migration PRs, verify process constraints:
 
-   Steps 3b and 3c may run **in parallel** (they produce independent files).
+- changes are on a feature branch — **never commit or push directly to `main`**
+- migration slice is scoped (pilot or one family), not all commands at once
+- each slice is independently revertible
+- refactor-only changes are not mixed with unrelated behavior changes
+- quality gates pass for the slice — discover tasks via
+  `bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default:parallel'].prerequisites"`
+  and run each individually via `bundle exec rake <task>`, fixing failures before
+  advancing
 
-   b. **Scaffold unit tests (subagent)** — delegate to a subagent: load
-      **[Command Test Conventions](../command-test-conventions/SKILL.md)** (which loads
-      [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md)),
-      then generate `spec/unit/git/commands/{command}_spec.rb` following the
-      unit test conventions. Fix all findings, then re-run the review until clean.
+## Common failures
 
-   c. **Scaffold integration tests (subagent)** — delegate to a subagent: load
-      **[Command Test Conventions](../command-test-conventions/SKILL.md)**, then generate
-      `spec/integration/git/commands/{command}_spec.rb` following the integration
-      test conventions. Fix all findings, then re-run the review until clean.
+### Policy/output-control flag hardcoded as `literal` (neutrality violation)
 
-   d. **Review Arguments DSL (subagent)** — delegate to a subagent: load and
-      apply **[Review Arguments DSL](../review-arguments-dsl/SKILL.md)** (and its
-      [CHECKLIST.md](../review-arguments-dsl/CHECKLIST.md)) against the
-      `arguments do` block. Fix all findings, then re-run the review until clean.
-      **Complete this step before starting steps 3e–3f** — DSL corrections change
-      the CLI arguments that tests and YARD docs must reflect.
+`literal` entries for output-control, editor-suppression, progress, or verbose
+flags inside a command class violate the neutrality principle. The command class
+must model the git CLI faithfully; the facade sets safe defaults and callers may
+override them.
 
-   Steps 3e and 3f may run **in parallel** (they review independent file sets).
+Symptom: the command class contains one or more of:
 
-   e. **Review Command Tests (subagent)** — delegate to a subagent: load and
-      apply **[Command Test Conventions](../command-test-conventions/SKILL.md)** against
-      the unit and integration spec files. Fix all findings, then re-run the
-      review until clean.
+```ruby
+# ❌ Any of these are neutrality violations
+literal '--no-edit'
+literal '--verbose'
+literal '--no-progress'
+literal '--no-color'
+literal '--porcelain'
+```
 
-   f. **Review YARD Documentation (subagent)** — delegate to a subagent: load
-      and apply **[Command YARD Documentation](../command-yard-documentation/SKILL.md)**
-      against the command class. Fix all findings, then re-run the review until
-      clean.
+Fix: convert each to a DSL option and pass the policy value from the facade:
 
-4. **Scaffold facade delegation** — write or update the `Git::Lib` method per [Facade
-   delegation and policy options](#facade-delegation-and-policy-options).
+```ruby
+# ✅ In the command class — neutral DSL declaration
+flag_option :edit, negatable: true
+flag_option :progress, negatable: true
+flag_option :verbose
+value_option :format
 
-5. **Run quality gates** — pass per-slice gates: `bundle exec rspec`, `bundle exec
-   rake test`, `bundle exec rubocop`, `bundle exec rake yard`.
+# ✅ In Git::Lib — facade passes the policy value explicitly
+Git::Commands::Pull.new(self).call(edit: false, progress: false)
+Git::Commands::Mv.new(self).call(*args, verbose: true)
+Git::Commands::Fsck.new(self).call(progress: false)
+```
 
-## Output
+See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
 
-Produce:
+### Unnecessary `def call` override
 
-1. **Command class** — `lib/git/commands/{command}.rb` (and optionally the namespace
-   module file for the first command in a namespace)
-2. **Unit tests** — `spec/unit/git/commands/{command}_spec.rb`
-3. **Integration tests** — `spec/integration/git/commands/{command}_spec.rb`
-4. **Facade delegation** — updated `Git::Lib` method in `lib/git/lib.rb`
-5. **All quality gates pass** — rspec, minitest, rubocop, and yard all green
+Do **not** add `def call(*, **) = super` or `def call(*, **) / super / end` for
+commands that need no custom logic; it adds no behavior and conflicts with the
+`@!method` directive.
+
+### `execution_option` for fixed kwargs
+
+`execution_option` must **not** be used for kwargs whose value must be
+unconditionally fixed regardless of caller input. If a kwarg always has a specific
+required value (e.g. `chomp: false` for commands returning raw content where trailing
+newlines are data), hardcode it in a `def call` override instead — exposing it via
+`execution_option` would allow callers to override a value that must never change.
+
+### Other common failures
+
+- lingering `ARGS = Arguments.define` constant and custom `#call`
+- command-specific duplicated exit-status checks instead of `allow_exit_status`
+- missing rationale comment for `allow_exit_status`
+- missing YARD directive (`# @!method call(*, **)`)
+- `call` override that reimplements `Base#call` logic instead of delegating to `validate_exit_status!`
+- using a manual `IO.pipe` inline instead of `Base#with_stdin` for stdin-feeding commands
+- migration PR scope too broad (not phased)

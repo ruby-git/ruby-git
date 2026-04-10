@@ -47,7 +47,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 
 ## Related skills
 
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
+- [Command Implementation](../command-implementation/SKILL.md) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
@@ -118,7 +118,7 @@ end
 
 ## Migration process and internal compatibility
 
-See [Review Command Implementation](../review-command-implementation/SKILL.md) for the canonical phased rollout checklist
+See [Command Implementation](../command-implementation/SKILL.md) for the canonical phased rollout checklist
 and internal compatibility contract. In summary:
 
 - **always work on a feature branch** — never commit or push directly to `main`;

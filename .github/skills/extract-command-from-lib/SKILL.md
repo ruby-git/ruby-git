@@ -62,11 +62,10 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 
 Run or reference these skills during the workflow:
 
-- [Scaffold New Command](../scaffold-new-command/SKILL.md) — generates the `Git::Commands::*` class, unit tests,
-  integration tests, and YARD docs (used in Step 4 if the command class does not
-  exist yet)
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
-  rollout gates, and internal compatibility contracts
+- [Command Implementation](../command-implementation/SKILL.md) — generates and reviews `Git::Commands::*`
+  classes, unit tests, integration tests, and YARD docs (used in Step 4 if the
+  command class does not exist yet); also the canonical class-shape checklist,
+  phased rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
@@ -189,7 +188,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
 2. **If the command class already exists**, skip to Step 5.
 
 3. **If the command class does not exist**, scaffold it using the
-  [Scaffold New Command](../scaffold-new-command/SKILL.md) skill. This produces:
+  [Command Implementation](../command-implementation/SKILL.md) skill. This produces:
 
    - `lib/git/commands/<command>.rb` (or `lib/git/commands/<family>/<action>.rb`)
    - `spec/unit/git/commands/<command>_spec.rb`

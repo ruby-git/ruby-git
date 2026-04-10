@@ -50,7 +50,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
 
 ## Related skills
 
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — canonical class-shape checklist, phased
+- [Command Implementation](../command-implementation/REFERENCE.md#phased-rollout-requirements) — canonical class-shape checklist, phased
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
@@ -119,7 +119,7 @@ only as a supplemental check.
 
 ### 7. Migration process consistency
 
-See **Review Command Implementation § Phased rollout / rollback requirements** for
+See **[Command Implementation § Phased rollout requirements](../command-implementation/REFERENCE.md#phased-rollout-requirements)** for
 the canonical checklist. During a cross-command audit, verify that sibling commands
 were migrated in the same slice and that the same quality gates were applied.
 

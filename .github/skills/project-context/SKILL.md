@@ -31,8 +31,8 @@ coding standard details, or implementation constraints.
 
 - [Development Workflow](../development-workflow/SKILL.md) — TDD cycle and commit
   conventions for day-to-day work
-- [Scaffold New Command](../scaffold-new-command/SKILL.md) — generating new command
-  classes in the layered architecture
+- [Command Implementation](../command-implementation/SKILL.md) — generating and
+  reviewing command classes in the layered architecture
 - [YARD Documentation](../yard-documentation/SKILL.md) — documentation
   standards
 
@@ -284,7 +284,7 @@ swallow exceptions silently.
 
 Follow the three-layer pattern: command class (CLI contract) → parser (output
 transform) → `Git::Lib` method (orchestration + rich object). See
-[Scaffold New Command](../scaffold-new-command/SKILL.md).
+[Command Implementation](../command-implementation/SKILL.md).
 
 ### Working with paths
 

@@ -31,7 +31,7 @@ Conventions for writing and reviewing unit and integration tests for
   coverage; this skill adds command-specific conventions on top
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries
   match git CLI
-- [Review Command Implementation](../review-command-implementation/SKILL.md) — class
+- [Command Implementation](../command-implementation/SKILL.md) — class
   structure, phased rollout gates, and internal compatibility contracts
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   — documentation completeness for command classes
