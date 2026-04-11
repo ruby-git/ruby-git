@@ -194,6 +194,22 @@ conditions. Command specs should test that the command **uses** the DSL correctl
 (i.e., the right arguments reach `execution_context.command_capturing`), not re-test
 the DSL's own behavior.
 
+Two specific DSL re-test patterns that commonly appear but should be avoided:
+
+- **`end_of_options` protection tests (dash-prefixed operands).** When a command
+  declares `end_of_options`, the existing operand tests already verify that `'--'`
+  appears before operands in the expected argv sequence. Do **not** add a separate
+  test that passes a dash-prefixed operand (e.g. `'-feature'`) to prove the
+  separator prevents misinterpretation: a dash-prefixed string exercises the
+  identical code path as any other string, and the DSL spec (`arguments_spec.rb`)
+  already covers `end_of_options` protection. The command spec only needs to show
+  `'--'` at the right position; the DSL spec demonstrates why that matters.
+- **`required:` operand rejection tests.** When a command declares
+  `operand :name, required: true`, do not test that calling with no arguments
+  raises `ArgumentError` — the DSL spec covers required-operand validation. The
+  command spec should test what happens when the operand IS provided, not that
+  the DSL reports missing-argument errors correctly.
+
 **Policy vs. interface testing:** Command classes are neutral, faithful
 representations of the git CLI. Their unit tests verify CLI argument building (the
 neutral interface), not policy enforcement. Tests should **not** hardcode policy

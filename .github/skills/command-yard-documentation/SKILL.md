@@ -194,6 +194,25 @@ conflicting documentation for the method.
   #   Pass `true` for `--create-reflog`, `false` for `--no-create-reflog`.
   ```
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
+- **Overly specific `@raise [Git::FailedError]` description** — do not enumerate
+  specific failure causes (e.g., "if the branch doesn't exist", "if the target
+  already exists"). Git can fail for many reasons beyond any list (invalid ref name,
+  not a git repository, permission error, etc.). Use the generic range-based form:
+
+  ```ruby
+  # ❌ Overly specific — does not cover all failure cases
+  # @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
+
+  # ✅ Correct — generic, matches sibling commands, accurate for all failure causes
+  # @raise [Git::FailedError] if git exits with a non-zero exit status
+  ```
+
+  For commands with a non-default range (e.g. `allow_exit_status 0..1`):
+
+  ```ruby
+  # ✅ Correct for allow_exit_status 0..1
+  # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+  ```
 - Legacy references to `ARGS` constant or command-specific `initialize`
 - **`@option` description references a short flag instead of the emitted long flag** —
   `@option` prose must describe behavior using the emitted CLI form (the long flag),
@@ -271,8 +290,15 @@ For each command file, run through these checks in order:
 
 - [ ] `@return [Git::CommandLineResult]` with wording: "the result of calling `git
       <subcommand>`"
-- [ ] `@raise [Git::FailedError]` reflects range-based behavior (outside default
-      `0..0` or declared `allow_exit_status` range)
+- [ ] `@raise [Git::FailedError]` uses the canonical generic wording — **never**
+      enumerate specific failure causes; use the form that matches the command's
+      declared exit-status range:
+
+  | `allow_exit_status` | Canonical `@raise` wording |
+  |---|---|
+  | none declared (default `0..0`) | `if git exits with a non-zero exit status` |
+  | `allow_exit_status 0..1` | `if git exits outside the allowed range (exit code > 1)` |
+  | `allow_exit_status 0..N` | `if git exits outside the allowed range (exit code > N)` |
 
 ### 4. `allow_exit_status` rationale consistency
 
