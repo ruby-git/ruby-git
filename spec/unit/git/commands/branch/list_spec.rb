@@ -2,243 +2,230 @@
 
 require 'spec_helper'
 require 'git/commands/branch/list'
-require 'git/parsers/branch'
 
 RSpec.describe Git::Commands::Branch::List do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
-  # Format string used by the command (defined in BranchParser)
-  let(:format_string) { Git::Parsers::Branch::FORMAT_STRING }
-
-  let(:sample_output) { "refs/heads/main|abc123|*|||\n" }
-
-  # Helper to build expected command arguments (format is now passed by the facade)
+  # Helper to build expected command arguments
   def expected_args(*extra_args)
     ['branch', '--list', *extra_args]
   end
 
   describe '#call' do
-    context 'with no options (basic list)' do
-      it 'runs branch --list with no format flag by default' do
-        expect_command_capturing(*expected_args)
-          .and_return(command_result(sample_output))
-
+    context 'with no options' do
+      it 'runs git branch --list and returns the result' do
+        expected_result = command_result("main\n")
+        expect_command_capturing(*expected_args).and_return(expected_result)
         result = command.call
-
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq(sample_output)
+        expect(result).to eq(expected_result)
       end
     end
 
-    context 'with parser-contract options (format:)' do
-      it 'includes --format=<string> when format: is given' do
-        expect_command_capturing(*expected_args("--format=#{format_string}"))
-          .and_return(command_result(sample_output))
+    context 'with :color option' do
+      it 'adds --color with true' do
+        expect_command_capturing(*expected_args('--color')).and_return(command_result(''))
+        command.call(color: true)
+      end
 
-        command.call(format: format_string)
+      it 'adds --color=<when> with string value' do
+        expect_command_capturing(*expected_args('--color=always')).and_return(command_result(''))
+        command.call(color: 'always')
+      end
+
+      it 'adds --no-color with false' do
+        expect_command_capturing(*expected_args('--no-color')).and_return(command_result(''))
+        command.call(color: false)
       end
     end
 
-    context 'with :all option' do
-      it 'adds --all flag' do
-        expect_command_capturing(*expected_args('--all'))
-          .and_return(command_result(''))
-
-        result = command.call(all: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with :verbose option' do
+      it 'adds --verbose with true' do
+        expect_command_capturing(*expected_args('--verbose')).and_return(command_result(''))
+        command.call(verbose: true)
       end
 
-      it 'accepts :a alias' do
-        expect_command_capturing(*expected_args('--all'))
-          .and_return(command_result(''))
+      it 'adds --verbose --verbose with 2' do
+        expect_command_capturing(*expected_args('--verbose', '--verbose')).and_return(command_result(''))
+        command.call(verbose: 2)
+      end
 
-        result = command.call(a: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+      it 'accepts :v alias' do
+        expect_command_capturing(*expected_args('--verbose')).and_return(command_result(''))
+        command.call(v: true)
       end
     end
 
-    context 'with :remotes option' do
-      it 'adds --remotes flag' do
-        expect_command_capturing(*expected_args('--remotes'))
-          .and_return(command_result(''))
-
-        result = command.call(remotes: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with :abbrev option' do
+      it 'adds --abbrev=<n> with integer value' do
+        expect_command_capturing(*expected_args('--abbrev=7')).and_return(command_result(''))
+        command.call(abbrev: 7)
       end
 
-      it 'accepts :r alias' do
-        expect_command_capturing(*expected_args('--remotes'))
-          .and_return(command_result(''))
+      it 'adds --abbrev with true' do
+        expect_command_capturing(*expected_args('--abbrev')).and_return(command_result(''))
+        command.call(abbrev: true)
+      end
 
-        result = command.call(r: true)
+      it 'adds --no-abbrev with false' do
+        expect_command_capturing(*expected_args('--no-abbrev')).and_return(command_result(''))
+        command.call(abbrev: false)
+      end
+    end
 
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with :column option' do
+      it 'adds --column with true' do
+        expect_command_capturing(*expected_args('--column')).and_return(command_result(''))
+        command.call(column: true)
+      end
+
+      it 'adds --column=<options> with string value' do
+        expect_command_capturing(*expected_args('--column=dense')).and_return(command_result(''))
+        command.call(column: 'dense')
+      end
+
+      it 'adds --no-column with false' do
+        expect_command_capturing(*expected_args('--no-column')).and_return(command_result(''))
+        command.call(column: false)
       end
     end
 
     context 'with :sort option' do
       it 'adds --sort=<key> with single value' do
-        expect_command_capturing(*expected_args('--sort=refname'))
-          .and_return(command_result(''))
-
-        result = command.call(sort: 'refname')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        expect_command_capturing(*expected_args('--sort=refname')).and_return(command_result(''))
+        command.call(sort: 'refname')
       end
 
       it 'adds multiple --sort=<key> with array of values' do
         expect_command_capturing(*expected_args('--sort=refname', '--sort=-committerdate'))
           .and_return(command_result(''))
-
-        result = command.call(sort: ['refname', '-committerdate'])
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-    end
-
-    context 'with :ignore_case option' do
-      it 'adds --ignore-case flag' do
-        expect_command_capturing(*expected_args('--ignore-case'))
-          .and_return(command_result(''))
-
-        result = command.call(ignore_case: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'accepts :i alias' do
-        expect_command_capturing(*expected_args('--ignore-case'))
-          .and_return(command_result(''))
-
-        result = command.call(i: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-    end
-
-    context 'with :contains option' do
-      it 'adds --contains <commit> with string value' do
-        expect_command_capturing(*expected_args('--contains', 'abc123'))
-          .and_return(command_result(''))
-
-        result = command.call(contains: 'abc123')
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'adds --contains flag with true (defaults to HEAD)' do
-        expect_command_capturing(*expected_args('--contains'))
-          .and_return(command_result(''))
-
-        result = command.call(contains: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-    end
-
-    context 'with :no_contains option' do
-      it 'adds --no-contains <commit> with string value' do
-        expect_command_capturing(*expected_args('--no-contains', 'abc123'))
-          .and_return(command_result(''))
-
-        result = command.call(no_contains: 'abc123')
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'adds --no-contains flag with true (defaults to HEAD)' do
-        expect_command_capturing(*expected_args('--no-contains'))
-          .and_return(command_result(''))
-
-        result = command.call(no_contains: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call(sort: ['refname', '-committerdate'])
       end
     end
 
     context 'with :merged option' do
       it 'adds --merged <commit> with string value' do
-        expect_command_capturing(*expected_args('--merged', 'main'))
-          .and_return(command_result(''))
-
-        result = command.call(merged: 'main')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        expect_command_capturing(*expected_args('--merged', 'main')).and_return(command_result(''))
+        command.call(merged: 'main')
       end
 
-      it 'adds --merged flag with true (defaults to HEAD)' do
-        expect_command_capturing(*expected_args('--merged'))
-          .and_return(command_result(''))
-
-        result = command.call(merged: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+      it 'adds --merged with true' do
+        expect_command_capturing(*expected_args('--merged')).and_return(command_result(''))
+        command.call(merged: true)
       end
     end
 
     context 'with :no_merged option' do
       it 'adds --no-merged <commit> with string value' do
-        expect_command_capturing(*expected_args('--no-merged', 'main'))
-          .and_return(command_result(''))
-
-        result = command.call(no_merged: 'main')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        expect_command_capturing(*expected_args('--no-merged', 'main')).and_return(command_result(''))
+        command.call(no_merged: 'main')
       end
 
-      it 'adds --no-merged flag with true (defaults to HEAD)' do
-        expect_command_capturing(*expected_args('--no-merged'))
-          .and_return(command_result(''))
+      it 'adds --no-merged with true' do
+        expect_command_capturing(*expected_args('--no-merged')).and_return(command_result(''))
+        command.call(no_merged: true)
+      end
+    end
 
-        result = command.call(no_merged: true)
+    context 'with :contains option' do
+      it 'adds --contains <commit> with string value' do
+        expect_command_capturing(*expected_args('--contains', 'abc123')).and_return(command_result(''))
+        command.call(contains: 'abc123')
+      end
 
-        expect(result).to be_a(Git::CommandLineResult)
+      it 'adds --contains with true' do
+        expect_command_capturing(*expected_args('--contains')).and_return(command_result(''))
+        command.call(contains: true)
+      end
+    end
+
+    context 'with :no_contains option' do
+      it 'adds --no-contains <commit> with string value' do
+        expect_command_capturing(*expected_args('--no-contains', 'abc123')).and_return(command_result(''))
+        command.call(no_contains: 'abc123')
+      end
+
+      it 'adds --no-contains with true' do
+        expect_command_capturing(*expected_args('--no-contains')).and_return(command_result(''))
+        command.call(no_contains: true)
       end
     end
 
     context 'with :points_at option' do
       it 'adds --points-at <object>' do
-        expect_command_capturing(*expected_args('--points-at', 'v1.0'))
-          .and_return(command_result(''))
+        expect_command_capturing(*expected_args('--points-at', 'v1.0')).and_return(command_result(''))
+        command.call(points_at: 'v1.0')
+      end
+    end
 
-        result = command.call(points_at: 'v1.0')
+    context 'with :format option' do
+      it 'includes --format=<string>' do
+        expect_command_capturing(*expected_args('--format=%(refname)')).and_return(command_result(''))
+        command.call(format: '%(refname)')
+      end
+    end
 
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with :remotes option' do
+      it 'adds --remotes' do
+        expect_command_capturing(*expected_args('--remotes')).and_return(command_result(''))
+        command.call(remotes: true)
+      end
+
+      it 'accepts :r alias' do
+        expect_command_capturing(*expected_args('--remotes')).and_return(command_result(''))
+        command.call(r: true)
+      end
+    end
+
+    context 'with :all option' do
+      it 'adds --all' do
+        expect_command_capturing(*expected_args('--all')).and_return(command_result(''))
+        command.call(all: true)
+      end
+
+      it 'accepts :a alias' do
+        expect_command_capturing(*expected_args('--all')).and_return(command_result(''))
+        command.call(a: true)
+      end
+    end
+
+    context 'with :ignore_case option' do
+      it 'adds --ignore-case' do
+        expect_command_capturing(*expected_args('--ignore-case')).and_return(command_result(''))
+        command.call(ignore_case: true)
+      end
+
+      it 'accepts :i alias' do
+        expect_command_capturing(*expected_args('--ignore-case')).and_return(command_result(''))
+        command.call(i: true)
+      end
+    end
+
+    context 'with :omit_empty option' do
+      it 'adds --omit-empty' do
+        expect_command_capturing(*expected_args('--omit-empty')).and_return(command_result(''))
+        command.call(omit_empty: true)
       end
     end
 
     context 'with patterns' do
-      it 'adds pattern arguments' do
-        expect_command_capturing(*expected_args('feature/*'))
-          .and_return(command_result(''))
-
-        result = command.call('feature/*')
-
-        expect(result).to be_a(Git::CommandLineResult)
+      it 'adds a single pattern after end-of-options marker' do
+        expect_command_capturing(*expected_args('--', 'feature/*')).and_return(command_result(''))
+        command.call('feature/*')
       end
 
-      it 'adds multiple pattern arguments' do
-        expect_command_capturing(*expected_args('feature/*', 'bugfix/*'))
-          .and_return(command_result(''))
-
-        result = command.call('feature/*', 'bugfix/*')
-
-        expect(result).to be_a(Git::CommandLineResult)
+      it 'adds multiple patterns after end-of-options marker' do
+        expect_command_capturing(*expected_args('--', 'feature/*', 'bugfix/*')).and_return(command_result(''))
+        command.call('feature/*', 'bugfix/*')
       end
     end
 
-    context 'with multiple options' do
-      it 'combines flags correctly' do
-        expect_command_capturing(*expected_args('--all', '--sort=refname', '--contains', 'abc123'))
-          .and_return(command_result(''))
-
-        result = command.call(all: true, sort: 'refname', contains: 'abc123')
-
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with options and patterns combined' do
+      it 'places options before end-of-options marker and patterns after' do
+        expect_command_capturing(*expected_args('--all', '--', 'feature/*')).and_return(command_result(''))
+        command.call('feature/*', all: true)
       end
     end
 
