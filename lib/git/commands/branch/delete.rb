@@ -7,6 +7,8 @@ module Git
     module Branch
       # Implements the `git branch --delete` command for deleting branches
       #
+      # @see Git::Commands::Branch
+      #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
       # @api private
@@ -33,6 +35,9 @@ module Git
           literal '--delete'
           flag_option %i[force f]
           flag_option %i[remotes r]
+
+          end_of_options
+
           operand :branch_name, repeatable: true, required: true
         end
 
@@ -66,7 +71,7 @@ module Git
         #
         #     @raise [ArgumentError] if no branch names are provided
         #
-        #     @raise [Git::FailedError] for unexpected errors (exit code > 1)
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       end
     end
   end

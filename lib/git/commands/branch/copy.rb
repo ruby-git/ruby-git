@@ -10,6 +10,8 @@ module Git
       # This command copies a branch, together with its config and reflog.
       # If the old branch name is omitted, copies the current branch.
       #
+      # @see Git::Commands::Branch
+      #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
       # @api private
@@ -36,6 +38,9 @@ module Git
           literal 'branch'
           literal '--copy'
           flag_option %i[force f]
+
+          end_of_options
+
           operand :old_branch
           operand :new_branch, required: true
         end
@@ -56,6 +61,12 @@ module Git
         #
         #       Alias: :f
         #
+        #     @return [Git::CommandLineResult] the result of calling `git branch --copy`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
         #   @overload call(old_branch, new_branch, **options)
         #
         #     Copies old_branch to new_branch
@@ -74,7 +85,7 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
