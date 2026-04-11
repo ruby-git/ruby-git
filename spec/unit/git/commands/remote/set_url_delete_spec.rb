@@ -10,7 +10,7 @@ RSpec.describe Git::Commands::Remote::SetUrlDelete do
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    context 'with name and url matcher' do
+    context 'with name and url pattern' do
       it 'passes the delete form arguments' do
         expected_result = command_result
         expect_command_capturing('remote', 'set-url', '--delete', '--', 'origin', 'github').and_return(expected_result)

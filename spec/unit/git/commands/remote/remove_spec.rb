@@ -13,11 +13,20 @@ RSpec.describe Git::Commands::Remote::Remove do
     context 'with a remote name' do
       it 'passes the remote name' do
         expected_result = command_result
-        expect_command_capturing('remote', 'remove', 'origin').and_return(expected_result)
+        expect_command_capturing('remote', 'remove', '--', 'origin').and_return(expected_result)
 
         result = command.call('origin')
 
         expect(result).to eq(expected_result)
+      end
+    end
+
+    context 'with end-of-options separator' do
+      it 'includes -- before the name operand' do
+        expect_command_capturing('remote', 'remove', '--', '-weirdremote')
+          .and_return(command_result)
+
+        command.call('-weirdremote')
       end
     end
 

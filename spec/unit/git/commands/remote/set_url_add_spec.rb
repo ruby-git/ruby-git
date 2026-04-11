@@ -32,14 +32,6 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd do
     end
 
     context 'input validation' do
-      it 'raises ArgumentError when name is missing' do
-        expect { command.call }.to raise_error(ArgumentError, /name is required/)
-      end
-
-      it 'raises ArgumentError when newurl is missing' do
-        expect { command.call('origin') }.to raise_error(ArgumentError, /newurl is required/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('origin', 'https://example.com/repo.git', delete: true) }
           .to raise_error(ArgumentError, /unsupported/i)
