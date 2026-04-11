@@ -9,8 +9,8 @@ RSpec.describe Git::Commands::Branch::List, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    describe 'when the command succeeds' do
-      it 'returns a CommandLineResult with output' do
+    context 'when the command succeeds' do
+      it 'returns a CommandLineResult with output after a commit' do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
@@ -29,13 +29,15 @@ RSpec.describe Git::Commands::Branch::List, :integration do
       end
     end
 
-    describe 'when the command fails' do
-      it 'raises FailedError for invalid options' do
+    context 'when the command fails' do
+      it 'raises FailedError for an invalid sort key' do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
 
-        expect { command.call(sort: 'invalid-key') }.to raise_error(Git::FailedError)
+        # git includes the invalid field name in its error message
+        expect { command.call(sort: 'invalid-key') }
+          .to raise_error(Git::FailedError, /invalid-key/)
       end
     end
   end

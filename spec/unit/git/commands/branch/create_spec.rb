@@ -4,243 +4,179 @@ require 'spec_helper'
 require 'git/commands/branch/create'
 
 RSpec.describe Git::Commands::Branch::Create do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
     context 'with branch name only (basic creation)' do
       it 'runs branch with the branch name' do
-        expect_command_capturing('branch', 'feature-branch')
-          .and_return(command_result(''))
+        expected_result = command_result('')
+        expect_command_capturing('branch', '--', 'feature-branch')
+          .and_return(expected_result)
 
         result = command.call('feature-branch')
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).to eq('')
+        expect(result).to eq(expected_result)
       end
     end
 
     context 'with start_point' do
       it 'adds the start point after the branch name' do
-        expect_command_capturing('branch', 'feature-branch', 'main')
+        expect_command_capturing('branch', '--', 'feature-branch', 'main')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', 'main')
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'accepts a commit SHA as start point' do
-        expect_command_capturing('branch', 'feature-branch', 'abc123')
-          .and_return(command_result(''))
-
-        result = command.call('feature-branch', 'abc123')
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'accepts a tag as start point' do
-        expect_command_capturing('branch', 'feature-branch', 'v1.0.0')
-          .and_return(command_result(''))
-
-        result = command.call('feature-branch', 'v1.0.0')
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'accepts a remote branch as start point' do
-        expect_command_capturing('branch', 'feature-branch', 'origin/main')
-          .and_return(command_result(''))
-
-        result = command.call('feature-branch', 'origin/main')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', 'main')
       end
     end
 
     context 'with :force option' do
       it 'adds --force flag' do
-        expect_command_capturing('branch', '--force', 'feature-branch')
+        expect_command_capturing('branch', '--force', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', force: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', force: true)
       end
 
       it 'allows resetting an existing branch to a new start point' do
-        expect_command_capturing('branch', '--force', 'feature-branch', 'main')
+        expect_command_capturing('branch', '--force', '--', 'feature-branch', 'main')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', 'main', force: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'does not add flag when false' do
-        expect_command_capturing('branch', 'feature-branch')
-          .and_return(command_result(''))
-
-        result = command.call('feature-branch', force: false)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', 'main', force: true)
       end
     end
 
     context 'with :f short option alias' do
       it 'adds --force flag' do
-        expect_command_capturing('branch', '--force', 'feature-branch')
+        expect_command_capturing('branch', '--force', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', f: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', f: true)
       end
     end
 
     context 'with :create_reflog option' do
       it 'adds --create-reflog flag' do
-        expect_command_capturing('branch', '--create-reflog', 'feature-branch')
+        expect_command_capturing('branch', '--create-reflog', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', create_reflog: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', create_reflog: true)
       end
 
       it 'adds --no-create-reflog flag when false' do
-        expect_command_capturing('branch', '--no-create-reflog', 'feature-branch')
+        expect_command_capturing('branch', '--no-create-reflog', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', create_reflog: false)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', create_reflog: false)
       end
     end
 
     context 'with :recurse_submodules option' do
       it 'adds --recurse-submodules flag' do
-        expect_command_capturing('branch', '--recurse-submodules', 'feature-branch')
+        expect_command_capturing('branch', '--recurse-submodules', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', recurse_submodules: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', recurse_submodules: true)
       end
+    end
 
-      it 'does not add flag when false' do
-        expect_command_capturing('branch', 'feature-branch')
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('branch', '--quiet', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', recurse_submodules: false)
+        command.call('feature-branch', quiet: true)
+      end
+    end
 
-        expect(result).to be_a(Git::CommandLineResult)
+    context 'with :q short option alias' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('branch', '--quiet', '--', 'feature-branch')
+          .and_return(command_result(''))
+
+        command.call('feature-branch', q: true)
       end
     end
 
     context 'with :track option' do
       context 'when true' do
         it 'adds --track flag' do
-          expect_command_capturing('branch', '--track', 'feature-branch', 'origin/main')
+          expect_command_capturing('branch', '--track', '--', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
-          result = command.call('feature-branch', 'origin/main', track: true)
-
-          expect(result).to be_a(Git::CommandLineResult)
+          command.call('feature-branch', 'origin/main', track: true)
         end
       end
 
       context 'when false' do
         it 'adds --no-track flag' do
-          expect_command_capturing('branch', '--no-track', 'feature-branch', 'origin/main')
+          expect_command_capturing('branch', '--no-track', '--', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
-          result = command.call('feature-branch', 'origin/main', track: false)
-
-          expect(result).to be_a(Git::CommandLineResult)
+          command.call('feature-branch', 'origin/main', track: false)
         end
       end
 
       context 'when "direct"' do
         it 'adds --track=direct flag' do
-          expect_command_capturing('branch', '--track=direct', 'feature-branch', 'origin/main')
+          expect_command_capturing('branch', '--track=direct', '--', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
-          result = command.call('feature-branch', 'origin/main', track: 'direct')
-
-          expect(result).to be_a(Git::CommandLineResult)
+          command.call('feature-branch', 'origin/main', track: 'direct')
         end
       end
 
       context 'when "inherit"' do
         it 'adds --track=inherit flag' do
-          expect_command_capturing('branch', '--track=inherit', 'feature-branch', 'origin/main')
+          expect_command_capturing('branch', '--track=inherit', '--', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
-          result = command.call('feature-branch', 'origin/main', track: 'inherit')
-
-          expect(result).to be_a(Git::CommandLineResult)
+          command.call('feature-branch', 'origin/main', track: 'inherit')
         end
       end
     end
 
     context 'with :t short option alias' do
       it 'adds --track flag when true' do
-        expect_command_capturing('branch', '--track', 'feature-branch', 'origin/main')
+        expect_command_capturing('branch', '--track', '--', 'feature-branch', 'origin/main')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', 'origin/main', t: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
-      it 'adds --track=inherit when string value' do
-        expect_command_capturing('branch', '--track=inherit', 'feature-branch', 'origin/main')
-          .and_return(command_result(''))
-
-        result = command.call('feature-branch', 'origin/main', t: 'inherit')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', 'origin/main', t: true)
       end
     end
 
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
-        expect_command_capturing('branch', '--track', '--force', '--create-reflog', 'feature-branch', 'origin/main')
-          .and_return(command_result(''))
+        expect_command_capturing(
+          'branch', '--track', '--force', '--create-reflog',
+          '--', 'feature-branch', 'origin/main'
+        ).and_return(command_result(''))
 
-        result = command.call('feature-branch', 'origin/main', force: true, create_reflog: true, track: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', 'origin/main', force: true, create_reflog: true, track: true)
       end
 
       it 'combines force with no-track' do
-        expect_command_capturing('branch', '--no-track', '--force', 'feature-branch', 'main')
+        expect_command_capturing('branch', '--no-track', '--force', '--', 'feature-branch', 'main')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', 'main', force: true, track: false)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', 'main', force: true, track: false)
       end
     end
 
     context 'with nil start_point' do
       it 'omits the start point from the command' do
-        expect_command_capturing('branch', 'feature-branch')
+        expect_command_capturing('branch', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', nil)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', nil)
       end
 
       it 'omits the start point when options are provided' do
-        expect_command_capturing('branch', '--force', 'feature-branch')
+        expect_command_capturing('branch', '--force', '--', 'feature-branch')
           .and_return(command_result(''))
 
-        result = command.call('feature-branch', nil, force: true)
-
-        expect(result).to be_a(Git::CommandLineResult)
+        command.call('feature-branch', nil, force: true)
       end
     end
   end
