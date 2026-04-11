@@ -162,7 +162,9 @@ conflicting documentation for the method.
 | --- | --- |
 | `flag_option` | `[Boolean]` |
 | `flag_option ..., max_times: N` | `[Boolean, Integer]` |
+| `flag_option ..., negatable: true` | `[Boolean]` — document both `true` (→ `--flag`) and `false` (→ `--no-flag`) forms |
 | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
+| `flag_or_value_option ..., negatable: true` | `[Boolean, String]` — document `true` (→ `--flag`), string (→ `--flag=value`), and `false` (→ `--no-flag`) forms |
 | `value_option` | `[String]` (or a more specific type where known) |
 | `operand` (repeatable) | `[Array<String>]` |
 | `operand` (single) | `[String]` |
@@ -175,8 +177,39 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
+- **Missing negated form for `negatable:` options** — when the DSL declares
+  `flag_option :foo, negatable: true` or `flag_or_value_option :foo, negatable: true`,
+  the `@option` prose must document both `false` → `--no-foo` and `true` → `--foo`.
+  Documenting only the positive form misleads callers who pass `false`.
+
+  ```ruby
+  # ❌ Missing negated form
+  # @option options [Boolean] :create_reflog (nil)
+  #   create the branch's reflog
+
+  # ✅ Documents both forms
+  # @option options [Boolean] :create_reflog (nil)
+  #   create the branch's reflog
+  #
+  #   Pass `true` for `--create-reflog`, `false` for `--no-create-reflog`.
+  ```
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - Legacy references to `ARGS` constant or command-specific `initialize`
+- **`@option` description references a short flag instead of the emitted long flag** —
+  `@option` prose must describe behavior using the emitted CLI form (the long flag),
+  not the git man-page synopsis short notation. The DSL emits the primary (long) flag
+  regardless of which alias the caller uses.
+
+  ```ruby
+  # ❌ Wrong — describes -v as if it is emitted
+  # @option options [Boolean, Integer] :verbose (nil) ...
+  #   Pass `true` for `-v`; pass `2` for `-v -v`.
+
+  # ✅ Correct — describes the actually emitted flag
+  # @option options [Boolean, Integer] :verbose (nil) ...
+  #   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
+  ```
+
 - Description leaks internal mechanics (e.g., "written via IO pipe") instead of
   describing caller-facing behavior
 - **Trailing period on `@option` short description** — the inline text after the

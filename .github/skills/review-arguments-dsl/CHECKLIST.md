@@ -283,6 +283,29 @@ matches the SYNOPSIS.
 - Prefer aliases for long/short pairs (`%i[force f]`, `%i[all A]`, `%i[intent_to_add
   N]`)
 - Ensure long name is first in alias arrays
+
+### Inline comment style
+
+Each DSL entry MAY have a trailing comment documenting the emitted CLI form. When
+present, the comment must reflect **what the DSL actually emits** — the primary
+(long) flag — not the git man-page synopsis notation.
+
+```ruby
+# ✅ Correct — shows the emitted long flag; alias noted separately
+flag_option %i[verbose v]          # --verbose (alias: :v)
+flag_option %i[all a]              # --all (alias: :a)
+flag_or_value_option :color, inline: true, negatable: true  # --color[=<when>] / --no-color
+value_option :format, inline: true # --format=<format>
+
+# ❌ Wrong — shows both short and long forms as if both are emitted;
+#            reader may assume -v and --verbose are two separate flags
+flag_option %i[verbose v], max_times: 2  # -v / -vv / --verbose
+flag_option %i[all a]                    # -a / --all
+```
+
+The rule: **one comment → one emitted flag form**. Aliases are referenced as
+`(alias: :x)`, not listed as separate flag tokens. Flag any comment that lists a
+short flag as if it is independently emitted.
 - **Do not** flag uppercase short-flag aliases (e.g. `:A`, `:N`) as needing `as:` —
   the DSL preserves symbol case, so `:A` correctly produces `-A` without any override
 
@@ -603,6 +626,37 @@ The one exception is action-option-with-optional-value commands (see
 Every keyword/positional parameter documented for `call` must correspond to a DSL
 entry and vice versa — mismatches indicate either a missing DSL entry or stale
 documentation.
+
+**`negatable:` options must document both emitted forms.** When the DSL declares
+`flag_option :foo, negatable: true` or `flag_or_value_option :foo, negatable: true`,
+the `@option` prose must explicitly state that `false` emits `--no-foo`. An
+`@option` that only describes the positive (`true`) form is missing documentation
+for callers who pass `false`.
+
+```ruby
+# ❌ Missing — only describes the positive form
+# @option options [Boolean] :create_reflog (nil) create the branch's reflog
+
+# ✅ Correct — documents both forms
+# @option options [Boolean] :create_reflog (nil) create the branch's reflog
+#
+#   Pass `true` for `--create-reflog`, `false` for `--no-create-reflog`.
+```
+
+**`@option` descriptions must use the emitted long flag form.** The DSL emits the
+primary (long) flag regardless of which alias the caller uses. Any `@option`
+prose that references a short flag (e.g. `-v`, `-f`, `-a`) as if it is emitted
+is misleading and must be corrected to the long form:
+
+```ruby
+# ❌ Misleading — describes -v as emitted
+# @option options [Boolean, Integer] :verbose (nil) ...
+#   Pass `true` for `-v`; pass `2` for `-v -v`.
+
+# ✅ Correct — describes the emitted flag
+# @option options [Boolean, Integer] :verbose (nil) ...
+#   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
+```
 
 - If the class defines an explicit `def call`, check the YARD docs directly above
   that method.
