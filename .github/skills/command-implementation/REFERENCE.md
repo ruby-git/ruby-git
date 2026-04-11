@@ -215,6 +215,9 @@ Structural requirements:
 - Has exactly one `arguments do` declaration
 - Does not define command-specific `initialize` that only assigns
   `@execution_context`
+- `require` statements are limited to files actually used within the command
+  class file itself — do not carry over `require` entries that belong only to
+  the facade (`Git::Lib`) or parser layer
 
 ## Command template (Base pattern)
 
@@ -231,7 +234,10 @@ module Git
       # @api private
       class Bar < Git::Commands::Base  # never name the class Object
         arguments do
-          # literals/options/operands
+          # Trailing comments on DSL entries must show the emitted long flag:
+          #   flag_option %i[verbose v]  # --verbose (alias: :v)
+          # Never list short flags as separate emitted tokens:
+          #   flag_option %i[verbose v]  # -v / --verbose  ← wrong
         end
 
         # Optional: for commands where non-zero exits are valid
@@ -822,6 +828,26 @@ unconditionally fixed regardless of caller input. If a kwarg always has a specif
 required value (e.g. `chomp: false` for commands returning raw content where trailing
 newlines are data), hardcode it in a `def call` override instead — exposing it via
 `execution_option` would allow callers to override a value that must never change.
+
+### Unnecessary `require` statements
+
+A command class file should only `require` what it actually uses. The canonical
+example is parser requires: `require 'git/parsers/foo'` is needed by the facade
+(`Git::Lib`) but not by the command class itself — the command class just runs git
+and returns `CommandLineResult`.
+
+```ruby
+# ❌ Command class does not use Git::Parsers::Branch
+require 'git/parsers/branch'
+require 'git/commands/base'
+
+# ✅ Only what the file actually uses
+require 'git/commands/base'
+```
+
+**Review mode:** flag any `require` beyond `git/commands/base` (and `git/commands/branch` for sub-command files) unless a constant from that file is referenced in the command class body.
+
+**Update mode:** remove flagged `require` statements.
 
 ### Other common failures
 

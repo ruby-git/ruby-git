@@ -191,10 +191,13 @@ This skill supports three modes. Determine which mode applies before starting:
    bundle exec ruby -e "require 'rake'; load 'Rakefile'; puts Rake::Task['default:parallel'].prerequisites"
    ```
 
-   Run each listed task in order via `bundle exec rake <task>`. On failure, fix
-   the issue and re-run that task. Once it passes, continue to the next. After
-   all tasks pass, re-run the full sequence from the first task to confirm no
-   fix broke an earlier gate. Repeat until the whole sequence runs without error.
+   Run each listed task **individually** in order via `bundle exec rake <task>`
+   (one task per invocation — never combine multiple tasks in a single command).
+   On failure, fix the issue and re-run that same task. Once it passes, continue
+   to the next task. After all tasks pass, if any task required a fix during this
+   cycle, start a new cycle from the first task using the same one-at-a-time
+   approach. Keep cycling until every task passes on its first attempt with no
+   fixes needed.
 
 ## Output
 
