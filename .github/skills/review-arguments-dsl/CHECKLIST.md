@@ -1,6 +1,7 @@
 # Arguments DSL Checklist
 
 - [1. Determine scope and exclusions](#1-determine-scope-and-exclusions)
+  - [Options excluded because they belong to a different sub-action](#options-excluded-because-they-belong-to-a-different-sub-action)
   - [Options excluded due to execution-model conflicts](#options-excluded-due-to-execution-model-conflicts)
 - [2. Verify DSL method per option type](#2-verify-dsl-method-per-option-type)
   - [Recognizing `flag_or_value_option` from the git docs](#recognizing-flag_or_value_option-from-the-git-docs)
@@ -31,6 +32,27 @@
 
 Before auditing individual DSL entries, determine which git options are in scope.
 Reference documents and source files are loaded during the [Input phase](SKILL.md#input).
+
+### Options excluded because they belong to a different sub-action
+
+When a command is split into sub-command classes (e.g., `Branch::Create` vs.
+`Branch::List`), each class includes **only** the options that apply to its
+sub-action. Do **not** add every option from the man page — git documents all modes
+on a single page.
+
+To determine which options belong to a sub-action:
+
+1. **Read the SYNOPSIS** — git man pages list separate SYNOPSIS lines per mode.
+   Only options shown on the SYNOPSIS line for the target sub-action are candidates.
+2. **Cross-reference DESCRIPTION and OPTIONS sections** — check each option's
+   description for phrases like "only useful with `--list`" or "when used with
+   `-d`". If the docs explicitly tie an option to a different mode, exclude it.
+3. **Common/shared options** — options on every SYNOPSIS line or described as
+   applying to the command as a whole (e.g., `--quiet`, `--verbose`) belong in
+   every sub-command class where they are meaningful.
+
+This rule applies **only** to split commands. For single-class commands, include all
+options (subject to execution-model exclusions below).
 
 ### Options excluded due to execution-model conflicts
 
