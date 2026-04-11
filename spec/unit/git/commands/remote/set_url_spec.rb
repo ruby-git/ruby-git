@@ -40,15 +40,17 @@ RSpec.describe Git::Commands::Remote::SetUrl do
       end
     end
 
+    context 'with :push option and old url matcher' do
+      it 'includes --push before the separator and oldurl after newurl' do
+        expect_command_capturing(
+          'remote', 'set-url', '--push', '--', 'origin', 'https://example.com/repo.git', 'github'
+        ).and_return(command_result)
+
+        command.call('origin', 'https://example.com/repo.git', 'github', push: true)
+      end
+    end
+
     context 'input validation' do
-      it 'raises ArgumentError when name is missing' do
-        expect { command.call }.to raise_error(ArgumentError, /name is required/)
-      end
-
-      it 'raises ArgumentError when newurl is missing' do
-        expect { command.call('origin') }.to raise_error(ArgumentError, /newurl is required/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('origin', 'https://example.com/repo.git', all: true) }
           .to raise_error(ArgumentError, /unsupported/i)

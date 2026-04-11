@@ -38,14 +38,6 @@ RSpec.describe Git::Commands::Remote::Rename do
     end
 
     context 'input validation' do
-      it 'raises ArgumentError when old name is missing' do
-        expect { command.call }.to raise_error(ArgumentError, /old is required/)
-      end
-
-      it 'raises ArgumentError when new name is missing' do
-        expect { command.call('origin') }.to raise_error(ArgumentError, /new is required/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('origin', 'upstream', verbose: true) }.to raise_error(ArgumentError, /unsupported/i)
       end

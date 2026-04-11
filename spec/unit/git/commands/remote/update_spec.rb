@@ -63,6 +63,12 @@ RSpec.describe Git::Commands::Remote::Update do
 
         command.call(p: true)
       end
+
+      it 'passes operands after end-of-options when combined' do
+        expect_command_capturing('remote', 'update', '--prune', '--', 'origin').and_return(command_result)
+
+        command.call('origin', prune: true)
+      end
     end
 
     context 'input validation' do

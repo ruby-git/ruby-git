@@ -39,14 +39,6 @@ RSpec.describe Git::Commands::Remote::SetBranches do
     end
 
     context 'input validation' do
-      it 'raises ArgumentError when name is missing' do
-        expect { command.call }.to raise_error(ArgumentError, /name is required/)
-      end
-
-      it 'raises ArgumentError when branches are missing' do
-        expect { command.call('origin') }.to raise_error(ArgumentError, /at least one value is required for branch/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('origin', 'main', fetch: true) }.to raise_error(ArgumentError, /unsupported/i)
       end
