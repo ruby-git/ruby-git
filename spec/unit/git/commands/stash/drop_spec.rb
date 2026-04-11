@@ -35,5 +35,22 @@ RSpec.describe Git::Commands::Stash::Drop do
         command.call('1')
       end
     end
+
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'drop', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('stash', 'drop').and_return(command_result(''))
+        command.call(quiet: false)
+      end
+
+      it 'accepts :q alias' do
+        expect_command_capturing('stash', 'drop', '--quiet').and_return(command_result(''))
+        command.call(q: true)
+      end
+    end
   end
 end

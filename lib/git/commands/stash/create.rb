@@ -48,6 +48,8 @@ module Git
         #     @param message [String] optional message for the stash commit
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash create`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

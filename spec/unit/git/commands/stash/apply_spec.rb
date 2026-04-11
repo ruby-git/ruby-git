@@ -54,5 +54,22 @@ RSpec.describe Git::Commands::Stash::Apply do
         command.call('stash@{1}', index: true)
       end
     end
+
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'apply', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('stash', 'apply').and_return(command_result(''))
+        command.call(quiet: false)
+      end
+
+      it ':q alias works' do
+        expect_command_capturing('stash', 'apply', '--quiet').and_return(command_result(''))
+        command.call(q: true)
+      end
+    end
   end
 end

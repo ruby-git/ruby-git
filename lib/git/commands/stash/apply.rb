@@ -30,6 +30,7 @@ module Git
           literal 'stash'
           literal 'apply'
           flag_option :index
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -45,6 +46,10 @@ module Git
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
         #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
+        #
         #   @overload call(stash, **options)
         #
         #     Apply a specific stash
@@ -55,9 +60,13 @@ module Git
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
         #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
+        #
         #   @return [Git::CommandLineResult] the result of calling `git stash apply`
         #
-        #   @raise [Git::FailedError] if the stash does not exist
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

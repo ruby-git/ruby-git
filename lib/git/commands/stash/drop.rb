@@ -26,6 +26,7 @@ module Git
         arguments do
           literal 'stash'
           literal 'drop'
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -33,19 +34,31 @@ module Git
         #
         #   Drop a stash entry
         #
-        #   @overload call()
+        #   @overload call(**options)
         #
         #     Drop the latest stash
         #
-        #   @overload call(stash)
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
+        #
+        #   @overload call(stash, **options)
         #
         #     Drop a specific stash
         #
         #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
+        #
         #   @return [Git::CommandLineResult] the result of calling `git stash drop`
         #
-        #   @raise [Git::FailedError] if the stash does not exist
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

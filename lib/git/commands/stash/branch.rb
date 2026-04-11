@@ -56,7 +56,7 @@ module Git
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash branch`
         #
-        #   @raise [Git::FailedError] if the branch already exists or stash doesn't exist
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

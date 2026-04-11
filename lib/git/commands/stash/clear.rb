@@ -30,7 +30,9 @@ module Git
         #
         #     Clear all stash entries
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash clear`
+        #   @return [Git::CommandLineResult] the result of calling `git stash clear`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
