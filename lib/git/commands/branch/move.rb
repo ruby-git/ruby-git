@@ -10,10 +10,6 @@ module Git
       # This command moves/renames a branch, together with its config and reflog.
       # If the old branch name is omitted, renames the current branch.
       #
-      # @see https://git-scm.com/docs/git-branch git-branch
-      #
-      # @api private
-      #
       # @example Rename the current branch
       #   move = Git::Commands::Branch::Move.new(execution_context)
       #   move.call('new-branch-name')
@@ -26,6 +22,14 @@ module Git
       #   move = Git::Commands::Branch::Move.new(execution_context)
       #   move.call('old-branch', 'existing-branch', force: true)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
+      # @see Git::Commands::Branch
+      #
+      # @see https://git-scm.com/docs/git-branch git-branch
+      #
+      # @api private
+      #
       class Move < Git::Commands::Base
         # NOTE: The positional arguments follow Ruby semantics:
         # - When one positional is provided, it fills new_branch (required)
@@ -36,6 +40,9 @@ module Git
           literal 'branch'
           literal '--move'
           flag_option %i[force f]
+
+          end_of_options
+
           operand :old_branch
           operand :new_branch, required: true
         end
@@ -52,9 +59,15 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
+        #     @option options [Boolean] :force (nil) allow renaming even if new_branch already exists
         #
         #       Alias: :f
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #
         #   @overload call(old_branch, new_branch, **options)
         #
@@ -66,7 +79,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) Allow renaming even if new_branch already exists.
+        #     @option options [Boolean] :force (nil) allow renaming even if new_branch already exists
         #
         #       Alias: :f
         #
@@ -74,7 +87,7 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the branch doesn't exist or target exists (without force)
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
     context 'with set_upstream_to and branch_name' do
       it 'runs branch --set-upstream-to=<upstream> <branch>' do
-        expect_command_capturing('branch', '--set-upstream-to=origin/main', 'feature')
+        expect_command_capturing('branch', '--set-upstream-to=origin/main', '--', 'feature')
           .and_return(command_result(''))
 
         result = command.call('feature', set_upstream_to: 'origin/main')

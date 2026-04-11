@@ -10,10 +10,6 @@ module Git
       # This command sets up tracking information so the specified upstream branch is considered
       # the upstream for the given branch (or current branch if not specified).
       #
-      # @see https://git-scm.com/docs/git-branch git-branch
-      #
-      # @api private
-      #
       # @example Set upstream for current branch
       #   set_upstream = Git::Commands::Branch::SetUpstream.new(execution_context)
       #   set_upstream.call(set_upstream_to: 'origin/main')
@@ -22,6 +18,14 @@ module Git
       #   set_upstream = Git::Commands::Branch::SetUpstream.new(execution_context)
       #   set_upstream.call('feature', set_upstream_to: 'origin/main')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
+      # @see Git::Commands::Branch
+      #
+      # @see https://git-scm.com/docs/git-branch git-branch
+      #
+      # @api private
+      #
       class SetUpstream < Git::Commands::Base
         # NOTE: The set_upstream_to option maps to git's --set-upstream-to=<upstream> syntax.
         # The branch_name positional is optional; if omitted, git uses the current branch.
@@ -29,6 +33,9 @@ module Git
         arguments do
           literal 'branch'
           value_option %i[set_upstream_to u], inline: true, required: true, allow_nil: false
+
+          end_of_options
+
           operand :branch_name
         end
 
@@ -42,19 +49,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main').
-        #
-        #       Alias: :u
-        #
-        #   @overload call(branch_name, **options)
-        #
-        #      Set upstream for the specified branch
-        #
-        #     @param branch_name [String] the branch to set upstream for
-        #
-        #     @param options [Hash] command options
-        #
-        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main').
+        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
         #
         #       Alias: :u
         #
@@ -64,7 +59,27 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the branch or upstream doesn't exist
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @overload call(branch_name, **options)
+        #
+        #     Set upstream for the specified branch
+        #
+        #     @param branch_name [String] the branch to set upstream for
+        #
+        #     @param options [Hash] command options
+        #
+        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #
+        #       Alias: :u
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git branch --set-upstream-to`
+        #
+        #     @raise [ArgumentError] if set_upstream_to is not provided
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

@@ -23,6 +23,8 @@ module Git
       #   list = Git::Commands::Branch::List.new(execution_context)
       #   feature_branches = list.call('feature/*')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
       # @see Git::Commands::Branch
       #
       # @see https://git-scm.com/docs/git-branch git-branch
