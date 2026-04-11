@@ -2,6 +2,7 @@
 
 require 'securerandom'
 require 'spec_helper'
+require 'git/commands/worktree/add'
 require 'git/commands/worktree/remove'
 
 RSpec.describe Git::Commands::Worktree::Remove, :integration do
@@ -19,9 +20,7 @@ RSpec.describe Git::Commands::Worktree::Remove, :integration do
     context 'when the command succeeds' do
       let(:worktree_path) { File.join(repo_dir, '..', "worktree-remove-#{SecureRandom.hex(4)}") }
 
-      before do
-        execution_context.command_capturing('worktree', 'add', '--', worktree_path, env: { 'GIT_INDEX_FILE' => nil })
-      end
+      before { Git::Commands::Worktree::Add.new(execution_context).call(worktree_path) }
       after { FileUtils.rm_rf(worktree_path) }
 
       it 'returns a CommandLineResult' do

@@ -25,11 +25,14 @@ module Git
       # @example Pop and restore index state
       #   Git::Commands::Stash::Pop.new(execution_context).call(index: true)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.52.0
+      #
       class Pop < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'pop'
           flag_option :index
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -45,6 +48,10 @@ module Git
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
         #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
+        #
         #   @overload call(stash, **options)
         #
         #     Pop a specific stash
@@ -54,6 +61,10 @@ module Git
         #     @param options [Hash] command options
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
+        #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash pop`
         #

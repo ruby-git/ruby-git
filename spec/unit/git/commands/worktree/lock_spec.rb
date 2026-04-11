@@ -32,5 +32,17 @@ RSpec.describe Git::Commands::Worktree::Lock do
         command.call('/tmp/feature', reason: 'on NFS share')
       end
     end
+
+    context 'input validation' do
+      it 'raises ArgumentError when no worktree is provided' do
+        expect { command.call }
+          .to raise_error(ArgumentError, /worktree is required/)
+      end
+
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call('/tmp/feature', foo: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
+      end
+    end
   end
 end

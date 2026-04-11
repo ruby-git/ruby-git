@@ -10,6 +10,8 @@ module Git
       # @example Unlock a worktree
       #   Git::Commands::Worktree::Unlock.new(execution_context).call('/tmp/feature')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
@@ -35,7 +37,7 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree unlock`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

@@ -62,6 +62,13 @@ RSpec.describe Git::Commands::Worktree::Add do
 
         command.call('/tmp/exp', detach: true)
       end
+
+      it 'accepts :d alias' do
+        expect_command_capturing('worktree', 'add', '--detach', '--', '/tmp/exp', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/exp', d: true)
+      end
     end
 
     context 'with :checkout option' do
@@ -86,6 +93,24 @@ RSpec.describe Git::Commands::Worktree::Add do
           .and_return(command_result(''))
 
         command.call('/tmp/wt', lock: true)
+      end
+    end
+
+    context 'with :reason option' do
+      it 'adds --reason with the given string' do
+        expect_command_capturing('worktree', 'add', '--reason', 'on portable drive', '--', '/tmp/wt', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/wt', reason: 'on portable drive')
+      end
+    end
+
+    context 'with :orphan option' do
+      it 'adds --orphan flag' do
+        expect_command_capturing('worktree', 'add', '--orphan', '--', '/tmp/wt', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/wt', orphan: true)
       end
     end
 
@@ -136,6 +161,22 @@ RSpec.describe Git::Commands::Worktree::Add do
           .and_return(command_result(''))
 
         command.call('/tmp/wt', guess_remote: false)
+      end
+    end
+
+    context 'with :relative_paths option' do
+      it 'adds --relative-paths when true' do
+        expect_command_capturing('worktree', 'add', '--relative-paths', '--', '/tmp/wt', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/wt', relative_paths: true)
+      end
+
+      it 'adds --no-relative-paths when false' do
+        expect_command_capturing('worktree', 'add', '--no-relative-paths', '--', '/tmp/wt', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call('/tmp/wt', relative_paths: false)
       end
     end
 

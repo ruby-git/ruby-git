@@ -29,11 +29,9 @@ RSpec.describe Git::Commands::Worktree::Repair, :integration do
 
     context 'when the command fails' do
       it 'raises FailedError outside a git repository' do
-        Dir.mktmpdir do |tmpdir|
-          non_repo = Git.init(tmpdir, initial_branch: 'main')
-          FileUtils.rm_rf(File.join(tmpdir, '.git'))
-          non_git_command = described_class.new(non_repo.lib)
-          expect { non_git_command.call }
+        Dir.chdir(repo_dir) do
+          FileUtils.rm_rf(File.join(repo_dir, '.git'))
+          expect { command.call }
             .to raise_error(Git::FailedError, /not a git repository/)
         end
       end

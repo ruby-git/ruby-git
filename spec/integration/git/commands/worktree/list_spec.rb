@@ -21,8 +21,23 @@ RSpec.describe Git::Commands::Worktree::List, :integration do
         expect(result).to be_a(Git::CommandLineResult)
       end
 
+      it 'returns a CommandLineResult with the :verbose option' do
+        result = command.call(verbose: true)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
       it 'returns a CommandLineResult with the :porcelain option' do
         result = command.call(porcelain: true)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'returns a CommandLineResult with :porcelain and :z options combined' do
+        result = command.call(porcelain: true, z: true)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'returns a CommandLineResult with the :expire option' do
+        result = command.call(expire: '1.week.ago')
         expect(result).to be_a(Git::CommandLineResult)
       end
     end

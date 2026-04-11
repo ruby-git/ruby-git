@@ -48,7 +48,7 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree remove`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

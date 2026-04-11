@@ -49,6 +49,42 @@ RSpec.describe Git::Commands::Worktree::Add, :integration do
           expect(File.directory?(worktree_path)).to be(true)
         end
       end
+
+      context 'with --lock and --reason' do
+        let(:worktree_path) { File.join(repo_dir, '..', "worktree-locked-#{SecureRandom.hex(4)}") }
+
+        after { FileUtils.rm_rf(worktree_path) }
+
+        it 'creates a locked worktree with the given reason' do
+          result = command.call(worktree_path, lock: true, reason: 'on portable device')
+          expect(result).to be_a(Git::CommandLineResult)
+          expect(File.directory?(worktree_path)).to be(true)
+        end
+      end
+
+      context 'with --relative-paths' do
+        let(:worktree_path) { File.join(repo_dir, '..', "worktree-relative-#{SecureRandom.hex(4)}") }
+
+        after { FileUtils.rm_rf(worktree_path) }
+
+        it 'creates the worktree successfully' do
+          result = command.call(worktree_path, relative_paths: true)
+          expect(result).to be_a(Git::CommandLineResult)
+          expect(File.directory?(worktree_path)).to be(true)
+        end
+      end
+
+      context 'with --orphan', skip: unless_git('2.41', 'git worktree add --orphan') do
+        let(:worktree_path) { File.join(repo_dir, '..', "worktree-orphan-#{SecureRandom.hex(4)}") }
+
+        after { FileUtils.rm_rf(worktree_path) }
+
+        it 'creates a worktree on a new unborn branch' do
+          result = command.call(worktree_path, orphan: true)
+          expect(result).to be_a(Git::CommandLineResult)
+          expect(File.directory?(worktree_path)).to be(true)
+        end
+      end
     end
 
     context 'when the command fails' do

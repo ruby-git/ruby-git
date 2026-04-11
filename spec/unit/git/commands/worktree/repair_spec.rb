@@ -38,5 +38,23 @@ RSpec.describe Git::Commands::Worktree::Repair do
         command.call('/tmp/moved1', '/tmp/moved2')
       end
     end
+
+    context 'with --relative-paths' do
+      it 'passes the flag' do
+        expect_command_capturing('worktree', 'repair', '--relative-paths', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call(relative_paths: true)
+      end
+    end
+
+    context 'with --no-relative-paths' do
+      it 'passes the negated flag' do
+        expect_command_capturing('worktree', 'repair', '--no-relative-paths', env: worktree_env)
+          .and_return(command_result(''))
+
+        command.call(relative_paths: false)
+      end
+    end
   end
 end
