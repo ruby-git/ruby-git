@@ -74,7 +74,7 @@ continuation text within a YARD block:
 Correct — blank comment line keeps the block intact:
 
 ```ruby
-# @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+# @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
 #
 #   Alias: :"4"
 ```
@@ -82,7 +82,7 @@ Correct — blank comment line keeps the block intact:
 Incorrect — raw blank line silently drops the alias note:
 
 ```ruby
-# @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+# @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
 
 #   Alias: :"4"
 ```

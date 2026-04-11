@@ -101,7 +101,7 @@ only as a supplemental check.
 
 - [ ] consistent class summaries and `@api private`
 - [ ] `@overload` coverage consistent for equivalent call shapes
-- [ ] `@return` and `@raise` wording consistent across siblings
+- [ ] `@return` and `@raise` wording consistent across siblings — `@raise [Git::FailedError]` uses the canonical generic form ("if git exits with a non-zero exit status" for default range; "if git exits outside the allowed range (exit code > N)" for non-default); never enumerates specific failure causes
 - [ ] tag short descriptions do not end with punctuation
 - [ ] multi-paragraph tag descriptions have a blank comment line between the short
       description and each continuation paragraph

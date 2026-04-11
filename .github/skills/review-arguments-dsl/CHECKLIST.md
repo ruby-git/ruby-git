@@ -768,3 +768,9 @@ and [`requires_git_version` convention](../command-implementation/REFERENCE.md#r
   command has non-zero successful exits.
 - **`requires_git_version`** — present only when the command was introduced after
   `Git::MINIMUM_GIT_VERSION`; uses a `'major.minor.patch'` string.
+- **`` @note `arguments` block audited against https://git-scm.com/docs/git-{command}/<version> ``** —
+  present in the class-level YARD doc block. Flag as an error if: (1) the note is
+  missing, or (2) the version in the URL is not the current latest git version.
+  To get the current latest version, run `bin/latest-git-version` from the repo root.
+  A stale version means the DSL may be missing options added in subsequent git
+  releases.
