@@ -627,37 +627,6 @@ Every keyword/positional parameter documented for `call` must correspond to a DS
 entry and vice versa — mismatches indicate either a missing DSL entry or stale
 documentation.
 
-**`negatable:` options must document both emitted forms.** When the DSL declares
-`flag_option :foo, negatable: true` or `flag_or_value_option :foo, negatable: true`,
-the `@option` prose must explicitly state that `false` emits `--no-foo`. An
-`@option` that only describes the positive (`true`) form is missing documentation
-for callers who pass `false`.
-
-```ruby
-# ❌ Missing — only describes the positive form
-# @option options [Boolean] :create_reflog (nil) create the branch's reflog
-
-# ✅ Correct — documents both forms
-# @option options [Boolean] :create_reflog (nil) create the branch's reflog
-#
-#   Pass `true` for `--create-reflog`, `false` for `--no-create-reflog`.
-```
-
-**`@option` descriptions must use the emitted long flag form.** The DSL emits the
-primary (long) flag regardless of which alias the caller uses. Any `@option`
-prose that references a short flag (e.g. `-v`, `-f`, `-a`) as if it is emitted
-is misleading and must be corrected to the long form:
-
-```ruby
-# ❌ Misleading — describes -v as emitted
-# @option options [Boolean, Integer] :verbose (nil) ...
-#   Pass `true` for `-v`; pass `2` for `-v -v`.
-
-# ✅ Correct — describes the emitted flag
-# @option options [Boolean, Integer] :verbose (nil) ...
-#   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
-```
-
 - If the class defines an explicit `def call`, check the YARD docs directly above
   that method.
 - If the class does **not** define `def call`, check the `@overload` blocks in the

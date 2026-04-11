@@ -75,9 +75,8 @@ module Git
         #     @option options [Boolean, Integer] :verbose (nil) show sha1 and commit
         #       subject for each branch
         #
-        #       Pass `true` for `--verbose` (show sha1 and subject); pass `2` for
-        #       `--verbose --verbose` (also show the linked worktree path and upstream
-        #       branch name).
+        #       Pass `true` for `-v` (show sha1 and subject); pass `2` for `-v -v` (also
+        #       show the linked worktree path and upstream branch name).
         #
         #       Alias: :v
         #
