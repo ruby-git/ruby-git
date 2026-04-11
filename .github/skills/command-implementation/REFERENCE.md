@@ -35,6 +35,7 @@ by subagents during the [Command Implementation](SKILL.md) workflow.
   - [Policy/output-control flag hardcoded as `literal` (neutrality violation)](#policyoutput-control-flag-hardcoded-as-literal-neutrality-violation)
   - [Unnecessary `def call` override](#unnecessary-def-call-override)
   - [`execution_option` for fixed kwargs](#execution_option-for-fixed-kwargs)
+  - [Unnecessary `require` statements](#unnecessary-require-statements)
   - [Other common failures](#other-common-failures)
 
 ## Files to generate
@@ -231,6 +232,16 @@ module Git
     module Foo
       # Summary...
       #
+      # @example Typical usage
+      #   bar = Git::Commands::Foo::Bar.new(execution_context)
+      #   bar.call(...)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-{command}/2.XX.0
+      #
+      # @see Git::Commands::Foo
+      #
+      # @see https://git-scm.com/docs/git-{command} git-{command}
+      #
       # @api private
       class Bar < Git::Commands::Base  # never name the class Object
         arguments do
@@ -275,7 +286,7 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git ...`
         #
-        #     @raise [Git::FailedError] if git exits outside allowed status range
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
@@ -285,6 +296,16 @@ end
 This template uses no explicit `def call` — the `@!method` YARD directive attaches
 per-command docs to the inherited `call` method. Use this form for simple commands
 where no pre-call logic is needed.
+
+> **`@raise` wording** — always use the canonical generic form that matches the
+> command's declared exit-status range. **Never** enumerate specific failure causes
+> (e.g. "if the branch doesn't exist"). Use:
+>
+> | `allow_exit_status` | Canonical `@raise` wording |
+> |---|---|
+> | none declared (default `0..0`) | `if git exits with a non-zero exit status` |
+> | `allow_exit_status 0..1` | `if git exits outside the allowed range (exit code > 1)` |
+> | `allow_exit_status 0..N` | `if git exits outside the allowed range (exit code > N)` |
 
 YARD tag formatting rules (short descriptions, continuation paragraphs, punctuation)
 are defined in the [YARD Documentation](../yard-documentation/SKILL.md) skill. The
@@ -404,7 +425,7 @@ end
 ```ruby
 # Show the patch currently being applied by `git am`
 #
-# @param value [true, String] When +true+ (default), emits +--show-current-patch+
+# @param value [true, String] when +true+ (default), emits +--show-current-patch+
 #   (git's default behavior). Pass +"diff"+ or +"raw"+ to emit
 #   +--show-current-patch=diff+ / +--show-current-patch=raw+.
 #

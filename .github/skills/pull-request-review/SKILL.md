@@ -52,7 +52,7 @@ Evaluate the PR against these criteria:
 
 **Testing:** Changes are covered by atomic RSpec specs (`spec/`), well-named, and passing CI. Legacy Test::Unit tests (`tests/units/`) require justification to modify.
 
-**Documentation:** YARD docs on public methods with `@param`, `@return`, `@raise`, `@example`. README updated for user-facing changes. Platform differences and security documented.
+**Documentation:** YARD docs on public methods with `@param`, `@return`, `@raise`, `@example`. README updated for user-facing changes. Platform differences and security documented. For `Git::Commands::*` classes, `@raise [Git::FailedError]` must use the canonical generic wording — **never** enumerate failure causes; see the `@raise` wording table in [Command YARD Documentation](../command-yard-documentation/SKILL.md#3-return-and-raise-tags).
 
 **Architecture:** Correct layer placement (Base/Lib/CommandLine), principle of least surprise, direct Git command mapping, proper error hierarchy.
 

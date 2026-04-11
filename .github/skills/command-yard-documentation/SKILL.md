@@ -231,10 +231,20 @@ conflicting documentation for the method.
 
 - Description leaks internal mechanics (e.g., "written via IO pipe") instead of
   describing caller-facing behavior
-- **Trailing period on `@option` short description** — the inline text after the
-  type and option key must not end with a period. This is easy to miss when
-  transcribing from the git man page, which ends flag descriptions with periods.
-  Run `bundle exec rake yard` to catch this — YARD treats any failure as fatal.
+- **Uppercase first letter or trailing period on tag short descriptions** — the
+  summary text of every `@option`, `@param`, `@return`, and `@raise` tag must start
+  with a **lowercase** letter and must not end with punctuation (`.`, `,`, `;`, `:`).
+  Git man pages start descriptions with uppercase and end them with periods; both
+  mistakes are easy to copy verbatim. Run `bundle exec rake yard` to catch trailing
+  periods — YARD treats any failure as fatal. Correct form:
+
+  ```ruby
+  # ❌ Copied verbatim from the git man page
+  # @option options [Boolean] :force (nil) Allow renaming even if target already exists.
+
+  # ✅ Correct — lowercase start, no trailing period
+  # @option options [Boolean] :force (nil) allow renaming even if target already exists
+  ```
 - **Raw blank line inside a doc comment block** — a raw blank line (an empty line
   with no leading `#`) silently terminates the YARD block. Any comment lines after
   the raw blank line are dropped from generated docs. Replace every raw blank line
@@ -267,9 +277,15 @@ For each command file, run through these checks in order:
 
 - [ ] one-line summary
 - [ ] brief behavior description
-- [ ] `@api private`
+- [ ] `@example` blocks with representative usage
+- [ ] ``@note `arguments` block audited against https://git-scm.com/docs/git-{command}/<version>`` —
+      present and recording the latest git version at the time of the last DSL audit.
+      Flag as an error if missing or if the version in the URL does not match the
+      current latest git version (run `bin/latest-git-version` from the repo root to
+      check; a stale version means the DSL may be missing options added in later releases)
 - [ ] `@see` to parent command module where applicable
 - [ ] `@see` to the full documentation URL (e.g., `@see https://git-scm.com/docs/git-show-ref`)
+- [ ] `@api private`
 
 ### 2. Arguments docs
 
