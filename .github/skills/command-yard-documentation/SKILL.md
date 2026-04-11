@@ -177,6 +177,22 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
+- **`**options` in `@overload` without `@param options [Hash]`** — whenever an
+  `@overload` signature includes `**options`, a corresponding `@param options [Hash]`
+  tag is required. For commands whose `arguments` block declares **no** options (only
+  `operand` entries), omit `**options` from the `@overload` signature entirely and
+  remove any `@raise [ArgumentError] if unsupported options are provided` tag.
+
+  ```ruby
+  # ❌ No options in DSL but **options appears in overload without @param
+  #   @overload call(name, **options)
+  #     @param name [String] the remote name to remove
+  #     @raise [ArgumentError] if unsupported options are provided
+
+  # ✅ Operand-only command: drop **options from the signature
+  #   @overload call(name)
+  #     @param name [String] the remote name to remove
+  ```
 - **Missing negated form for `negatable:` options** — when the DSL declares
   `flag_option :foo, negatable: true` or `flag_or_value_option :foo, negatable: true`,
   the `@option` prose must document both `false` → `--no-foo` and `true` → `--foo`.
@@ -306,6 +322,9 @@ For each command file, run through these checks in order:
 
 - [ ] `@return [Git::CommandLineResult]` with wording: "the result of calling `git
       <subcommand>`"
+- [ ] whenever the `@overload` signature includes `**options`, include
+      `@raise [ArgumentError] if unsupported options are provided` — the base
+      `ArgsBuilder` always raises this at bind time for unknown keys
 - [ ] `@raise [Git::FailedError]` uses the canonical generic wording — **never**
       enumerate specific failure causes; use the form that matches the command's
       declared exit-status range:
