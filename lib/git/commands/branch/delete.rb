@@ -7,12 +7,6 @@ module Git
     module Branch
       # Implements the `git branch --delete` command for deleting branches
       #
-      # @see Git::Commands::Branch
-      #
-      # @see https://git-scm.com/docs/git-branch git-branch
-      #
-      # @api private
-      #
       # @example Delete a single branch
       #   delete = Git::Commands::Branch::Delete.new(execution_context)
       #   result = delete.call('feature-branch')
@@ -28,6 +22,14 @@ module Git
       # @example Delete remote-tracking branch
       #   delete = Git::Commands::Branch::Delete.new(execution_context)
       #   result = delete.call('origin/feature', remotes: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
+      # @see Git::Commands::Branch
+      #
+      # @see https://git-scm.com/docs/git-branch git-branch
+      #
+      # @api private
       #
       class Delete < Git::Commands::Base
         arguments do

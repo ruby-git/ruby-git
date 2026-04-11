@@ -10,12 +10,6 @@ module Git
       # This command copies a branch, together with its config and reflog.
       # If the old branch name is omitted, copies the current branch.
       #
-      # @see Git::Commands::Branch
-      #
-      # @see https://git-scm.com/docs/git-branch git-branch
-      #
-      # @api private
-      #
       # @example Copy the current branch
       #   copy = Git::Commands::Branch::Copy.new(execution_context)
       #   copy.call('new-branch-name')
@@ -27,6 +21,14 @@ module Git
       # @example Force copy (overwrite existing branch)
       #   copy = Git::Commands::Branch::Copy.new(execution_context)
       #   copy.call('old-branch', 'existing-branch', force: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
+      # @see Git::Commands::Branch
+      #
+      # @see https://git-scm.com/docs/git-branch git-branch
+      #
+      # @api private
       #
       class Copy < Git::Commands::Base
         # NOTE: The positional arguments follow Ruby semantics:

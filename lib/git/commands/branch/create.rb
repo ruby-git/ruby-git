@@ -30,7 +30,10 @@ module Git
       #   create = Git::Commands::Branch::Create.new(execution_context)
       #   create.call('feature-branch', 'origin/main', track: 'inherit')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
       # @see Git::Commands::Branch
+      #
       # @see https://git-scm.com/docs/git-branch git-branch
       #
       # @api private

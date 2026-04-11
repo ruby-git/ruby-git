@@ -10,10 +10,6 @@ module Git
       # This command removes the upstream tracking information for the given branch
       # (or current branch if not specified).
       #
-      # @see https://git-scm.com/docs/git-branch git-branch
-      #
-      # @api private
-      #
       # @example Unset upstream for current branch
       #   unset_upstream = Git::Commands::Branch::UnsetUpstream.new(execution_context)
       #   unset_upstream.call
@@ -21,6 +17,14 @@ module Git
       # @example Unset upstream for a specific branch
       #   unset_upstream = Git::Commands::Branch::UnsetUpstream.new(execution_context)
       #   unset_upstream.call('feature')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-branch/2.53.0
+      #
+      # @see Git::Commands::Branch
+      #
+      # @see https://git-scm.com/docs/git-branch git-branch
+      #
+      # @api private
       #
       class UnsetUpstream < Git::Commands::Base
         # NOTE: The --unset-upstream flag is always present.
@@ -33,19 +37,20 @@ module Git
 
         # @!method call(*, **)
         #
-        #   Execute the git branch --unset-upstream command
-        #
         #   @overload call(branch_name = nil, **options)
         #
-        #     @param branch_name [String, nil] The branch to configure (defaults to current branch if nil)
+        #     Execute the `git branch --unset-upstream` command.
         #
-        #     @param options [Hash] command options (none currently supported)
+        #     @param branch_name [String, nil] the branch to remove upstream tracking for
+        #       (defaults to current branch if omitted)
+        #
+        #     @param options [Hash] command options
         #
         #     @return [Git::CommandLineResult] the result of calling `git branch --unset-upstream`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the branch doesn't exist or has no upstream
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
