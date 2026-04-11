@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/stash/push'
 
 RSpec.describe Git::Commands::Stash::Push do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -43,6 +45,18 @@ RSpec.describe Git::Commands::Stash::Push do
       end
     end
 
+    context 'with :quiet option' do
+      it 'adds -q flag' do
+        expect_command_capturing('stash', 'push', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'accepts :q alias' do
+        expect_command_capturing('stash', 'push', '--quiet').and_return(command_result(''))
+        command.call(q: true)
+      end
+    end
+
     context 'with :staged option' do
       it 'adds -S flag to stash only staged changes' do
         expect_command_capturing('stash', 'push', '--staged').and_return(command_result(''))
@@ -76,6 +90,11 @@ RSpec.describe Git::Commands::Stash::Push do
       it 'adds -u flag to include untracked files' do
         expect_command_capturing('stash', 'push', '--include-untracked').and_return(command_result(''))
         command.call(include_untracked: true)
+      end
+
+      it 'adds --no-include-untracked flag when false' do
+        expect_command_capturing('stash', 'push', '--no-include-untracked').and_return(command_result(''))
+        command.call(include_untracked: false)
       end
 
       it 'accepts :u alias' do

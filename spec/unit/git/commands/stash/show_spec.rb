@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/stash/show'
 
 RSpec.describe Git::Commands::Stash::Show do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 

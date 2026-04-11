@@ -25,11 +25,17 @@ module Git
       # @example Store with a custom message
       #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456', message: 'WIP: feature')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.52.0
+      #
       class Store < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'store'
           value_option %i[message m]
+          flag_option %i[quiet q]
+
+          end_of_options
+
           operand :commit, required: true
         end
 
@@ -46,6 +52,10 @@ module Git
         #     @option options [String] :message (nil) description for the reflog entry.
         #
         #       Alias: :m
+        #
+        #     @option options [Boolean] :quiet (nil) suppress feedback messages
+        #
+        #       Alias: :q
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash store`
         #

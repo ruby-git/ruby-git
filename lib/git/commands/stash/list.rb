@@ -8,6 +8,8 @@ module Git
     module Stash
       # List all stash entries
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.52.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation

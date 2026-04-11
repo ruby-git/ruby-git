@@ -23,6 +23,8 @@ module Git
       #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: true)
       #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: 'lines,cumulative')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.52.0
+      #
       class Show < Git::Commands::Base
         arguments do
           literal 'stash'
@@ -62,6 +64,9 @@ module Git
         #
         #     @option options [Boolean] :include_untracked (nil) include untracked files
         #
+        #         Pass `true` to include untracked files (`--include-untracked`).
+        #       Pass `false` to explicitly exclude untracked files (`--no-include-untracked`).
+        #
         #       Alias: :u
         #
         #     @option options [Boolean] :only_untracked (nil) show only untracked files
@@ -95,6 +100,9 @@ module Git
         #     @option options [Boolean] :shortstat (nil) include aggregate totals line
         #
         #     @option options [Boolean] :include_untracked (nil) include untracked files
+        #
+        #         Pass `true` to include untracked files (`--include-untracked`).
+        #       Pass `false` to explicitly exclude untracked files (`--no-include-untracked`).
         #
         #       Alias: :u
         #

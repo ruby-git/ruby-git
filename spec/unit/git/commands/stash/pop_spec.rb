@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/stash/pop'
 
 RSpec.describe Git::Commands::Stash::Pop do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -33,6 +35,18 @@ RSpec.describe Git::Commands::Stash::Pop do
       it 'pops stash using short form' do
         expect_command_capturing('stash', 'pop', '1').and_return(command_result(''))
         command.call('1')
+      end
+    end
+
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'pop', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'accepts :q alias' do
+        expect_command_capturing('stash', 'pop', '--quiet').and_return(command_result(''))
+        command.call(q: true)
       end
     end
 
