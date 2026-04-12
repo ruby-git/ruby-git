@@ -72,6 +72,18 @@ RSpec.describe Git::Commands::Stash::Push do
       end
     end
 
+    context 'with :quiet option' do
+      it 'adds --quiet flag to suppress output' do
+        expect_command_capturing('stash', 'push', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'accepts :q alias' do
+        expect_command_capturing('stash', 'push', '--quiet').and_return(command_result(''))
+        command.call(q: true)
+      end
+    end
+
     context 'with :include_untracked option' do
       it 'adds -u flag to include untracked files' do
         expect_command_capturing('stash', 'push', '--include-untracked').and_return(command_result(''))

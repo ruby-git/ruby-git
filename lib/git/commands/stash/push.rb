@@ -11,6 +11,8 @@ module Git
       # to HEAD (in the working tree and index). The command takes
       # various options to customize what gets stashed.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -36,6 +38,7 @@ module Git
           flag_option %i[patch p]
           flag_option %i[staged S]
           flag_option %i[keep_index k], negatable: true
+          flag_option %i[quiet q]
           flag_option %i[include_untracked u]
           flag_option %i[all a]
           value_option %i[message m]
@@ -55,39 +58,41 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :patch (nil) Interactively select hunks to stash
+        #     @option options [Boolean] :patch (nil) interactively select hunks to stash
         #
         #       Alias: :p
         #
-        #     @option options [Boolean] :staged (nil) Stash only staged changes
+        #     @option options [Boolean] :staged (nil) stash only staged changes
         #
         #       Alias: :S
         #
-        #     @option options [Boolean] :keep_index (nil) Keep staged changes in the index
+        #     @option options [Boolean] :keep_index (nil) keep staged changes in the index
         #
         #       Alias: :k
         #
-        #     @option options [Boolean] :include_untracked (nil) Include untracked files in the stash
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
+        #
+        #     @option options [Boolean] :include_untracked (nil) include untracked files in the stash
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :all (nil) Include untracked and ignored files in the stash
+        #     @option options [Boolean] :all (nil) include untracked and ignored files in the stash
         #
         #       Alias: :a
         #
-        #     @option options [String] :message (nil) Descriptive message for the stash
+        #     @option options [String] :message (nil) descriptive message for the stash
         #
         #       Alias: :m
         #
-        #     @option options [String] :pathspec_from_file (nil) Read pathspecs from the given file
+        #     @option options [String] :pathspec_from_file (nil) read pathspecs from the given file
         #
-        #     @option options [Boolean] :pathspec_file_nul (nil) Pathspecs in the file are NUL-separated
+        #     @option options [Boolean] :pathspec_file_nul (nil) pathspecs in the file are NUL-separated
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash push`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
-        #
-        #   @api public
         #
       end
     end

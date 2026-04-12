@@ -10,6 +10,8 @@ module Git
       # Like {Apply}, but removes the stash from the stash list after
       # applying, unless there are conflicts.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -25,11 +27,15 @@ module Git
       # @example Pop and restore index state
       #   Git::Commands::Stash::Pop.new(execution_context).call(index: true)
       #
+      # @example Pop quietly
+      #   Git::Commands::Stash::Pop.new(execution_context).call(quiet: true)
+      #
       class Pop < Git::Commands::Base
         arguments do
           literal 'stash'
           literal 'pop'
           flag_option :index
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -45,6 +51,10 @@ module Git
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
         #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
+        #
         #   @overload call(stash, **options)
         #
         #     Pop a specific stash
@@ -54,6 +64,10 @@ module Git
         #     @param options [Hash] command options
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
+        #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash pop`
         #
