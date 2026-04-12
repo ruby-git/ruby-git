@@ -13,6 +13,8 @@ module Git
       # This command is typically used after {Create} to actually record
       # the stash in the reflog.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -30,6 +32,7 @@ module Git
           literal 'stash'
           literal 'store'
           value_option %i[message m]
+          flag_option %i[quiet q]
           operand :commit, required: true
         end
 
@@ -46,6 +49,10 @@ module Git
         #     @option options [String] :message (nil) description for the reflog entry.
         #
         #       Alias: :m
+        #
+        #     @option options [Boolean] :quiet (nil) suppress output.
+        #
+        #       Alias: :q
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash store`
         #

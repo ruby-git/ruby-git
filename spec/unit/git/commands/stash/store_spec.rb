@@ -50,6 +50,31 @@ RSpec.describe Git::Commands::Stash::Store do
       end
     end
 
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'store', '--quiet', 'abc123')
+          .and_return(command_result(''))
+
+        command.call('abc123', quiet: true)
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('stash', 'store', 'abc123')
+          .and_return(command_result(''))
+
+        command.call('abc123', quiet: false)
+      end
+    end
+
+    context 'with :q short option alias' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'store', '--quiet', 'abc123')
+          .and_return(command_result(''))
+
+        command.call('abc123', q: true)
+      end
+    end
+
     context 'with full SHA' do
       it 'handles 40-character SHA' do
         sha = 'a' * 40
