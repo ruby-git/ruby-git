@@ -48,10 +48,34 @@ RSpec.describe Git::Commands::Stash::Apply do
       end
     end
 
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'apply', '--quiet').and_return(command_result(''))
+        command.call(quiet: true)
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('stash', 'apply').and_return(command_result(''))
+        command.call(quiet: false)
+      end
+    end
+
+    context 'with :q short option alias' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('stash', 'apply', '--quiet').and_return(command_result(''))
+        command.call(q: true)
+      end
+    end
+
     context 'with stash reference and options' do
       it 'combines stash reference with index option' do
         expect_command_capturing('stash', 'apply', '--index', 'stash@{1}').and_return(command_result(''))
         command.call('stash@{1}', index: true)
+      end
+
+      it 'combines stash reference with quiet option' do
+        expect_command_capturing('stash', 'apply', '--quiet', 'stash@{1}').and_return(command_result(''))
+        command.call('stash@{1}', quiet: true)
       end
     end
   end

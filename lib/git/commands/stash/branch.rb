@@ -16,6 +16,8 @@ module Git
       # be created at the commit that was HEAD when the stash was created, so
       # applying the stash should succeed.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -56,7 +58,7 @@ module Git
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash branch`
         #
-        #   @raise [Git::FailedError] if the branch already exists or stash doesn't exist
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

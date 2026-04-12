@@ -10,6 +10,8 @@ module Git
       # Applies the changes recorded in a stash to the working tree.
       # Unlike {Pop}, this does not remove the stash from the stash list.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -30,6 +32,7 @@ module Git
           literal 'stash'
           literal 'apply'
           flag_option :index
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -45,6 +48,10 @@ module Git
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
         #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
+        #
         #   @overload call(stash, **options)
         #
         #     Apply a specific stash
@@ -54,6 +61,10 @@ module Git
         #     @param options [Hash] command options
         #
         #     @option options [Boolean] :index (nil) restore the index state as well
+        #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash apply`
         #

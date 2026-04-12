@@ -9,6 +9,8 @@ module Git
       #
       # Removes all stash entries. Use with caution as this cannot be undone.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -30,7 +32,9 @@ module Git
         #
         #     Clear all stash entries
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash clear`
+        #   @return [Git::CommandLineResult] the result of calling `git stash clear`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
