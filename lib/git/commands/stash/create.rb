@@ -14,6 +14,8 @@ module Git
       # The command creates a stash commit and outputs its SHA, but does not
       # update refs/stash. Use {Store} to store the commit in the stash reflog.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -48,6 +50,8 @@ module Git
         #     @param message [String] optional message for the stash commit
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash create`
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

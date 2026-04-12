@@ -10,6 +10,8 @@ module Git
       # Removes a single stash entry from the list of stash entries.
       # If no stash reference is given, it removes the latest one.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
@@ -26,6 +28,7 @@ module Git
         arguments do
           literal 'stash'
           literal 'drop'
+          flag_option %i[quiet q]
           operand :stash
         end
 
@@ -33,15 +36,27 @@ module Git
         #
         #   Drop a stash entry
         #
-        #   @overload call()
+        #   @overload call(**options)
         #
         #     Drop the latest stash
         #
-        #   @overload call(stash)
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
+        #
+        #   @overload call(stash, **options)
         #
         #     Drop a specific stash
         #
         #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #
+        #       Alias: :q
         #
         #   @return [Git::CommandLineResult] the result of calling `git stash drop`
         #
