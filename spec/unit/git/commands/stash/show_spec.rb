@@ -65,6 +65,22 @@ RSpec.describe Git::Commands::Stash::Show do
       end
     end
 
+    context 'with :unified option' do
+      it 'adds --unified=<n> for context lines' do
+        expect_command_capturing('stash', 'show', '--unified=5')
+          .and_return(command_result(''))
+
+        command.call(unified: 5)
+      end
+
+      it 'accepts :U alias' do
+        expect_command_capturing('stash', 'show', '--unified=3')
+          .and_return(command_result(''))
+
+        command.call(U: 3)
+      end
+    end
+
     context 'with specific stash reference' do
       it 'passes stash reference to command' do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', 'stash@{2}')
@@ -103,6 +119,15 @@ RSpec.describe Git::Commands::Stash::Show do
           .and_return(command_result(numstat_output))
 
         command.call(numstat: true, shortstat: true, only_untracked: true)
+      end
+    end
+
+    context 'with :inter_hunk_context option' do
+      it 'adds --inter-hunk-context=<n>' do
+        expect_command_capturing('stash', 'show', '--inter-hunk-context=2')
+          .and_return(command_result(''))
+
+        command.call(inter_hunk_context: 2)
       end
     end
 

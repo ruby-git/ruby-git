@@ -5,9 +5,15 @@ require 'git/commands/base'
 module Git
   module Commands
     module Stash
-      # Implements the `git stash show` command
+      # Show the changes recorded in a stash entry as a diff
       #
-      # Shows the changes recorded in a stash entry as a diff.
+      # Shows the changes recorded in the stash entry as a diff between the
+      # stashed contents and the commit back when the stash entry was first
+      # created.
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
@@ -32,12 +38,14 @@ module Git
           flag_option :numstat
           flag_option :raw
           flag_option :shortstat
+          value_option %i[unified U], inline: true
 
           flag_option %i[include_untracked u], negatable: true
           flag_option :only_untracked
           flag_or_value_option %i[find_renames M], inline: true
           flag_or_value_option %i[find_copies C], inline: true
           flag_option :find_copies_harder
+          value_option :inter_hunk_context, inline: true
           flag_or_value_option :dirstat, inline: true
           operand :stash
         end
@@ -60,6 +68,10 @@ module Git
         #
         #     @option options [Boolean] :shortstat (nil) include aggregate totals line
         #
+        #     @option options [Integer, String] :unified (nil) generate diff with <n> lines of context
+        #
+        #       Alias: :U
+        #
         #     @option options [Boolean] :include_untracked (nil) include untracked files
         #
         #       Alias: :u
@@ -73,6 +85,9 @@ module Git
         #       optionally pass a threshold. Alias: :C
         #
         #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #
+        #     @option options [Integer, String] :inter_hunk_context (nil) show context between diff hunks, up to
+        #       <n> lines, fusing hunks that are close to each other
         #
         #     @option options [Boolean, String] :dirstat (nil) include directory statistics
         #
@@ -94,6 +109,10 @@ module Git
         #
         #     @option options [Boolean] :shortstat (nil) include aggregate totals line
         #
+        #     @option options [Integer, String] :unified (nil) generate diff with <n> lines of context
+        #
+        #       Alias: :U
+        #
         #     @option options [Boolean] :include_untracked (nil) include untracked files
         #
         #       Alias: :u
@@ -107,6 +126,9 @@ module Git
         #       optionally pass a threshold. Alias: :C
         #
         #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #
+        #     @option options [Integer, String] :inter_hunk_context (nil) show context between diff hunks, up to
+        #       <n> lines, fusing hunks that are close to each other
         #
         #     @option options [Boolean, String] :dirstat (nil) include directory statistics
         #
