@@ -45,6 +45,14 @@ RSpec.describe Git::Commands::ShowRef::List do
       end
     end
 
+    context 'with the :branches option' do
+      it 'adds --branches' do
+        expect_command_capturing('show-ref', '--branches').and_return(command_result)
+
+        command.call(branches: true)
+      end
+    end
+
     context 'with the :heads option' do
       it 'adds --heads' do
         expect_command_capturing('show-ref', '--heads').and_return(command_result)

@@ -31,6 +31,8 @@ module Git
       #   Earlier versions do not recognise the `--exists` flag and will exit
       #   non-zero with an "unknown option" error.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
+      #
       # @see Git::Commands::ShowRef
       #
       # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation

@@ -35,6 +35,8 @@ module Git
       #   cmd = Git::Commands::ShowRef::Verify.new(execution_context)
       #   cmd.call('refs/heads/main', quiet: true)  # raises FailedError if not found
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
+      #
       # @see Git::Commands::ShowRef
       #
       # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation
