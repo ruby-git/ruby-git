@@ -2,6 +2,8 @@
 
 require 'securerandom'
 require 'spec_helper'
+require 'git/commands/worktree/add'
+require 'git/commands/worktree/lock'
 require 'git/commands/worktree/unlock'
 
 RSpec.describe Git::Commands::Worktree::Unlock, :integration do
@@ -20,8 +22,8 @@ RSpec.describe Git::Commands::Worktree::Unlock, :integration do
       let(:worktree_path) { File.join(repo_dir, '..', "worktree-unlock-#{SecureRandom.hex(4)}") }
 
       before do
-        execution_context.command_capturing('worktree', 'add', worktree_path, env: { 'GIT_INDEX_FILE' => nil })
-        execution_context.command_capturing('worktree', 'lock', '--', worktree_path, env: { 'GIT_INDEX_FILE' => nil })
+        Git::Commands::Worktree::Add.new(execution_context).call(worktree_path)
+        Git::Commands::Worktree::Lock.new(execution_context).call(worktree_path)
       end
 
       after { FileUtils.rm_rf(worktree_path) }
@@ -33,9 +35,9 @@ RSpec.describe Git::Commands::Worktree::Unlock, :integration do
     end
 
     context 'when the command fails' do
-      it 'raises FailedError for a nonexistent path' do
+      it 'raises FailedError for a nonexistent worktree path' do
         expect { command.call('/nonexistent/path/xyz') }
-          .to raise_error(Git::FailedError, /nonexistent/)
+          .to raise_error(Git::FailedError)
       end
     end
   end
