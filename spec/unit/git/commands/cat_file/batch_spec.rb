@@ -131,6 +131,20 @@ RSpec.describe Git::Commands::CatFile::Batch do
       end
     end
 
+    context 'with the :use_mailmap option' do
+      it 'passes --use-mailmap alongside --batch-check' do
+        expect_batch_command('--batch-check', '--use-mailmap', stdin_content: "HEAD\n")
+
+        command.call('HEAD', batch_check: true, use_mailmap: true)
+      end
+
+      it 'passes --no-use-mailmap when use_mailmap: false' do
+        expect_batch_command('--batch-check', '--no-use-mailmap', stdin_content: "HEAD\n")
+
+        command.call('HEAD', batch_check: true, use_mailmap: false)
+      end
+    end
+
     context 'with out: execution option (streaming)' do
       let(:out_io) { instance_double(File) }
 

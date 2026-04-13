@@ -25,6 +25,8 @@ module Git
       #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-cat-file/2.53.0
+      #
       # @api private
       #
       class Raw < Base
@@ -47,6 +49,11 @@ module Git
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--s
           flag_option :s
 
+          # Allow -t and -s to query broken or corrupt objects of unknown type;
+          # rejected by git in any other mode — enforced by constraint below
+          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---allow-unknown-type
+          flag_option :allow_unknown_type
+
           # Map committer/author identities through the mailmap before reporting size
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
           flag_option :use_mailmap, negatable: true
@@ -55,6 +62,8 @@ module Git
           # When provided, {#call} dispatches to the streaming execution path.
           execution_option :out
 
+          end_of_options
+
           # Expected object type — one of `commit`, `tree`, `blob`, or `tag`.
           # Git also accepts a type that the object is trivially dereferenceable to
           # (e.g. `tree` against a commit ref, `blob` against a tag that points to one).
@@ -62,6 +71,8 @@ module Git
 
           # Object name: SHA, ref, `HEAD`, treeish path reference, etc.
           operand :object, required: true
+
+          requires_one_of :t, :s, when: :allow_unknown_type
         end
 
         # Execute `git cat-file` for a single object.
@@ -80,9 +91,13 @@ module Git
         #
         #   @option options [Boolean] :use_mailmap (false) Map identities through mailmap
         #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Exit status 0 means the object exists; exit status 1 means it does not
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits with a status other than 0 or 1
         #
@@ -95,11 +110,18 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :allow_unknown_type (false) Allow querying broken or corrupt objects of
+        #     unknown type
+        #
         #   @option options [Boolean] :use_mailmap (false) Map identities through mailmap
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the object type string
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if the object does not exist
         #
@@ -112,11 +134,18 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :allow_unknown_type (false) Allow querying broken or corrupt objects of
+        #     unknown type
+        #
         #   @option options [Boolean] :use_mailmap (false) Map identities through mailmap
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the object size as a decimal string
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if the object does not exist
         #
@@ -131,9 +160,13 @@ module Git
         #
         #   @option options [Boolean] :use_mailmap (false) Map identities through mailmap
         #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the formatted object content
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if the object does not exist
         #
@@ -148,9 +181,13 @@ module Git
         #
         #   @option options [Boolean] :use_mailmap (false) Map identities through mailmap
         #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the raw object content
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if the object does not exist or is not of the
         #     given type
