@@ -165,7 +165,7 @@ conflicting documentation for the method.
 | `flag_option ..., negatable: true` | `[Boolean]` — document both `true` (→ `--flag`) and `false` (→ `--no-flag`) forms |
 | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
 | `flag_or_value_option ..., negatable: true` | `[Boolean, String]` — document `true` (→ `--flag`), string (→ `--flag=value`), and `false` (→ `--no-flag`) forms |
-| `value_option` | `[String]` (or a more specific type where known) |
+| `value_option` | `[String]` — `value_option` does not enforce types; it accepts any non-nil value and converts it to a string. Use `[String]` unless callers are expected to pass a narrower type, in which case widen the annotation to reflect reality (e.g. `[Integer, String]` for options documented as taking `<n>` lines/bytes). Never use a bare numeric type such as `[Integer]` alone — that misrepresents what the implementation accepts. |
 | `operand` (repeatable) | `[Array<String>]` |
 | `operand` (single) | `[String]` |
 
