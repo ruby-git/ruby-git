@@ -36,6 +36,8 @@ module Git
       #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-cat-file/2.53.0
+      #
       # @api private
       #
       class Batch < Base
@@ -63,8 +65,8 @@ module Git
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-all-objects
           flag_option :batch_all_objects
 
-          # Buffer output until an explicit `flush` command is sent (only meaningful
-          # with `batch_command:`)
+          # Use normal stdio buffering; enables explicit `flush` semantics when used
+          # with `batch_command:` and improves throughput with `batch_check:`
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---buffer
           flag_option :buffer
 
@@ -85,7 +87,7 @@ module Git
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filters
           flag_option :filters
 
-          # Map committer/author identities through mailmap (combine with `batch_command:`)
+          # Map committer/author identities through mailmap for all batch modes
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
           flag_option :use_mailmap, negatable: true
 
@@ -128,6 +130,8 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :buffer (false) Use normal stdio buffering for better throughput
+        #
         #   @option options [Boolean] :follow_symlinks (false) Follow symlinks in trees
         #
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
@@ -137,6 +141,8 @@ module Git
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
         #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -148,6 +154,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the batch output stream (or `''` when `out:` is given)
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits non-zero (catastrophic failure only;
         #     missing objects are reported inline)
@@ -163,6 +171,9 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :buffer (false) Use normal stdio buffering for better
+        #     throughput when processing large numbers of objects
+        #
         #   @option options [Boolean] :follow_symlinks (false) Follow symlinks in trees
         #
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
@@ -172,6 +183,8 @@ module Git
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
         #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -183,6 +196,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains one metadata line per object (or `''` when `out:` is given)
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits non-zero (catastrophic failure only;
         #     missing objects are reported inline)
@@ -201,13 +216,17 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @option options [Boolean] :buffer (false) Buffer output until `flush`
+        #   @option options [Boolean] :buffer (false) Use normal stdio buffering for better throughput
         #
         #   @option options [Boolean] :textconv (false) Apply textconv filters
         #
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
         #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #
+        #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
         #   @option options [Boolean] :Z (false) Use NUL-delimited I/O
         #
@@ -217,6 +236,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the interleaved command output (or `''` when `out:` is given)
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits non-zero
         #
@@ -230,7 +251,14 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :buffer (false) Use normal stdio buffering for better throughput
+        #
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
+        #
+        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap for
+        #     commit and tag objects
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -242,6 +270,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains the full batch output (or `''` when `out:` is given)
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits non-zero
         #
@@ -255,7 +285,15 @@ module Git
         #
         #   @param options [Hash] command options
         #
+        #   @option options [Boolean] :buffer (false) Use normal stdio buffering for better
+        #     throughput when processing large numbers of objects
+        #
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
+        #
+        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap for
+        #     commit and tag objects
+        #
+        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -267,6 +305,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains one metadata line per object (or `''` when `out:` is given)
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
         #
         #   @raise [Git::FailedError] if git exits non-zero
         def call(*objects, **)

@@ -24,6 +24,8 @@ module Git
       # For unfiltered object access, use {CatFile::Raw}.
       # For batch queries across multiple objects, use {CatFile::Batch}.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-cat-file/2.53.0
+      #
       # @see Git::Commands::CatFile
       #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
@@ -46,6 +48,8 @@ module Git
           # When used, the `rev` operand must be a plain revision (not `<rev>:<path>`).
           # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---pathltpathgt
           value_option :path, inline: true
+
+          end_of_options
 
           # Revision identifying the object — either a combined `<rev>:<path>` string
           # (e.g. `HEAD:README.md`) or a bare revision when `--path` is also given
@@ -72,6 +76,8 @@ module Git
         #
         #       Stdout contains the textconv-processed content
         #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
         #     @raise [Git::FailedError] if the object does not exist or the path is missing
         #
         #   @overload call(rev, filters: true, **options)
@@ -89,6 +95,8 @@ module Git
         #     @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #       Stdout contains the filter-processed content
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if the object does not exist or the path is missing
       end

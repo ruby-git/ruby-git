@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::CatFile::Filtered do
     context 'with --textconv mode' do
       it 'passes --textconv and the combined rev:path and returns the result' do
         expected_result = command_result('file content')
-        expect_command_capturing('cat-file', '--textconv', 'HEAD:README.md').and_return(expected_result)
+        expect_command_capturing('cat-file', '--textconv', '--', 'HEAD:README.md').and_return(expected_result)
 
         result = command.call('HEAD:README.md', textconv: true)
 
@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::CatFile::Filtered do
 
     context 'with --filters mode' do
       it 'passes --filters and the combined rev:path' do
-        expect_command_capturing('cat-file', '--filters', 'HEAD:README.md').and_return(command_result('content'))
+        expect_command_capturing('cat-file', '--filters', '--', 'HEAD:README.md').and_return(command_result('content'))
 
         command.call('HEAD:README.md', filters: true)
       end
@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::CatFile::Filtered do
 
     context 'with --path= option' do
       it 'passes --path= inline and the bare revision separately' do
-        expect_command_capturing('cat-file', '--textconv', '--path=README.md', 'HEAD')
+        expect_command_capturing('cat-file', '--textconv', '--path=README.md', '--', 'HEAD')
           .and_return(command_result('content'))
 
         command.call('HEAD', textconv: true, path: 'README.md')

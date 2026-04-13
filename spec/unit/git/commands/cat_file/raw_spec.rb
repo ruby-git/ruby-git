@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
     context 'with -e mode' do
       it 'passes -e and the object name and returns the result' do
         expected_result = command_result('', exitstatus: 0)
-        expect_command_capturing('cat-file', '-e', 'HEAD').and_return(expected_result)
+        expect_command_capturing('cat-file', '-e', '--', 'HEAD').and_return(expected_result)
 
         result = command.call('HEAD', e: true)
 
@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
     context 'with -t mode' do
       it 'passes -t and the object name' do
-        expect_command_capturing('cat-file', '-t', 'HEAD').and_return(command_result('commit'))
+        expect_command_capturing('cat-file', '-t', '--', 'HEAD').and_return(command_result('commit'))
 
         command.call('HEAD', t: true)
       end
@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
     context 'with -s mode' do
       it 'passes -s and the object name' do
-        expect_command_capturing('cat-file', '-s', 'HEAD').and_return(command_result('42'))
+        expect_command_capturing('cat-file', '-s', '--', 'HEAD').and_return(command_result('42'))
 
         command.call('HEAD', s: true)
       end
@@ -45,7 +45,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
     context 'with -p mode' do
       it 'passes -p and the object name' do
-        expect_command_capturing('cat-file', '-p', 'HEAD').and_return(command_result('blob content'))
+        expect_command_capturing('cat-file', '-p', '--', 'HEAD').and_return(command_result('blob content'))
 
         command.call('HEAD', p: true)
       end
@@ -53,7 +53,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
     context 'with a type operand' do
       it 'passes type and object as positional arguments' do
-        expect_command_capturing('cat-file', 'blob', 'HEAD:README.md').and_return(command_result('# Hello'))
+        expect_command_capturing('cat-file', '--', 'blob', 'HEAD:README.md').and_return(command_result('# Hello'))
 
         command.call('blob', 'HEAD:README.md')
       end
@@ -61,22 +61,32 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
     context 'with :use_mailmap option' do
       it 'passes --use-mailmap when true' do
-        expect_command_capturing('cat-file', '-t', '--use-mailmap', 'HEAD').and_return(command_result('commit'))
+        expect_command_capturing('cat-file', '-t', '--use-mailmap', '--', 'HEAD').and_return(command_result('commit'))
 
         command.call('HEAD', t: true, use_mailmap: true)
       end
 
       it 'passes --no-use-mailmap when false' do
-        expect_command_capturing('cat-file', '-t', '--no-use-mailmap', 'HEAD').and_return(command_result('commit'))
+        expect_command_capturing('cat-file', '-t', '--no-use-mailmap', '--', 'HEAD')
+          .and_return(command_result('commit'))
 
         command.call('HEAD', t: true, use_mailmap: false)
+      end
+    end
+
+    context 'with :allow_unknown_type option' do
+      it 'passes --allow-unknown-type' do
+        expect_command_capturing('cat-file', '-t', '--allow-unknown-type', '--', 'HEAD')
+          .and_return(command_result('commit'))
+
+        command.call('HEAD', t: true, allow_unknown_type: true)
       end
     end
 
     context 'with out: execution option (streaming)' do
       it 'dispatches to command_streaming when out: is given' do
         out_io = instance_double(File)
-        expect_command_streaming('cat-file', '-p', 'HEAD', out: out_io).and_return(command_result(''))
+        expect_command_streaming('cat-file', '-p', '--', 'HEAD', out: out_io).and_return(command_result(''))
 
         command.call('HEAD', p: true, out: out_io)
       end
@@ -85,7 +95,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
     context 'exit code handling' do
       it 'returns result for exit code 1 with -e (object not found)' do
         allow(execution_context).to receive(:command_capturing)
-          .with('cat-file', '-e', 'nonexistent', raise_on_failure: false)
+          .with('cat-file', '-e', '--', 'nonexistent', raise_on_failure: false)
           .and_return(command_result('', exitstatus: 1))
 
         result = command.call('nonexistent', e: true)
@@ -95,7 +105,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
       it 'raises FailedError for exit code 128 with -e (catastrophic failure)' do
         allow(execution_context).to receive(:command_capturing)
-          .with('cat-file', '-e', 'HEAD', raise_on_failure: false)
+          .with('cat-file', '-e', '--', 'HEAD', raise_on_failure: false)
           .and_return(command_result('', exitstatus: 128))
 
         expect { command.call('HEAD', e: true) }.to raise_error(Git::FailedError, /git/)
@@ -103,7 +113,7 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
       it 'raises FailedError for exit code 1 without -e' do
         allow(execution_context).to receive(:command_capturing)
-          .with('cat-file', '-t', 'HEAD', raise_on_failure: false)
+          .with('cat-file', '-t', '--', 'HEAD', raise_on_failure: false)
           .and_return(command_result('', exitstatus: 1))
 
         expect { command.call('HEAD', t: true) }.to raise_error(Git::FailedError, /git/)
@@ -118,6 +128,11 @@ RSpec.describe Git::Commands::CatFile::Raw do
 
       it 'raises ArgumentError when the required object argument is missing' do
         expect { command.call }.to raise_error(ArgumentError, /object is required/)
+      end
+
+      it 'raises ArgumentError when allow_unknown_type is used without -t or -s' do
+        expect { command.call('HEAD', e: true, allow_unknown_type: true) }
+          .to raise_error(ArgumentError, /:allow_unknown_type requires/)
       end
     end
   end
