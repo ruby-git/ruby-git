@@ -29,5 +29,37 @@ RSpec.describe Git::Commands::Worktree::List do
         command.call(porcelain: true)
       end
     end
+
+    context 'with :z option' do
+      it 'includes the -z flag' do
+        expect_command_capturing('worktree', 'list', '-z').and_return(command_result(''))
+
+        command.call(z: true)
+      end
+    end
+
+    context 'with :verbose option' do
+      it 'includes the --verbose flag' do
+        expect_command_capturing('worktree', 'list', '--verbose').and_return(command_result(''))
+
+        command.call(verbose: true)
+      end
+    end
+
+    context 'with :v alias' do
+      it 'includes the --verbose flag' do
+        expect_command_capturing('worktree', 'list', '--verbose').and_return(command_result(''))
+
+        command.call(v: true)
+      end
+    end
+
+    context 'with :expire option' do
+      it 'includes the --expire flag with the given value' do
+        expect_command_capturing('worktree', 'list', '--expire', '2.weeks.ago').and_return(command_result(''))
+
+        command.call(expire: '2.weeks.ago')
+      end
+    end
   end
 end

@@ -20,6 +20,9 @@ module Git
           literal 'worktree'
           literal 'list'
           flag_option :porcelain
+          flag_option :z
+          flag_option %i[verbose v]
+          value_option :expire
         end
 
         # @!method call(*, **)
@@ -32,9 +35,18 @@ module Git
         #
         #     @option options [Boolean] :porcelain (nil) produce machine-readable output
         #
+        #     @option options [Boolean] :z (nil) NUL-terminate lines (use with `:porcelain`)
+        #
+        #     @option options [Boolean] :verbose (nil) output additional information about worktrees
+        #
+        #       Alias: :v
+        #
+        #     @option options [String] :expire (nil) annotate missing worktrees as prunable if older than
+        #       this time expression
+        #
         #     @return [Git::CommandLineResult] the result of calling `git worktree list`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
