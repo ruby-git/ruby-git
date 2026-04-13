@@ -160,7 +160,7 @@ conflicting documentation for the method.
 
 | DSL method | YARD type |
 | --- | --- |
-| `flag_option` | `[Boolean]` |
+| `flag_option` | `[Boolean]` — default `(false)` (flag not emitted by default) |
 | `flag_option ..., max_times: N` | `[Boolean, Integer]` |
 | `flag_option ..., negatable: true` | `[Boolean]` — document both `true` (→ `--flag`) and `false` (→ `--no-flag`) forms |
 | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
@@ -177,6 +177,12 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
+- **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
+  every `@overload` that includes `**options` requires
+  `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
+  always raises this at bind time for unknown keys. For commands whose `arguments`
+  block declares **no** options (only `operand` entries), drop `**options` from the
+  signature entirely — then no `@raise [ArgumentError]` is needed.
 - **`**options` in `@overload` without `@param options [Hash]`** — whenever an
   `@overload` signature includes `**options`, a corresponding `@param options [Hash]`
   tag is required. For commands whose `arguments` block declares **no** options (only

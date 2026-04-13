@@ -268,9 +268,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :simple_flag (nil) One-sentence description without period
+        #     @option options [Boolean] :simple_flag (false) One-sentence description without period
         #
-        #     @option options [Boolean, Integer] :force (nil) Short description without period
+        #     @option options [Boolean, Integer] :force (false) Short description without period
         #
         #       When an integer is given, the flag is repeated that many times (up to the
         #       configured `max_times:` limit).
@@ -583,6 +583,20 @@ single source of truth for its own option semantics. There are two narrow except
    result), a `conflicts` declaration MAY be added with: a code comment explaining
    why, a reference to the git version(s) where the behavior was verified, and a
    test. As of this writing, no such case has been identified.
+3. **Mode-scoped flags explicitly constrained by the git docs** — if the git
+   documentation explicitly states that a flag only applies to certain modes or
+   option combinations (e.g., `--allow-unknown-type` is documented as "Allow
+   `-s` or `-t` to query broken/corrupt objects of unknown type"), a
+   `requires_one_of :mode_a, :mode_b, when: :flag` declaration is appropriate. Add
+   a DSL comment noting the constraint and a unit test asserting the ArgumentError.
+
+   ```ruby
+   # Allow -t and -s to query broken or corrupt objects of unknown type;
+   # rejected by git in any other mode — enforced by constraint below
+   flag_option :allow_unknown_type
+   # ...
+   requires_one_of :t, :s, when: :allow_unknown_type
+   ```
 
 See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
 
