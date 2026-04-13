@@ -29,14 +29,17 @@ module Git
           literal 'worktree'
           literal 'add'
           flag_option %i[force f], max_times: 2
-          flag_option :detach
-          flag_option :checkout, negatable: true
-          flag_option :guess_remote, negatable: true
-          flag_option :track, negatable: true
-          flag_option :lock
-          flag_option %i[quiet q]
           value_option :b
           value_option :B
+          flag_option %i[detach d]
+          flag_option :checkout, negatable: true
+          flag_option :guess_remote, negatable: true
+          flag_option :relative_paths, negatable: true
+          flag_option :track, negatable: true
+          flag_option :lock
+          flag_option :orphan
+          flag_option %i[quiet q]
+          value_option :reason
           end_of_options
           operand :path, required: true
           operand :commit_ish
@@ -64,7 +67,13 @@ module Git
         #
         #       Alias: :f
         #
+        #     @option options [String] :b (nil) create a new branch with this name and check it out
+        #
+        #     @option options [String] :B (nil) create or reset a branch with this name and check it out
+        #
         #     @option options [Boolean] :detach (nil) check out in detached-HEAD state
+        #
+        #       Alias: :d
         #
         #     @option options [Boolean] :checkout (nil) control whether the working tree
         #       is checked out after creation
@@ -76,23 +85,30 @@ module Git
         #
         #       When `false`, passes `--no-guess-remote`.
         #
+        #     @option options [Boolean] :relative_paths (nil) link worktrees using relative paths
+        #
+        #       When `false`, passes `--no-relative-paths`, using absolute paths instead.
+        #       Overrides the `worktree.useRelativePaths` config option.
+        #
         #     @option options [Boolean] :track (nil) mark the upstream branch for tracking
         #
         #       When `false`, passes `--no-track`.
         #
         #     @option options [Boolean] :lock (nil) lock the worktree immediately after creation
         #
+        #     @option options [Boolean] :orphan (nil) create an empty worktree associated with a new unborn branch
+        #
         #     @option options [Boolean] :quiet (nil) suppress informational messages
         #
         #       Alias: :q
         #
-        #     @option options [String] :b (nil) create a new branch with this name and check it out
+        #     @option options [String] :reason (nil) explanation for why the worktree is locked
         #
-        #     @option options [String] :B (nil) create or reset a branch with this name and check it out
+        #       Only meaningful when used with `:lock`.
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree add`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

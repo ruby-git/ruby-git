@@ -25,6 +25,24 @@ RSpec.describe Git::Commands::Worktree::List, :integration do
         result = command.call(porcelain: true)
         expect(result).to be_a(Git::CommandLineResult)
       end
+
+      it 'returns a CommandLineResult with the :verbose option',
+         skip: unless_git('2.33.0', 'git worktree list --verbose') do
+        result = command.call(verbose: true)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'returns a CommandLineResult with the :z option combined with :porcelain',
+         skip: unless_git('2.36.0', 'git worktree list -z') do
+        result = command.call(porcelain: true, z: true)
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'returns a CommandLineResult with the :expire option',
+         skip: unless_git('2.33.0', 'git worktree list --expire') do
+        result = command.call(expire: '2.weeks.ago')
+        expect(result).to be_a(Git::CommandLineResult)
+      end
     end
 
     context 'when the command fails' do
