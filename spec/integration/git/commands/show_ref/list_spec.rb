@@ -47,6 +47,13 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
         expect(result.status.exitstatus).to eq(0)
       end
 
+      it 'returns exit status 0 with the :branches option',
+         skip: unless_git('2.46.0', 'git show-ref --branches') do
+        result = command.call(branches: true)
+
+        expect(result.status.exitstatus).to eq(0)
+      end
+
       it 'returns exit status 0 with the :head option' do
         result = command.call(head: true)
 

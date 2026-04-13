@@ -30,6 +30,8 @@ module Git
       #   # refs/heads/main already exists locally, so git echoes nothing
       #   result.stdout  # => ""
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
+      #
       # @see Git::Commands::ShowRef
       #
       # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation

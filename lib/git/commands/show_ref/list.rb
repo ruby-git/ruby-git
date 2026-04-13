@@ -19,6 +19,8 @@ module Git
       # For stdin-based filtering, use {Git::Commands::ShowRef::ExcludeExisting}.
       # For a simple boolean existence check (git >= 2.43), use {Git::Commands::ShowRef::Exists}.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
+      #
       # @example List all refs
       #   cmd = Git::Commands::ShowRef::List.new(execution_context)
       #   result = cmd.call
@@ -65,8 +67,12 @@ module Git
           # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---abbrevlength
           flag_or_value_option :abbrev, inline: true
 
-          # Limit to refs under refs/heads/ only
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---heads
+          # Limit to refs under refs/heads/ only (preferred over :heads on git >= 2.46)
+          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
+          flag_option :branches
+
+          # Limit to refs under refs/heads/ only (deprecated synonym for :branches in git >= 2.46)
+          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
           flag_option :heads
 
           # Limit to refs under refs/tags/ only
@@ -116,7 +122,14 @@ module Git
         #
         #       Pass `true` for the default length or an integer for a specific length.
         #
-        #     @option options [Boolean] :heads (nil) limit output to refs under refs/heads/
+        #     @option options [Boolean] :branches (false) limit output to local branches (refs/heads/)
+        #
+        #       Prefer `:branches` over `:heads` on git >= 2.46; `:heads` emits the deprecated
+        #       `--heads` flag.
+        #
+        #     @option options [Boolean] :heads (false) limit output to refs under refs/heads/
+        #
+        #       Deprecated at the git level in git 2.46. Use `:branches` instead.
         #
         #     @option options [Boolean] :tags (nil) limit output to refs under refs/tags/
         #
