@@ -286,6 +286,8 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git ...`
         #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
@@ -376,6 +378,8 @@ an explicit override.
 #   @option options [Boolean] :unordered (false) Unordered output
 #
 #   @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
+#
+#   @raise [ArgumentError] if unsupported options are provided
 #
 #   @raise [Git::FailedError] if git exits with a non-zero exit status
 def call(*objects, **options)
