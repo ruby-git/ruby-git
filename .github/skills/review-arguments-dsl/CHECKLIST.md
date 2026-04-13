@@ -770,7 +770,10 @@ and [`requires_git_version` convention](../command-implementation/REFERENCE.md#r
   `Git::MINIMUM_GIT_VERSION`; uses a `'major.minor.patch'` string.
 - **`` @note `arguments` block audited against https://git-scm.com/docs/git-{command}/<version> ``** —
   present in the class-level YARD doc block. Flag as an error if: (1) the note is
-  missing, or (2) the version in the URL is not the current latest git version.
+  missing, (2) the version in the URL is not the current latest git version, or
+  (3) the note appears in the wrong position (it must appear after all `@example`
+  blocks and before any `@see` tags — i.e. the canonical tag order is description
+  → `@example` → `@note` → `@see` → `@api private`).
   To get the current latest version, run `bin/latest-git-version` from the repo root.
   A stale version means the DSL may be missing options added in subsequent git
   releases.
