@@ -377,7 +377,7 @@ an explicit override.
 #
 #   @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
 #
-#   @raise [Git::FailedError] if git exits with a non-zero status
+#   @raise [Git::FailedError] if git exits with a non-zero exit status
 def call(*objects, **options)
   bound = args_definition.bind(*objects, **options)
   with_stdin(Array(bound.objects).map { |o| "#{o}\n" }.join) do |reader|

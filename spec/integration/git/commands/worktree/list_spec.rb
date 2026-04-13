@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Worktree::List, :integration do
       end
 
       it 'returns a CommandLineResult with the :z option combined with :porcelain',
-         skip: unless_git('2.36.0', 'git worktree list -z') do
+         skip: unless_git('2.36.0', 'git worktree list --porcelain -z') do
         result = command.call(porcelain: true, z: true)
         expect(result).to be_a(Git::CommandLineResult)
       end
