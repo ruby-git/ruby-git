@@ -504,6 +504,45 @@ RSpec.describe Git::Commands::Diff::Numstat, :integration do
 end
 ```
 
+#### Guard tests for options introduced after the minimum supported Git version
+
+When an integration test exercises an option that was introduced after the minimum
+supported Git version (2.28.0), guard the example with
+`skip: unless_git(minimum_version, feature_description)` to prevent failures on
+installations that do not yet have the required Git version. The `unless_git` helper
+is defined in `spec/spec_helper.rb`:
+
+- Returns `false` when the installed Git meets the minimum version (tests run normally).
+- Returns a human-readable skip reason string when the installed Git is too old
+  (RSpec skips the example).
+
+Apply the guard to individual `it` blocks when only some tests in a context require a
+newer version. Apply it to a `context` or `describe` block when **all** tests in that
+group require the same minimum version.
+
+```ruby
+# ✅ Different options introduced in different git versions — guard each `it` individually
+it 'returns a CommandLineResult with the :verbose option',
+   skip: unless_git('2.33.0', 'git worktree list --verbose') do
+  # ...
+end
+
+it 'returns a CommandLineResult with the :z option combined with :porcelain',
+   skip: unless_git('2.36.0', 'git worktree list --porcelain -z') do
+  # ...
+end
+
+# ✅ All tests in the group require the same version — guard the context/describe block
+RSpec.describe Git::Commands::ShowRef::Exists, :integration,
+               skip: unless_git('2.43.0', 'git show-ref --exists') do
+  # ...
+end
+```
+
+Determine the correct minimum version by checking version-matched upstream git
+documentation (e.g., `https://git-scm.com/docs/git-worktree/2.33.0`) rather than
+relying only on the locally installed git binary.
+
 #### Additional integration conventions
 
 **Always specify `initial_branch: 'main'` when calling `Git.init` in test setup.**
