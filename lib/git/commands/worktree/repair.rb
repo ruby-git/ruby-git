@@ -17,6 +17,7 @@ module Git
       #   Git::Commands::Worktree::Repair.new(execution_context).call('/tmp/moved1', '/tmp/moved2')
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
+      #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
       # @api private
@@ -25,13 +26,14 @@ module Git
         arguments do
           literal 'worktree'
           literal 'repair'
+          flag_option :relative_paths, negatable: true
           end_of_options
           operand :path, repeatable: true
         end
 
         # @!method call(*, **)
         #
-        #   @overload call(*path)
+        #   @overload call(*path, **options)
         #
         #     Repair worktree administrative files
         #
@@ -39,9 +41,20 @@ module Git
         #
         #       When omitted, all registered worktrees are repaired.
         #
+        #     @param options [Hash] command options
+        #
+        #     @option options [Boolean] :relative_paths (nil) link worktrees using relative paths
+        #
+        #       When `false`, passes `--no-relative-paths`, using absolute paths instead.
+        #       Also causes repair to update linking files if there is an absolute/relative
+        #       mismatch, even if the links are already correct. Overrides the
+        #       `worktree.useRelativePaths` config option.
+        #
         #     @return [Git::CommandLineResult] the result of calling `git worktree repair`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
