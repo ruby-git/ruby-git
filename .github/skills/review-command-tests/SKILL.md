@@ -326,6 +326,11 @@ Unit test descriptions should be concise and action-oriented. Use descriptions l
 "includes the --cached flag", "passes both commits as operands", "combines commit
 with pathspecs".
 
+**Always use the emitted long-flag form in descriptions, never a short alias.** The
+DSL canonicalises aliases to the long form (e.g. `:q` → `--quiet`, `:f` → `--force`).
+Writing `'adds -q flag'` in an `it` description is misleading because the actual token
+asserted in the expectation is `'--quiet'`. Use `'adds --quiet flag'` instead.
+
 > **Exception to RSpec Unit Testing Standards Rules 11–12 (subject and let
 > ordering):** Command unit tests intentionally omit `subject` within `describe
 > '#call'`. Because each test exercises a different argument combination, there is no
