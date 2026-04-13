@@ -106,6 +106,32 @@ RSpec.describe Git::Commands::UpdateRef::Batch do
       end
     end
 
+    context 'with the :batch_updates option' do
+      it 'adds --batch-updates after --stdin' do
+        expect(execution_context).to receive(:command_capturing) do |*args, **kwargs|
+          expect(args).to eq(['update-ref', '--stdin', '--batch-updates'])
+          expect(kwargs).to include(raise_on_failure: false)
+          expect(kwargs[:in].read).to eq("update refs/heads/main newsha\n")
+          command_result
+        end
+
+        command.call('update refs/heads/main newsha', batch_updates: true)
+      end
+    end
+
+    context 'with the :timeout execution option' do
+      it 'passes timeout to the execution context' do
+        expect(execution_context).to receive(:command_capturing) do |*args, **kwargs|
+          expect(args).to eq(['update-ref', '--stdin'])
+          expect(kwargs).to include(raise_on_failure: false, timeout: 5)
+          expect(kwargs[:in].read).to eq("update refs/heads/main newsha\n")
+          command_result
+        end
+
+        command.call('update refs/heads/main newsha', timeout: 5)
+      end
+    end
+
     context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('update refs/heads/main newsha', unknown: true) }

@@ -23,6 +23,8 @@ module Git
       #   cmd = Git::Commands::UpdateRef::Update.new(execution_context)
       #   cmd.call('refs/heads/main', 'abc1234', m: 'reset to upstream')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-update-ref/2.53.0
+      #
       # @see Git::Commands::UpdateRef
       #
       # @see https://git-scm.com/docs/git-update-ref git-update-ref documentation
@@ -42,6 +44,8 @@ module Git
           # Create a reflog for the ref even if one would not ordinarily
           # be created
           flag_option :create_reflog
+
+          execution_option :timeout
 
           end_of_options
 
@@ -84,6 +88,9 @@ module Git
         #     @option options [Boolean] :create_reflog (nil) create a reflog
         #       even if one would not ordinarily be created
         #
+        #     @option options [Numeric] :timeout (nil) abort the command after this many
+        #       seconds
+        #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git update-ref`
         #
@@ -92,8 +99,7 @@ module Git
         #     @raise [ArgumentError] if the ref or newvalue operand is
         #       missing
         #
-        #     @raise [Git::FailedError] if the command returns a non-zero
-        #       exit status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

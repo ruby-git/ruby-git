@@ -61,6 +61,15 @@ RSpec.describe Git::Commands::UpdateRef::Delete do
       end
     end
 
+    context 'with the :timeout execution option' do
+      it 'passes timeout to the execution context' do
+        expect_command_capturing('update-ref', '-d', '--', 'refs/heads/old-branch', timeout: 5)
+          .and_return(command_result)
+
+        command.call('refs/heads/old-branch', timeout: 5)
+      end
+    end
+
     context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('refs/heads/old-branch', unknown: true) }

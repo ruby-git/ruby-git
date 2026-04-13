@@ -19,6 +19,8 @@ module Git
       #   cmd = Git::Commands::UpdateRef::Delete.new(execution_context)
       #   cmd.call('refs/heads/old-branch', 'expected-sha')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-update-ref/2.53.0
+      #
       # @see Git::Commands::UpdateRef
       #
       # @see https://git-scm.com/docs/git-update-ref git-update-ref documentation
@@ -37,6 +39,8 @@ module Git
 
           # Delete the named ref
           literal '-d'
+
+          execution_option :timeout
 
           end_of_options
 
@@ -71,6 +75,9 @@ module Git
         #     @option options [Boolean] :no_deref (nil) overwrite the ref
         #       itself rather than following symbolic refs
         #
+        #     @option options [Numeric] :timeout (nil) abort the command after this many
+        #       seconds
+        #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git update-ref -d`
         #
@@ -78,8 +85,7 @@ module Git
         #
         #     @raise [ArgumentError] if the ref operand is missing
         #
-        #     @raise [Git::FailedError] if the command returns a non-zero
-        #       exit status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
