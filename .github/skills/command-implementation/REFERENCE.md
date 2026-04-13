@@ -222,6 +222,19 @@ Structural requirements:
 
 ## Command template (Base pattern)
 
+The `@note` annotation in the class-level docs must record the **latest git release**
+at the time of audit, not the "last updated in" version shown in the git-scm.com page
+footer (which only tracks when that command's docs last changed and can be much older
+than the current release). Determine the correct version by running:
+
+```sh
+bin/latest-git-version   # e.g. 2.53.0
+```
+
+Substitute the output for `2.XX.0` in the template below. The URL will resolve to
+the last docs update for that command even if the command docs did not change in that
+exact release.
+
 ```ruby
 # frozen_string_literal: true
 

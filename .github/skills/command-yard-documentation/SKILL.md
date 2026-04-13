@@ -177,6 +177,23 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
+- **`(nil)` default for `flag_option` entries** — the DSL-to-YARD type mapping
+  requires `(false)` for plain `flag_option` entries (the flag is not emitted by
+  default). Using `(nil)` implies the caller explicitly passes `nil` to opt out,
+  which is not the intended semantics.
+
+  ```ruby
+  # ❌ Wrong — (nil) implies explicit nil opt-out
+  # @option options [Boolean] :tags (nil) limit output to refs/tags/
+
+  # ✅ Correct — (false) means the flag is not emitted when the caller omits the option
+  # @option options [Boolean] :tags (false) limit output to refs/tags/
+  ```
+
+  Exception: `flag_option ..., negatable: true` — the three-state `true`/`false`/`nil`
+  semantics make `(nil)` meaningful (unset/omit both `--foo` and `--no-foo`), so use
+  `(nil)` for negatable flags. Plain (non-negatable) `flag_option` always uses
+  `(false)`.
 - **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
   every `@overload` that includes `**options` requires
   `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
