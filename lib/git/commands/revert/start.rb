@@ -24,6 +24,8 @@ module Git
       # @example Revert a merge commit specifying the mainline parent
       #   revert.call('abc123', mainline: 1)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-revert/2.53.0
+      #
       # @see Git::Commands::Revert
       #
       # @see https://git-scm.com/docs/git-revert git-revert
@@ -59,6 +61,9 @@ module Git
           # Conflict resolution
           flag_option :rerere_autoupdate, negatable: true
 
+          # Commit log message format
+          flag_option :reference
+
           end_of_options
 
           # Commits to revert
@@ -82,12 +87,12 @@ module Git
         #       `true` → `--edit`, `false` → `--no-edit`.
         #       Alias: `:e`
         #
-        #     @option options [Boolean] :no_commit (nil) apply changes to index
+        #     @option options [Boolean] :no_commit (false) apply changes to index
         #       and working tree without committing
         #
         #       Alias: `:n`
         #
-        #     @option options [Integer] :mainline (nil) parent number (starting
+        #     @option options [Integer, String] :mainline (nil) parent number (starting
         #       from 1) identifying the mainline when reverting a merge commit
         #
         #       Alias: `:m`
@@ -126,9 +131,14 @@ module Git
         #       `true` → `--rerere-autoupdate`,
         #       `false` → `--no-rerere-autoupdate`
         #
+        #     @option options [Boolean] :reference (false) use compact reference
+        #       format in the revert commit message instead of the full object name
+        #
         #     @return [Git::CommandLineResult] the result of calling `git revert`
         #
-        #     @raise [Git::FailedError] if the revert fails (e.g., conflicts)
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

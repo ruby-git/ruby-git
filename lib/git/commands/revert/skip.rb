@@ -14,6 +14,8 @@ module Git
       #   skip_cmd = Git::Commands::Revert::Skip.new(execution_context)
       #   skip_cmd.call
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-revert/2.53.0
+      #
       # @see Git::Commands::Revert
       #
       # @see https://git-scm.com/docs/git-revert git-revert
@@ -35,7 +37,7 @@ module Git
         #     @return [Git::CommandLineResult] the result of calling
         #       `git revert --skip`
         #
-        #     @raise [Git::FailedError] if no revert is in progress
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
