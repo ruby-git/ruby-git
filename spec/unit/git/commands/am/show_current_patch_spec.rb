@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Am::ShowCurrentPatch do
       it 'includes --show-current-patch=diff' do
         expect_command_capturing('am', '--show-current-patch=diff').and_return(command_result)
 
-        command.call('diff')
+        command.call(show_current_patch: 'diff')
       end
     end
 
@@ -33,6 +33,16 @@ RSpec.describe Git::Commands::Am::ShowCurrentPatch do
       it 'raises ArgumentError for an unsupported option' do
         expect { command.call(unknown: true) }
           .to raise_error(ArgumentError, /Unsupported options: :unknown/)
+      end
+
+      it 'raises ArgumentError when show_current_patch is false' do
+        expect { command.call(show_current_patch: false) }
+          .to raise_error(ArgumentError, /:show_current_patch must be true or a non-empty String/)
+      end
+
+      it 'raises ArgumentError when show_current_patch is nil' do
+        expect { command.call(show_current_patch: nil) }
+          .to raise_error(ArgumentError, /:show_current_patch must be true or a non-empty String/)
       end
     end
   end

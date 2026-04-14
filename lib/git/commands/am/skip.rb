@@ -13,6 +13,10 @@ module Git
       #   skip_cmd = Git::Commands::Am::Skip.new(execution_context)
       #   skip_cmd.call
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-am/2.53.0
+      #
+      # @see Git::Commands::Am
+      #
       # @see https://git-scm.com/docs/git-am git-am
       #
       # @api private
@@ -29,9 +33,9 @@ module Git
         #
         #     Skip the current patch and continue with remaining patches
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am`
+        #     @return [Git::CommandLineResult] the result of calling `git am --skip`
         #
-        #     @raise [Git::FailedError] if no am session is in progress
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

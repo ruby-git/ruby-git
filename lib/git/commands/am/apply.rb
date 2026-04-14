@@ -20,6 +20,8 @@ module Git
       # @example Apply with 3-way merge fallback
       #   am.call('patches.mbox', three_way: true, chdir: repo.workdir)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-am/2.53.0
+      #
       # @see https://git-scm.com/docs/git-am git-am
       #
       # @api private
@@ -34,6 +36,8 @@ module Git
           flag_option :keep_non_patch
           flag_option :keep_cr, negatable: true
           flag_option %i[scissors c], negatable: true
+          value_option :quoted_cr
+          value_option :empty
           flag_option %i[message_id m], negatable: true
 
           # Output
@@ -59,6 +63,12 @@ module Git
 
           # Patch format
           value_option :patch_format
+
+          # Interactive mode
+          flag_option %i[interactive i]
+
+          # Hook verification
+          flag_option :verify, negatable: true
 
           # Date handling
           flag_option :committer_date_is_author_date
@@ -107,6 +117,17 @@ module Git
         #       body before a scissors line
         #
         #       `true` → `--scissors`, `false` → `--no-scissors`. Alias: `:c`
+        #
+        #     @option options [String] :quoted_cr (nil) how to handle CR in quoted
+        #       text passed to git-mailinfo
+        #
+        #       Valid actions: `'nowarn'`, `'warn'`, `'error'`.
+        #
+        #     @option options [String] :empty (nil) how to handle an e-mail message
+        #       lacking a patch
+        #
+        #       Valid values: `'stop'` (fail, default), `'drop'` (skip the message),
+        #       `'keep'` (create an empty commit).
         #
         #     @option options [Boolean] :message_id (nil) pass -m flag to
         #       git-mailinfo, adding the Message-ID header to the commit message
@@ -180,6 +201,17 @@ module Git
         #       Valid formats: `'mbox'`, `'mboxrd'`, `'stgit'`, `'stgit-series'`,
         #       `'hg'`.
         #
+        #     @option options [Boolean] :interactive (false) run interactively,
+        #       prompting before each patch is applied
+        #
+        #       Alias: `:i`
+        #
+        #     @option options [Boolean] :verify (nil) run pre-applypatch and
+        #       applypatch-msg hooks
+        #
+        #       `true` → `--verify`, `false` → `--no-verify` (bypass hooks).
+        #       Hooks are run by default when this option is omitted.
+        #
         #     @option options [Boolean] :committer_date_is_author_date (nil) use the
         #       author date as the committer date
         #
@@ -199,7 +231,9 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git am`
         #
-        #     @raise [Git::FailedError] if patches cannot be applied
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

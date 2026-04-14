@@ -18,5 +18,12 @@ RSpec.describe Git::Commands::Am::Abort do
 
       expect(result).to eq(expected_result)
     end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(invalid: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
+      end
+    end
   end
 end

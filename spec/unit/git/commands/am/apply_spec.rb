@@ -263,6 +263,48 @@ RSpec.describe Git::Commands::Am::Apply do
       end
     end
 
+    context 'with :interactive option' do
+      it 'adds --interactive flag' do
+        expect_command_capturing('am', '--interactive').and_return(command_result)
+        command.call(interactive: true)
+      end
+
+      it 'accepts :i alias' do
+        expect_command_capturing('am', '--interactive').and_return(command_result)
+        command.call(i: true)
+      end
+    end
+
+    context 'with :verify option' do
+      context 'when false' do
+        it 'adds --no-verify flag' do
+          expect_command_capturing('am', '--no-verify', '--', 'patches.mbox').and_return(command_result)
+          command.call('patches.mbox', verify: false)
+        end
+      end
+
+      context 'when true' do
+        it 'adds --verify flag' do
+          expect_command_capturing('am', '--verify', '--', 'patches.mbox').and_return(command_result)
+          command.call('patches.mbox', verify: true)
+        end
+      end
+    end
+
+    context 'with :quoted_cr option' do
+      it 'adds --quoted-cr flag' do
+        expect_command_capturing('am', '--quoted-cr', 'warn', '--', 'patches.mbox').and_return(command_result)
+        command.call('patches.mbox', quoted_cr: 'warn')
+      end
+    end
+
+    context 'with :empty option' do
+      it 'adds --empty flag' do
+        expect_command_capturing('am', '--empty', 'drop', '--', 'patches.mbox').and_return(command_result)
+        command.call('patches.mbox', empty: 'drop')
+      end
+    end
+
     context 'with :committer_date_is_author_date option' do
       it 'adds --committer-date-is-author-date flag' do
         expect_command_capturing('am', '--committer-date-is-author-date', '--',

@@ -32,6 +32,34 @@ RSpec.describe Git::Commands::Base do
     end
   end
 
+  describe '.requires_git_version' do
+    let(:command_class) do
+      Class.new(described_class) do
+        arguments { literal 'status' }
+      end
+    end
+
+    it 'stores the version string in minimum_git_version' do
+      command_class.requires_git_version '2.46.0'
+
+      expect(command_class.minimum_git_version).to eq('2.46.0')
+    end
+
+    it 'raises ArgumentError for a non-semver string' do
+      expect { command_class.requires_git_version '2.46' }
+        .to raise_error(ArgumentError, /major\.minor\.patch/)
+    end
+
+    it 'raises ArgumentError for a non-string value' do
+      expect { command_class.requires_git_version 2 }
+        .to raise_error(ArgumentError, /major\.minor\.patch/)
+    end
+
+    it 'defaults minimum_git_version to nil when not declared' do
+      expect(command_class.minimum_git_version).to be_nil
+    end
+  end
+
   describe '.allow_exit_status' do
     let(:command_class) do
       Class.new(described_class) do
