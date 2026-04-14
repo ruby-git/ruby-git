@@ -200,6 +200,10 @@ module Test
         RUBY_PLATFORM == 'java'
       end
 
+      def truffleruby_platform?
+        RUBY_ENGINE == 'truffleruby'
+      end
+
       # Build a mock CommandLineResult for clone commands
       #
       # Used in tests that mock Git::Lib#command_capturing to capture command line args.

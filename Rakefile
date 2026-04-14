@@ -27,14 +27,19 @@ default_tasks = %i[test spec:unit spec:integration rubocop]
 default_tasks << :yard if Rake::Task.task_defined?(:yard)
 default_tasks << :build
 
-task default: default_tasks
+default_tasks_parallel = %w[test:parallel spec:unit:parallel spec:integration:parallel rubocop]
+default_tasks_parallel << :yard if Rake::Task.task_defined?(:yard)
+default_tasks_parallel << :build
 
-default_parallel = %w[test:parallel spec:unit:parallel spec:integration:parallel rubocop]
-default_parallel << :yard if Rake::Task.task_defined?(:yard)
-default_parallel << :build
+# Use parallel test execution for MRI where it cuts build times by 30-48%.
+# JRuby and TruffleRuby are slower with parallel_tests because each worker
+# process pays JVM/Truffle startup and warm-up overhead independently,
+# resulting in 18-28% slower builds vs. serial execution.
+parallel_supported = RUBY_ENGINE == 'ruby'
+task default: parallel_supported ? default_tasks_parallel : default_tasks
 
 desc 'Same as default but runs tests in parallel'
-task 'default:parallel': default_parallel
+task 'default:parallel': default_tasks_parallel
 
 module Rake
   # Overload Rake::Task to add logging

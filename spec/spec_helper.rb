@@ -47,9 +47,17 @@ end
 
 # SimpleCov configuration
 #
-require 'simplecov'
-require 'simplecov-lcov'
-require 'simplecov-rspec'
+# JRuby and TruffleRuby do not provide reliable coverage data.
+# SimpleCov's branch coverage crashes on TruffleRuby and coverage metrics
+# are not meaningful on alternative runtimes. Skip coverage entirely.
+#
+SIMPLECOV_ENABLED = RUBY_ENGINE == 'ruby'
+
+if SIMPLECOV_ENABLED
+  require 'simplecov'
+  require 'simplecov-lcov'
+  require 'simplecov-rspec'
+end
 
 # Returns `false` when git meets the minimum version, or a skip message when it does not
 #
@@ -88,21 +96,23 @@ end
 
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 
-if ci_build?
-  SimpleCov.formatters = [
-    SimpleCov::Formatter::HTMLFormatter,
-    SimpleCov::Formatter::LcovFormatter
-  ]
-end
+if SIMPLECOV_ENABLED
+  if ci_build?
+    SimpleCov.formatters = [
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::LcovFormatter
+    ]
+  end
 
-SimpleCov.enable_coverage :branch
+  SimpleCov.enable_coverage :branch
 
-SimpleCov::RSpec.start(
-  coverage_threshold: 100,
-  fail_on_low_coverage: false,
-  list_uncovered_lines: false
-) do
-  command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
+  SimpleCov::RSpec.start(
+    coverage_threshold: 100,
+    fail_on_low_coverage: false,
+    list_uncovered_lines: false
+  ) do
+    command_name "RSpec-#{ENV['TEST_ENV_NUMBER']}" if ENV['TEST_ENV_NUMBER']
+  end
 end
 
 require 'git'
