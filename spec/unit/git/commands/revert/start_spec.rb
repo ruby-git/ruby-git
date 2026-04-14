@@ -141,6 +141,13 @@ RSpec.describe Git::Commands::Revert::Start do
       end
     end
 
+    context 'with :reference option' do
+      it 'adds --reference when true' do
+        expect_command_capturing('revert', '--reference', '--', 'abc123').and_return(command_result(''))
+        command.call('abc123', reference: true)
+      end
+    end
+
     context 'with :mainline option' do
       it 'adds --mainline <n>' do
         expect_command_capturing('revert', '--mainline', '1', '--', 'abc123').and_return(command_result(''))
