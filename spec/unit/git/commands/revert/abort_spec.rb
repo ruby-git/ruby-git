@@ -10,13 +10,20 @@ RSpec.describe Git::Commands::Revert::Abort do
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    it 'passes the revert --abort arguments' do
+    it 'calls git revert --abort' do
       expected_result = command_result('')
       expect_command_capturing('revert', '--abort').and_return(expected_result)
 
       result = command.call
 
       expect(result).to eq(expected_result)
+    end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(invalid: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
+      end
     end
   end
 end

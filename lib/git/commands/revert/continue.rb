@@ -14,6 +14,8 @@ module Git
       #   continue_cmd = Git::Commands::Revert::Continue.new(execution_context)
       #   continue_cmd.call
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-revert/2.53.0
+      #
       # @see Git::Commands::Revert
       #
       # @see https://git-scm.com/docs/git-revert git-revert
@@ -24,7 +26,7 @@ module Git
         arguments do
           literal 'revert'
           literal '--continue'
-          flag_option :edit, negatable: true
+          flag_option %i[edit e], negatable: true
         end
 
         # @!method call(*, **)
@@ -41,11 +43,14 @@ module Git
         #       `true` → `--edit`, `false` → `--no-edit`. Omit to use
         #       git's default.
         #
+        #       Alias: `:e`
+        #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git revert --continue`
         #
-        #     @raise [Git::FailedError] if no revert is in progress or conflicts
-        #       remain unresolved
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
