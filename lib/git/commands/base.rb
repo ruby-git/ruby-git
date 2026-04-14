@@ -88,6 +88,38 @@ module Git
 
           @allowed_exit_status_range = range
         end
+
+        # @return [String, nil] minimum git version required by this command, or +nil+ if
+        #   the command is available in all supported git versions
+        attr_reader :minimum_git_version
+
+        # Declare the minimum git version required for this command.
+        #
+        # Use this when the command (or the specific sub-action this class wraps) was
+        # introduced in a git version later than +Git::MINIMUM_GIT_VERSION+. When
+        # not declared, the command is assumed to be available in all supported git
+        # versions.
+        #
+        # @note This macro stores the version string for documentation and introspection.
+        #   It does not enforce the requirement at runtime — git itself will return a
+        #   native "unknown option" error when the option is not available.
+        #
+        # @example git-am --retry requires git 2.46.0
+        #   requires_git_version '2.46.0'
+        #
+        # @param version [String] minimum git version in +'major.minor.patch'+ format
+        #
+        # @raise [ArgumentError] if version is not a valid +'major.minor.patch'+ string
+        #
+        # @return [void]
+        def requires_git_version(version)
+          unless version.is_a?(String) && version.match?(/\A\d+\.\d+\.\d+\z/)
+            raise ArgumentError,
+                  "requires_git_version expects a 'major.minor.patch' string, got: #{version.inspect}"
+          end
+
+          @minimum_git_version = version
+        end
       end
 
       # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides

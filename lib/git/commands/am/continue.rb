@@ -7,13 +7,14 @@ module Git
     module Am
       # Implements `git am --continue` to resume after resolving conflicts
       #
-      # After the user has resolved a conflict, the patch can be applied again
-      # with `--continue`. The editor is suppressed via `GIT_EDITOR=true` set
-      # in the execution environment.
+      # After the user has resolved a conflict in the working tree and updated
+      # the index, this command continues applying the remaining patches.
       #
       # @example Resume an am session after resolving conflicts
       #   continue_cmd = Git::Commands::Am::Continue.new(execution_context)
       #   continue_cmd.call
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-am/2.53.0
       #
       # @see Git::Commands::Am
       #
@@ -35,8 +36,7 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git am --continue`
         #
-        #     @raise [Git::FailedError] if no am session is in progress or
-        #       conflicts remain unresolved
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

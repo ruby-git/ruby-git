@@ -5,7 +5,7 @@ require 'git/commands/base'
 module Git
   module Commands
     module Am
-      # Command that retries the current in-progress `git am` patch
+      # Implements `git am --retry` to retry the most-recently-failed patch
       #
       # Tries to apply the last conflicting patch again. Generally only useful
       # when retrying with extra options (e.g. `--3way`), or in scripts where
@@ -15,10 +15,7 @@ module Git
       #   retry_cmd = Git::Commands::Am::Retry.new(execution_context)
       #   retry_cmd.call
       #
-      # @note Requires git 2.46 or later
-      #
-      #   Earlier versions do not recognise the `--retry` flag; the option was
-      #   introduced in git 2.46.0.
+      # @note `arguments` block audited against https://git-scm.com/docs/git-am/2.53.0
       #
       # @see Git::Commands::Am
       #
@@ -32,15 +29,18 @@ module Git
           literal '--retry'
         end
 
+        # git am --retry was introduced in git 2.46.0
+        requires_git_version '2.46.0'
+
         # @!method call(*, **)
         #
         #   @overload call()
         #
-        #     Retry applying the current patch
+        #     Retry applying the most-recently-failed patch
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am`
+        #     @return [Git::CommandLineResult] the result of calling `git am --retry`
         #
-        #     @raise [Git::FailedError] if no am session is in progress
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
