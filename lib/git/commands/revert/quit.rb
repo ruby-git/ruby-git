@@ -5,7 +5,7 @@ require 'git/commands/base'
 module Git
   module Commands
     module Revert
-      # Implementation of `git revert --quit` that forgets an in-progress revert sequence
+      # Implements `git revert --quit` to forget an in-progress revert sequence
       #
       # Clears the sequencer state without restoring the branch, leaving the
       # working tree and index in their current state. If no revert is in
@@ -14,6 +14,8 @@ module Git
       # @example Forget an in-progress revert session
       #   quit_cmd = Git::Commands::Revert::Quit.new(execution_context)
       #   quit_cmd.call
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-revert/2.53.0
       #
       # @see Git::Commands::Revert
       #
@@ -37,6 +39,8 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git revert --quit`
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

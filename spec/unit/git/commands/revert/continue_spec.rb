@@ -33,6 +33,13 @@ RSpec.describe Git::Commands::Revert::Continue do
       end
     end
 
+    context 'with e: true (alias for :edit)' do
+      it 'includes --edit' do
+        expect_command_capturing('revert', '--continue', '--edit').and_return(command_result(''))
+        command.call(e: true)
+      end
+    end
+
     context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call(invalid: true) }
