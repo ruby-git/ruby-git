@@ -1,6 +1,6 @@
 ---
 name: command-implementation
-description: "Scaffolds new and reviews existing Git::Commands::* classes with unit tests, integration tests, and YARD docs using the Base architecture. Use when creating a new command from scratch, updating an existing command, or reviewing a command class for correctness."
+description: "Scaffolds new, reviews existing Git::Commands::* classes with unit tests, integration tests, and YARD docs using the Base architecture. Use when creating a new command class from scratch, updating an existing command class, or reviewing a command class for correctness."
 ---
 
 # Command Implementation
