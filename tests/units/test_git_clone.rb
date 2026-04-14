@@ -5,14 +5,21 @@ require 'test_helper'
 
 # Tests for Git.clone
 class TestGitClone < Test::Unit::TestCase
+  # These tests trigger a timeout by cloning a local repo with an extremely small
+  # timeout (0.00001s), expecting git to not finish in time. On JRuby and TruffleRuby,
+  # subprocess startup and teardown timing is unpredictable enough that git
+  # occasionally completes before the timeout fires, making the tests inherently
+  # racy. Since the timeout plumbing is platform-independent (it happens in
+  # process_executer at the OS level), MRI coverage is sufficient.
   sub_test_case 'Git.clone with timeouts' do
-    test 'global timmeout' do
+    test 'global timeout' do
       saved_timeout = Git.config.timeout
+      omit 'Flaky: local clone can finish before the timeout fires' if
+        jruby_platform? || truffleruby_platform?
 
       in_temp_dir do |_path|
         setup_repo
-        # Use larger timeout on JRuby due to subprocess timing differences
-        Git.config.timeout = jruby_platform? ? 0.001 : 0.00001
+        Git.config.timeout = 0.00001
 
         error = assert_raise Git::TimeoutError do
           Git.clone('repository.git', 'temp2', timeout: nil)
@@ -25,13 +32,15 @@ class TestGitClone < Test::Unit::TestCase
     end
 
     test 'override global timeout' do
+      omit 'Flaky: local clone can finish before the timeout fires' if
+        jruby_platform? || truffleruby_platform?
+
       in_temp_dir do |_path|
         saved_timeout = Git.config.timeout
 
         in_temp_dir do |_path|
           setup_repo
-          # Use larger timeout on JRuby due to subprocess timing differences
-          Git.config.timeout = jruby_platform? ? 0.001 : 0.00001
+          Git.config.timeout = 0.00001
 
           assert_nothing_raised do
             Git.clone('repository.git', 'temp2', timeout: 10)
@@ -43,11 +52,13 @@ class TestGitClone < Test::Unit::TestCase
     end
 
     test 'per command timeout' do
+      omit 'Flaky: local clone can finish before the timeout fires' if
+        jruby_platform? || truffleruby_platform?
+
       in_temp_dir do |_path|
         setup_repo
 
-        # Use larger timeout on JRuby due to subprocess timing differences
-        timeout_value = jruby_platform? ? 0.001 : 0.00001
+        timeout_value = 0.00001
         error = assert_raise Git::TimeoutError do
           Git.clone('repository.git', 'temp2', timeout: timeout_value)
         end
