@@ -36,6 +36,35 @@ RSpec.describe Git::Commands::Checkout::Branch do
       end
     end
 
+    context 'with :quiet option' do
+      it 'adds --quiet flag' do
+        expect_command_capturing('checkout', '--quiet', 'main').and_return(command_result)
+        command.call('main', quiet: true)
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('checkout', 'main').and_return(command_result)
+        command.call('main', quiet: false)
+      end
+
+      it 'works with :q alias' do
+        expect_command_capturing('checkout', '--quiet', 'main').and_return(command_result)
+        command.call('main', q: true)
+      end
+    end
+
+    context 'with :progress option' do
+      it 'adds --progress flag' do
+        expect_command_capturing('checkout', '--progress', 'main').and_return(command_result)
+        command.call('main', progress: true)
+      end
+
+      it 'adds --no-progress flag when false' do
+        expect_command_capturing('checkout', '--no-progress', 'main').and_return(command_result)
+        command.call('main', progress: false)
+      end
+    end
+
     context 'with :force option' do
       it 'adds --force flag' do
         expect_command_capturing('checkout', '--force', 'main').and_return(command_result)
@@ -174,6 +203,18 @@ RSpec.describe Git::Commands::Checkout::Branch do
       end
     end
 
+    context 'with :l option (create reflog)' do
+      it 'adds -l flag' do
+        expect_command_capturing('checkout', '-b', 'new-branch', '-l').and_return(command_result)
+        command.call(l: true, b: 'new-branch')
+      end
+
+      it 'does not add flag when false' do
+        expect_command_capturing('checkout', '-b', 'new-branch').and_return(command_result)
+        command.call(b: 'new-branch', l: false)
+      end
+    end
+
     context 'with :ignore_other_worktrees option' do
       it 'adds --ignore-other-worktrees flag' do
         expect_command_capturing('checkout', '--ignore-other-worktrees', 'main').and_return(command_result)
@@ -199,6 +240,18 @@ RSpec.describe Git::Commands::Checkout::Branch do
           expect_command_capturing('checkout', '--no-recurse-submodules', 'main').and_return(command_result)
           command.call('main', recurse_submodules: false)
         end
+      end
+    end
+
+    context 'with :overwrite_ignore option' do
+      it 'adds --overwrite-ignore flag' do
+        expect_command_capturing('checkout', '--overwrite-ignore', 'main').and_return(command_result)
+        command.call('main', overwrite_ignore: true)
+      end
+
+      it 'adds --no-overwrite-ignore flag when false' do
+        expect_command_capturing('checkout', '--no-overwrite-ignore', 'main').and_return(command_result)
+        command.call('main', overwrite_ignore: false)
       end
     end
 
@@ -230,6 +283,16 @@ RSpec.describe Git::Commands::Checkout::Branch do
       it 'allows creating a branch with -b and no start point' do
         expect_command_capturing('checkout', '-b', 'new-feature').and_return(command_result)
         command.call(nil, b: 'new-feature')
+      end
+    end
+
+    context 'with :chdir execution option' do
+      it 'passes chdir to the execution context, not to the CLI' do
+        expect(execution_context).to receive(:command_capturing)
+          .with('checkout', 'main', chdir: '/tmp', raise_on_failure: false)
+          .and_return(command_result)
+
+        command.call('main', chdir: '/tmp')
       end
     end
   end
