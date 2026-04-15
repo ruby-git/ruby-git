@@ -145,12 +145,65 @@ RSpec.describe Git::Commands::Archive do
       end
     end
 
-    context 'input validation' do
-      it 'raises ArgumentError when tree_ish is missing' do
-        expect { command.call }
-          .to raise_error(ArgumentError, /tree_ish is required/)
+    context 'with the :list option' do
+      it 'adds --list to the command line' do
+        expect_command_capturing('archive', '--list', normalize: false, chomp: false)
+          .and_return(command_result)
+
+        command.call(list: true)
       end
 
+      it 'supports the :l alias' do
+        expect_command_capturing('archive', '--list', normalize: false, chomp: false)
+          .and_return(command_result)
+
+        command.call(l: true)
+      end
+    end
+
+    context 'with the :add_file option' do
+      it 'adds --add-file=<value> to the command line' do
+        expect_command_capturing(
+          'archive', '--add-file=configure', '--', 'HEAD',
+          normalize: false, chomp: false
+        ).and_return(command_result)
+
+        command.call('HEAD', add_file: 'configure')
+      end
+
+      it 'repeats --add-file for each element of an array' do
+        expect_command_capturing(
+          'archive', '--add-file=configure', '--add-file=Makefile', '--', 'HEAD',
+          normalize: false, chomp: false
+        ).and_return(command_result)
+
+        command.call('HEAD', add_file: %w[configure Makefile])
+      end
+    end
+
+    context 'with the :add_virtual_file option' do
+      it 'adds --add-virtual-file=<value> to the command line' do
+        expect_command_capturing(
+          'archive', '--add-virtual-file=path:content', '--', 'HEAD',
+          normalize: false, chomp: false
+        ).and_return(command_result)
+
+        command.call('HEAD', add_virtual_file: 'path:content')
+      end
+    end
+
+    context 'with the :mtime option' do
+      it 'adds --mtime=<value> to the command line' do
+        expect_command_capturing(
+          'archive', '--mtime=2023-01-01T00:00:00', '--', 'HEAD',
+          normalize: false, chomp: false
+        ).and_return(command_result)
+
+        command.call('HEAD', mtime: '2023-01-01T00:00:00')
+      end
+    end
+
+    context 'input validation' do
       it 'raises ArgumentError for unsupported options' do
         expect { command.call('HEAD', unknown: true) }
           .to raise_error(ArgumentError, /Unsupported options/)
