@@ -284,42 +284,6 @@ matches the SYNOPSIS.
   N]`)
 - Ensure long name is first in alias arrays
 
-### Inline comment style
-
-Each DSL entry MAY have a trailing comment documenting the emitted CLI form. When
-present, the comment must reflect **what the DSL actually emits** — the primary
-(long) flag — not the git man-page synopsis notation.
-
-```ruby
-# ✅ Correct — shows the emitted long flag; alias noted separately
-flag_option %i[verbose v]          # --verbose (alias: :v)
-flag_option %i[all a]              # --all (alias: :a)
-flag_option :progress, negatable: true     # --progress / --no-progress
-flag_option :guess, negatable: true        # --guess / --no-guess
-flag_or_value_option :color, inline: true, negatable: true  # --color[=<when>] / --no-color
-value_option :format, inline: true # --format=<format>
-
-# ❌ Wrong — shows both short and long forms as if both are emitted;
-#            reader may assume -v and --verbose are two separate flags
-flag_option %i[verbose v], max_times: 2  # -v / -vv / --verbose
-flag_option %i[all a]                    # -a / --all
-
-# ❌ Wrong — negatable: true is declared but only the positive form is shown
-flag_option :progress, negatable: true   # --progress
-```
-
-The rule: **one comment → one emitted flag form**. Aliases are referenced as
-`(alias: :x)`, not listed as separate flag tokens. Flag any comment that lists a
-short flag as if it is independently emitted.
-
-**Negatable exception:** when `negatable: true` is present, the option has two
-distinct emitted forms. Show both separated by ` / `:
-
-- `flag_option :foo, negatable: true` → `# --foo / --no-foo`
-- `flag_or_value_option :foo, inline: true, negatable: true` → `# --foo[=<val>] / --no-foo`
-
-Flag any `negatable: true` entry whose trailing comment shows only the positive form
-as incorrect.
 - **Do not** flag uppercase short-flag aliases (e.g. `:A`, `:N`) as needing `as:` —
   the DSL preserves symbol case, so `:A` correctly produces `-A` without any override
 
@@ -392,9 +356,9 @@ Every option that the git documentation documents with a short form must have an
 alias with the long name first:
 
 ```ruby
-flag_option %i[regexp_ignore_case i]   # -i / --regexp-ignore-case
-flag_option %i[extended_regexp E]      # -E / --extended-regexp
-flag_option %i[fixed_strings F]        # -F / --fixed-strings
+flag_option %i[regexp_ignore_case i]
+flag_option %i[extended_regexp E]
+flag_option %i[fixed_strings F]
 ```
 
 When reviewing, scan the git command doc's option headings for lines of the form

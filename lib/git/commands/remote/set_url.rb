@@ -35,7 +35,7 @@ module Git
         arguments do
           literal 'remote'
           literal 'set-url'
-          flag_option :push # --push
+          flag_option :push
 
           end_of_options
 

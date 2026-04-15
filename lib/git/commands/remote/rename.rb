@@ -34,7 +34,7 @@ module Git
         arguments do
           literal 'remote'
           literal 'rename'
-          flag_option :progress, negatable: true # --[no-]progress
+          flag_option :progress, negatable: true
 
           end_of_options
 

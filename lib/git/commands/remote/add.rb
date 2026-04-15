@@ -34,11 +34,11 @@ module Git
         arguments do
           literal 'remote'
           literal 'add'
-          value_option %i[track t], repeatable: true  # --track=<branch> (alias: :t)
-          value_option %i[master m]                   # --master=<branch> (alias: :m)
-          flag_option %i[fetch f]                     # --fetch (alias: :f)
-          flag_option :tags, negatable: true          # --tags / --no-tags
-          value_option :mirror, inline: true          # --mirror=<mode>
+          value_option %i[track t], repeatable: true
+          value_option %i[master m]
+          flag_option %i[fetch f]
+          flag_option :tags, negatable: true
+          value_option :mirror, inline: true
 
           end_of_options
 

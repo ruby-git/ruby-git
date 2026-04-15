@@ -43,68 +43,68 @@ module Git
         literal 'pull'
 
         # General options
-        flag_option %i[quiet q]                                              # --quiet
-        flag_option %i[verbose v]                                            # --verbose
-        flag_or_value_option :recurse_submodules, # --recurse-submodules[=yes|on-demand|no] / --no-recurse-submodules
+        flag_option %i[quiet q]
+        flag_option %i[verbose v]
+        flag_or_value_option :recurse_submodules,
                              negatable: true, inline: true
 
         # Merge options
-        flag_option :commit, negatable: true                                 # --commit / --no-commit
-        flag_option :edit, negatable: true                                   # --edit / --no-edit
-        value_option :cleanup, inline: true                                  # --cleanup=<mode>
-        flag_option :ff_only                                                 # --ff-only
-        flag_option :ff, negatable: true                                     # --ff / --no-ff
-        flag_or_value_option %i[gpg_sign S], negatable: true, inline: true # --gpg-sign[=<key-id>] / --no-gpg-sign
-        flag_or_value_option :log, negatable: true, inline: true             # --log[=<n>] / --no-log
-        flag_option :signoff, negatable: true                                # --signoff / --no-signoff
-        flag_option :stat                                                    # --stat
-        flag_option %i[no_stat n]                                            # --no-stat
-        flag_option :compact_summary                                         # --compact-summary
-        flag_option :squash, negatable: true                                 # --squash / --no-squash
-        flag_option :verify, negatable: true                                 # --verify / --no-verify
-        value_option %i[strategy s], inline: true # --strategy=<strategy>
-        value_option %i[strategy_option X], inline: true, repeatable: true # --strategy-option=<option>
-        flag_option :verify_signatures, negatable: true # --verify-signatures / --no-verify-signatures
-        flag_option :summary, negatable: true                                # --summary / --no-summary
-        flag_option :autostash, negatable: true                              # --autostash / --no-autostash
-        flag_option :allow_unrelated_histories                               # --allow-unrelated-histories
-        flag_or_value_option %i[rebase r], negatable: true, inline: true # --rebase[=<mode>] / --no-rebase
+        flag_option :commit, negatable: true
+        flag_option :edit, negatable: true
+        value_option :cleanup, inline: true
+        flag_option :ff_only
+        flag_option :ff, negatable: true
+        flag_or_value_option %i[gpg_sign S], negatable: true, inline: true
+        flag_or_value_option :log, negatable: true, inline: true
+        flag_option :signoff, negatable: true
+        flag_option :stat
+        flag_option %i[no_stat n]
+        flag_option :compact_summary
+        flag_option :squash, negatable: true
+        flag_option :verify, negatable: true
+        value_option %i[strategy s], inline: true
+        value_option %i[strategy_option X], inline: true, repeatable: true
+        flag_option :verify_signatures, negatable: true
+        flag_option :summary, negatable: true
+        flag_option :autostash, negatable: true
+        flag_option :allow_unrelated_histories
+        flag_or_value_option %i[rebase r], negatable: true, inline: true
 
         # Fetch options
-        flag_option :all, negatable: true                                    # --all / --no-all
-        flag_option %i[append a]                                             # --append
-        flag_option :atomic                                                  # --atomic
-        value_option :depth, inline: true # --depth=<depth>
-        value_option :deepen, inline: true                                   # --deepen=<depth>
-        value_option :shallow_since, inline: true                            # --shallow-since=<date>
-        value_option :shallow_exclude, inline: true, repeatable: true        # --shallow-exclude=<ref>
-        flag_option :unshallow                                               # --unshallow
-        flag_option :update_shallow                                          # --update-shallow
-        value_option :negotiation_tip, inline: true, repeatable: true        # --negotiation-tip=<commit|glob>
-        flag_option :negotiate_only                                          # --negotiate-only
-        flag_option :dry_run                                                 # --dry-run
-        flag_option :porcelain                                               # --porcelain
-        flag_option %i[force f]                                              # --force
-        flag_option %i[keep k]                                               # --keep
-        flag_option :prefetch                                                # --prefetch
-        flag_option %i[prune p]                                              # --prune
-        flag_option %i[tags t], negatable: true                              # --tags / --no-tags
-        value_option :refmap, inline: true, repeatable: true                 # --refmap=<refspec>
-        value_option %i[jobs j], inline: true # --jobs=<n>
-        flag_option :set_upstream                                            # --set-upstream
-        value_option :upload_pack                                            # --upload-pack <path>
-        flag_option :progress, negatable: true                               # --[no-]progress
-        value_option %i[server_option o], inline: true, repeatable: true     # --server-option=<option>
-        flag_option :show_forced_updates, negatable: true # --show-forced-updates / --no-show-forced-updates
-        flag_option %i[ipv4 4]                                               # --ipv4
-        flag_option %i[ipv6 6]                                               # --ipv6
+        flag_option :all, negatable: true
+        flag_option %i[append a]
+        flag_option :atomic
+        value_option :depth, inline: true
+        value_option :deepen, inline: true
+        value_option :shallow_since, inline: true
+        value_option :shallow_exclude, inline: true, repeatable: true
+        flag_option :unshallow
+        flag_option :update_shallow
+        value_option :negotiation_tip, inline: true, repeatable: true
+        flag_option :negotiate_only
+        flag_option :dry_run
+        flag_option :porcelain
+        flag_option %i[force f]
+        flag_option %i[keep k]
+        flag_option :prefetch
+        flag_option %i[prune p]
+        flag_option %i[tags t], negatable: true
+        value_option :refmap, inline: true, repeatable: true
+        value_option %i[jobs j], inline: true
+        flag_option :set_upstream
+        value_option :upload_pack
+        flag_option :progress, negatable: true
+        value_option %i[server_option o], inline: true, repeatable: true
+        flag_option :show_forced_updates, negatable: true
+        flag_option %i[ipv4 4]
+        flag_option %i[ipv6 6]
 
         # Execution options (not emitted as CLI flags)
         execution_option :timeout
 
         end_of_options
-        operand :repository                                                  # [<repository>]
-        operand :refspec, repeatable: true                                   # [<refspec>…]
+        operand :repository
+        operand :refspec, repeatable: true
       end
 
       # @!method call(*, **)

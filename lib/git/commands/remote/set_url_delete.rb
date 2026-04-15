@@ -31,7 +31,7 @@ module Git
           literal 'remote'
           literal 'set-url'
           literal '--delete'
-          flag_option :push # --push
+          flag_option :push
 
           end_of_options
 

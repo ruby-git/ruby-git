@@ -29,15 +29,15 @@ module Git
     class CheckoutIndex < Git::Commands::Base
       arguments do
         literal 'checkout-index'
-        flag_option %i[index u]                  # --index (alias: :u)
-        flag_option %i[quiet q]                  # --quiet (alias: :q)
-        flag_option %i[all a]                    # --all (alias: :a)
-        flag_option %i[force f]                  # --force (alias: :f)
-        flag_option %i[no_create n]              # --no-create (alias: :n)
-        value_option :prefix, inline: true       # --prefix=<string>
-        value_option :stage, inline: true        # --stage=<number>|all
-        flag_option :temp                        # --temp
-        flag_option :ignore_skip_worktree_bits   # --ignore-skip-worktree-bits
+        flag_option %i[index u]
+        flag_option %i[quiet q]
+        flag_option %i[all a]
+        flag_option %i[force f]
+        flag_option %i[no_create n]
+        value_option :prefix, inline: true
+        value_option :stage, inline: true
+        flag_option :temp
+        flag_option :ignore_skip_worktree_bits
         end_of_options
         operand :file, required: false, repeatable: true
       end

@@ -40,120 +40,120 @@ module Git
         literal 'diff-index'
 
         # diff-index-specific options
-        flag_option :m                                   # -m
-        flag_option :cached                              # --cached
-        flag_option :merge_base                          # --merge-base
+        flag_option :m
+        flag_option :cached
+        flag_option :merge_base
 
         # Output format selection
-        flag_option %i[patch p u]                        # --patch / -p / -u
-        flag_option %i[no_patch s]                       # --no-patch / -s
-        flag_option :raw                                 # --raw
-        flag_option :patch_with_raw                      # --patch-with-raw
-        value_option %i[unified U], inline: true         # --unified=<n> / -U<n>
-        value_option :output, inline: true               # --output=<file>
-        value_option :output_indicator_new, inline: true    # --output-indicator-new=<char>
-        value_option :output_indicator_old, inline: true    # --output-indicator-old=<char>
-        value_option :output_indicator_context, inline: true # --output-indicator-context=<char>
+        flag_option %i[patch p u]
+        flag_option %i[no_patch s]
+        flag_option :raw
+        flag_option :patch_with_raw
+        value_option %i[unified U], inline: true
+        value_option :output, inline: true
+        value_option :output_indicator_new, inline: true
+        value_option :output_indicator_old, inline: true
+        value_option :output_indicator_context, inline: true
 
         # Diff algorithm
-        flag_option :indent_heuristic, negatable: true   # --[no-]indent-heuristic
-        flag_option :minimal                             # --minimal
-        flag_option :patience                            # --patience
-        flag_option :histogram                           # --histogram
-        value_option :anchored, inline: true, repeatable: true # --anchored=<text> (repeatable)
-        value_option :diff_algorithm, inline: true # --diff-algorithm=<algo>
+        flag_option :indent_heuristic, negatable: true
+        flag_option :minimal
+        flag_option :patience
+        flag_option :histogram
+        value_option :anchored, inline: true, repeatable: true
+        value_option :diff_algorithm, inline: true
 
         # Statistics output formats
-        flag_or_value_option :stat, inline: true         # --stat[=<width>[,<name-width>[,<count>]]]
-        value_option :stat_width, inline: true           # --stat-width=<width>
-        value_option :stat_name_width, inline: true      # --stat-name-width=<name-width>
-        value_option :stat_graph_width, inline: true     # --stat-graph-width=<graph-width>
-        value_option :stat_count, inline: true           # --stat-count=<count>
-        flag_option :compact_summary                     # --compact-summary
-        flag_option :numstat                             # --numstat
-        flag_option :shortstat                           # --shortstat
-        flag_or_value_option %i[dirstat X], inline: true # --dirstat[=<param>...] / -X[<param>...]
-        flag_option :cumulative                          # --cumulative
-        flag_or_value_option :dirstat_by_file, inline: true # --dirstat-by-file[=<param>...]
-        flag_option :summary                             # --summary
-        flag_option :patch_with_stat                     # --patch-with-stat
+        flag_or_value_option :stat, inline: true
+        value_option :stat_width, inline: true
+        value_option :stat_name_width, inline: true
+        value_option :stat_graph_width, inline: true
+        value_option :stat_count, inline: true
+        flag_option :compact_summary
+        flag_option :numstat
+        flag_option :shortstat
+        flag_or_value_option %i[dirstat X], inline: true
+        flag_option :cumulative
+        flag_or_value_option :dirstat_by_file, inline: true
+        flag_option :summary
+        flag_option :patch_with_stat
 
         # Name and path display
-        flag_option :z                                   # -z
-        flag_option :name_only                           # --name-only
-        flag_option :name_status                         # --name-status
-        flag_or_value_option :submodule, inline: true    # --submodule[=<format>]
+        flag_option :z
+        flag_option :name_only
+        flag_option :name_status
+        flag_or_value_option :submodule, inline: true
 
         # Color output
-        flag_or_value_option :color, inline: true, negatable: true # --color[=<when>] / --no-color
-        flag_or_value_option :color_moved, inline: true, negatable: true # --color-moved[=<mode>] / --no-color-moved
-        value_option :color_moved_ws, inline: true       # --color-moved-ws=<mode>,...
-        flag_option :no_color_moved_ws                   # --no-color-moved-ws
+        flag_or_value_option :color, inline: true, negatable: true
+        flag_or_value_option :color_moved, inline: true, negatable: true
+        value_option :color_moved_ws, inline: true
+        flag_option :no_color_moved_ws
 
         # Word diff
-        flag_or_value_option :word_diff, inline: true    # --word-diff[=<mode>]
-        value_option :word_diff_regex, inline: true      # --word-diff-regex=<regex>
-        flag_or_value_option :color_words, inline: true  # --color-words[=<regex>]
+        flag_or_value_option :word_diff, inline: true
+        value_option :word_diff_regex, inline: true
+        flag_or_value_option :color_words, inline: true
 
         # Whitespace handling
-        flag_option :ignore_cr_at_eol                    # --ignore-cr-at-eol
-        flag_option :ignore_space_at_eol                 # --ignore-space-at-eol
-        flag_option %i[ignore_space_change b]            # --ignore-space-change / -b
-        flag_option %i[ignore_all_space w]               # --ignore-all-space / -w
-        flag_option :ignore_blank_lines                  # --ignore-blank-lines
-        value_option %i[ignore_matching_lines I], inline: true, repeatable: true # --ignore-matching-lines / -I
-        flag_option :check                               # --check
-        value_option :ws_error_highlight, inline: true   # --ws-error-highlight=<kind>
+        flag_option :ignore_cr_at_eol
+        flag_option :ignore_space_at_eol
+        flag_option %i[ignore_space_change b]
+        flag_option %i[ignore_all_space w]
+        flag_option :ignore_blank_lines
+        value_option %i[ignore_matching_lines I], inline: true, repeatable: true
+        flag_option :check
+        value_option :ws_error_highlight, inline: true
 
         # Rename/copy detection
-        flag_option :no_renames                          # --no-renames
-        flag_option :rename_empty, negatable: true       # --[no-]rename-empty
-        flag_option :full_index                          # --full-index
-        flag_option :binary                              # --binary
-        flag_or_value_option :abbrev, inline: true       # --abbrev[=<n>]
-        flag_or_value_option %i[break_rewrites B], inline: true  # --break-rewrites[=[<n>][/<m>]] / -B[<n>][/<m>]
-        flag_or_value_option %i[find_renames M], inline: true    # --find-renames[=<n>] / -M[<n>]
-        flag_or_value_option %i[find_copies C], inline: true     # --find-copies[=<n>] / -C[<n>]
-        flag_option :find_copies_harder                  # --find-copies-harder
-        flag_option %i[irreversible_delete D]            # --irreversible-delete / -D
+        flag_option :no_renames
+        flag_option :rename_empty, negatable: true
+        flag_option :full_index
+        flag_option :binary
+        flag_or_value_option :abbrev, inline: true
+        flag_or_value_option %i[break_rewrites B], inline: true
+        flag_or_value_option %i[find_renames M], inline: true
+        flag_or_value_option %i[find_copies C], inline: true
+        flag_option :find_copies_harder
+        flag_option %i[irreversible_delete D]
 
         # Pickaxe / filtering
-        value_option :l, inline: true                    # -l<num>
-        value_option :diff_filter, inline: true          # --diff-filter=[ACDMRTUXB*...]
-        value_option :S, inline: true                    # -S<string>
-        value_option :G, inline: true                    # -G<regex>
-        value_option :find_object, inline: true          # --find-object=<object-id>
-        flag_option :pickaxe_all                         # --pickaxe-all
-        flag_option :pickaxe_regex                       # --pickaxe-regex
-        value_option :O, inline: true                    # -O<orderfile>
-        value_option :skip_to, inline: true              # --skip-to=<file>
-        value_option :rotate_to, inline: true            # --rotate-to=<file>
+        value_option :l, inline: true
+        value_option :diff_filter, inline: true
+        value_option :S, inline: true
+        value_option :G, inline: true
+        value_option :find_object, inline: true
+        flag_option :pickaxe_all
+        flag_option :pickaxe_regex
+        value_option :O, inline: true
+        value_option :skip_to, inline: true
+        value_option :rotate_to, inline: true
 
         # Miscellaneous diff options
-        flag_option :R # -R (swap inputs)
-        flag_or_value_option :relative, inline: true, negatable: true # --relative[=<path>] / --no-relative
-        flag_option %i[text a]                           # --text / -a
-        value_option :inter_hunk_context, inline: true   # --inter-hunk-context=<number>
-        flag_option %i[function_context W]               # --function-context / -W
-        flag_option :exit_code                           # --exit-code
-        flag_option :quiet                               # --quiet
-        flag_option :ext_diff, negatable: true           # --[no-]ext-diff
-        flag_option :textconv, negatable: true           # --[no-]textconv
-        flag_or_value_option :ignore_submodules, inline: true # --ignore-submodules[=<when>]
-        value_option :src_prefix, inline: true           # --src-prefix=<prefix>
-        value_option :dst_prefix, inline: true           # --dst-prefix=<prefix>
-        flag_option :no_prefix                           # --no-prefix
-        flag_option :default_prefix                      # --default-prefix
-        value_option :line_prefix, inline: true          # --line-prefix=<prefix>
-        flag_option :ita_invisible_in_index              # --ita-invisible-in-index
-        value_option :max_depth, inline: true            # --max-depth=<depth>
+        flag_option :R
+        flag_or_value_option :relative, inline: true, negatable: true
+        flag_option %i[text a]
+        value_option :inter_hunk_context, inline: true
+        flag_option %i[function_context W]
+        flag_option :exit_code
+        flag_option :quiet
+        flag_option :ext_diff, negatable: true
+        flag_option :textconv, negatable: true
+        flag_or_value_option :ignore_submodules, inline: true
+        value_option :src_prefix, inline: true
+        value_option :dst_prefix, inline: true
+        flag_option :no_prefix
+        flag_option :default_prefix
+        value_option :line_prefix, inline: true
+        flag_option :ita_invisible_in_index
+        value_option :max_depth, inline: true
 
         # Operands: git diff-index does not accept -- before <tree-ish>.
         # end_of_options is placed between tree_ish and path so that -- is emitted
         # only when path arguments are present, disambiguating paths from revisions.
-        operand :tree_ish, required: true   # <tree-ish> (required)
-        end_of_options                      # -- emitted only when paths follow
-        operand :path, repeatable: true     # [<path>...] (optional)
+        operand :tree_ish, required: true
+        end_of_options
+        operand :path, repeatable: true
       end
 
       # git diff-index exits 1 when differences are found (e.g. with --exit-code)

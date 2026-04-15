@@ -36,21 +36,21 @@ module Git
           literal 'branch'
           literal '--list'
 
-          flag_or_value_option :color, inline: true, negatable: true     # --color[=<when>] / --no-color
-          flag_option %i[verbose v], max_times: 2                        # --verbose (alias: :v)
-          flag_or_value_option :abbrev, inline: true, negatable: true    # --abbrev[=<n>] / --no-abbrev
-          flag_or_value_option :column, inline: true, negatable: true    # --column[=<options>] / --no-column
-          value_option :sort, inline: true, repeatable: true             # --sort=<key>
-          flag_or_value_option :merged                                   # --merged [<commit>]
-          flag_or_value_option :no_merged                                # --no-merged [<commit>]
-          flag_or_value_option :contains                                 # --contains [<commit>]
-          flag_or_value_option :no_contains                              # --no-contains [<commit>]
-          value_option :points_at                                        # --points-at <object>
-          value_option :format, inline: true                             # --format=<format>
-          flag_option %i[remotes r]                                      # --remotes (alias: :r)
-          flag_option %i[all a]                                          # --all (alias: :a)
-          flag_option %i[ignore_case i]                                  # --ignore-case (alias: :i)
-          flag_option :omit_empty                                        # --omit-empty
+          flag_or_value_option :color, inline: true, negatable: true
+          flag_option %i[verbose v], max_times: 2
+          flag_or_value_option :abbrev, inline: true, negatable: true
+          flag_or_value_option :column, inline: true, negatable: true
+          value_option :sort, inline: true, repeatable: true
+          flag_or_value_option :merged
+          flag_or_value_option :no_merged
+          flag_or_value_option :contains
+          flag_or_value_option :no_contains
+          value_option :points_at
+          value_option :format, inline: true
+          flag_option %i[remotes r]
+          flag_option %i[all a]
+          flag_option %i[ignore_case i]
+          flag_option :omit_empty
 
           end_of_options
 

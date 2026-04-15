@@ -33,9 +33,9 @@ module Git
       class Show < Git::Commands::Base
         arguments do
           literal 'remote'
-          flag_option %i[verbose v]                   # --verbose (alias: :v)
+          flag_option %i[verbose v]
           literal 'show'
-          flag_option :n                              # -n
+          flag_option :n
 
           end_of_options
 

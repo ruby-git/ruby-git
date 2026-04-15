@@ -28,7 +28,7 @@ module Git
       class List < Git::Commands::Base
         arguments do
           literal 'remote'
-          flag_option %i[verbose v] # --verbose (alias: :v)
+          flag_option %i[verbose v]
         end
 
         # @!method call(*, **)

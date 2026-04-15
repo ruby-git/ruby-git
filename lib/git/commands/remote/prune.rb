@@ -29,7 +29,7 @@ module Git
         arguments do
           literal 'remote'
           literal 'prune'
-          flag_option %i[dry_run n] # --dry-run (alias: :n)
+          flag_option %i[dry_run n]
 
           end_of_options
 

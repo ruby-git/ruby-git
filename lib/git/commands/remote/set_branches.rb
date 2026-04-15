@@ -30,7 +30,7 @@ module Git
         arguments do
           literal 'remote'
           literal 'set-branches'
-          flag_option :add # --add
+          flag_option :add
 
           end_of_options
 

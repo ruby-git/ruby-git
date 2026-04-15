@@ -29,64 +29,64 @@ module Git
         literal 'commit'
 
         # Stage selection
-        flag_option %i[all a] # --all (alias: :a)
+        flag_option %i[all a]
 
         # Message source and editing
-        flag_option %i[edit e], negatable: true                          # --edit / --no-edit (alias: :e)
-        flag_option :amend                                               # --amend
-        value_option %i[reuse_message C], inline: true                   # --reuse-message=<commit> (alias: :C)
-        value_option :fixup, inline: true                                # --fixup=[amend:|reword:]<commit>
-        value_option :squash, inline: true                               # --squash=<commit>
-        value_option %i[message m], inline: true, allow_empty: true      # --message=<msg> (alias: :m)
-        value_option %i[file F], inline: true                            # --file=<file> (alias: :F)
-        value_option %i[template t], inline: true                        # --template=<file> (alias: :t)
+        flag_option %i[edit e], negatable: true
+        flag_option :amend
+        value_option %i[reuse_message C], inline: true
+        value_option :fixup, inline: true
+        value_option :squash, inline: true
+        value_option %i[message m], inline: true, allow_empty: true
+        value_option %i[file F], inline: true
+        value_option %i[template t], inline: true
 
         # Author / date
-        flag_option :reset_author                                        # --reset-author
-        value_option :author, inline: true                               # --author=<author>
-        value_option :date, inline: true, type: String                   # --date=<date>
+        flag_option :reset_author
+        value_option :author, inline: true
+        value_option :date, inline: true, type: String
 
         # Message cleanup and trailers
-        value_option :cleanup, inline: true                              # --cleanup=<mode>
-        value_option :trailer, repeatable: true                          # --trailer <token>[=<value>]
+        value_option :cleanup, inline: true
+        value_option :trailer, repeatable: true
 
         # Hooks
-        flag_option %i[verify n], negatable: true # --verify / --no-verify (alias: :n)
+        flag_option %i[verify n], negatable: true
 
         # Behavior
-        flag_option :allow_empty                                         # --allow-empty
-        flag_option :allow_empty_message                                 # --allow-empty-message
-        flag_option :no_post_rewrite                                     # --no-post-rewrite
-        flag_option %i[include i]                                        # --include (alias: :i)
-        flag_option %i[only o]                                           # --only (alias: :o)
+        flag_option :allow_empty
+        flag_option :allow_empty_message
+        flag_option :no_post_rewrite
+        flag_option %i[include i]
+        flag_option %i[only o]
 
         # Output / dry-run
-        flag_option :dry_run                                             # --dry-run
-        flag_option :short                                               # --short
-        flag_option :branch                                              # --branch
-        flag_option :porcelain                                           # --porcelain
-        flag_option :long                                                # --long
-        flag_option %i[null z]                                           # --null (alias: :z)
-        flag_option %i[verbose v], max_times: 2                          # --verbose (alias: :v, up to 2×)
-        flag_option %i[quiet q]                                          # --quiet (alias: :q)
-        flag_option :status, negatable: true                             # --status / --no-status
+        flag_option :dry_run
+        flag_option :short
+        flag_option :branch
+        flag_option :porcelain
+        flag_option :long
+        flag_option %i[null z]
+        flag_option %i[verbose v], max_times: 2
+        flag_option %i[quiet q]
+        flag_option :status, negatable: true
 
         # Verbose diff options
-        value_option %i[unified U], inline: true, type: Integer          # --unified=<n> (alias: :U)
-        value_option :inter_hunk_context, inline: true, type: Integer    # --inter-hunk-context=<n>
+        value_option %i[unified U], inline: true, type: Integer
+        value_option :inter_hunk_context, inline: true, type: Integer
 
         # Signoff
-        flag_option %i[signoff s], negatable: true # --signoff / --no-signoff (alias: :s)
+        flag_option %i[signoff s], negatable: true
 
         # GPG signing
-        flag_or_value_option %i[gpg_sign S], negatable: true, inline: true # --gpg-sign[=<keyid>] / --no-gpg-sign (:S)
+        flag_or_value_option %i[gpg_sign S], negatable: true, inline: true
 
         # Untracked files
-        flag_or_value_option %i[untracked_files u], inline: true # --untracked-files[=<mode>] (alias: :u)
+        flag_or_value_option %i[untracked_files u], inline: true
 
         # Pathspec from file
-        value_option :pathspec_from_file, inline: true                   # --pathspec-from-file=<file>
-        flag_option :pathspec_file_nul                                   # --pathspec-file-nul
+        value_option :pathspec_from_file, inline: true
+        flag_option :pathspec_file_nul
 
         # Path selection
         end_of_options

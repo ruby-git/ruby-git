@@ -32,41 +32,41 @@ module Git
     class LsFiles < Git::Commands::Base
       arguments do
         literal 'ls-files'
-        flag_option :z                                     # -z
-        flag_option :t                                     # -t
-        flag_option :v                                     # -v
-        flag_option :f                                     # -f
-        flag_option %i[cached c]                           # --cached (alias: :c)
-        flag_option %i[deleted d]                          # --deleted (alias: :d)
-        flag_option %i[others o]                           # --others (alias: :o)
-        flag_option %i[ignored i]                          # --ignored (alias: :i)
-        flag_option %i[stage s]                            # --stage (alias: :s)
-        flag_option %i[unmerged u]                         # --unmerged (alias: :u)
-        flag_option %i[killed k]                           # --killed (alias: :k)
-        flag_option %i[modified m]                         # --modified (alias: :m)
-        flag_option :resolve_undo                          # --resolve-undo
-        flag_option :directory                             # --directory
-        flag_option :no_empty_directory                    # --no-empty-directory
-        flag_option :eol                                   # --eol
-        flag_option :sparse                                # --sparse
-        flag_option :deduplicate                           # --deduplicate
-        value_option %i[exclude x], inline: true           # --exclude=<pattern> (alias: :x)
-        value_option %i[exclude_from X], inline: true      # --exclude-from=<file> (alias: :X)
-        value_option :exclude_per_directory, inline: true  # --exclude-per-directory=<file>
-        flag_option :exclude_standard                      # --exclude-standard
-        flag_option :error_unmatch                         # --error-unmatch
-        value_option :with_tree, inline: true              # --with-tree=<tree-ish>
-        flag_option :full_name                             # --full-name
-        flag_option :recurse_submodules                    # --recurse-submodules
-        flag_or_value_option :abbrev, inline: true         # --abbrev[=<n>]
-        flag_option :debug                                 # --debug
-        value_option :format, inline: true                 # --format=<format>
+        flag_option :z
+        flag_option :t
+        flag_option :v
+        flag_option :f
+        flag_option %i[cached c]
+        flag_option %i[deleted d]
+        flag_option %i[others o]
+        flag_option %i[ignored i]
+        flag_option %i[stage s]
+        flag_option %i[unmerged u]
+        flag_option %i[killed k]
+        flag_option %i[modified m]
+        flag_option :resolve_undo
+        flag_option :directory
+        flag_option :no_empty_directory
+        flag_option :eol
+        flag_option :sparse
+        flag_option :deduplicate
+        value_option %i[exclude x], inline: true
+        value_option %i[exclude_from X], inline: true
+        value_option :exclude_per_directory, inline: true
+        flag_option :exclude_standard
+        flag_option :error_unmatch
+        value_option :with_tree, inline: true
+        flag_option :full_name
+        flag_option :recurse_submodules
+        flag_or_value_option :abbrev, inline: true
+        flag_option :debug
+        value_option :format, inline: true
 
-        end_of_options                                     # --
+        end_of_options
 
-        operand :file, repeatable: true                    # [<file>...]
+        operand :file, repeatable: true
 
-        execution_option :chdir                            # NOT a git flag — routes to process spawn options only
+        execution_option :chdir
       end
 
       # @!method call(*, **)
