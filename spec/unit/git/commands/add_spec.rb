@@ -26,6 +26,20 @@ RSpec.describe Git::Commands::Add do
       end
     end
 
+    context 'with the :verbose option' do
+      it 'includes the --verbose flag' do
+        expect_command_capturing('add', '--verbose', '--', 'file.rb').and_return(command_result)
+
+        command.call('file.rb', verbose: true)
+      end
+
+      it 'accepts the :v alias' do
+        expect_command_capturing('add', '--verbose', '--', 'file.rb').and_return(command_result)
+
+        command.call('file.rb', v: true)
+      end
+    end
+
     context 'with the :dry_run option' do
       it 'includes the --dry-run flag' do
         expect_command_capturing('add', '--dry-run', '--', 'file.rb').and_return(command_result)
