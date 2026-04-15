@@ -350,6 +350,9 @@ For each command file, run through these checks in order:
 
 - [ ] `@return [Git::CommandLineResult]` with wording: "the result of calling `git
       <subcommand>`"
+- [ ] `@api public` is present at the end of the `@overload` block (after all `@raise`
+      tags) — every command class is `@api private` at the class level, but `call` is
+      the public contract and must be marked `@api public`
 - [ ] whenever the `@overload` signature includes `**options`, include
       `@raise [ArgumentError] if unsupported options are provided` — the base
       `ArgsBuilder` always raises this at bind time for unknown keys
