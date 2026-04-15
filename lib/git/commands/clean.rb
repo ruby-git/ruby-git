@@ -6,52 +6,39 @@ module Git
   module Commands
     # Remove untracked files from the working tree
     #
-    # This command removes files from the working directory that are not tracked by Git.
-    # It respects standard ignore rules unless explicitly overridden.
+    # Cleans the working tree by recursively removing files that are not under
+    # version control. Only files unknown to Git are removed by default; with
+    # `:x` also removes ignored files; with `:X` removes only ignored files.
     #
-    # @see https://git-scm.com/docs/git-clean git-clean
+    # @example Typical usage
+    #   clean = Git::Commands::Clean.new(execution_context)
+    #   clean.call(force: true)
+    #   clean.call(force: true, d: true)
+    #   clean.call(force: 2)
+    #   clean.call(dry_run: true)
+    #   clean.call(force: true, exclude: '*.log')
+    #   clean.call(force: true, X: true)
+    #   clean.call(force: true, pathspec: ['tmp/', 'build/'])
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-clean/2.53.0
     #
     # @see Git::Commands
     #
+    # @see https://git-scm.com/docs/git-clean git-clean
+    #
     # @api private
-    #
-    # @example Clean untracked files
-    #   clean = Git::Commands::Clean.new(execution_context)
-    #   clean.call
-    #
-    # @example Force cleaning of untracked files
-    #   clean.call(force: true)
-    #
-    # @example Force cleaning of untracked nested git repositories
-    #   clean.call(force: 2)
-    #
-    # @example Recurse into untracked directories
-    #   clean.call(d: true)
-    #
-    # @example Don’t use the standard ignore rules
-    #   clean.call(x: true)
-    #
-    # @example Dry run — show what would be done without removing anything
-    #   clean.call(dry_run: true)
-    #
-    # @example Exclude files matching a pattern from cleaning
-    #   clean.call(force: true, exclude: '*.log')
-    #
-    # @example Remove only files ignored by Git
-    #   clean.call(force: true, X: true)
-    #
-    # @example Clean specific paths only
-    #   clean.call(force: true, pathspec: ['tmp/', 'build/'])
     #
     class Clean < Git::Commands::Base
       arguments do
         literal 'clean'
-        flag_option :d
-        flag_option %i[force f], max_times: 2
-        flag_option %i[dry_run n]
-        value_option %i[exclude e], inline: true, repeatable: true
-        flag_option :x
-        flag_option :X
+        flag_option :d # -d
+        flag_option %i[force f], max_times: 2 # --force (alias: :f)
+        flag_option %i[dry_run n] # --dry-run (alias: :n)
+        flag_option %i[quiet q] # --quiet (alias: :q)
+        value_option %i[exclude e], inline: true, repeatable: true # --exclude=<pattern> (alias: :e)
+        flag_option :x  # -x
+        flag_option :X  # -X
+        execution_option :chdir
         end_of_options
         value_option :pathspec, as_operand: true, repeatable: true
       end
@@ -64,9 +51,9 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :d (nil) Recurse into untracked directories
+      #     @option options [Boolean] :d (false) recurse into untracked directories
       #
-      #     @option options [Boolean, Integer] :force (nil) Force the removal of untracked files
+      #     @option options [Boolean, Integer] :force (false) force the removal of untracked files
       #
       #       When `clean.requireForce` is not set to `false`, git-clean will refuse to
       #       delete files or directories unless this option is given.
@@ -75,28 +62,35 @@ module Git
       #       which also removes untracked nested git repositories (directories with a
       #       `.git` subdirectory).
       #
-      #       Alias: :f
+      #       Alias: `:f`
       #
-      #     @option options [Boolean] :dry_run (nil) Don't actually remove anything, just
+      #     @option options [Boolean] :dry_run (false) don't actually remove anything, just
       #       show what would be done
       #
-      #     @option options [String, Array<String>] :exclude (nil) Use the given exclude pattern
-      #       in addition to the standard ignore rules
+      #       Alias: `:n`
       #
-      #       May be specified multiple times
+      #     @option options [Boolean] :quiet (false) be quiet, only report errors
       #
-      #     @option options [Boolean] :x (nil) Don't use the standard ignore rules
+      #       Alias: `:q`
       #
-      #       Mutually exclusive with `:X`
+      #     @option options [String, Array<String>] :exclude (nil) use the given exclude
+      #       pattern in addition to the standard ignore rules
       #
-      #     @option options [Boolean] :X (nil) Remove only files ignored by Git
+      #       May be specified multiple times. Alias: `:e`
       #
-      #       Mutually exclusive with `:x`
+      #     @option options [Boolean] :x (false) don't use the standard ignore rules
       #
-      #     @option options [String, Array<String>] :pathspec (nil) Limit cleaning to files
+      #     @option options [Boolean] :X (false) remove only files ignored by Git
+      #
+      #     @option options [String, Array<String>] :pathspec (nil) limit cleaning to files
       #       matching the given pathspec(s)
       #
+      #     @option options [String, nil] :chdir (nil) change to this directory before
+      #       running git; not passed to the git CLI
+      #
       #     @return [Git::CommandLineResult] the result of calling `git clean`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #

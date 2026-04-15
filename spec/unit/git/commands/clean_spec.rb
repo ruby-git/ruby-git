@@ -61,6 +61,28 @@ RSpec.describe Git::Commands::Clean do
       end
     end
 
+    context 'with the :quiet option' do
+      it 'adds --quiet to the command line' do
+        expect_command_capturing('clean', '--quiet').and_return(command_result)
+
+        command.call(quiet: true)
+      end
+
+      it 'accepts :q as an alias' do
+        expect_command_capturing('clean', '--quiet').and_return(command_result)
+
+        command.call(q: true)
+      end
+    end
+
+    context 'with the :chdir execution option' do
+      it 'passes chdir to the execution context, not to the git CLI' do
+        expect_command_capturing('clean', chdir: '/some/dir').and_return(command_result)
+
+        command.call(chdir: '/some/dir')
+      end
+    end
+
     context 'with the :exclude option' do
       it 'adds --exclude=<pattern> to the command line' do
         expect_command_capturing('clean', '--exclude=*.log').and_return(command_result)
