@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/merge/continue'
 
 RSpec.describe Git::Commands::Merge::Continue do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
