@@ -74,9 +74,9 @@ class TestLib < Test::Unit::TestCase
       @lib.commit('commit without no verify and pre-commit file')
     end
 
-    # Error is not raised when no_verify is passed
+    # Error is not raised when verify: false is passed
     assert_nothing_raised do
-      @lib.commit('commit with no verify and pre-commit file', no_verify: true)
+      @lib.commit('commit with no verify and pre-commit file', verify: false)
     end
 
     # Restore pre-commit hook

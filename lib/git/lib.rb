@@ -1197,20 +1197,8 @@ module Git
     #
     def commit(message, opts = {})
       opts = opts.merge(message: message) if message
-
-      # TODO: deprecate :no_gpg_sign in favor of :gpg_sign => false
-      # This adapter was added to maintain backward compatibility
-      if opts[:no_gpg_sign]
-        Git::Deprecation.warn(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
-
-        raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts.key?(:gpg_sign)
-
-        opts.delete(:no_gpg_sign)
-        opts[:gpg_sign] = false
-      end
-
+      deprecate_commit_no_gpg_sign_option!(opts)
       deprecate_commit_add_all_option!(opts)
-
       Git::Commands::Commit.new(self).call(edit: false, **opts).stdout
     end
 
@@ -2255,6 +2243,17 @@ module Git
 
       Git::Deprecation.warn('The :add_all option for Git::Lib#commit is deprecated, use :all instead')
       opts[:all] = opts.delete(:add_all)
+    end
+
+    # TODO: deprecate :no_gpg_sign in favor of :gpg_sign => false
+    def deprecate_commit_no_gpg_sign_option!(opts)
+      return unless opts[:no_gpg_sign]
+
+      Git::Deprecation.warn(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
+      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts.key?(:gpg_sign)
+
+      opts.delete(:no_gpg_sign)
+      opts[:gpg_sign] = false
     end
 
     # Extracts execution context options from clone options.
