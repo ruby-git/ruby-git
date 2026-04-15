@@ -144,21 +144,76 @@ Two hard constraints:
 ### Namespace module template
 
 When splitting, create a bare namespace module file (`foo.rb`) — no class — matching
-the pattern of `diff.rb` and `cat_file.rb`:
+the pattern of `cat_file.rb`. The file has three required sections in this order:
+`require_relative` lines → module body with YARD → empty `module Foo` block.
+
+**Required elements (all mandatory):**
+
+1. `# frozen_string_literal: true` magic comment
+2. One `require_relative` line per sub-command file, in the order the sub-commands
+   appear in the `@see` bullet list
+3. A one-line summary (what `git foo` does overall)
+4. A "This module contains command classes split by…" paragraph with a bullet for
+   every sub-command class using `{Foo::Bar}` YARD links followed by ` — ` and a
+   short description
+5. `@api private`
+6. `@see https://git-scm.com/docs/git-foo git-foo documentation`
+7. At least two `@example` blocks — one per sub-command class; each example should
+   demonstrate the most common (non-error-path) call using a local variable named
+   `cmd` and `lib` as the constructor argument
+8. Empty `module Foo` + `end` block (no methods, no constants)
+
+**Tag ordering inside the YARD comment block:**
+
+```
+# One-line summary.
+#
+# This module contains command classes split by ...:
+#
+# - {Foo::Bar} — short description
+# - {Foo::Baz} — short description
+#
+# @api private
+#
+# @see https://git-scm.com/docs/git-foo git-foo documentation
+#
+# @example <Short description of the Bar use case>
+#   cmd = Git::Commands::Foo::Bar.new(lib)
+#   cmd.call(...)
+#
+# @example <Short description of the Baz use case>
+#   cmd = Git::Commands::Foo::Baz.new(lib)
+#   cmd.call(...)
+```
+
+**Full template:**
 
 ```ruby
 # frozen_string_literal: true
 
+require_relative 'foo/bar'
+require_relative 'foo/baz'
+
 module Git
   module Commands
-    # One-line summary of what the git command does.
+    # One-line summary of what `git foo` does.
     #
-    # This module contains command classes for [reason for split]:
-    # - {Foo::Bar} – what Bar does
-    # - {Foo::Baz} – what Baz does
+    # This module contains command classes split by [reason for split]:
+    #
+    # - {Foo::Bar} — what Bar does
+    # - {Foo::Baz} — what Baz does
     #
     # @api private
+    #
     # @see https://git-scm.com/docs/git-foo git-foo documentation
+    #
+    # @example <Short description for bar>
+    #   cmd = Git::Commands::Foo::Bar.new(lib)
+    #   cmd.call(...)
+    #
+    # @example <Short description for baz>
+    #   cmd = Git::Commands::Foo::Baz.new(lib)
+    #   cmd.call(...)
     #
     module Foo
     end
@@ -168,6 +223,18 @@ end
 
 Each sub-command file adds `@see Git::Commands::Foo` to link back to the parent
 module's overview.
+
+**Checklist for reviewing an existing namespace module:**
+
+- [ ] `# frozen_string_literal: true` is present
+- [ ] All sub-command files are `require_relative`'d (no `require 'git/commands/...'`)
+- [ ] Bullet list covers every sub-command class in the namespace with `{Foo::Bar}` YARD links
+- [ ] `@api private` is present
+- [ ] `@see` link points to `git-scm.com/docs/git-foo` documentation
+- [ ] At least one `@example` block per sub-command class
+- [ ] Each example uses `cmd = Git::Commands::Foo::Bar.new(lib)` form (variable `cmd`, arg `lib`)
+- [ ] Tag order: summary → bullet list → `@api private` → `@see` → `@examples`
+- [ ] No class is defined inside the module file; the `module Foo` block is empty
 
 ## Architecture contract
 
