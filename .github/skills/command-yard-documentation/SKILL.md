@@ -335,6 +335,11 @@ For each command file, run through these checks in order:
       `arguments do` block
 - [ ] `@option` types match the DSL method (see
       [DSL-to-YARD type mapping](#dsl-to-yard-type-mapping))
+- [ ] `@option` defaults match the DSL method — plain (non-negatable) `flag_option`
+      always uses `(false)`; `flag_option ..., negatable: true` uses `(nil)`;
+      `value_option` uses `(nil)`. Using `(nil)` on a plain `flag_option` is a bug:
+      it implies the caller can pass explicit `nil` to opt out, which is not the
+      intended semantics. Check every `@option` default tag against the DSL entry.
 - [ ] option defaults/types are consistent with DSL definitions
 - [ ] `@option` descriptions for options that have an `allowed_values` declaration
       enumerate the accepted values in the description text, e.g.: `@option options
