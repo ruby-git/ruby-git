@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/commands/clone'
 
 RSpec.describe Git::Commands::Clone do
   let(:execution_context) { double('ExecutionContext') }
@@ -224,6 +225,42 @@ RSpec.describe Git::Commands::Clone do
                                  directory).and_return(command_result)
 
         command.call(repository_url, directory, no_hardlinks: true)
+      end
+    end
+
+    context 'with the :quiet option' do
+      it 'includes --quiet when true' do
+        expect_command_capturing('clone', '--quiet', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, quiet: true)
+      end
+
+      it 'accepts :q as an alias' do
+        expect_command_capturing('clone', '--quiet', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, q: true)
+      end
+    end
+
+    context 'with the :verbose option' do
+      it 'includes --verbose when true' do
+        expect_command_capturing('clone', '--verbose', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, verbose: true)
+      end
+
+      it 'accepts :v as an alias' do
+        expect_command_capturing('clone', '--verbose', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, v: true)
+      end
+    end
+
+    context 'with the :progress option' do
+      it 'includes --progress when true' do
+        expect_command_capturing('clone', '--progress', '--', repository_url, directory).and_return(command_result)
+
+        command.call(repository_url, directory, progress: true)
       end
     end
 
