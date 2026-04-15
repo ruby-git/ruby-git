@@ -10,21 +10,17 @@ module Git
     # new commit object id on stdout. The log message is provided via `-m` or `-F`
     # options; multiple instances of either are concatenated as separate paragraphs.
     #
-    # @example Create a simple commit with a message
+    # @example Typical usage
     #   commit_tree = Git::Commands::CommitTree.new(execution_context)
-    #   result = commit_tree.call('abc123', m: 'Initial commit')
+    #   commit_tree.call('abc123', m: 'Initial commit')
+    #   commit_tree.call('abc123', p: %w[parent1 parent2], m: 'Merge')
+    #   commit_tree.call('abc123', m: 'Signed', gpg_sign: true)
     #
-    # @example Create a merge commit with multiple parents
-    #   commit_tree = Git::Commands::CommitTree.new(execution_context)
-    #   result = commit_tree.call('abc123', p: %w[parent1 parent2], m: 'Merge')
-    #
-    # @example GPG-sign a commit
-    #   commit_tree = Git::Commands::CommitTree.new(execution_context)
-    #   result = commit_tree.call('abc123', m: 'Signed', gpg_sign: true)
-    #
-    # @see https://git-scm.com/docs/git-commit-tree git-commit-tree documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-commit-tree/2.53.0
     #
     # @see Git::Commands
+    #
+    # @see https://git-scm.com/docs/git-commit-tree git-commit-tree
     #
     # @api private
     #
@@ -95,8 +91,10 @@ module Git
       #
       #     @raise [ArgumentError] if the tree operand is missing
       #
-      #     @raise [Git::FailedError] if the command returns a non-zero exit
+      #     @raise [Git::FailedError] if git exits with a non-zero exit
       #       status
+      #
+      #     @api public
     end
   end
 end
