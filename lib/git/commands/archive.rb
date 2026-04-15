@@ -25,114 +25,99 @@ module Git
     #   cmd = Git::Commands::Archive.new(execution_context)
     #   cmd.call('HEAD', 'src/', format: 'tar', out: io)
     #
-    # @see https://git-scm.com/docs/git-archive git-archive documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-archive/2.53.0
+    #
+    # @see Git::Commands
+    #
+    # @see https://git-scm.com/docs/git-archive git-archive
     #
     # @api private
     #
     class Archive < Base
       arguments do
         literal 'archive'
-
-        # Archive format — `tar` or `zip`; user-defined formats (e.g. `tar.gz`)
-        # are also supported when configured via `tar.<format>.command`
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---formatltfmtgt
-        value_option :format, inline: true
-
-        # Report progress to stderr
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---verbose
-        flag_option %i[verbose v]
-
-        # Prepend `<prefix>/` to each filename in the archive
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---prefixltprefixgt
-        value_option :prefix, inline: true
-
-        # Write the archive to `<file>` instead of stdout
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt--oltfilegt
-        value_option %i[output o], inline: true
-
-        # Look for attributes in `.gitattributes` files in the working tree
-        # as well as in the tree being archived
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---worktree-attributes
-        flag_option :worktree_attributes
-
-        # Instead of making an archive from the local repository, retrieve
-        # a tar archive from a remote repository
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---remoteltrepogt
-        value_option :remote, inline: true
-
-        # Used with `--remote` to specify the path to `git-upload-archive`
-        # on the remote side
-        # @see https://git-scm.com/docs/git-archive#Documentation/git-archive.txt---execltgit-upload-archivegt
-        value_option :exec, inline: true
-
-        # Stream stdout to this IO object instead of buffering in memory
+        value_option :format, inline: true                              # --format=<fmt>
+        flag_option %i[list l]                                          # --list (alias: :l)
+        flag_option %i[verbose v]                                       # --verbose (alias: :v)
+        value_option :prefix, inline: true                              # --prefix=<prefix>
+        value_option %i[output o], inline: true                         # --output=<file> (alias: :o)
+        value_option :add_file, inline: true, repeatable: true          # --add-file=<file>
+        value_option :add_virtual_file, inline: true, repeatable: true  # --add-virtual-file=<path>:<content>
+        flag_option :worktree_attributes                                # --worktree-attributes
+        value_option :mtime, inline: true                               # --mtime=<time>
+        value_option :remote, inline: true                              # --remote=<repo>
+        value_option :exec, inline: true                                # --exec=<git-upload-archive>
         execution_option :out
-
         conflicts :output, :out
 
         end_of_options
-
-        # The tree or commit to produce an archive for
-        operand :tree_ish, required: true
-
-        # Limit the archive to these paths within the tree
+        operand :tree_ish
         operand :path, repeatable: true
       end
 
-      # Execute the `git archive` command
-      #
-      # Archive output is binary. On the capturing path (no `out:` option),
-      # `normalize` and `chomp` are disabled so stdout bytes are returned
-      # unchanged. When `out:` is given, the streaming path is used and
-      # these options do not apply.
       # @!method call(*, **)
       #
-      #   @overload call(tree_ish, *path, **options)
+      #   @overload call(tree_ish = nil, *path, **options)
       #
-      #     @param tree_ish [String] the tree or commit to produce an archive for
+      #     Execute the `git archive` command.
       #
-      #     @param path [Array<String>] limit the archive to these paths
-      #       within the tree
+      #     Archive output is binary. On the capturing path (no `out:` option),
+      #     `normalize` and `chomp` are disabled so stdout bytes are returned
+      #     unchanged. When `out:` is given, the streaming path is used.
+      #
+      #     @param tree_ish [String, nil] (nil) the tree or commit to produce an archive for;
+      #       omit when using the `:list` option to enumerate available formats
+      #
+      #     @param path [Array<String>] paths within the tree to include in the archive
       #
       #     @param options [Hash] command options
       #
-      #     @option options [String] :format (nil) archive format — `tar` or
-      #       `zip`; user-defined formats are also supported
+      #     @option options [String] :format (nil) archive format — `tar`, `zip`, `tar.gz`,
+      #       `tgz`, or any format defined via `tar.<format>.command`
       #
-      #     @option options [Boolean] :verbose (nil) report progress to stderr
+      #     @option options [Boolean] :list (false) show all available archive formats
+      #
+      #       Alias: :l
+      #
+      #     @option options [Boolean] :verbose (false) report progress to stderr
       #
       #       Alias: :v
       #
-      #     @option options [String] :prefix (nil) prepend `<prefix>/` to each
-      #       filename in the archive
+      #     @option options [String] :prefix (nil) prepend `<prefix>/` to each filename
+      #       in the archive
       #
-      #     @option options [String] :output (nil) write the archive to
-      #       this file instead of stdout
+      #     @option options [String] :output (nil) write the archive to this file instead
+      #       of stdout
       #
       #       Alias: :o
       #
-      #     @option options [Boolean] :worktree_attributes (nil) look for
-      #       attributes in `.gitattributes` files in the working tree
+      #     @option options [String, Array<String>] :add_file (nil) add one or more
+      #       non-tracked files to the archive; may be passed multiple times
       #
-      #     @option options [String] :remote (nil) retrieve a tar archive from
-      #       a remote repository instead of the local one
+      #     @option options [String, Array<String>] :add_virtual_file (nil) add one or
+      #       more virtual files by `<path>:<content>`; may be passed multiple times
       #
-      #     @option options [String] :exec (nil) path to `git-upload-archive`
-      #       on the remote side (used with `:remote`)
+      #     @option options [Boolean] :worktree_attributes (false) look for attributes in
+      #       `.gitattributes` files in the working tree as well
       #
-      #     @option options [IO, #write] :out the command output is sent to the
-      #       given IO object instead of being captured in the result; the
-      #       result's `.stdout` will be `''` in this case.
+      #     @option options [String] :mtime (nil) set modification time of archive entries
       #
-      #     @return [Git::CommandLineResult] the result of calling
-      #       `git archive`
+      #     @option options [String] :remote (nil) retrieve a tar archive from a remote
+      #       repository instead of the local one
+      #
+      #     @option options [String] :exec (nil) path to `git-upload-archive` on the remote
+      #       side; used with `:remote`
+      #
+      #     @option options [IO, #write] :out (nil) stream archive output to this IO object
+      #       instead of capturing it; the result's `.stdout` will be `''`
+      #
+      #     @return [Git::CommandLineResult] the result of calling `git archive`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if the tree_ish operand is missing
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if the command returns a non-zero
-      #       exit status
+      #     @api public
 
       # Archive output is intrinsically binary (tar, zip, etc.) — opt out of
       # Ruby string normalization and trailing-newline chomping so that
