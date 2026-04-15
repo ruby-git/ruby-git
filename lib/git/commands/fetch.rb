@@ -39,67 +39,67 @@ module Git
         literal 'fetch'
 
         # Remotes and fetching scope
-        flag_option :all, negatable: true              # --all / --no-all
-        flag_option %i[append a]                       # --append; alias: :a
-        flag_option :atomic                            # --atomic
+        flag_option :all, negatable: true
+        flag_option %i[append a]
+        flag_option :atomic
 
         # Shallow clone controls
-        value_option :depth                            # --depth <n>
-        value_option :deepen                           # --deepen <n>
-        value_option :shallow_since, inline: true      # --shallow-since=<date>
-        value_option :shallow_exclude,                 # --shallow-exclude=<ref>
+        value_option :depth
+        value_option :deepen
+        value_option :shallow_since, inline: true
+        value_option :shallow_exclude,
                      inline: true, repeatable: true
-        flag_option :unshallow                         # --unshallow
-        flag_option :update_shallow                    # --update-shallow
+        flag_option :unshallow
+        flag_option :update_shallow
 
         # Output and behavior
-        flag_option :dry_run                           # --dry-run
-        flag_option :write_fetch_head, negatable: true # --write-fetch-head / --no-write-fetch-head
-        flag_option :refetch                           # --refetch
-        flag_option :prefetch                          # --prefetch
+        flag_option :dry_run
+        flag_option :write_fetch_head, negatable: true
+        flag_option :refetch
+        flag_option :prefetch
 
         # Safety and update control
-        flag_option %i[force f]                        # --force; alias: :f
-        flag_option %i[keep k]                         # --keep; alias: :k
-        flag_option :multiple                          # --multiple
+        flag_option %i[force f]
+        flag_option %i[keep k]
+        flag_option :multiple
 
         # Pruning
-        flag_option %i[prune p]                        # --prune; alias: :p
-        flag_option %i[prune_tags P]                   # --prune-tags; alias: :P
+        flag_option %i[prune p]
+        flag_option %i[prune_tags P]
 
         # Tag handling
-        flag_option %i[tags t], negatable: true # --tags / --no-tags; alias: :t
+        flag_option %i[tags t], negatable: true
 
         # Submodules
-        flag_or_value_option :recurse_submodules, # --recurse-submodules[=(yes|on-demand|no)]
+        flag_or_value_option :recurse_submodules,
                              inline: true, negatable: true
 
         # Parallelism
-        value_option %i[jobs j] # --jobs <n>; alias: :j
+        value_option %i[jobs j]
 
         # Tracking
-        flag_option :set_upstream                      # --set-upstream
-        flag_option %i[update_head_ok u]               # --update-head-ok; alias: :u
+        flag_option :set_upstream
+        flag_option %i[update_head_ok u]
 
         # Output verbosity
-        flag_option %i[quiet q]                        # --quiet; alias: :q
-        flag_option %i[verbose v]                      # --verbose; alias: :v
-        flag_option :progress                          # --progress
+        flag_option %i[quiet q]
+        flag_option %i[verbose v]
+        flag_option :progress
 
         # Protocol and connectivity
-        value_option %i[server_option o], # --server-option=<opt>; alias: :o
+        value_option %i[server_option o],
                      inline: true, repeatable: true
-        flag_option :show_forced_updates, negatable: true # --show-forced-updates / --no-show-forced-updates
-        flag_option :ipv4                              # --ipv4
-        flag_option :ipv6                              # --ipv6
+        flag_option :show_forced_updates, negatable: true
+        flag_option :ipv4
+        flag_option :ipv6
 
         # Execution-only options (not emitted as CLI flags)
         execution_option :timeout
         execution_option :merge
 
         end_of_options
-        operand :repository                            # [<repository>]
-        operand :refspecs, repeatable: true            # [<refspec>...]
+        operand :repository
+        operand :refspecs, repeatable: true
       end
 
       # @!method call(*, **)

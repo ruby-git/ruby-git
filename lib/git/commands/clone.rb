@@ -26,41 +26,41 @@ module Git
     class Clone < Git::Commands::Base
       arguments do
         literal 'clone'
-        value_option :template, inline: true # --template=<template-directory>
-        flag_option %i[local l], negatable: true # --local / --no-local (alias: :l)
-        flag_option %i[shared s] # --shared (alias: :s)
-        flag_option :no_hardlinks # --no-hardlinks
-        flag_option %i[quiet q] # --quiet (alias: :q)
-        flag_option %i[verbose v] # --verbose (alias: :v)
-        flag_option :progress # --progress
-        flag_option %i[no_checkout n] # --no-checkout (alias: :n)
-        flag_option :bare # --bare
-        flag_option :mirror # --mirror
-        value_option %i[origin o] # --origin <name> (alias: :o)
-        value_option %i[branch b] # --branch <name> (alias: :b)
-        value_option :revision, inline: true # --revision=<rev>
-        value_option %i[upload_pack u] # --upload-pack <upload-pack> (alias: :u)
-        value_option :reference, repeatable: true # --reference <repository>
-        value_option :reference_if_able, repeatable: true # --reference-if-able <repository>
-        flag_option :dissociate # --dissociate
-        value_option :separate_git_dir, inline: true # --separate-git-dir=<git-dir>
-        value_option :server_option, inline: true, repeatable: true # --server-option=<option>
-        value_option :depth # --depth <depth>
-        value_option :shallow_since, inline: true # --shallow-since=<date>
-        value_option :shallow_exclude, inline: true, repeatable: true # --shallow-exclude=<ref>
-        flag_option :single_branch, negatable: true # --single-branch / --no-single-branch
-        flag_option :tags, negatable: true # --tags / --no-tags
-        flag_or_value_option :recurse_submodules, inline: true, repeatable: true # --recurse-submodules[=<pathspec>]
-        flag_option :shallow_submodules, negatable: true # --shallow-submodules / --no-shallow-submodules
-        flag_option :remote_submodules, negatable: true # --remote-submodules / --no-remote-submodules
-        value_option %i[jobs j] # --jobs <n> (alias: :j)
-        flag_option :sparse # --sparse
-        flag_option :reject_shallow, negatable: true # --reject-shallow / --no-reject-shallow
-        value_option :filter, inline: true # --filter=<filter-spec>
-        flag_option :also_filter_submodules # --also-filter-submodules
-        value_option %i[config c], repeatable: true # --config <key>=<value> (alias: :c)
-        value_option :bundle_uri, inline: true # --bundle-uri=<uri>
-        value_option :ref_format, inline: true # --ref-format=<ref-format>
+        value_option :template, inline: true
+        flag_option %i[local l], negatable: true
+        flag_option %i[shared s]
+        flag_option :no_hardlinks
+        flag_option %i[quiet q]
+        flag_option %i[verbose v]
+        flag_option :progress
+        flag_option %i[no_checkout n]
+        flag_option :bare
+        flag_option :mirror
+        value_option %i[origin o]
+        value_option %i[branch b]
+        value_option :revision, inline: true
+        value_option %i[upload_pack u]
+        value_option :reference, repeatable: true
+        value_option :reference_if_able, repeatable: true
+        flag_option :dissociate
+        value_option :separate_git_dir, inline: true
+        value_option :server_option, inline: true, repeatable: true
+        value_option :depth
+        value_option :shallow_since, inline: true
+        value_option :shallow_exclude, inline: true, repeatable: true
+        flag_option :single_branch, negatable: true
+        flag_option :tags, negatable: true
+        flag_or_value_option :recurse_submodules, inline: true, repeatable: true
+        flag_option :shallow_submodules, negatable: true
+        flag_option :remote_submodules, negatable: true
+        value_option %i[jobs j]
+        flag_option :sparse
+        flag_option :reject_shallow, negatable: true
+        value_option :filter, inline: true
+        flag_option :also_filter_submodules
+        value_option %i[config c], repeatable: true
+        value_option :bundle_uri, inline: true
+        value_option :ref_format, inline: true
         end_of_options
         operand :repository, required: true
         operand :directory

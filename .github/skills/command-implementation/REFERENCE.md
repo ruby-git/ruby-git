@@ -91,9 +91,9 @@ class Diff::Raw < Git::Commands::Base; end      # literal '--raw'
 class Diff < Git::Commands::Base
   arguments do
     literal 'diff'
-    flag_option :patch    # facade passes patch: true when it needs patch output
-    flag_option :numstat  # facade passes numstat: true for stats
-    flag_option :raw      # facade passes raw: true for raw output
+    flag_option :patch
+    flag_option :numstat
+    flag_option :raw
     ...
   end
 end
@@ -325,10 +325,7 @@ module Git
       # @api private
       class Bar < Git::Commands::Base  # never name the class Object
         arguments do
-          # Trailing comments on DSL entries must show the emitted long flag:
-          #   flag_option %i[verbose v]  # --verbose (alias: :v)
-          # Never list short flags as separate emitted tokens:
-          #   flag_option %i[verbose v]  # -v / --verbose  ← wrong
+          # Group related options with section comments (e.g. # Output, # Safety)
         end
 
         # Optional: for commands where non-zero exits are valid

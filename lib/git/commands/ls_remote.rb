@@ -39,29 +39,29 @@ module Git
       arguments do
         literal 'ls-remote'
 
-        flag_option %i[heads h]                                       # --heads; alias: :h
-        flag_option %i[tags t]                                        # --tags; alias: :t
-        flag_option :refs                                             # --refs
+        flag_option %i[heads h]
+        flag_option %i[tags t]
+        flag_option :refs
 
         # Connectivity
-        value_option :upload_pack, inline: true # --upload-pack=<exec>
+        value_option :upload_pack, inline: true
 
-        flag_option %i[quiet q]                                       # --quiet; alias: :q
-        flag_option :exit_code                                        # --exit-code
-        flag_option :get_url                                          # --get-url
-        value_option :sort, inline: true                              # --sort=<key>
-        flag_option :symref                                           # --symref
+        flag_option %i[quiet q]
+        flag_option :exit_code
+        flag_option :get_url
+        value_option :sort, inline: true
+        flag_option :symref
 
-        value_option %i[server_option o],                             # --server-option=<option>
-                     inline: true, repeatable: true                   # alias: :o
+        value_option %i[server_option o],
+                     inline: true, repeatable: true
 
         # Execution-only options (not emitted as CLI flags)
         execution_option :timeout
 
         end_of_options
 
-        operand :repository # [<repository>]
-        operand :pattern, repeatable: true # [<patterns>...]
+        operand :repository
+        operand :pattern, repeatable: true
       end
 
       # Exit status 2 means no matching refs were found (used with --exit-code)

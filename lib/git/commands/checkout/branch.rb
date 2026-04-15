@@ -30,23 +30,23 @@ module Git
       class Branch < Git::Commands::Base
         arguments do
           literal 'checkout'
-          flag_option %i[quiet q]                                          # --quiet (alias: :q)
-          flag_option :progress, negatable: true                           # --progress / --no-progress
-          flag_option %i[force f]                                          # --force (alias: :f)
-          value_option :b                                                  # -b <new-branch>
-          value_option :B                                                  # -B <new-branch>
-          flag_or_value_option %i[track t], negatable: true, inline: true  # --track[=(direct|inherit)] / --no-track
-          flag_option :guess, negatable: true                              # --guess / --no-guess
-          flag_option :l                                                   # -l
-          flag_option %i[detach d]                                         # --detach (alias: :d)
-          value_option :orphan                                             # --orphan <new-branch>
-          flag_option %i[merge m]                                          # --merge (alias: :m)
-          flag_option :ignore_other_worktrees                              # --ignore-other-worktrees
-          flag_option :overwrite_ignore, negatable: true                   # --overwrite-ignore / --no-overwrite-ignore
+          flag_option %i[quiet q]
+          flag_option :progress, negatable: true
+          flag_option %i[force f]
+          value_option :b
+          value_option :B
+          flag_or_value_option %i[track t], negatable: true, inline: true
+          flag_option :guess, negatable: true
+          flag_option :l
+          flag_option %i[detach d]
+          value_option :orphan
+          flag_option %i[merge m]
+          flag_option :ignore_other_worktrees
+          flag_option :overwrite_ignore, negatable: true
 
           # --recurse-submodules is technically available but has no effect on branch
           # switching in older git versions. Included for completeness per the man page.
-          flag_option :recurse_submodules, negatable: true # --recurse-submodules / --no-recurse-submodules
+          flag_option :recurse_submodules, negatable: true
 
           execution_option :chdir
 

@@ -36,17 +36,17 @@ module Git
     class Archive < Base
       arguments do
         literal 'archive'
-        value_option :format, inline: true                              # --format=<fmt>
-        flag_option %i[list l]                                          # --list (alias: :l)
-        flag_option %i[verbose v]                                       # --verbose (alias: :v)
-        value_option :prefix, inline: true                              # --prefix=<prefix>
-        value_option %i[output o], inline: true                         # --output=<file> (alias: :o)
-        value_option :add_file, inline: true, repeatable: true          # --add-file=<file>
-        value_option :add_virtual_file, inline: true, repeatable: true  # --add-virtual-file=<path>:<content>
-        flag_option :worktree_attributes                                # --worktree-attributes
-        value_option :mtime, inline: true                               # --mtime=<time>
-        value_option :remote, inline: true                              # --remote=<repo>
-        value_option :exec, inline: true                                # --exec=<git-upload-archive>
+        value_option :format, inline: true
+        flag_option %i[list l]
+        flag_option %i[verbose v]
+        value_option :prefix, inline: true
+        value_option %i[output o], inline: true
+        value_option :add_file, inline: true, repeatable: true
+        value_option :add_virtual_file, inline: true, repeatable: true
+        flag_option :worktree_attributes
+        value_option :mtime, inline: true
+        value_option :remote, inline: true
+        value_option :exec, inline: true
         execution_option :out
         conflicts :output, :out
 

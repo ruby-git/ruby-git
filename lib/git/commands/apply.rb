@@ -31,57 +31,57 @@ module Git
         literal 'apply'
 
         # Informational flags (turn off actual apply)
-        flag_option :stat                                    # --stat
-        flag_option :numstat                                 # --numstat
-        flag_option :summary                                 # --summary
-        flag_option :check                                   # --check
+        flag_option :stat
+        flag_option :numstat
+        flag_option :summary
+        flag_option :check
 
         # Application mode
-        flag_option :index                                   # --index
-        flag_option %i[intent_to_add N]                      # --intent-to-add (alias: :N)
-        flag_option :three_way, as: '--3way'                 # --3way
+        flag_option :index
+        flag_option %i[intent_to_add N]
+        flag_option :three_way, as: '--3way'
 
         # 3-way merge conflict resolution
-        flag_option :ours                                    # --ours
-        flag_option :theirs                                  # --theirs
-        flag_option :union                                   # --union
+        flag_option :ours
+        flag_option :theirs
+        flag_option :union
 
         # Apply behavior
-        flag_option :apply                                   # --apply
-        flag_option :no_add                                  # --no-add
-        value_option :build_fake_ancestor, inline: true      # --build-fake-ancestor=<file>
-        flag_option %i[reverse R]                            # --reverse (alias: :R)
-        flag_option %i[allow_binary_replacement binary]      # --allow-binary-replacement (alias: :binary)
-        flag_option :reject                                  # --reject
-        flag_option :z                                       # -z
+        flag_option :apply
+        flag_option :no_add
+        value_option :build_fake_ancestor, inline: true
+        flag_option %i[reverse R]
+        flag_option %i[allow_binary_replacement binary]
+        flag_option :reject
+        flag_option :z
 
         # Strip/context levels
-        value_option :p, inline: true                        # -p<n>
-        value_option :C, inline: true                        # -C<n>
+        value_option :p, inline: true
+        value_option :C, inline: true
 
         # Patch parsing
-        flag_option :unidiff_zero                            # --unidiff-zero
-        flag_option :inaccurate_eof                          # --inaccurate-eof
-        flag_option :recount                                 # --recount
+        flag_option :unidiff_zero
+        flag_option :inaccurate_eof
+        flag_option :recount
 
         # Application scope
-        flag_option :cached # --cached
+        flag_option :cached
 
         # Whitespace handling
-        flag_option :ignore_space_change                     # --ignore-space-change
-        flag_option :ignore_whitespace                       # --ignore-whitespace
-        value_option :whitespace, inline: true               # --whitespace=<action>
+        flag_option :ignore_space_change
+        flag_option :ignore_whitespace
+        value_option :whitespace, inline: true
 
         # Path filtering
-        value_option :exclude, inline: true                  # --exclude=<path-pattern>
-        value_option :include, inline: true                  # --include=<path-pattern>
-        value_option :directory, inline: true                # --directory=<root>
+        value_option :exclude, inline: true
+        value_option :include, inline: true
+        value_option :directory, inline: true
 
         # Verbosity
-        flag_option %i[verbose v]                            # --verbose (alias: :v)
-        flag_option %i[quiet q]                              # --quiet (alias: :q)
-        flag_option :unsafe_paths                            # --unsafe-paths
-        flag_option :allow_empty                             # --allow-empty
+        flag_option %i[verbose v]
+        flag_option %i[quiet q]
+        flag_option :unsafe_paths
+        flag_option :allow_empty
 
         # Execution
         execution_option :chdir

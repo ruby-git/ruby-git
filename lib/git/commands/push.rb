@@ -42,64 +42,64 @@ module Git
         literal 'push'
 
         # Push scope (SYNOPSIS order: [--all | --branches | --mirror | --tags])
-        flag_option %i[all branches]                               # --all
-        flag_option :mirror                                        # --mirror
-        flag_option :tags                                          # --tags
-        flag_option :follow_tags, negatable: true                  # --follow-tags / --no-follow-tags
-        flag_option :atomic, negatable: true                       # --atomic / --no-atomic
+        flag_option %i[all branches]
+        flag_option :mirror
+        flag_option :tags
+        flag_option :follow_tags, negatable: true
+        flag_option :atomic, negatable: true
 
         # Transfer options
-        flag_option %i[dry_run n]                                  # --dry-run
-        flag_option :porcelain                                     # --porcelain
-        value_option %i[receive_pack exec], inline: true           # --receive-pack=<git-receive-pack>
-        value_option :repo, inline: true                           # --repo=<repository>
+        flag_option %i[dry_run n]
+        flag_option :porcelain
+        value_option %i[receive_pack exec], inline: true
+        value_option :repo, inline: true
 
         # Safety
-        flag_option %i[force f]                                    # --force
-        flag_option %i[delete d]                                   # --delete
-        flag_option :prune                                         # --prune
+        flag_option %i[force f]
+        flag_option %i[delete d]
+        flag_option :prune
 
         # Output verbosity
-        flag_option %i[quiet q]                                    # --quiet
-        flag_option %i[verbose v]                                  # --verbose
+        flag_option %i[quiet q]
+        flag_option %i[verbose v]
 
         # Tracking
-        flag_option %i[set_upstream u] # --set-upstream
+        flag_option %i[set_upstream u]
 
         # Push options (server-side)
-        value_option %i[push_option o], repeatable: true, inline: true # --push-option=<value>
+        value_option %i[push_option o], repeatable: true, inline: true
 
         # GPG signing
-        flag_or_value_option :signed, # --signed[=(true|false|if-asked)] / --no-signed
+        flag_or_value_option :signed,
                              negatable: true, inline: true
 
         # Force safety
-        flag_or_value_option :force_with_lease,                    # --force-with-lease[=<refname>:<expect>]
-                             negatable: true, inline: true         # --no-force-with-lease
-        flag_option :force_if_includes, negatable: true            # --force-if-includes / --no-force-if-includes
+        flag_or_value_option :force_with_lease,
+                             negatable: true, inline: true
+        flag_option :force_if_includes, negatable: true
 
         # Hooks
-        flag_option :verify, negatable: true # --verify / --no-verify
+        flag_option :verify, negatable: true
 
         # Submodules
-        flag_or_value_option :recurse_submodules, # --recurse-submodules=(...) / --no-recurse-submodules
+        flag_or_value_option :recurse_submodules,
                              negatable: true, inline: true, type: [String, FalseClass]
 
         # Transfer
-        flag_option :thin, negatable: true                         # --thin / --no-thin
-        flag_option :progress                                      # --progress
+        flag_option :thin, negatable: true
+        flag_option :progress
 
         # Protocol and connectivity
-        flag_option %i[ipv4 4]                                     # --ipv4
-        flag_option %i[ipv6 6]                                     # --ipv6
+        flag_option %i[ipv4 4]
+        flag_option %i[ipv6 6]
 
         # Execution options (not emitted as CLI flags)
         execution_option :timeout
 
         end_of_options
 
-        operand :repository                                        # [<repository>]
-        operand :refspec, repeatable: true                         # [<refspec>…]
+        operand :repository
+        operand :refspec, repeatable: true
       end
 
       # @!method call(*, **)

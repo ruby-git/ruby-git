@@ -34,9 +34,9 @@ module Git
       class Update < Git::Commands::Base
         arguments do
           literal 'remote'
-          flag_option %i[verbose v]  # --verbose (alias: :v)
+          flag_option %i[verbose v]
           literal 'update'
-          flag_option %i[prune p]    # --prune (alias: :p)
+          flag_option %i[prune p]
 
           end_of_options
 

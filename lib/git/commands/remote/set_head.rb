@@ -34,8 +34,8 @@ module Git
           literal 'remote'
           literal 'set-head'
           operand :name, required: true
-          flag_option %i[auto a]    # --auto (alias: :a)
-          flag_option %i[delete d]  # --delete (alias: :d)
+          flag_option %i[auto a]
+          flag_option %i[delete d]
           operand :branch
         end
 

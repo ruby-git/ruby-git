@@ -35,25 +35,25 @@ module Git
         literal 'ls-tree'
 
         # Listing behavior
-        flag_option :d                                  # -d
-        flag_option :r                                  # -r
-        flag_option :t                                  # -t
-        flag_option %i[long l]                          # --long / -l (show object size)
-        flag_option :z                                  # -z (NUL termination)
+        flag_option :d
+        flag_option :r
+        flag_option :t
+        flag_option %i[long l]
+        flag_option :z
 
         # Output format
-        flag_option %i[name_only name_status]           # --name-only (alias: :name_status)
-        flag_option :object_only                        # --object-only
-        flag_option :full_name                          # --full-name
-        flag_option :full_tree                          # --full-tree
-        flag_or_value_option :abbrev, inline: true      # --abbrev[=<n>]
-        value_option :format, inline: true              # --format=<format>
+        flag_option %i[name_only name_status]
+        flag_option :object_only
+        flag_option :full_name
+        flag_option :full_tree
+        flag_or_value_option :abbrev, inline: true
+        value_option :format, inline: true
 
-        operand :tree_ish, required: true               # <tree-ish>
+        operand :tree_ish, required: true
 
-        end_of_options                                  # --
+        end_of_options
 
-        operand :path, repeatable: true                 # [<path>...]
+        operand :path, repeatable: true
       end
 
       # @!method call(*, **)

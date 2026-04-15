@@ -26,22 +26,22 @@ module Git
     class Add < Git::Commands::Base
       arguments do
         literal 'add'
-        flag_option %i[verbose v]                          # --verbose (alias: :v)
-        flag_option %i[dry_run n]                          # --dry-run (alias: :n)
-        flag_option %i[force f]                            # --force (alias: :f)
-        flag_option %i[all A], negatable: true             # --all / --no-all (alias: :A)
-        flag_option :ignore_removal, negatable: true       # --ignore-removal / --no-ignore-removal
-        flag_option %i[update u]                           # --update (alias: :u)
-        flag_option :sparse                                # --sparse
-        flag_option %i[intent_to_add N]                    # --intent-to-add (alias: :N)
-        flag_option :refresh                               # --refresh
-        flag_option :ignore_errors                         # --ignore-errors
-        flag_option :ignore_missing                        # --ignore-missing
-        flag_option :renormalize                           # --renormalize
-        flag_option :no_warn_embedded_repo                 # --no-warn-embedded-repo
-        value_option :chmod, inline: true                  # --chmod=<value>
-        value_option :pathspec_from_file, inline: true     # --pathspec-from-file=<file>
-        flag_option :pathspec_file_nul                     # --pathspec-file-nul
+        flag_option %i[verbose v]
+        flag_option %i[dry_run n]
+        flag_option %i[force f]
+        flag_option %i[all A], negatable: true
+        flag_option :ignore_removal, negatable: true
+        flag_option %i[update u]
+        flag_option :sparse
+        flag_option %i[intent_to_add N]
+        flag_option :refresh
+        flag_option :ignore_errors
+        flag_option :ignore_missing
+        flag_option :renormalize
+        flag_option :no_warn_embedded_repo
+        value_option :chmod, inline: true
+        value_option :pathspec_from_file, inline: true
+        flag_option :pathspec_file_nul
         end_of_options
         operand :pathspec, repeatable: true
       end

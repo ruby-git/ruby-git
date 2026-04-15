@@ -33,8 +33,8 @@ module Git
         arguments do
           literal 'remote'
           literal 'get-url'
-          flag_option :push  # --push
-          flag_option :all   # --all
+          flag_option :push
+          flag_option :all
 
           end_of_options
 

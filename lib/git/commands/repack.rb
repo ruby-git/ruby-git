@@ -32,8 +32,6 @@ module Git
       arguments do
         literal 'repack'
 
-        # SYNOPSIS order: [-a] [-A] [-d] [-f] [-F] [-l] [-n] [-q] [-b]
-        #   [--window=<n>] [--depth=<n>] [--threads=<n>] [--keep-pack=<pack-name>]
         flag_option :a
         flag_option :A
         flag_option :d

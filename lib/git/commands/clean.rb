@@ -31,13 +31,13 @@ module Git
     class Clean < Git::Commands::Base
       arguments do
         literal 'clean'
-        flag_option :d # -d
-        flag_option %i[force f], max_times: 2 # --force (alias: :f)
-        flag_option %i[dry_run n] # --dry-run (alias: :n)
-        flag_option %i[quiet q] # --quiet (alias: :q)
-        value_option %i[exclude e], inline: true, repeatable: true # --exclude=<pattern> (alias: :e)
-        flag_option :x  # -x
-        flag_option :X  # -X
+        flag_option :d
+        flag_option %i[force f], max_times: 2
+        flag_option %i[dry_run n]
+        flag_option %i[quiet q]
+        value_option %i[exclude e], inline: true, repeatable: true
+        flag_option :x
+        flag_option :X
         execution_option :chdir
         end_of_options
         value_option :pathspec, as_operand: true, repeatable: true

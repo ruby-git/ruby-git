@@ -30,21 +30,21 @@ module Git
       class Files < Git::Commands::Base
         arguments do
           literal 'checkout'
-          flag_option %i[force f]                                     # --force (alias: :f)
-          flag_option :ours                                           # --ours
-          flag_option :theirs                                         # --theirs
-          flag_option %i[merge m]                                     # --merge (alias: :m)
-          value_option :conflict, inline: true                        # --conflict=<style>
-          flag_option :overlay, negatable: true                       # --overlay / --no-overlay
-          flag_option :ignore_skip_worktree_bits                      # --ignore-skip-worktree-bits
-          value_option :pathspec_from_file, inline: true              # --pathspec-from-file=<file>
-          flag_option :pathspec_file_nul                              # --pathspec-file-nul
+          flag_option %i[force f]
+          flag_option :ours
+          flag_option :theirs
+          flag_option %i[merge m]
+          value_option :conflict, inline: true
+          flag_option :overlay, negatable: true
+          flag_option :ignore_skip_worktree_bits
+          value_option :pathspec_from_file, inline: true
+          flag_option :pathspec_file_nul
 
           execution_option :chdir
 
           operand :tree_ish
           end_of_options
-          value_option :pathspec, as_operand: true, repeatable: true  # <pathspec>...
+          value_option :pathspec, as_operand: true, repeatable: true
         end
 
         # @!method call(*, **)
