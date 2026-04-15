@@ -9,6 +9,8 @@ module Git
     # This command updates the index using the current content found in the working tree,
     # to prepare the content staged for the next commit.
     #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-add/2.53.0
+    #
     # @see https://git-scm.com/docs/git-add git-add
     #
     # @see Git::Commands
@@ -24,21 +26,22 @@ module Git
     class Add < Git::Commands::Base
       arguments do
         literal 'add'
-        flag_option %i[dry_run n]
-        flag_option %i[force f]
-        flag_option %i[all A], negatable: true
-        flag_option :ignore_removal, negatable: true
-        flag_option %i[update u]
-        flag_option :sparse
-        flag_option %i[intent_to_add N]
-        flag_option :refresh
-        flag_option :ignore_errors
-        flag_option :ignore_missing
-        flag_option :renormalize
-        flag_option :no_warn_embedded_repo
-        value_option :chmod, inline: true
-        value_option :pathspec_from_file, inline: true
-        flag_option :pathspec_file_nul
+        flag_option %i[verbose v]                          # --verbose (alias: :v)
+        flag_option %i[dry_run n]                          # --dry-run (alias: :n)
+        flag_option %i[force f]                            # --force (alias: :f)
+        flag_option %i[all A], negatable: true             # --all / --no-all (alias: :A)
+        flag_option :ignore_removal, negatable: true       # --ignore-removal / --no-ignore-removal
+        flag_option %i[update u]                           # --update (alias: :u)
+        flag_option :sparse                                # --sparse
+        flag_option %i[intent_to_add N]                    # --intent-to-add (alias: :N)
+        flag_option :refresh                               # --refresh
+        flag_option :ignore_errors                         # --ignore-errors
+        flag_option :ignore_missing                        # --ignore-missing
+        flag_option :renormalize                           # --renormalize
+        flag_option :no_warn_embedded_repo                 # --no-warn-embedded-repo
+        value_option :chmod, inline: true                  # --chmod=<value>
+        value_option :pathspec_from_file, inline: true     # --pathspec-from-file=<file>
+        flag_option :pathspec_file_nul                     # --pathspec-file-nul
         end_of_options
         operand :pathspec, repeatable: true
       end
@@ -47,82 +50,75 @@ module Git
       #
       #   @overload call(*pathspec, **options)
       #
-      #     Execute the git add command
+      #     Execute the `git add` command
       #
       #     @param pathspec [Array<String>] files to be added to the repository
       #       (relative to the worktree root)
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :dry_run (nil) Don't actually add files; show what would be added
+      #     @option options [Boolean] :verbose (false) be verbose
+      #
+      #       Alias: :v
+      #
+      #     @option options [Boolean] :dry_run (false) don't actually add files; show what would be added
       #
       #       Alias: :n
       #
-      #     @option options [Boolean] :force (nil) Allow adding otherwise ignored files
+      #     @option options [Boolean] :force (false) allow adding otherwise ignored files
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :all (nil) Add, modify, and remove index entries to match the worktree
+      #     @option options [Boolean] :all (nil) add, modify, and remove index entries to match the worktree
       #
-      #       Use `no_all: true` (i.e. `--no-all`) to ignore removed files
+      #       Pass `true` for `--all`, `false` for `--no-all`.
       #
       #       Alias: :A
       #
-      #       Mutually exclusive with :update
+      #     @option options [Boolean] :ignore_removal (nil) add and modify files, but ignore removed files
       #
-      #     @option options [Boolean] :ignore_removal (nil) Add and modify files, but ignore removed files
+      #       Pass `true` for `--ignore-removal`, `false` for `--no-ignore-removal`.
       #
-      #       Use `ignore_removal: false` (i.e. `--no-ignore-removal`) to match :all behavior
-      #
-      #       Mutually exclusive with :update
-      #
-      #     @option options [Boolean] :update (nil) Update tracked files only; does not add new files
-      #
-      #       Mutually exclusive with :all and :ignore_removal
+      #     @option options [Boolean] :update (false) update tracked files only; does not add new files
       #
       #       Alias: :u
       #
-      #     @option options [Boolean] :sparse (nil) Allow updating index entries outside the
+      #     @option options [Boolean] :sparse (false) allow updating index entries outside the
       #       sparse-checkout cone
       #
-      #     @option options [Boolean] :intent_to_add (nil) Record that the path will be added later,
+      #     @option options [Boolean] :intent_to_add (false) record that the path will be added later,
       #       placing an empty entry in the index
       #
       #       Alias: :N
       #
-      #     @option options [Boolean] :refresh (nil) Refresh stat() information in the index without
+      #     @option options [Boolean] :refresh (false) refresh stat() information in the index without
       #       adding files
       #
-      #     @option options [Boolean] :ignore_errors (nil) Continue adding other files if some files
+      #     @option options [Boolean] :ignore_errors (false) continue adding other files if some files
       #       cannot be added due to indexing errors
       #
-      #     @option options [Boolean] :ignore_missing (nil) Check whether any given files would be
+      #     @option options [Boolean] :ignore_missing (false) check whether any given files would be
       #       ignored
       #
-      #       Only meaningful with :dry_run
-      #
-      #     @option options [Boolean] :renormalize (nil) Apply the clean process freshly to all tracked
+      #     @option options [Boolean] :renormalize (false) apply the "clean" process freshly to all tracked
       #       files to forcibly re-add them with correct line endings
       #
-      #     @option options [Boolean] :no_warn_embedded_repo (nil) Suppress warning when adding an
+      #     @option options [Boolean] :no_warn_embedded_repo (false) suppress warning when adding an
       #       embedded repository without using `git submodule add`
       #
-      #     @option options [String] :chmod (nil) Override the executable bit of added files in the
-      #       index
+      #     @option options [String] :chmod (nil) override the executable bit of added files in the index
       #
       #       Value must be `'+x'` or `'-x'`
       #
-      #     @option options [String] :pathspec_from_file (nil) Read pathspec from the given file
+      #     @option options [String] :pathspec_from_file (nil) read pathspec from the given file
       #       (use `'-'` for stdin)
       #
-      #       Mutually exclusive with positional :pathspec values
-      #
-      #     @option options [Boolean] :pathspec_file_nul (nil) Separate pathspec elements with NUL
+      #     @option options [Boolean] :pathspec_file_nul (false) separate pathspec elements with NUL
       #       when reading from a file
       #
-      #       Only meaningful with :pathspec_from_file
-      #
       #     @return [Git::CommandLineResult] the result of calling `git add`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
