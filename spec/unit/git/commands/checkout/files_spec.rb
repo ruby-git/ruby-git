@@ -138,6 +138,20 @@ RSpec.describe Git::Commands::Checkout::Files do
       end
     end
 
+    context 'with :ignore_skip_worktree_bits option' do
+      it 'adds --ignore-skip-worktree-bits flag' do
+        expect_command_capturing('checkout', '--ignore-skip-worktree-bits', '--', 'file.txt').and_return(command_result)
+        command.call(pathspec: ['file.txt'], ignore_skip_worktree_bits: true)
+      end
+    end
+
+    context 'with :chdir execution option' do
+      it 'passes chdir to the execution context, not to the git CLI' do
+        expect_command_capturing('checkout', '--', 'file.txt', chdir: '/some/dir').and_return(command_result)
+        command.call(pathspec: ['file.txt'], chdir: '/some/dir')
+      end
+    end
+
     context 'with multiple options combined' do
       it 'includes all specified flags in correct order' do
         expect_command_capturing('checkout',
