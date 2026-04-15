@@ -19,6 +19,20 @@ RSpec.describe Git::Commands::CheckoutIndex do
       end
     end
 
+    context 'with the :quiet option' do
+      it 'includes --quiet when true' do
+        expect_command_capturing('checkout-index', '--quiet').and_return(command_result)
+
+        command.call(quiet: true)
+      end
+
+      it 'accepts :q as an alias' do
+        expect_command_capturing('checkout-index', '--quiet').and_return(command_result)
+
+        command.call(q: true)
+      end
+    end
+
     context 'with the :all option' do
       it 'includes --all when true' do
         expect_command_capturing('checkout-index', '--all').and_return(command_result)
