@@ -2732,7 +2732,7 @@ module Git
       log_or_empty_on_unborn do
         result = Git::Commands::Log.new(self).call(
           *revision_range_args,
-          no_color: true, pretty: 'raw',
+          color: false, pretty: 'raw',
           **call_opts
         )
         process_commit_log_data(result.stdout.split("\n"))

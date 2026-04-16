@@ -20,25 +20,28 @@ RSpec.describe Git::Commands::Log, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
+      it 'returns a CommandLineResult with non-empty output' do
         result = command.call
 
         expect(result).to be_a(Git::CommandLineResult)
+        expect(result.stdout).not_to be_empty
       end
 
       context 'with a revision range operand' do
-        it 'returns a CommandLineResult' do
+        it 'returns a CommandLineResult for the given range' do
           first_sha = repo.lib.rev_parse('HEAD~1')
           result = command.call("#{first_sha}..")
 
           expect(result).to be_a(Git::CommandLineResult)
+          expect(result.stdout).not_to be_empty
         end
       end
     end
 
     context 'when the command fails' do
       it 'raises FailedError for an invalid revision' do
-        expect { command.call('nonexistent-branch') }.to raise_error(Git::FailedError)
+        expect { command.call('nonexistent-branch') }
+          .to raise_error(Git::FailedError, /nonexistent-branch/)
       end
     end
   end

@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Grep do
       end
     end
 
-    context 'with parser-contract options (no_color:)' do
+    context 'with :no_color option' do
       it 'includes --no-color when no_color: true' do
         expect_command_capturing('grep', '--no-color', '-e', 'search', 'HEAD')
           .and_return(command_result('HEAD:file.txt:5:to search'))
@@ -571,7 +571,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :recurse_submodules option' do
       it 'includes --recurse-submodules flag' do
-        expect_command_capturing('grep', '--recurse-submodules', '-e', 'search', 'HEAD')
+        expect_command_capturing('grep', '-e', 'search', '--recurse-submodules', 'HEAD')
           .and_return(command_result(''))
 
         command.call('HEAD', pattern: 'search', recurse_submodules: true)
@@ -580,7 +580,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :exclude_standard option' do
       it 'includes --exclude-standard flag' do
-        expect_command_capturing('grep', '--exclude-standard', '--untracked', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search', '--exclude-standard', '--untracked')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', exclude_standard: true, untracked: true)
@@ -589,7 +589,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :exclude_standard false' do
       it 'includes --no-exclude-standard flag' do
-        expect_command_capturing('grep', '--no-exclude-standard', '--no-index', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search', '--no-exclude-standard', '--no-index')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', exclude_standard: false, no_index: true)
@@ -598,7 +598,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :cached option' do
       it 'includes --cached flag' do
-        expect_command_capturing('grep', '--cached', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search', '--cached')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', cached: true)
@@ -607,7 +607,7 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :untracked option' do
       it 'includes --untracked flag' do
-        expect_command_capturing('grep', '--untracked', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search', '--untracked')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', untracked: true)
@@ -616,10 +616,60 @@ RSpec.describe Git::Commands::Grep do
 
     context 'with :no_index option' do
       it 'includes --no-index flag' do
-        expect_command_capturing('grep', '--no-index', '-e', 'search')
+        expect_command_capturing('grep', '-e', 'search', '--no-index')
           .and_return(command_result(''))
 
         command.call(pattern: 'search', no_index: true)
+      end
+    end
+
+    # Output format
+
+    context 'with :null option' do
+      it 'includes --null flag' do
+        expect_command_capturing('grep', '--null', '-e', 'search', 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', pattern: 'search', null: true)
+      end
+    end
+
+    context 'with :z alias' do
+      it 'accepts :z as alias for :null' do
+        expect_command_capturing('grep', '--null', '-e', 'search', 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', pattern: 'search', z: true)
+      end
+    end
+
+    # Color
+
+    context 'with :color option' do
+      it 'includes --color when color: true' do
+        expect_command_capturing('grep', '--color', '-e', 'search', 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', pattern: 'search', color: true)
+      end
+
+      it 'includes --color=<value> when color: string' do
+        expect_command_capturing('grep', '--color=always', '-e', 'search', 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', pattern: 'search', color: 'always')
+      end
+    end
+
+    # Source selection
+
+    context 'with :parent_basename option' do
+      it 'includes --parent-basename with the given value' do
+        expect_command_capturing('grep', '-e', 'search', '--parent-basename', 'superproject',
+                                 'HEAD')
+          .and_return(command_result(''))
+
+        command.call('HEAD', pattern: 'search', parent_basename: 'superproject')
       end
     end
 
