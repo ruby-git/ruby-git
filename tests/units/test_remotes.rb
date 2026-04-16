@@ -227,7 +227,7 @@ class TestRemotes < Test::Unit::TestCase
   end
 
   def test_fetch_cmd_with_origin_and_branch
-    expected_command_line = ['fetch', '--depth', '2', '--', 'origin', 'master', { merge: true }]
+    expected_command_line = ['fetch', '--depth=2', '--', 'origin', 'master', { merge: true }]
     assert_command_line_eq(expected_command_line) { |git| git.fetch('origin', { ref: 'master', depth: '2' }) }
   end
 
@@ -238,7 +238,7 @@ class TestRemotes < Test::Unit::TestCase
 
   def test_fetch_cmd_with_all_with_other_args
     # Args are rendered in DSL definition order: --depth is defined before --force
-    expected_command_line = ['fetch', '--all', '--depth', '2', '--force', { merge: true }]
+    expected_command_line = ['fetch', '--all', '--depth=2', '--force', { merge: true }]
     assert_command_line_eq(expected_command_line) { |git| git.fetch({ all: true, force: true, depth: '2' }) }
   end
 
