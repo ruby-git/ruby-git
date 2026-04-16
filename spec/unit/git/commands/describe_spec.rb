@@ -21,13 +21,13 @@ RSpec.describe Git::Commands::Describe do
 
     context 'with a commit-ish' do
       it 'passes a single commit-ish as a positional argument' do
-        expect_command_capturing('describe', 'abc123').and_return(command_result('v1.0-3-gabc123'))
+        expect_command_capturing('describe', '--', 'abc123').and_return(command_result('v1.0-3-gabc123'))
 
         command.call('abc123')
       end
 
       it 'passes multiple commit-ishes as positional arguments' do
-        expect_command_capturing('describe', 'abc123', 'def456').and_return(command_result("v1.0\nv1.1"))
+        expect_command_capturing('describe', '--', 'abc123', 'def456').and_return(command_result("v1.0\nv1.1"))
 
         command.call('abc123', 'def456')
       end
@@ -200,10 +200,10 @@ RSpec.describe Git::Commands::Describe do
         expect_command_capturing(
           'describe',
           '--tags',
-          '--long',
           '--abbrev=7',
+          '--long',
           '--match', 'v[0-9]*',
-          'HEAD'
+          '--', 'HEAD'
         ).and_return(command_result('v1.0-0-g1234567'))
 
         command.call('HEAD', tags: true, long: true, abbrev: '7', match: 'v[0-9]*')
@@ -213,9 +213,9 @@ RSpec.describe Git::Commands::Describe do
         expect_command_capturing(
           'describe',
           '--tags',
-          '--long',
+          '--abbrev=7',
           '--dirty',
-          '--abbrev=7'
+          '--long'
         ).and_return(command_result('v1.0-0-g1234567-dirty'))
 
         command.call(tags: true, long: true, abbrev: '7', dirty: true)
