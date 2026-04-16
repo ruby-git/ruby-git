@@ -6,109 +6,129 @@ module Git
   module Commands
     # Implements the `git fsck` command
     #
-    # This command verifies the connectivity and validity of objects in the database.
+    # Verifies the connectivity and validity of objects in the database.
     # It checks the integrity of the repository, reporting any dangling, missing, or
     # unreachable objects.
     #
+    # @example Typical usage
+    #   fsck = Git::Commands::Fsck.new(execution_context)
+    #   fsck.call
+    #   fsck.call('abc1234', 'def5678')
+    #   fsck.call(unreachable: true, strict: true)
+    #   fsck.call(dangling: false)
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-fsck/2.53.0
+    #
     # @see https://git-scm.com/docs/git-fsck git-fsck
     #
+    # @see Git::Commands
+    #
     # @api private
-    #
-    # @example Basic usage
-    #   fsck = Git::Commands::Fsck.new(execution_context)
-    #   result = fsck.call
-    #   result.stdout # => "dangling blob abc123...\n"
-    #
-    # @example With specific objects
-    #   fsck = Git::Commands::Fsck.new(execution_context)
-    #   result = fsck.call('abc1234', 'def5678')
-    #
-    # @example With options
-    #   fsck = Git::Commands::Fsck.new(execution_context)
-    #   result = fsck.call(unreachable: true, strict: true)
     #
     class Fsck < Git::Commands::Base
       arguments do
         literal 'fsck'
         flag_option :progress, negatable: true
+
+        # Ref reporting
         flag_option :tags
         flag_option :root
         flag_option :unreachable
         flag_option :cache
         flag_option :no_reflogs
+
+        # Checking scope
         flag_option :full, negatable: true
         flag_option :strict
+        flag_option :verbose
         flag_option :lost_found
+
+        # Output control
         flag_option :dangling, negatable: true
         flag_option :connectivity_only
         flag_option :name_objects, negatable: true
         flag_option :references, negatable: true
+
         operand :object, repeatable: true
       end
 
-      # git fsck uses exit codes 0-7 to indicate different levels of issues found
-      # Exit code 0 = no issues, 1-7 = various issue types (still considered successful)
+      # git fsck uses exit codes 0-7 as bit flags for findings
       allow_exit_status 0..7
 
       # @!method call(*, **)
       #
-      #   Execute the git fsck command
-      #
       #   @overload call(*object, **options)
       #
-      #     @example Check repository integrity
-      #       # git fsck
-      #       result = fsck.call
+      #     Execute the `git fsck` command
       #
-      #     @example Check specific objects
-      #       # git fsck abc1234 def5678
-      #       result = fsck.call('abc1234', 'def5678')
+      #     @param object [Array<String>] zero or more object identifiers to check
       #
-      #     @example With options
-      #       # git fsck --unreachable --strict
-      #       result = fsck.call(unreachable: true, strict: true)
-      #
-      #     @param object [Array<String>] optional object identifiers to check
+      #       When none are given, git fsck defaults to using the index file and
+      #       all references as heads.
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :progress (nil) Show progress status (e.g. `--progress`).
-      #       Pass `false` to suppress progress output (e.g. `--no-progress`)
+      #     @option options [Boolean] :tags (false) report tags
       #
-      #     @option options [Boolean] :tags (nil) report tags
+      #     @option options [Boolean] :root (false) report root nodes
       #
-      #     @option options [Boolean] :root (nil) report root nodes
+      #     @option options [Boolean] :unreachable (false) print out objects that
+      #       exist but are not reachable from any of the reference nodes
       #
-      #     @option options [Boolean] :unreachable (nil) print out objects that exist but are not
-      #       reachable from any of the reference nodes
+      #     @option options [Boolean] :cache (false) consider any object recorded
+      #       in the index also as a head node for reachability
       #
-      #     @option options [Boolean] :cache (nil) consider any object recorded in the index also
-      #       as a head node for reachability
+      #     @option options [Boolean] :no_reflogs (false) do not consider commits
+      #       referenced only by reflogs to be reachable
       #
-      #     @option options [Boolean] :no_reflogs (nil) do not consider commits referenced only by
-      #       reflogs to be reachable
+      #     @option options [Boolean] :full (nil) check not just objects in
+      #       `GIT_OBJECT_DIRECTORY` but also those in alternate object pools and
+      #       packed archives
       #
-      #     @option options [Boolean] :full (nil) check all objects, not just reachable ones. Pass
-      #       false to explicitly disable
+      #       Pass `true` for `--full`, `false` for `--no-full`.
       #
-      #     @option options [Boolean] :strict (nil) enable more strict checking
+      #     @option options [Boolean] :strict (false) enable more strict checking,
+      #       catching files with `g+w` bits set
       #
-      #     @option options [Boolean] :lost_found (nil) write dangling objects into .git/lost-found
+      #     @option options [Boolean] :verbose (false) be chatty
       #
-      #     @option options [Boolean] :dangling (nil) report dangling objects. Pass false to suppress
-      #       dangling object reporting
+      #     @option options [Boolean] :lost_found (false) write dangling objects
+      #       into `.git/lost-found/commit/` or `.git/lost-found/other/`
       #
-      #     @option options [Boolean] :connectivity_only (nil) check only the connectivity of objects
+      #     @option options [Boolean] :dangling (nil) print dangling objects
       #
-      #     @option options [Boolean] :name_objects (nil) show the name of each reachable object
-      #       alongside its identifier. Pass false to explicitly disable
+      #       Pass `true` for `--dangling`, `false` for `--no-dangling` to
+      #       suppress dangling object reporting.
       #
-      #     @option options [Boolean] :references (nil) check reference objects. Pass false to
-      #       explicitly disable reference checking
+      #     @option options [Boolean] :progress (nil) show progress status on
+      #       standard error
+      #
+      #       Pass `true` for `--progress`, `false` for `--no-progress` to
+      #       suppress progress output when attached to a terminal.
+      #
+      #     @option options [Boolean] :connectivity_only (false) check only the
+      #       connectivity of reachable objects; faster but does not validate
+      #       blob content
+      #
+      #     @option options [Boolean] :name_objects (nil) show the name of each
+      #       reachable object alongside its identifier
+      #
+      #       Pass `true` for `--name-objects`, `false` for `--no-name-objects`.
+      #
+      #     @option options [Boolean] :references (nil) control whether to check
+      #       reference database consistency via `git refs verify`
+      #
+      #       Pass `true` for `--references`, `false` for `--no-references` to
+      #       skip reference checking.
       #
       #     @return [Git::CommandLineResult] the result of calling `git fsck`
       #
-      #     @raise [Git::FailedError] if git returns an exit code > 7
+      #     @raise [ArgumentError] if unsupported options are provided
+      #
+      #     @raise [Git::FailedError] if git exits outside the allowed range
+      #       (exit code > 7)
+      #
+      #     @api public
     end
   end
 end
