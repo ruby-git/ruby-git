@@ -803,29 +803,29 @@ RSpec.describe Git::Lib do
       allow(Git::Commands::Log).to receive(:new).with(lib).and_return(log_command)
     end
 
-    it 'passes no_color: true and pretty: "raw" as hardcoded parser-contract options' do
+    it 'passes color: false and pretty: "raw" as hardcoded parser-contract options' do
       allow(log_command).to receive(:call)
-        .with(no_color: true, pretty: 'raw')
+        .with(color: false, pretty: 'raw')
         .and_return(command_result(''))
 
       lib.full_log_commits
 
-      expect(log_command).to have_received(:call).with(no_color: true, pretty: 'raw')
+      expect(log_command).to have_received(:call).with(color: false, pretty: 'raw')
     end
 
     it 'forwards documented options to the command' do
       allow(log_command).to receive(:call)
-        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
+        .with(color: false, pretty: 'raw', max_count: 5, all: true)
         .and_return(command_result(''))
 
       lib.full_log_commits(count: 5, all: true)
 
       expect(log_command).to have_received(:call)
-        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
+        .with(color: false, pretty: 'raw', max_count: 5, all: true)
     end
 
     context 'with parser-contract options the facade owns' do
-      it 'rejects :no_color because the facade always sets it' do
+      it 'rejects :no_color because it is not a recognized option (facade uses color: false)' do
         expect { lib.full_log_commits(no_color: false) }
           .to raise_error(ArgumentError, /Unknown options: no_color/)
       end
