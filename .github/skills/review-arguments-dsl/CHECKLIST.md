@@ -403,10 +403,19 @@ operands should go last.
 to group related options within large DSL blocks. Place them on the line immediately
 before the first option in the group.
 
-**Do not add trailing inline comments** to DSL entries (e.g.
-`flag_option :verbose  # --verbose`). They duplicate information already expressed
-by the DSL itself, create line-length pressure, and require manual alignment
-maintenance. Flag any trailing inline comments on DSL entries as an error.
+**NEVER add trailing inline comments to DSL entries.** This is a hard rule — not a
+style preference. Comments like `flag_option :verbose  # --verbose` or
+`flag_option :full, negatable: true  # --[no-]full` are **always wrong** in this
+project. They were removed project-wide in commit 370dffb because they:
+
+1. Duplicate information the DSL already encodes deterministically
+2. Duplicate the YARD `@option` documentation
+3. Create a false verification layer (reviewer checks comment ↔ DSL without
+   catching errors in either)
+4. Create line-length pressure and alignment maintenance burden
+
+Flag any trailing inline comment on a DSL entry as an error. This applies when
+scaffolding new commands, updating existing commands, and reviewing commands.
 
 ### `end_of_options` placement
 

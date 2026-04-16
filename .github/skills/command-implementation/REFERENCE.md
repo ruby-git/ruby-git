@@ -326,6 +326,9 @@ module Git
       class Bar < Git::Commands::Base  # never name the class Object
         arguments do
           # Group related options with section comments (e.g. # Output, # Safety)
+          # NEVER add trailing inline comments (e.g. `# --verbose`) to DSL entries.
+          # The DSL is self-documenting; inline comments duplicate YARD docs and
+          # were removed project-wide in commit 370dffb.
         end
 
         # Optional: for commands where non-zero exits are valid
