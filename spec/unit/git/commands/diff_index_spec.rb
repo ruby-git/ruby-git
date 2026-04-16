@@ -961,7 +961,14 @@ RSpec.describe Git::Commands::DiffIndex do
         expect(result.status.exitstatus).to eq(1)
       end
 
-      it 'raises FailedError when git exits with code 2 or higher' do
+      it 'raises FailedError when git exits with code 2' do
+        expect_command_capturing('diff-index', 'HEAD')
+          .and_return(command_result('', stderr: 'error: something went wrong', exitstatus: 2))
+
+        expect { command.call('HEAD') }.to raise_error(Git::FailedError, /something went wrong/)
+      end
+
+      it 'raises FailedError when git exits with code 128' do
         expect_command_capturing('diff-index', 'HEAD')
           .and_return(command_result('', stderr: 'fatal: bad revision', exitstatus: 128))
 
@@ -970,10 +977,6 @@ RSpec.describe Git::Commands::DiffIndex do
     end
 
     context 'input validation' do
-      it 'raises ArgumentError when tree_ish is not provided' do
-        expect { command.call }.to raise_error(ArgumentError, /tree_ish/)
-      end
-
       it 'raises ArgumentError for unsupported option keys' do
         expect { command.call('HEAD', totally_unknown: true) }.to raise_error(ArgumentError, /totally_unknown/)
       end

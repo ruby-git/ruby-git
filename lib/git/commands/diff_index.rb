@@ -13,12 +13,6 @@ module Git
     # treating any file that differs from the index as changed even if the on-disk
     # content is identical to the tree.
     #
-    # @see https://git-scm.com/docs/git-diff-index git-diff-index documentation
-    #
-    # @see Git::Commands
-    #
-    # @api private
-    #
     # @example Compare HEAD tree to the working tree (raw output)
     #   # git diff-index HEAD
     #   Git::Commands::DiffIndex.new(ctx).call('HEAD')
@@ -34,6 +28,14 @@ module Git
     # @example Limit comparison to a specific path
     #   # git diff-index --cached HEAD -- lib/
     #   Git::Commands::DiffIndex.new(ctx).call('HEAD', 'lib/', cached: true)
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-diff-index/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-diff-index git-diff-index documentation
+    #
+    # @see Git::Commands
+    #
+    # @api private
     #
     class DiffIndex < Git::Commands::Base
       arguments do
@@ -161,8 +163,6 @@ module Git
 
       # @!method call(*, **)
       #
-      #   @api public
-      #
       #   @overload call(tree_ish, **options)
       #     Compare a tree to the index or working tree
       #
@@ -174,175 +174,176 @@ module Git
       #       # git diff-index --cached HEAD
       #       DiffIndex.new(ctx).call('HEAD', cached: true)
       #
-      #     @param tree_ish [String] the tree object to compare against (e.g., `'HEAD'`, a commit SHA,
-      #       or a tag name)
+      #     @param tree_ish [String] the tree object to compare
+      #       against (e.g., `'HEAD'`, a commit SHA, or a tag
+      #       name)
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :m (nil) Treat non-checked-out files as up to date
+      #     @option options [Boolean] :m (false) treat non-checked-out files as up to date
       #
       #       By default, files recorded in the index but not checked out are reported as
       #       deleted. This flag makes `git diff-index` report all such files as up to date.
       #
-      #     @option options [Boolean] :cached (nil) Compare the tree to the index only (staged
+      #     @option options [Boolean] :cached (false) compare the tree to the index only (staged
       #       changes), without considering the working tree
       #
-      #     @option options [Boolean] :merge_base (nil) Use the merge base between the tree-ish
+      #     @option options [Boolean] :merge_base (false) use the merge base between the tree-ish
       #       and `HEAD` rather than the tree-ish directly
       #
       #       `tree_ish` must be a commit when this option is used.
       #
-      #     @option options [Boolean] :patch (nil) Generate unified diff patch output
+      #     @option options [Boolean] :patch (false) generate unified diff patch output
       #
       #       Alias: :p, :u
       #
-      #     @option options [Boolean] :no_patch (nil) Suppress all diff output
+      #     @option options [Boolean] :no_patch (false) suppress all diff output
       #
       #       Alias: :s
       #
-      #     @option options [Boolean] :raw (nil) Generate diff in raw format (default output)
+      #     @option options [Boolean] :raw (false) generate diff in raw format (default output)
       #
-      #     @option options [Boolean] :patch_with_raw (nil) Synonym for `patch: true, raw: true`
+      #     @option options [Boolean] :patch_with_raw (false) synonym for `patch: true, raw: true`
       #
-      #     @option options [Integer, String] :unified (nil) Number of context lines around diff
+      #     @option options [Integer, String] :unified (nil) number of context lines around diff
       #       hunks (e.g., `3`)
       #
       #       Alias: :U
       #
-      #     @option options [String] :output (nil) Write diff output to a file instead of stdout
+      #     @option options [String] :output (nil) write diff output to a file instead of stdout
       #
-      #     @option options [String] :output_indicator_new (nil) Character for new lines in patch output
+      #     @option options [String] :output_indicator_new (nil) character for new lines in patch output
       #
-      #     @option options [String] :output_indicator_old (nil) Character for old lines in patch output
+      #     @option options [String] :output_indicator_old (nil) character for old lines in patch output
       #
-      #     @option options [String] :output_indicator_context (nil) Character for context lines in patch output
+      #     @option options [String] :output_indicator_context (nil) character for context lines in patch output
       #
-      #     @option options [Boolean] :indent_heuristic (nil) Shift hunk boundaries for readability
+      #     @option options [Boolean] :indent_heuristic (nil) shift hunk boundaries for readability
       #
-      #       Pass `false` to emit `--no-indent-heuristic`.
+      #       Pass `true` for `--indent-heuristic`, `false` for `--no-indent-heuristic`.
       #
-      #     @option options [Boolean] :minimal (nil) Spend extra time to minimize diff size
+      #     @option options [Boolean] :minimal (false) spend extra time to minimize diff size
       #
-      #     @option options [Boolean] :patience (nil) Use patience diff algorithm
+      #     @option options [Boolean] :patience (false) use patience diff algorithm
       #
-      #     @option options [Boolean] :histogram (nil) Use histogram diff algorithm
+      #     @option options [Boolean] :histogram (false) use histogram diff algorithm
       #
-      #     @option options [String, Array<String>] :anchored (nil) Anchor lines matching the given
+      #     @option options [String, Array<String>] :anchored (nil) anchor lines matching the given
       #       text to prevent them from appearing as additions or deletions (repeatable)
       #
       #     @option options [String] :diff_algorithm (nil) diff algorithm to use
       #
       #       Accepted values: `'default'`, `'myers'`, `'minimal'`, `'patience'`, `'histogram'`.
       #
-      #     @option options [Boolean, String] :stat (nil) Show a diffstat
+      #     @option options [Boolean, String] :stat (nil) show a diffstat
       #
       #       Pass `true` for the default format, or a string like `'80,40,5'` for custom
       #       `width,name-width,count` limits.
       #
-      #     @option options [Integer, String] :stat_width (nil) Override diffstat total width
+      #     @option options [Integer, String] :stat_width (nil) override diffstat total width
       #
-      #     @option options [Integer, String] :stat_name_width (nil) Override diffstat filename column width
+      #     @option options [Integer, String] :stat_name_width (nil) override diffstat filename column width
       #
-      #     @option options [Integer, String] :stat_graph_width (nil) Override diffstat graph column width
+      #     @option options [Integer, String] :stat_graph_width (nil) override diffstat graph column width
       #
-      #     @option options [Integer, String] :stat_count (nil) Limit diffstat to this many lines
+      #     @option options [Integer, String] :stat_count (nil) limit diffstat to this many lines
       #
-      #     @option options [Boolean] :compact_summary (nil) Include creation/deletion mode changes in stat
+      #     @option options [Boolean] :compact_summary (false) include creation/deletion mode changes in stat
       #
-      #     @option options [Boolean] :numstat (nil) Show per-file insertion/deletion counts (machine-friendly)
+      #     @option options [Boolean] :numstat (false) show per-file insertion/deletion counts (machine-friendly)
       #
-      #     @option options [Boolean] :shortstat (nil) Show aggregate totals line only
+      #     @option options [Boolean] :shortstat (false) show aggregate totals line only
       #
-      #     @option options [Boolean, String] :dirstat (nil) Show distribution of changes per directory
+      #     @option options [Boolean, String] :dirstat (nil) show distribution of changes per directory
       #
       #       Pass `true` for the default, or a string like `'lines,cumulative,10'` to pass params.
       #
       #       Alias: :X
       #
-      #     @option options [Boolean] :cumulative (nil) Synonym for `dirstat: 'cumulative'`
+      #     @option options [Boolean] :cumulative (false) synonym for `dirstat: 'cumulative'`
       #
-      #     @option options [Boolean, String] :dirstat_by_file (nil) Synonym for `dirstat: 'files,...'`
+      #     @option options [Boolean, String] :dirstat_by_file (nil) synonym for `dirstat: 'files,...'`
       #
-      #     @option options [Boolean] :summary (nil) Show condensed extended header information
+      #     @option options [Boolean] :summary (false) show condensed extended header information
       #
-      #     @option options [Boolean] :patch_with_stat (nil) Synonym for `patch: true, stat: true`
+      #     @option options [Boolean] :patch_with_stat (false) synonym for `patch: true, stat: true`
       #
-      #     @option options [Boolean] :z (nil) Use NUL as output field terminator instead of newline
+      #     @option options [Boolean] :z (false) use NUL as output field terminator instead of newline
       #
-      #     @option options [Boolean] :name_only (nil) Show only changed file names
+      #     @option options [Boolean] :name_only (false) show only changed file names
       #
-      #     @option options [Boolean] :name_status (nil) Show changed file names with status letters
+      #     @option options [Boolean] :name_status (false) show changed file names with status letters
       #
-      #     @option options [Boolean, String] :submodule (nil) How to show submodule differences
+      #     @option options [Boolean, String] :submodule (nil) how to show submodule differences
       #
       #       Pass `true` for the default, or a string like `'log'` or `'diff'` for a format name.
       #
-      #     @option options [Boolean, String] :color (nil) Control diff colorization
+      #     @option options [Boolean, String] :color (nil) control diff colorization
       #
       #       Pass `true` for `--color`, `false` for `--no-color`, or a string like `'always'`
       #       or `'auto'` for a specific mode.
       #
-      #     @option options [Boolean, String] :color_moved (nil) Color moved lines differently
+      #     @option options [Boolean, String] :color_moved (nil) color moved lines differently
       #
       #       Pass `true` for default, `false` for `--no-color-moved`, or a mode string such as
       #       `'zebra'` or `'dimmed-zebra'`.
       #
-      #     @option options [String] :color_moved_ws (nil) Whitespace handling for moved-line color detection
+      #     @option options [String] :color_moved_ws (nil) whitespace handling for moved-line color detection
       #
       #       Comma-separated list of modes, e.g. `'ignore-space-at-eol,ignore-space-change'`.
       #
-      #     @option options [Boolean] :no_color_moved_ws (nil) Synonym for `color_moved_ws: 'no'`
+      #     @option options [Boolean] :no_color_moved_ws (false) synonym for `color_moved_ws: 'no'`
       #
-      #     @option options [Boolean, String] :word_diff (nil) Show a word-level diff
+      #     @option options [Boolean, String] :word_diff (nil) show a word-level diff
       #
       #       Pass `true` for the default `plain` mode, or a string like `'color'`, `'porcelain'`,
       #       or `'none'` for a specific mode.
       #
-      #     @option options [String] :word_diff_regex (nil) Regular expression defining word boundaries for word diff
+      #     @option options [String] :word_diff_regex (nil) regular expression defining word boundaries for word diff
       #
-      #     @option options [Boolean, String] :color_words (nil) Equivalent to `word_diff: 'color'`
+      #     @option options [Boolean, String] :color_words (nil) equivalent to `word_diff: 'color'`
       #       plus an optional word regex
       #
-      #     @option options [Boolean] :ignore_cr_at_eol (nil) Ignore carriage-return at end of line
+      #     @option options [Boolean] :ignore_cr_at_eol (false) ignore carriage-return at end of line
       #
-      #     @option options [Boolean] :ignore_space_at_eol (nil) Ignore whitespace changes at end of line
+      #     @option options [Boolean] :ignore_space_at_eol (false) ignore whitespace changes at end of line
       #
-      #     @option options [Boolean] :ignore_space_change (nil) Ignore changes in amount of whitespace
+      #     @option options [Boolean] :ignore_space_change (false) ignore changes in amount of whitespace
       #
       #       Alias: :b
       #
-      #     @option options [Boolean] :ignore_all_space (nil) Ignore all whitespace when comparing lines
+      #     @option options [Boolean] :ignore_all_space (false) ignore all whitespace when comparing lines
       #
       #       Alias: :w
       #
-      #     @option options [Boolean] :ignore_blank_lines (nil) Ignore changes whose lines are all blank
+      #     @option options [Boolean] :ignore_blank_lines (false) ignore changes whose lines are all blank
       #
-      #     @option options [String, Array<String>] :ignore_matching_lines (nil) Ignore changes whose lines all match
+      #     @option options [String, Array<String>] :ignore_matching_lines (nil) ignore changes whose lines all match
       #       the given regex (repeatable)
       #
       #       Alias: :I
       #
-      #     @option options [Boolean] :check (nil) Warn if changes introduce whitespace errors or
+      #     @option options [Boolean] :check (false) warn if changes introduce whitespace errors or
       #       conflict markers
       #
-      #     @option options [String] :ws_error_highlight (nil) Highlight whitespace errors in the
+      #     @option options [String] :ws_error_highlight (nil) highlight whitespace errors in the
       #       given diff line types (e.g. `'new'`, `'old,new'`, `'all'`)
       #
-      #     @option options [Boolean] :no_renames (nil) Disable rename detection
+      #     @option options [Boolean] :no_renames (false) disable rename detection
       #
-      #     @option options [Boolean] :rename_empty (nil) Use empty blobs as rename sources
+      #     @option options [Boolean] :rename_empty (nil) use empty blobs as rename sources
       #
-      #       Pass `false` to emit `--no-rename-empty`.
+      #       Pass `true` for `--rename-empty`, `false` for `--no-rename-empty`.
       #
-      #     @option options [Boolean] :full_index (nil) Show full blob SHA in index line
+      #     @option options [Boolean] :full_index (false) show full blob SHA in index line
       #
-      #     @option options [Boolean] :binary (nil) Output binary diff suitable for `git apply`
+      #     @option options [Boolean] :binary (false) output binary diff suitable for `git apply`
       #
-      #     @option options [Boolean, String] :abbrev (nil) Abbreviate blob names in raw output
+      #     @option options [Boolean, String] :abbrev (nil) abbreviate blob names in raw output
       #
       #       Pass `true` for the default, or an integer string like `'10'` for a specific length.
       #
-      #     @option options [Boolean, String] :break_rewrites (nil) Break total rewrites into
+      #     @option options [Boolean, String] :break_rewrites (nil) break total rewrites into
       #       delete-and-create pairs
       #
       #       Pass `true` for defaults, or a threshold string like `'80%'` or `'50%/70%'` for custom
@@ -350,112 +351,114 @@ module Git
       #
       #       Alias: :B
       #
-      #     @option options [Boolean, String] :find_renames (nil) Detect renames
+      #     @option options [Boolean, String] :find_renames (nil) detect renames
       #
       #       Pass `true` for the default threshold, or a string like `'90%'` for a custom
       #       similarity threshold.
       #
       #       Alias: :M
       #
-      #     @option options [Boolean, String] :find_copies (nil) Detect copies as well as renames
+      #     @option options [Boolean, String] :find_copies (nil) detect copies as well as renames
       #
       #       Pass `true` for the default threshold, or a string like `'75%'` for a custom
       #       similarity threshold.
       #
       #       Alias: :C
       #
-      #     @option options [Boolean] :find_copies_harder (nil) Inspect all unmodified files as copy
+      #     @option options [Boolean] :find_copies_harder (false) inspect all unmodified files as copy
       #       sources (very expensive for large repos)
       #
-      #     @option options [Boolean] :irreversible_delete (nil) Omit preimage for deleted files
+      #     @option options [Boolean] :irreversible_delete (false) omit preimage for deleted files
       #
       #       Alias: :D
       #
-      #     @option options [Integer, String] :l (nil) Limit the number of rename/copy candidates
+      #     @option options [Integer, String] :l (nil) limit the number of rename/copy candidates
       #       considered during exhaustive detection
       #
-      #     @option options [String] :diff_filter (nil) Select only certain kinds of changed files
+      #     @option options [String] :diff_filter (nil) select only certain kinds of changed files
       #
       #       A string of status letters such as `'A'`, `'M'`, `'D'`, `'ACDM'`, or lowercase
       #       forms to exclude (e.g. `'ad'` excludes added and deleted).
       #
-      #     @option options [String] :S (nil) Find changes that alter the occurrence count of the
+      #     @option options [String] :S (nil) find changes that alter the occurrence count of the
       #       given string (pickaxe)
       #
-      #     @option options [String] :G (nil) Find changes whose patch text contains lines matching
+      #     @option options [String] :G (nil) find changes whose patch text contains lines matching
       #       the given regex (pickaxe)
       #
-      #     @option options [String] :find_object (nil) Find changes involving the given object id
+      #     @option options [String] :find_object (nil) find changes involving the given object id
       #
-      #     @option options [Boolean] :pickaxe_all (nil) Show all changes in a changeset when using
+      #     @option options [Boolean] :pickaxe_all (false) show all changes in a changeset when using
       #       `-S` or `-G`
       #
-      #     @option options [Boolean] :pickaxe_regex (nil) Treat the `-S` string as an extended POSIX
+      #     @option options [Boolean] :pickaxe_regex (false) treat the `-S` string as an extended POSIX
       #       regular expression
       #
-      #     @option options [String] :O (nil) Path to an orderfile controlling output file order
+      #     @option options [String] :O (nil) path to an orderfile controlling output file order
       #
-      #     @option options [String] :skip_to (nil) Discard files before the named file in the output
+      #     @option options [String] :skip_to (nil) discard files before the named file in the output
       #
-      #     @option options [String] :rotate_to (nil) Move files before the named file to end of output
+      #     @option options [String] :rotate_to (nil) move files before the named file to end of output
       #
-      #     @option options [Boolean] :R (nil) Swap the two diff inputs
+      #     @option options [Boolean] :R (false) swap the two diff inputs
       #
-      #     @option options [Boolean, String] :relative (nil) Show paths relative to a directory
+      #     @option options [Boolean, String] :relative (nil) show paths relative to a directory
       #
       #       Pass `true` to use the current directory, `false` for `--no-relative`, or a path
       #       string to name the directory explicitly.
       #
-      #     @option options [Boolean] :text (nil) Treat all files as text
+      #     @option options [Boolean] :text (false) treat all files as text
       #
       #       Alias: :a
       #
-      #     @option options [Integer, String] :inter_hunk_context (nil) Show context between diff hunks
+      #     @option options [Integer, String] :inter_hunk_context (nil) show context between diff hunks
       #       up to this many lines, fusing close hunks
       #
-      #     @option options [Boolean] :function_context (nil) Show whole function as context for each change
+      #     @option options [Boolean] :function_context (false) show whole function as context for each change
       #
       #       Alias: :W
       #
-      #     @option options [Boolean] :exit_code (nil) Exit with status 1 if differences are found,
+      #     @option options [Boolean] :exit_code (false) exit with status 1 if differences are found,
       #       0 if none
       #
-      #     @option options [Boolean] :quiet (nil) Suppress all output
+      #     @option options [Boolean] :quiet (false) suppress all output
       #
       #       Implies `--exit-code`.
       #
-      #     @option options [Boolean] :ext_diff (nil) Allow external diff helpers
+      #     @option options [Boolean] :ext_diff (nil) allow external diff helpers
       #
-      #       Pass `false` to emit `--no-ext-diff`.
+      #       Pass `true` for `--ext-diff`, `false` for `--no-ext-diff`.
       #
-      #     @option options [Boolean] :textconv (nil) Allow external text-conversion filters
+      #     @option options [Boolean] :textconv (nil) allow external text-conversion filters
       #
-      #       Pass `false` to emit `--no-textconv`.
+      #       Pass `true` for `--textconv`, `false` for `--no-textconv`.
       #
-      #     @option options [Boolean, String] :ignore_submodules (nil) Ignore submodule changes
+      #     @option options [Boolean, String] :ignore_submodules (nil) ignore submodule changes
       #
       #       Pass `true` for `--ignore-submodules` (equivalent to `'all'`), or a string such as
       #       `'untracked'`, `'dirty'`, `'none'`, or `'all'`.
       #
-      #     @option options [String] :src_prefix (nil) Source prefix for diff headers (e.g. `'a/'`)
+      #     @option options [String] :src_prefix (nil) source prefix for diff headers (e.g. `'a/'`)
       #
-      #     @option options [String] :dst_prefix (nil) Destination prefix for diff headers (e.g. `'b/'`)
+      #     @option options [String] :dst_prefix (nil) destination prefix for diff headers (e.g. `'b/'`)
       #
-      #     @option options [Boolean] :no_prefix (nil) Omit source and destination prefixes
+      #     @option options [Boolean] :no_prefix (false) omit source and destination prefixes
       #
-      #     @option options [Boolean] :default_prefix (nil) Use the default `a/` and `b/` prefixes
+      #     @option options [Boolean] :default_prefix (false) use the default `a/` and `b/` prefixes
       #
-      #     @option options [String] :line_prefix (nil) Prepend this prefix to every output line
+      #     @option options [String] :line_prefix (nil) prepend this prefix to every output line
       #
-      #     @option options [Boolean] :ita_invisible_in_index (nil) Make `git add -N` entries appear as
+      #     @option options [Boolean] :ita_invisible_in_index (false) make `git add -N` entries appear as
       #       new files in `git diff` and non-existent in `git diff --cached`
       #
-      #     @option options [Integer, String] :max_depth (nil) Maximum directory depth to descend for
+      #     @option options [Integer, String] :max_depth (nil) maximum directory depth to descend for
       #       each pathspec (tree-to-tree diffs only)
       #
       #     @return [Git::CommandLineResult] the result of calling `git diff-index`
       #
-      #     @raise [Git::FailedError] if git returns exit code >= 2
+      #     @raise [ArgumentError] if unsupported options are provided
+      #
+      #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
       #   @overload call(tree_ish, *paths, **options)
       #     Compare a tree to the index or working tree, limiting output to specific paths
@@ -476,7 +479,11 @@ module Git
       #
       #     @return [Git::CommandLineResult] the result of calling `git diff-index`
       #
-      #     @raise [Git::FailedError] if git returns exit code >= 2
+      #     @raise [ArgumentError] if unsupported options are provided
+      #
+      #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      #   @api public
     end
   end
 end
