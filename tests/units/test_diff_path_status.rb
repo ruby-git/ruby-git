@@ -71,7 +71,7 @@ class TestDiffPathStatus < Test::Unit::TestCase
     diff_cmd.expects(:call).with('gitsearch1', 'v2.5',
                                  raw: true, numstat: true, shortstat: true,
                                  src_prefix: 'a/', dst_prefix: 'b/',
-                                 pathspecs: nil).returns(result)
+                                 path: nil).returns(result)
 
     status_hash = Git::DiffPathStatus.new(@git, 'gitsearch1', 'v2.5', []).to_h
     assert_equal({}, status_hash)

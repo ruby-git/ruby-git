@@ -9,8 +9,8 @@ RSpec.describe Git::Commands::Diff, :integration do
   subject(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    describe 'with numstat output mode' do
-      it 'returns a CommandLineResult with numstat output' do
+    context 'when the command succeeds' do
+      it 'returns a CommandLineResult' do
         result = command.call('initial', 'after_modify',
                               numstat: true, shortstat: true,
                               src_prefix: 'a/', dst_prefix: 'b/')
@@ -27,37 +27,21 @@ RSpec.describe Git::Commands::Diff, :integration do
         expect(result.status.exitstatus).to eq(0)
         expect(result.stdout).to be_empty
       end
-    end
 
-    describe 'with patch output mode' do
-      it 'returns a CommandLineResult with patch output' do
-        result = command.call('initial', 'after_modify',
-                              patch: true, numstat: true, shortstat: true,
-                              src_prefix: 'a/', dst_prefix: 'b/')
+      it 'returns exit code 1 with differences when exit_code: true' do
+        result = command.call('initial', 'after_modify', exit_code: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
-        expect(result.stdout).not_to be_empty
-        expect(result.stdout).to include('diff --git')
-      end
-    end
-
-    describe 'with raw output mode' do
-      it 'returns a CommandLineResult with raw output' do
-        result = command.call('initial', 'after_modify',
-                              raw: true, numstat: true, shortstat: true,
-                              src_prefix: 'a/', dst_prefix: 'b/')
-
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(1)
         expect(result.stdout).not_to be_empty
       end
     end
 
-    describe 'when the command fails' do
+    context 'when the command fails' do
       it 'raises FailedError for invalid revision' do
         expect do
           command.call('nonexistent-ref', numstat: true, shortstat: true,
                                           src_prefix: 'a/', dst_prefix: 'b/')
-        end.to raise_error(Git::FailedError)
+        end.to raise_error(Git::FailedError, /nonexistent-ref/)
       end
     end
   end

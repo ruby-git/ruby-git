@@ -465,40 +465,40 @@ RSpec.describe Git::Lib do
     it 'forwards obj1 and obj2 to the command' do
       allow(diff_command).to receive(:call)
         .with('HEAD~3', 'HEAD', patch: true, numstat: true, shortstat: true,
-                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: nil)
+                                src_prefix: 'a/', dst_prefix: 'b/', path: nil)
         .and_return(command_result(''))
 
       lib.diff_full('HEAD~3', 'HEAD')
 
       expect(diff_command).to have_received(:call)
         .with('HEAD~3', 'HEAD', patch: true, numstat: true, shortstat: true,
-                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: nil)
+                                src_prefix: 'a/', dst_prefix: 'b/', path: nil)
     end
 
-    it 'forwards path_limiter as pathspecs' do
+    it 'forwards path_limiter as path' do
       allow(diff_command).to receive(:call)
         .with('HEAD', patch: true, numstat: true, shortstat: true,
-                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                      src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_full('HEAD', nil, path_limiter: ['lib/'])
 
       expect(diff_command).to have_received(:call)
         .with('HEAD', patch: true, numstat: true, shortstat: true,
-                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                      src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
     end
 
     it 'wraps a string path_limiter in an array' do
       allow(diff_command).to receive(:call)
         .with('HEAD', patch: true, numstat: true, shortstat: true,
-                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/foo.rb'])
+                      src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/foo.rb'])
         .and_return(command_result(''))
 
       lib.diff_full('HEAD', nil, path_limiter: 'lib/foo.rb')
 
       expect(diff_command).to have_received(:call)
         .with('HEAD', patch: true, numstat: true, shortstat: true,
-                      src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/foo.rb'])
+                      src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/foo.rb'])
     end
 
     it 'rejects unknown options' do
@@ -532,14 +532,14 @@ RSpec.describe Git::Lib do
     it 'forwards obj1, obj2, and path_limiter to the command' do
       allow(diff_command).to receive(:call)
         .with('HEAD~3', 'HEAD', numstat: true, shortstat: true,
-                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                                src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_stats('HEAD~3', 'HEAD', path_limiter: ['lib/'])
 
       expect(diff_command).to have_received(:call)
         .with('HEAD~3', 'HEAD', numstat: true, shortstat: true,
-                                src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                                src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
     end
 
     it 'rejects unknown options' do
@@ -579,14 +579,14 @@ RSpec.describe Git::Lib do
     it 'forwards references and path_limiter to the command' do
       allow(diff_command).to receive(:call)
         .with('abc123', 'def456', raw: true, numstat: true, shortstat: true,
-                                  src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                                  src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
         .and_return(command_result(''))
 
       lib.diff_path_status('abc123', 'def456', path_limiter: ['lib/'])
 
       expect(diff_command).to have_received(:call)
         .with('abc123', 'def456', raw: true, numstat: true, shortstat: true,
-                                  src_prefix: 'a/', dst_prefix: 'b/', pathspecs: ['lib/'])
+                                  src_prefix: 'a/', dst_prefix: 'b/', path: ['lib/'])
     end
 
     it 'supports the deprecated :path option' do
