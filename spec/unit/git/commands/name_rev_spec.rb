@@ -75,6 +75,24 @@ RSpec.describe Git::Commands::NameRev do
       end
     end
 
+    context 'with the :no_refs option' do
+      it 'adds --no-refs to the command line' do
+        expect_command_capturing('name-rev', '--no-refs', '--', 'abc123')
+          .and_return(command_result)
+
+        command.call('abc123', no_refs: true)
+      end
+    end
+
+    context 'with the :no_exclude option' do
+      it 'adds --no-exclude to the command line' do
+        expect_command_capturing('name-rev', '--no-exclude', '--', 'abc123')
+          .and_return(command_result)
+
+        command.call('abc123', no_exclude: true)
+      end
+    end
+
     context 'with the :all option' do
       it 'adds --all to the command line' do
         expect_command_capturing('name-rev', '--all').and_return(command_result)

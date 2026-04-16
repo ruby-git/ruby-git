@@ -4,14 +4,10 @@ require 'git/commands/base'
 
 module Git
   module Commands
-    # Encapsulates the `git push` command
+    # Implements the `git push` command
     #
     # Updates remote refs using local refs, while sending objects necessary to
     # complete the given refs.
-    #
-    # @see https://git-scm.com/docs/git-push git-push documentation
-    #
-    # @api private
     #
     # @example Push to the default remote
     #   push = Git::Commands::Push.new(execution_context)
@@ -36,6 +32,14 @@ module Git
     # @example Push all tags to a remote
     #   push = Git::Commands::Push.new(execution_context)
     #   push.call('origin', tags: true)
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-push/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-push git-push
+    #
+    # @see Git::Commands
+    #
+    # @api private
     #
     class Push < Git::Commands::Base
       arguments do
@@ -224,6 +228,8 @@ module Git
       #     @option options [Integer] :timeout (nil) Maximum seconds to wait for the command to complete
       #
       #     @return [Git::CommandLineResult] the result of calling `git push`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #

@@ -25,9 +25,9 @@ module Git
     #   name_rev = Git::Commands::NameRev.new(execution_context)
     #   result = name_rev.call('abc123', refs: ['heads/*', 'tags/*'])
     #
-    # @see https://git-scm.com/docs/git-name-rev git-name-rev documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-name-rev/2.53.0
     #
-    # @see Git::Commands
+    # @see https://git-scm.com/docs/git-name-rev git-name-rev
     #
     # @api private
     #
@@ -38,7 +38,9 @@ module Git
         # Ref filtering
         flag_option :tags
         value_option :refs, inline: true, repeatable: true
+        flag_option :no_refs
         value_option :exclude, inline: true, repeatable: true
+        flag_option :no_exclude
 
         # Output control
         flag_option :all
@@ -63,7 +65,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :tags (nil) use only tags to name
+      #     @option options [Boolean] :tags (false) use only tags to name
       #       the commits, not branch names
       #
       #     @option options [String, Array<String>] :refs (nil) only use refs
@@ -72,31 +74,39 @@ module Git
       #       When given multiple times, uses refs whose names match any of the
       #       given shell patterns. Maps to `--refs=<pattern>`.
       #
+      #     @option options [Boolean] :no_refs (false) clear all previously given
+      #       `--refs` patterns
+      #
       #     @option options [String, Array<String>] :exclude (nil) do not use
       #       any ref whose name matches the given shell pattern
       #
       #       When given multiple times, a ref is excluded when it matches any
       #       of the given patterns. Maps to `--exclude=<pattern>`.
       #
-      #     @option options [Boolean] :all (nil) list all commits reachable
+      #     @option options [Boolean] :no_exclude (false) clear all previously
+      #       given `--exclude` patterns
+      #
+      #     @option options [Boolean] :all (false) list all commits reachable
       #       from all refs
       #
-      #     @option options [Boolean] :annotate_stdin (nil) transform stdin by
+      #     @option options [Boolean] :annotate_stdin (false) transform stdin by
       #       substituting all 40-character SHA-1 hexes with their symbolic
       #       names. Maps to `--annotate-stdin`.
       #
-      #     @option options [Boolean] :name_only (nil) print only the symbolic
+      #     @option options [Boolean] :name_only (false) print only the symbolic
       #       name, not the SHA-1
       #
-      #     @option options [Boolean] :no_undefined (nil) die with non-zero
+      #     @option options [Boolean] :no_undefined (false) die with non-zero
       #       exit code when a reference is undefined, instead of printing
       #       `undefined`
       #
-      #     @option options [Boolean] :always (nil) show uniquely abbreviated
+      #     @option options [Boolean] :always (false) show uniquely abbreviated
       #       commit object as fallback
       #
       #     @return [Git::CommandLineResult] the result of calling
       #       `git name-rev`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero status
     end

@@ -79,6 +79,12 @@ RSpec.describe Git::Commands::Pull do
 
         command.call(progress: true)
       end
+
+      it 'adds --no-progress when false' do
+        expect_command_capturing('pull', '--no-progress').and_return(command_result)
+
+        command.call(progress: false)
+      end
     end
 
     context 'with the :recurse_submodules option' do
@@ -695,6 +701,12 @@ RSpec.describe Git::Commands::Pull do
         expect_command_capturing('pull', '--no-edit').and_return(command_result)
 
         command.call(edit: false)
+      end
+
+      it 'supports the :e alias' do
+        expect_command_capturing('pull', '--edit').and_return(command_result)
+
+        command.call(e: true)
       end
     end
 
