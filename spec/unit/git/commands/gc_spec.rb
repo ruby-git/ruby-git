@@ -61,19 +61,55 @@ RSpec.describe Git::Commands::Gc do
       end
     end
 
+    context 'with the :detach option' do
+      it 'adds --detach when true' do
+        expect_command_capturing('gc', '--detach').and_return(command_result)
+
+        command.call(detach: true)
+      end
+
+      it 'adds --no-detach when false' do
+        expect_command_capturing('gc', '--no-detach').and_return(command_result)
+
+        command.call(detach: false)
+      end
+    end
+
+    context 'with the :cruft option' do
+      it 'adds --cruft when true' do
+        expect_command_capturing('gc', '--cruft').and_return(command_result)
+
+        command.call(cruft: true)
+      end
+
+      it 'adds --no-cruft when false' do
+        expect_command_capturing('gc', '--no-cruft').and_return(command_result)
+
+        command.call(cruft: false)
+      end
+    end
+
+    context 'with the :max_cruft_size option' do
+      it 'passes --max-cruft-size=<n>' do
+        expect_command_capturing('gc', '--max-cruft-size=1g').and_return(command_result)
+
+        command.call(max_cruft_size: '1g')
+      end
+    end
+
+    context 'with the :expire_to option' do
+      it 'passes --expire-to=<dir>' do
+        expect_command_capturing('gc', '--expire-to=/tmp/pruned').and_return(command_result)
+
+        command.call(expire_to: '/tmp/pruned')
+      end
+    end
+
     context 'with the :quiet option' do
       it 'adds --quiet when true' do
         expect_command_capturing('gc', '--quiet').and_return(command_result)
 
         command.call(quiet: true)
-      end
-    end
-
-    context 'with the :q alias for :quiet' do
-      it 'passes --quiet' do
-        expect_command_capturing('gc', '--quiet').and_return(command_result)
-
-        command.call(q: true)
       end
     end
 
@@ -95,7 +131,7 @@ RSpec.describe Git::Commands::Gc do
 
     context 'with :aggressive, :quiet, and :prune combined' do
       it 'passes all three flags in DSL-defined order' do
-        expect_command_capturing('gc', '--aggressive', '--quiet', '--prune=now').and_return(command_result)
+        expect_command_capturing('gc', '--aggressive', '--prune=now', '--quiet').and_return(command_result)
 
         command.call(aggressive: true, prune: 'now', quiet: true)
       end
