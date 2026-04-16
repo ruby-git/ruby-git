@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/commands/fsck'
 
 RSpec.describe Git::Commands::Fsck do
   let(:execution_context) { double('ExecutionContext') }
@@ -52,6 +53,14 @@ RSpec.describe Git::Commands::Fsck do
         expect_command_capturing('fsck', '--unreachable').and_return(command_result(''))
 
         command.call(unreachable: true)
+      end
+    end
+
+    context 'with the :verbose option' do
+      it 'includes the --verbose flag' do
+        expect_command_capturing('fsck', '--verbose').and_return(command_result(''))
+
+        command.call(verbose: true)
       end
     end
 
