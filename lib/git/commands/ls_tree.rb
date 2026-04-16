@@ -10,7 +10,9 @@ module Git
     # name, and file name of each item. Supports recursive listing, output
     # format control, and path filtering.
     #
-    # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-tree/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-ls-tree git-ls-tree
     #
     # @api private
     #
@@ -49,10 +51,9 @@ module Git
         flag_or_value_option :abbrev, inline: true
         value_option :format, inline: true
 
-        operand :tree_ish, required: true
-
         end_of_options
 
+        operand :tree_ish, required: true
         operand :path, repeatable: true
       end
 
@@ -62,58 +63,69 @@ module Git
       #
       #     Execute the git ls-tree command
       #
-      #     @param tree_ish [String] The tree object to list (SHA, branch name, tag, etc.)
+      #     @param tree_ish [String] the tree object to list (SHA, branch name, tag, etc.)
       #
-      #     @param path [Array<String>] Optional path(s) to restrict the listing. When given,
-      #       only entries matching these paths are shown.
+      #     @param path [Array<String>] optional path(s) to restrict the listing
+      #
+      #       When given, only entries matching these paths are shown.
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :d (nil) Show only the named tree entry itself, not its
-      #       children. Only meaningful together with `:r`.
+      #     @option options [Boolean] :d (false) show only the named tree entry itself,
+      #       not its children
       #
-      #     @option options [Boolean] :r (nil) Recurse into sub-trees.
+      #     @option options [Boolean] :r (false) recurse into sub-trees
       #
-      #     @option options [Boolean] :t (nil) Show tree entries even when going to recurse
-      #       or truncate to a directory that would be shown in combination with `-r`.
-      #       Has no effect if `-r` was not passed. `-t` implies `-r`.
+      #     @option options [Boolean] :t (false) show tree entries even when going to
+      #       recurse them
       #
-      #     @option options [Boolean] :long (nil) Show object size of blob (file) objects.
+      #       Implies recursive listing (`:r`) in git.
+      #
+      #     @option options [Boolean] :long (false) show object size of blob (file)
+      #       objects
+      #
       #       Cannot be combined with `:name_only` or `:object_only`.
       #
       #       Alias: :l
       #
-      #     @option options [Boolean] :z (nil) Use NUL (`\0`) as line terminator instead of
-      #       newline, and do not quote filenames.
+      #     @option options [Boolean] :z (false) use NUL (`\0`) as line terminator
+      #       instead of newline, and do not quote filenames
       #
-      #     @option options [Boolean] :name_only (nil) List only filenames, one per line.
-      #       Cannot be combined with `:long`.
+      #     @option options [Boolean] :name_only (false) list only filenames, one per
+      #       line
+      #
+      #       Cannot be combined with `:object_only` or `:long`.
       #
       #       Alias: :name_status
       #
-      #     @option options [Boolean] :object_only (nil) List only the object names (SHAs),
-      #       one per line. Cannot be combined with `:long` or `:name_only`.
+      #     @option options [Boolean] :object_only (false) list only the object names
+      #       (SHAs), one per line
       #
-      #     @option options [Boolean] :full_name (nil) Show full path names instead of paths
-      #       relative to the current working directory. Maps to `--full-name`.
+      #       Cannot be combined with `:name_only` or `:long`.
       #
-      #     @option options [Boolean] :full_tree (nil) Do not limit the listing to the current
-      #       working directory. Implies `:full_name`. Maps to `--full-tree`.
+      #     @option options [Boolean] :full_name (false) show full path names instead
+      #       of paths relative to the current working directory
       #
-      #     @option options [Boolean, String] :abbrev (nil) When `true`, use git's default
-      #       abbreviated object name length. When a string (e.g. `'8'`), use exactly that
-      #       many hex digits. Maps to `--abbrev[=<n>]`.
+      #     @option options [Boolean] :full_tree (false) do not limit the listing to
+      #       the current working directory; implies `:full_name`
       #
-      #     @option options [String] :format (nil) A format string that interpolates
-      #       `%(fieldname)` placeholders from tree entries. Maps to `--format=<format>`.
+      #     @option options [Boolean, String] :abbrev (nil) use abbreviated object names
+      #
+      #       When `true`, uses git's default abbreviated name length. When a string
+      #       (e.g. `'8'`), uses exactly that many hex digits.
+      #
+      #     @option options [String] :format (nil) a format string that interpolates
+      #       `%(fieldname)` placeholders from tree entries
+      #
+      #       Cannot be combined with `:long`, `:name_only`, or `:object_only`.
       #
       #     @return [Git::CommandLineResult] the result of calling `git ls-tree`
       #
-      #     @raise [ArgumentError] if `:tree_ish` is not provided
-      #
       #     @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [Git::FailedError] if the command returns a non-zero exit status
+      #     @raise [ArgumentError] if the tree-ish operand is missing
+      #
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
     end
   end
 end

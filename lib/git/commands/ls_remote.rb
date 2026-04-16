@@ -10,7 +10,10 @@ module Git
     # associated commit IDs. Can be used to detect changes in a remote
     # repository without cloning or fetching.
     #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-remote/2.53.0
+    #
     # @see https://git-scm.com/docs/git-ls-remote git-ls-remote documentation
+    #
     # @see Git::Commands
     #
     # @api private
@@ -21,7 +24,7 @@ module Git
     #
     # @example List only branches and tags
     #   ls_remote = Git::Commands::LsRemote.new(execution_context)
-    #   ls_remote.call('origin', heads: true, tags: true)
+    #   ls_remote.call('origin', branches: true, tags: true)
     #
     # @example List only refs (no symbolic refs like HEAD)
     #   ls_remote = Git::Commands::LsRemote.new(execution_context)
@@ -39,6 +42,7 @@ module Git
       arguments do
         literal 'ls-remote'
 
+        flag_option %i[branches b]
         flag_option %i[heads h]
         flag_option %i[tags t]
         flag_option :refs
@@ -80,21 +84,28 @@ module Git
       #
       #     @param patterns [Array<String>] One or more ref patterns to filter results
       #
-      #       When omitted, all references (after filtering via `--heads`, `--tags`,
+      #       When omitted, all references (after filtering via `--branches`, `--tags`,
       #       `--refs`) are shown. When specified, only refs matching one or more
       #       patterns are displayed.
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :heads (nil) Limit output to refs under `refs/heads/`
+      #     @option options [Boolean] :branches (false) Limit output to refs under `refs/heads/`
+      #
+      #       Alias: :b
+      #
+      #     @option options [Boolean] :heads (false) Limit output to refs under `refs/heads/`
+      #
+      #       Deprecated: use `:branches` instead. Kept for backward compatibility with
+      #       older git versions where `--heads` is the only supported flag.
       #
       #       Alias: :h
       #
-      #     @option options [Boolean] :tags (nil) Limit output to refs under `refs/tags/`
+      #     @option options [Boolean] :tags (false) Limit output to refs under `refs/tags/`
       #
       #       Alias: :t
       #
-      #     @option options [Boolean] :refs (nil) Exclude peeled tags and pseudorefs
+      #     @option options [Boolean] :refs (false) Exclude peeled tags and pseudorefs
       #       like `HEAD` from the output
       #
       #     @option options [String] :upload_pack (nil) Full path to `git-upload-pack`
@@ -103,17 +114,17 @@ module Git
       #       Useful when accessing repositories via SSH where the daemon does not
       #       use the PATH configured by the user.
       #
-      #     @option options [Boolean] :quiet (nil) Do not print the remote URL to stderr
+      #     @option options [Boolean] :quiet (false) Do not print the remote URL to stderr
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :exit_code (nil) Exit with status `2` when no
+      #     @option options [Boolean] :exit_code (false) Exit with status `2` when no
       #       matching refs are found in the remote repository
       #
       #       Without this option, the command exits `0` whenever it successfully
       #       communicates with the remote, even if no refs match.
       #
-      #     @option options [Boolean] :get_url (nil) Expand and print the remote URL
+      #     @option options [Boolean] :get_url (false) Expand and print the remote URL
       #       (respecting `url.<base>.insteadOf` config) and exit without contacting
       #       the remote
       #
@@ -122,7 +133,7 @@ module Git
       #       Prefix `-` for descending order. Supports `"version:refname"` or
       #       `"v:refname"`. See `git for-each-ref` for sort key documentation.
       #
-      #     @option options [Boolean] :symref (nil) Show the underlying ref pointed to by
+      #     @option options [Boolean] :symref (false) Show the underlying ref pointed to by
       #       symbolic refs
       #
       #       The `upload-pack` protocol currently surfaces only the `HEAD` symref,
@@ -138,7 +149,7 @@ module Git
       #
       #     @return [Git::CommandLineResult] the result of calling `git ls-remote`
       #
-      #     @raise [Git::FailedError] if git returns an exit code > 2
+      #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
     end
   end
 end
