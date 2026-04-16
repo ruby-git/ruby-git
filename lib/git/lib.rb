@@ -911,7 +911,7 @@ module Git
         *[obj1, obj2].compact,
         patch: true, numstat: true, shortstat: true,
         src_prefix: 'a/', dst_prefix: 'b/',
-        pathspecs: pathspecs
+        path: pathspecs
       )
       extract_patch_text(result.stdout)
     end
@@ -943,7 +943,7 @@ module Git
         *[obj1, obj2].compact,
         numstat: true, shortstat: true,
         src_prefix: 'a/', dst_prefix: 'b/',
-        pathspecs: pathspecs
+        path: pathspecs
       )
       output_lines = extract_numstat_lines(result.stdout)
       parse_diff_stats_output(output_lines)
@@ -982,7 +982,7 @@ module Git
         *[reference1, reference2].compact,
         raw: true, numstat: true, shortstat: true,
         src_prefix: 'a/', dst_prefix: 'b/',
-        pathspecs: pathspecs
+        path: pathspecs
       )
       extract_name_status_from_raw(result.stdout)
     end

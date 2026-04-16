@@ -51,7 +51,7 @@ class TestDiffStats < Test::Unit::TestCase
     diff_cmd.expects(:call).with('gitsearch1', 'v2.5',
                                  numstat: true, shortstat: true,
                                  src_prefix: 'a/', dst_prefix: 'b/',
-                                 pathspecs: nil).returns(result)
+                                 path: nil).returns(result)
 
     stats = @git.diff_stats('gitsearch1', 'v2.5', path_limiter: [])
     assert_equal(0, stats.total[:files])

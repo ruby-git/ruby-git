@@ -15,6 +15,7 @@
   - [Short-flag alias completeness](#short-flag-alias-completeness)
   - [Spurious aliases](#spurious-aliases)
 - [4. Verify ordering](#4-verify-ordering)
+  - [Comments in the DSL block](#comments-in-the-dsl-block)
   - [`end_of_options` placement](#end_of_options-placement)
     - [Rule 1 — SYNOPSIS shows `--`: mirror the SYNOPSIS](#rule-1--synopsis-shows----mirror-the-synopsis)
     - [Rule 2 — SYNOPSIS does NOT show `--`: protect operands from flag misinterpretation](#rule-2--synopsis-does-not-show----protect-operands-from-flag-misinterpretation)
@@ -395,6 +396,17 @@ emits CLI arguments, its position does not affect the generated command line, bu
 consistent placement keeps the DSL block readable.
 
 operands should go last.
+
+### Comments in the DSL block
+
+**Section comments** (e.g. `# Output format`, `# Whitespace handling`) are encouraged
+to group related options within large DSL blocks. Place them on the line immediately
+before the first option in the group.
+
+**Do not add trailing inline comments** to DSL entries (e.g.
+`flag_option :verbose  # --verbose`). They duplicate information already expressed
+by the DSL itself, create line-length pressure, and require manual alignment
+maintenance. Flag any trailing inline comments on DSL entries as an error.
 
 ### `end_of_options` placement
 
