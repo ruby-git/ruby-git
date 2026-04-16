@@ -30,6 +30,18 @@ RSpec.describe Git::Commands::MergeBase, :integration do
         expect(result).to be_a(Git::CommandLineResult)
         expect(result.stdout).not_to be_empty
       end
+
+      it 'returns exit 0 without raising when the first commit is an ancestor' do
+        result = command.call('main', 'feature', is_ancestor: true)
+
+        expect(result.status.exitstatus).to eq(0)
+      end
+
+      it 'returns exit 1 without raising when the first commit is not an ancestor' do
+        result = command.call('feature', 'main', is_ancestor: true)
+
+        expect(result.status.exitstatus).to eq(1)
+      end
     end
 
     describe 'when the command fails' do

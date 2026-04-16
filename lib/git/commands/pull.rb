@@ -10,10 +10,6 @@ module Git
     # In its default mode, `git pull` is shorthand for `git fetch` followed
     # by `git merge FETCH_HEAD`.
     #
-    # @see https://git-scm.com/docs/git-pull git-pull documentation
-    #
-    # @api private
-    #
     # @example Pull from the default remote
     #   pull = Git::Commands::Pull.new(execution_context)
     #   pull.call
@@ -38,6 +34,15 @@ module Git
     #   pull = Git::Commands::Pull.new(execution_context)
     #   pull.call('origin', edit: false)
     #
+    # @note `arguments` block audited against
+    #   https://git-scm.com/docs/git-pull/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-pull git-pull
+    #
+    # @see Git::Commands
+    #
+    # @api private
+    #
     class Pull < Git::Commands::Base
       arguments do
         literal 'pull'
@@ -50,7 +55,7 @@ module Git
 
         # Merge options
         flag_option :commit, negatable: true
-        flag_option :edit, negatable: true
+        flag_option %i[edit e], negatable: true
         value_option :cleanup, inline: true
         flag_option :ff_only
         flag_option :ff, negatable: true
@@ -124,11 +129,11 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :quiet (nil) Suppress all output
+      #     @option options [Boolean] :quiet (false) Suppress all output
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :verbose (nil) Enable verbose output during fetch and merge
+      #     @option options [Boolean] :verbose (false) Enable verbose output during fetch and merge
       #
       #       Alias: :v
       #
@@ -143,16 +148,18 @@ module Git
       #
       #       `true` for `--commit`, `false` for `--no-commit`.
       #
-      #     @option options [Boolean] :edit (nil) Open an editor for the merge commit message.
-      #       When false, adds --no-edit to suppress the editor. When true, adds --edit.
-      #       When nil, defers to git's default behavior.
+      #     @option options [Boolean] :edit (nil) Open an editor for the merge commit message
+      #
+      #       `true` for `--edit`, `false` for `--no-edit`, `nil` defers to git's default behavior.
+      #
+      #       Alias: :e
       #
       #     @option options [String] :cleanup (nil) Merge-message cleanup mode
       #
       #       Determines how the merge message is cleaned up before committing.
       #       For example, `'strip'`, `'whitespace'`, `'verbatim'`, `'scissors'`, `'default'`.
       #
-      #     @option options [Boolean] :ff_only (nil) Require fast-forward merge or up-to-date HEAD
+      #     @option options [Boolean] :ff_only (false) Require fast-forward merge or up-to-date HEAD
       #
       #       Refuses to merge unless the current HEAD is already up to date or the
       #       merge can be resolved as a fast-forward.
@@ -176,13 +183,13 @@ module Git
       #
       #       `true` for `--signoff`, `false` for `--no-signoff`.
       #
-      #     @option options [Boolean] :stat (nil) Show a diffstat at the end of the merge
+      #     @option options [Boolean] :stat (false) Show a diffstat at the end of the merge
       #
-      #     @option options [Boolean] :no_stat (nil) Do not show a diffstat at the end of the merge
+      #     @option options [Boolean] :no_stat (false) Do not show a diffstat at the end of the merge
       #
       #       Alias: :n
       #
-      #     @option options [Boolean] :compact_summary (nil) Show a compact summary after the merge
+      #     @option options [Boolean] :compact_summary (false) Show a compact summary after the merge
       #
       #     @option options [Boolean] :squash (nil) Squash pulled commits into a single commit
       #
@@ -218,7 +225,7 @@ module Git
       #
       #       `true` for `--autostash`, `false` for `--no-autostash`.
       #
-      #     @option options [Boolean] :allow_unrelated_histories (nil) Allow pulling from a
+      #     @option options [Boolean] :allow_unrelated_histories (false) Allow pulling from a
       #       repository that shares no common history with the current repository
       #
       #     @option options [Boolean, String] :rebase (nil) Rebase the current branch on
@@ -231,12 +238,12 @@ module Git
       #
       #       `true` for `--all`, `false` for `--no-all`.
       #
-      #     @option options [Boolean] :append (nil) Append ref names and object names fetched to
+      #     @option options [Boolean] :append (false) Append ref names and object names fetched to
       #       the existing contents of `.git/FETCH_HEAD`
       #
       #       Alias: :a
       #
-      #     @option options [Boolean] :atomic (nil) Use an atomic transaction to update local refs
+      #     @option options [Boolean] :atomic (false) Use an atomic transaction to update local refs
       #
       #     @option options [String] :depth (nil) Limit fetching to the given number of commits
       #
@@ -253,37 +260,37 @@ module Git
       #
       #       Repeatable.
       #
-      #     @option options [Boolean] :unshallow (nil) Convert a shallow repository to a complete one
+      #     @option options [Boolean] :unshallow (false) Convert a shallow repository to a complete one
       #
       #       If the source is shallow, fetches as much as possible.
       #
-      #     @option options [Boolean] :update_shallow (nil) Accept refs that update `.git/shallow`
+      #     @option options [Boolean] :update_shallow (false) Accept refs that update `.git/shallow`
       #
       #     @option options [String, Array<String>] :negotiation_tip (nil) Report only commits
       #       reachable from the given tips during negotiation
       #
       #       Repeatable.
       #
-      #     @option options [Boolean] :negotiate_only (nil) Do not fetch; only print ancestries
+      #     @option options [Boolean] :negotiate_only (false) Do not fetch; only print ancestries
       #       between the local repository and the remote
       #
-      #     @option options [Boolean] :dry_run (nil) Show what would be done without making changes
+      #     @option options [Boolean] :dry_run (false) Show what would be done without making changes
       #
-      #     @option options [Boolean] :porcelain (nil) Give the output in a stable, easy-to-parse
+      #     @option options [Boolean] :porcelain (false) Give the output in a stable, easy-to-parse
       #       format for scripts
       #
-      #     @option options [Boolean] :force (nil) Override the check for a non-fast-forward update
+      #     @option options [Boolean] :force (false) Override the check for a non-fast-forward update
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :keep (nil) Keep the downloaded pack
+      #     @option options [Boolean] :keep (false) Keep the downloaded pack
       #
       #       Alias: :k
       #
-      #     @option options [Boolean] :prefetch (nil) Modify the configured refspec to place
+      #     @option options [Boolean] :prefetch (false) Modify the configured refspec to place
       #       all refs into the `refs/prefetch/` namespace
       #
-      #     @option options [Boolean] :prune (nil) Remove remote-tracking references that no longer
+      #     @option options [Boolean] :prune (false) Remove remote-tracking references that no longer
       #       exist on the remote before fetching
       #
       #       Alias: :p
@@ -302,15 +309,14 @@ module Git
       #
       #       Alias: :j
       #
-      #     @option options [Boolean] :set_upstream (nil) Add upstream (tracking) reference for
+      #     @option options [Boolean] :set_upstream (false) Add upstream (tracking) reference for
       #       the current branch
       #
       #     @option options [String] :upload_pack (nil) Path to `git-upload-pack` on the remote
       #
-      #     @option options [Boolean] :progress (nil) Control progress reporting
+      #     @option options [Boolean] :progress (nil) Control progress status display
       #
-      #       `true` for `--progress` (force progress even if stderr is not a terminal),
-      #       `false` for `--no-progress` (suppress progress output).
+      #       `true` for `--progress`, `false` for `--no-progress`.
       #
       #     @option options [String, Array<String>] :server_option (nil) Transmit the given
       #       string to the server when communicating using protocol version 2
@@ -321,11 +327,11 @@ module Git
       #
       #       `true` for `--show-forced-updates`, `false` for `--no-show-forced-updates`.
       #
-      #     @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only, ignoring IPv6 addresses
+      #     @option options [Boolean] :ipv4 (false) Use IPv4 addresses only, ignoring IPv6 addresses
       #
       #       Alias: :'4'
       #
-      #     @option options [Boolean] :ipv6 (nil) Use IPv6 addresses only, ignoring IPv4 addresses
+      #     @option options [Boolean] :ipv6 (false) Use IPv6 addresses only, ignoring IPv4 addresses
       #
       #       Alias: :'6'
       #
