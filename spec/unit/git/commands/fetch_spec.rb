@@ -93,16 +93,16 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :depth option' do
-      it 'adds --depth <n> to the command line' do
-        expect_command_capturing('fetch', '--depth', '5').and_return(command_result)
+      it 'adds --depth=<n> to the command line' do
+        expect_command_capturing('fetch', '--depth=5').and_return(command_result)
 
         command.call(depth: '5')
       end
     end
 
     context 'with the :deepen option' do
-      it 'adds --deepen <n> to the command line' do
-        expect_command_capturing('fetch', '--deepen', '3').and_return(command_result)
+      it 'adds --deepen=<n> to the command line' do
+        expect_command_capturing('fetch', '--deepen=3').and_return(command_result)
 
         command.call(deepen: '3')
       end
@@ -291,14 +291,14 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :jobs option' do
-      it 'adds --jobs <n> to the command line' do
-        expect_command_capturing('fetch', '--jobs', '4').and_return(command_result)
+      it 'adds --jobs=<n> to the command line' do
+        expect_command_capturing('fetch', '--jobs=4').and_return(command_result)
 
         command.call(jobs: '4')
       end
 
       it 'supports the :j alias' do
-        expect_command_capturing('fetch', '--jobs', '2').and_return(command_result)
+        expect_command_capturing('fetch', '--jobs=2').and_return(command_result)
 
         command.call(j: '2')
       end
@@ -404,6 +404,12 @@ RSpec.describe Git::Commands::Fetch do
 
         command.call(ipv4: true)
       end
+
+      it 'supports the :"4" alias' do
+        expect_command_capturing('fetch', '--ipv4').and_return(command_result)
+
+        command.call('4': true)
+      end
     end
 
     context 'with the :ipv6 option' do
@@ -411,6 +417,134 @@ RSpec.describe Git::Commands::Fetch do
         expect_command_capturing('fetch', '--ipv6').and_return(command_result)
 
         command.call(ipv6: true)
+      end
+
+      it 'supports the :"6" alias' do
+        expect_command_capturing('fetch', '--ipv6').and_return(command_result)
+
+        command.call('6': true)
+      end
+    end
+
+    context 'with the :negotiation_tip option' do
+      it 'adds --negotiation-tip=<ref> to the command line' do
+        expect_command_capturing('fetch', '--negotiation-tip=refs/heads/main').and_return(command_result)
+
+        command.call(negotiation_tip: 'refs/heads/main')
+      end
+
+      it 'repeats the option for multiple values' do
+        expect_command_capturing(
+          'fetch', '--negotiation-tip=refs/heads/main', '--negotiation-tip=refs/heads/dev'
+        ).and_return(command_result)
+
+        command.call(negotiation_tip: %w[refs/heads/main refs/heads/dev])
+      end
+    end
+
+    context 'with the :negotiate_only option' do
+      it 'adds --negotiate-only to the command line' do
+        expect_command_capturing('fetch', '--negotiate-only').and_return(command_result)
+
+        command.call(negotiate_only: true)
+      end
+    end
+
+    context 'with the :porcelain option' do
+      it 'adds --porcelain to the command line' do
+        expect_command_capturing('fetch', '--porcelain').and_return(command_result)
+
+        command.call(porcelain: true)
+      end
+    end
+
+    context 'with the :auto_maintenance option' do
+      it 'adds --auto-maintenance when true' do
+        expect_command_capturing('fetch', '--auto-maintenance').and_return(command_result)
+
+        command.call(auto_maintenance: true)
+      end
+
+      it 'adds --no-auto-maintenance when false' do
+        expect_command_capturing('fetch', '--no-auto-maintenance').and_return(command_result)
+
+        command.call(auto_maintenance: false)
+      end
+    end
+
+    context 'with the :auto_gc option' do
+      it 'adds --auto-gc when true' do
+        expect_command_capturing('fetch', '--auto-gc').and_return(command_result)
+
+        command.call(auto_gc: true)
+      end
+
+      it 'adds --no-auto-gc when false' do
+        expect_command_capturing('fetch', '--no-auto-gc').and_return(command_result)
+
+        command.call(auto_gc: false)
+      end
+    end
+
+    context 'with the :write_commit_graph option' do
+      it 'adds --write-commit-graph when true' do
+        expect_command_capturing('fetch', '--write-commit-graph').and_return(command_result)
+
+        command.call(write_commit_graph: true)
+      end
+
+      it 'adds --no-write-commit-graph when false' do
+        expect_command_capturing('fetch', '--no-write-commit-graph').and_return(command_result)
+
+        command.call(write_commit_graph: false)
+      end
+    end
+
+    context 'with the :refmap option' do
+      it 'adds --refmap=<refspec> to the command line' do
+        expect_command_capturing('fetch', '--refmap=+refs/heads/*:refs/remotes/origin/*').and_return(command_result)
+
+        command.call(refmap: '+refs/heads/*:refs/remotes/origin/*')
+      end
+
+      it 'repeats the option for multiple values' do
+        expect_command_capturing(
+          'fetch', '--refmap=rs1', '--refmap=rs2'
+        ).and_return(command_result)
+
+        command.call(refmap: %w[rs1 rs2])
+      end
+    end
+
+    context 'with the :submodule_prefix option' do
+      it 'adds --submodule-prefix=<path> to the command line' do
+        expect_command_capturing('fetch', '--submodule-prefix=libs/foo').and_return(command_result)
+
+        command.call(submodule_prefix: 'libs/foo')
+      end
+    end
+
+    context 'with the :recurse_submodules_default option' do
+      it 'adds --recurse-submodules-default=<value> to the command line' do
+        expect_command_capturing('fetch', '--recurse-submodules-default=on-demand').and_return(command_result)
+
+        command.call(recurse_submodules_default: 'on-demand')
+      end
+    end
+
+    context 'with the :upload_pack option' do
+      it 'adds --upload-pack <path> to the command line' do
+        expect_command_capturing('fetch', '--upload-pack', '/usr/lib/git/git-upload-pack').and_return(command_result)
+
+        command.call(upload_pack: '/usr/lib/git/git-upload-pack')
+      end
+    end
+
+    context 'with the :stdin option' do
+      it 'adds --stdin to the command line' do
+        expect_command_capturing('fetch', '--stdin').and_return(command_result)
+
+        command.call(stdin: true)
       end
     end
 
@@ -432,7 +566,7 @@ RSpec.describe Git::Commands::Fetch do
 
     context 'with options and repository combined' do
       it 'places flags before -- and repository (in DSL definition order)' do
-        expect_command_capturing('fetch', '--depth', '2', '--force', '--', 'origin').and_return(command_result)
+        expect_command_capturing('fetch', '--depth=2', '--force', '--', 'origin').and_return(command_result)
 
         command.call('origin', force: true, depth: '2')
       end
