@@ -53,7 +53,21 @@ RSpec.describe Git::Commands::LsRemote do
       end
     end
 
-    context 'with the :heads option' do
+    context 'with the :branches option' do
+      it 'adds --branches to the command line' do
+        expect_command_capturing('ls-remote', '--branches').and_return(command_result)
+
+        command.call(branches: true)
+      end
+
+      it 'supports the :b alias' do
+        expect_command_capturing('ls-remote', '--branches').and_return(command_result)
+
+        command.call(b: true)
+      end
+    end
+
+    context 'with the :heads option (deprecated backward-compat alias for :branches)' do
       it 'adds --heads to the command line' do
         expect_command_capturing('ls-remote', '--heads').and_return(command_result)
 
@@ -166,9 +180,11 @@ RSpec.describe Git::Commands::LsRemote do
 
     context 'with multiple options and a repository' do
       it 'emits flags before end-of-options and repository after' do
-        expect_command_capturing('ls-remote', '--heads', '--tags', '--refs', '--', 'origin').and_return(command_result)
+        expect_command_capturing(
+          'ls-remote', '--branches', '--tags', '--refs', '--', 'origin'
+        ).and_return(command_result)
 
-        command.call('origin', heads: true, tags: true, refs: true)
+        command.call('origin', branches: true, tags: true, refs: true)
       end
     end
 
