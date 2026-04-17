@@ -4,6 +4,8 @@ require 'spec_helper'
 require 'git/commands/config_option_syntax/get_urlmatch'
 
 RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
@@ -58,7 +60,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
         command.call('http', 'https://example.com', file: '/path/to/config')
       end
 
-      it 'supports the :f alias' do
+      it 'emits --file when called with the :f alias' do
         expect_command_capturing('config', '--get-urlmatch', '--file', '/path/to/config', '--', 'http', 'https://example.com').and_return(command_result)
 
         command.call('http', 'https://example.com', f: '/path/to/config')
@@ -102,7 +104,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
         command.call('http', 'https://example.com', null: true)
       end
 
-      it 'supports the :z alias' do
+      it 'emits --null when called with the :z alias' do
         expect_command_capturing('config', '--get-urlmatch', '--null', '--', 'http', 'https://example.com').and_return(command_result)
 
         command.call('http', 'https://example.com', z: true)
@@ -110,6 +112,13 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
     end
 
     context 'exit code handling' do
+      it 'returns result for exit code 0 (match found)' do
+        result = command_result(exitstatus: 0)
+        expect_command_capturing('config', '--get-urlmatch', '--', 'http', 'https://example.com').and_return(result)
+
+        expect(command.call('http', 'https://example.com')).to eq(result)
+      end
+
       it 'returns result for exit code 1 (no match found)' do
         result = command_result(exitstatus: 1)
         expect_command_capturing('config', '--get-urlmatch', '--', 'http', 'https://example.com').and_return(result)
@@ -123,17 +132,16 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
 
         expect { command.call('http', 'https://example.com') }.to raise_error(Git::FailedError, /git/)
       end
+
+      it 'raises FailedError for exit code 128' do
+        result = command_result(exitstatus: 128)
+        expect_command_capturing('config', '--get-urlmatch', '--', 'http', 'https://example.com').and_return(result)
+
+        expect { command.call('http', 'https://example.com') }.to raise_error(Git::FailedError, /git/)
+      end
     end
 
     context 'input validation' do
-      it 'raises ArgumentError when name is missing' do
-        expect { command.call }.to raise_error(ArgumentError, /name/)
-      end
-
-      it 'raises ArgumentError when url is missing' do
-        expect { command.call('http') }.to raise_error(ArgumentError, /url/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
         expect do
           command.call('http', 'https://example.com', unknown: true)

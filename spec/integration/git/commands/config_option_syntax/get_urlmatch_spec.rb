@@ -18,6 +18,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch, :integration do
         result = command.call('http.proxy', 'https://example.com')
 
         expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(0)
       end
 
       it 'returns exit code 1 when no URL match exists' do
