@@ -11,17 +11,20 @@ module Git
       # key name, one per line.
       #
       # @example Get all values for a key
-      #   Git::Commands::ConfigOptionSyntax::GetAll.new(ctx).call('remote.origin.fetch')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetAll.new(lib)
+      #   cmd.call('remote.origin.fetch')
       #
       # @example Get all values with a value pattern
-      #   Git::Commands::ConfigOptionSyntax::GetAll.new(ctx).call('remote.origin.fetch', '\\+refs/heads/.*')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetAll.new(lib)
+      #   cmd.call('remote.origin.fetch', '\\+refs/heads/.*')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
       #
-      # @api private
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
+      # @api private
       class GetAll < Git::Commands::Base
         arguments do
           literal 'config'
@@ -40,6 +43,7 @@ module Git
 
           # Type constraint
           value_option :type, inline: true
+          flag_option :no_type
 
           # Output modifiers
           flag_option :show_origin
@@ -63,17 +67,17 @@ module Git
         #
         #     @param name [String] the config key name to look up
         #
-        #     @param value_regex [String, nil] optional regex to filter values
+        #     @param value_regex [String, nil] (nil) optional regex to filter values
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) read from system config
+        #     @option options [Boolean] :system (false) read from system config
         #
-        #     @option options [Boolean] :local (nil) read from repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) read from worktree config
+        #     @option options [Boolean] :worktree (false) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -85,17 +89,22 @@ module Git
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
-        #     @option options [Boolean] :show_origin (nil) show the origin of each config value
+        #     @option options [Boolean] :no_type (false) unset the previously set type specifier;
+        #       `true` emits `--no-type`
         #
-        #     @option options [Boolean] :show_scope (nil) show the scope of each config value
+        #     @option options [Boolean] :show_origin (false) show the origin of each config value
         #
-        #     @option options [Boolean] :null (nil) terminate values with NUL byte instead of newline
+        #     @option options [Boolean] :show_scope (false) show the scope of each config value
+        #
+        #     @option options [Boolean] :null (false) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-all`
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed status range (0..1)
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       end
     end
   end

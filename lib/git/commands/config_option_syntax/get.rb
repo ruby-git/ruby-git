@@ -11,20 +11,24 @@ module Git
       # config entry for the given key name.
       #
       # @example Get a local config value
-      #   Git::Commands::ConfigOptionSyntax::Get.new(ctx).call('user.name')
+      #   cmd = Git::Commands::ConfigOptionSyntax::Get.new(lib)
+      #   cmd.call('user.name')
       #
       # @example Get a global config value
-      #   Git::Commands::ConfigOptionSyntax::Get.new(ctx).call('user.name', global: true)
+      #   cmd = Git::Commands::ConfigOptionSyntax::Get.new(lib)
+      #   cmd.call('user.name', global: true)
       #
       # @example Get a value with a type constraint
-      #   Git::Commands::ConfigOptionSyntax::Get.new(ctx).call('core.bare', type: 'bool')
+      #   cmd = Git::Commands::ConfigOptionSyntax::Get.new(lib)
+      #   cmd.call('core.bare', type: 'bool')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
       #
-      # @api private
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
+      # @api private
       class Get < Git::Commands::Base
         arguments do
           literal 'config'
@@ -100,6 +104,8 @@ module Git
         #     @option options [String] :default (nil) default value when the key is not found
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed status range (0..1)
       end

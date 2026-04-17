@@ -12,14 +12,18 @@ module Git
       # git 2.46.0 — it exists only in the option-syntax interface.
       #
       # @example Query whether color is enabled for diff
-      #   Git::Commands::ConfigOptionSyntax::GetColorBool.new(ctx).call('color.diff')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetColorBool.new(lib)
+      #   cmd.call('color.diff')
       #
       # @example Query with explicit stdout-is-tty hint
-      #   Git::Commands::ConfigOptionSyntax::GetColorBool.new(ctx).call('color.diff', 'true')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetColorBool.new(lib)
+      #   cmd.call('color.diff', 'true')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
+      #
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
       # @api private
       #
@@ -60,13 +64,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) read from system config
+        #     @option options [Boolean] :system (false) read from system config
         #
-        #     @option options [Boolean] :local (nil) read from repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) read from worktree config
+        #     @option options [Boolean] :worktree (false) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -76,9 +80,13 @@ module Git
         #
         #     @option options [Boolean] :includes (nil) respect include directives in config files
         #
+        #       Pass `true` for `--includes`, `false` for `--no-includes`.
+        #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-colorbool`
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed status range (0..1)
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       end
     end
   end
