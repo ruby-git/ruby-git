@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
       repo.add_tag('v1.0.0')
     end
 
-    describe 'when the command succeeds' do
+    context 'when the command succeeds' do
       it 'returns a CommandLineResult with output' do
         result = command.call('v1.0.0')
 
@@ -37,14 +37,6 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
 
         expect(result.status.exitstatus).to eq(1)
         expect(result.stdout).not_to be_empty
-      end
-    end
-
-    describe 'when the command fails' do
-      it 'raises ArgumentError for option-like tag names' do
-        # Option-like operand validation rejects values starting with '-'
-        # before they reach git, preventing misinterpretation as flags
-        expect { command.call('--invalid-flag-xyz') }.to raise_error(ArgumentError, /option-like values/)
       end
     end
   end

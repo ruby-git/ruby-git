@@ -34,16 +34,16 @@ RSpec.describe Git::Commands::Tag::List do
     end
 
     context 'with patterns' do
-      it 'adds a single pattern argument' do
-        expect_command_capturing('tag', '--list', 'v1.*').and_return(command_result)
+      it 'adds a single pattern argument after end-of-options separator' do
+        expect_command_capturing('tag', '--list', '--', 'v1.*').and_return(command_result)
 
         result = command.call('v1.*')
 
         expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'adds multiple pattern arguments' do
-        expect_command_capturing('tag', '--list', 'v1.*', 'v2.*').and_return(command_result)
+      it 'adds multiple pattern arguments after end-of-options separator' do
+        expect_command_capturing('tag', '--list', '--', 'v1.*', 'v2.*').and_return(command_result)
 
         result = command.call('v1.*', 'v2.*')
 
@@ -168,6 +168,50 @@ RSpec.describe Git::Commands::Tag::List do
       end
     end
 
+    context 'with :n option' do
+      it 'includes -n flag when true' do
+        expect_command_capturing('tag', '--list', '-n').and_return(command_result)
+
+        result = command.call(n: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'includes -n<num> when given an integer' do
+        expect_command_capturing('tag', '--list', '-n5').and_return(command_result)
+
+        result = command.call(n: 5)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'does not add flag when nil' do
+        expect_command_capturing('tag', '--list').and_return(command_result)
+
+        result = command.call(n: nil)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
+    context 'with :color option' do
+      it 'includes --color flag when true' do
+        expect_command_capturing('tag', '--list', '--color').and_return(command_result)
+
+        result = command.call(color: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'includes --color=<value> when given a string' do
+        expect_command_capturing('tag', '--list', '--color=always').and_return(command_result)
+
+        result = command.call(color: 'always')
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
     context 'with :ignore_case option' do
       it 'includes --ignore-case flag' do
         expect_command_capturing('tag', '--list', '--ignore-case').and_return(command_result)
@@ -194,9 +238,45 @@ RSpec.describe Git::Commands::Tag::List do
       end
     end
 
+    context 'with :omit_empty option' do
+      it 'includes --omit-empty flag when true' do
+        expect_command_capturing('tag', '--list', '--omit-empty').and_return(command_result)
+
+        result = command.call(omit_empty: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
+    context 'with :column option' do
+      it 'includes --column flag when true' do
+        expect_command_capturing('tag', '--list', '--column').and_return(command_result)
+
+        result = command.call(column: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'includes --no-column flag when false' do
+        expect_command_capturing('tag', '--list', '--no-column').and_return(command_result)
+
+        result = command.call(column: false)
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      it 'includes --column=<value> when given a string' do
+        expect_command_capturing('tag', '--list', '--column=always').and_return(command_result)
+
+        result = command.call(column: 'always')
+
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
     context 'with multiple options combined' do
       it 'combines flags correctly' do
-        expect_command_capturing('tag', '--list', '--contains', 'abc123', '--sort=refname', 'v1.*')
+        expect_command_capturing('tag', '--list', '--sort=refname', '--contains', 'abc123', '--', 'v1.*')
           .and_return(command_result)
 
         result = command.call('v1.*', sort: 'refname', contains: 'abc123')
@@ -205,7 +285,7 @@ RSpec.describe Git::Commands::Tag::List do
       end
 
       it 'combines multiple patterns with options' do
-        expect_command_capturing('tag', '--list', '--merged', 'main', 'release-*', 'v*')
+        expect_command_capturing('tag', '--list', '--merged', 'main', '--', 'release-*', 'v*')
           .and_return(command_result)
 
         result = command.call('release-*', 'v*', merged: 'main')

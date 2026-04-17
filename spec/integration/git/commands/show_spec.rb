@@ -23,10 +23,8 @@ RSpec.describe Git::Commands::Show, :integration do
         expect(result.status.success?).to be true
         expect(result.stdout).not_to be_empty
       end
-    end
 
-    context 'with out: streaming to a StringIO' do
-      it 'streams blob content into the IO object' do
+      it 'streams blob content into an IO object when out: is given' do
         io = StringIO.new
         result = command.call('HEAD:test.txt', out: io)
 

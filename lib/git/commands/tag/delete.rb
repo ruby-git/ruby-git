@@ -5,24 +5,25 @@ require 'git/commands/base'
 module Git
   module Commands
     module Tag
-      # Implements the `git tag -d` command for deleting tags
+      # Implements the `git tag --delete` command for deleting tags
       #
       # This command deletes one or more tag references.
+      #
+      # @example Delete a single tag
+      #   delete = Git::Commands::Tag::Delete.new(execution_context)
+      #   delete.call('v1.0.0')
+      #
+      # @example Delete multiple tags
+      #   delete = Git::Commands::Tag::Delete.new(execution_context)
+      #   delete.call('v1.0.0', 'v2.0.0')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-tag/2.53.0
       #
       # @see Git::Commands::Tag
       #
       # @see https://git-scm.com/docs/git-tag git-tag
       #
       # @api private
-      #
-      # @example Delete a single tag
-      #   delete = Git::Commands::Tag::Delete.new(execution_context)
-      #   result = delete.call('v1.0.0')
-      #   result.stdout  #=> "Deleted tag 'v1.0.0' (was abc123)\n"
-      #
-      # @example Delete multiple tags
-      #   delete = Git::Commands::Tag::Delete.new(execution_context)
-      #   result = delete.call('v1.0.0', 'v2.0.0')
       #
       class Delete < Git::Commands::Base
         arguments do
@@ -36,17 +37,17 @@ module Git
 
         # @!method call(*, **)
         #
-        #   Execute the git tag -d command to delete tags
-        #
         #   @overload call(*tagname)
         #
-        #     @param tagname [Array<String>] One or more tag names to delete.
+        #     Execute the `git tag --delete` command to delete one or more tags.
+        #
+        #     @param tagname [Array<String>] one or more tag names to delete
         #
         #     @return [Git::CommandLineResult] the result of calling `git tag --delete`
         #
-        #     @raise [ArgumentError] if no tag names are provided
+        #     @raise [ArgumentError] if no tag names are provided or unsupported options are provided
         #
-        #     @raise [Git::FailedError] for fatal errors (exit code > 1)
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
         #
       end
     end
