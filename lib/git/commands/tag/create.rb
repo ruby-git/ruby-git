@@ -10,12 +10,6 @@ module Git
       # This command creates a new tag reference pointing at the current HEAD
       # or a specified commit/object.
       #
-      # @see Git::Commands::Tag
-      #
-      # @see https://git-scm.com/docs/git-tag git-tag
-      #
-      # @api private
-      #
       # @example Create a lightweight tag
       #   create = Git::Commands::Tag::Create.new(execution_context)
       #   create.call('v1.0.0')
@@ -32,6 +26,14 @@ module Git
       #   create = Git::Commands::Tag::Create.new(execution_context)
       #   create.call('v1.0.0', force: true)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-tag/2.53.0
+      #
+      # @see Git::Commands::Tag
+      #
+      # @see https://git-scm.com/docs/git-tag git-tag
+      #
+      # @api private
+      #
       class Create < Git::Commands::Base
         arguments do
           literal 'tag'
@@ -41,9 +43,13 @@ module Git
           flag_option %i[force f]
           value_option %i[message m], inline: true
           value_option %i[file F], inline: true
+          flag_option %i[edit e], negatable: true
           key_value_option :trailer, key_separator: ': '
           value_option :cleanup, inline: true
           flag_option :create_reflog
+
+          end_of_options
+
           operand :tagname, required: true
           operand :commit
         end
@@ -54,49 +60,75 @@ module Git
         #
         #   @overload call(tagname, commit = nil, **options)
         #
-        #     @param tagname [String] The name of the tag to create. Must pass all checks
-        #       defined by git-check-ref-format.
+        #     @param tagname [String] the name of the tag to create
         #
-        #     @param commit [String, nil] The commit, branch, or object to tag.
-        #       If omitted, defaults to HEAD.
+        #     @param commit [String, nil] the commit, branch, or object to tag
+        #
+        #       Defaults to HEAD when omitted.
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :annotate (nil) Create an unsigned, annotated tag object.
-        #       Requires a message via `:message` or `:file`. Also available as `:a`.
+        #     @option options [Boolean] :annotate (false) make an unsigned, annotated tag object
         #
-        #     @option options [Boolean] :sign (nil) Create a GPG-signed tag using the default
-        #       signing key. Requires a message via `:message` or `:file`. Set to `false` to
-        #       override `tag.gpgSign` config. Also available as `:s`.
+        #       Requires a message via `:message` or `:file`.
         #
-        #     @option options [String] :local_user (nil) Create a GPG-signed tag using the
-        #       specified key. Requires a message via `:message` or `:file`. Also available as `:u`.
+        #       Alias: :a
         #
-        #     @option options [Boolean] :force (nil) Replace an existing tag with the given
-        #       name (instead of failing). Also available as `:f`.
+        #     @option options [Boolean] :sign (nil) make a cryptographically signed tag using the default signing key
         #
-        #     @option options [String] :message (nil) Use the given message as the tag message.
-        #       Implies `-a` if none of `-a`, `-s`, or `-u` is given. Also available as `:m`.
+        #       Set to `false` to emit `--no-sign`, overriding the `tag.gpgSign` config.
+        #       Requires a message via `:message` or `:file`.
         #
-        #     @option options [String] :file (nil) Take the tag message from the given file.
-        #       Use `-` to read from standard input. Implies `-a` if none of `-a`, `-s`, or `-u`
-        #       is given. Also available as `:F`.
+        #       Alias: :s
         #
-        #     @option options [Hash, Array<Array>] :trailer (nil) Add trailers to the tag message.
+        #     @option options [String] :local_user (nil) make a cryptographically signed tag using the given key
+        #
+        #       Requires a message via `:message` or `:file`.
+        #
+        #       Alias: :u
+        #
+        #     @option options [Boolean] :force (false) replace an existing tag with the given name instead of failing
+        #
+        #       Alias: :f
+        #
+        #     @option options [String] :message (nil) use the given message as the tag message
+        #
+        #       Implies `--annotate` if none of `--annotate`, `--sign`, or `--local-user` is given.
+        #
+        #       Alias: :m
+        #
+        #     @option options [String] :file (nil) take the tag message from the given file
+        #
+        #       Use `-` to read from standard input. Implies `--annotate` if none of
+        #       `--annotate`, `--sign`, or `--local-user` is given.
+        #
+        #       Alias: :F
+        #
+        #     @option options [Boolean] :edit (nil) let further edit the message taken from `:file` or `:message`
+        #
+        #       Pass `true` for `--edit`, `false` for `--no-edit`.
+        #
+        #       Alias: :e
+        #
+        #     @option options [Hash, Array<Array>] :trailer (nil) add trailers to the tag message
+        #
         #       Can be a Hash `{ 'Key' => 'value' }` or Array of pairs `[['Key', 'value']]`.
         #       Multiple trailers can be specified.
         #
-        #     @option options [String] :cleanup (nil) Set how the tag message is cleaned up.
+        #     @option options [String] :cleanup (nil) set how the tag message is cleaned up
+        #
         #       Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
         #       whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
         #
-        #     @option options [Boolean] :create_reflog (nil) Create a reflog for the tag,
-        #       enabling date-based sha1 expressions such as `tag@{yesterday}`.
+        #     @option options [Boolean] :create_reflog (false) create a reflog for the tag
+        #
+        #       Enables date-based sha1 expressions such as `tag@{yesterday}`.
         #
         #     @return [Git::CommandLineResult] the result of calling `git tag`
         #
-        #     @raise [Git::FailedError] if the tag already exists (without force) or if
-        #       an annotated tag is requested without a message
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #
       end
     end
