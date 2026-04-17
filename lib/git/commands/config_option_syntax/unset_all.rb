@@ -11,14 +11,20 @@ module Git
       # given key name and optional value regex.
       #
       # @example Unset all values for a key
-      #   Git::Commands::ConfigOptionSyntax::UnsetAll.new(ctx).call('remote.origin.fetch')
+      #   cmd = Git::Commands::ConfigOptionSyntax::UnsetAll.new(lib)
+      #   cmd.call('remote.origin.fetch')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @example Unset all values matching a pattern
+      #   cmd = Git::Commands::ConfigOptionSyntax::UnsetAll.new(lib)
+      #   cmd.call('core.gitproxy', 'for kernel.org$')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
       #
-      # @api private
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
+      # @api private
       class UnsetAll < Git::Commands::Base
         arguments do
           literal 'config'
@@ -31,6 +37,9 @@ module Git
           flag_option :worktree
           value_option %i[file f]
           value_option :blob
+
+          # Value matching
+          flag_option :fixed_value
 
           # Operands
           end_of_options
@@ -49,17 +58,17 @@ module Git
         #
         #     @param name [String] the config key name to unset
         #
-        #     @param value_regex [String, nil] optional regex to match values to remove
+        #     @param value_regex [String, nil] (nil) optional regex to match values to remove
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) remove from global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) remove from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) remove from system config
+        #     @option options [Boolean] :system (false) remove from system config
         #
-        #     @option options [Boolean] :local (nil) remove from repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) remove from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) remove from worktree config
+        #     @option options [Boolean] :worktree (false) remove from worktree config
         #
         #     @option options [String] :file (nil) remove from the specified file
         #
@@ -67,9 +76,13 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
+        #     @option options [Boolean] :fixed_value (false) treat the value regex as an exact string
+        #
         #     @return [Git::CommandLineResult] the result of calling `git config --unset-all`
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed status range (0..5)
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 5)
       end
     end
   end

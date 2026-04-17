@@ -84,11 +84,53 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Set do
       end
     end
 
+    context 'with the :replace_all option' do
+      it 'adds --replace-all to the command line' do
+        expect_command_capturing('config', '--replace-all', '--', 'user.name', 'Alice').and_return(command_result)
+
+        command.call('user.name', 'Alice', replace_all: true)
+      end
+    end
+
+    context 'with the :append option' do
+      it 'adds --append to the command line' do
+        expect_command_capturing('config', '--append', '--', 'user.name', 'Alice').and_return(command_result)
+
+        command.call('user.name', 'Alice', append: true)
+      end
+    end
+
+    context 'with the :comment option' do
+      it 'adds --comment with the message' do
+        expect_command_capturing('config', '--comment', 'added by script', '--', 'user.name',
+                                 'Alice').and_return(command_result)
+
+        command.call('user.name', 'Alice', comment: 'added by script')
+      end
+    end
+
     context 'with the :type option' do
       it 'adds --type=<value> inline' do
         expect_command_capturing('config', '--type=bool', '--', 'core.bare', 'true').and_return(command_result)
 
         command.call('core.bare', 'true', type: 'bool')
+      end
+    end
+
+    context 'with the :fixed_value option' do
+      it 'adds --fixed-value to the command line' do
+        expect_command_capturing('config', '--fixed-value', '--', 'core.gitproxy', 'ssh',
+                                 'default-proxy').and_return(command_result)
+
+        command.call('core.gitproxy', 'ssh', 'default-proxy', fixed_value: true)
+      end
+    end
+
+    context 'with the :no_type option' do
+      it 'adds --no-type to the command line' do
+        expect_command_capturing('config', '--no-type', '--', 'core.bare', 'true').and_return(command_result)
+
+        command.call('core.bare', 'true', no_type: true)
       end
     end
 

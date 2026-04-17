@@ -11,14 +11,18 @@ module Git
       # given key and optional value regex with a new value.
       #
       # @example Replace all values for a key
-      #   Git::Commands::ConfigOptionSyntax::ReplaceAll.new(ctx).call('core.autocrlf', 'true')
+      #   cmd = Git::Commands::ConfigOptionSyntax::ReplaceAll.new(lib)
+      #   cmd.call('core.autocrlf', 'true')
       #
       # @example Replace values matching a pattern
-      #   Git::Commands::ConfigOptionSyntax::ReplaceAll.new(ctx).call('core.autocrlf', 'true', 'false')
+      #   cmd = Git::Commands::ConfigOptionSyntax::ReplaceAll.new(lib)
+      #   cmd.call('core.autocrlf', 'true', 'false')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
+      #
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
       # @api private
       #
@@ -26,6 +30,9 @@ module Git
         arguments do
           literal 'config'
           literal '--replace-all'
+
+          # Write modifiers
+          value_option :comment
 
           # File-scope options
           flag_option :global
@@ -35,8 +42,12 @@ module Git
           value_option %i[file f]
           value_option :blob
 
+          # Value matching
+          flag_option :fixed_value
+
           # Type constraint
           value_option :type, inline: true
+          flag_option :no_type
 
           # Operands
           end_of_options
@@ -59,13 +70,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) write to global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) write to global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) write to system config
+        #     @option options [Boolean] :system (false) write to system config
         #
-        #     @option options [Boolean] :local (nil) write to repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) write to repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) write to worktree config
+        #     @option options [Boolean] :worktree (false) write to worktree config
         #
         #     @option options [String] :file (nil) write to the specified file
         #
@@ -73,11 +84,20 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
+        #     @option options [String] :comment (nil) append a comment at the end of new or modified lines
+        #
+        #     @option options [Boolean] :fixed_value (false) treat the value regex as an exact string
+        #
         #     @option options [String] :type (nil) ensure the value conforms to the given type
+        #
+        #     @option options [Boolean] :no_type (false) unset the previously set type specifier;
+        #       `true` emits `--no-type`
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --replace-all`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

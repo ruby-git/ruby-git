@@ -97,6 +97,33 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::ReplaceAll do
       end
     end
 
+    context 'with the :comment option' do
+      it 'adds --comment with the message' do
+        expect_command_capturing('config', '--replace-all', '--comment', 'added by script', '--', 'core.autocrlf',
+                                 'true').and_return(command_result)
+
+        command.call('core.autocrlf', 'true', comment: 'added by script')
+      end
+    end
+
+    context 'with the :fixed_value option' do
+      it 'adds --fixed-value to the command line' do
+        expect_command_capturing('config', '--replace-all', '--fixed-value', '--', 'core.gitproxy', 'ssh',
+                                 'default-proxy').and_return(command_result)
+
+        command.call('core.gitproxy', 'ssh', 'default-proxy', fixed_value: true)
+      end
+    end
+
+    context 'with the :no_type option' do
+      it 'adds --no-type to the command line' do
+        expect_command_capturing('config', '--replace-all', '--no-type', '--', 'core.bare',
+                                 'true').and_return(command_result)
+
+        command.call('core.bare', 'true', no_type: true)
+      end
+    end
+
     context 'input validation' do
       it 'raises ArgumentError when name is missing' do
         expect { command.call }.to raise_error(ArgumentError, /name/)

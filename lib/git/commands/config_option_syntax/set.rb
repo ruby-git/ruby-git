@@ -11,24 +11,34 @@ module Git
       # a value to a config key, optionally replacing only the entry
       # matching a value regex.
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @example Set a local config value
+      #   cmd = Git::Commands::ConfigOptionSyntax::Set.new(lib)
+      #   cmd.call('user.name', 'Alice')
+      #
+      # @example Set a global config value
+      #   cmd = Git::Commands::ConfigOptionSyntax::Set.new(lib)
+      #   cmd.call('user.name', 'Alice', global: true)
+      #
+      # @example Set a value with a type constraint
+      #   cmd = Git::Commands::ConfigOptionSyntax::Set.new(lib)
+      #   cmd.call('core.bare', 'true', type: 'bool')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
       #
+      # @see https://git-scm.com/docs/git-config git-config documentation
+      #
       # @api private
-      #
-      # @example Set a local config value
-      #   Git::Commands::ConfigOptionSyntax::Set.new(ctx).call('user.name', 'Alice')
-      #
-      # @example Set a global config value
-      #   Git::Commands::ConfigOptionSyntax::Set.new(ctx).call('user.name', 'Alice', global: true)
-      #
-      # @example Set a value with a type constraint
-      #   Git::Commands::ConfigOptionSyntax::Set.new(ctx).call('core.bare', 'true', type: 'bool')
       #
       class Set < Git::Commands::Base
         arguments do
           literal 'config'
+
+          # Write modifiers
+          flag_option :replace_all
+          flag_option :append
+          value_option :comment
 
           # File-scope options
           flag_option :global
@@ -38,8 +48,12 @@ module Git
           value_option %i[file f]
           value_option :blob
 
+          # Value matching
+          flag_option :fixed_value
+
           # Type constraint
           value_option :type, inline: true
+          flag_option :no_type
 
           # Operands
           end_of_options
@@ -62,13 +76,19 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) write to global config (`~/.gitconfig`)
+        #     @option options [Boolean] :replace_all (false) replace all lines matching the key
         #
-        #     @option options [Boolean] :system (nil) write to system config
+        #     @option options [Boolean] :append (false) add a new line without altering existing values
         #
-        #     @option options [Boolean] :local (nil) write to repository config (`.git/config`)
+        #     @option options [String] :comment (nil) append a comment at the end of new or modified lines
         #
-        #     @option options [Boolean] :worktree (nil) write to worktree config
+        #     @option options [Boolean] :global (false) write to global config (`~/.gitconfig`)
+        #
+        #     @option options [Boolean] :system (false) write to system config
+        #
+        #     @option options [Boolean] :local (false) write to repository config (`.git/config`)
+        #
+        #     @option options [Boolean] :worktree (false) write to worktree config
         #
         #     @option options [String] :file (nil) write to the specified file
         #
@@ -76,11 +96,18 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
+        #     @option options [Boolean] :fixed_value (false) treat the value regex as an exact string
+        #
         #     @option options [String] :type (nil) ensure the value conforms to the given type
+        #
+        #     @option options [Boolean] :no_type (false) unset the previously set type specifier;
+        #       `true` emits `--no-type`
         #
         #     @return [Git::CommandLineResult] the result of calling `git config`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

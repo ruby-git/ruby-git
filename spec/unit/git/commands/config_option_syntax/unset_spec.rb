@@ -83,6 +83,15 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Unset do
       end
     end
 
+    context 'with the :fixed_value option' do
+      it 'adds --fixed-value to the command line' do
+        expect_command_capturing('config', '--unset', '--fixed-value', '--', 'core.gitproxy',
+                                 'default-proxy').and_return(command_result)
+
+        command.call('core.gitproxy', 'default-proxy', fixed_value: true)
+      end
+    end
+
     context 'exit code handling' do
       it 'returns result for exit code 5 (non-existent key)' do
         result = command_result(exitstatus: 5)
