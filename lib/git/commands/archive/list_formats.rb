@@ -17,7 +17,9 @@ module Git
       #   result = cmd.call
       #   result.stdout  # => "tar\ntgz\ntar.gz\nzip\n"
       #
-      # @see Git::Commands::Archive
+      # @note `arguments` block audited against https://git-scm.com/docs/git-archive/2.53.0
+      #
+      # @see Git::Commands::Archive Git::Commands::Archive for the full archive command interface
       #
       # @see https://git-scm.com/docs/git-archive git-archive documentation
       #
@@ -33,13 +35,11 @@ module Git
         #
         #   @overload call
         #
-        #     Execute `git archive --list` to show available formats
+        #     Execute `git archive --list` to show available formats.
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git archive --list`
+        #     @return [Git::CommandLineResult] the result of calling `git archive --list`
         #
-        #     @raise [Git::FailedError] if the command returns a non-zero
-        #       exit status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
