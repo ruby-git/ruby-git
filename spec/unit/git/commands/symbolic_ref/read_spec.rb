@@ -47,6 +47,22 @@ RSpec.describe Git::Commands::SymbolicRef::Read do
       end
     end
 
+    context 'with the :recurse option' do
+      it 'adds --recurse to the command line when true' do
+        expect_command_capturing('symbolic-ref', '--recurse', '--', 'HEAD')
+          .and_return(command_result('refs/heads/main'))
+
+        command.call('HEAD', recurse: true)
+      end
+
+      it 'adds --no-recurse to the command line when false' do
+        expect_command_capturing('symbolic-ref', '--no-recurse', '--', 'HEAD')
+          .and_return(command_result('refs/heads/main'))
+
+        command.call('HEAD', recurse: false)
+      end
+    end
+
     context 'with multiple options combined' do
       it 'includes all specified options in definition order' do
         expect_command_capturing('symbolic-ref', '--quiet', '--short', '--', 'HEAD')
