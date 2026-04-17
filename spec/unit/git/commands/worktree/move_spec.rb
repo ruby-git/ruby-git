@@ -46,5 +46,12 @@ RSpec.describe Git::Commands::Worktree::Move do
         command.call('/tmp/old', '/tmp/new', force: 2)
       end
     end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call('/tmp/old', '/tmp/new', invalid: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
+      end
+    end
   end
 end

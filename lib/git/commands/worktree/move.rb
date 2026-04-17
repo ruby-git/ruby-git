@@ -13,6 +13,8 @@ module Git
       # @example Force-move a locked worktree
       #   Git::Commands::Worktree::Move.new(execution_context).call('/tmp/feat', '/tmp/feat2', force: true)
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
@@ -41,7 +43,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :force (nil) allow moving a locked worktree
+        #     @option options [Boolean, Integer] :force (false) allow moving a locked worktree
         #
         #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
         #       `--force --force`, which also handles locked or missing destinations.
@@ -49,6 +51,8 @@ module Git
         #       Alias: :f
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree move`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

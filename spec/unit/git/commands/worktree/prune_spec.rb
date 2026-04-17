@@ -72,5 +72,12 @@ RSpec.describe Git::Commands::Worktree::Prune do
         command.call(dry_run: true, verbose: true)
       end
     end
+
+    context 'input validation' do
+      it 'raises ArgumentError for unsupported options' do
+        expect { command.call(invalid: true) }
+          .to raise_error(ArgumentError, /unsupported/i)
+      end
+    end
   end
 end
