@@ -7,11 +7,6 @@ module Git
     module Worktree
       # Creates a new linked worktree
       #
-      # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
-      # @see https://git-scm.com/docs/git-worktree git-worktree documentation
-      #
-      # @api private
-      #
       # @example Add a worktree at a path (auto-creates a branch)
       #   Git::Commands::Worktree::Add.new(execution_context).call('/tmp/feature')
       #
@@ -23,6 +18,14 @@ module Git
       #
       # @example Add a detached-HEAD worktree locked at creation
       #   Git::Commands::Worktree::Add.new(execution_context).call('/tmp/exp', detach: true, lock: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
+      # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
+      #
+      # @see https://git-scm.com/docs/git-worktree git-worktree documentation
+      #
+      # @api private
       #
       class Add < ManagementBase
         arguments do
@@ -60,7 +63,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :force (nil) override safety guards
+        #     @option options [Boolean, Integer] :force (false) override safety guards
         #
         #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
         #       `--force --force`, which also allows adding worktrees for locked branches.
@@ -71,7 +74,7 @@ module Git
         #
         #     @option options [String] :B (nil) create or reset a branch with this name and check it out
         #
-        #     @option options [Boolean] :detach (nil) check out in detached-HEAD state
+        #     @option options [Boolean] :detach (false) check out in detached-HEAD state
         #
         #       Alias: :d
         #
@@ -94,11 +97,11 @@ module Git
         #
         #       When `false`, passes `--no-track`.
         #
-        #     @option options [Boolean] :lock (nil) lock the worktree immediately after creation
+        #     @option options [Boolean] :lock (false) lock the worktree immediately after creation
         #
-        #     @option options [Boolean] :orphan (nil) create an empty worktree associated with a new unborn branch
+        #     @option options [Boolean] :orphan (false) create an empty worktree associated with a new unborn branch
         #
-        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #     @option options [Boolean] :quiet (false) suppress informational messages
         #
         #       Alias: :q
         #
@@ -107,6 +110,8 @@ module Git
         #       Only meaningful when used with `:lock`.
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree add`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

@@ -10,7 +10,10 @@ module Git
       # @example List all worktrees in porcelain format
       #   Git::Commands::Worktree::List.new(execution_context).call(porcelain: true)
       #
-      # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
+      # @see Git::Commands::Worktree
+      #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
       # @api private
@@ -33,11 +36,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :porcelain (nil) produce machine-readable output
+        #     @option options [Boolean] :porcelain (false) produce machine-readable output
         #
-        #     @option options [Boolean] :z (nil) NUL-terminate lines (use with `:porcelain`)
+        #     @option options [Boolean] :z (false) NUL-terminate lines (use with `:porcelain`)
         #
-        #     @option options [Boolean] :verbose (nil) output additional information about worktrees
+        #     @option options [Boolean] :verbose (false) output additional information about worktrees
         #
         #       Alias: :v
         #
@@ -45,6 +48,8 @@ module Git
         #       this time expression
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree list`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
