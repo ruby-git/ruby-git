@@ -26,7 +26,9 @@ module Git
     #   read_tree = Git::Commands::ReadTree.new(execution_context)
     #   result = read_tree.call(empty: true)
     #
-    # @see https://git-scm.com/docs/git-read-tree git-read-tree documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-read-tree/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-read-tree git-read-tree
     #
     # @see Git::Commands
     #
@@ -36,16 +38,15 @@ module Git
       arguments do
         literal 'read-tree'
 
-        # Merge mode — SYNOPSIS: [-m [--trivial] [--aggressive] | --reset | --prefix=<prefix>]
+        # Merge mode
         flag_option :m
         flag_option :trivial
         flag_option :aggressive
         flag_option :reset
         value_option :prefix, inline: true
 
-        # Working tree update — SYNOPSIS: [-u [--exclude-per-directory=<gitignore>] | -i]
+        # Working tree update
         flag_option :u
-        value_option :exclude_per_directory, inline: true
         flag_option :i
 
         # Dry run and progress
@@ -81,16 +82,16 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :m (nil) perform a merge, not just a
+      #     @option options [Boolean] :m (false) perform a merge, not just a
       #       read
       #
-      #     @option options [Boolean] :trivial (nil) restrict three-way merge
+      #     @option options [Boolean] :trivial (false) restrict three-way merge
       #       to happen only if there is no file-level merging required
       #
-      #     @option options [Boolean] :aggressive (nil) resolve a few more
+      #     @option options [Boolean] :aggressive (false) resolve a few more
       #       three-way merge cases internally beyond the trivial defaults
       #
-      #     @option options [Boolean] :reset (nil) same as `-m`, except that
+      #     @option options [Boolean] :reset (false) same as `-m`, except that
       #       unmerged entries are discarded instead of failing
       #
       #     @option options [String] :prefix (nil) keep the current index
@@ -99,25 +100,19 @@ module Git
       #
       #       Maps to `--prefix=<prefix>`.
       #
-      #     @option options [Boolean] :u (nil) after a successful merge,
+      #     @option options [Boolean] :u (false) after a successful merge,
       #       update the files in the work tree with the result
       #
-      #     @option options [String] :exclude_per_directory (nil) read
-      #       per-directory exclude file and allow untracked but explicitly
-      #       ignored files to be overwritten
-      #
-      #       Maps to `--exclude-per-directory=<gitignore>`.
-      #
-      #     @option options [Boolean] :i (nil) disable the check with the
+      #     @option options [Boolean] :i (false) disable the check with the
       #       working tree, meant for creating a merge of trees not directly
       #       related to the current working tree status
       #
-      #     @option options [Boolean] :dry_run (nil) check if the command
+      #     @option options [Boolean] :dry_run (false) check if the command
       #       would error out, without updating the index or files for real
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :v (nil) show the progress of checking
+      #     @option options [Boolean] :v (false) show the progress of checking
       #       files out
       #
       #     @option options [String] :index_output (nil) write the resulting
@@ -129,20 +124,23 @@ module Git
       #       content of all active submodules according to the commit
       #       recorded in the superproject
       #
-      #       When `false`, emits `--no-recurse-submodules`.
+      #       Pass `true` to emit `--recurse-submodules`; pass `false` to emit
+      #       `--no-recurse-submodules`.
       #
-      #     @option options [Boolean] :no_sparse_checkout (nil) disable
+      #     @option options [Boolean] :no_sparse_checkout (false) disable
       #       sparse checkout support even if `core.sparseCheckout` is true
       #
-      #     @option options [Boolean] :empty (nil) empty the index instead of
+      #     @option options [Boolean] :empty (false) empty the index instead of
       #       reading tree object(s)
       #
-      #     @option options [Boolean] :quiet (nil) suppress feedback messages
+      #     @option options [Boolean] :quiet (false) suppress feedback messages
       #
       #       Alias: `:q`
       #
       #     @return [Git::CommandLineResult] the result of calling
       #       `git read-tree`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero exit
       #       status

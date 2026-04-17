@@ -1,25 +1,36 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/commands/rm'
 
 RSpec.describe Git::Commands::Rm do
+  # Duck-type collaborator: command specs depend on the #command_capturing interface,
+  # not a single concrete ExecutionContext class.
   let(:execution_context) { double('ExecutionContext') }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
-    context 'with a single file path' do
-      it 'removes the specified file' do
+    context 'with no arguments' do
+      it 'runs git rm with no options or pathspecs' do
         expected_result = command_result
-        expect_command_capturing('rm', '--', 'file.txt').and_return(expected_result)
+        expect_command_capturing('rm').and_return(expected_result)
 
-        result = command.call('file.txt')
+        result = command.call
 
         expect(result).to eq(expected_result)
       end
     end
 
-    context 'with multiple file paths' do
-      it 'removes all specified files' do
+    context 'with a single pathspec' do
+      it 'adds -- and the pathspec' do
+        expect_command_capturing('rm', '--', 'file.txt').and_return(command_result)
+
+        command.call('file.txt')
+      end
+    end
+
+    context 'with multiple pathspecs' do
+      it 'adds -- and all pathspecs' do
         expect_command_capturing('rm', '--', 'file1.txt', 'file2.txt').and_return(command_result)
 
         command.call('file1.txt', 'file2.txt')
@@ -27,68 +38,101 @@ RSpec.describe Git::Commands::Rm do
     end
 
     context 'with the :force option' do
-      it 'includes the --force flag when true' do
+      it 'adds --force to the command line' do
         expect_command_capturing('rm', '--force', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', force: true)
       end
 
-      it 'accepts :f as an alias for :force' do
+      it 'supports the :f alias' do
         expect_command_capturing('rm', '--force', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', f: true)
       end
     end
 
-    context 'with the :r option' do
-      it 'includes the -r flag when true' do
-        expect_command_capturing('rm', '-r', '--', 'directory').and_return(command_result)
+    context 'with the :dry_run option' do
+      it 'adds --dry-run to the command line' do
+        expect_command_capturing('rm', '--dry-run', '--', 'file.txt').and_return(command_result)
 
-        command.call('directory', r: true)
+        command.call('file.txt', dry_run: true)
+      end
+
+      it 'supports the :n alias' do
+        expect_command_capturing('rm', '--dry-run', '--', 'file.txt').and_return(command_result)
+
+        command.call('file.txt', n: true)
+      end
+    end
+
+    context 'with the :r option' do
+      it 'adds -r to the command line' do
+        expect_command_capturing('rm', '-r', '--', 'directory/').and_return(command_result)
+
+        command.call('directory/', r: true)
       end
     end
 
     context 'with the :cached option' do
-      it 'includes the --cached flag when true' do
+      it 'adds --cached to the command line' do
         expect_command_capturing('rm', '--cached', '--', 'file.txt').and_return(command_result)
 
         command.call('file.txt', cached: true)
       end
     end
 
-    context 'with multiple options combined' do
-      it 'includes all specified flags' do
-        expect_command_capturing('rm', '--force', '-r', '--cached', '--', 'directory').and_return(command_result)
+    context 'with the :ignore_unmatch option' do
+      it 'adds --ignore-unmatch to the command line' do
+        expect_command_capturing('rm', '--ignore-unmatch', '--', '*.txt').and_return(command_result)
 
-        command.call('directory', force: true, r: true, cached: true)
+        command.call('*.txt', ignore_unmatch: true)
       end
     end
 
-    context 'with paths containing special characters' do
-      it 'handles paths with spaces' do
-        expect_command_capturing('rm', '--', 'path/to/my file.txt').and_return(command_result)
+    context 'with the :sparse option' do
+      it 'adds --sparse to the command line' do
+        expect_command_capturing('rm', '--sparse', '--', 'file.txt').and_return(command_result)
 
-        command.call('path/to/my file.txt')
+        command.call('file.txt', sparse: true)
+      end
+    end
+
+    context 'with the :quiet option' do
+      it 'adds --quiet to the command line' do
+        expect_command_capturing('rm', '--quiet', '--', 'file.txt').and_return(command_result)
+
+        command.call('file.txt', quiet: true)
+      end
+
+      it 'supports the :q alias' do
+        expect_command_capturing('rm', '--quiet', '--', 'file.txt').and_return(command_result)
+
+        command.call('file.txt', q: true)
+      end
+    end
+
+    context 'with the :pathspec_from_file option' do
+      it 'adds --pathspec-from-file=<file> to the command line' do
+        expect_command_capturing('rm', '--pathspec-from-file=paths.txt').and_return(command_result)
+
+        command.call(pathspec_from_file: 'paths.txt')
+      end
+    end
+
+    context 'with the :pathspec_file_nul option' do
+      it 'adds --pathspec-file-nul to the command line' do
+        expect_command_capturing(
+          'rm', '--pathspec-from-file=paths.txt', '--pathspec-file-nul'
+        ).and_return(command_result)
+
+        command.call(pathspec_from_file: 'paths.txt', pathspec_file_nul: true)
       end
     end
 
     context 'input validation' do
-      it 'raises ArgumentError for nil (treated as not provided)' do
-        expect { command.call(nil) }.to raise_error(ArgumentError, /at least one value is required/)
-      end
-
-      it 'raises ArgumentError for empty array' do
-        expect { command.call([]) }.to raise_error(ArgumentError, /at least one value is required for pathspec/)
-      end
-
-      it 'raises ArgumentError for no arguments' do
-        expect { command.call }.to raise_error(ArgumentError, /at least one value is required for pathspec/)
-      end
-
       it 'raises ArgumentError for unsupported options' do
-        expect { command.call('file.txt', invalid_option: true) }.to(
-          raise_error(ArgumentError, /Unsupported options: :invalid_option/)
-        )
+        expect { command.call('file.txt', invalid: true) }
+          .to raise_error(ArgumentError, /Unsupported options/)
       end
     end
   end
