@@ -23,7 +23,9 @@ module Git
     #   write_tree = Git::Commands::WriteTree.new(execution_context)
     #   result = write_tree.call(missing_ok: true)
     #
-    # @see https://git-scm.com/docs/git-write-tree git-write-tree documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-write-tree/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-write-tree git-write-tree
     #
     # @see Git::Commands
     #
@@ -32,11 +34,7 @@ module Git
     class WriteTree < Git::Commands::Base
       arguments do
         literal 'write-tree'
-
-        # Disable check that all referenced objects exist in the object database
         flag_option :missing_ok
-
-        # Write a tree for a subdirectory instead of the full index
         value_option :prefix, inline: true
       end
 
@@ -48,25 +46,23 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :missing_ok (nil) disable the check that
+      #     @option options [Boolean] :missing_ok (false) disable the check that
       #       all objects referenced by the directory exist in the object
       #       database
-      #
-      #       Maps to `--missing-ok`.
       #
       #     @option options [String] :prefix (nil) write a tree object that
       #       represents a subdirectory
       #
-      #       The prefix path should end with `/` (e.g. `'lib/'`). Maps to
-      #       `--prefix=<prefix>/`.
+      #       The prefix path should end with `/` (e.g., `'lib/'`).
       #
-      #     @return [Git::CommandLineResult] the result of calling
-      #       `git write-tree`
+      #     @return [Git::CommandLineResult] the result of calling `git write-tree`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [Git::FailedError] if the command returns a non-zero exit
-      #       status
+      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      #   @api public
+      #
     end
   end
 end

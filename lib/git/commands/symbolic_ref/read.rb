@@ -25,6 +25,8 @@ module Git
       #   result = cmd.call('HEAD', short: true)
       #   result.stdout  # => "main"
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-symbolic-ref/2.53.0
+      #
       # @see Git::Commands::SymbolicRef
       #
       # @see https://git-scm.com/docs/git-symbolic-ref git-symbolic-ref documentation
@@ -40,6 +42,9 @@ module Git
 
           # Shorten the ref output (e.g. `refs/heads/main` → `main`)
           flag_option :short
+
+          # Follow (or stop after one level of) symbolic ref chain
+          flag_option :recurse, negatable: true
 
           end_of_options
 
@@ -62,13 +67,17 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (nil) suppress error message
+        #     @option options [Boolean] :quiet (false) suppress error message
         #       when the name is not a symbolic ref
         #
         #       Alias: :q
         #
-        #     @option options [Boolean] :short (nil) shorten the ref output
+        #     @option options [Boolean] :short (false) shorten the ref output
         #       (e.g. `refs/heads/main` → `main`)
+        #
+        #     @option options [Boolean] :recurse (nil) follow chain of symbolic refs
+        #       until result no longer points at a symbolic ref; pass +false+ to emit
+        #       `--no-recurse` and stop after a single level of dereferencing
         #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git symbolic-ref`
@@ -77,7 +86,7 @@ module Git
         #
         #     @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [Git::FailedError] if git exits with status >= 2
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       end
     end
   end

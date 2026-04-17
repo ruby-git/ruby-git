@@ -18,6 +18,8 @@ module Git
       #   cmd = Git::Commands::SymbolicRef::Update.new(execution_context)
       #   cmd.call('HEAD', 'refs/heads/main', m: 'switching to main')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-symbolic-ref/2.53.0
+      #
       # @see Git::Commands::SymbolicRef
       #
       # @see https://git-scm.com/docs/git-symbolic-ref git-symbolic-ref documentation
@@ -63,10 +65,11 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if the name or ref operand is missing
+        #     @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [Git::FailedError] if the command returns a non-zero
-        #       exit status
+        #     @raise [ArgumentError] if the ref operand is missing
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

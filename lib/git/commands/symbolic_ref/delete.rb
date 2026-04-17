@@ -14,6 +14,8 @@ module Git
       #   cmd = Git::Commands::SymbolicRef::Delete.new(execution_context)
       #   cmd.call('HEAD')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-symbolic-ref/2.53.0
+      #
       # @see Git::Commands::SymbolicRef
       #
       # @see https://git-scm.com/docs/git-symbolic-ref git-symbolic-ref documentation
@@ -47,7 +49,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (nil) suppress error message
+        #     @option options [Boolean] :quiet (false) suppress error message
         #       when the name is not a symbolic ref
         #
         #       Alias: :q
@@ -59,8 +61,7 @@ module Git
         #
         #     @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [Git::FailedError] if the command returns a non-zero
-        #       exit status
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
