@@ -106,6 +106,14 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetAll do
       end
     end
 
+    context 'with the :no_type option' do
+      it 'adds --no-type to the command line' do
+        expect_command_capturing('config', '--get-all', '--no-type', '--', 'core.bare').and_return(command_result)
+
+        command.call('core.bare', no_type: true)
+      end
+    end
+
     context 'with the :show_origin option' do
       it 'adds --show-origin to the command line' do
         expect_command_capturing('config', '--get-all', '--show-origin', '--', 'user.name').and_return(command_result)

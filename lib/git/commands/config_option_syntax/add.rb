@@ -11,13 +11,14 @@ module Git
       # altering existing values.
       #
       # @example Add a value to a multi-valued key
-      #   Git::Commands::ConfigOptionSyntax::Add.new(ctx).call(
-      #     'remote.origin.fetch', '+refs/heads/*:refs/remotes/origin/*'
-      #   )
+      #   cmd = Git::Commands::ConfigOptionSyntax::Add.new(lib)
+      #   cmd.call('remote.origin.fetch', '+refs/heads/*:refs/remotes/origin/*')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
+      #
+      # @see https://git-scm.com/docs/git-config git-config documentation
       #
       # @api private
       #
@@ -55,13 +56,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) write to global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) write to global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) write to system config
+        #     @option options [Boolean] :system (false) write to system config
         #
-        #     @option options [Boolean] :local (nil) write to repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) write to repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) write to worktree config
+        #     @option options [Boolean] :worktree (false) write to worktree config
         #
         #     @option options [String] :file (nil) write to the specified file
         #
@@ -73,7 +74,9 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --add`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end
