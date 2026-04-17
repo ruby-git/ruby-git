@@ -11,14 +11,16 @@ module Git
       # from the config file.
       #
       # @example Remove a section
-      #   Git::Commands::ConfigOptionSyntax::RemoveSection.new(ctx).call('old-section')
+      #   cmd = Git::Commands::ConfigOptionSyntax::RemoveSection.new(lib)
+      #   cmd.call('old-section')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
       #
-      # @api private
+      # @see https://git-scm.com/docs/git-config git-config
       #
+      # @api private
       class RemoveSection < Git::Commands::Base
         arguments do
           literal 'config'
@@ -47,15 +49,15 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) operate on global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) remove from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) operate on system config
+        #     @option options [Boolean] :system (false) remove from system config
         #
-        #     @option options [Boolean] :local (nil) operate on repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) remove from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) operate on worktree config
+        #     @option options [Boolean] :worktree (false) remove from worktree config
         #
-        #     @option options [String] :file (nil) operate on the specified file
+        #     @option options [String] :file (nil) remove from the specified file
         #
         #       Alias: :f
         #
@@ -63,7 +65,9 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --remove-section`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

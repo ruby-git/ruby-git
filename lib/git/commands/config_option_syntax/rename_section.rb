@@ -11,11 +11,14 @@ module Git
       # config file.
       #
       # @example Rename a section
-      #   Git::Commands::ConfigOptionSyntax::RenameSection.new(ctx).call('old-section', 'new-section')
+      #   cmd = Git::Commands::ConfigOptionSyntax::RenameSection.new(lib)
+      #   cmd.call('old-section', 'new-section')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
+      #
+      # @see https://git-scm.com/docs/git-config git-config
       #
       # @api private
       #
@@ -66,7 +69,9 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --rename-section`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero status
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

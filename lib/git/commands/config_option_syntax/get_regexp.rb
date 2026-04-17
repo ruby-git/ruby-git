@@ -11,14 +11,18 @@ module Git
       # key name matches the given regular expression.
       #
       # @example Get all entries matching a pattern
-      #   Git::Commands::ConfigOptionSyntax::GetRegexp.new(ctx).call('remote\..*\.url')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetRegexp.new(lib)
+      #   cmd.call('remote\..*\.url')
       #
       # @example Get matching entries with value filter
-      #   Git::Commands::ConfigOptionSyntax::GetRegexp.new(ctx).call('remote\..*\.url', 'github')
+      #   cmd = Git::Commands::ConfigOptionSyntax::GetRegexp.new(lib)
+      #   cmd.call('remote\..*\.url', 'github')
       #
-      # @see https://git-scm.com/docs/git-config/2.28.0 git-config documentation (v2.28.0)
+      # @note `arguments` block audited against https://git-scm.com/docs/git-config/2.53.0
       #
       # @see Git::Commands::ConfigOptionSyntax
+      #
+      # @see https://git-scm.com/docs/git-config git-config
       #
       # @api private
       #
@@ -68,13 +72,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) read from system config
+        #     @option options [Boolean] :system (false) read from system config
         #
-        #     @option options [Boolean] :local (nil) read from repository config (`.git/config`)
+        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) read from worktree config
+        #     @option options [Boolean] :worktree (false) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -86,19 +90,21 @@ module Git
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
-        #     @option options [Boolean] :show_origin (nil) show the origin of each config entry
+        #     @option options [Boolean] :show_origin (false) show the origin of each config entry
         #
-        #     @option options [Boolean] :show_scope (nil) show the scope of each config entry
+        #     @option options [Boolean] :show_scope (false) show the scope of each config entry
         #
-        #     @option options [Boolean] :null (nil) terminate values with NUL byte instead of newline
+        #     @option options [Boolean] :null (false) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #
-        #     @option options [Boolean] :name_only (nil) output only the names of config keys
+        #     @option options [Boolean] :name_only (false) output only the names of config keys
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-regexp`
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed status range (0..1)
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       end
     end
   end
