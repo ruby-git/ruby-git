@@ -16,6 +16,8 @@ module Git
       # @example Prune entries older than 2 weeks
       #   Git::Commands::Worktree::Prune.new(execution_context).call(expire: '2.weeks.ago')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
@@ -39,12 +41,12 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :dry_run (nil) report what would be removed
+        #     @option options [Boolean] :dry_run (false) report what would be removed
         #       without removing anything
         #
         #       Alias: :n
         #
-        #     @option options [Boolean] :verbose (nil) report all removals
+        #     @option options [Boolean] :verbose (false) report all removals
         #
         #       Alias: :v
         #
@@ -52,6 +54,8 @@ module Git
         #       this time expression
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree prune`
+        #
+        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

@@ -16,6 +16,8 @@ module Git
       # @example Repair specific moved worktrees
       #   Git::Commands::Worktree::Repair.new(execution_context).call('/tmp/moved1', '/tmp/moved2')
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
@@ -30,6 +32,9 @@ module Git
           end_of_options
           operand :path, repeatable: true
         end
+
+        # git worktree repair was introduced in git 2.29.0
+        requires_git_version '2.29.0'
 
         # @!method call(*, **)
         #

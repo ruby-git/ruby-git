@@ -5,10 +5,12 @@ require 'git/commands/worktree/management_base'
 module Git
   module Commands
     module Worktree
-      # Unlocks a worktree so it can be pruned
+      # Unlocks a worktree, allowing it to be pruned, moved, or deleted
       #
       # @example Unlock a worktree
       #   Git::Commands::Worktree::Unlock.new(execution_context).call('/tmp/feature')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
@@ -28,7 +30,7 @@ module Git
         #
         #   @overload call(worktree)
         #
-        #     Unlock a worktree so it can be pruned
+        #     Unlock a worktree, allowing it to be pruned, moved, or deleted
         #
         #     @param worktree [String] path or unique suffix identifying the worktree
         #       to unlock
