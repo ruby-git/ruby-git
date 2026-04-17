@@ -26,9 +26,9 @@ module Git
     #   rev_parse = Git::Commands::RevParse.new(execution_context)
     #   result = rev_parse.call(branches: true)
     #
-    # @see https://git-scm.com/docs/git-rev-parse git-rev-parse documentation
+    # @note `arguments` block audited against https://git-scm.com/docs/git-rev-parse/2.53.0
     #
-    # @see Git::Commands
+    # @see https://git-scm.com/docs/git-rev-parse git-rev-parse
     #
     # @api private
     #
@@ -52,6 +52,7 @@ module Git
         flag_or_value_option :abbrev_ref, inline: true
         flag_option :symbolic
         flag_option :symbolic_full_name
+        value_option :output_object_format, inline: true
 
         # Objects
         flag_option :all
@@ -60,10 +61,12 @@ module Git
         flag_or_value_option :remotes, inline: true
         value_option :glob, inline: true
         value_option :exclude, inline: true, repeatable: true
+        value_option :exclude_hidden, inline: true
         value_option :disambiguate, inline: true
 
-        # Repo info
+        # Files
         flag_option :local_env_vars
+        value_option :path_format, inline: true, repeatable: true
         flag_option :git_dir
         flag_option :absolute_git_dir
         flag_option :git_common_dir
@@ -79,6 +82,7 @@ module Git
         flag_option :show_superproject_working_tree
         flag_option :shared_index_path
         flag_or_value_option :show_object_format, inline: true
+        flag_option :show_ref_format
 
         # Date conversion
         value_option %i[since after], inline: true
@@ -161,6 +165,11 @@ module Git
       #     @option options [Boolean] :symbolic_full_name (nil) like
       #       `:symbolic` but omit non-ref input and show full refnames
       #
+      #     @option options [String] :output_object_format (nil) translate
+      #       object identifiers to the specified format
+      #
+      #       Accepted values are `"sha1"`, `"sha256"`, and `"storage"`.
+      #
       #     @option options [Boolean] :all (nil) show all refs found in
       #       `refs/`
       #
@@ -191,8 +200,23 @@ module Git
       #     @option options [String] :disambiguate (nil) show every object
       #       whose name begins with the given prefix
       #
+      #     @option options [String] :exclude_hidden (nil) do not include
+      #       refs that would be hidden by the specified protocol
+      #
+      #       Accepted values are `"fetch"`, `"receive"`, and `"uploadpack"`.
+      #       Affects the next `--all` or `--glob` and is cleared after
+      #       processing them.
+      #
       #     @option options [Boolean] :local_env_vars (nil) list the
       #       `GIT_*` environment variables local to the repository
+      #
+      #     @option options [String, Array<String>] :path_format (nil) control
+      #       whether paths output by subsequent path-related options are
+      #       absolute or relative
+      #
+      #       Accepted values are `"absolute"` and `"relative"`. May be
+      #       given multiple times; each instance affects the arguments
+      #       that follow it on the command line.
       #
       #     @option options [Boolean] :git_dir (nil) show `$GIT_DIR` if
       #       defined, otherwise show the path to the `.git` directory
@@ -247,6 +271,9 @@ module Git
       #       `"storage"`). When a String (`"storage"`, `"input"`, or
       #       `"output"`), emits `--show-object-format=<mode>`.
       #
+      #     @option options [Boolean] :show_ref_format (nil) show the
+      #       reference storage format used for the repository
+      #
       #     @option options [String] :since (nil) parse the date string
       #       and output the corresponding `--max-age=` parameter
       #
@@ -259,6 +286,8 @@ module Git
       #
       #     @return [Git::CommandLineResult] the result of calling
       #       `git rev-parse`
+      #
+      #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits with a non-zero status
     end

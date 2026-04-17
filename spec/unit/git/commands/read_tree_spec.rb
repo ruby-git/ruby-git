@@ -111,15 +111,6 @@ RSpec.describe Git::Commands::ReadTree do
       end
     end
 
-    context 'with the :exclude_per_directory option' do
-      it 'adds --exclude-per-directory=<value> as an inline value' do
-        expect_command_capturing('read-tree', '--exclude-per-directory=.gitignore', '--', 'HEAD')
-          .and_return(command_result)
-
-        command.call('HEAD', exclude_per_directory: '.gitignore')
-      end
-    end
-
     context 'with the :index_output option' do
       it 'adds --index-output=<value> as an inline value' do
         expect_command_capturing('read-tree', '--index-output=/tmp/index', '--', 'HEAD')

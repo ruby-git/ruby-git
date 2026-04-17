@@ -179,6 +179,15 @@ RSpec.describe Git::Commands::RevParse do
       end
     end
 
+    context 'with the :output_object_format option' do
+      it 'adds --output-object-format=<format> to the command line' do
+        expect_command_capturing('rev-parse', '--output-object-format=sha1', '--end-of-options', 'HEAD')
+          .and_return(command_result("abc123\n"))
+
+        command.call('HEAD', output_object_format: 'sha1')
+      end
+    end
+
     # Object options
 
     context 'with the :all option' do
@@ -254,6 +263,14 @@ RSpec.describe Git::Commands::RevParse do
       end
     end
 
+    context 'with the :exclude_hidden option' do
+      it 'adds --exclude-hidden=<protocol> to the command line' do
+        expect_command_capturing('rev-parse', '--exclude-hidden=fetch').and_return(command_result)
+
+        command.call(exclude_hidden: 'fetch')
+      end
+    end
+
     context 'with the :disambiguate option' do
       it 'adds --disambiguate=<prefix> to the command line' do
         expect_command_capturing('rev-parse', '--disambiguate=abc1').and_return(command_result("abc123\nabc1ff\n"))
@@ -262,13 +279,28 @@ RSpec.describe Git::Commands::RevParse do
       end
     end
 
-    # Repo info options
+    # Files options
 
     context 'with the :local_env_vars option' do
       it 'adds --local-env-vars to the command line' do
         expect_command_capturing('rev-parse', '--local-env-vars').and_return(command_result("GIT_DIR\n"))
 
         command.call(local_env_vars: true)
+      end
+    end
+
+    context 'with the :path_format option' do
+      it 'adds --path-format=<format> to the command line' do
+        expect_command_capturing('rev-parse', '--path-format=absolute').and_return(command_result)
+
+        command.call(path_format: 'absolute')
+      end
+
+      it 'supports repeatable path-format values' do
+        expect_command_capturing('rev-parse', '--path-format=absolute', '--path-format=relative')
+          .and_return(command_result)
+
+        command.call(path_format: %w[absolute relative])
       end
     end
 
@@ -396,6 +428,14 @@ RSpec.describe Git::Commands::RevParse do
         expect_command_capturing('rev-parse', '--show-object-format=input').and_return(command_result("sha1\n"))
 
         command.call(show_object_format: 'input')
+      end
+    end
+
+    context 'with the :show_ref_format option' do
+      it 'adds --show-ref-format to the command line' do
+        expect_command_capturing('rev-parse', '--show-ref-format').and_return(command_result("files\n"))
+
+        command.call(show_ref_format: true)
       end
     end
 
