@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/branch/move'
 
 RSpec.describe Git::Commands::Branch::Move do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do

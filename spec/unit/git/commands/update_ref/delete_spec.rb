@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/update_ref/delete'
 
 RSpec.describe Git::Commands::UpdateRef::Delete do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do

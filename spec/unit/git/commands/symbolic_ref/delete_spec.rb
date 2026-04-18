@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/symbolic_ref/delete'
 
 RSpec.describe Git::Commands::SymbolicRef::Delete do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do
