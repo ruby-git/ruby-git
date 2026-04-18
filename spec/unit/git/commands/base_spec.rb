@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe Git::Commands::Base do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
 
   describe '.arguments' do
     it 'stores a frozen args definition' do

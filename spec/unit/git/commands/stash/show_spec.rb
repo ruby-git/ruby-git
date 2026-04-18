@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/stash/show'
 
 RSpec.describe Git::Commands::Stash::Show do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   let(:numstat_output) do

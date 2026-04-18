@@ -6,7 +6,7 @@ require 'git/commands/cat_file/batch'
 RSpec.describe Git::Commands::CatFile::Batch do
   # Duck-type collaborator: command specs depend on the #command_capturing interface,
   # not a single concrete ExecutionContext class.
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   # Helper for asserting stdin-feeding batch commands (capturing path).

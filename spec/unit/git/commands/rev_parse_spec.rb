@@ -6,7 +6,7 @@ require 'git/commands/rev_parse'
 RSpec.describe Git::Commands::RevParse do
   # Duck-type collaborator: command specs depend on the #command_capturing interface,
   # not a single concrete ExecutionContext class.
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   describe '#call' do

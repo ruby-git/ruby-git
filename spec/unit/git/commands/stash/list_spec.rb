@@ -5,7 +5,7 @@ require 'git/commands/stash/list'
 require 'git/parsers/stash'
 
 RSpec.describe Git::Commands::Stash::List do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   let(:stash_output) do

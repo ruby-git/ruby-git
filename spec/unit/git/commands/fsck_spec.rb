@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/fsck'
 
 RSpec.describe Git::Commands::Fsck do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   # Helper to mock command call - accepts any keyword arguments

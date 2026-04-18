@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/commands/update_ref/batch'
 
 RSpec.describe Git::Commands::UpdateRef::Batch do
-  let(:execution_context) { double('ExecutionContext') }
+  let(:execution_context) { execution_context_double }
   let(:command) { described_class.new(execution_context) }
 
   # Helper for asserting stdin-feeding batch commands (capturing path).
