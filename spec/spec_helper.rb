@@ -170,3 +170,37 @@ def expect_command_streaming(*, **execution_options)
     receive(:command_streaming).with(*, **execution_options, raise_on_failure: false)
   )
 end
+
+# Create a test double for ExecutionContext with git_version stubbed
+#
+# This helper creates a consistent mock for the execution context used in
+# command specs. By default, it returns a very high git version (99.99.99) so
+# that all version-gated commands pass validation.
+#
+# @param version [String] the git version string to stub (default: '99.99.99')
+#
+# @return [RSpec::Mocks::Double] a test double with git_version stubbed
+#
+# @example
+#   let(:execution_context) { execution_context_double }
+#   let(:execution_context) { execution_context_double('2.30.0') }
+#
+def execution_context_double(version = '99.99.99')
+  double('ExecutionContext', git_version: Gem::Version.new(version))
+end
+
+# Stub git_version on an existing execution context double
+#
+# @param context [RSpec::Mocks::Double] the execution context double to modify
+# @param version [String] the git version string to stub
+#
+# @return [Gem::Version] the version that git_version will return when called
+#
+# @example
+#   stub_git_version(execution_context, '2.28.0')
+#
+def stub_git_version(context, version)
+  gem_version = Gem::Version.new(version)
+  allow(context).to receive(:git_version).and_return(gem_version)
+  gem_version
+end
