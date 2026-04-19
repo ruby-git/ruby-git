@@ -193,6 +193,7 @@ module Git
         #     given type
         def call(*, **)
           bound = args_definition.bind(*, **)
+          validate_version!
           result = execute_command(bound)
 
           # `-e` treats exit 1 as a meaningful result (object not found), but any other

@@ -118,15 +118,21 @@ module Git
         #   @raise [Git::FailedError] if git exits with a non-zero exit status
         def call(*, **)
           bound = args_definition.bind(*, **)
-          delimiter = bound.z? ? "\0" : "\n"
-          stdin = Array(bound.instructions).map { |i| "#{i}#{delimiter}" }.join
-          with_stdin(stdin) do |reader|
+          validate_version!
+          with_stdin(build_stdin(bound)) do |reader|
             result = @execution_context.command_capturing(
               *bound, in: reader, **bound.execution_options, raise_on_failure: false
             )
             validate_exit_status!(result)
             result
           end
+        end
+
+        private
+
+        def build_stdin(bound)
+          delimiter = bound.z? ? "\0" : "\n"
+          Array(bound.instructions).map { |i| "#{i}#{delimiter}" }.join
         end
       end
     end
