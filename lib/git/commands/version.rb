@@ -22,6 +22,11 @@ module Git
     # @api private
     #
     class Version < Git::Commands::Base
+      # Skip version validation for this command since this command is used to
+      # determine the version.
+      #
+      skip_version_validation
+
       arguments do
         literal 'version'
         flag_option :build_options

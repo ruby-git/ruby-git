@@ -39,24 +39,68 @@ RSpec.describe Git::Commands::Base do
       end
     end
 
-    it 'stores the version string in minimum_git_version' do
-      command_class.requires_git_version '2.46.0'
-
-      expect(command_class.minimum_git_version).to eq('2.46.0')
+    context 'with positional min' do
+      it 'stores the normalized constraint' do
+        command_class.requires_git_version '2.46.0'
+        expect(command_class.git_version_constraint).to eq(
+          Git::VersionConstraint.new(min: Git::Version.parse('2.46.0'), before: nil)
+        )
+      end
     end
 
-    it 'raises ArgumentError for a non-semver string' do
+    context 'with before: keyword only' do
+      it 'stores the normalized constraint' do
+        command_class.requires_git_version before: '2.50.0'
+        expect(command_class.git_version_constraint).to eq(
+          Git::VersionConstraint.new(min: nil, before: Git::Version.parse('2.50.0'))
+        )
+      end
+    end
+
+    context 'with min and before:' do
+      it 'stores the normalized constraint' do
+        command_class.requires_git_version '2.30.0', before: '2.50.0'
+        expected = Git::VersionConstraint.new(
+          min: Git::Version.parse('2.30.0'),
+          before: Git::Version.parse('2.50.0')
+        )
+        expect(command_class.git_version_constraint).to eq(expected)
+      end
+    end
+
+    it 'raises ArgumentError for a non-semver min string' do
       expect { command_class.requires_git_version '2.46' }
         .to raise_error(ArgumentError, /major\.minor\.patch/)
     end
 
-    it 'raises ArgumentError for a non-string value' do
-      expect { command_class.requires_git_version 2 }
+    it 'raises ArgumentError for a non-semver before string' do
+      expect { command_class.requires_git_version before: '2' }
         .to raise_error(ArgumentError, /major\.minor\.patch/)
     end
 
-    it 'defaults minimum_git_version to nil when not declared' do
-      expect(command_class.minimum_git_version).to be_nil
+    it 'raises ArgumentError for Ruby Range objects' do
+      expect { command_class.requires_git_version 1..2 }
+        .to raise_error(ArgumentError, /major\.minor\.patch/)
+    end
+
+    it 'raises ArgumentError when called twice' do
+      command_class.requires_git_version '2.30.0'
+      expect { command_class.requires_git_version '2.35.0' }
+        .to raise_error(ArgumentError, /requires_git_version already declared/)
+    end
+
+    it 'raises ArgumentError when no constraints are provided' do
+      expect { command_class.requires_git_version }
+        .to raise_error(ArgumentError, /requires min or before:/)
+    end
+
+    it 'raises ArgumentError for Hash argument' do
+      expect { command_class.requires_git_version({ before: '2.30.0' }) }
+        .to raise_error(ArgumentError, /major\.minor\.patch/)
+    end
+
+    it 'returns nil when not declared' do
+      expect(command_class.git_version_constraint).to be_nil
     end
   end
 
@@ -273,6 +317,117 @@ RSpec.describe Git::Commands::Base do
         real_writer.close
         allow(IO).to receive(:pipe).and_return([real_reader, real_writer])
         expect { command.call('') }.not_to raise_error
+      end
+    end
+  end
+
+  describe '#call with version validation' do
+    context 'with floor violation' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+        end
+      end
+      let(:execution_context) { execution_context_double('2.27.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'raises VersionError when git version is below MINIMUM_GIT_VERSION' do
+        expect { command.call }
+          .to raise_error(Git::VersionError, /The git gem requires git >= 2.28.0/)
+      end
+    end
+
+    context 'with class-level minimum version violation' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+          requires_git_version '2.30.0'
+        end
+      end
+      let(:execution_context) { execution_context_double('2.29.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'raises VersionError when git version is below class minimum' do
+        expect { command.call }
+          .to raise_error(Git::VersionError) do |error|
+            expect(error.message).to match(/requires git >= 2.30.0/)
+            expect(error.actual_version).to eq(Git::Version.parse('2.29.0'))
+          end
+      end
+    end
+
+    context 'with class-level upper bound violation' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+          requires_git_version before: '2.50.0'
+        end
+      end
+      let(:execution_context) { execution_context_double('2.51.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'raises VersionError when git version is at or above upper bound' do
+        expect { command.call }
+          .to raise_error(Git::VersionError) do |error|
+            expect(error.message).to match(/requires git < 2.50.0/)
+            expect(error.actual_version).to eq(Git::Version.parse('2.51.0'))
+          end
+      end
+    end
+
+    context 'floor check fail-fast behavior' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+          requires_git_version '2.35.0'
+        end
+      end
+      let(:execution_context) { execution_context_double('2.27.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'fails with floor message when both floor and class constraint would fail' do
+        # Should fail with floor message, not class-level message
+        expect { command.call }
+          .to raise_error(Git::VersionError, /The git gem requires git >= 2.28.0/)
+      end
+    end
+
+    context 'with sufficient version' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+          requires_git_version '2.30.0'
+        end
+      end
+      let(:execution_context) { execution_context_double('2.35.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'executes normally when version requirements are met' do
+        allow(execution_context).to receive(:command_capturing)
+          .with('status', raise_on_failure: false)
+          .and_return(command_result)
+
+        result = command.call
+        expect(result).to be_a(Git::CommandLineResult)
+      end
+    end
+
+    context 'without version constraint' do
+      let(:command_class) do
+        Class.new(described_class) do
+          arguments { literal 'status' }
+        end
+      end
+      let(:execution_context) { execution_context_double('2.35.0') }
+      let(:command) { command_class.new(execution_context) }
+
+      it 'executes normally when no version constraint is declared' do
+        allow(execution_context).to receive(:command_capturing)
+          .with('status', raise_on_failure: false)
+          .and_return(command_result)
+
+        result = command.call
+        expect(result).to be_a(Git::CommandLineResult)
       end
     end
   end
