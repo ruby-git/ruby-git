@@ -44,7 +44,7 @@ module Git
     #
     # Commands with execution options (e.g., timeout) work with the default
     # `call` — execution options are extracted and forwarded automatically.
-    class Base
+    class Base # rubocop:disable Metrics/ClassLength
       class << self
         # @return [Git::Commands::Arguments, nil] the frozen argument definition for this command
         attr_reader :args_definition
@@ -89,36 +89,87 @@ module Git
           @allowed_exit_status_range = range
         end
 
-        # @return [String, nil] minimum git version required by this command, or +nil+ if
-        #   the command is available in all supported git versions
-        attr_reader :minimum_git_version
+        # @return [Git::VersionConstraint, nil] version constraint for this command
+        #
+        #   Returns +nil+ if the command is available in all supported git versions.
+        attr_reader :git_version_constraint
 
-        # Declare the minimum git version required for this command.
+        # @!attribute [r] skip_version_validation?
+        # @return [Boolean] whether this command skips version validation
+        def skip_version_validation? = !!@skip_version_validation
+
+        # Declare that this command should skip version validation.
         #
-        # Use this when the command (or the specific sub-action this class wraps) was
-        # introduced in a git version later than +Git::MINIMUM_GIT_VERSION+. When
-        # not declared, the command is assumed to be available in all supported git
-        # versions.
+        # This is intended for internal use only — specifically for the
+        # `git version` command, which cannot validate versions without
+        # causing infinite recursion.
         #
-        # @note This macro stores the version string for documentation and introspection.
-        #   It does not enforce the requirement at runtime — git itself will return a
-        #   native "unknown option" error when the option is not available.
-        #
-        # @example git-am --retry requires git 2.46.0
-        #   requires_git_version '2.46.0'
-        #
-        # @param version [String] minimum git version in +'major.minor.patch'+ format
-        #
-        # @raise [ArgumentError] if version is not a valid +'major.minor.patch'+ string
+        # @api private
         #
         # @return [void]
-        def requires_git_version(version)
-          unless version.is_a?(String) && version.match?(/\A\d+\.\d+\.\d+\z/)
-            raise ArgumentError,
-                  "requires_git_version expects a 'major.minor.patch' string, got: #{version.inspect}"
-          end
+        def skip_version_validation
+          @skip_version_validation = true
+        end
 
-          @minimum_git_version = version
+        # Declare the git version requirements for this command.
+        #
+        # Use this when the command (or the specific sub-action this class wraps) was
+        # introduced in a git version later than +Git::MINIMUM_GIT_VERSION+, or when
+        # the command was removed in a later version. When not declared, the command
+        # is assumed to be available in all supported git versions.
+        #
+        # @example git-am --retry requires git 2.46.0 or later
+        #   requires_git_version '2.46.0'
+        #
+        # @example Feature with version range
+        #   requires_git_version '2.29.0', before: '2.50.0'
+        #
+        # @example Feature available before git 2.50.0
+        #   requires_git_version before: '2.50.0'
+        #
+        # @param min [String, nil] minimum version
+        # @param before [String, nil] upper bound version (exclusive)
+        #
+        # @raise [ArgumentError] if version format is invalid or called twice
+        #
+        # @return [void]
+        def requires_git_version(min = nil, before: nil)
+          raise ArgumentError, 'requires_git_version already declared for this class' if @git_version_constraint
+
+          @git_version_constraint = normalize_version_constraint(min, before)
+        end
+
+        private
+
+        # Normalize a version constraint to a VersionConstraint
+        #
+        # @param min [String, nil] minimum version
+        # @param before_version [String, nil] upper bound version
+        #
+        # @return [Git::VersionConstraint] the normalized constraint
+        #
+        # @raise [ArgumentError] if the constraint is invalid
+        #
+        def normalize_version_constraint(min, before_version)
+          raise ArgumentError, 'requires_git_version requires min or before:' unless min || before_version
+
+          min_version = min ? parse_version(min, 'min') : nil
+          before_parsed = before_version ? parse_version(before_version, 'before') : nil
+
+          Git::VersionConstraint.new(min: min_version, before: before_parsed)
+        end
+
+        def parse_version(version, key_name)
+          validate_version_format!(version, key_name)
+          Git::Version.parse(version)
+        end
+
+        def validate_version_format!(version, context = nil)
+          return if version.is_a?(String) && version.match?(/\A\d+\.\d+\.\d+\z/)
+
+          ctx = context ? " for #{context}" : ''
+          raise ArgumentError,
+                "requires_git_version expects a 'major.minor.patch' string#{ctx}, got: #{version.inspect}"
         end
       end
 
@@ -155,8 +206,11 @@ module Git
       # @raise [ArgumentError] if no arguments definition is declared on the command class
       #
       # @raise [Git::FailedError] if git returns an exit code outside the allowed range
+      #
+      # @raise [Git::VersionError] if the installed git version doesn't meet requirements
       def call(*, **)
         bound = args_definition.bind(*, **)
+        validate_version!
         result = execute_command(bound)
         validate_exit_status!(result)
         result
@@ -248,6 +302,48 @@ module Git
 
       def validate_exit_status!(result)
         raise Git::FailedError, result unless allowed_exit_status_range.include?(result.status.exitstatus)
+      end
+
+      # Validate that the installed git version meets requirements
+      #
+      # Raises Git::VersionError if:
+      # 1. The installed version is below Git::MINIMUM_GIT_VERSION (floor check)
+      # 2. The command has a class-level constraint that isn't satisfied
+      #
+      # Floor check always runs first and fails fast.
+      #
+      def validate_version!
+        return if self.class.skip_version_validation?
+
+        actual_version = @execution_context.git_version
+
+        # Floor check: fail-fast if git is too old for the gem itself
+        validate_floor_version!(actual_version)
+
+        # Class-level constraint check
+        validate_class_version_constraint!(actual_version)
+      end
+
+      def validate_floor_version!(actual_version)
+        return if actual_version >= Git::MINIMUM_GIT_VERSION
+
+        raise Git::VersionError.new(
+          subject: 'The git gem',
+          constraint: Git::VersionConstraint.new(min: Git::MINIMUM_GIT_VERSION, before: nil),
+          actual_version: actual_version
+        )
+      end
+
+      def validate_class_version_constraint!(actual_version)
+        constraint = self.class.git_version_constraint
+        return unless constraint
+        return if constraint.satisfied_by?(actual_version)
+
+        raise Git::VersionError.new(
+          subject: self.class,
+          constraint: constraint,
+          actual_version: actual_version
+        )
       end
 
       # Opens an in-memory IO pipe, spawns a background thread to write
