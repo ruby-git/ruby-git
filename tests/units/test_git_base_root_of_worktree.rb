@@ -8,7 +8,7 @@ class TestGitBaseRootOfWorktree < Test::Unit::TestCase
     # Loop through the arguments and check for the "rev-parse --show-toplevel" args
     for arg in "$@"; do
       if [ "$arg" = "version" ]; then
-        echo "git version 1.2.3"
+        echo "git version #{Git::MINIMUM_GIT_VERSION}"
         exit 0
       elif [ "$arg" = "rev-parse" ]; then
         REV_PARSE_ARG=true
@@ -61,7 +61,7 @@ class TestGitBaseRootOfWorktree < Test::Unit::TestCase
     # Loop through the arguments and check for the "rev-parse --show-toplevel" args
     for arg in "$@"; do
       if [ "$arg" = "version" ]; then
-        echo "git version 1.2.3"
+        echo "git version #{Git::MINIMUM_GIT_VERSION}"
         exit 0
       elif [ "$arg" = "rev-parse" ]; then
         REV_PARSE_ARG=true
