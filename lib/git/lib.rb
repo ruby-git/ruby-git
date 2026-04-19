@@ -23,6 +23,10 @@ module Git
   # Internal git operations
   # @api private
   class Lib
+    # Thread-safe cache for git versions, keyed by binary path
+    @git_version_cache_mutex = Mutex.new
+    @git_version_cache = {}
+
     # The path to the Git working copy.  The default is '"./.git"'.
     #
     # @return [Pathname] the path to the Git working copy.
@@ -1853,6 +1857,52 @@ module Git
       apply_gzip(file) if gzip
 
       file
+    end
+
+    # Returns the git version as a Git::Version
+    #
+    # Parses the output of `git version`, strips platform suffixes (like
+    # `.windows.1` or `.vfs.0`), and pads two-segment versions to three segments.
+    #
+    # Results are cached globally (keyed by binary path). It is assumed that the
+    # git version doesn't change during runtime for a given binary.
+    #
+    # @return [Git::Version] the parsed git version
+    #
+    # @raise [Git::Error] if the version cannot be parsed
+    #
+    # @example
+    #   lib.git_version #=> Git::Version.new(2, 42, 1)
+    #
+    def git_version
+      self.class.cached_git_version(Git::Base.config.binary_path) do
+        output = Git::Commands::Version.new(self).call.stdout
+        Git::Version.parse(output)
+      rescue ArgumentError => e
+        raise Git::Error, "Unable to parse git version from: #{output.inspect} (#{e.message})"
+      end
+    end
+
+    # Class-level cache for git versions, keyed by binary path
+    #
+    # Thread-safe for JRuby/TruffleRuby where true parallelism exists.
+    #
+    # @api private
+    #
+    def self.cached_git_version(binary_path, &block)
+      @git_version_cache_mutex.synchronize do
+        @git_version_cache[binary_path] ||= block.call
+      end
+    end
+
+    # Clear the git version cache (primarily for testing)
+    #
+    # @api private
+    #
+    def self.clear_git_version_cache
+      @git_version_cache_mutex.synchronize do
+        @git_version_cache.clear
+      end
     end
 
     # returns the current version of git, as an Array of Fixnums.
