@@ -21,7 +21,8 @@ module Git
   #     │   └─> Git::SignaledError
   #     │       └─> Git::TimeoutError
   #     ├─> Git::ProcessIOError
-  #     └─> Git::UnexpectedResultError
+  #     ├─> Git::UnexpectedResultError
+  #     └─> Git::VersionError
   # ```
   #
   # | Error Class | Description |
@@ -33,6 +34,7 @@ module Git
   # | `TimeoutError` | This is a specific type of `SignaledError` that is raised when the git command line operation times out and is killed via the SIGKILL signal. This happens if the operation takes longer than the timeout duration configured in `Git.config.timeout` or via the `:timeout` parameter given in git methods that support timeouts. |
   # | `ProcessIOError` | An error was encountered reading or writing to a subprocess. |
   # | `UnexpectedResultError` | The command line ran without error but did not return the expected results. |
+  # | `VersionError` | The installed git version does not meet the requirements of the git gem or a specific command. |
   #
   # @example Rescuing a generic error
   #   begin
@@ -57,6 +59,7 @@ module Git
   # @see Git::TimeoutError
   # @see Git::ProcessIOError
   # @see Git::UnexpectedResultError
+  # @see Git::VersionError
   #
   # @api public
   #
@@ -209,4 +212,64 @@ module Git
   # @api public
   #
   class UnexpectedResultError < Git::Error; end
+
+  # Raised when the installed git version does not meet requirements
+  #
+  # This error is raised when:
+  # - The installed git version is below `Git::MINIMUM_GIT_VERSION`
+  # - A command requires a minimum git version that isn't met
+  # - A command was removed in a git version older than the installed version
+  #
+  # @example Rescuing a version error
+  #   begin
+  #     git.some_command
+  #   rescue Git::VersionError => e
+  #     puts "Git version #{e.actual_version} does not meet requirements"
+  #     puts "  #{e.subject}: requires #{e.constraint}"
+  #   end
+  #
+  # @api public
+  #
+  class VersionError < Git::Error
+    # Create a VersionError
+    #
+    # @param subject [#to_s] the entity with the version requirement (e.g., "The git gem", a Class)
+    # @param constraint [Git::VersionConstraint] the version constraint that was violated
+    # @param actual_version [Git::Version] the installed git version
+    #
+    def initialize(subject:, constraint:, actual_version:)
+      @subject = subject
+      @constraint = constraint
+      @actual_version = actual_version
+      super(build_message)
+    end
+
+    # The entity that has the version requirement
+    #
+    # @return [#to_s]
+    #
+    attr_reader :subject
+
+    # The version constraint that was violated
+    #
+    # @return [Git::VersionConstraint]
+    #
+    attr_reader :constraint
+
+    # The installed git version that caused the error
+    #
+    # @return [Git::Version]
+    #
+    attr_reader :actual_version
+
+    private
+
+    def build_message
+      if constraint.too_new?(actual_version)
+        "#{subject} requires git < #{constraint.before} (found #{actual_version})"
+      else
+        "#{subject} requires git >= #{constraint.min} (found #{actual_version})"
+      end
+    end
+  end
 end
