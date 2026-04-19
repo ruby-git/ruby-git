@@ -311,6 +311,7 @@ module Git
         #   @raise [Git::FailedError] if git exits non-zero
         def call(*objects, **)
           bound = args_definition.bind(*objects, **)
+          validate_version!
           # `-Z` puts git into NUL I/O mode: input objects must be NUL-terminated.
           # Without `-Z`, the standard newline delimiter is used.
           delimiter = bound.Z? ? "\0" : "\n"

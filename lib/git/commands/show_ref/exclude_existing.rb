@@ -86,6 +86,7 @@ module Git
           end
 
           bound = args_definition.bind(*, exclude_existing: exclude_existing, **)
+          validate_version!
           stdin = Array(bound.ref).map { |r| "#{r}\n" }.join
           with_stdin(stdin) { |reader| run_filter(bound, reader) }
         end
