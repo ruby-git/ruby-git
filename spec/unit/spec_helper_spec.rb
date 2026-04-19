@@ -10,8 +10,8 @@ RSpec.describe 'spec_helper' do
       expect(double_instance).to respond_to(:git_version)
     end
 
-    it 'returns Gem::Version 99.99.99 by default' do
-      expect(double_instance.git_version).to eq(Gem::Version.new('99.99.99'))
+    it 'returns Git::Version 99.99.99 by default' do
+      expect(double_instance.git_version).to eq(Git::Version.new(99, 99, 99))
     end
   end
 
@@ -20,7 +20,7 @@ RSpec.describe 'spec_helper' do
 
     it 'stubs the git_version to the specified version' do
       stub_git_version(context, '2.30.0')
-      expect(context.git_version).to eq(Gem::Version.new('2.30.0'))
+      expect(context.git_version).to eq(Git::Version.new(2, 30, 0))
     end
   end
 end

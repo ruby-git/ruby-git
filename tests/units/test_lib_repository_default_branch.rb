@@ -30,6 +30,9 @@ class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
   end
 
   def mock_command(lib, repository, response)
+    # Stub git_version to avoid calling real git version during validation
+    stub_lib_git_version(lib)
+
     test_case = self
     lib.define_singleton_method(:command_capturing) do |cmd, *opts, **_kwargs, &_block|
       test_case.assert_equal('ls-remote', cmd)

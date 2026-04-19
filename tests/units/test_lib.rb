@@ -137,6 +137,10 @@ class TestLib < Test::Unit::TestCase
       binary_path = File.join(dir, 'my_own_git.bat') # .bat so it works in Windows too
       Git::Base.config.binary_path = binary_path
       Git::Base.config.git_ssh = 'GIT_SSH_VALUE'
+
+      # Stub git_version to avoid version validation calling the fake binary
+      stub_lib_git_version(@lib)
+
       File.write(binary_path, <<~SCRIPT)
         #!/bin/sh
         set > "#{output_path}"

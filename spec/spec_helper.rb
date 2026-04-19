@@ -186,7 +186,7 @@ end
 #   let(:execution_context) { execution_context_double('2.30.0') }
 #
 def execution_context_double(version = '99.99.99')
-  double('ExecutionContext', git_version: Gem::Version.new(version))
+  double('ExecutionContext', git_version: Git::Version.parse(version))
 end
 
 # Stub git_version on an existing execution context double
@@ -194,13 +194,13 @@ end
 # @param context [RSpec::Mocks::Double] the execution context double to modify
 # @param version [String] the git version string to stub
 #
-# @return [Gem::Version] the version that git_version will return when called
+# @return [Git::Version] the version that git_version will return when called
 #
 # @example
 #   stub_git_version(execution_context, '2.28.0')
 #
 def stub_git_version(context, version)
-  gem_version = Gem::Version.new(version)
-  allow(context).to receive(:git_version).and_return(gem_version)
-  gem_version
+  git_version = Git::Version.parse(version)
+  allow(context).to receive(:git_version).and_return(git_version)
+  git_version
 end

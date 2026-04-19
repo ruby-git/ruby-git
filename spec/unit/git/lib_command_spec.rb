@@ -11,6 +11,10 @@ RSpec.describe Git::Lib do
   subject(:lib) { described_class.new(base, logger) }
 
   before do
+    # Stub git_version to avoid version validation issues
+    # This prevents validate_version! from calling the real git binary
+    allow(lib).to receive(:git_version).and_return(Git::Version.new(99, 99, 99))
+
     allow(lib).to receive(:command_line_capturing).and_return(capturing_command_line)
     allow(lib).to receive(:command_line_streaming).and_return(streaming_command_line)
   end
