@@ -3,8 +3,21 @@
 require 'active_support'
 require 'active_support/deprecation'
 
+require 'git/version'
+
 module Git
   Deprecation = ActiveSupport::Deprecation.new('5.0.0', 'Git')
+
+  # Minimum git version required by this gem
+  #
+  # Commands and features may require newer versions, but this is the absolute
+  # minimum supported version for the gem as a whole.
+  #
+  # @return [Git::Version]
+  #
+  # @api public
+  #
+  MINIMUM_GIT_VERSION = Version.parse('2.28.0')
 end
 
 require 'git/author'
@@ -31,6 +44,7 @@ require 'git/execution_context'
 require 'git/file_ref'
 require 'git/fsck_object'
 require 'git/fsck_result'
+require 'git/version_constraint'
 require 'git/lib'
 require 'git/log'
 require 'git/object'
@@ -44,7 +58,6 @@ require 'git/tag_delete_failure'
 require 'git/tag_delete_result'
 require 'git/tag_info'
 require 'git/url'
-require 'git/version'
 require 'git/worktree'
 require 'git/worktrees'
 
