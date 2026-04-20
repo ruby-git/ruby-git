@@ -67,8 +67,8 @@ argument → expected git CLI). Coverage completeness is assessed by the
   URL `https://git-scm.com/docs/git-{command}/{version}`.
 
 Do **not** scaffold from local `git <command> -h` output alone — the installed Git
-version is unknown and may differ from the latest supported version. Local help may
-be used as a supplemental check only.
+version is unknown and may differ from the latest supported version. Local help should
+NOT be used even as a supplemental check.
 
 ## Reference
 

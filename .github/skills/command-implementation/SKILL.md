@@ -77,8 +77,8 @@ Skip this step when scaffolding a new command (the file does not exist yet).
   URL `https://git-scm.com/docs/git-{command}/{version}`.
 
 Do **not** scaffold from local `git <command> -h` output — the installed Git
-version is unknown and may differ from the latest supported version. Local help may
-be used as a supplemental check only.
+version is unknown and may differ from the latest supported version. Local help should
+NOT be used even as a supplemental check.
 
 ## Reference
 
