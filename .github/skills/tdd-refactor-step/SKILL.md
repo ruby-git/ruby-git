@@ -146,10 +146,10 @@ When a magic value appears in logic:
 
 ```ruby
 # Before
-raise error if version < Gem::Version.new('2.28.0')
+raise error if version < Git::Version.parse('2.28.0')
 
 # After
-MINIMUM_GIT_VERSION = Gem::Version.new('2.28.0').freeze
+MINIMUM_GIT_VERSION = Git::Version.parse('2.28.0')
 raise error if version < MINIMUM_GIT_VERSION
 ```
 

@@ -594,7 +594,7 @@ option the latest-version docs describe.
 
 `requires_git_version` is a **class-level** declaration only. Individual options do
 **not** carry version annotations. The declaration must use a `'major.minor.patch'`
-string (e.g., `'2.29.0'`), not a `Gem::Version` or `Range` — pre-release versions
+string (e.g., `'2.29.0'`), not a `Git::Version` or `Range` — pre-release versions
 are not supported.
 
 | Scenario | Action |
