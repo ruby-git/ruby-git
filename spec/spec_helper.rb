@@ -96,6 +96,20 @@ end
 
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 
+# Returns false when running on CI, or a skip-reason string when not on CI.
+# Use as the `skip:` metadata value for tests that modify shared OS state
+# (e.g. launchctl/systemd scheduler entries) and must only run on CI where
+# the environment is guaranteed clean.
+#
+# Example:
+#   RSpec.describe MyClass, skip: unless_ci_build('reason') do ...
+#
+def unless_ci_build(feature)
+  return false if ci_build?
+
+  "#{feature} modifies OS-level state; only runs on CI (set GITHUB_ACTIONS=true to run locally)"
+end
+
 if SIMPLECOV_ENABLED
   if ci_build?
     SimpleCov.formatters = [
