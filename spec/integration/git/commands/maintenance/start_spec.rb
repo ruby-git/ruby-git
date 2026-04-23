@@ -38,14 +38,24 @@ RSpec.describe Git::Commands::Maintenance::Start, :integration,
 
   describe '#call' do
     context 'when the command succeeds' do
+      # Specify the scheduler explicitly rather than relying on `auto` to avoid
+      # environment-specific failures:
+      #
+      # - Linux `auto` picks `systemd-timer`, which requires git-maintained unit
+      #   files (git-maintenance@*.timer) that may not be present in all CI images.
+      # - Windows `crontab` is not available; its native scheduler is `schtasks`.
+      #
+      # Using the platform-appropriate scheduler keeps the test portable.
+      let(:scheduler) { Gem.win_platform? ? 'schtasks' : 'crontab' }
+
       it 'returns a CommandLineResult' do
-        result = command.call(env: isolated_env)
+        result = command.call(scheduler: scheduler, env: isolated_env)
 
         expect(result).to be_a(Git::CommandLineResult)
       end
 
       it 'returns exit code 0' do
-        result = command.call(env: isolated_env)
+        result = command.call(scheduler: scheduler, env: isolated_env)
 
         expect(result.status.exitstatus).to eq(0)
       end
