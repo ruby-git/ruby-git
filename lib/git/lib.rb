@@ -1905,47 +1905,89 @@ module Git
       end
     end
 
-    # returns the current version of git, as an Array of Fixnums.
+    # Returns the current version of git, as an Array<Integer>
+    #
+    # @deprecated Use {Git.git_version} instead, which returns a {Git::Version} (not an Array).
+    #   For the legacy array shape, call: `Git.git_version.to_a`
+    #
     def current_command_version
-      output = Git::Commands::Version.new(self).call.stdout
-      version = output[/\d+(\.\d+)+/]
-      version_parts = version.split('.').collect(&:to_i)
-      version_parts.fill(0, version_parts.length...3)
+      Git::Deprecation.warn(
+        'Git::Lib#current_command_version is deprecated and will be removed in 6.0. ' \
+        'Use Git.git_version instead, which returns a Git::Version (not an Array). ' \
+        'For the legacy array shape, call: Git.git_version.to_a'
+      )
+      git_version.to_a
     end
 
     # Returns current_command_version <=> other_version
     #
     # @example
-    #   lib.current_command_version #=> [2, 42, 0]
-    #
     #   lib.compare_version_to(2, 41, 0) #=> 1
     #   lib.compare_version_to(2, 42, 0) #=> 0
     #   lib.compare_version_to(2, 43, 0) #=> -1
     #
-    # @param other_version [Array<Object>] the other version to compare to
+    # @param other_version [Array<Integer>] the other version to compare to
     # @return [Integer] -1 if this version is less than other_version, 0 if equal, or 1 if greater than
     #
+    # @deprecated Use {Git.git_version} with {Git::Version} comparison operators instead,
+    #   e.g. `Git.git_version <=> Git::Version.new(2, 41, 0)`
+    #
     def compare_version_to(*other_version)
-      current_command_version <=> other_version
+      Git::Deprecation.warn(
+        'Git::Lib#compare_version_to is deprecated and will be removed in 6.0. ' \
+        'Use Git.git_version with Git::Version comparison operators instead, ' \
+        'e.g. Git.git_version <=> Git::Version.new(2, 41, 0)'
+      )
+      git_version.to_a <=> other_version
     end
 
+    # @deprecated Use {Git::MINIMUM_GIT_VERSION} constant instead, which returns a {Git::Version}
+    #   (not an Array). For the legacy array shape, call: `Git::MINIMUM_GIT_VERSION.to_a.first(2)`
+    #
     def required_command_version
-      [2, 28]
+      Git::Deprecation.warn(
+        'Git::Lib#required_command_version is deprecated and will be removed in 6.0. ' \
+        'Use the Git::MINIMUM_GIT_VERSION constant instead, which returns a Git::Version ' \
+        '(not an Array). For the legacy array shape, call: Git::MINIMUM_GIT_VERSION.to_a.first(2)'
+      )
+      Git::MINIMUM_GIT_VERSION.to_a.first(2)
     end
 
+    # @deprecated For a boolean check, use `Git.git_version >= Git::MINIMUM_GIT_VERSION`.
+    #   For enforcement, no action is needed: {Git::Commands::Base#call} automatically
+    #   invokes `validate_version!`, which raises {Git::VersionError} on failure.
+    #
     def meets_required_version?
-      (current_command_version <=> required_command_version) >= 0
+      Git::Deprecation.warn(
+        'Git::Lib#meets_required_version? is deprecated and will be removed in 6.0. ' \
+        'For a boolean check, use: Git.git_version >= Git::MINIMUM_GIT_VERSION. ' \
+        'For enforcement, no action is needed: Git::Commands::Base#call automatically ' \
+        'invokes validate_version!, which raises Git::VersionError on failure.'
+      )
+      git_version >= Git::MINIMUM_GIT_VERSION
     end
 
-    def self.warn_if_old_command(lib) # rubocop:disable Naming/PredicateMethod
-      Git::Deprecation.warn('Git::Lib#warn_if_old_command is deprecated. Use meets_required_version?.')
+    # @deprecated Version validation is now handled automatically by
+    #   {Git::Commands::Base#validate_version!}, which raises {Git::VersionError} on failure.
+    #   Callers wanting the old warn-and-continue behavior must implement it themselves
+    #   using: `Git.git_version >= Git::MINIMUM_GIT_VERSION`.
+    #
+    def self.warn_if_old_command(_lib) # rubocop:disable Metrics/MethodLength, Naming/PredicateMethod
+      Git::Deprecation.warn(
+        'Git::Lib.warn_if_old_command is deprecated and will be removed in 6.0. ' \
+        'Version validation is now handled automatically by Git::Commands::Base#validate_version!, ' \
+        'which RAISES Git::VersionError on failure (the old method only printed a warning ' \
+        'once per process and continued). Callers wanting the old warn-and-continue behavior ' \
+        'must implement it themselves using: Git.git_version >= Git::MINIMUM_GIT_VERSION.'
+      )
 
       return true if @version_checked
 
       @version_checked = true
-      unless lib.meets_required_version?
-        warn "[WARNING] The git gem requires git #{lib.required_command_version.join('.')} or later, " \
-             "but only found #{lib.current_command_version.join('.')}. You should probably upgrade."
+      git_version = Git.git_version
+      unless git_version >= Git::MINIMUM_GIT_VERSION
+        warn "The git gem requires git #{Git::MINIMUM_GIT_VERSION} or later, " \
+             "but only found #{git_version}. You should probably upgrade."
       end
       true
     end

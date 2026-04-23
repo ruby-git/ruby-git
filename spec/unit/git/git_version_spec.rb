@@ -100,4 +100,63 @@ RSpec.describe Git do
       end
     end
   end
+
+  describe '.binary_version' do
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(Git).to receive(:git_version).and_return(Git::Version.new(2, 42, 0))
+    end
+
+    it 'emits a deprecation warning' do
+      described_class.binary_version
+
+      expect(Git::Deprecation).to have_received(:warn).with(
+        'Git.binary_version is deprecated and will be removed in 6.0. ' \
+        'Use Git.git_version instead, which returns a Git::Version ' \
+        '(not an Array). For the legacy array shape, call: Git.git_version.to_a. ' \
+        'The optional binary_path argument is preserved: Git.git_version(binary_path).'
+      ).once
+    end
+
+    it 'emits exactly one deprecation warning per call' do
+      described_class.binary_version
+
+      expect(Git::Deprecation).to have_received(:warn).exactly(1).time
+    end
+
+    it 'still returns an Array of integers' do
+      expect(described_class.binary_version).to eq([2, 42, 0])
+    end
+  end
+end
+
+RSpec.describe Git::Base do
+  describe '.binary_version' do
+    let(:binary_path) { described_class.config.binary_path }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(Git).to receive(:git_version).and_return(Git::Version.new(2, 42, 0))
+    end
+
+    it 'emits a deprecation warning' do
+      described_class.binary_version(binary_path)
+
+      expect(Git::Deprecation).to have_received(:warn).with(
+        'Git::Base.binary_version is deprecated and will be removed in 6.0. ' \
+        'Use Git.git_version instead, which returns a Git::Version ' \
+        '(not an Array). For the legacy array shape, call: Git.git_version.to_a'
+      ).once
+    end
+
+    it 'emits exactly one deprecation warning per call' do
+      described_class.binary_version(binary_path)
+
+      expect(Git::Deprecation).to have_received(:warn).exactly(1).time
+    end
+
+    it 'still returns an Array of integers' do
+      expect(described_class.binary_version(binary_path)).to eq([2, 42, 0])
+    end
+  end
 end

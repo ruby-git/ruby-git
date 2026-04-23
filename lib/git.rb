@@ -537,7 +537,17 @@ module Git
   #
   # @return [Array<Integer>] the version of the git binary
   #
+  # @deprecated Use {Git.git_version} instead, which returns a {Git::Version} (not an Array).
+  #   For the legacy array shape, call: `Git.git_version.to_a`.
+  #   The optional binary_path argument is preserved: `Git.git_version(binary_path)`.
+  #
   def self.binary_version(binary_path = Git::Base.config.binary_path)
-    Base.binary_version(binary_path)
+    Git::Deprecation.warn(
+      'Git.binary_version is deprecated and will be removed in 6.0. ' \
+      'Use Git.git_version instead, which returns a Git::Version ' \
+      '(not an Array). For the legacy array shape, call: Git.git_version.to_a. ' \
+      'The optional binary_path argument is preserved: Git.git_version(binary_path).'
+    )
+    git_version(binary_path).to_a
   end
 end

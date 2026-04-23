@@ -38,15 +38,17 @@ RSpec.describe Git::Commands::Merge::Quit, :integration do
         end
       end
 
-      it 'succeeds when no merge is in progress (git 2.35+)' do
-        skip 'git < 2.35' if repo.lib.compare_version_to(2, 35, 0) < 0
+      it 'succeeds when no merge is in progress' do
+        skip 'requires git 2.35.0 or later' unless Git.git_version >= Git::Version.new(2, 35, 0)
+
         expect { command.call }.not_to raise_error
       end
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError when no merge is in progress (git < 2.35)' do
-        skip 'git >= 2.35' if repo.lib.compare_version_to(2, 35, 0) >= 0
+      it 'raises FailedError when no merge is in progress' do
+        skip 'requires git < 2.35.0' unless Git.git_version < Git::Version.new(2, 35, 0)
+
         expect { command.call }.to raise_error(Git::FailedError)
       end
     end

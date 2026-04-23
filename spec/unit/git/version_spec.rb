@@ -140,4 +140,12 @@ RSpec.describe Git::Version do
       expect(version.inspect).to eq('#<Git::Version 2.42.1>')
     end
   end
+
+  describe '#to_a' do
+    it 'returns an array of [major, minor, patch]' do
+      version = described_class.new(2, 42, 0)
+
+      expect(version.to_a).to eq([2, 42, 0])
+    end
+  end
 end
