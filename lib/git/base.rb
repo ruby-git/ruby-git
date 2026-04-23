@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'logger'
-require 'open3'
 require 'pathname'
 
 require 'git/commands/rev_parse'
@@ -48,32 +47,16 @@ module Git
       @config ||= Config.new
     end
 
+    # @deprecated Use {Git.git_version} instead, which returns a {Git::Version} (not an Array).
+    #   For the legacy array shape, call: `Git.git_version.to_a`
+    #
     def self.binary_version(binary_path)
-      result, status = execute_git_version(binary_path)
-
-      raise "Failed to get git version: #{status}\n#{result}" unless status.success?
-
-      parse_version_string(result)
-    end
-
-    private_class_method def self.execute_git_version(binary_path)
-      Open3.capture2e(
-        binary_path,
-        '-c', 'core.quotePath=true',
-        '-c', 'core.editor=false',
-        '-c', 'color.ui=false',
-        'version'
+      Git::Deprecation.warn(
+        'Git::Base.binary_version is deprecated and will be removed in 6.0. ' \
+        'Use Git.git_version instead, which returns a Git::Version ' \
+        '(not an Array). For the legacy array shape, call: Git.git_version.to_a'
       )
-    rescue Errno::ENOENT
-      raise "Failed to get git version: #{binary_path} not found"
-    end
-
-    private_class_method def self.parse_version_string(raw_string)
-      version_match = raw_string.match(/\d+(\.\d+)+/)
-      return [0, 0, 0] unless version_match
-
-      version_parts = version_match[0].split('.').map(&:to_i)
-      version_parts.fill(0, version_parts.length...3)
+      Git.git_version(binary_path).to_a
     end
 
     def self.root_of_worktree(working_dir)

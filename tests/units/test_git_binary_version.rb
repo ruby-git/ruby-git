@@ -38,6 +38,7 @@ class TestGitBinaryVersion < Test::Unit::TestCase
   def test_binary_version
     in_temp_dir do |_path|
       mock_git_binary(mocked_git_script) do |git_binary_path|
+        Git::Deprecation.stubs(:warn)
         assert_equal([1, 2, 3], Git.binary_version(git_binary_path))
       end
     end
@@ -47,13 +48,15 @@ class TestGitBinaryVersion < Test::Unit::TestCase
     in_temp_dir do |_path|
       subdir = 'Git Bin Directory'
       mock_git_binary(mocked_git_script, subdir: subdir) do |git_binary_path|
+        Git::Deprecation.stubs(:warn)
         assert_equal([1, 2, 3], Git.binary_version(git_binary_path))
       end
     end
   end
 
   def test_binary_version_bad_binary_path
-    assert_raise RuntimeError do
+    Git::Deprecation.stubs(:warn)
+    assert_raise Git::Error do
       Git.binary_version('/path/to/nonexistent/git')
     end
   end

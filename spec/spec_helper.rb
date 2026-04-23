@@ -85,7 +85,7 @@ end
 def unless_git(minimum_version, feature)
   minimum_version_parts = minimum_version.split('.').map(&:to_i)
   minimum_version_parts.fill(0, minimum_version_parts.length...3)
-  actual_version_parts = Git::Lib.new(nil).current_command_version
+  actual_version_parts = Git.git_version.to_a
 
   return false if (actual_version_parts <=> minimum_version_parts) >= 0
 

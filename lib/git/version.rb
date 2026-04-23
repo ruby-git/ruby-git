@@ -95,5 +95,19 @@ module Git
     def inspect
       "#<Git::Version #{self}>"
     end
+
+    # Return the version as an array of integers
+    #
+    # Useful when legacy code expects the array shape returned by the
+    # deprecated {Git::Lib#current_command_version} method.
+    #
+    # @return [Array<Integer>] [major, minor, patch]
+    #
+    # @example
+    #   Git.git_version.to_a  #=> [2, 42, 0]
+    #
+    def to_a
+      deconstruct
+    end
   end
 end

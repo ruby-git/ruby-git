@@ -921,7 +921,7 @@ require 'git'
 Git.configure { |c| c.binary_path = '/Users/james/Downloads/git-2.30.2/bin-wrappers/git' }
 
 # Validate the version (if desired)
-assert_equal([2, 30, 2], Git.binary_version)
+assert_equal(Git::Version.new(2, 30, 2), Git.git_version)
 ```
 
 Tests can be run using the newly built Git version as follows:

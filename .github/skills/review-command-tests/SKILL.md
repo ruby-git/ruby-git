@@ -571,8 +571,9 @@ at the describe level where helpers like `repo` are not available, causing a loa
 error. For example:
 
 ```ruby
-it 'succeeds when no merge is in progress (git 2.35+)' do
-  skip 'git < 2.35' if repo.lib.compare_version_to(2, 35, 0) < 0
+it 'succeeds when no merge is in progress' do
+  skip 'requires git 2.35.0 or later' unless Git.git_version >= Git::Version.new(2, 35, 0)
+
   expect { command.call }.not_to raise_error
 end
 ```
