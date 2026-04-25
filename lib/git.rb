@@ -509,11 +509,11 @@ module Git
   # in its command-line factory, so Git::Commands::Version cannot be used to query an
   # arbitrary binary path today.
   #
-  # Phase 3 of the redesign (redesign/2_architecture_redesign.md) introduces
-  # Git::GlobalContext, which will accept a binary_path: constructor argument. Once that
-  # lands, replace the Open3 call with:
+  # A future enhancement will add binary_path: to Git::ExecutionContext (see
+  # redesign/3_architecture_implementation.md Phase 3). Once that lands, replace the
+  # Open3 call with:
   #
-  #   Git::Commands::Version.new(Git::GlobalContext.new(binary_path: path)).call.stdout
+  #   Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout
   #
   # and remove the Open3 dependency from this method.
   def self.run_git_version(path)
