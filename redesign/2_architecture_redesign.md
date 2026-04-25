@@ -106,14 +106,14 @@ into three distinct layers: a Facade, an Execution Context, and Command Objects.
     **Two Context Types**: The execution layer will consist of an abstract base class
     with two concrete implementations:
 
-    - **Git::GlobalContext**: For commands that do not require an existing repository
+    - **Git::ExecutionContext::Global**: For commands that do not require an existing repository
       (`init`, `clone`, `config --global`, `version`). These commands execute in a
       clean environment with no repository paths set. In the specific case of
-      `init`/`clone`, the command itself runs in `GlobalContext`, but on success it
+      `init`/`clone`, the command itself runs in `ExecutionContext::Global`, but on success it
       yields a newly created `Git::Repository` instance backed by a
-      `Git::RepositoryContext`.
+      `Git::ExecutionContext::Repository`.
 
-    - **Git::RepositoryContext**: For repository-bound commands (`add`, `commit`,
+    - **Git::ExecutionContext::Repository**: For repository-bound commands (`add`, `commit`,
       `status`, `log`, etc.). Manages the repository environment (working directory,
       .git path, index file) and provides the ability to override environment
       variables per-command (e.g., unsetting `GIT_INDEX_FILE` for worktree
@@ -340,8 +340,8 @@ The circular dependency will be resolved by implementing a clear, one-way depend
 flow.
 
 1. The factory methods (`Git.open`, `Git.clone`) will create and configure an
-   instance of the appropriate `Git::ExecutionContext` subclass (`Git::GlobalContext`
-   for `init`/`clone`, `Git::RepositoryContext` for `open`/`bare`).
+   instance of the appropriate `Git::ExecutionContext` subclass (`Git::ExecutionContext::Global`
+   for `init`/`clone`, `Git::ExecutionContext::Repository` for `open`/`bare`).
 
 2. This context instance will then be wired into the system in two ways:
    - For commands that run before a repository exists (e.g., `Git::Commands::Init`,
