@@ -28,150 +28,60 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 ### Next Task
 
-**Begin Phase 3: Refactoring the Public Interface**
+**Phase 3, Task 1: Create `Git::RepositoryContext` and `Git::GlobalContext`**
 
 Phase 2 is complete — all commands have been migrated to `Git::Commands::*` classes.
-The next step is Phase 3: introducing `Git::Repository` as the public facade,
-populating it with delegate methods, and deprecating `Git::Base`.
+Phase 3 begins with creating proper `Git::ExecutionContext` subclasses. These replace
+the current `method_missing` delegation stub and become the context objects that
+`Git::Commands::*` classes receive once the factory methods are refactored.
 
 #### Workflow
 
-1. **Analyze**: Review the Phase 3 plan below and the current state of `lib/git/repository.rb` and `lib/git/base.rb`.
+1. **Analyze**: Review `lib/git/execution_context.rb`, and the relevant private methods
+   in `lib/git/lib.rb`: `initialize_from_base`, `initialize_from_hash`, `env_overrides`,
+   `global_opts`, `command_capturing`, `command_streaming`, `command_line_capturing`, and
+   `command_line_streaming`. These are the methods to extract into `Git::ExecutionContext`
+   and its subclasses.
 
-2. **Design**: Create command class following the pattern in
-   `lib/git/commands/branch/delete.rb`. The interface for `#call` should only include
-   options relevant to the command being implemented.
+2. **Design**: Plan the interfaces for `Git::RepositoryContext` and `Git::GlobalContext`:
+   - Both must implement `command_capturing` and `command_streaming` (the interface
+     expected by `Git::Commands::Base`)
+   - `Git::RepositoryContext` manages `git_dir`, `git_work_dir`, `git_index_file`,
+     and SSH config
+   - `Git::GlobalContext` has no repository paths (for `init`, `clone`, `version`)
+   - Shared execution logic lives in the `Git::ExecutionContext` base class
 
-3. **TDD**: Write spec file *before* implementing:
-   - Test every option using separate `context` blocks
-   - Mock the execution context with `double('ExecutionContext')`
-   - Verify argument building matches expected git CLI args
-   - Unit tests go in `spec/unit/git/commands/`
-   - Optionally add integration tests in `spec/integration/` to verify behavior
-     against real git (see CONTRIBUTING.md for integration test guidelines). Only
-     add essential integration tests for edge cases and testing that the assumptions
-     for git output used in unit tests are correct.
+3. **TDD**: Write spec files *before* implementing:
+   - `spec/unit/git/repository_context_spec.rb`
+   - `spec/unit/git/global_context_spec.rb`
+   - Test: initialization with paths, `env_overrides` hash contents, delegation to
+     `command_capturing`/`command_streaming`
 
 4. **Implement**:
-   - Use `Git::Commands::Arguments.define` DSL for argument handling
-   - Include comprehensive YARD documentation (see format below)
-   - Mark class with `@api private`
+   - Extract execution logic from `Git::Lib` into `Git::ExecutionContext` base class
+   - Create `Git::RepositoryContext < Git::ExecutionContext` in
+     `lib/git/repository_context.rb`
+   - Create `Git::GlobalContext < Git::ExecutionContext` in
+     `lib/git/global_context.rb`
 
-   **YARD Documentation Format for `#call` methods:**
-
-   ```ruby
-   # Execute the git example command
-   #
-   # @overload call(operand_arg, *repeatable_args, **options)
-   #
-   #   @param operand_arg [String] Description of the operand (positional argument)
-   #
-   #   @param repeatable_args [Array<String>] Description of repeatable arguments
-   #
-   #   @param options [Hash] command options
-   #
-   #   @option options [Boolean] :force (nil) Description. Alias: :f
-   #
-   #   @option options [String] :message (nil) Description
-   #
-   # @return [String] the command output
-   #
-   # @raise [Git::FailedError] if the command fails
-   #
-   def call(*, **)
-   ```
-
-   **Important**: Keep empty comment lines between each yard tag
-
-   **Note on Return Types**: Commands return `Git::CommandLineResult` by default.
-   If the command output needs to be parsed into structured data, create a Parser
-   class (see step 4a below).
-
-4a. **Create Parser Classes** (when output needs transformation):
-
-   If the command produces output that needs to be parsed into structured data,
-   create a Parser class or module in `lib/git/parsers/` following existing patterns.
-   For example, see `Git::Parsers::Diff` which uses nested classes for different
-   output formats:
-
-   ```ruby
-   # lib/git/parsers/diff.rb (existing pattern)
-   module Git
-     module Parsers
-       module Diff
-         # Nested parser for --numstat format
-         class Numstat
-           def self.parse(output)
-             output.lines.map { |line| parse_line(line) }
-           end
-         end
-
-         # Nested parser for --raw format
-         class Raw
-           def self.parse(output)
-             # Parse into DiffFileRawInfo value objects
-           end
-         end
-       end
-     end
-   end
-   ```
-
-   Parser classes/modules should:
-   - Be stateless (class methods or module methods)
-   - Return value objects (e.g., `DiffFileNumstatInfo`, `BranchInfo`)
-   - Be independently testable
-   - Live outside the Commands namespace (they're reusable utilities)
-
-5. **Delegate**: Update related methods in `Git::Lib` to delegate to the new class(es).
-   Here is an example pattern for facade methods in `Git::Lib`:
-
-   ```ruby
-   # Example pattern (aspirational - specific classes/methods may vary)
-   def branch_new(branch_name, options = {})
-     result = Git::Commands::Branch::Create.new(self).call(branch_name, **options)
-     # Facade builds rich return value from CommandLineResult
-     # Using a Result factory method or Parser class
-     result.stdout  # Or parse into a value object as needed
-   end
-
-   def branch_delete(branch_name, options = {})
-     result = Git::Commands::Branch::Delete.new(self).call(branch_name, **options)
-     # Facade parses output into result object using existing parser
-     Git::BranchDeleteResult.parse(result.stdout)
-   end
-   ```
-
-   Note: `Git::Lib` methods may accept an options hash for backward compatibility,
-   but they must convert it to keyword arguments when calling the command class
-   using `**options`.
-
-   Note: `Git::Lib` methods must remain backward compatible. The facade layer is
-   responsible for building rich response objects from `CommandLineResult` using
-   Parser classes and Result factories.
-
-6. **Verify**:
-   - `bundle exec rspec spec/unit/git/commands/pull_spec.rb` — new tests pass
+5. **Verify**:
+   - `bundle exec rspec spec/unit/git/repository_context_spec.rb` — new tests pass
+   - `bundle exec rspec spec/unit/git/global_context_spec.rb` — new tests pass
    - `bundle exec rspec` — all RSpec tests pass
    - `bundle exec rake test` — legacy TestUnit tests pass
    - `bundle exec rubocop` — no lint errors
    - `bundle exec yard` — no yardoc errors
 
-  To run a single legacy test: `bundle exec bin/test test_<name>` (e.g., `bundle exec bin/test test_branch`)
-
-7. **Update Checklist**: Move the command from "Commands To Migrate" to "Migrated
-   Commands" table in this document, and update the "Next Task" section to point to
-   the next command in the list. When updating "Next Task", also update the Workflow
-   steps below it — they contain method names and search strings specific to the
-   previous task (e.g. the `def <method>` reference in step 1) that must be changed
-   to match the new task.
+6. **Update Checklist**: Update the Phase 3 progress tracker in this document when
+   each sub-task is complete. Update the "Next Task" heading and Workflow steps to
+   describe the next Phase 3 sub-task (e.g. "Task 2: Refactor factory methods").
 
 #### Reference Files
 
-- Pattern to follow: `lib/git/commands/commit.rb` + `spec/unit/git/commands/commit_spec.rb`
-- Namespace example: `lib/git/commands/checkout/branch.rb`
-- Complex options example: `lib/git/commands/clone.rb`
-- Contributing guide: `CONTRIBUTING.md` (see "Wrapping a git command")
+- Execution methods to extract: `lib/git/lib.rb` (`env_overrides`, `global_opts`,
+  `command_capturing`, `command_streaming`)
+- Current stub: `lib/git/execution_context.rb`
+- Phase 3 plan: see "Phase 3: Refactoring the Public Interface" section below
 
 ## Phase 1: Foundation and Scaffolding
 
@@ -903,9 +813,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Branch::Copy` | `spec/unit/git/commands/branch/copy_spec.rb` | `git branch --copy <old-name> <new-name>` |
 | N/A (new) | `Git::Commands::Branch::SetUpstream` | `spec/unit/git/commands/branch/set_upstream_spec.rb` | `git branch --set-upstream-to <upstream> [<branch>]` |
 | N/A (new) | `Git::Commands::Branch::UnsetUpstream` | `spec/unit/git/commands/branch/unset_upstream_spec.rb` | `git branch --unset-upstream [<branch>]` |
-| `diff_full` | `Git::Commands::Diff::Patch` | `spec/unit/git/commands/diff/patch_spec.rb` | `git diff` (patch format) |
-| `diff_stats` | `Git::Commands::Diff::Numstat` | `spec/unit/git/commands/diff/numstat_spec.rb` | `git diff --numstat` |
-| `diff_path_status` / `diff_index` | `Git::Commands::Diff::Raw` | `spec/unit/git/commands/diff/raw_spec.rb` | `git diff --raw` |
+| `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` | `Git::Commands::Diff` | `spec/unit/git/commands/diff_spec.rb` | `git diff` |
 | `stashes_list` | `Git::Commands::Stash::List` | `spec/unit/git/commands/stash/list_spec.rb` | `git stash list` |
 | `stash_save` | `Git::Commands::Stash::Push` | `spec/unit/git/commands/stash/push_spec.rb` | `git stash push` |
 | `stash_pop` | `Git::Commands::Stash::Pop` | `spec/unit/git/commands/stash/pop_spec.rb` | `git stash pop` |
@@ -922,9 +830,7 @@ The following tracks the migration status of commands from `Git::Lib` to
 | N/A (new) | `Git::Commands::Stash::Create` | `spec/unit/git/commands/stash/create_spec.rb` | `git stash create` |
 | N/A (new) | `Git::Commands::Stash::Store` | `spec/unit/git/commands/stash/store_spec.rb` | `git stash store` |
 | N/A (new) | `Git::Commands::Stash::Branch` | `spec/unit/git/commands/stash/branch_spec.rb` | `git stash branch` |
-| N/A (new) | `Git::Commands::Stash::ShowNumstat` | `spec/unit/git/commands/stash/show_numstat_spec.rb` | `git stash show --numstat` |
-| N/A (new) | `Git::Commands::Stash::ShowPatch` | `spec/unit/git/commands/stash/show_patch_spec.rb` | `git stash show --patch` |
-| N/A (new) | `Git::Commands::Stash::ShowRaw` | `spec/unit/git/commands/stash/show_raw_spec.rb` | `git stash show --raw` |
+| N/A (new) | `Git::Commands::Stash::Show` | `spec/unit/git/commands/stash/show_spec.rb` | `git stash show` |
 | `cat_file_*` | `Git::Commands::CatFile::*` | `spec/unit/git/commands/cat_file/*_spec.rb` | `git cat-file` |
 | `checkout_index` | `Git::Commands::CheckoutIndex` | `spec/unit/git/commands/checkout_index_spec.rb` | `git checkout-index` |
 | `archive` | `Git::Commands::Archive` | `spec/unit/git/commands/archive_spec.rb` | `git archive` |
@@ -978,6 +884,13 @@ The following tracks the migration status of commands from `Git::Lib` to
 | `worktrees_all` / `worktree_add` / `worktree_remove` / `worktree_prune` | `Git::Commands::Worktree::List` / `Git::Commands::Worktree::Add` / `Git::Commands::Worktree::Remove` / `Git::Commands::Worktree::Prune` (+ `Lock`, `Unlock`, `Move`, `Repair`) | `spec/unit/git/commands/worktree/*_spec.rb` | `git worktree` |
 | `change_head_branch` | `Git::Commands::SymbolicRef::Update` (+ `Read`, `Delete`) | `spec/unit/git/commands/symbolic_ref/*_spec.rb` | `git symbolic-ref` |
 | `current_command_version` | `Git::Commands::Version` | `spec/unit/git/commands/version_spec.rb` | `git version` |
+| `diff_as_hash` (private) | `Git::Commands::DiffFiles` / `Git::Commands::DiffIndex` | `spec/unit/git/commands/diff_files_spec.rb` / `spec/unit/git/commands/diff_index_spec.rb` | `git diff-files` / `git diff-index` |
+| `remote_add` / `remote_remove` / `remote_set_url` / `remote_set_branches` | `Git::Commands::Remote::*` | `spec/unit/git/commands/remote/*_spec.rb` | `git remote` |
+| `revert` | `Git::Commands::Revert::*` | `spec/unit/git/commands/revert/*_spec.rb` | `git revert` |
+| `rev_parse` | `Git::Commands::RevParse` | `spec/unit/git/commands/rev_parse_spec.rb` | `git rev-parse` |
+| `read_tree` | `Git::Commands::ReadTree` | `spec/unit/git/commands/read_tree_spec.rb` | `git read-tree` |
+| `write_tree` | `Git::Commands::WriteTree` | `spec/unit/git/commands/write_tree_spec.rb` | `git write-tree` |
+| N/A (new) | `Git::Commands::Maintenance::*` | `spec/unit/git/commands/maintenance/*_spec.rb` ⚠️ missing — needs specs | `git maintenance` |
 
 #### ⏳ Commands To Migrate
 
@@ -1007,13 +920,13 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `merge` → `Git::Commands::Merge::Start` — `git merge`
 - [x] N/A (new) → `Git::Commands::Merge::Abort` / `Git::Commands::Merge::Continue` / `Git::Commands::Merge::Quit` — `git merge --abort/--continue/--quit`
 - [x] `tag` → `Git::Commands::Tag::*` — `git tag` (implemented as `List`, `Create`, `Delete`, and `Verify`)
-- [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, ShowNumstat, ShowPatch, ShowRaw)
+- [x] `stash_*` → `Git::Commands::Stash::*` — `git stash` (List, Push, Pop, Apply, Drop, Clear, Create, Store, Branch, Show)
 
 **Inspection & Comparison:**
 
 - [x] `log_commits` / `full_log_commits` → `Git::Commands::Log` — `git log`
 - [x] `diff_full` / `diff_stats` / `diff_path_status` / `diff_index` →
-  `Git::Commands::Diff::*` — `git diff` (implemented as `Patch`, `Numstat`, and `Raw`)
+  `Git::Commands::Diff` — `git diff`
 - [x] `unmerged` → (use existing `Git::Commands::Diff` class) — `git diff`
   (one unmigrated call site in `Git::Lib#unmerged`; command class already exists)
 - [x] `diff_as_hash` (private) → `Git::Commands::DiffFiles` / `Git::Commands::DiffIndex`
@@ -1069,6 +982,7 @@ order: Basic Snapshotting → Branching & Merging → etc.
 - [x] `change_head_branch` → `Git::Commands::SymbolicRef` — `git symbolic-ref`
 - [x] `repository_default_branch` → (part of `Git::Commands::LsRemote`)
 - [x] `current_command_version` → `Git::Commands::Version` — `git version`
+- [x] N/A (new) → `Git::Commands::Maintenance::*` — `git maintenance` (Register, Run, Start, Stop, Unregister) ⚠️ missing specs
 
 ## Phase 3: Refactoring the Public Interface
 
