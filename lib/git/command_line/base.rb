@@ -151,6 +151,9 @@ module Git
       #
       # @raise [ArgumentError] in place of ProcessExecuter::ArgumentError
       #
+      # @raise [Git::Error] in place of ProcessExecuter::SpawnError (binary not found or
+      #   failed to launch)
+      #
       # @raise [Git::ProcessIOError] in place of ProcessExecuter::ProcessIOError
       #
       # @return [Object] the return value of the block
@@ -161,6 +164,8 @@ module Git
         yield
       rescue ProcessExecuter::ArgumentError => e
         raise ::ArgumentError, e.message
+      rescue ProcessExecuter::SpawnError => e
+        raise Git::Error, e.message, cause: e.cause
       rescue ProcessExecuter::ProcessIOError => e
         raise Git::ProcessIOError, e.message, cause: e.cause
       end

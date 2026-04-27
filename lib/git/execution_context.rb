@@ -33,6 +33,10 @@ module Git
   # - {Git::ExecutionContext::Global} — for commands that do not require an existing repository
   #   (`init`, `clone`, `version`)
   #
+  # @example Using a concrete subclass
+  #   context = Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git2')
+  #   context.binary_path  #=> "/usr/local/bin/git2"
+  #
   # @api private
   #
   class ExecutionContext
@@ -81,15 +85,32 @@ module Git
 
     # Creates a new execution context
     #
-    # @param git_ssh [String, nil, :use_global_config] SSH wrapper path, `nil` to
-    #   unset `GIT_SSH`, or `:use_global_config` (default) to inherit from
-    #   {Git::Base.config}
+    # @param binary_path [String, :use_global_config] path to the git binary
     #
-    # @param logger [Logger, nil] logger forwarded to the CommandLine layer;
-    #   `nil` defaults to a null logger (`Logger.new(nil)`) so that contexts
-    #   created without an explicit logger can always execute commands safely.
+    #   Give `:use_global_config` (the default) to use `Git::Base.config.binary_path`.
     #
-    def initialize(git_ssh: :use_global_config, logger: nil)
+    #   Passing `nil` raises `ArgumentError` — there is no "unset the
+    #   binary" semantic.
+    #
+    # @param git_ssh [String, nil, :use_global_config] the SSH wrapper path
+    #
+    #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default) to use `Git::Base.config.git_ssh`.
+    #
+    # @param logger [Logger, nil] the logger to use in the CommandLine layer
+    #
+    #   Give `nil` to use a null logger (`Logger.new(nil)`).
+    #
+    # @raise [NotImplementedError] if called directly on {Git::ExecutionContext} rather than a subclass
+    #
+    # @raise [ArgumentError] if `binary_path` is `nil`
+    #
+    def initialize(binary_path: :use_global_config, git_ssh: :use_global_config, logger: nil)
+      if instance_of?(Git::ExecutionContext)
+        raise NotImplementedError, 'Git::ExecutionContext is an abstract base class'
+      end
+      raise ArgumentError, 'binary_path must not be nil' if binary_path.nil?
+
+      @binary_path = binary_path
       @git_ssh = git_ssh
       @logger = logger || Logger.new(nil)
     end
@@ -100,7 +121,11 @@ module Git
     # (per `Process.spawn` semantics — unset is not the same as inherited).
     # Subclasses override this to supply a repository-specific path.
     #
-    # @return [String, nil]
+    # @example Base class returns nil; subclasses return the actual path
+    #   context = Git::ExecutionContext::Global.new
+    #   context.git_dir  #=> nil
+    #
+    # @return [String, nil] the `GIT_DIR` path, or `nil` to unset the variable
     #
     def git_dir = nil
 
@@ -108,7 +133,11 @@ module Git
     #
     # `nil` means `GIT_WORK_TREE` will be explicitly **unset** in the child process.
     #
-    # @return [String, nil]
+    # @example Base class returns nil; subclasses return the actual path
+    #   context = Git::ExecutionContext::Global.new
+    #   context.git_work_dir  #=> nil
+    #
+    # @return [String, nil] the `GIT_WORK_TREE` path, or `nil` to unset the variable
     #
     def git_work_dir = nil
 
@@ -116,18 +145,52 @@ module Git
     #
     # `nil` means `GIT_INDEX_FILE` will be explicitly **unset** in the child process.
     #
-    # @return [String, nil]
+    # @example Base class returns nil; subclasses return the actual path
+    #   context = Git::ExecutionContext::Global.new
+    #   context.git_index_file  #=> nil
+    #
+    # @return [String, nil] the `GIT_INDEX_FILE` path, or `nil` to unset the variable
     #
     def git_index_file = nil
 
+    # Returns the resolved git binary path for this context
+    #
+    # `:use_global_config` is resolved to `Git::Base.config.binary_path` each time a
+    # command method is called, so runtime changes to `Git::Base.config.binary_path`
+    # are reflected per command invocation.
+    #
+    # @example With the default sentinel (resolves from Git::Base.config at call-time)
+    #   context = Git::ExecutionContext::Global.new
+    #   context.binary_path  #=> "git"
+    #
+    # @example With an explicit path
+    #   context = Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git2')
+    #   context.binary_path  #=> "/usr/local/bin/git2"
+    #
+    # @return [String] the resolved git binary path
+    #
+    def binary_path
+      return Git::Base.config.binary_path if @binary_path == :use_global_config
+
+      @binary_path
+    end
+
     # Returns the resolved `GIT_SSH` wrapper path for this context
     #
-    # `:use_global_config` is resolved to {Git::Base.config.git_ssh} each time
-    # {#command_line_capturing} or {#command_line_streaming} is called, so
-    # runtime changes to {Git::Base.config.git_ssh} are reflected per command
-    # invocation. `nil` means the variable will be explicitly unset.
+    # `:use_global_config` is resolved to `Git::Base.config.git_ssh` each time a
+    # command method is called, so runtime changes to `Git::Base.config.git_ssh`
+    # are reflected per command invocation. `nil` means the variable will be
+    # explicitly unset.
     #
-    # @return [String, nil]
+    # @example With the default sentinel (resolves from Git::Base.config at call-time)
+    #   context = Git::ExecutionContext::Global.new
+    #   context.git_ssh  #=> nil
+    #
+    # @example With an explicit path
+    #   context = Git::ExecutionContext::Global.new(git_ssh: '/usr/bin/ssh-wrapper')
+    #   context.git_ssh  #=> "/usr/bin/ssh-wrapper"
+    #
+    # @return [String, nil] the resolved `GIT_SSH` wrapper path, or `nil` to unset
     #
     def git_ssh
       return Git::Base.config.git_ssh if @git_ssh == :use_global_config
@@ -228,8 +291,6 @@ module Git
     #
     # @see Git::CommandLine::Capturing#run
     #
-    # @see #command_line_capturing
-    #
     def command_capturing(*, **options_hash)
       options_hash = COMMAND_CAPTURING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
@@ -317,8 +378,6 @@ module Git
     #
     # @see Git::CommandLine::Streaming#run
     #
-    # @see #command_line_streaming
-    #
     def command_streaming(*, **options_hash)
       options_hash = COMMAND_STREAMING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
@@ -335,16 +394,18 @@ module Git
     #
     # The result is memoized per instance.
     #
+    # @example Get the installed git version
+    #   context = Git::ExecutionContext::Global.new
+    #   context.git_version  #=> #<Git::Version 2.42.0>
+    #
     # @return [Git::Version] the installed git version
     #
-    # @raise [Git::Error] if the version string cannot be parsed
+    # @raise [Git::UnexpectedResultError] if the version string cannot be parsed
     #
     def git_version
       @git_version ||= begin
         output = Git::Commands::Version.new(self).call.stdout
         Git::Version.parse(output)
-      rescue ArgumentError => e
-        raise Git::Error, "Unable to parse git version from: #{output.inspect} (#{e.message})"
       end
     end
 
@@ -390,26 +451,28 @@ module Git
 
     # Creates a {Git::CommandLine::Capturing} instance for the current invocation.
     #
-    # A new instance is created per call so that {#env_overrides} — including
-    # {#git_ssh} resolution for `:use_global_config` — reflects the state of
-    # {Git::Base.config} at the time of each command invocation.
+    # A new instance is created per call so that {#binary_path} — resolved from
+    # `Git::Base.config` when set to `:use_global_config` — and {#env_overrides}
+    # — including {#git_ssh} resolution for `:use_global_config` — reflect the
+    # state of `Git::Base.config` at the time of each command invocation.
     #
     # @return [Git::CommandLine::Capturing] the capturing command line instance
     #
     def command_line_capturing
-      Git::CommandLine::Capturing.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+      Git::CommandLine::Capturing.new(env_overrides, binary_path, global_opts, @logger)
     end
 
     # Creates a {Git::CommandLine::Streaming} instance for the current invocation.
     #
-    # A new instance is created per call so that {#env_overrides} — including
-    # {#git_ssh} resolution for `:use_global_config` — reflects the state of
-    # {Git::Base.config} at the time of each command invocation.
+    # A new instance is created per call so that {#binary_path} — resolved from
+    # `Git::Base.config` when set to `:use_global_config` — and {#env_overrides}
+    # — including {#git_ssh} resolution for `:use_global_config` — reflect the
+    # state of `Git::Base.config` at the time of each command invocation.
     #
     # @return [Git::CommandLine::Streaming] the streaming command line instance
     #
     def command_line_streaming
-      Git::CommandLine::Streaming.new(env_overrides, Git::Base.config.binary_path, global_opts, @logger)
+      Git::CommandLine::Streaming.new(env_overrides, binary_path, global_opts, @logger)
     end
   end
 end

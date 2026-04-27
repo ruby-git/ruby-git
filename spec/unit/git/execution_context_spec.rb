@@ -3,6 +3,13 @@
 require 'spec_helper'
 
 RSpec.describe Git::ExecutionContext do
+  describe '.new' do
+    it 'raises NotImplementedError when instantiated directly' do
+      expect { described_class.new }
+        .to raise_error(NotImplementedError, /abstract base class/)
+    end
+  end
+
   describe 'constants' do
     it 'defines COMMAND_CAPTURING_ARG_DEFAULTS' do
       expect(described_class::COMMAND_CAPTURING_ARG_DEFAULTS).to be_a(Hash)
@@ -21,7 +28,7 @@ RSpec.describe Git::ExecutionContext do
   end
 
   describe 'accessor defaults' do
-    let(:context) { described_class.new }
+    let(:context) { Git::ExecutionContext::Global.new }
 
     it 'returns nil for git_dir' do
       expect(context.git_dir).to be_nil
@@ -41,16 +48,31 @@ RSpec.describe Git::ExecutionContext do
     end
 
     it 'returns nil for git_ssh when explicitly passed nil' do
-      expect(described_class.new(git_ssh: nil).git_ssh).to be_nil
+      expect(Git::ExecutionContext::Global.new(git_ssh: nil).git_ssh).to be_nil
     end
 
     it 'returns a literal git_ssh path when provided' do
-      expect(described_class.new(git_ssh: '/usr/bin/ssh').git_ssh).to eq('/usr/bin/ssh')
+      expect(Git::ExecutionContext::Global.new(git_ssh: '/usr/bin/ssh').git_ssh).to eq('/usr/bin/ssh')
+    end
+
+    it 'delegates binary_path to Git::Base.config by default' do
+      allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/configured/git')
+      expect(context.binary_path).to eq('/configured/git')
+    end
+
+    it 'returns an explicit binary_path when provided' do
+      expect(Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git').binary_path).to(
+        eq('/usr/local/bin/git')
+      )
+    end
+
+    it 'raises ArgumentError when explicitly passed nil' do
+      expect { Git::ExecutionContext::Global.new(binary_path: nil) }.to raise_error(ArgumentError, /binary_path/)
     end
   end
 
   describe 'env_overrides (via #send)' do
-    let(:context) { described_class.new(git_ssh: nil) }
+    let(:context) { Git::ExecutionContext::Global.new(git_ssh: nil) }
 
     it 'returns GIT_DIR as nil by default' do
       expect(context.send(:env_overrides)['GIT_DIR']).to be_nil
@@ -84,13 +106,13 @@ RSpec.describe Git::ExecutionContext do
 
   describe 'global_opts (via #send)' do
     it 'includes only static opts when git_dir and git_work_dir are nil' do
-      context = described_class.new
+      context = Git::ExecutionContext::Global.new
       expect(context.send(:global_opts)).to eq(described_class::STATIC_GLOBAL_OPTS)
     end
   end
 
   describe '#command_capturing' do
-    let(:context) { described_class.new }
+    let(:context) { Git::ExecutionContext::Global.new }
     let(:command_line_double) { instance_double(Git::CommandLine::Capturing) }
     let(:result) { command_result('output') }
 
@@ -113,7 +135,7 @@ RSpec.describe Git::ExecutionContext do
   end
 
   describe '#command_streaming' do
-    let(:context) { described_class.new }
+    let(:context) { Git::ExecutionContext::Global.new }
     let(:command_line_double) { instance_double(Git::CommandLine::Streaming) }
     let(:result) { command_result('') }
 
@@ -136,7 +158,7 @@ RSpec.describe Git::ExecutionContext do
   end
 
   describe '#git_version' do
-    let(:context) { described_class.new }
+    let(:context) { Git::ExecutionContext::Global.new }
     let(:version_command_double) { instance_double(Git::Commands::Version) }
 
     before do
@@ -155,10 +177,10 @@ RSpec.describe Git::ExecutionContext do
       context.git_version
     end
 
-    it 'raises Git::Error with a helpful message when the output cannot be parsed' do
+    it 'raises Git::UnexpectedResultError when the output cannot be parsed' do
       allow(version_command_double).to receive(:call).and_return(command_result('not a version string'))
       expect { context.git_version }
-        .to raise_error(Git::Error, /Unable to parse git version/)
+        .to raise_error(Git::UnexpectedResultError)
     end
   end
 end

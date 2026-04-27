@@ -23,19 +23,21 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface (Task 1 ✅) |
+| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅) |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Phase 3, Task 2: Add `binary_path:` to `Git::ExecutionContext`**
+**Phase 3, Task 3: Refactor Factory Methods**
 
-Phase 3, Task 1 is complete — `Git::ExecutionContext` is now a real base class, and
-`Git::ExecutionContext::Repository` and `Git::ExecutionContext::Global` are implemented and fully tested.
+Phase 3, Tasks 1 and 2 are complete — `Git::ExecutionContext` is a real base class with
+a `binary_path:` constructor argument, all subclasses forward it, and the `Open3`
+stopgap in `Git.run_git_version` has been retired in favour of
+`Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout`.
 
-Task 2 adds a `binary_path:` constructor argument to `Git::ExecutionContext` so that
-context objects can target an arbitrary git binary, and retires the `Open3` stopgap
-in `Git.run_git_version`.
+Task 3 refactors the factory methods (`Git::ExecutionContext::Repository.from_base`,
+`.from_hash`) to clean up any remaining coupling and ensure the full builder chain
+is consistent with the new architecture.
 
 #### Workflow
 

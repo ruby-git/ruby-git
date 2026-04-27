@@ -27,9 +27,29 @@ RSpec.describe Git::ExecutionContext::Repository do
           git_work_dir: git_work_dir,
           git_index_file: git_index_file,
           git_ssh: '/usr/bin/ssh',
+          binary_path: '/usr/local/bin/git',
           logger: nil
         )
       end.not_to raise_error
+    end
+  end
+
+  describe 'binary_path resolution' do
+    context 'with :use_global_config (default)' do
+      let(:context) { described_class.new(git_dir: git_dir) }
+
+      it 'delegates to Git::Base.config.binary_path' do
+        allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+        expect(context.binary_path).to eq('/global/git')
+      end
+    end
+
+    context 'with a literal binary_path' do
+      let(:context) { described_class.new(git_dir: git_dir, binary_path: '/usr/local/bin/git') }
+
+      it 'returns the provided path' do
+        expect(context.binary_path).to eq('/usr/local/bin/git')
+      end
     end
   end
 
@@ -240,6 +260,16 @@ RSpec.describe Git::ExecutionContext::Repository do
     it 'uses the provided git_ssh when :git_ssh is present in hash' do
       hash[:git_ssh] = '/custom/ssh'
       expect(context.git_ssh).to eq('/custom/ssh')
+    end
+
+    it 'defaults binary_path to :use_global_config when :binary_path is absent' do
+      allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+      expect(context.binary_path).to eq('/global/git')
+    end
+
+    it 'uses the provided binary_path when :binary_path is present in hash' do
+      hash[:binary_path] = '/custom/git'
+      expect(context.binary_path).to eq('/custom/git')
     end
   end
 

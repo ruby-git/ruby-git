@@ -24,11 +24,11 @@ RSpec.describe Git::Lib do
     end
 
     context 'with unparseable output' do
-      it 'raises Git::Error' do
+      it 'raises Git::UnexpectedResultError' do
         allow(version_command).to receive(:call).and_return(command_result('not a version'))
-        allow(Git::Version).to receive(:parse).and_raise(ArgumentError, 'Invalid version')
+        allow(Git::Version).to receive(:parse).and_raise(Git::UnexpectedResultError, 'Invalid version')
 
-        expect { lib.git_version }.to raise_error(Git::Error, /Unable to parse git version/)
+        expect { lib.git_version }.to raise_error(Git::UnexpectedResultError, 'Invalid version')
       end
     end
 

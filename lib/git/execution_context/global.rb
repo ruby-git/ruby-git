@@ -14,19 +14,41 @@ module Git
     # `GIT_SSH` is still supported to allow SSH-based remote operations
     # (e.g. `git clone git@github.com:...`).
     #
+    # @example Create a context using the default git binary
+    #   context = Git::ExecutionContext::Global.new
+    #
+    # @example Create a context targeting a specific binary
+    #   context = Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git2')
+    #
     # @api private
     #
     class Global < ExecutionContext
       # Creates a new global execution context
       #
-      # @param git_ssh [String, nil, :use_global_config] SSH wrapper path, `nil` to
-      #   unset `GIT_SSH`, or `:use_global_config` (default) to inherit from
-      #   {Git::Base.config}
+      # @example Create with default settings
+      #   Git::ExecutionContext::Global.new
       #
-      # @param logger [Logger, nil] logger forwarded to the CommandLine layer;
-      #   `nil` uses a null logger (see {Git::ExecutionContext#initialize})
+      # @example Create with an explicit binary path
+      #   Git::ExecutionContext::Global.new(binary_path: '/usr/local/bin/git2')
       #
-      def initialize(git_ssh: :use_global_config, logger: nil)
+      # @param binary_path [String, :use_global_config] path to the git binary
+      #
+      #   Give `:use_global_config` (the default) to use `Git::Base.config.binary_path`.
+      #
+      #   Passing `nil` raises `ArgumentError` — there is no "unset the
+      #   binary" semantic.
+      #
+      # @param git_ssh [String, nil, :use_global_config] the SSH wrapper path
+      #
+      #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default) to use `Git::Base.config.git_ssh`.
+      #
+      # @param logger [Logger, nil] the logger to use in the CommandLine layer
+      #
+      #   Give `nil` to use a null logger (`Logger.new(nil)`).
+      #
+      # @raise [ArgumentError] if `binary_path` is `nil`
+      #
+      def initialize(binary_path: :use_global_config, git_ssh: :use_global_config, logger: nil)
         super
       end
     end

@@ -17,7 +17,6 @@ require 'process_executer'
 require 'stringio'
 require 'tempfile'
 require 'zlib'
-require 'open3'
 
 module Git
   # Internal git operations
@@ -1869,7 +1868,7 @@ module Git
     #
     # @return [Git::Version] the parsed git version
     #
-    # @raise [Git::Error] if the version cannot be parsed
+    # @raise [Git::UnexpectedResultError] if the version string cannot be parsed
     #
     # @example
     #   lib.git_version #=> Git::Version.new(2, 42, 1)
@@ -1878,8 +1877,6 @@ module Git
       self.class.cached_git_version(Git::Base.config.binary_path) do
         output = Git::Commands::Version.new(self).call.stdout
         Git::Version.parse(output)
-      rescue ArgumentError => e
-        raise Git::Error, "Unable to parse git version from: #{output.inspect} (#{e.message})"
       end
     end
 

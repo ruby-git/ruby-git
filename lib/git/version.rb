@@ -2,7 +2,8 @@
 
 module Git
   # The current gem version
-  # @return [String] the current gem version.
+  #
+  # @return [String] the current gem version
   VERSION = '4.1.2'
 
   # Represents a git version with major, minor, and patch components
@@ -48,20 +49,20 @@ module Git
     # (like `.windows.1` or `.vfs.0`) and padding two-segment versions
     # to three segments.
     #
-    # @param string [String] version string to parse
-    #
-    # @return [Git::Version] the parsed version
-    #
-    # @raise [ArgumentError] if the string cannot be parsed as a version
-    #
-    # @example
+    # @example Parse various version string formats
     #   Git::Version.parse('2.42.1')  #=> Git::Version.new(2, 42, 1)
     #   Git::Version.parse('git version 2.42.1')  #=> Git::Version.new(2, 42, 1)
     #   Git::Version.parse('2.42.0.windows.1')  #=> Git::Version.new(2, 42, 0)
     #
+    # @param string [String] version string to parse
+    #
+    # @return [Git::Version] the parsed version
+    #
+    # @raise [Git::UnexpectedResultError] if the string cannot be parsed as a version
+    #
     def self.parse(string)
       version_match = string&.match(/(\d+)\.(\d+)(?:\.(\d+))?/)
-      raise ArgumentError, "Invalid version: #{string.inspect}" unless version_match
+      raise Git::UnexpectedResultError, "Invalid version: #{string.inspect}" unless version_match
 
       major = version_match[1].to_i
       minor = version_match[2].to_i
