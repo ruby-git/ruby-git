@@ -72,20 +72,20 @@ RSpec.describe Git::Version do
     end
 
     context 'with invalid input' do
-      it 'raises ArgumentError for nil' do
-        expect { described_class.parse(nil) }.to raise_error(ArgumentError, /Invalid version/)
+      it 'raises Git::UnexpectedResultError for nil' do
+        expect { described_class.parse(nil) }.to raise_error(Git::UnexpectedResultError, /Invalid version/)
       end
 
-      it 'raises ArgumentError for empty string' do
-        expect { described_class.parse('') }.to raise_error(ArgumentError, /Invalid version/)
+      it 'raises Git::UnexpectedResultError for empty string' do
+        expect { described_class.parse('') }.to raise_error(Git::UnexpectedResultError, /Invalid version/)
       end
 
-      it 'raises ArgumentError for non-version string' do
-        expect { described_class.parse('not a version') }.to raise_error(ArgumentError, /Invalid version/)
+      it 'raises Git::UnexpectedResultError for non-version string' do
+        expect { described_class.parse('not a version') }.to raise_error(Git::UnexpectedResultError, /Invalid version/)
       end
 
-      it 'raises ArgumentError for single segment' do
-        expect { described_class.parse('2') }.to raise_error(ArgumentError, /Invalid version/)
+      it 'raises Git::UnexpectedResultError for single segment' do
+        expect { described_class.parse('2') }.to raise_error(Git::UnexpectedResultError, /Invalid version/)
       end
     end
   end

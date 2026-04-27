@@ -5,15 +5,18 @@ require 'spec_helper'
 RSpec.describe Git do
   describe '.git_version' do
     let(:binary_path) { Git::Base.config.binary_path }
-    let(:success_status) { instance_double(Process::Status, success?: true) }
-    let(:failure_status) { instance_double(Process::Status, success?: false) }
+    let(:context) { instance_double(Git::ExecutionContext::Global) }
+    let(:version_cmd) { instance_double(Git::Commands::Version) }
 
-    before { Git::Lib.clear_git_version_cache }
+    before do
+      Git::Lib.clear_git_version_cache
+      allow(Git::ExecutionContext::Global).to receive(:new).and_return(context)
+      allow(Git::Commands::Version).to receive(:new).with(context).and_return(version_cmd)
+    end
 
     context 'when called with no argument (default binary)' do
       before do
-        allow(Open3).to receive(:capture2e).with(binary_path, 'version')
-                                           .and_return(['git version 2.42.0', success_status])
+        allow(version_cmd).to receive(:call).and_return(command_result('git version 2.42.0'))
       end
 
       it 'returns a Git::Version' do
@@ -25,78 +28,98 @@ RSpec.describe Git do
 
     context 'when called with an explicit binary_path' do
       let(:explicit_path) { '/usr/local/bin/git2' }
+      let(:explicit_context) { instance_double(Git::ExecutionContext::Global) }
+      let(:explicit_cmd) { instance_double(Git::Commands::Version) }
+
+      before do
+        allow(Git::ExecutionContext::Global).to receive(:new)
+          .with(binary_path: explicit_path).and_return(explicit_context)
+        allow(Git::Commands::Version).to receive(:new).with(explicit_context).and_return(explicit_cmd)
+        allow(explicit_cmd).to receive(:call).and_return(command_result('git version 2.42.0'))
+      end
 
       it 'returns a Git::Version for the specified binary' do
-        allow(Open3).to receive(:capture2e).with(explicit_path, 'version')
-                                           .and_return(['git version 2.42.0', success_status])
-
         version = described_class.git_version(explicit_path)
 
         expect(version).to be_a(Git::Version)
-        expect(Open3).to have_received(:capture2e).with(explicit_path, 'version').once
+        expect(explicit_cmd).to have_received(:call).once
       end
 
       it 'caches the result per binary path (second call does not re-shell)' do
-        allow(Open3).to receive(:capture2e).with(explicit_path, 'version')
-                                           .and_return(['git version 2.40.0', success_status])
+        allow(explicit_cmd).to receive(:call).and_return(command_result('git version 2.40.0'))
 
         described_class.git_version(explicit_path)
         described_class.git_version(explicit_path)
 
-        expect(Open3).to have_received(:capture2e).once
+        expect(explicit_cmd).to have_received(:call).once
       end
 
       it 'caches independently from the default binary path' do
-        allow(Open3).to receive(:capture2e).with(binary_path, 'version')
-                                           .and_return(['git version 2.42.0', success_status])
-        allow(Open3).to receive(:capture2e).with(explicit_path, 'version')
-                                           .and_return(['git version 2.40.0', success_status])
+        allow(version_cmd).to receive(:call).and_return(command_result('git version 2.42.0'))
 
         described_class.git_version
         described_class.git_version(explicit_path)
 
-        expect(Open3).to have_received(:capture2e).with(binary_path, 'version').once
-        expect(Open3).to have_received(:capture2e).with(explicit_path, 'version').once
+        expect(version_cmd).to have_received(:call).once
+        expect(explicit_cmd).to have_received(:call).once
       end
     end
 
     context 'when the binary is not found' do
       before do
-        allow(Open3).to receive(:capture2e).and_raise(Errno::ENOENT)
+        allow(Git::ExecutionContext::Global).to receive(:new).and_call_original
+        allow(Git::Commands::Version).to receive(:new).and_call_original
+        allow(ProcessExecuter).to receive(:run_with_capture) do
+          raise Errno::ENOENT, 'git'
+        rescue Errno::ENOENT
+          raise ProcessExecuter::SpawnError, 'Failed to spawn process: No such file or directory - git'
+        end
       end
 
-      it 'raises Git::Error' do
-        expect { described_class.git_version }.to raise_error(Git::Error, /Git binary not found/)
+      it 'raises Git::Error with Errno::ENOENT as cause' do
+        expect { described_class.git_version }.to raise_error(Git::Error) do |error|
+          expect(error.cause).to be_a(Errno::ENOENT)
+        end
       end
     end
 
     context 'when the binary exists but is not executable' do
       before do
-        allow(Open3).to receive(:capture2e).and_raise(Errno::EACCES)
+        allow(Git::ExecutionContext::Global).to receive(:new).and_call_original
+        allow(Git::Commands::Version).to receive(:new).and_call_original
+        allow(ProcessExecuter).to receive(:run_with_capture) do
+          raise Errno::EACCES, 'git'
+        rescue Errno::EACCES
+          raise ProcessExecuter::SpawnError, 'Failed to spawn process: Permission denied - git'
+        end
       end
 
-      it 'raises Git::Error' do
-        expect { described_class.git_version }.to raise_error(Git::Error, /Failed to execute git binary/)
+      it 'raises Git::Error with Errno::EACCES as cause' do
+        expect { described_class.git_version }.to raise_error(Git::Error) do |error|
+          expect(error.cause).to be_a(Errno::EACCES)
+        end
       end
     end
 
     context 'when the binary exits with a non-zero status' do
       before do
-        allow(Open3).to receive(:capture2e).and_return(['git: command not found', failure_status])
+        allow(version_cmd).to receive(:call).and_raise(
+          Git::FailedError.new(command_result('', stderr: 'git: command not found', exitstatus: 1))
+        )
       end
 
-      it 'raises Git::Error' do
-        expect { described_class.git_version }.to raise_error(Git::Error, /Failed to run/)
+      it 'raises Git::FailedError' do
+        expect { described_class.git_version }.to raise_error(Git::FailedError)
       end
     end
 
     context 'when the version cannot be parsed' do
       before do
-        allow(Open3).to receive(:capture2e).and_return(['not a version string', success_status])
+        allow(version_cmd).to receive(:call).and_return(command_result('not a version string'))
       end
 
-      it 'raises Git::Error' do
-        expect { described_class.git_version }.to raise_error(Git::Error, /Unable to parse git version/)
+      it 'raises Git::UnexpectedResultError' do
+        expect { described_class.git_version }.to raise_error(Git::UnexpectedResultError)
       end
     end
   end

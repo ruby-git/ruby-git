@@ -23,6 +23,25 @@ RSpec.describe Git::ExecutionContext::Global do
     it 'accepts an optional git_ssh path' do
       expect { described_class.new(git_ssh: '/usr/bin/ssh') }.not_to raise_error
     end
+
+    it 'accepts an optional binary_path' do
+      expect { described_class.new(binary_path: '/usr/local/bin/git') }.not_to raise_error
+    end
+  end
+
+  describe 'binary_path resolution' do
+    it 'delegates to Git::Base.config by default' do
+      allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+      expect(described_class.new.binary_path).to eq('/global/git')
+    end
+
+    it 'returns an explicit path when provided' do
+      expect(described_class.new(binary_path: '/usr/local/bin/git').binary_path).to eq('/usr/local/bin/git')
+    end
+
+    it 'raises ArgumentError when explicitly passed nil' do
+      expect { described_class.new(binary_path: nil) }.to raise_error(ArgumentError, /binary_path/)
+    end
   end
 
   describe 'accessor methods' do

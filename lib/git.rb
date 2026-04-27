@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'open3'
-
 require 'active_support'
 require 'active_support/deprecation'
 
@@ -490,8 +488,11 @@ module Git
   #
   # @return [Git::Version] the parsed git version
   #
-  # @raise [Git::Error] if the binary exits with a non-zero status, is not found,
-  #   or the version output cannot be parsed
+  # @raise [Git::UnexpectedResultError] if the version output cannot be parsed
+  #
+  # @raise [Git::FailedError] if the git binary exits with a non-zero status
+  #
+  # @raise [Git::Error] if the binary is not found or fails to launch
   #
   # @example Default binary
   #   Git.git_version #=> #<Git::Version 2.42.0>
@@ -505,28 +506,9 @@ module Git
   end
 
   # @api private
-  # STOPGAP: uses Open3 directly because Git::Lib hardcodes Git::Base.config.binary_path
-  # in its command-line factory, so Git::Commands::Version cannot be used to query an
-  # arbitrary binary path today.
-  #
-  # A future enhancement will add binary_path: to Git::ExecutionContext (see
-  # redesign/3_architecture_implementation.md Phase 3). Once that lands, replace the
-  # Open3 call with:
-  #
-  #   Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout
-  #
-  # and remove the Open3 dependency from this method.
   def self.run_git_version(path)
-    output, status = Open3.capture2e(path, 'version')
-    raise Git::Error, "Failed to run `#{path} version`: #{output.chomp}" unless status.success?
-
+    output = Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout
     Git::Version.parse(output)
-  rescue Errno::ENOENT
-    raise Git::Error, "Git binary not found: #{path}"
-  rescue SystemCallError => e
-    raise Git::Error, "Failed to execute git binary at `#{path}`: #{e.message}"
-  rescue ArgumentError => e
-    raise Git::Error, "Unable to parse git version from: #{output.inspect} (#{e.message})"
   end
   private_class_method :run_git_version
 
