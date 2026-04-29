@@ -97,32 +97,62 @@ module Git
     # @param [Hash] options The options for this command (see list of valid
     #   options below)
     #
-    # @option options [Pathname] :working_dir the path to the root of the working
-    #   directory.  Should be `nil` if executing commands on a bare repository.
+    # @option options [Pathname] :working_directory the path to the root of the working
+    #   directory or `nil` if executing commands on a bare repository
     #
     # @option options [Pathname] :repository used to specify a non-standard path to
-    #   the repository directory.  The default is `"#{working_dir}/.git"`.
+    #   the repository directory
+    #
+    #   The default is `"<working_directory>/.git"`.
     #
     # @option options [Pathname] :index used to specify a non-standard path to an
-    #   index file.  The default is `"#{working_dir}/.git/index"`
+    #   index file
     #
-    # @option options [Logger] :log A logger to use for Git operations.  Git
-    #   commands are logged at the `:info` level.  Additional logging is done
+    #   The default is `"<working_directory>/.git/index"`
+    #
+    # @option options [Logger] :log A logger to use for Git operations
+    #
+    #   Git commands are logged at the `:info` level.  Additional logging is done
     #   at the `:debug` level.
     #
-    # @option options [String, nil] :git_ssh Path to a custom SSH executable or script.
+    # @option options [String, nil] :git_ssh Path to a custom SSH executable or script
+    #
     #   Controls how SSH is configured for this {Git::Base} instance:
     #   - If this option is not provided, the global Git::Base.config.git_ssh setting is used.
     #   - If this option is explicitly set to nil, SSH is disabled for this instance.
     #   - If this option is a non-empty String, that value is used as the SSH command for
     #     this instance, overriding the global Git::Base.config.git_ssh setting.
     #
-    # @return [Git::Base] an object that can execute git commands in the context
-    #   of the opened working copy or bare repository
+    # @option options [String, :use_global_config] :binary_path Path to the git binary
+    #
+    #   Controls which git binary is used for commands routed through
+    #   {Git::ExecutionContext} (i.e., commands already migrated to
+    #   +Git::Commands::*+ classes). Commands still delegating through +Git::Lib+
+    #   continue to use the global {Git::Base.config.binary_path} setting.
+    #
+    #   This limitation will be resolved when the architectural migration to
+    #   +Git::Repository+ is complete.
+    #
+    #   - If this option is not provided, the global Git::Base.config.binary_path setting is used.
+    #   - If this option is a String, that value is used as the git binary path for
+    #     migrated commands, overriding the global Git::Base.config.binary_path setting.
+    #   - Passing `nil` raises ArgumentError — there is no "unset the binary" semantic.
+    #
+    # @return [Git::Base] an object that can execute git commands on a working copy or
+    #   bare repository
+    #
+    # @raise [ArgumentError] if `binary_path` is `nil`
     #
     def initialize(options = {})
       setup_logger(options[:log])
       @git_ssh = options.key?(:git_ssh) ? options[:git_ssh] : :use_global_config
+      if options.key?(:binary_path)
+        raise ArgumentError, 'binary_path must not be nil' if options[:binary_path].nil?
+
+        @binary_path = options[:binary_path]
+      else
+        @binary_path = :use_global_config
+      end
       initialize_components(options)
     end
 
@@ -133,10 +163,13 @@ module Git
     #   lib.add(['path/to/file1','path/to/file2'])
     #   lib.add(all: true)
     #
-    # @param [String, Array<String>] paths a file or files to be added to the repository (relative to the worktree root)
+    # @param [String, Array<String>] paths a file or files to be added to the repository
+    #   relative to the worktree root
+    #
     # @param [Hash] options
     #
     # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
+    #
     # @option options [Boolean] :force Allow adding otherwise ignored files
     #
     def add(paths = '.', **options)
@@ -313,7 +346,7 @@ module Git
       @lib ||= Git::Lib.new(self, @logger)
     end
 
-    # Returns the per-instance git_ssh configuration value.
+    # Returns the per-instance git_ssh configuration value
     #
     # This may be:
     # * a [String] path when an explicit git_ssh command has been configured
@@ -323,6 +356,16 @@ module Git
     # @return [String, Symbol, nil] the git_ssh configuration value for this instance
     # @api private
     attr_reader :git_ssh
+
+    # Returns the per-instance git binary path configuration value
+    #
+    # This may be:
+    # * a [String] path when an explicit binary path has been configured
+    # * the Symbol `:use_global_config` when this instance is using the global config
+    #
+    # @return [String, Symbol] the binary_path configuration value for this instance
+    # @api private
+    attr_reader :binary_path
 
     # Run a grep for 'string' on the HEAD of the git repository
     #
