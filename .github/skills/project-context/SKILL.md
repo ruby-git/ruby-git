@@ -33,6 +33,13 @@ coding standard details, or implementation constraints.
   conventions for day-to-day work
 - [Command Implementation](../command-implementation/SKILL.md) — generating and
   reviewing command classes in the layered architecture
+- [Facade Implementation](../facade-implementation/SKILL.md) — generating and
+  reviewing `Git::Repository::*` facade methods (the planned v5.0.0 facade
+  layer is being introduced incrementally during the architectural redesign;
+  `Git::Base` / `Git::Lib` remain the current public API until the migration
+  completes)
+- [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) —
+  migrating public methods from `Git::Base` / `Git::Lib` into facade methods
 - [YARD Documentation](../yard-documentation/SKILL.md) — documentation
   standards
 

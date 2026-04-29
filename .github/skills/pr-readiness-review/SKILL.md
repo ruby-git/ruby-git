@@ -46,6 +46,10 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   test conventions for command classes
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md)
   — verify command documentation completeness and consistency
+- [Facade Test Conventions](../facade-test-conventions/SKILL.md) —
+  unit/integration test conventions for `Git::Repository::*` facade methods
+- [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — verify
+  facade module/method documentation completeness and consistency
 
 ## 1. Run Final Validation
 
