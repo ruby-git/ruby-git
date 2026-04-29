@@ -23,14 +23,14 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅) |
+| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅, 4 ✅ staging module) |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Phase 3, Task 4: Implement the `Git::Repository` Facade**
+**Phase 3, Task 4 (continued): Add more `Git::Repository` facade modules**
 
-Phase 3, Tasks 1–3 are complete:
+Phase 3, Tasks 1–4 (staging module) are complete:
 - Tasks 1 and 2: `Git::ExecutionContext` has a `binary_path:` constructor argument;
   all subclasses accept and store it; `command_line_capturing` /
   `command_line_streaming` use `@binary_path` instead of reading
@@ -40,26 +40,24 @@ Phase 3, Tasks 1–3 are complete:
 - Task 3: `Git::Base` has a per-instance `binary_path` attribute (mirrors `git_ssh`);
   `Git::ExecutionContext::Repository.from_base` forwards it, completing the builder
   chain so every context can carry an instance-specific binary path end-to-end.
+- Task 4 (staging): `Git::Repository` has a proper `initialize(execution_context:)`
+  constructor and includes `Git::Repository::Staging` (first facade module):
+  - `lib/git/repository/staging.rb` — `add` and `reset` facade methods
+  - `lib/git/repository.rb` — includes `Git::Repository::Staging`
+  - `spec/unit/git/repository/staging_spec.rb` — delegation unit tests
 
-Task 4 populates `Git::Repository` with facade methods — thin, one-line delegators
-that forward each public git operation to the appropriate `Git::Commands::*` class,
-using the `Git::ExecutionContext::Repository` injected at construction time. Facade
-methods are organized into focused modules under `lib/git/repository/` and included
-into the `Git::Repository` class.
+The next step is to expand the facade by adding more modules. Continue with one
+module at a time following the same TDD pattern established by the staging module:
 
-#### Workflow
-
-1. **Analyze**: Review `lib/git/repository.rb` (currently an empty shell) and the
-   existing `Git::Base` public methods to identify the first set of facade methods to
-   implement. Start with one module (e.g., `lib/git/repository/staging.rb` for `add`
-   / `reset`) to establish the pattern before expanding.
+1. **Choose the next topic group** from `Git::Base` public methods (e.g., `commit`,
+   `push`, `pull`, `fetch`, `branch`, `tag`, `status`, etc.).
 
 2. **Implement** (one module at a time, TDD):
    - Create `lib/git/repository/<topic>.rb` with a module
      `Git::Repository::<Topic>` containing one-line facade methods, e.g.:
      ```ruby
-     def add(paths = '.', **opts)
-       Git::Commands::Add.new(@execution_context).call(paths, **opts)
+     def commit(message, **)
+       Git::Commands::Commit.new(@execution_context).call(message: message, **).stdout
      end
      ```
    - `include` the module in `lib/git/repository.rb`
@@ -76,14 +74,16 @@ into the `Git::Repository` class.
    - `bundle exec rubocop` — no lint errors
    - `bundle exec yard` — no yardoc errors
 
-5. **Update Checklist**: Update the Phase 3 progress tracker in this document when
-   Task 4 (or each module) is complete. Update the "Next Task" heading to describe
-   Task 5 (update `Git.open` / `Git.bare` etc. to return `Git::Repository` instead of
-   `Git::Base`).
+5. **Update Checklist**: Update the Phase 3 progress tracker in this document after
+   each module. When all `Git::Base` public methods are covered, update the "Next
+   Task" heading to describe Task 5 (update `Git.open` / `Git.bare` etc. to return
+   `Git::Repository` instead of `Git::Base`).
 
 #### Reference Files
 
 - Facade shell: `lib/git/repository.rb`
+- Staging module (pattern reference): `lib/git/repository/staging.rb`
+- Staging spec (pattern reference): `spec/unit/git/repository/staging_spec.rb`
 - Existing public API to replicate: `lib/git/base.rb` public methods
 - Command classes: `lib/git/commands/`
 - Phase 3 plan: see "Phase 3: Refactoring the Public Interface" section below
