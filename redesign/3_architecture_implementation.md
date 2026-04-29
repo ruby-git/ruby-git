@@ -23,42 +23,52 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅) |
+| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅) |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
 
-**Phase 3, Task 3: Refactor Factory Methods**
+**Phase 3, Task 4: Implement the `Git::Repository` Facade**
 
-Phase 3, Tasks 1 and 2 are complete — `Git::ExecutionContext` is a real base class with
-a `binary_path:` constructor argument, all subclasses forward it, and the `Open3`
-stopgap in `Git.run_git_version` has been retired in favour of
-`Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout`.
+Phase 3, Tasks 1–3 are complete:
+- Tasks 1 and 2: `Git::ExecutionContext` has a `binary_path:` constructor argument;
+  all subclasses accept and store it; `command_line_capturing` /
+  `command_line_streaming` use `@binary_path` instead of reading
+  `Git::Base.config.binary_path` at definition time; `Git.run_git_version` uses
+  `Git::Commands::Version` via `Git::ExecutionContext::Global` — the `Open3` stopgap
+  is gone.
+- Task 3: `Git::Base` has a per-instance `binary_path` attribute (mirrors `git_ssh`);
+  `Git::ExecutionContext::Repository.from_base` forwards it, completing the builder
+  chain so every context can carry an instance-specific binary path end-to-end.
 
-Task 3 refactors the factory methods (`Git::ExecutionContext::Repository.from_base`,
-`.from_hash`) to clean up any remaining coupling and ensure the full builder chain
-is consistent with the new architecture.
+Task 4 populates `Git::Repository` with facade methods — thin, one-line delegators
+that forward each public git operation to the appropriate `Git::Commands::*` class,
+using the `Git::ExecutionContext::Repository` injected at construction time. Facade
+methods are organized into focused modules under `lib/git/repository/` and included
+into the `Git::Repository` class.
 
 #### Workflow
 
-1. **Analyze**: Review `lib/git/execution_context.rb` — specifically
-   `command_line_capturing` and `command_line_streaming`, which currently hardcode
-   `Git::Base.config.binary_path`. Also review `Git.run_git_version` in `lib/git.rb`
-   and the `Git.git_version` public method.
+1. **Analyze**: Review `lib/git/repository.rb` (currently an empty shell) and the
+   existing `Git::Base` public methods to identify the first set of facade methods to
+   implement. Start with one module (e.g., `lib/git/repository/staging.rb` for `add`
+   / `reset`) to establish the pattern before expanding.
 
-2. **Implement**:
-   - Add `binary_path: Git::Base.config.binary_path` to `Git::ExecutionContext#initialize`
-   - Store as `@binary_path`; use it in `command_line_capturing` and `command_line_streaming`
-     instead of `Git::Base.config.binary_path`
-   - Forward `binary_path:` in `Git::ExecutionContext::Repository.from_base` and `.from_hash`
-   - Replace the `Open3` call in `Git.run_git_version` with
-     `Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout`
-   - Remove the `Open3` require from `lib/git.rb` if it is no longer needed
+2. **Implement** (one module at a time, TDD):
+   - Create `lib/git/repository/<topic>.rb` with a module
+     `Git::Repository::<Topic>` containing one-line facade methods, e.g.:
+     ```ruby
+     def add(paths = '.', **opts)
+       Git::Commands::Add.new(@execution_context).call(paths, **opts)
+     end
+     ```
+   - `include` the module in `lib/git/repository.rb`
+   - Each method should delegate entirely to the corresponding `Git::Commands::*`
+     class; no logic beyond argument forwarding belongs in the facade
 
-3. **TDD**: Add / update specs in:
-   - `spec/unit/git/execution_context_spec.rb` — `binary_path:` default and override
-   - `spec/unit/git/execution_context/repository_spec.rb` — forwarded via factory methods
-   - `spec/unit/git/execution_context/global_spec.rb` — forwarded via constructor
+3. **TDD**: For each facade module:
+   - `spec/unit/git/repository/<topic>_spec.rb` — stub the command class and assert
+     the facade delegates correctly; do NOT exercise real git commands in unit specs
 
 4. **Verify**:
    - `bundle exec rspec` — all RSpec tests pass
@@ -67,14 +77,15 @@ is consistent with the new architecture.
    - `bundle exec yard` — no yardoc errors
 
 5. **Update Checklist**: Update the Phase 3 progress tracker in this document when
-   Task 2 is complete. Update the "Next Task" heading to describe Task 3 (refactor
-   factory methods).
+   Task 4 (or each module) is complete. Update the "Next Task" heading to describe
+   Task 5 (update `Git.open` / `Git.bare` etc. to return `Git::Repository` instead of
+   `Git::Base`).
 
 #### Reference Files
 
-- Execution context: `lib/git/execution_context.rb`,
-  `lib/git/execution_context/repository.rb`, `lib/git/execution_context/global.rb`
-- Stopgap method: `lib/git.rb` (`Git.run_git_version`)
+- Facade shell: `lib/git/repository.rb`
+- Existing public API to replicate: `lib/git/base.rb` public methods
+- Command classes: `lib/git/commands/`
 - Phase 3 plan: see "Phase 3: Refactoring the Public Interface" section below
 
 ## Phase 1: Foundation and Scaffolding
