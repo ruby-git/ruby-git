@@ -21,7 +21,6 @@ module Git
 end
 
 require 'git/author'
-require 'git/base'
 require 'git/branch'
 require 'git/branch_info'
 require 'git/branches'
@@ -50,6 +49,7 @@ require 'git/log'
 require 'git/object'
 require 'git/remote'
 require 'git/repository'
+require 'git/base'
 require 'git/status'
 require 'git/stash'
 require 'git/stash_info'

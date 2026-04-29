@@ -128,7 +128,7 @@ module Git
     #   Controls which git binary is used for commands routed through
     #   {Git::ExecutionContext} (i.e., commands already migrated to
     #   +Git::Commands::*+ classes). Commands still delegating through +Git::Lib+
-    #   continue to use the global {Git::Base.config.binary_path} setting.
+    #   continue to use the global `Git::Base.config.binary_path` setting.
     #
     #   This limitation will be resolved when the architectural migration to
     #   +Git::Repository+ is complete.
@@ -156,24 +156,41 @@ module Git
       initialize_components(options)
     end
 
-    # Update the index from the current worktree to prepare the for the next commit
+    # Update the index from the current worktree to prepare for the next commit
     #
-    # @example
-    #   lib.add('path/to/file')
-    #   lib.add(['path/to/file1','path/to/file2'])
-    #   lib.add(all: true)
+    # @overload add(paths = '.', **options)
     #
-    # @param [String, Array<String>] paths a file or files to be added to the repository
-    #   relative to the worktree root
+    #   @example Stage all changed files
+    #     git.add
     #
-    # @param [Hash] options
+    #   @example Stage a specific file
+    #     git.add('path/to/file.rb')
     #
-    # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
+    #   @example Stage multiple files
+    #     git.add(['path/to/file1.rb', 'path/to/file2.rb'])
     #
-    # @option options [Boolean] :force Allow adding otherwise ignored files
+    #   @example Stage all changes including deletions
+    #     git.add(all: true)
     #
-    def add(paths = '.', **options)
-      lib.add(paths, options)
+    #   @param paths [String, Array<String>] a file or files to add (relative to
+    #     the worktree root); defaults to `'.'` (all files)
+    #
+    #   @param options [Hash] options for the add command
+    #
+    #   @option options [Boolean] :all (false) add, modify, and remove index
+    #     entries to match the worktree
+    #
+    #   @option options [Boolean] :force (false) allow adding otherwise ignored
+    #     files
+    #
+    #   @return [String] git's stdout from the add
+    #
+    #   @raise [ArgumentError] if unsupported options are provided
+    #
+    #   @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    def add(paths = '.', **)
+      facade_repository.add(paths, **)
     end
 
     # adds a new remote to this repository
@@ -288,12 +305,14 @@ module Git
     def set_index(index_file, check = nil, must_exist: nil)
       must_exist = deprecate_check_argument(check, must_exist)
       @lib = nil
+      @facade_repository = nil
       @index = validate_path(index_file, must_exist)
     end
 
     def set_working(work_dir, check = nil, must_exist: nil)
       must_exist = deprecate_check_argument(check, must_exist)
       @lib = nil
+      @facade_repository = nil
       @working_directory = validate_path(work_dir, must_exist)
     end
 
@@ -344,6 +363,16 @@ module Git
     # class with one that uses native methods or libgit C bindings
     def lib
       @lib ||= Git::Lib.new(self, @logger)
+    end
+
+    # Returns the {Git::Repository} facade for this repository
+    #
+    # @return [Git::Repository]
+    # @api private
+    def facade_repository
+      @facade_repository ||= Git::Repository.new(
+        execution_context: Git::ExecutionContext::Repository.from_base(self, logger: @logger)
+      )
     end
 
     # Returns the per-instance git_ssh configuration value
@@ -419,7 +448,7 @@ module Git
 
     # resets the working directory to the provided commitish
     def reset(commitish = nil, opts = {})
-      lib.reset(commitish, opts)
+      facade_repository.reset(commitish, **opts)
     end
 
     # resets the working directory to the commitish with '--hard'

@@ -134,6 +134,23 @@ class TestIndexOps < Test::Unit::TestCase
     end
   end
 
+  def test_add_force
+    in_bare_repo_clone do
+      g = Git.open('.')
+
+      new_file('.gitignore', 'ignored_file')
+      g.add('.gitignore')
+      g.commit('add .gitignore')
+
+      new_file('ignored_file', 'ignored file contents')
+      assert(File.exist?('ignored_file'))
+      assert(!g.status.added.assoc('ignored_file'))
+
+      g.add('ignored_file', force: true)
+      assert(g.status.added.assoc('ignored_file'))
+    end
+  end
+
   def test_reset
     in_bare_repo_clone do
       g = Git.open('.')

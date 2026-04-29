@@ -1,21 +1,45 @@
 # frozen_string_literal: true
 
+require 'git/execution_context/repository'
+require 'git/repository/staging'
+
 module Git
   # The main public interface for interacting with a Git repository
   #
-  # This class will serve as a clean, high-level facade for all common git
-  # operations. Its methods will be simple, one-line calls that delegate the
-  # actual work to appropriate command objects.
+  # `Git::Repository` is the **orchestration layer** for all git operations. It acts
+  # as the glue between the user-facing API and the underlying components, but
+  # contains minimal domain logic itself. For each operation it:
   #
-  # During the architectural transition (Phase 1-2), this class remains empty.
-  # In Phase 3, it will be populated with facade methods that delegate to
-  # Git::Commands::* objects, and eventually replace Git::Base as the primary
-  # public interface.
+  # 1. **Pre-processes arguments** — transforms user-provided values into forms
+  #    suitable for the command layer (e.g. path expansion, option normalization,
+  #    Ruby-idiomatic defaults, deprecation handling, input validation).
+  # 2. **Calls commands** — invokes one or more `Git::Commands::*` classes via the
+  #    injected `Git::ExecutionContext::Repository`.
+  # 3. **Builds rich return values** — passes raw command output through
+  #    `Git::Parsers::*` classes and result-class factory methods to assemble the
+  #    meaningful Ruby objects the caller expects.
+  #
+  # Some operations are genuinely one-line delegators when no pre/post-processing is
+  # needed (e.g. `add`, `reset`), but many are short orchestration sequences that
+  # coordinate argument preparation, one or more command calls, and result assembly.
+  #
+  # Facade methods are organized into focused modules under `lib/git/repository/`
+  # (e.g. {Git::Repository::Staging}) and included into this class.
   #
   # @api public
   #
-  class Repository # rubocop:disable Lint/EmptyClass
-    # This class is intentionally empty during Phase 1 of the redesign.
-    # It will be populated with methods in Phase 3.
+  class Repository
+    include Git::Repository::Staging
+
+    # @param execution_context [Git::ExecutionContext::Repository] the context used
+    #   to run git commands for this repository; must not be nil
+    #
+    # @raise [ArgumentError] if `execution_context` is nil
+    #
+    def initialize(execution_context:)
+      raise ArgumentError, 'execution_context must not be nil' if execution_context.nil?
+
+      @execution_context = execution_context
+    end
   end
 end
