@@ -14,6 +14,15 @@ For architecture details, coding standards, design philosophy, key technical det
 and compatibility requirements see the
 [Project Context](skills/project-context/SKILL.md) skill.
 
+## Terminology & Writing Style
+
+- Use American English always. Avoid British English spellings and idioms.
+- **RuboCop** — correct capitalization when referring to the tool by name in prose,
+  documentation, or comments.
+- **`rubocop`** — correct form when referring to the command-line executable or gem
+  name (e.g., `gem 'rubocop'`, `bundle exec rubocop`).
+- **Rubocop** — incorrect; never use this form.
+
 ## Skill Loading
 
 When a skill applies to a request, read the entire `SKILL.md` file before taking
@@ -38,7 +47,7 @@ or explanation does not require a skill.
 **Test suites:** `spec/` (RSpec) is the current suite — all new tests go here.
 `tests/` (Test::Unit) is legacy; only touch it when modifying existing tests there
 or adding pre-migration coverage to verify that a `Git::Lib` → `Git::Commands`
-migration doesn't break existing behaviour.
+migration doesn't break existing behavior.
 
 ## Commit Conventions
 
@@ -68,7 +77,7 @@ footer.
 > Always check `git branch --show-current` before committing. If on a release branch,
 > run `git switch -c <type>/<short-description>` first.
 
-All changes go via PR from a topic branch.
+All changes go through a PR from a topic branch.
 
 **Creating a PR:** Use `gh pr create`. Read `.github/pull_request_template.md` for
 the body structure. Complete the [PR Readiness Review](skills/pr-readiness-review/SKILL.md)

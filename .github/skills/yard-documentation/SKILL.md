@@ -9,6 +9,7 @@ General YARD documentation rules and workflow for all Ruby source code.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Documentation Standards](#documentation-standards)
@@ -16,6 +17,9 @@ General YARD documentation rules and workflow for all Ruby source code.
   - [Element-Specific Rules](#element-specific-rules)
 - [Step 1: Identify What Needs Documentation](#step-1-identify-what-needs-documentation)
 - [Step 2: Write Documentation](#step-2-write-documentation)
+  - [Standard template (no `@overload`)](#standard-template-no-overload)
+  - [Overload template](#overload-template)
+  - [Documenting anonymous splats with `@overload`](#documenting-anonymous-splats-with-overload)
 - [Step 3: Verify Documentation](#step-3-verify-documentation)
 - [Command Reference](#command-reference)
 
@@ -415,6 +419,15 @@ BranchDeleteFailure = Data.define(:name, :result)
   parameters or return types — each overload gets its own full set of tags.
   Methods that yield only when an optional block is given should use `@overload`
   to document the with-block and without-block signatures separately
+- Methods whose signature uses an **anonymous keyword splat** (`**`),
+  **anonymous positional splat** (`*`), or the **argument forwarding
+  parameter** (`...`) must document their call shapes with `@overload` blocks
+  that name the parameters. `@param`, `@option`, `@yield`, and `@yieldparam`
+  cannot bind to an anonymous splat or to `...` — the named overload signature
+  is what gives YARD a parameter to attach the docs to. Do **not** introduce a
+  named splat (or expand `...` into `*args, **kwargs, &block`) solely so the
+  tags will bind; that conflicts with RuboCop's `Style/ArgumentsForwarding`
+  cop, and the `@overload` form satisfies both
 - Use `@note` for callouts that need visual emphasis: thread-safety warnings,
   significant side effects, or platform-specific behaviour
 - Deprecated methods must include `@deprecated` explaining the migration path,
@@ -552,6 +565,86 @@ at the top level:
 def method_name(name, options = {})
 end
 ```
+
+### Documenting anonymous splats with `@overload`
+
+When the method signature uses an anonymous splat — `def foo(*)`, `def foo(**)`,
+`def foo(*, **)` — or the argument forwarding parameter `def foo(...)` —
+`@param`, `@option`, `@yield`, and `@yieldparam` tags have no parameter name
+to bind to. RuboCop's `Style/ArgumentsForwarding` cop prefers these forms when
+arguments are forwarded unchanged, so naming the splat (or expanding `...`
+into `*args, **kwargs, &block`) is **not** an acceptable workaround. Use
+`@overload` blocks that introduce named parameters for documentation purposes
+only:
+
+```ruby
+# Update the index with the current content found in the working tree
+#
+# @overload add(paths = '.', **options)
+#
+#   @example Stage a specific file
+#     git.add('README.md')
+#
+#   @param paths [String, Array<String>] file(s) to add (relative to the
+#     worktree root); defaults to `'.'` (all files)
+#
+#   @param options [Hash] command options
+#
+#   @option options [Boolean] :all add, modify, and remove index entries to
+#     match the worktree
+#
+#   @option options [Boolean] :force allow adding otherwise ignored files
+#
+#   @return [String] the command output
+#
+#   @raise [Git::FailedError] if `git add` exits with a non-zero status
+#
+def add(paths = '.', **)
+  Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
+end
+```
+
+The same approach applies to `...`. The overload signature names the
+parameters; the actual `def` keeps `...` so RuboCop is satisfied:
+
+```ruby
+# Run a command against the underlying execution context
+#
+# @overload run(command, *args, **options, &block)
+#
+#   @example Run git status
+#     result = git.run('status')
+#
+#   @param command [String] the git subcommand to run
+#
+#   @param args [Array<String>] positional arguments forwarded to the command
+#
+#   @param options [Hash] keyword options forwarded to the command
+#
+#   @return [Git::CommandLineResult] the command result
+#
+#   @yield [result] yields the command result, when a block is given
+#
+#   @yieldparam result [Git::CommandLineResult] the command result
+#
+#   @yieldreturn [void]
+#
+def run(command, ...)
+  Git::Commands::Run.new(@execution_context).call(command, ...)
+end
+```
+
+When a method has multiple genuinely distinct call shapes, write one
+`@overload` block per shape as in the [Overload template](#overload-template)
+above.
+
+**Anonymous block parameter (`&`)** is **not** covered by this rule.
+`@yield`, `@yieldparam`, and `@yieldreturn` describe what is yielded to the
+block, not the block parameter itself, so they bind correctly even with an
+anonymous `&`. Use a named block parameter (`&block`) and a `@param block
+[Proc]` tag only in the rare case where the block is documented as a
+first-class `Proc` value (stored, returned, or passed elsewhere) rather than
+yielded to.
 
 ## Step 3: Verify Documentation
 
