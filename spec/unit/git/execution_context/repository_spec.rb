@@ -187,7 +187,9 @@ RSpec.describe Git::ExecutionContext::Repository do
     let(:index_double) { double('index', to_s: git_index_file) }
     let(:dir_double) { double('dir', to_s: git_work_dir) }
     let(:base) do
-      double('Git::Base', repo: repo_double, index: index_double, dir: dir_double, git_ssh: nil)
+      double('Git::Base',
+             repo: repo_double, index: index_double, dir: dir_double,
+             git_ssh: nil, binary_path: :use_global_config)
     end
 
     subject(:context) { described_class.from_base(base) }
@@ -206,6 +208,25 @@ RSpec.describe Git::ExecutionContext::Repository do
 
     it 'extracts git_index_file from base.index.to_s' do
       expect(context.git_index_file).to eq(git_index_file)
+    end
+
+    context 'when base.binary_path is an explicit path' do
+      let(:base) do
+        double('Git::Base',
+               repo: repo_double, index: index_double, dir: dir_double,
+               git_ssh: nil, binary_path: '/custom/git')
+      end
+
+      it 'forwards binary_path to the context' do
+        expect(context.binary_path).to eq('/custom/git')
+      end
+    end
+
+    context 'when base.binary_path is :use_global_config (default)' do
+      it 'delegates binary_path resolution to Git::Base.config' do
+        allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+        expect(context.binary_path).to eq('/global/git')
+      end
     end
 
     context 'when base.dir is nil' do

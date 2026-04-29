@@ -50,6 +50,7 @@ module Git
           git_index_file: base_object.index&.to_s,
           git_work_dir: base_object.dir&.to_s,
           git_ssh: base_object.git_ssh,
+          binary_path: base_object.binary_path,
           logger: logger
         )
       end
