@@ -71,6 +71,10 @@ Run or reference these skills during the workflow:
 - [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
 - [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
 - [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
+- [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) — the
+  follow-on extraction that moves the public method from `Git::Base` /
+  `Git::Lib` into a `Git::Repository::*` facade method (Phase 4 deletes both
+  `Git::Base` and `Git::Lib`)
 
 ## Input
 

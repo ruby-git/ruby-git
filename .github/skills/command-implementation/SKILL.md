@@ -34,6 +34,9 @@ Additional related skills:
   writing and reviewing unit and integration tests for command classes
 - [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) —
   sibling consistency within a command family
+- [Facade Implementation](../facade-implementation/SKILL.md) — the v5.0.0 facade
+  layer (`Git::Repository::*`) that calls these command classes; new facade
+  wiring goes there rather than into `Git::Lib`
 
 ## Input
 
