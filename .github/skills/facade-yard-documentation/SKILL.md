@@ -189,7 +189,7 @@ the `def` has a named parameter for every documented argument, `@param` and
 def commit(message, opts = {})
   Git::Repository::Internal.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
   opts = opts.merge(message: message) if message
-  Git::Commands::Commit.new(@execution_context).call(edit: false, **opts).stdout
+  Git::Commands::Commit.new(@execution_context).call(no_edit: true, **opts).stdout
 end
 ```
 
@@ -313,7 +313,7 @@ delegators do not need them.
   the options listed in its public contract (and the `<METHOD>_ALLOWED_OPTS`
   whitelist when present). Do not copy every option the command DSL declares.
 - **Documenting policy defaults as caller options.** When the facade hardcodes
-  `edit: false`, do not list `:edit` as a caller option. The facade's contract
+  `no_edit: true`, do not list `:no_edit` as a caller option. The facade's contract
   is "non-interactive commit"; mention the policy in prose if relevant, not as
   an `@option`.
 - **Documenting the underlying command in the summary.** Wrong: "Calls

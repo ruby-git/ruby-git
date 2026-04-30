@@ -109,7 +109,7 @@ without a method definition in the subclass:
 #
 #     @param options [Hash] command options
 #
-#     @option options [Boolean] :force (nil) ...
+#     @option options [Boolean] :force (false) ...
 #
 #     @return [Git::CommandLineResult]
 ```
@@ -140,7 +140,7 @@ method:
 #
 #   @param options [Hash] command options
 #
-#   @option options [Boolean] :all (nil) ...
+#   @option options [Boolean] :all (false) ...
 #
 #   @return [Git::CommandLineResult] the result of calling `git log`
 #
@@ -162,9 +162,9 @@ conflicting documentation for the method.
 | --- | --- |
 | `flag_option` | `[Boolean]` — default `(false)` (flag not emitted by default) |
 | `flag_option ..., max_times: N` | `[Boolean, Integer]` |
-| `flag_option ..., negatable: true` | `[Boolean]` — document both `true` (→ `--flag`) and `false` (→ `--no-flag`) forms |
+| `flag_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean]` (`true` → `--flag`; default `(false)` → nothing), negative key `[Boolean]` (`true` → `--no-flag`; default `(false)` → nothing) |
 | `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
-| `flag_or_value_option ..., negatable: true` | `[Boolean, String]` — document `true` (→ `--flag`), string (→ `--flag=value`), and `false` (→ `--no-flag`) forms |
+| `flag_or_value_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean, String]` (`true` → `--flag`; string → `--flag=value` with `inline: true`, or `--flag <value>` without; default `(false)` → nothing), negative key `[Boolean]` (`true` → `--no-flag`; default `(false)` → nothing) |
 | `value_option` | `[String]` — `value_option` does not enforce types; it accepts any non-nil value and converts it to a string. Use `[String]` unless callers are expected to pass a narrower type, in which case widen the annotation to reflect reality (e.g. `[Integer, String]` for options documented as taking `<n>` lines/bytes). Never use a bare numeric type such as `[Integer]` alone — that misrepresents what the implementation accepts. |
 | `operand` (repeatable) | `[Array<String>]` |
 | `operand` (single) | `[String]` |
@@ -190,10 +190,9 @@ conflicting documentation for the method.
   # @option options [Boolean] :tags (false) limit output to refs/tags/
   ```
 
-  Exception: `flag_option ..., negatable: true` — the three-state `true`/`false`/`nil`
-  semantics make `(nil)` meaningful (unset/omit both `--foo` and `--no-foo`), so use
-  `(nil)` for negatable flags. Plain (non-negatable) `flag_option` always uses
-  `(false)`.
+  This applies to negatable flags as well — both the positive key and the negative
+  `no_` companion key use `(false)`. There is no three-state exception: `false` and
+  `nil` both mean omit for every key.
 - **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
   every `@overload` that includes `**options` requires
   `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
@@ -216,21 +215,21 @@ conflicting documentation for the method.
   #   @overload call(name)
   #     @param name [String] the remote name to remove
   ```
-- **Missing negated form for `negatable:` options** — when the DSL declares
+- **Missing second `@option` tag for `negatable:` options** — when the DSL declares
   `flag_option :foo, negatable: true` or `flag_or_value_option :foo, negatable: true`,
-  the `@option` prose must document both `false` → `--no-foo` and `true` → `--foo`.
-  Documenting only the positive form misleads callers who pass `false`.
+  two separate `@option` entries are required: one for the positive key (`:foo`) and
+  one for the negative companion key (`:no_foo`). A single tag documents only half
+  the interface.
 
   ```ruby
-  # ❌ Missing negated form
-  # @option options [Boolean] :create_reflog (nil)
-  #   create the branch's reflog
+  # ❌ Missing negative companion tag
+  # @option options [Boolean] :create_reflog (false) create the branch's reflog
 
-  # ✅ Documents both forms
-  # @option options [Boolean] :create_reflog (nil)
-  #   create the branch's reflog
+  # ✅ Both forms documented with separate tags
+  # @option options [Boolean] :create_reflog (false) create the branch's reflog
   #
-  #   Pass `true` for `--create-reflog`, `false` for `--no-create-reflog`.
+  # @option options [Boolean] :no_create_reflog (false) suppress branch reflog
+  #   creation (`--no-create-reflog`)
   ```
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
 - **Overly specific `@raise [Git::FailedError]` description** — do not enumerate
@@ -260,11 +259,11 @@ conflicting documentation for the method.
 
   ```ruby
   # ❌ Wrong — describes -v as if it is emitted
-  # @option options [Boolean, Integer] :verbose (nil) ...
+  # @option options [Boolean, Integer] :verbose (false) ...
   #   Pass `true` for `-v`; pass `2` for `-v -v`.
 
   # ✅ Correct — describes the actually emitted flag
-  # @option options [Boolean, Integer] :verbose (nil) ...
+  # @option options [Boolean, Integer] :verbose (false) ...
   #   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
   ```
 
@@ -279,10 +278,10 @@ conflicting documentation for the method.
 
   ```ruby
   # ❌ Copied verbatim from the git man page
-  # @option options [Boolean] :force (nil) Allow renaming even if target already exists.
+  # @option options [Boolean] :force (false) Allow renaming even if target already exists.
 
   # ✅ Correct — lowercase start, no trailing period
-  # @option options [Boolean] :force (nil) allow renaming even if target already exists
+  # @option options [Boolean] :force (false) allow renaming even if target already exists
   ```
 - **Raw blank line inside a doc comment block** — a raw blank line (an empty line
   with no leading `#`) silently terminates the YARD block. Any comment lines after
@@ -291,7 +290,7 @@ conflicting documentation for the method.
   continuation paragraphs and alias notes. Correct form:
 
   ```ruby
-  # @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
+  # @option options [Boolean] :ipv4 (false) use IPv4 addresses only
   #
   #   Alias: :"4"
   ```
@@ -335,11 +334,13 @@ For each command file, run through these checks in order:
       `arguments do` block
 - [ ] `@option` types match the DSL method (see
       [DSL-to-YARD type mapping](#dsl-to-yard-type-mapping))
-- [ ] `@option` defaults match the DSL method — plain (non-negatable) `flag_option`
-      always uses `(false)`; `flag_option ..., negatable: true` uses `(nil)`;
-      `value_option` uses `(nil)`. Using `(nil)` on a plain `flag_option` is a bug:
+- [ ] `@option` defaults match the DSL method — `flag_option` (plain or negatable)
+      always uses `(false)` for both the positive and negative `no_` companion tag;
+      `value_option` uses `(nil)`. Using `(nil)` on any `flag_option` entry is a bug:
       it implies the caller can pass explicit `nil` to opt out, which is not the
       intended semantics. Check every `@option` default tag against the DSL entry.
+      For `negatable:` options, verify that **two** `@option` tags are present (one
+      for the positive key, one for the `no_` companion key) and that both use `(false)`.
 - [ ] option defaults/types are consistent with DSL definitions
 - [ ] `@option` descriptions for options that have an `allowed_values` declaration
       enumerate the accepted values in the description text, e.g.: `@option options

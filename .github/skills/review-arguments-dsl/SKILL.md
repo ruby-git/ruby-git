@@ -128,8 +128,14 @@ Key behaviors:
 - **Aliases** — first alias is canonical and determines the generated flag; remaining
   aliases are accepted as caller-side synonyms. Long name first:
   `%i[force f]`, not `%i[f force]`.
-- **`negatable:`** — `flag_option :edit, negatable: true` emits `--edit` for `true`,
-  `--no-edit` for `false`, nothing for `nil`.
+- **`negatable:`** — registers two entries: the positive key and a `no_` companion.
+  Both follow standard boolean semantics: `true` emits the flag, `false`/`nil` omits
+  it. Pass `no_edit: true` to emit `--no-edit`.
+  - `flag_option :edit, negatable: true` → `:edit` `[Boolean]` and `:no_edit`
+    `[Boolean]`
+  - `flag_or_value_option :track, negatable: true` → `:track` `[Boolean, String]`
+    (positive or value form) and `:no_track` `[Boolean]` (boolean only; the negated
+    form never takes a value)
 - **`inline:`** — `value_option :format, inline: true` emits `--format=value` as one
   token; without it, `--format value` as two tokens.
 - **`max_times:`** — `flag_option :force, max_times: 2` with `force: 2` emits
