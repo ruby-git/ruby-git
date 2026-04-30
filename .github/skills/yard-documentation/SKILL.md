@@ -457,6 +457,16 @@ distinct call signatures with different parameters or return types.
 silently ignores top-level tags when overloads are present. In both templates
 below, include only the tags that apply to the method.
 
+**Trigger: always use `@overload` when the signature contains `*`, `**`, or `...`**
+
+Anonymous splats and the forwarding parameter give `@param`, `@option`, `@yield`,
+and `@yieldparam` no named parameter to bind to. YARD silently drops or
+mis-renders these tags when the signature is, for example, `def foo(**)` or
+`def foo(paths = '.', **)` — even though `paths` is named, the keyword options
+have no name so every `@option` is unbound. As soon as any parameter in the
+signature is anonymous (`*`, `**`, or `...`), switch to `@overload` for the entire
+signature (see [Documenting anonymous splats with `@overload`](#documenting-anonymous-splats-with-overload)).
+
 ### Standard template (no `@overload`)
 
 When present, tags must appear in the order shown. `@param` tags appear in
