@@ -8,6 +8,23 @@ description: "Conventions for writing and reviewing unit and integration tests f
 Conventions for writing and reviewing unit and integration tests for
 `Git::Commands::*` classes.
 
+- [Related skills](#related-skills)
+- [Input](#input)
+  - [Version-aware test scope](#version-aware-test-scope)
+- [Reference](#reference)
+  - [Unit tests](#unit-tests)
+    - [Cover these cases](#cover-these-cases)
+    - [Expectations for command invocation](#expectations-for-command-invocation)
+    - [`#initialize` — omit from command specs](#initialize--omit-from-command-specs)
+    - [Unit test grouping](#unit-test-grouping)
+  - [Integration tests](#integration-tests)
+    - [Integration test grouping](#integration-test-grouping)
+    - [Guard tests for options introduced after the minimum supported Git version](#guard-tests-for-options-introduced-after-the-minimum-supported-git-version)
+    - [Additional integration conventions](#additional-integration-conventions)
+  - [Shared conventions](#shared-conventions)
+- [Workflow](#workflow)
+- [Output](#output)
+
 ## Related skills
 
 - [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md) — baseline
@@ -163,11 +180,12 @@ confirm nothing is written.
 Unit tests should exercise each **code path** through the command, not each possible
 **input value**. Avoid these patterns:
 
-- **`option: false` for non-negatable flags.** Passing `false` to a non-negatable
-  `flag_option` produces no output — identical to the base invocation with no
-  options. The "no arguments" test already covers this path. (Negatable flags like
-  `single_branch` are different: `false` produces `--no-single-branch`, which is a
-  distinct code path worth testing.)
+- **`option: false` for any `flag_option`.** Passing `false` to a `flag_option`
+  (negatable or non-negatable) produces no output — identical to the base invocation
+  with no options. The "no arguments" test already covers this path. To exercise the
+  negative form of a negatable flag, use the `no_` companion key: e.g.:
+  `no_single_branch: true` emits `--no-single-branch`, which is a distinct code path
+  worth testing.
 - **Repeating the return value assertion.** The base invocation test asserts
   `expect(result).to eq(expected_result)` once as a contract check. Do not repeat
   this assertion in other tests — one check per file is sufficient.
@@ -213,29 +231,29 @@ Two specific DSL re-test patterns that commonly appear but should be avoided:
 **Policy vs. interface testing:** Command classes are neutral, faithful
 representations of the git CLI. Their unit tests verify CLI argument building (the
 neutral interface), not policy enforcement. Tests should **not** hardcode policy
-assumptions — for example, a command spec should not always pass `edit: false` or
+assumptions — for example, a command spec should not always pass `no_edit: true` or
 expect `--no-edit` unless the test is specifically exercising that option.
 
-> **Anti-pattern:** every `it` block in a command spec passes `edit: false`,
-> `progress: false`, or `no_color: true` — this tests the facade's policy, not
+> **Anti-pattern:** every `it` block in a command spec passes `no_edit: true`,
+> `no_progress: true`, or `no_color: true` — this tests the facade's policy, not
 > the command's interface.
 >
 > **Correct pattern:** test each option independently (`it 'passes --no-edit
-> when edit is false'`); test the default (no option passed) separately. Policy
+> when no_edit is true'`); test the default (no option passed) separately. Policy
 > enforcement (which options the facade passes and why) is tested at the facade
 > layer (`lib_command_spec.rb`).
 
 **Where to test policy enforcement:** Policy tests belong in the facade layer,
 not in command specs. When a `Git::Lib` method sets policy defaults like
-`edit: false` or `progress: false`, the corresponding `lib_command_spec.rb`
+`no_edit: true` or `no_progress: true`, the corresponding `lib_command_spec.rb`
 (or `lib_spec.rb`) test should verify those defaults reach the command:
 
 ```ruby
 # spec/unit/git/lib_command_spec.rb — facade policy-default test
 describe '#pull' do
-  it 'defaults to edit: false for non-interactive execution' do
+  it 'defaults to no_edit: true for non-interactive execution' do
     expect_any_instance_of(Git::Commands::Pull)
-      .to receive(:call).with(anything, edit: false).and_call_original
+      .to receive(:call).with(anything, no_edit: true).and_call_original
     lib.pull('origin', 'main')
   end
 end

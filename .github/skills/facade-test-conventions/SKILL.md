@@ -116,7 +116,7 @@ Three rules:
 - **Each positional argument variation** — single value, array, nil where
   applicable.
 - **Each option the facade exposes** — including aliases, deprecated keys, and
-  policy defaults the facade applies (`edit: false`, etc.).
+  policy defaults the facade applies (`no_edit: true`, etc.).
 - **Multi-command sequences** — when the facade calls more than one command,
   use `expect ... receive(:call).with(...).ordered` to assert ordering and
   intermediate-result wiring.

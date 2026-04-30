@@ -40,7 +40,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Exposing command-DSL-shaped argv in the facade signature](#exposing-command-dsl-shaped-argv-in-the-facade-signature)
   - [Changing the legacy return type or signature on extraction](#changing-the-legacy-return-type-or-signature-on-extraction)
   - [Bypassing `@execution_context`](#bypassing-execution_context)
-  - [Hardcoding policy options the caller cannot override](#hardcoding-policy-options-the-caller-cannot-override)
+  - [Placing an overridable policy default after caller options](#placing-an-overridable-policy-default-after-caller-options)
   - [Skipping option whitelisting on opaque opts hashes](#skipping-option-whitelisting-on-opaque-opts-hashes)
   - [Mixing facade and command responsibilities](#mixing-facade-and-command-responsibilities)
   - [Adding a new topic module for a single method](#adding-a-new-topic-module-for-a-single-method)
@@ -235,7 +235,7 @@ def commit(message, opts = {})
   Git::Repository::Internal.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
   opts = opts.merge(message: message) if message
   opts = deprecate_commit_no_gpg_sign_option(opts)
-  Git::Commands::Commit.new(@execution_context).call(edit: false, **opts).stdout
+  Git::Commands::Commit.new(@execution_context).call(no_edit: true, **opts).stdout
 end
 ```
 
@@ -369,7 +369,7 @@ def pull(remote = nil, branch = nil, **)
   Git::Repository::Internal.assert_valid_opts!(PULL_ALLOWED_OPTS, **)
   positional_args = [remote, branch].compact
   Git::Commands::Pull.new(@execution_context)
-                     .call(*positional_args, edit: false, **)
+                     .call(*positional_args, no_edit: true, **)
                      .stdout
 end
 ```
@@ -413,7 +413,7 @@ def commit(message, opts = {})
   opts = opts.merge(message: message) if message
   opts = deprecate_commit_no_gpg_sign_option(opts)
   opts = deprecate_commit_add_all_option(opts)
-  Git::Commands::Commit.new(@execution_context).call(edit: false, **opts).stdout
+  Git::Commands::Commit.new(@execution_context).call(no_edit: true, **opts).stdout
 end
 
 private
@@ -437,21 +437,32 @@ end
 The facade is where **policy defaults** are applied — options that support
 non-interactive execution, control output format for parsing, or set safe
 command-level defaults. The command class stays neutral; the facade makes the
-defaults explicit; callers may override when needed.
+defaults explicit.
+
+There are two categories of policy defaults:
+
+**Fixed policy defaults** are set unconditionally and are NOT included in the
+method's `ALLOWED_OPTS` constant. `assert_valid_opts!` rejects any
+caller-supplied value for these keys before it reaches the command call,
+enforcing the policy. They are not part of the facade's public API and must
+not be documented as `@option` tags.
 
 | Policy option | Why facade sets it |
 | --- | --- |
-| `edit: false` | Subprocesses cannot launch `$EDITOR` |
-| `progress: false` | Progress output goes to stderr and pollutes parsing |
+| `no_edit: true` | Subprocesses cannot launch `$EDITOR` |
+| `no_progress: true` | Progress output goes to stderr and pollutes parsing |
 | `no_color: true` | ANSI escapes interfere with parsers |
 | `format: Git::Parsers::Foo::FORMAT_STRING` | Facade wants a parseable format |
 
-Always allow callers to override by placing policy defaults **before** the
-caller's options in the keyword splat:
+**Overridable policy defaults** are included in `ALLOWED_OPTS`. The facade
+sets a sensible default but callers may override it. Place these **before**
+the caller's `**opts` in the command call so the caller's value wins on key
+collision, and document them as `@option` tags since they are part of the
+public API:
 
 ```ruby
-Git::Commands::Pull.new(@execution_context).call(*args, edit: false, **opts)
-# When opts contains :edit, the caller's value wins.
+# :verbose is in ALLOWED_OPTS — caller can pass verbose: true to override
+Git::Commands::Log.new(@execution_context).call(*args, verbose: false, **opts)
 ```
 
 ## Internal helpers and encapsulation
@@ -662,18 +673,23 @@ Constructing a command with anything other than `@execution_context` (e.g.
 holds a `Git::ExecutionContext::Repository`; commands must always be constructed
 with it.
 
-### Hardcoding policy options the caller cannot override
+### Placing an overridable policy default after caller options
+
+This anti-pattern applies to **overridable** policy defaults (those in `ALLOWED_OPTS`).
+Placing the default after `**opts` silently overwrites the caller's explicit value:
 
 ```ruby
-# ❌ Wrong — caller cannot override
-Git::Commands::Pull.new(@execution_context).call(*args, **opts, edit: false)
+# ❌ Wrong — caller's :verbose is silently discarded
+Git::Commands::Log.new(@execution_context).call(*args, **opts, verbose: false)
 
-# ✅ Correct — caller's :edit wins because opts is splatted last
-Git::Commands::Pull.new(@execution_context).call(*args, edit: false, **opts)
+# ✅ Correct — caller's :verbose wins because opts is splatted last
+Git::Commands::Log.new(@execution_context).call(*args, verbose: false, **opts)
 ```
 
-Place policy defaults before the caller's `**opts` so the caller's value wins on
-key collision.
+Place overridable policy defaults before the caller's `**opts` so the caller's
+value wins on key collision. This does not apply to fixed policy options (not in
+`ALLOWED_OPTS`): `assert_valid_opts!` prevents those keys from reaching the
+command call at all.
 
 ### Skipping option whitelisting on opaque opts hashes
 

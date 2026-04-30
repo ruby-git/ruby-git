@@ -116,14 +116,16 @@ Command classes that need non-zero successful exits declare
 Command classes are neutral, faithful representations of the git CLI. They declare
 options via the DSL but never embed policy choices (output-control flags, editor
 suppression, progress, verbose mode). The facade (`Git::Lib`) sets safe defaults
-at each call site; callers may override when needed. The execution layer
-(`GIT_EDITOR='true'`) is an unconditional safety net.
+at each call site. Some defaults are **fixed** (not in `ALLOWED_OPTS` — rejected by
+`assert_valid_opts!` before reaching the command); others are **overridable** (in
+`ALLOWED_OPTS`, placed before the caller's `**opts` so the caller's value wins).
+The execution layer (`GIT_EDITOR='true'`) is an unconditional safety net.
 
 > **Anti-pattern:** `literal '--no-edit'`, `literal '--verbose'`,
 > `literal '--no-progress'` inside a command class.
 >
 > **Correct pattern:** `flag_option :edit, negatable: true` in the command;
-> `edit: false` passed from the facade call site.
+> `no_edit: true` passed from the facade call site.
 
 ### Validation Boundaries
 

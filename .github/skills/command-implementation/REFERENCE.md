@@ -623,8 +623,10 @@ against the docs.
 
 **Pairs and opposites:** when the latest-version docs document `--foo` / `--no-foo`
 as explicit flags, model them as a single `flag_option :foo, negatable: true` rather
-than two separate entries. This prevents contradictory combinations and makes the
-three-state semantics (`true` / `false` / `nil`) explicit.
+than two separate DSL declarations. This registers both `:foo` (positive) and `:no_foo`
+(negative) as independent boolean keys that follow standard boolean semantics:
+`true` emits the flag, `false`/`nil` emits nothing. Use `no_foo: true` at the call
+site to emit `--no-foo`.
 
 **Short-flag aliases — cross-check the latest-version docs/source:** before adding
 any short-flag alias (e.g. `%i[dry_run n]`), verify the alias character appears on
@@ -726,12 +728,12 @@ single-class commands, include all options as described in the decision table ab
 ### Execution-model conflicts
 
 Command classes are neutral — they never hardcode policy choices. Policy defaults
-(`edit: false`, `progress: false`, etc.) belong to the facade (`Git::Lib`).
+(`no_edit: true`, `no_progress: true`, etc.) belong to the facade (`Git::Lib`).
 
 > **Anti-pattern:** `literal '--no-edit'` inside a command class.
 >
-> **Correct pattern:** `flag_option :edit, negatable: true` in the command; `edit:
-> false` passed from the facade call site.
+> **Correct pattern:** `flag_option :edit, negatable: true` in the command; `no_edit:
+> true` passed from the facade call site.
 
 The **only** options to exclude from the DSL are those that conflict with
 non-interactive subprocess execution:
@@ -745,8 +747,8 @@ non-interactive subprocess execution:
 > Evaluate per-command, not globally.
 
 **`--edit` / `--no-edit`:** Model as `flag_option :edit, negatable: true`. Do
-**not** hardcode `literal '--no-edit'`. See "Command-layer neutrality" in
-CONTRIBUTING.md.
+**not** hardcode `literal '--no-edit'`. Pass `no_edit: true` from the facade call
+site. See "Command-layer neutrality" in CONTRIBUTING.md.
 
 **`--verbose`/`-v` and `--quiet`/`-q`:** include these unless their git
 implementation requires interactive I/O.
@@ -832,10 +834,20 @@ allow_exit_status 0..7
 
 The command class is only half the story. After scaffolding the command, you must
 also write (or update) the `Git::Lib` method that **delegates** to it. The facade
-sets safe policy defaults at each call site — `edit: false`, `verbose: true`,
-`progress: false`, etc. — not as `literal` entries inside the command class. Callers
-may override these defaults when needed. See "Command-layer neutrality" in
-CONTRIBUTING.md.
+sets safe policy defaults at each call site — `no_edit: true`, `no_progress: true`,
+etc. — not as `literal` entries inside the command class. See "Command-layer
+neutrality" in CONTRIBUTING.md.
+
+Policy defaults fall into two categories (see also
+[facade-implementation/REFERENCE.md](../facade-implementation/REFERENCE.md)):
+
+- **Fixed policy defaults** (`no_edit: true`, `no_progress: true`, `no_color: true`,
+  format strings): set unconditionally and **not** included in `ALLOWED_OPTS`.
+  `assert_valid_opts` rejects any caller-supplied value for these keys, enforcing
+  the policy. They are not part of the public API.
+- **Overridable policy defaults** (e.g., `verbose: false`): included in `ALLOWED_OPTS`.
+  The facade sets a sensible default but callers may override it by passing a value
+  that goes through `**opts`.
 
 ```ruby
 # lib/git/lib.rb — facade method for `git pull`
@@ -848,8 +860,8 @@ def pull(remote = nil, branch = nil, opts = {})
   assert_valid_opts(opts, PULL_ALLOWED_OPTS)
   allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
   positional_args = [remote, branch].compact
-  # edit: false is the non-interactive default (see CONTRIBUTING.md)
-  Git::Commands::Pull.new(self).call(*positional_args, edit: false, **allowed_opts).stdout
+  # no_edit: true is the non-interactive default (see CONTRIBUTING.md)
+  Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
 end
 ```
 
@@ -858,9 +870,11 @@ Key points for the facade method:
 - **Filter options** — declare an `ALLOWED_OPTS` constant listing only the options
   the public API accepted at v4.3.0. Use `assert_valid_opts` + `opts.slice` to
   prevent accidental API expansion.
-- **Pass policy options as safe defaults** — `edit: false`, `progress: false`, etc.
-  Place them before `**opts` so the caller can override when needed. Add a comment
-  explaining *why* (e.g., `# non-interactive default`).
+- **Pass policy options as safe defaults** — `no_edit: true`, `no_progress: true`, etc.
+  Fixed policy defaults go directly in the command call (not in `ALLOWED_OPTS`).
+  Overridable policy defaults are placed before `**opts` in the command call so the
+  caller's value wins on key collision, and are included in `ALLOWED_OPTS`. Add a
+  comment explaining *why* (e.g., `# non-interactive default`).
 - **Return the legacy type** — typically `.stdout` or a parsed struct, not
   `CommandLineResult`.
 
@@ -927,9 +941,9 @@ flag_option :verbose
 value_option :format
 
 # ✅ In Git::Lib — facade passes the policy value explicitly
-Git::Commands::Pull.new(self).call(edit: false, progress: false)
+Git::Commands::Pull.new(self).call(no_edit: true, no_progress: true)
 Git::Commands::Mv.new(self).call(*args, verbose: true)
-Git::Commands::Fsck.new(self).call(progress: false)
+Git::Commands::Fsck.new(self).call(no_progress: true)
 ```
 
 See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.

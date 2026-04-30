@@ -437,8 +437,11 @@ happen to match command DSL names but were never part of the public contract.
 The facade is also where **policy options** are set as safe defaults — options
 that support non-interactive execution, control output format for parsing, or
 set other command-level defaults. The command class stays neutral; the facade
-makes the defaults explicit; callers may override when needed. Examples:
-`edit: false`, `verbose: true`, `progress: false`, `no_color: true`.
+makes the defaults explicit. Some defaults are **fixed** (not in `ALLOWED_OPTS` —
+`assert_valid_opts` rejects them if a caller supplies them); others are
+**overridable** (in `ALLOWED_OPTS`, placed before `**opts` so the caller's value
+wins on collision). Examples: `no_edit: true`, `verbose: true`,
+`no_progress: true`, `no_color: true`.
 See "Command-layer neutrality" in CONTRIBUTING.md.
 
 Declare an `<COMMAND>_ALLOWED_OPTS` constant listing only the options that were
@@ -456,8 +459,8 @@ def pull(remote = nil, branch = nil, opts = {})
   assert_valid_opts(opts, PULL_ALLOWED_OPTS)
   allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
   positional_args = [remote, branch].compact
-  # edit: false is the non-interactive default (see CONTRIBUTING.md)
-  Git::Commands::Pull.new(self).call(*positional_args, edit: false, **allowed_opts).stdout
+  # no_edit: true is the non-interactive default (see CONTRIBUTING.md)
+  Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
 end
 ```
 
