@@ -18,11 +18,17 @@ preserve backward compatibility within the migration window.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Source patterns](#source-patterns)
+  - [Pattern A — `Git::Base` wrapper + `Git::Lib` implementation](#pattern-a--gitbase-wrapper--gitlib-implementation)
+  - [Pattern B — `Git::Lib`-only (public-by-exposure)](#pattern-b--gitlib-only-public-by-exposure)
+  - [Pattern C — `Git::Base`-only (no `Git::Lib` method)](#pattern-c--gitbase-only-no-gitlib-method)
+- [Determining the option allowlist](#determining-the-option-allowlist)
+- [Negatable flag normalization](#negatable-flag-normalization)
 - [Workflow](#workflow)
   - [Branch setup](#branch-setup)
   - [Step 1 — Identify the source pattern](#step-1--identify-the-source-pattern)
@@ -34,6 +40,14 @@ preserve backward compatibility within the migration window.
 - [Commit discipline](#commit-discipline)
 - [Quality gates](#quality-gates)
 - [What stays vs. what moves](#what-stays-vs-what-moves)
+- [Review mode](#review-mode)
+  - [Invoke](#invoke)
+  - [R1 — Source analysis](#r1--source-analysis)
+  - [R2 — Legacy test coverage](#r2--legacy-test-coverage)
+  - [R3 — Command class](#r3--command-class)
+  - [R4 — Facade implementation](#r4--facade-implementation)
+  - [R5 — Delegation](#r5--delegation)
+  - [R6 — Quality gates](#r6--quality-gates)
 
 ## How to use this skill
 
@@ -155,6 +169,72 @@ end
 
 **Public contract source:** `Git::Base#foo` signature and implementation.
 
+## Determining the option allowlist
+
+When the facade method uses `assert_valid_opts!`, the allowlist (`*_ALLOWED_OPTS`) must
+contain **only the options that were accepted in the 4.x branch** of this gem. Do not
+expand the allowlist to match everything the underlying `Git::Commands::*` class
+supports — new options are deferred to a follow-up PR so they can be properly
+documented and tested.
+
+**How to find the 4.x allowlist for a method:**
+
+1. Open `https://github.com/ruby-git/ruby-git/blob/4.x/lib/git/lib.rb` and search
+   for the method's `*_OPTION_MAP` constant (e.g. `ADD_OPTION_MAP`,
+   `RESET_OPTION_MAP`).
+2. The option keys declared in that map are the only keys that were valid in 4.x.
+   Any key not present in the map would have raised `ArgumentError` via
+   `ArgsBuilder.validate!` — confirmed by
+   `https://github.com/ruby-git/ruby-git/blob/4.x/lib/git/args_builder.rb`.
+3. Use those keys — and only those keys — in the facade's `*_ALLOWED_OPTS`
+   constant, `@option` YARD tags, and integration/unit tests.
+4. If the underlying `Git::Commands::*` class supports additional options beyond the
+   4.x map, note them in a follow-up issue rather than silently including them.
+
+## Negatable flag normalization
+
+Some options in `Git::Commands::*` classes are declared with `negatable: true`:
+
+```ruby
+flag_option %i[all A], negatable: true
+```
+
+A negatable flag maps its value to a different CLI flag depending on truthiness:
+
+| Ruby value | CLI flag emitted |
+| --- | --- |
+| `true` | `--all` |
+| `false` | `--no-all` |
+| `nil` / omitted | *(flag absent)* |
+
+In 4.x, boolean options were always simple flags — `false` or `nil` meant
+_omission_, never `--no-<flag>`. If a facade method passes a caller's `false`
+value straight through to a negatable command option, it silently emits
+`--no-<flag>`, breaking the 4.x contract.
+
+**Fix:** After `assert_valid_opts!`, strip any `false` values from the options
+hash before forwarding to the command:
+
+```ruby
+def add(paths = '.', **options)
+  Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **options)
+  normalized = options.reject { |_k, v| v == false }
+  Git::Commands::Add.new(@execution_context).call(*Array(paths), **normalized).stdout
+end
+```
+
+**How to detect negatable flags:** Open the command class
+(`lib/git/commands/<command>.rb`) and look for `flag_option` declarations with
+`negatable: true`. Cross-check every key in `*_ALLOWED_OPTS` against those
+declarations — any match requires the normalization step above.
+
+**Unit spec coverage:** For each allowlisted option that maps to a negatable
+flag, add two spec contexts:
+
+- `option: true` — verifies the key is forwarded as-is to the command
+- `option: false` — verifies the key is **omitted** (command receives no
+  keyword for that key, so `--no-<flag>` is never emitted)
+
 ## Workflow
 
 ### Branch setup
@@ -182,6 +262,10 @@ git checkout -b <feature-branch-name>
      handling)
    - any post-processing (parsing, result-class assembly)
    - any execution-context arguments (`timeout:`, `chdir:`, `env:`)
+   - the **4.x-supported options**: locate the corresponding `*_OPTION_MAP`
+     constant in `4.x/lib/git/lib.rb` and record which option keys it declared.
+     These become the facade's `*_ALLOWED_OPTS` allowlist — see
+     [Determining the option allowlist](#determining-the-option-allowlist).
 4. Document the method's current **public contract** in writing — it must be
    preserved exactly by the facade method.
 5. Run linters and rubocop to confirm a clean baseline:
@@ -286,6 +370,16 @@ For Pattern A and B migrations, copy any pre-processing logic
 (option whitelisting, deprecation rewrites, key normalization) from `Git::Lib`
 to the facade method. Do **not** leave it behind in `Git::Lib` — the facade is
 now the source of truth.
+
+When copying option whitelisting logic, use only the keys from the 4.x
+`*_OPTION_MAP` for the `*_ALLOWED_OPTS` constant — do not expand to match the
+full `Git::Commands::*` argument DSL. See
+[Determining the option allowlist](#determining-the-option-allowlist).
+
+After building the allowlist, check each key against the command class's
+`arguments` block for `negatable: true` declarations. Any match requires the
+normalization step described in
+[Negatable flag normalization](#negatable-flag-normalization).
 
 For Pattern C migrations, port any pre-processing or filesystem logic from
 `Git::Base` to the facade method.
@@ -414,3 +508,92 @@ failures before advancing. All listed tasks must pass before committing.
 > **Branch workflow:** Implement migrations on a feature branch. Never commit
 > or push directly to `main` — open a pull request when changes are ready to
 > merge.
+
+## Review mode
+
+Use this checklist to audit a completed extraction PR. For each item, read the
+relevant source files, check the box, and note any finding.
+
+### Invoke
+
+```text
+Using the Extract Facade from Base/Lib skill (review mode), audit the extraction
+of Git::Base#<method_name>.
+```
+
+### R1 — Source analysis
+
+- [ ] **Pattern identified.** Confirm which source pattern (A, B, or C) applies
+  by reading `Git::Base` and `Git::Lib`.
+- [ ] **Signature preserved.** The facade method's signature (positional args,
+  optional args, keyword splat) matches the 4.x `Git::Base#<method>` signature
+  exactly.
+- [ ] **Return type correct.** The facade returns the same type as the legacy
+  implementation (e.g. `String` from `.stdout`, not `CommandLineResult`). Read
+  the source — do not rely on YARD tags alone.
+- [ ] **4.x options only in allowlist.** The `*_ALLOWED_OPTS` constant contains
+  only keys declared in the corresponding `*_OPTION_MAP` in
+  `4.x/lib/git/lib.rb`. Look up the map at
+  `https://github.com/ruby-git/ruby-git/blob/4.x/lib/git/lib.rb`. Any extra
+  keys are a finding.
+- [ ] **Pre-processing ported.** All option whitelisting, deprecation handling,
+  and key normalization from `Git::Lib` is reproduced in the facade. Nothing
+  was left behind in `Git::Lib`.
+- [ ] **Post-processing ported.** Any parsing or result-class assembly that
+  lived in `Git::Lib` is reproduced in the facade.
+
+### R2 — Legacy test coverage
+
+- [ ] **Legacy tests exist and pass.** `tests/units/` has tests exercising the
+  public method. Verify with `bundle exec bin/test <test-file-basename>`.
+- [ ] **All 4.x options exercised.** Every option in `*_ALLOWED_OPTS` has at
+  least one legacy or integration test that passes an actual value and asserts
+  the outcome.
+
+### R3 — Command class
+
+- [ ] **Command class exists.** The `Git::Commands::*` class used by the facade
+  exists in `lib/git/commands/`.
+- [ ] **Arguments DSL covers the allowlisted options.** Every key in
+  `*_ALLOWED_OPTS` maps to a declared entry in the command's `arguments` block.
+
+### R4 — Facade implementation
+
+- [ ] **Topic module correct.** The facade method is placed in the right
+  `Git::Repository::*` module per the redesign topic groupings.
+- [ ] **`assert_valid_opts!` used.** The facade calls
+  `Git::Repository::Internal.assert_valid_opts!(ALLOWED_OPTS, **)` before
+  forwarding to the command.
+- [ ] **Negatable flags normalized.** For every key in `*_ALLOWED_OPTS` that
+  maps to a `negatable: true` entry in the command's `arguments` block, the
+  facade strips `false` values before forwarding (so `--no-<flag>` is never
+  emitted from the facade API).
+- [ ] **YARD docs complete.** Each allowed option has an `@option` tag with
+  type, name, default, and description. `@param`, `@return`, `@raise` are
+  present and accurate.
+- [ ] **Unit specs present.** `spec/unit/git/repository/<topic>_spec.rb`
+  covers: default call, explicit path(s), each documented option, unknown
+  option raises `ArgumentError`, return value is `.stdout`.
+- [ ] **Integration specs present (or explicitly skipped).** Write
+  `spec/integration/git/repository/<topic>_spec.rb` **only** when the facade
+  adds behavior not exercised by any single command's integration tests —
+  specifically multi-command orchestration or facade-owned post-processing of
+  real git output. For one-line delegators (e.g. `#add`, `#reset`) the
+  command's own integration tests already provide end-to-end coverage; omit
+  the facade integration spec and add a comment in the unit spec explaining
+  which command integration specs provide coverage.
+
+### R5 — Delegation
+
+- [ ] **`Git::Base` delegates.** The original `Git::Base` method is a one-line
+  forward to `facade_repository.<method>(...)`.
+- [ ] **`Git::Lib` delegates (Pattern A/B only).** The original `Git::Lib`
+  method is a one-line forward to the facade.
+- [ ] **Legacy tests still pass after delegation.** Run
+  `bundle exec bin/test <test-file-basename>` against the delegating methods.
+
+### R6 — Quality gates
+
+- [ ] `bundle exec rspec` passes
+- [ ] `bundle exec rubocop` passes
+- [ ] `bundle exec rake yard` passes (no undocumented public methods)
