@@ -716,6 +716,13 @@ documentation in singular form. For example, if the git docs say
 `<pathspec>...`, the operand should be named `:pathspec` (not `:pathspecs` or
 `:paths`). If the docs say `<commit>`, the operand should be named `:commit`.
 
+**Name-collision avoidance:** if an operand name conflicts with a keyword option name
+in the same command (e.g., both `flag_option :commit` and `operand :commit` exist),
+the **option keeps its name** and the **operand is renamed** to something close but
+distinct. Prefer the plural form for repeatable operands (e.g., `:commit` →
+`:commits`) or another unambiguous variant for non-repeatable ones. Flag this as an
+issue if the existing operand and option share a name.
+
 ### Per-argument validation completeness
 
 For every `flag_option`, `value_option`, `flag_or_value_option`, and `operand`

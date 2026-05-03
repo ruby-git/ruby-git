@@ -314,21 +314,25 @@ future work:
    This single decision determines where parsing lives, what types flow where, and
    how the system layers together.
 
-6. **Use `negatable_flag_or_inline_value` for tri-state options with optional values**
+6. **Use `flag_or_value_option ..., negatable: true` for options with positive, negative, and value forms**
 
    When a git option supports `--flag`, `--no-flag`, AND `--flag=value` forms (like
-   `--track`/`--no-track`/`--track=inherit`), use the `negatable_flag_or_inline_value`
-   DSL type instead of defining separate options with conflict declarations:
+   `--track`/`--no-track`/`--track=inherit`), use `flag_or_value_option` with
+   `negatable: true` instead of defining separate options with conflict declarations.
+   Under the companion-key model this registers two entries (`:track` and
+   `:no_track`), each following standard boolean semantics, with an automatic
+   conflict between them:
 
    ```ruby
-   # ✅ Preferred: single definition handles all forms
-   negatable_flag_or_inline_value_option :track
-   # track: nil     → (omitted)
-   # track: true    → --track
-   # track: false   → --no-track
+   # ✅ Preferred: single declaration registers the companion-key pair
+   flag_or_value_option :track, negatable: true, inline: true
+   # track: nil       → (omitted)
+   # track: true      → --track
    # track: 'inherit' → --track=inherit
+   # no_track: true   → --no-track
+   # track: false     → (omitted; false is always absent)
 
-   # ❌ Avoid: separate definitions require conflict management
+   # ❌ Avoid: separate definitions require manual conflict management
    flag_option :track
    flag_option :no_track
    conflicts :track, :no_track
