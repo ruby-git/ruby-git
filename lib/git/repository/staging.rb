@@ -47,10 +47,9 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def add(paths = '.', **options)
-        Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **options)
-        normalized = options.reject { |_k, v| v == false }
-        Git::Commands::Add.new(@execution_context).call(*Array(paths), **normalized).stdout
+      def add(paths = '.', **)
+        Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
+        Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
       end
 
       # Option keys accepted by {#reset}
