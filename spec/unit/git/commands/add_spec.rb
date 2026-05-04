@@ -60,6 +60,12 @@ RSpec.describe Git::Commands::Add do
 
         command.call('ignored_file.txt', force: true)
       end
+
+      it 'accepts the :f alias' do
+        expect_command_capturing('add', '--force', '--', 'ignored_file.txt').and_return(command_result)
+
+        command.call('ignored_file.txt', f: true)
+      end
     end
 
     context 'with the :update option' do
@@ -83,10 +89,16 @@ RSpec.describe Git::Commands::Add do
         command.call('.', all: true)
       end
 
-      it 'includes --no-all when false (negatable flag)' do
+      it 'includes --no-all when :no_all is true' do
         expect_command_capturing('add', '--no-all', '--', '.').and_return(command_result)
 
-        command.call('.', all: false)
+        command.call('.', no_all: true)
+      end
+
+      it 'accepts the :A alias' do
+        expect_command_capturing('add', '--all', '--', '.').and_return(command_result)
+
+        command.call('.', A: true)
       end
 
       it 'omits the flag when not provided' do
@@ -103,10 +115,10 @@ RSpec.describe Git::Commands::Add do
         command.call('.', ignore_removal: true)
       end
 
-      it 'includes --no-ignore-removal when false (negatable flag)' do
+      it 'includes --no-ignore-removal when :no_ignore_removal is true' do
         expect_command_capturing('add', '--no-ignore-removal', '--', '.').and_return(command_result)
 
-        command.call('.', ignore_removal: false)
+        command.call('.', no_ignore_removal: true)
       end
 
       it 'omits the flag when not provided' do
@@ -216,16 +228,16 @@ RSpec.describe Git::Commands::Add do
     end
 
     context 'with equivalent all/ignore_removal combinations' do
-      it 'allows :all false with :ignore_removal true' do
+      it 'emits --no-all and --ignore-removal' do
         expect_command_capturing('add', '--no-all', '--ignore-removal', '--', '.').and_return(command_result)
 
-        command.call('.', all: false, ignore_removal: true)
+        command.call('.', no_all: true, ignore_removal: true)
       end
 
-      it 'allows :all true with :ignore_removal false' do
+      it 'emits --all and --no-ignore-removal' do
         expect_command_capturing('add', '--all', '--no-ignore-removal', '--', '.').and_return(command_result)
 
-        command.call('.', all: true, ignore_removal: false)
+        command.call('.', all: true, no_ignore_removal: true)
       end
     end
 

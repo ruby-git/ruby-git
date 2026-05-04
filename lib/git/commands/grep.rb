@@ -132,10 +132,11 @@ module Git
       #     @option options [Boolean] :I (false) do not match the pattern in binary
       #       files
       #
-      #     @option options [Boolean] :textconv (nil) honor textconv filter settings
+      #     @option options [Boolean] :textconv (false) honor textconv filter
+      #       settings (`--textconv`)
       #
-      #       Pass `true` to emit `--textconv`; pass `false` to emit
-      #       `--no-textconv`.
+      #     @option options [Boolean] :no_textconv (false) suppress textconv filter
+      #       processing (`--no-textconv`)
       #
       #     @option options [Boolean] :ignore_case (false) ignore case distinctions
       #       in both the pattern and the file contents
@@ -224,12 +225,13 @@ module Git
       #     @option options [Integer, String] :max_depth (nil) descend at most this
       #       many directory levels for each pathspec argument
       #
-      #     @option options [Boolean] :recursive (nil) recurse into subdirectories
+      #     @option options [Boolean] :recursive (false) recurse into subdirectories
       #       (same as `--max-depth=-1`; this is the default)
       #
-      #       Pass `false` to emit `--no-recursive` (`--max-depth=0`).
-      #
       #       Alias: :r
+      #
+      #     @option options [Boolean] :no_recursive (false) do not recurse into
+      #       subdirectories (`--no-recursive`, equivalent to `--max-depth=0`)
       #
       #     @option options [Boolean, String] :color (nil) show colored matches
       #
@@ -295,11 +297,12 @@ module Git
       #     @option options [String] :parent_basename (nil) override the name used
       #       as a prefix for submodule output when used with `:recurse_submodules`
       #
-      #     @option options [Boolean] :exclude_standard (nil) honor the `.gitignore`
-      #       mechanism when searching untracked files
+      #     @option options [Boolean] :exclude_standard (false) honor the `.gitignore`
+      #       mechanism when searching untracked files (`--exclude-standard`)
       #
-      #       Pass `false` to emit `--no-exclude-standard` and also search ignored
-      #       files. Only useful with `:untracked` or `:no_index`.
+      #     @option options [Boolean] :no_exclude_standard (false) do not honor the
+      #       `.gitignore` mechanism; also search ignored files
+      #       (`--no-exclude-standard`); only useful with `:untracked` or `:no_index`
       #
       #     @option options [Boolean] :cached (false) search blobs registered in the
       #       index instead of tracked files in the working tree

@@ -86,9 +86,10 @@ module Git
         #
         #       Alias: :z
         #
-        #     @option options [Boolean] :includes (nil) respect include directives in config files
+        #     @option options [Boolean] :includes (false) respect include directives in config files (`--includes`)
         #
-        #       Pass `true` for `--includes`, `false` for `--no-includes`.
+        #     @option options [Boolean] :no_includes (false) disable include directives
+        #       in config files (`--no-includes`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-urlmatch`
         #

@@ -66,11 +66,11 @@ RSpec.describe Git::Commands::CatFile::Raw do
         command.call('HEAD', t: true, use_mailmap: true)
       end
 
-      it 'passes --no-use-mailmap when false' do
+      it 'passes --no-use-mailmap when :no_use_mailmap is true' do
         expect_command_capturing('cat-file', '-t', '--no-use-mailmap', '--', 'HEAD')
           .and_return(command_result('commit'))
 
-        command.call('HEAD', t: true, use_mailmap: false)
+        command.call('HEAD', t: true, no_use_mailmap: true)
       end
     end
 

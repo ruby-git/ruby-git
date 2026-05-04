@@ -98,11 +98,11 @@ RSpec.describe Git::Commands::Stash::Show do
         command.call(numstat: true, shortstat: true, include_untracked: true)
       end
 
-      it 'adds --no-include-untracked flag when false' do
+      it 'adds --no-include-untracked flag when :no_include_untracked is true' do
         expect_command_capturing('stash', 'show', '--numstat', '--shortstat', '--no-include-untracked')
           .and_return(command_result(numstat_output))
 
-        command.call(numstat: true, shortstat: true, include_untracked: false)
+        command.call(numstat: true, shortstat: true, no_include_untracked: true)
       end
 
       it 'accepts :u alias' do

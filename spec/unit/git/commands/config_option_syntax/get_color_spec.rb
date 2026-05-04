@@ -85,18 +85,22 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColor do
     end
 
     context 'with the :includes option' do
-      it 'adds --includes when true' do
-        expect_command_capturing('config', '--get-color', '--includes', '--',
-                                 'color.diff.new').and_return(command_result)
+      context 'when true' do
+        it 'adds --includes to the command line' do
+          expect_command_capturing('config', '--get-color', '--includes', '--',
+                                   'color.diff.new').and_return(command_result)
 
-        command.call('color.diff.new', includes: true)
+          command.call('color.diff.new', includes: true)
+        end
       end
 
-      it 'adds --no-includes when false' do
-        expect_command_capturing('config', '--get-color', '--no-includes', '--',
-                                 'color.diff.new').and_return(command_result)
+      context 'when :no_includes is true' do
+        it 'adds --no-includes to the command line' do
+          expect_command_capturing('config', '--get-color', '--no-includes', '--',
+                                   'color.diff.new').and_return(command_result)
 
-        command.call('color.diff.new', includes: false)
+          command.call('color.diff.new', no_includes: true)
+        end
       end
     end
 

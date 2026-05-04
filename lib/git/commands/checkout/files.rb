@@ -78,9 +78,11 @@ module Git
         #     @option options [String] :conflict (nil) conflict marker style; valid
         #       values are `'merge'`, `'diff3'`, and `'zdiff3'`
         #
-        #     @option options [Boolean] :overlay (nil) use `true` for `--overlay`
-        #       (never removes files from the index or working tree); use `false` for
-        #       `--no-overlay` (removes files not present in the tree-ish)
+        #     @option options [Boolean] :overlay (false) never remove files from the
+        #       index or working tree that are not present in the tree-ish (`--overlay`)
+        #
+        #     @option options [Boolean] :no_overlay (false) remove files not present
+        #       in the tree-ish from the index and working tree (`--no-overlay`)
         #
         #     @option options [Boolean] :ignore_skip_worktree_bits (false) in sparse
         #       checkout mode, ignore sparse patterns and update all files matched by

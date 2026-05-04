@@ -94,8 +94,8 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      it 'outputs --no-flag once when value is false' do
-        expect(args.bind(force: false).to_ary).to eq(['--no-force'])
+      it 'outputs --no-flag once when no_force is true' do
+        expect(args.bind(no_force: true).to_ary).to eq(['--no-force'])
       end
 
       it 'outputs --flag once when value is true' do
@@ -127,7 +127,203 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       it 'raises an error for Integer value' do
-        expect { args.bind(force: 1) }.to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
+        expect { args.bind(force: 1) }.to raise_error(ArgumentError, /flag_option :force expects a boolean value/)
+      end
+    end
+
+    context 'with negatable: true companion-key model' do
+      context 'with flag_option negatable: true — basic companion-key behavior' do
+        subject(:args) do
+          described_class.define do
+            flag_option :all, negatable: true
+          end
+        end
+
+        it 'emits --all when :all is true' do
+          expect(args.bind(all: true).to_ary).to eq(['--all'])
+        end
+
+        it 'emits --no-all when :no_all is true' do
+          expect(args.bind(no_all: true).to_ary).to eq(['--no-all'])
+        end
+
+        it 'emits nothing when :all is false (false is absent under companion-key model)' do
+          expect(args.bind(all: false).to_ary).to eq([])
+        end
+
+        it 'emits nothing when :no_all is false' do
+          expect(args.bind(no_all: false).to_ary).to eq([])
+        end
+
+        it 'emits nothing when neither key is provided' do
+          expect(args.bind.to_ary).to eq([])
+        end
+
+        it 'raises a conflict when both :all and :no_all are true' do
+          expect { args.bind(all: true, no_all: true) }
+            .to raise_error(ArgumentError, /cannot specify :all and :no_all/)
+        end
+
+        it 'does not raise when :all is false and :no_all is true (false is absent, no conflict)' do
+          expect { args.bind(all: false, no_all: true) }.not_to raise_error
+          expect(args.bind(all: false, no_all: true).to_ary).to eq(['--no-all'])
+        end
+      end
+
+      context 'with flag_option negatable: true and custom as:' do
+        subject(:args) do
+          described_class.define do
+            flag_option :three_way, as: '--3way', negatable: true
+          end
+        end
+
+        it 'emits --3way when :three_way is true' do
+          expect(args.bind(three_way: true).to_ary).to eq(['--3way'])
+        end
+
+        it 'emits --no-3way when :no_three_way is true' do
+          expect(args.bind(no_three_way: true).to_ary).to eq(['--no-3way'])
+        end
+      end
+
+      context 'with flag_option negatable: true and aliases — no_ only for primary' do
+        subject(:args) do
+          described_class.define do
+            flag_option %i[edit e], negatable: true
+          end
+        end
+
+        it 'registers no_edit companion (primary key)' do
+          expect(args.bind(no_edit: true).to_ary).to eq(['--no-edit'])
+        end
+
+        it 'does not register no_e companion (alias only)' do
+          expect { args.bind(no_e: true) }
+            .to raise_error(ArgumentError, /Unsupported options: :no_e/)
+        end
+      end
+
+      context 'with snake_case validation' do
+        it 'raises when primary key starts with uppercase' do
+          expect do
+            described_class.define do
+              flag_option :L, negatable: true
+            end
+          end.to raise_error(ArgumentError, /negatable: true requires a snake_case primary key, got :L/)
+        end
+      end
+
+      context 'with collision detection' do
+        it 'raises when :no_foo is already registered and :foo negatable: true is defined' do
+          expect do
+            described_class.define do
+              flag_option :no_foo
+              flag_option :foo, negatable: true
+            end
+          end.to raise_error(ArgumentError, /negatable: true would register :no_foo but that key is already registered/)
+        end
+
+        it 'raises when :foo negatable: true is defined and :no_foo is registered after' do
+          expect do
+            described_class.define do
+              flag_option :foo, negatable: true
+              flag_option :no_foo
+            end
+          end.to raise_error(ArgumentError, /option key :no_foo is already registered as a negatable companion/)
+        end
+
+        it 'raises when the names array contains duplicate aliases' do
+          expect do
+            described_class.define do
+              flag_option %i[foo foo]
+            end
+          end.to raise_error(ArgumentError, /duplicate alias key :foo in option definition/)
+        end
+
+        it 'raises when the companion key is included in the same declaration alias list for flag_option' do
+          expect do
+            described_class.define do
+              flag_option %i[foo no_foo], negatable: true
+            end
+          end.to raise_error(
+            ArgumentError, /negatable: true would register :no_foo as a companion.*already listed as an alias/
+          )
+        end
+
+        it 'raises when the companion key is included in the same declaration alias list for flag_or_value_option' do
+          expect do
+            described_class.define do
+              flag_or_value_option %i[bar no_bar], negatable: true
+            end
+          end.to raise_error(
+            ArgumentError, /negatable: true would register :no_bar as a companion.*already listed as an alias/
+          )
+        end
+      end
+
+      context 'with flag_or_value_option negatable: true — companion-key behavior' do
+        subject(:args) do
+          described_class.define do
+            flag_or_value_option :color, negatable: true
+          end
+        end
+
+        it 'emits --color when :color is true' do
+          expect(args.bind(color: true).to_ary).to eq(['--color'])
+        end
+
+        it 'emits --color always when :color is "always"' do
+          expect(args.bind(color: 'always').to_ary).to eq(['--color', 'always'])
+        end
+
+        it 'emits --no-color when :no_color is true' do
+          expect(args.bind(no_color: true).to_ary).to eq(['--no-color'])
+        end
+
+        it 'emits nothing when :no_color is false' do
+          expect(args.bind(no_color: false).to_ary).to eq([])
+        end
+
+        it 'raises when :no_color is given a non-boolean value' do
+          expect { args.bind(no_color: 'always') }
+            .to raise_error(ArgumentError, /flag_option :no_color expects a boolean value/)
+        end
+      end
+
+      context 'when arrays for as: are used with negatable flag_or_value' do
+        it 'raises when as: is an array with negatable: true' do
+          expect do
+            described_class.define do
+              flag_or_value_option :sign, negatable: true, as: %w[--sign --verify]
+            end
+          end.to raise_error(
+            ArgumentError, /arrays for as: parameter cannot be combined with negatable: true/
+          )
+        end
+      end
+
+      context 'when as: is a short-form flag with negatable: true' do
+        it 'raises because the synthesized --no-<flag> form would be invalid' do
+          expect do
+            described_class.define do
+              flag_option :sign, as: '-S', negatable: true
+            end
+          end.to raise_error(
+            ArgumentError, /negatable: true requires a long-form .*for as: on :sign/
+          )
+        end
+      end
+
+      context 'when as: is a non-String value with negatable: true' do
+        it 'raises a clean ArgumentError instead of NoMethodError from negate_flag' do
+          expect do
+            described_class.define do
+              flag_option :sign, as: 123, negatable: true
+            end
+          end.to raise_error(
+            ArgumentError, /negatable: true requires a long-form .*for as: on :sign/
+          )
+        end
       end
     end
 
@@ -692,7 +888,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'edge case: empty strings vs nil for positionals' do
+      context 'with empty strings vs nil for positionals' do
         let(:args) do
           described_class.define do
             operand :commit, required: false
@@ -720,7 +916,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'edge case: empty arrays for variadic positionals' do
+      context 'with empty arrays for variadic positionals' do
         let(:args) do
           described_class.define do
             operand :paths, repeatable: true
@@ -789,7 +985,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'multiple variadic positionals (rejected at definition time)' do
+      context 'with multiple variadic positionals (rejected at definition time)' do
         it 'raises ArgumentError when defining a second variadic positional' do
           expect do
             described_class.define do
@@ -843,9 +1039,9 @@ RSpec.describe Git::Commands::Arguments do
       #
       # =======================================================================
 
-      context 'positional mapping (Ruby semantics)' do
+      context 'with positional mapping (Ruby semantics)' do
         # Pattern: def foo(arg1)
-        context 'single required positional' do
+        context 'with single required positional' do
           let(:args) do
             described_class.define do
               operand :arg1, required: true
@@ -862,7 +1058,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1 = 'default')
-        context 'single optional positional with default' do
+        context 'with single optional positional with default' do
           let(:args) do
             described_class.define do
               operand :arg1, default: 'default_value'
@@ -879,7 +1075,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1, arg2)
-        context 'two required positionals' do
+        context 'with two required positionals' do
           let(:args) do
             described_class.define do
               operand :arg1, required: true
@@ -897,7 +1093,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1, arg2 = 'default')
-        context 'required followed by optional' do
+        context 'with required followed by optional' do
           let(:args) do
             described_class.define do
               operand :arg1, required: true
@@ -916,7 +1112,7 @@ RSpec.describe Git::Commands::Arguments do
 
         # Pattern: def foo(arg1 = 'default', arg2)
         # Ruby fills required args first (from the end), then optional from remaining
-        context 'optional followed by required' do
+        context 'with optional followed by required' do
           let(:args) do
             described_class.define do
               operand :arg1, default: 'default1'
@@ -939,7 +1135,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1 = 'default1', arg2 = 'default2', arg3)
-        context 'two optionals followed by required' do
+        context 'with two optionals followed by required' do
           let(:args) do
             described_class.define do
               operand :arg1, default: 'default1'
@@ -963,7 +1159,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1, arg2 = 'default2', arg3)
-        context 'required, optional, required' do
+        context 'with required, optional, required' do
           let(:args) do
             described_class.define do
               operand :arg1, required: true
@@ -987,7 +1183,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(*args)
-        context 'variadic only' do
+        context 'with variadic only' do
           let(:args) do
             described_class.define do
               operand :paths, repeatable: true
@@ -1008,7 +1204,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(arg1, *rest)
-        context 'required followed by variadic' do
+        context 'with required followed by variadic' do
           let(:args) do
             described_class.define do
               operand :command, required: true
@@ -1030,7 +1226,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(*sources, destination) - the git mv pattern!
-        context 'variadic followed by required (git mv pattern)' do
+        context 'with variadic followed by required (git mv pattern)' do
           let(:args) do
             described_class.define do
               operand :sources, repeatable: true, required: true
@@ -1063,7 +1259,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(first, *middle, last)
-        context 'required, variadic, required' do
+        context 'with required, variadic, required' do
           let(:args) do
             described_class.define do
               operand :first, required: true
@@ -1092,7 +1288,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(a, b, *middle, c, d)
-        context 'two required, variadic, two required' do
+        context 'with two required, variadic, two required' do
           let(:args) do
             described_class.define do
               operand :a, required: true
@@ -1123,7 +1319,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(a, *middle, c = 'default')
-        context 'required, variadic, optional' do
+        context 'with required, variadic, optional' do
           let(:args) do
             described_class.define do
               operand :a, required: true
@@ -1147,7 +1343,7 @@ RSpec.describe Git::Commands::Arguments do
 
         # Pattern: def foo(a = 'default', *middle, b)
         # Now follows Ruby semantics: optional before variadic with required after
-        context 'optional, variadic, required (Ruby semantics)' do
+        context 'with optional, variadic, required (Ruby semantics)' do
           let(:args) do
             described_class.define do
               operand :a, default: 'default_a'
@@ -1171,7 +1367,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(a = 'default', *rest)
-        context 'optional followed by variadic (no post)' do
+        context 'with optional followed by variadic (no post)' do
           let(:args) do
             described_class.define do
               operand :a, default: 'default_a'
@@ -1193,7 +1389,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(a, b = 'default', *rest)
-        context 'required, optional, variadic (no post)' do
+        context 'with required, optional, variadic (no post)' do
           let(:args) do
             described_class.define do
               operand :a, required: true
@@ -1220,7 +1416,7 @@ RSpec.describe Git::Commands::Arguments do
         end
 
         # Pattern: def foo(a, b = 'default', *middle, c)
-        context 'required, optional, variadic, required' do
+        context 'with required, optional, variadic, required' do
           let(:args) do
             described_class.define do
               operand :a, required: true
@@ -1264,7 +1460,7 @@ RSpec.describe Git::Commands::Arguments do
       #
       # =======================================================================
 
-      context 'nil handling for positionals' do
+      context 'with nil handling for positionals' do
         context 'with non-variadic positionals' do
           let(:args) do
             described_class.define do
@@ -1504,12 +1700,12 @@ RSpec.describe Git::Commands::Arguments do
           described_class.define do
             flag_or_value_option :sign, negatable: true, inline: true, as: ['--sign', '--verify']
           end
-        end.to raise_error(ArgumentError, /arrays for as: parameter are only supported for flag types/)
+        end.to raise_error(ArgumentError, /arrays for as: parameter cannot be combined with negatable: true/)
       end
     end
 
     context 'with allow_empty parameter' do
-      context 'for value types' do
+      context 'with value types' do
         let(:args_without_allow_empty) do
           described_class.define do
             value_option :message
@@ -1536,7 +1732,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'for value inline: true types' do
+      context 'with value inline: true types' do
         let(:args_without_allow_empty) do
           described_class.define do
             value_option :abbrev, inline: true
@@ -1858,11 +2054,9 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
 
-        it 'raises when negatable flag is false and conflicting option is present' do
-          expect { args_def.bind(all: false, update: true) }.to raise_error(
-            ArgumentError,
-            /cannot specify :all and :update/
-          )
+        it 'does not raise when all: false and conflicting option is present' do
+          # false is absent under companion-key model
+          expect { args_def.bind(all: false, update: true) }.not_to raise_error
         end
 
         it 'does not raise when non-negatable flag is false and other option is present' do
@@ -1883,11 +2077,9 @@ RSpec.describe Git::Commands::Arguments do
             end
           end
 
-          it 'raises when negatable flag_or_value is false and conflicting option is present' do
-            expect { fov_args_def.bind(sign: false, no_verify: true) }.to raise_error(
-              ArgumentError,
-              /cannot specify :sign and :no_verify/
-            )
+          it 'does not raise when sign: false and conflicting option is present' do
+            # false is absent under companion-key model
+            expect { fov_args_def.bind(sign: false, no_verify: true) }.not_to raise_error
           end
 
           it 'raises when negatable flag_or_value is true and conflicting option is present' do
@@ -1903,7 +2095,37 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'typo guard — definition-time errors' do
+      context 'when conflict is declared using an option alias' do
+        let(:args_def) do
+          described_class.define do
+            flag_option %i[verbose v]
+            flag_option :quiet
+            conflicts :v, :quiet
+          end
+        end
+
+        it 'raises when conflict is declared with alias and both options are present (primary binding)' do
+          expect { args_def.bind(verbose: true, quiet: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :v and :quiet/
+          )
+        end
+
+        it 'raises when conflict is declared with alias and both options are present (alias binding)' do
+          expect { args_def.bind(v: true, quiet: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :v and :quiet/
+          )
+        end
+
+        it 'allows each aliased option alone' do
+          expect(args_def.bind(verbose: true).to_ary).to eq(['--verbose'])
+          expect(args_def.bind(v: true).to_ary).to eq(['--verbose'])
+          expect(args_def.bind(quiet: true).to_ary).to eq(['--quiet'])
+        end
+      end
+
+      context 'with typo guard (definition-time errors)' do
         it 'raises ArgumentError for an unknown argument name in conflicts declaration' do
           expect do
             described_class.define do
@@ -1911,6 +2133,31 @@ RSpec.describe Git::Commands::Arguments do
               conflicts :patch, :typo
             end
           end.to raise_error(ArgumentError, /unknown argument :typo in conflicts declaration/)
+        end
+      end
+
+      context 'with conflicts involving a positional operand' do
+        let(:args_def) do
+          described_class.define do
+            flag_option :all
+            operand :path
+            conflicts :all, :path
+          end
+        end
+
+        it 'raises when both the flag and the positional are supplied' do
+          expect { args_def.bind('src/', all: true) }.to raise_error(
+            ArgumentError,
+            /cannot specify :all and :path/
+          )
+        end
+
+        it 'allows the flag alone (no positional)' do
+          expect(args_def.bind(all: true).to_ary).to eq(['--all'])
+        end
+
+        it 'allows the positional alone (no flag)' do
+          expect(args_def.bind('src/').to_ary).to eq(['src/'])
         end
       end
     end
@@ -1921,8 +2168,8 @@ RSpec.describe Git::Commands::Arguments do
           described_class.define do
             flag_option :all,            negatable: true
             flag_option :ignore_removal, negatable: true
-            forbid_values all: true,  ignore_removal: true
-            forbid_values all: false, ignore_removal: false
+            forbid_values all: true,    ignore_removal: true         # --all --ignore-removal: contradictory
+            forbid_values no_all: true, no_ignore_removal: true      # --no-all --no-ignore-removal: contradictory
           end
         end
 
@@ -1933,29 +2180,35 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
 
-        it 'rejects the exact forbidden tuple (all: false, ignore_removal: false)' do
-          expect { args.bind(all: false, ignore_removal: false) }.to raise_error(
+        it 'rejects the exact forbidden tuple (no_all: true, no_ignore_removal: true)' do
+          expect { args.bind(no_all: true, no_ignore_removal: true) }.to raise_error(
             ArgumentError,
-            /all.*ignore_removal/
+            'cannot specify :no_all=true with :no_ignore_removal=true'
           )
         end
 
-        it 'allows semantically equivalent pair (all: true, ignore_removal: false)' do
-          expect { args.bind(all: true, ignore_removal: false) }.not_to raise_error
+        it 'allows semantically equivalent pair (all: true + no_ignore_removal: true → --all --no-ignore-removal)' do
+          expect { args.bind(all: true, no_ignore_removal: true) }.not_to raise_error
         end
 
-        it 'allows semantically equivalent pair (all: false, ignore_removal: true)' do
-          expect { args.bind(all: false, ignore_removal: true) }.not_to raise_error
+        it 'allows semantically equivalent pair (no_all: true + ignore_removal: true → --no-all --ignore-removal)' do
+          expect { args.bind(no_all: true, ignore_removal: true) }.not_to raise_error
         end
 
         it 'allows only :all being provided' do
           expect { args.bind(all: true) }.not_to raise_error
-          expect { args.bind(all: false) }.not_to raise_error
+        end
+
+        it 'allows only :no_all being provided' do
+          expect { args.bind(no_all: true) }.not_to raise_error
         end
 
         it 'allows only :ignore_removal being provided' do
           expect { args.bind(ignore_removal: true) }.not_to raise_error
-          expect { args.bind(ignore_removal: false) }.not_to raise_error
+        end
+
+        it 'allows only :no_ignore_removal being provided' do
+          expect { args.bind(no_ignore_removal: true) }.not_to raise_error
         end
 
         it 'includes name=value pairs in the error message' do
@@ -2029,7 +2282,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'definition-time validation' do
+      context 'with definition-time validation' do
         it 'raises ArgumentError for unknown names at definition time' do
           expect do
             described_class.define do
@@ -2063,7 +2316,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'alongside conflicts (independent checks)' do
+      context 'when used alongside conflicts (independent checks)' do
         let(:args) do
           described_class.define do
             flag_option :all,            negatable: true
@@ -2086,10 +2339,8 @@ RSpec.describe Git::Commands::Arguments do
           )
         end
 
-        it 'raises conflicts error for all: false with update: true (negatable false counts as present)' do
-          expect { args.bind(all: false, update: true) }.to raise_error(
-            ArgumentError, /cannot specify :all and :update/
-          )
+        it 'does not raise for all: false with update: true (false is absent under companion-key model)' do
+          expect { args.bind(all: false, update: true) }.not_to raise_error
         end
 
         it 'allows all: true with ignore_removal: false (no forbid_values violation)' do
@@ -2435,7 +2686,7 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with negatable flag options in requires_one_of groups' do
-        context 'satisfied-by check: negatable false counts as present' do
+        context 'when negatable false is checked for group membership' do
           let(:args_def) do
             described_class.define do
               flag_option :all,    negatable: true
@@ -2444,8 +2695,9 @@ RSpec.describe Git::Commands::Arguments do
             end
           end
 
-          it 'counts negatable false as satisfying the group' do
-            expect { args_def.bind(all: false) }.not_to raise_error
+          it 'does not satisfy the group when all: false (false is absent under companion-key model)' do
+            expect { args_def.bind(all: false) }
+              .to raise_error(ArgumentError, /at least one of :all, :update must be provided/)
           end
 
           it 'counts negatable true as satisfying the group' do
@@ -2468,7 +2720,7 @@ RSpec.describe Git::Commands::Arguments do
           end
         end
 
-        context 'trigger (when:) check: negatable false does not fire the trigger' do
+        context 'when negatable false does not fire the requires trigger' do
           let(:args_def) do
             described_class.define do
               flag_option :verbose, negatable: true
@@ -2500,6 +2752,30 @@ RSpec.describe Git::Commands::Arguments do
             expect { args_def.bind }.not_to raise_error
           end
         end
+
+        context 'with keyword option requires_one_of and a separate positional operand (option-aware lookup)' do
+          let(:args_def) do
+            described_class.define do
+              operand :path, required: false
+              flag_option :force, negatable: true, required: true
+            end
+          end
+
+          it 'raises when only a positional is bound but the required keyword option is absent' do
+            # The positional :path does not satisfy the requires_one_of for :force/:no_force;
+            # only the keyword option (or its companion) can satisfy the group.
+            expect { args_def.bind('src/') }
+              .to raise_error(ArgumentError, /at least one of :force, :no_force must be provided/)
+          end
+
+          it 'satisfies the group when the keyword option is provided alongside a positional' do
+            expect { args_def.bind('src/', force: true) }.not_to raise_error
+          end
+
+          it 'satisfies the group via the companion keyword option alongside a positional' do
+            expect { args_def.bind('src/', no_force: true) }.not_to raise_error
+          end
+        end
       end
     end
 
@@ -2527,7 +2803,7 @@ RSpec.describe Git::Commands::Arguments do
           .to raise_error(ArgumentError, /cannot specify :soft and :hard/)
       end
 
-      context 'typo guard' do
+      context 'with typo guard' do
         it 'raises at definition time for unknown names' do
           expect do
             described_class.define do
@@ -2547,7 +2823,7 @@ RSpec.describe Git::Commands::Arguments do
     end
 
     context 'with requires method' do
-      context 'unary form — single conditional requirement' do
+      context 'with unary form (single conditional requirement)' do
         let(:args_def) do
           described_class.define do
             flag_option :pathspec_file_nul
@@ -2583,7 +2859,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'group form — conditional requires_one_of with when:' do
+      context 'with group form (conditional requires_one_of with when:)' do
         let(:args_def) do
           described_class.define do
             flag_option :annotate
@@ -2623,7 +2899,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'trigger (when:) check: empty string and empty array are treated as absent' do
+      context 'when trigger is empty string or empty array' do
         let(:args_def) do
           described_class.define do
             value_option :label, inline: true
@@ -2655,7 +2931,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'typo guard — definition-time errors' do
+      context 'with typo guard (definition-time errors for requires)' do
         it 'raises at definition time for unknown required name' do
           expect do
             described_class.define do
@@ -2714,7 +2990,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'backward compatibility — unconditional requires_one_of still works' do
+      context 'when using unconditional requires_one_of (backward compatibility)' do
         let(:args_def) do
           described_class.define do
             value_option :pathspec_from_file, inline: true
@@ -2736,7 +3012,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'multiple conditional requires with same trigger' do
+      context 'with multiple conditional requires with same trigger' do
         let(:args_def) do
           described_class.define do
             flag_option :annotate
@@ -2970,7 +3246,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'allow_nil defaults to false for required positional' do
+      context 'with allow_nil defaulting to false for required positional' do
         let(:args) do
           described_class.define do
             operand :tree_ish, required: true
@@ -3055,16 +3331,24 @@ RSpec.describe Git::Commands::Arguments do
           end
         end
 
-        it 'raises ArgumentError when required option is not provided' do
-          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :verify/)
+        it 'raises when neither side is provided' do
+          expect { args.bind }.to raise_error(
+            ArgumentError, /at least one of :verify, :no_verify must be provided/
+          )
         end
 
-        it 'accepts true value' do
+        it 'accepts true value (positive side)' do
           expect(args.bind(verify: true).to_ary).to eq(['--verify'])
         end
 
-        it 'accepts false value' do
-          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
+        it 'accepts no_verify: true (negative side satisfies required pair)' do
+          expect(args.bind(no_verify: true).to_ary).to eq(['--no-verify'])
+        end
+
+        it 'raises when verify: false and nothing else is provided (false is absent)' do
+          expect { args.bind(verify: false) }.to raise_error(
+            ArgumentError, /at least one of :verify, :no_verify must be provided/
+          )
         end
       end
 
@@ -3095,16 +3379,24 @@ RSpec.describe Git::Commands::Arguments do
           end
         end
 
-        it 'raises ArgumentError when required option is not provided' do
-          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
+        it 'raises when neither side is provided' do
+          expect { args.bind }.to raise_error(
+            ArgumentError, /at least one of :gpg_sign, :no_gpg_sign must be provided/
+          )
         end
 
-        it 'accepts true value' do
+        it 'accepts true value (positive side)' do
           expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
         end
 
-        it 'accepts false value' do
-          expect(args.bind(gpg_sign: false).to_ary).to eq(['--no-gpg-sign'])
+        it 'accepts no_gpg_sign: true (negative side satisfies required pair)' do
+          expect(args.bind(no_gpg_sign: true).to_ary).to eq(['--no-gpg-sign'])
+        end
+
+        it 'raises when gpg_sign: false and nothing else is provided (false is absent)' do
+          expect { args.bind(gpg_sign: false) }.to raise_error(
+            ArgumentError, /at least one of :gpg_sign, :no_gpg_sign must be provided/
+          )
         end
 
         it 'accepts string value' do
@@ -3289,26 +3581,13 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with required: true and allow_nil: false on flag negatable: true' do
-        let(:args) do
-          described_class.define do
-            flag_option :verify, negatable: true, required: true, allow_nil: false
-          end
-        end
-
-        it 'raises ArgumentError when option is not provided' do
-          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :verify/)
-        end
-
-        it 'raises ArgumentError when value is nil' do
-          expect { args.bind(verify: nil) }.to raise_error(ArgumentError, /Required options cannot be nil: :verify/)
-        end
-
-        it 'accepts true value' do
-          expect(args.bind(verify: true).to_ary).to eq(['--verify'])
-        end
-
-        it 'accepts false value' do
-          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
+        it 'raises ArgumentError at definition time' do
+          expect do
+            described_class.define do
+              flag_option :verify, negatable: true, required: true, allow_nil: false
+            end
+          end.to raise_error(ArgumentError,
+                             /allow_nil: false.*negatable.*required|negatable.*required.*allow_nil: false/)
         end
       end
 
@@ -3343,32 +3622,13 @@ RSpec.describe Git::Commands::Arguments do
       end
 
       context 'with required: true and allow_nil: false on flag_or_value negatable: true, inline: true' do
-        let(:args) do
-          described_class.define do
-            flag_or_value_option :gpg_sign, negatable: true, inline: true, required: true, allow_nil: false
-          end
-        end
-
-        it 'raises ArgumentError when option is not provided' do
-          expect { args.bind }.to raise_error(ArgumentError, /Required options not provided: :gpg_sign/)
-        end
-
-        it 'raises ArgumentError when value is nil' do
+        it 'raises ArgumentError at definition time' do
           expect do
-            args.bind(gpg_sign: nil)
-          end.to raise_error(ArgumentError, /Required options cannot be nil: :gpg_sign/)
-        end
-
-        it 'accepts true value' do
-          expect(args.bind(gpg_sign: true).to_ary).to eq(['--gpg-sign'])
-        end
-
-        it 'accepts false value' do
-          expect(args.bind(gpg_sign: false).to_ary).to eq(['--no-gpg-sign'])
-        end
-
-        it 'accepts string value' do
-          expect(args.bind(gpg_sign: 'KEYID').to_ary).to eq(['--gpg-sign=KEYID'])
+            described_class.define do
+              flag_or_value_option :gpg_sign, negatable: true, inline: true, required: true, allow_nil: false
+            end
+          end.to raise_error(ArgumentError,
+                             /allow_nil: false.*negatable.*required|negatable.*required.*allow_nil: false/)
         end
       end
 
@@ -3542,8 +3802,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(full: true).to_ary).to eq(['--full'])
         end
 
-        it 'outputs --no-flag when value is false' do
-          expect(args.bind(full: false).to_ary).to eq(['--no-full'])
+        it 'outputs nothing when full: false (false is absent under companion-key model)' do
+          expect(args.bind(full: false).to_ary).to eq([])
         end
 
         it 'outputs nothing when option is not provided' do
@@ -3553,7 +3813,7 @@ RSpec.describe Git::Commands::Arguments do
         it 'raises an error when value is not a boolean' do
           expect { args.bind(full: 'true') }.to raise_error(
             ArgumentError,
-            /negatable_flag expects a boolean value, got "true"/
+            /flag_option :full expects a boolean value, got "true"/
           )
         end
       end
@@ -3800,8 +4060,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(verify: true).to_ary).to eq(['--verify'])
         end
 
-        it 'outputs --no-flag when value is false' do
-          expect(args.bind(verify: false).to_ary).to eq(['--no-verify'])
+        it 'outputs nothing when verify: false (false is absent under companion-key model)' do
+          expect(args.bind(verify: false).to_ary).to eq([])
         end
 
         it 'outputs --flag value as separate arguments when value is a string' do
@@ -3822,7 +4082,7 @@ RSpec.describe Git::Commands::Arguments do
           it 'raises an error when an array element is nil' do
             expect { args.bind(verify: [nil]) }.to raise_error(
               ArgumentError,
-              /Invalid value for negatable_flag_or_value: nil is not allowed as an array element/
+              /Invalid value for flag_or_value: nil is not allowed as an array element/
             )
           end
         end
@@ -3839,8 +4099,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(sign: true).to_ary).to eq(['--sign'])
         end
 
-        it 'outputs --no-flag when value is false' do
-          expect(args.bind(sign: false).to_ary).to eq(['--no-sign'])
+        it 'outputs nothing when sign: false (false is absent under companion-key model)' do
+          expect(args.bind(sign: false).to_ary).to eq([])
         end
 
         it 'outputs --flag=value when value is a string' do
@@ -3861,7 +4121,7 @@ RSpec.describe Git::Commands::Arguments do
           it 'raises an error when an array element is nil' do
             expect { args.bind(sign: [nil]) }.to raise_error(
               ArgumentError,
-              /Invalid value for negatable_flag_or_inline_value: nil is not allowed as an array element/
+              /Invalid value for flag_or_inline_value: nil is not allowed as an array element/
             )
           end
         end
@@ -3873,7 +4133,7 @@ RSpec.describe Git::Commands::Arguments do
     # =======================================================================
 
     context 'with key_value options' do
-      context 'basic Hash input' do
+      context 'with basic Hash input' do
         let(:args) do
           described_class.define do
             key_value_option :trailers, as: '--trailer'
@@ -3893,7 +4153,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'Hash with array values' do
+      context 'with Hash containing array values' do
         let(:args) do
           described_class.define do
             key_value_option :trailers, as: '--trailer'
@@ -3913,7 +4173,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'Array of arrays input' do
+      context 'with Array of arrays as input' do
         let(:args) do
           described_class.define do
             key_value_option :trailers, as: '--trailer'
@@ -3939,7 +4199,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'nil and empty value handling' do
+      context 'with nil and empty value handling' do
         let(:args) do
           described_class.define do
             key_value_option :trailers, as: '--trailer'
@@ -4013,7 +4273,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'key validation' do
+      context 'with key validation' do
         let(:args) do
           described_class.define do
             key_value_option :trailers, as: '--trailer'
@@ -4226,8 +4486,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(f: true).to_ary).to eq(['-f'])
         end
 
-        it 'uses double-dash --no- prefix when false' do
-          expect(args.bind(f: false).to_ary).to eq(['--no-f'])
+        it 'uses double-dash --no- prefix when no_f is true' do
+          expect(args.bind(no_f: true).to_ary).to eq(['--no-f'])
         end
       end
 
@@ -4310,8 +4570,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
-        it 'outputs --no-n when false' do
-          expect(args.bind(n: false).to_ary).to eq(['--no-n'])
+        it 'outputs --no-n when no_n is true' do
+          expect(args.bind(no_n: true).to_ary).to eq(['--no-n'])
         end
 
         it 'outputs value with no separator when given a string' do
@@ -4326,8 +4586,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(n: true).to_ary).to eq(['-n'])
         end
 
-        it 'outputs --no-n when false' do
-          expect(args.bind(n: false).to_ary).to eq(['--no-n'])
+        it 'outputs --no-n when no_n is true' do
+          expect(args.bind(no_n: true).to_ary).to eq(['--no-n'])
         end
 
         it 'outputs value as separate argument when given a string' do
@@ -4342,8 +4602,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(name: true).to_ary).to eq(['--name'])
         end
 
-        it 'outputs --no-name when false' do
-          expect(args.bind(name: false).to_ary).to eq(['--no-name'])
+        it 'outputs --no-name when no_name is true' do
+          expect(args.bind(no_name: true).to_ary).to eq(['--no-name'])
         end
 
         it 'outputs value with = separator when given a string' do
@@ -4358,8 +4618,8 @@ RSpec.describe Git::Commands::Arguments do
           expect(args.bind(name: true).to_ary).to eq(['--name'])
         end
 
-        it 'outputs --no-name when false' do
-          expect(args.bind(name: false).to_ary).to eq(['--no-name'])
+        it 'outputs --no-name when no_name is true' do
+          expect(args.bind(no_name: true).to_ary).to eq(['--no-name'])
         end
 
         it 'outputs value as separate argument when given a string' do
@@ -5496,10 +5756,10 @@ RSpec.describe Git::Commands::Arguments do
           .to raise_error(ArgumentError, /expected one of.*got "maybe"/)
       end
 
-      it 'skips allowed_values validation in boolean modes' do
+      it 'skips allowed_values validation in boolean modes and outputs nothing when false' do
         expect { args_def.bind(sign: true) }.not_to raise_error
         expect { args_def.bind(sign: false) }.not_to raise_error
-        expect(args_def.bind(sign: false).to_a).to eq(['--no-sign'])
+        expect(args_def.bind(sign: false).to_a).to eq([])
       end
     end
 
@@ -5637,7 +5897,7 @@ RSpec.describe Git::Commands::Arguments do
   end
 
   describe '#end_of_options' do
-    context 'basic emission behavior' do
+    context 'with basic emission behavior' do
       let(:args) do
         described_class.define do
           flag_option :force
@@ -5762,7 +6022,7 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'coexistence with literal "--"' do
+    context 'when coexisting with literal "--"' do
       let(:args) do
         described_class.define do
           flag_option :force
@@ -5782,7 +6042,7 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'definition-time errors' do
+    context 'when definition-time errors occur' do
       it 'raises ArgumentError if end_of_options is declared twice' do
         expect do
           described_class.define do
@@ -5838,7 +6098,7 @@ RSpec.describe Git::Commands::Arguments do
       end
     end
 
-    context 'always-active validation boundary' do
+    context 'with always-active validation boundary' do
       let(:args) do
         described_class.define do
           operand :commit
@@ -5913,7 +6173,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'boundary semantics with as:' do
+      context 'with boundary semantics and as:' do
         let(:args) do
           described_class.define do
             operand :commit
@@ -5933,7 +6193,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'duplicate guard with as:' do
+      context 'with duplicate guard for as:' do
         it 'raises ArgumentError if end_of_options is declared twice with as:' do
           expect do
             described_class.define do
@@ -5944,7 +6204,7 @@ RSpec.describe Git::Commands::Arguments do
         end
       end
 
-      context 'marker does not leak with as:' do
+      context 'when marker does not leak with as:' do
         let(:args) do
           described_class.define do
             flag_option :force

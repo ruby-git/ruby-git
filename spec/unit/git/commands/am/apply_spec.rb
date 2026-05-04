@@ -72,10 +72,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_keep_cr is true' do
         it 'adds --no-keep-cr flag' do
           expect_command_capturing('am', '--no-keep-cr', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', keep_cr: false)
+          command.call('patches.mbox', no_keep_cr: true)
         end
       end
     end
@@ -88,10 +88,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_scissors is true' do
         it 'adds --no-scissors flag' do
           expect_command_capturing('am', '--no-scissors', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', scissors: false)
+          command.call('patches.mbox', no_scissors: true)
         end
       end
 
@@ -109,10 +109,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_message_id is true' do
         it 'adds --no-message-id flag' do
           expect_command_capturing('am', '--no-message-id', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', message_id: false)
+          command.call('patches.mbox', no_message_id: true)
         end
       end
 
@@ -142,10 +142,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_utf8 is true' do
         it 'adds --no-utf8 flag' do
           expect_command_capturing('am', '--no-utf8', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', utf8: false)
+          command.call('patches.mbox', no_utf8: true)
         end
       end
 
@@ -163,10 +163,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_three_way is true' do
         it 'adds --no-3way flag' do
           expect_command_capturing('am', '--no-3way', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', three_way: false)
+          command.call('patches.mbox', no_three_way: true)
         end
       end
     end
@@ -179,10 +179,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_rerere_autoupdate is true' do
         it 'adds --no-rerere-autoupdate flag' do
           expect_command_capturing('am', '--no-rerere-autoupdate', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', rerere_autoupdate: false)
+          command.call('patches.mbox', no_rerere_autoupdate: true)
         end
       end
     end
@@ -276,10 +276,10 @@ RSpec.describe Git::Commands::Am::Apply do
     end
 
     context 'with :verify option' do
-      context 'when false' do
+      context 'when :no_verify is true' do
         it 'adds --no-verify flag' do
           expect_command_capturing('am', '--no-verify', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', verify: false)
+          command.call('patches.mbox', no_verify: true)
         end
       end
 
@@ -335,10 +335,10 @@ RSpec.describe Git::Commands::Am::Apply do
         end
       end
 
-      context 'when false' do
+      context 'when :no_gpg_sign is true' do
         it 'adds --no-gpg-sign flag' do
           expect_command_capturing('am', '--no-gpg-sign', '--', 'patches.mbox').and_return(command_result)
-          command.call('patches.mbox', gpg_sign: false)
+          command.call('patches.mbox', no_gpg_sign: true)
         end
       end
 

@@ -143,11 +143,13 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, single_branch: true)
       end
 
-      it 'includes --no-single-branch when false' do
-        expect_command_capturing('clone', '--no-single-branch', '--', repository_url,
-                                 directory).and_return(command_result)
+      context 'when :no_single_branch is true' do
+        it 'includes --no-single-branch flag' do
+          expect_command_capturing('clone', '--no-single-branch', '--', repository_url,
+                                   directory).and_return(command_result)
 
-        command.call(repository_url, directory, single_branch: false)
+          command.call(repository_url, directory, no_single_branch: true)
+        end
       end
     end
 
@@ -192,10 +194,12 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, local: true)
       end
 
-      it 'includes --no-local when false' do
-        expect_command_capturing('clone', '--no-local', '--', repository_url, directory).and_return(command_result)
+      context 'when :no_local is true' do
+        it 'includes --no-local flag' do
+          expect_command_capturing('clone', '--no-local', '--', repository_url, directory).and_return(command_result)
 
-        command.call(repository_url, directory, local: false)
+          command.call(repository_url, directory, no_local: true)
+        end
       end
 
       it 'accepts the :l alias' do
@@ -393,10 +397,12 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, tags: true)
       end
 
-      it 'includes --no-tags when false' do
-        expect_command_capturing('clone', '--no-tags', '--', repository_url, directory).and_return(command_result)
+      context 'when :no_tags is true' do
+        it 'includes --no-tags flag' do
+          expect_command_capturing('clone', '--no-tags', '--', repository_url, directory).and_return(command_result)
 
-        command.call(repository_url, directory, tags: false)
+          command.call(repository_url, directory, no_tags: true)
+        end
       end
     end
 
@@ -408,11 +414,13 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, shallow_submodules: true)
       end
 
-      it 'includes --no-shallow-submodules when false' do
-        expect_command_capturing('clone', '--no-shallow-submodules', '--', repository_url,
-                                 directory).and_return(command_result)
+      context 'when :no_shallow_submodules is true' do
+        it 'includes --no-shallow-submodules flag' do
+          expect_command_capturing('clone', '--no-shallow-submodules', '--', repository_url,
+                                   directory).and_return(command_result)
 
-        command.call(repository_url, directory, shallow_submodules: false)
+          command.call(repository_url, directory, no_shallow_submodules: true)
+        end
       end
     end
 
@@ -424,11 +432,13 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, remote_submodules: true)
       end
 
-      it 'includes --no-remote-submodules when false' do
-        expect_command_capturing('clone', '--no-remote-submodules', '--', repository_url,
-                                 directory).and_return(command_result)
+      context 'when :no_remote_submodules is true' do
+        it 'includes --no-remote-submodules flag' do
+          expect_command_capturing('clone', '--no-remote-submodules', '--', repository_url,
+                                   directory).and_return(command_result)
 
-        command.call(repository_url, directory, remote_submodules: false)
+          command.call(repository_url, directory, no_remote_submodules: true)
+        end
       end
     end
 
@@ -462,11 +472,13 @@ RSpec.describe Git::Commands::Clone do
         command.call(repository_url, directory, reject_shallow: true)
       end
 
-      it 'includes --no-reject-shallow when false' do
-        expect_command_capturing('clone', '--no-reject-shallow', '--', repository_url,
-                                 directory).and_return(command_result)
+      context 'when :no_reject_shallow is true' do
+        it 'includes --no-reject-shallow flag' do
+          expect_command_capturing('clone', '--no-reject-shallow', '--', repository_url,
+                                   directory).and_return(command_result)
 
-        command.call(repository_url, directory, reject_shallow: false)
+          command.call(repository_url, directory, no_reject_shallow: true)
+        end
       end
     end
 
@@ -520,7 +532,7 @@ RSpec.describe Git::Commands::Clone do
 
       it 'raises ArgumentError for non-boolean single_branch values' do
         expect { command.call(repository_url, directory, single_branch: 'yes') }
-          .to raise_error(ArgumentError, /negatable_flag expects a boolean value/)
+          .to raise_error(ArgumentError, /single_branch expects a boolean value/)
       end
     end
   end

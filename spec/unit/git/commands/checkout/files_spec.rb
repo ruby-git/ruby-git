@@ -107,14 +107,18 @@ RSpec.describe Git::Commands::Checkout::Files do
     end
 
     context 'with :overlay option' do
-      it 'adds --overlay flag when true' do
-        expect_command_capturing('checkout', '--overlay', 'main', '--', 'file.txt').and_return(command_result)
-        command.call('main', pathspec: ['file.txt'], overlay: true)
+      context 'when true' do
+        it 'adds --overlay flag' do
+          expect_command_capturing('checkout', '--overlay', 'main', '--', 'file.txt').and_return(command_result)
+          command.call('main', pathspec: ['file.txt'], overlay: true)
+        end
       end
 
-      it 'adds --no-overlay flag when false' do
-        expect_command_capturing('checkout', '--no-overlay', 'main', '--', 'file.txt').and_return(command_result)
-        command.call('main', pathspec: ['file.txt'], overlay: false)
+      context 'when :no_overlay is true' do
+        it 'adds --no-overlay flag' do
+          expect_command_capturing('checkout', '--no-overlay', 'main', '--', 'file.txt').and_return(command_result)
+          command.call('main', pathspec: ['file.txt'], no_overlay: true)
+        end
       end
     end
 

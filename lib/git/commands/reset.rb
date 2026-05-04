@@ -101,16 +101,18 @@ module Git
       #     @option options [Boolean] :keep (false) reset index entries and update files that
       #       differ between the commit and HEAD; aborts if any such file has local changes
       #
-      #     @option options [Boolean] :quiet (nil) suppress all output; report errors only
-      #
-      #       Pass `true` to emit `--quiet`; pass `false` to emit `--no-quiet`.
+      #     @option options [Boolean] :quiet (false) suppress all output; report errors only
+      #       (`--quiet`)
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :refresh (nil) refresh the index after a mixed reset;
-      #       enabled by default when omitted
+      #     @option options [Boolean] :no_quiet (false) do not suppress output (`--no-quiet`)
       #
-      #       Pass `true` to emit `--refresh`; pass `false` to emit `--no-refresh`.
+      #     @option options [Boolean] :refresh (false) refresh the index after a mixed reset;
+      #       enabled by default when omitted (`--refresh`)
+      #
+      #     @option options [Boolean] :no_refresh (false) do not refresh the index after a mixed
+      #       reset (`--no-refresh`)
       #
       #     @option options [Integer, String] :unified (nil) number of context lines around each diff hunk
       #
@@ -125,8 +127,12 @@ module Git
       #     @option options [Boolean] :pathspec_file_nul (false) delimit pathspec elements with NUL
       #       when reading from `:pathspec_from_file`; only meaningful alongside `:pathspec_from_file`
       #
-      #     @option options [Boolean] :recurse_submodules (nil) also reset the working tree of
+      #     @option options [Boolean] :recurse_submodules (false) also reset the working tree of
       #       all active submodules to the commit recorded in the superproject
+      #       (`--recurse-submodules`)
+      #
+      #     @option options [Boolean] :no_recurse_submodules (false) do not reset submodule
+      #       working trees (`--no-recurse-submodules`)
       #
       #     @option options [Array<String>] :pathspec (nil) path(s) to reset in the index;
       #       when given, only the index entries for the matching paths are updated

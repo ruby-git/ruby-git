@@ -96,10 +96,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(indent_heuristic: true)
       end
 
-      it 'adds --no-indent-heuristic when indent_heuristic: false' do
+      it 'adds --no-indent-heuristic when no_indent_heuristic: true' do
         expect_command_capturing('diff-files', '--no-indent-heuristic').and_return(command_result(''))
 
-        command.call(indent_heuristic: false)
+        command.call(no_indent_heuristic: true)
       end
 
       it 'repeats --anchored= for each value in an array' do
@@ -120,10 +120,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(color: true)
       end
 
-      it 'includes --no-color when color: false' do
+      it 'includes --no-color when no_color: true' do
         expect_command_capturing('diff-files', '--no-color').and_return(command_result(''))
 
-        command.call(color: false)
+        command.call(no_color: true)
       end
 
       it 'includes --color=auto when color: "auto"' do
@@ -307,10 +307,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(rename_empty: true)
       end
 
-      it 'includes --no-rename-empty when rename_empty: false' do
+      it 'includes --no-rename-empty when no_rename_empty: true' do
         expect_command_capturing('diff-files', '--no-rename-empty').and_return(command_result(''))
 
-        command.call(rename_empty: false)
+        command.call(no_rename_empty: true)
       end
 
       it 'includes --ext-diff when ext_diff: true' do
@@ -319,10 +319,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(ext_diff: true)
       end
 
-      it 'includes --no-ext-diff when ext_diff: false' do
+      it 'includes --no-ext-diff when no_ext_diff: true' do
         expect_command_capturing('diff-files', '--no-ext-diff').and_return(command_result(''))
 
-        command.call(ext_diff: false)
+        command.call(no_ext_diff: true)
       end
 
       it 'includes --textconv when textconv: true' do
@@ -331,10 +331,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(textconv: true)
       end
 
-      it 'includes --no-textconv when textconv: false' do
+      it 'includes --no-textconv when no_textconv: true' do
         expect_command_capturing('diff-files', '--no-textconv').and_return(command_result(''))
 
-        command.call(textconv: false)
+        command.call(no_textconv: true)
       end
 
       it 'includes --color-moved when color_moved: true' do
@@ -343,10 +343,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(color_moved: true)
       end
 
-      it 'includes --no-color-moved when color_moved: false' do
+      it 'includes --no-color-moved when no_color_moved: true' do
         expect_command_capturing('diff-files', '--no-color-moved').and_return(command_result(''))
 
-        command.call(color_moved: false)
+        command.call(no_color_moved: true)
       end
 
       it 'includes --color-moved=zebra when color_moved: "zebra"' do
@@ -361,10 +361,10 @@ RSpec.describe Git::Commands::DiffFiles do
         command.call(relative: true)
       end
 
-      it 'includes --no-relative when relative: false' do
+      it 'includes --no-relative when no_relative: true' do
         expect_command_capturing('diff-files', '--no-relative').and_return(command_result(''))
 
-        command.call(relative: false)
+        command.call(no_relative: true)
       end
 
       it 'passes an inline value to --relative= when relative: is a string' do

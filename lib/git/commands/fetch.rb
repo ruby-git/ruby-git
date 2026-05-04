@@ -133,9 +133,9 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :all (nil) fetch all remotes
+      #     @option options [Boolean] :all (false) fetch all remotes (`--all`)
       #
-      #       Pass `true` to emit `--all`; pass `false` to emit `--no-all`.
+      #     @option options [Boolean] :no_all (false) do not fetch all remotes (`--no-all`)
       #
       #     @option options [Boolean] :append (false) append ref names and object
       #       names of fetched refs to the existing contents of `.git/FETCH_HEAD`
@@ -182,11 +182,11 @@ module Git
       #     @option options [Boolean] :porcelain (false) print the output to
       #       standard output in an easy-to-parse format for scripts
       #
-      #     @option options [Boolean] :write_fetch_head (nil) control whether to
-      #       write the fetched remote refs to `.git/FETCH_HEAD`
+      #     @option options [Boolean] :write_fetch_head (false) write the fetched
+      #       remote refs to `.git/FETCH_HEAD` (`--write-fetch-head`)
       #
-      #       Pass `true` to emit `--write-fetch-head`; pass `false` to emit
-      #       `--no-write-fetch-head`.
+      #     @option options [Boolean] :no_write_fetch_head (false) do not write
+      #       fetched remote refs to `.git/FETCH_HEAD` (`--no-write-fetch-head`)
       #
       #     @option options [Boolean] :force (false) override the fast-forward
       #       check when using explicit refspecs
@@ -204,24 +204,25 @@ module Git
       #       as extra positional arguments; they are bound to the `:refspec`
       #       slot in the DSL but are passed through to git correctly.
       #
-      #     @option options [Boolean] :auto_maintenance (nil) run automatic
-      #       repository maintenance after fetching
+      #     @option options [Boolean] :auto_maintenance (false) run automatic
+      #       repository maintenance after fetching (`--auto-maintenance`)
       #
-      #       Pass `true` to emit `--auto-maintenance`; pass `false` to emit
-      #       `--no-auto-maintenance`.
+      #     @option options [Boolean] :no_auto_maintenance (false) do not run
+      #       automatic repository maintenance after fetching
+      #       (`--no-auto-maintenance`)
       #
-      #     @option options [Boolean] :auto_gc (nil) run automatic garbage
-      #       collection after fetching (deprecated alias for
-      #       `:auto_maintenance`)
+      #     @option options [Boolean] :auto_gc (false) run automatic garbage
+      #       collection after fetching — deprecated alias for `:auto_maintenance`
+      #       (`--auto-gc`)
       #
-      #       Pass `true` to emit `--auto-gc`; pass `false` to emit
-      #       `--no-auto-gc`.
+      #     @option options [Boolean] :no_auto_gc (false) do not run automatic
+      #       garbage collection after fetching (`--no-auto-gc`)
       #
-      #     @option options [Boolean] :write_commit_graph (nil) write a
-      #       commit-graph after fetching
+      #     @option options [Boolean] :write_commit_graph (false) write a
+      #       commit-graph after fetching (`--write-commit-graph`)
       #
-      #       Pass `true` to emit `--write-commit-graph`; pass `false` to emit
-      #       `--no-write-commit-graph`.
+      #     @option options [Boolean] :no_write_commit_graph (false) do not write
+      #       a commit-graph after fetching (`--no-write-commit-graph`)
       #
       #     @option options [Boolean] :prefetch (false) modify the configured
       #       refspec to place all refs into the `refs/prefetch/` namespace
@@ -246,19 +247,22 @@ module Git
       #
       #       Repeatable.
       #
-      #     @option options [Boolean] :tags (nil) fetch all tags from the remote
-      #
-      #       Pass `true` to emit `--tags`; pass `false` to emit `--no-tags`
-      #       and disable automatic tag following.
+      #     @option options [Boolean] :tags (false) fetch all tags from the
+      #       remote (`--tags`)
       #
       #       Alias: :t
       #
-      #     @option options [Boolean, String] :recurse_submodules (nil) control
+      #     @option options [Boolean] :no_tags (false) disable automatic tag
+      #       following (`--no-tags`)
+      #
+      #     @option options [Boolean, String] :recurse_submodules (false) control
       #       whether new commits of submodules should be fetched
       #
       #       When `true`, uses `--recurse-submodules`. When a string (e.g.
-      #       `'yes'`, `'on-demand'`, `'no'`), passes that value. When `false`,
-      #       emits `--no-recurse-submodules`.
+      #       `'yes'`, `'on-demand'`, `'no'`), passes that value.
+      #
+      #     @option options [Boolean] :no_recurse_submodules (false) do not
+      #       recurse into submodules (`--no-recurse-submodules`)
       #
       #     @option options [String] :jobs (nil) number of submodules or parallel
       #       fetches
@@ -307,11 +311,12 @@ module Git
       #
       #       Alias: :o
       #
-      #     @option options [Boolean] :show_forced_updates (nil) check for
-      #       force-updated branches during fetch
+      #     @option options [Boolean] :show_forced_updates (false) check for
+      #       force-updated branches during fetch (`--show-forced-updates`)
       #
-      #       Pass `true` to emit `--show-forced-updates`; pass `false` to emit
-      #       `--no-show-forced-updates`.
+      #     @option options [Boolean] :no_show_forced_updates (false) do not
+      #       check for force-updated branches during fetch
+      #       (`--no-show-forced-updates`)
       #
       #     @option options [Boolean] :ipv4 (false) use IPv4 addresses only
       #

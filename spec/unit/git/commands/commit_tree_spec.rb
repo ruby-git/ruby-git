@@ -99,11 +99,13 @@ RSpec.describe Git::Commands::CommitTree do
         command.call('abc123', gpg_sign: 'ABCD1234')
       end
 
-      it 'adds --no-gpg-sign when false' do
-        expect_command_capturing('commit-tree', '--no-gpg-sign', '--', 'abc123')
-          .and_return(command_result)
+      context 'when :no_gpg_sign is true' do
+        it 'adds --no-gpg-sign flag' do
+          expect_command_capturing('commit-tree', '--no-gpg-sign', '--', 'abc123')
+            .and_return(command_result)
 
-        command.call('abc123', gpg_sign: false)
+          command.call('abc123', no_gpg_sign: true)
+        end
       end
     end
 

@@ -26,10 +26,12 @@ RSpec.describe Git::Commands::Maintenance::Run do
         command.call(auto: true)
       end
 
-      it 'includes the --no-auto flag' do
-        expect_command_capturing('maintenance', 'run', '--no-auto').and_return(command_result(''))
+      context 'when :no_auto is true' do
+        it 'includes the --no-auto flag' do
+          expect_command_capturing('maintenance', 'run', '--no-auto').and_return(command_result(''))
 
-        command.call(auto: false)
+          command.call(no_auto: true)
+        end
       end
     end
 
@@ -40,10 +42,12 @@ RSpec.describe Git::Commands::Maintenance::Run do
         command.call(detach: true)
       end
 
-      it 'includes the --no-detach flag' do
-        expect_command_capturing('maintenance', 'run', '--no-detach').and_return(command_result(''))
+      context 'when :no_detach is true' do
+        it 'includes the --no-detach flag' do
+          expect_command_capturing('maintenance', 'run', '--no-detach').and_return(command_result(''))
 
-        command.call(detach: false)
+          command.call(no_detach: true)
+        end
       end
     end
 
@@ -54,10 +58,12 @@ RSpec.describe Git::Commands::Maintenance::Run do
         command.call(scheduled: true)
       end
 
-      it 'includes the --no-scheduled flag' do
-        expect_command_capturing('maintenance', 'run', '--no-scheduled').and_return(command_result(''))
+      context 'when :no_scheduled is true' do
+        it 'includes the --no-scheduled flag' do
+          expect_command_capturing('maintenance', 'run', '--no-scheduled').and_return(command_result(''))
 
-        command.call(scheduled: false)
+          command.call(no_scheduled: true)
+        end
       end
     end
 
@@ -77,11 +83,13 @@ RSpec.describe Git::Commands::Maintenance::Run do
       end
     end
 
-    context 'with :schedule option as false' do
-      it 'passes --no-schedule' do
-        expect_command_capturing('maintenance', 'run', '--no-schedule').and_return(command_result(''))
+    context 'with :schedule option' do
+      context 'when :no_schedule is true' do
+        it 'passes --no-schedule' do
+          expect_command_capturing('maintenance', 'run', '--no-schedule').and_return(command_result(''))
 
-        command.call(schedule: false)
+          command.call(no_schedule: true)
+        end
       end
     end
 
@@ -92,10 +100,12 @@ RSpec.describe Git::Commands::Maintenance::Run do
         command.call(quiet: true)
       end
 
-      it 'includes the --no-quiet flag' do
-        expect_command_capturing('maintenance', 'run', '--no-quiet').and_return(command_result(''))
+      context 'when :no_quiet is true' do
+        it 'includes the --no-quiet flag' do
+          expect_command_capturing('maintenance', 'run', '--no-quiet').and_return(command_result(''))
 
-        command.call(quiet: false)
+          command.call(no_quiet: true)
+        end
       end
     end
 

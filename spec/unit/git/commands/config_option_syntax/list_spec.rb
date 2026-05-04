@@ -84,16 +84,20 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::List do
     end
 
     context 'with the :includes option' do
-      it 'adds --includes when true' do
-        expect_command_capturing('config', '--list', '--includes').and_return(command_result)
+      context 'when true' do
+        it 'adds --includes to the command line' do
+          expect_command_capturing('config', '--list', '--includes').and_return(command_result)
 
-        command.call(includes: true)
+          command.call(includes: true)
+        end
       end
 
-      it 'adds --no-includes when false' do
-        expect_command_capturing('config', '--list', '--no-includes').and_return(command_result)
+      context 'when :no_includes is true' do
+        it 'adds --no-includes to the command line' do
+          expect_command_capturing('config', '--list', '--no-includes').and_return(command_result)
 
-        command.call(includes: false)
+          command.call(no_includes: true)
+        end
       end
     end
 

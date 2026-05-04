@@ -72,9 +72,12 @@ module Git
         #
         #       Alias: :U
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files
+        #     @option options [Boolean] :include_untracked (false) include untracked files (`--include-untracked`)
         #
         #       Alias: :u
+        #
+        #     @option options [Boolean] :no_include_untracked (false) exclude untracked files
+        #       (`--no-include-untracked`)
         #
         #     @option options [Boolean] :only_untracked (nil) show only untracked files
         #
@@ -113,9 +116,12 @@ module Git
         #
         #       Alias: :U
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files
+        #     @option options [Boolean] :include_untracked (false) include untracked files (`--include-untracked`)
         #
         #       Alias: :u
+        #
+        #     @option options [Boolean] :no_include_untracked (false) exclude untracked files
+        #       (`--no-include-untracked`)
         #
         #     @option options [Boolean] :only_untracked (nil) show only untracked files
         #

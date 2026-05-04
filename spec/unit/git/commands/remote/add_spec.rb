@@ -78,18 +78,22 @@ RSpec.describe Git::Commands::Remote::Add do
     end
 
     context 'with :tags option' do
-      it 'includes --tags when true' do
-        expect_command_capturing('remote', 'add', '--tags', '--', 'origin', 'https://example.com/repo.git')
-          .and_return(command_result)
+      context 'when true' do
+        it 'includes --tags' do
+          expect_command_capturing('remote', 'add', '--tags', '--', 'origin', 'https://example.com/repo.git')
+            .and_return(command_result)
 
-        command.call('origin', 'https://example.com/repo.git', tags: true)
+          command.call('origin', 'https://example.com/repo.git', tags: true)
+        end
       end
 
-      it 'includes --no-tags when false' do
-        expect_command_capturing('remote', 'add', '--no-tags', '--', 'origin', 'https://example.com/repo.git')
-          .and_return(command_result)
+      context 'when :no_tags is true' do
+        it 'includes --no-tags' do
+          expect_command_capturing('remote', 'add', '--no-tags', '--', 'origin', 'https://example.com/repo.git')
+            .and_return(command_result)
 
-        command.call('origin', 'https://example.com/repo.git', tags: false)
+          command.call('origin', 'https://example.com/repo.git', no_tags: true)
+        end
       end
     end
 

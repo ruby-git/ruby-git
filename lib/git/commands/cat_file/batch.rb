@@ -140,9 +140,9 @@ module Git
         #
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
-        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap (`--use-mailmap`)
         #
-        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #   @option options [Boolean] :no_use_mailmap (false) Suppress mailmap remapping (`--no-use-mailmap`)
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -182,9 +182,9 @@ module Git
         #
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
-        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap (`--use-mailmap`)
         #
-        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #   @option options [Boolean] :no_use_mailmap (false) Suppress mailmap remapping (`--no-use-mailmap`)
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -222,9 +222,9 @@ module Git
         #
         #   @option options [Boolean] :filters (false) Apply full working-tree filters
         #
-        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap
+        #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap (`--use-mailmap`)
         #
-        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #   @option options [Boolean] :no_use_mailmap (false) Suppress mailmap remapping (`--no-use-mailmap`)
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -256,9 +256,9 @@ module Git
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
         #
         #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap for
-        #     commit and tag objects
+        #     commit and tag objects (`--use-mailmap`)
         #
-        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #   @option options [Boolean] :no_use_mailmap (false) Suppress mailmap remapping (`--no-use-mailmap`)
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #
@@ -291,9 +291,9 @@ module Git
         #   @option options [Boolean] :unordered (false) Output in arbitrary order
         #
         #   @option options [Boolean] :use_mailmap (false) Remap identities via mailmap for
-        #     commit and tag objects
+        #     commit and tag objects (`--use-mailmap`)
         #
-        #     Pass `true` for `--use-mailmap`, `false` for `--no-use-mailmap`.
+        #   @option options [Boolean] :no_use_mailmap (false) Suppress mailmap remapping (`--no-use-mailmap`)
         #
         #   @option options [String] :filter (nil) Omit objects matching the given filter spec
         #

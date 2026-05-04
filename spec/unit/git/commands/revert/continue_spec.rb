@@ -26,10 +26,10 @@ RSpec.describe Git::Commands::Revert::Continue do
       end
     end
 
-    context 'with edit: false' do
+    context 'when :no_edit is true' do
       it 'includes --no-edit' do
         expect_command_capturing('revert', '--continue', '--no-edit').and_return(command_result(''))
-        command.call(edit: false)
+        command.call(no_edit: true)
       end
     end
 

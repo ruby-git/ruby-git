@@ -84,10 +84,13 @@ module Git
       #     @option options [String] :template (nil) directory from which templates
       #       will be used
       #
-      #     @option options [Boolean] :local (nil) bypass the normal Git-aware transport
-      #       for local clones; pass false to emit --no-local
+      #     @option options [Boolean] :local (false) bypass the normal Git-aware transport
+      #       for local clones (`--local`)
       #
       #       Alias: `:l`
+      #
+      #     @option options [Boolean] :no_local (false) disable the local optimization
+      #       and use the normal transport (`--no-local`)
       #
       #     @option options [Boolean] :shared (false) set up a shared clone using
       #       alternates instead of hardlinks
@@ -159,21 +162,32 @@ module Git
       #     @option options [String, Array<String>] :shallow_exclude (nil) exclude
       #       commits reachable from the specified remote branch or tag
       #
-      #     @option options [Boolean] :single_branch (nil) clone only the history for
-      #       one branch; pass false to emit --no-single-branch
+      #     @option options [Boolean] :single_branch (false) clone only the history for
+      #       one branch (`--single-branch`)
       #
-      #     @option options [Boolean] :tags (nil) control whether tags are cloned; pass
-      #       false to emit --no-tags
+      #     @option options [Boolean] :no_single_branch (false) clone history for all
+      #       branches (`--no-single-branch`)
+      #
+      #     @option options [Boolean] :tags (false) include tags in the clone (`--tags`)
+      #
+      #     @option options [Boolean] :no_tags (false) exclude tags from the clone
+      #       (`--no-tags`)
       #
       #     @option options [Boolean, String, Array<String>] :recurse_submodules (nil)
       #       initialize submodules after cloning; pass true for all submodules or a
       #       pathspec string/array for a subset
       #
-      #     @option options [Boolean] :shallow_submodules (nil) clone submodules with
-      #       depth 1; pass false to emit --no-shallow-submodules
+      #     @option options [Boolean] :shallow_submodules (false) clone submodules with
+      #       depth 1 (`--shallow-submodules`)
       #
-      #     @option options [Boolean] :remote_submodules (nil) use submodule
-      #       remote-tracking branch status; pass false to emit --no-remote-submodules
+      #     @option options [Boolean] :no_shallow_submodules (false) clone submodules
+      #       with full history (`--no-shallow-submodules`)
+      #
+      #     @option options [Boolean] :remote_submodules (false) use submodule
+      #       remote-tracking branch status (`--remote-submodules`)
+      #
+      #     @option options [Boolean] :no_remote_submodules (false) use the locally
+      #       recorded SHA-1 for submodules (`--no-remote-submodules`)
       #
       #     @option options [Integer, String] :jobs (nil) number of submodules fetched
       #       concurrently
@@ -183,8 +197,11 @@ module Git
       #     @option options [Boolean] :sparse (false) enable sparse checkout with
       #       top-level files only
       #
-      #     @option options [Boolean] :reject_shallow (nil) fail if source is shallow;
-      #       pass false to emit --no-reject-shallow
+      #     @option options [Boolean] :reject_shallow (false) fail if source is shallow
+      #       (`--reject-shallow`)
+      #
+      #     @option options [Boolean] :no_reject_shallow (false) allow cloning from
+      #       shallow sources (`--no-reject-shallow`)
       #
       #     @option options [String] :filter (nil) specify a partial clone filter
       #       (e.g., 'blob:none', 'tree:0')
