@@ -10,8 +10,8 @@ require 'git/repository/staging'
 #   spec/integration/git/commands/reset_spec.rb
 # Both #add and #reset delegate to a single Git::Commands::* class with no
 # multi-command orchestration or facade-owned post-processing of git output.
-# The unit specs below cover the facade's own behavior (option whitelisting and
-# negatable-flag normalization); the command integration specs cover end-to-end
+# The unit specs below cover the facade's own behavior (option whitelisting);
+# the command integration specs cover end-to-end
 # git execution. No facade integration spec is needed.
 
 RSpec.describe Git::Repository::Staging do
@@ -84,8 +84,8 @@ RSpec.describe Git::Repository::Staging do
     context 'with all: false' do
       subject(:result) { described_instance.add('file.rb', all: false) }
 
-      it 'normalizes all: false away so --no-all is never emitted' do
-        expect(add_command).to receive(:call).with('file.rb').and_return(add_result)
+      it 'forwards all: false to Git::Commands::Add#call' do
+        expect(add_command).to receive(:call).with('file.rb', all: false).and_return(add_result)
         result
       end
     end
