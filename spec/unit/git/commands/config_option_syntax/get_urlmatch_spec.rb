@@ -82,10 +82,12 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
         command.call('http', 'https://example.com', includes: true)
       end
 
-      it 'adds --no-includes to the command line' do
-        expect_command_capturing('config', '--get-urlmatch', '--no-includes', '--', 'http', 'https://example.com').and_return(command_result)
+      context 'when :no_includes is true' do
+        it 'adds --no-includes to the command line' do
+          expect_command_capturing('config', '--get-urlmatch', '--no-includes', '--', 'http', 'https://example.com').and_return(command_result)
 
-        command.call('http', 'https://example.com', includes: false)
+          command.call('http', 'https://example.com', no_includes: true)
+        end
       end
     end
 
