@@ -212,9 +212,11 @@ module Git
       #     @option options [String] :output_indicator_context (nil) character for context lines in
       #       patch output
       #
-      #     @option options [Boolean] :indent_heuristic (nil) shift hunk boundaries for readability
+      #     @option options [Boolean] :indent_heuristic (false) shift hunk boundaries for readability
+      #       (`--indent-heuristic`)
       #
-      #       Pass `false` to emit `--no-indent-heuristic`.
+      #     @option options [Boolean] :no_indent_heuristic (false) do not shift hunk boundaries
+      #       for readability (`--no-indent-heuristic`)
       #
       #     @option options [Boolean] :minimal (false) spend extra time to minimize diff size
       #
@@ -281,15 +283,18 @@ module Git
       #       Pass `true` for the default, or a string like `'log'` or `'diff'` for a format
       #       name.
       #
-      #     @option options [Boolean, String] :color (nil) control diff colorization
+      #     @option options [Boolean, String] :color (false) control diff colorization (`--color`)
       #
-      #       Pass `true` for `--color`, `false` for `--no-color`, or a string like `'always'`
-      #       or `'auto'` for a specific mode.
+      #       Pass `true` for `--color` or a string like `'always'` or `'auto'` for a specific mode.
       #
-      #     @option options [Boolean, String] :color_moved (nil) color moved lines differently
+      #     @option options [Boolean] :no_color (false) suppress colorized output (`--no-color`)
       #
-      #       Pass `true` for default, `false` for `--no-color-moved`, or a mode string such
-      #       as `'zebra'` or `'dimmed-zebra'`.
+      #     @option options [Boolean, String] :color_moved (false) color moved lines differently
+      #       (`--color-moved`)
+      #
+      #       Pass `true` for the default, or a mode string such as `'zebra'` or `'dimmed-zebra'`.
+      #
+      #     @option options [Boolean] :no_color_moved (false) disable moved-line coloring (`--no-color-moved`)
       #
       #     @option options [String] :color_moved_ws (nil) whitespace handling for moved-line
       #       color detection
@@ -343,9 +348,11 @@ module Git
       #
       #     @option options [Boolean] :no_renames (false) disable rename detection
       #
-      #     @option options [Boolean] :rename_empty (nil) use empty blobs as rename sources
+      #     @option options [Boolean] :rename_empty (false) use empty blobs as rename sources
+      #       (`--rename-empty`)
       #
-      #       Pass `false` to emit `--no-rename-empty`.
+      #     @option options [Boolean] :no_rename_empty (false) disallow empty blobs as rename
+      #       sources (`--no-rename-empty`)
       #
       #     @option options [Boolean] :full_index (false) show full blob SHA in index line
       #
@@ -420,11 +427,13 @@ module Git
       #
       #     @option options [Boolean] :R (false) swap the two diff inputs
       #
-      #     @option options [Boolean, String] :relative (nil) show paths relative to a
-      #       directory
+      #     @option options [Boolean, String] :relative (false) show paths relative to a
+      #       directory (`--relative`)
       #
-      #       Pass `true` to use the current directory, `false` for `--no-relative`, or a
-      #       path string to name the directory explicitly.
+      #       Pass `true` to use the current directory, or a path string to name the directory
+      #       explicitly.
+      #
+      #     @option options [Boolean] :no_relative (false) use absolute paths in output (`--no-relative`)
       #
       #     @option options [Boolean] :text (false) treat all files as text
       #
@@ -445,13 +454,13 @@ module Git
       #
       #       Implies `--exit-code`.
       #
-      #     @option options [Boolean] :ext_diff (nil) allow external diff helpers
+      #     @option options [Boolean] :ext_diff (false) allow external diff helpers (`--ext-diff`)
       #
-      #       Pass `false` to emit `--no-ext-diff`.
+      #     @option options [Boolean] :no_ext_diff (false) disallow external diff helpers (`--no-ext-diff`)
       #
-      #     @option options [Boolean] :textconv (nil) allow external text-conversion filters
+      #     @option options [Boolean] :textconv (false) allow external text-conversion filters (`--textconv`)
       #
-      #       Pass `false` to emit `--no-textconv`.
+      #     @option options [Boolean] :no_textconv (false) disallow external text-conversion filters (`--no-textconv`)
       #
       #     @option options [Boolean, String] :ignore_submodules (nil) ignore submodule changes
       #
