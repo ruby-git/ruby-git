@@ -78,9 +78,11 @@ module Git
         #
         #     @option options [String] :blob (nil) list entries from the specified blob
         #
-        #     @option options [Boolean] :includes (nil) respect include directives in config files
+        #     @option options [Boolean] :includes (false) respect include directives in config files
+        #       (`--includes`)
         #
-        #       Pass `true` for `--includes`, `false` for `--no-includes`.
+        #     @option options [Boolean] :no_includes (false) suppress include directive processing
+        #       (`--no-includes`)
         #
         #     @option options [Boolean] :show_origin (false) show the origin of each config entry
         #
