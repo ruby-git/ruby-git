@@ -497,13 +497,13 @@ module Git
     #   args_def = Arguments.define do
     #     flag_option :all,            negatable: true
     #     flag_option :ignore_removal, negatable: true
-    #     forbid_values all: true,  ignore_removal: true   # --all --ignore-removal: contradictory
-    #     forbid_values all: false, ignore_removal: false  # --no-all --no-ignore-removal: contradictory
+    #     forbid_values all: true,    ignore_removal: true         # --all --ignore-removal: contradictory
+    #     forbid_values no_all: true, no_ignore_removal: true     # --no-all --no-ignore-removal: contradictory
     #   end
-    #   args_def.bind(all: true,  ignore_removal: true)
+    #   args_def.bind(all: true,    ignore_removal: true)
     #     #=> raise ArgumentError, 'cannot specify :all=true with :ignore_removal=true'
-    #   args_def.bind(all: true,  ignore_removal: false).to_a  # => ['--all', '--no-ignore-removal']
-    #   args_def.bind(all: false, ignore_removal: true).to_a   # => ['--no-all', '--ignore-removal']
+    #   args_def.bind(all: true,    no_ignore_removal: true).to_a  # => ['--all', '--no-ignore-removal']
+    #   args_def.bind(no_all: true, ignore_removal: true).to_a     # => ['--no-all', '--ignore-removal']
     #
     # ## At-Least-One Presence Validation
     #
@@ -621,6 +621,7 @@ module Git
         @ordered_definitions = [] # Tracks all definitions in definition order
         @past_separator = false # Tracks whether a '--' boundary has been defined
         @end_of_options_declared = false # Guards against duplicate end_of_options calls
+        @negatable_companions = Set.new # Synthesized :no_<name> companion entries
       end
 
       # Define a boolean flag option (--flag when true)
@@ -629,12 +630,26 @@ module Git
       #
       # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
       #
-      # @param negatable [Boolean] when true, outputs --no-flag when value is false (default: false)
+      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
+      #   `--no-<flag>` when set to `true`. Both keys use standard boolean semantics: `true`
+      #   emits the flag, `false` or absent emits nothing. A conflict is automatically registered
+      #   between the two keys so that `name: true, no_name: true` raises at bind time.
+      #   The primary key must be snake_case (e.g. `:verify`, `:three_way`). When `as:` is
+      #   given, it must be a long-form (`--flag`) String; Arrays and short-form flags (e.g.
+      #   `-S`) are not compatible with `negatable: true` because the synthesized companion is
+      #   always `--no-<flag>`.
       #
-      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param required [Boolean] whether the option must be provided (the key must be present
+      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   group is automatically registered so that either the primary or companion key satisfies
+      #   the requirement (e.g. `bind(no_verify: true)` satisfies `required: true` for `:verify`).
+      #   Note that under the companion-key model, `bind(verify: false)` does **not** satisfy
+      #   the requirement because `false` is treated as absent.
       #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
       #   When false with required: true, raises ArgumentError if value is nil.
+      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
+      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
       #
       # @param max_times [Integer, nil] maximum number of times the flag may be repeated (default: nil).
       #   When set, the caller may pass a positive Integer up to this limit to emit the flag
@@ -648,6 +663,17 @@ module Git
       #
       # @raise [ArgumentError] if max_times is not nil and not an Integer >= 2
       #
+      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
+      #
+      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
+      #   with an already-registered key
+      #
+      # @raise [ArgumentError] if negatable: true and as: is an Array
+      #
+      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
+      #
+      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
+      #
       # @example Basic flag
       #   args_def = Arguments.define do
       #     flag_option :force
@@ -655,12 +681,24 @@ module Git
       #   args_def.bind(force: true).to_a   # => ['--force']
       #   args_def.bind(force: false).to_a  # => []
       #
-      # @example Negatable flag
+      # @example Negatable flag (companion-key model)
       #   args_def = Arguments.define do
       #     flag_option :full, negatable: true
       #   end
-      #   args_def.bind(full: true).to_a   # => ['--full']
-      #   args_def.bind(full: false).to_a  # => ['--no-full']
+      #   args_def.bind(full: true).to_a      # => ['--full']
+      #   args_def.bind(no_full: true).to_a   # => ['--no-full']
+      #   args_def.bind(full: false).to_a     # => []
+      #
+      # @example Negatable flag with required: true (either companion key satisfies the requirement)
+      #   args_def = Arguments.define do
+      #     flag_option :verify, negatable: true, required: true
+      #   end
+      #   args_def.bind(verify: true).to_a    # => ['--verify']
+      #   args_def.bind(no_verify: true).to_a # => ['--no-verify']
+      #   args_def.bind(verify: false)
+      #   #=> raise ArgumentError, "at least one of :verify, :no_verify must be provided"
+      #   args_def.bind
+      #   #=> raise ArgumentError, "at least one of :verify, :no_verify must be provided"
       #
       # @example Repeatable flag with max_times
       #   args_def = Arguments.define do
@@ -674,8 +712,8 @@ module Git
       #   args_def = Arguments.define do
       #     flag_option :force, negatable: true, max_times: 2
       #   end
-      #   args_def.bind(force: false).to_a  # => ['--no-force']
-      #   args_def.bind(force: 2).to_a      # => ['--force', '--force']
+      #   args_def.bind(no_force: true).to_a  # => ['--no-force']
+      #   args_def.bind(force: 2).to_a        # => ['--force', '--force']
       #
       # @example With required and allow_nil: false
       #   args_def = Arguments.define do
@@ -685,11 +723,16 @@ module Git
       #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
       def flag_option(names, as: nil, negatable: false, required: false, allow_nil: true, max_times: nil)
-        option_type = negatable ? :negatable_flag : :flag
-        validate_max_times!(Array(names).first, max_times)
+        primary = Array(names).first
+        validate_max_times!(primary, max_times)
 
-        register_option(names, type: option_type, as: as, expected_type: nil, validator: nil,
-                               required: required, allow_nil: allow_nil, max_times: max_times)
+        if negatable
+          register_negatable_flag_pair(names, as: as, required: required,
+                                              allow_nil: allow_nil, max_times: max_times)
+        else
+          register_option(names, type: :flag, as: as, expected_type: nil, validator: nil,
+                                 required: required, allow_nil: allow_nil, max_times: max_times)
+        end
       end
 
       # Define a valued option (--flag value as separate arguments)
@@ -831,7 +874,7 @@ module Git
       #
       # This is a flexible option type that outputs:
       # - Just the flag (--flag) when value is true
-      # - Nothing when value is false (or --no-flag if negatable: true)
+      # - Nothing when value is false
       # - Flag with value when value is any non-boolean, non-nil object (stringified via #to_s;
       #   e.g., --flag value or --flag=value if inline: true)
       # - Nothing when value is nil
@@ -842,7 +885,13 @@ module Git
       #
       # @param type [Class, Array<Class>, nil] expected type(s) for validation
       #
-      # @param negatable [Boolean] when true, outputs --no-flag for false values (default: false)
+      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
+      #   `--no-<flag>` when set to `true`. The positive key retains flag-or-value semantics;
+      #   the negative key is boolean-only (accepts only `true`/`false`/`nil`). A conflict is
+      #   automatically registered so that `name: true, no_name: true` raises at bind time.
+      #   The primary key must be snake_case. When `as:` is given, it must be a long-form
+      #   (`--flag`) String; Arrays and short-form flags (e.g. `-S`) are not compatible with
+      #   `negatable: true` because the synthesized companion is always `--no-<flag>`.
       #
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
       #
@@ -851,9 +900,15 @@ module Git
       #   stringified via +#to_s+); nil elements raise ArgumentError at bind time.
       #   A single (non-Array) value is also accepted. Default false.
       #
-      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      # @param required [Boolean] whether the option must be provided (the key must be present
+      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   group is automatically registered so that either side satisfies the requirement. Note
+      #   that `bind(name: false)` does **not** satisfy the requirement because `false` is
+      #   treated as absent under the companion-key model.
       #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
+      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
       #
       # @return [void]
       #
@@ -861,6 +916,17 @@ module Git
       #   Array element is nil
       #
       # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #
+      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
+      #
+      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
+      #   with an already-registered key
+      #
+      # @raise [ArgumentError] if negatable: true and as: is an Array
+      #
+      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
+      #
+      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
       #
       # @example Basic flag or value (new capability - not possible with old DSL)
       #   args_def = Arguments.define do
@@ -880,23 +946,25 @@ module Git
       #   args_def.bind(gpg_sign: "KEY").to_a   # => ['--gpg-sign=KEY']
       #   args_def.bind(gpg_sign: nil).to_a     # => []
       #
-      # @example With negatable: true (flag or value with negation)
+      # @example With negatable: true (companion-key model)
       #   args_def = Arguments.define do
       #     flag_or_value_option :verify, negatable: true
       #   end
-      #   args_def.bind(verify: true).to_a      # => ['--verify']
-      #   args_def.bind(verify: false).to_a     # => ['--no-verify']
-      #   args_def.bind(verify: "KEYID").to_a   # => ['--verify', 'KEYID']
-      #   args_def.bind(verify: nil).to_a       # => []
+      #   args_def.bind(verify: true).to_a       # => ['--verify']
+      #   args_def.bind(verify: false).to_a      # => []
+      #   args_def.bind(no_verify: true).to_a    # => ['--no-verify']
+      #   args_def.bind(verify: "KEYID").to_a    # => ['--verify', 'KEYID']
+      #   args_def.bind(verify: nil).to_a        # => []
       #
       # @example With negatable: true and inline: true
       #   args_def = Arguments.define do
       #     flag_or_value_option :sign, negatable: true, inline: true
       #   end
-      #   args_def.bind(sign: true).to_a    # => ['--sign']
-      #   args_def.bind(sign: false).to_a   # => ['--no-sign']
-      #   args_def.bind(sign: "KEY").to_a   # => ['--sign=KEY']
-      #   args_def.bind(sign: nil).to_a     # => []
+      #   args_def.bind(sign: true).to_a      # => ['--sign']
+      #   args_def.bind(sign: false).to_a     # => []
+      #   args_def.bind(no_sign: true).to_a   # => ['--no-sign']
+      #   args_def.bind(sign: "KEY").to_a     # => ['--sign=KEY']
+      #   args_def.bind(sign: nil).to_a       # => []
       #
       # @example With inline: true and repeatable: true
       #   args_def = Arguments.define do
@@ -911,9 +979,15 @@ module Git
       #
       def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
                                repeatable: false, required: false, allow_nil: true)
-        option_type = determine_flag_or_value_option_type(negatable, inline)
-        register_option(names, type: option_type, as: as, expected_type: type,
-                               repeatable: repeatable, required: required, allow_nil: allow_nil)
+        if negatable
+          register_negatable_flag_or_value_pair(names, as: as, type: type, inline: inline,
+                                                       repeatable: repeatable, required: required,
+                                                       allow_nil: allow_nil)
+        else
+          option_type = inline ? :flag_or_inline_value : :flag_or_value
+          register_option(names, type: option_type, as: as, expected_type: type,
+                                 repeatable: repeatable, required: required, allow_nil: allow_nil)
+        end
       end
 
       # Define a key-value option that can be specified multiple times
@@ -1154,9 +1228,7 @@ module Git
       # raised.
       #
       # **Presence semantics** — an argument is present when its value is not `nil`,
-      # `[]`, or `''`. For **negatable flag options** (`negatable: true`), an explicit
-      # `false` value also counts as present because it emits a real CLI token
-      # (`--no-flag`). For all other option types `false` means absent.
+      # `[]`, or `''`. `false` is always treated as absent for all option types.
       #
       # An ArgumentError is raised at definition time if any name given to
       # +conflicts+ is not a known option or operand, catching typos early.
@@ -1246,18 +1318,18 @@ module Git
       #     flag_option :all,            negatable: true
       #     flag_option :ignore_removal, negatable: true
       #     # --all --ignore-removal: contradictory (add ALL vs ignore removals)
-      #     forbid_values all: true,  ignore_removal: true
+      #     forbid_values all: true,    ignore_removal: true
       #     # --no-all --no-ignore-removal: contradictory (ignore removals vs include removals)
-      #     forbid_values all: false, ignore_removal: false
+      #     forbid_values no_all: true, no_ignore_removal: true
       #   end
       #   # Contradictory tuples raise:
-      #   args_def.bind(all: true,  ignore_removal: true)
+      #   args_def.bind(all: true, ignore_removal: true)
       #     # => raise ArgumentError, 'cannot specify :all=true with :ignore_removal=true'
-      #   args_def.bind(all: false, ignore_removal: false)
-      #     # => raise ArgumentError, 'cannot specify :all=false with :ignore_removal=false'
-      #   # Semantically equivalent pairs are allowed:
-      #   args_def.bind(all: true,  ignore_removal: false).to_a  # => ['--all', '--no-ignore-removal']
-      #   args_def.bind(all: false, ignore_removal: true).to_a   # => ['--no-all', '--ignore-removal']
+      #   args_def.bind(no_all: true, no_ignore_removal: true)
+      #     # => raise ArgumentError, 'cannot specify :no_all=true with :no_ignore_removal=true'
+      #   # Semantically compatible pairs are allowed:
+      #   args_def.bind(all: true,    no_ignore_removal: true).to_a  # => ['--all', '--no-ignore-removal']
+      #   args_def.bind(no_all: true, ignore_removal: true).to_a     # => ['--no-all', '--ignore-removal']
       #
       def forbid_values(**pairs)
         raise ArgumentError, 'forbid_values must be given at least one name-value pair' if pairs.empty?
@@ -1285,12 +1357,11 @@ module Git
       # **Presence semantics** — two slightly different rules apply:
       #
       # - *`when:` trigger* — the trigger is considered present when its value is
-      #   not `nil`, `false`, `[]`, or `''`. A negatable flag set to `false`
-      #   means the feature is OFF, so the trigger does **not** fire.
+      #   not `nil`, `false`, `[]`, or `''`. A flag set to `false` means absent,
+      #   so the trigger does **not** fire.
       # - *Satisfied-by check* — a group member is considered present when its
-      #   value is not `nil`, `[]`, or `''`. For **negatable flag options**
-      #   (`negatable: true`), an explicit `false` also counts as present because
-      #   the caller explicitly provided `--no-flag`.
+      #   value is not `nil`, `false`, `[]`, or `''`. `false` is treated as absent
+      #   for all option types under the companion-key model.
       #
       # Names may refer to **options** (flag, value, flag-or-value, etc.) or
       # **operands** (positional arguments) interchangeably. Alias resolution happens
@@ -1397,10 +1468,8 @@ module Git
       #   requires_one_of :a, :b, :c
       #   conflicts       :a, :b, :c
       #
-      # **Presence semantics** — inherits the rules from the constituent methods:
-      # for the satisfied-by check a negatable flag option set to `false` counts
-      # as present; for the conflict check the same rule applies. See
-      # {#requires_one_of} and {#conflicts} for the full details.
+      # **Presence semantics** — inherits the rules from the constituent methods.
+      # See {#requires_one_of} and {#conflicts} for the full details.
       #
       # An ArgumentError is raised at definition time if any name is not a known
       # option or operand, catching typos early.
@@ -1447,11 +1516,11 @@ module Git
       # **Presence semantics** — two slightly different rules apply:
       #
       # - *`when:` trigger* — the trigger is considered present when its value is
-      #   not `nil`, `false`, `[]`, or `''`. A negatable flag set to `false`
-      #   means the feature is OFF, so the trigger does **not** fire.
+      #   not `nil`, `false`, `[]`, or `''`. A value of `false` is treated as
+      #   absent. If you need an explicit negative form for a negatable flag, use
+      #   its `no_<name>` companion key instead.
       # - *Required argument* — *name* is considered present when its value is
-      #   not `nil`, `[]`, or `''`. For **negatable flag options** (`negatable:
-      #   true`), an explicit `false` also counts as present.
+      #   not `nil`, `false`, `[]`, or `''`.
       #
       # An ArgumentError is raised at definition time if either *name* or the `when:`
       # trigger is not a known option or operand, catching typos early.
@@ -1522,7 +1591,7 @@ module Git
       # @param in [#each] accepted values enumerable. Each value is coerced with
       #   +to_s+ and compared as a string.
       #
-      # For \\{#flag_or_value_option} / \\{#negatable_flag_or_value_option} variants,
+      # For \\{#flag_or_value_option} variants (including +negatable: true+),
       # boolean values (+true+ / +false+) are skipped by this check because they
       # control flag-emission behavior rather than representing candidate string
       # values.
@@ -1745,7 +1814,7 @@ module Git
         args_array = build_ordered_arguments(allocated_positionals, normalized_opts)
         options_hash = build_options_hash(normalized_opts)
         execution_option_names = option_names_by_type(:execution_option)
-        flag_names = option_names_by_type(:flag, :negatable_flag)
+        flag_names = option_names_by_type(:flag)
 
         Bound.new(args_array, options_hash, allocated_positionals, execution_option_names, flag_names)
       end
@@ -1765,7 +1834,6 @@ module Git
       VALUE_OPTION_TYPES_FOR_ALLOWED_VALUES = %i[
         value inline_value value_as_operand
         flag_or_value flag_or_inline_value
-        negatable_flag_or_value negatable_flag_or_inline_value
       ].freeze
 
       # The subset of VALUE_OPTION_TYPES_FOR_ALLOWED_VALUES whose boolean values
@@ -1773,7 +1841,6 @@ module Git
       # skip allowed_values validation rather than being compared against the set.
       FLAG_OR_VALUE_OPTION_TYPES = %i[
         flag_or_value flag_or_inline_value
-        negatable_flag_or_value negatable_flag_or_inline_value
       ].freeze
 
       private
@@ -1837,7 +1904,7 @@ module Git
       def default_option_value(name)
         definition = @option_definitions[name]
         case definition[:type]
-        when :flag, :negatable_flag
+        when :flag
           false
         end
       end
@@ -1870,24 +1937,6 @@ module Git
         raise ArgumentError, "inline: and as_operand: cannot both be true for :#{primary}" if inline && as_operand
       end
 
-      # Determine the internal option type for flag_or_value based on negatable and inline modifiers
-      #
-      # @param negatable [Boolean] whether to negate false values
-      # @param inline [Boolean] whether to use inline format (--flag=value)
-      # @return [Symbol] the internal option type
-      #
-      def determine_flag_or_value_option_type(negatable, inline)
-        if negatable && inline
-          :negatable_flag_or_inline_value
-        elsif negatable
-          :negatable_flag_or_value
-        elsif inline
-          :flag_or_inline_value
-        else
-          :flag_or_value
-        end
-      end
-
       # Register an option with optional aliases
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
@@ -1898,12 +1947,42 @@ module Git
         keys = Array(names)
         primary = keys.first
         definition[:aliases] = keys
+        validate_no_duplicate_aliases!(keys)
+        validate_no_companion_collision!(keys)
         validate_option_after_separator!(definition[:type], primary)
         validate_as_parameter!(definition, primary)
         apply_type_validator!(definition, primary)
+        store_option(primary, keys, definition)
+      end
+
+      def store_option(primary, keys, definition)
         @option_definitions[primary] = definition
         keys.each { |key| @alias_map[key] = primary }
         @ordered_definitions << { kind: :option, name: primary }
+      end
+
+      # Raise if any of +keys+ collides with a previously synthesized +no_<name>+
+      # companion entry. This catches the case where a user declares
+      # +flag_option :foo, negatable: true+ followed by +flag_option :no_foo+.
+      def validate_no_companion_collision!(keys)
+        keys.each do |key|
+          next unless @negatable_companions.include?(key)
+
+          raise ArgumentError,
+                "option key :#{key} is already registered as a negatable companion"
+        end
+      end
+
+      # Raise if the +keys+ array contains duplicate entries.
+      #
+      # Duplicate aliases in a single declaration (e.g. +flag_option %i[foo foo]+)
+      # are a programming mistake and would silently overwrite each other in
+      # +@alias_map+. Catching them at definition time makes the error obvious.
+      def validate_no_duplicate_aliases!(keys)
+        seen = Set.new
+        keys.each do |key|
+          raise ArgumentError, "duplicate alias key :#{key} in option definition" unless seen.add?(key)
+        end
       end
 
       def validate_max_times!(option_name, max_times)
@@ -1912,6 +1991,139 @@ module Git
         return if max_times.is_a?(Integer) && max_times >= 2
 
         raise ArgumentError, "max_times for :#{option_name} must be an Integer >= 2"
+      end
+
+      # Register two companion :flag entries for a negatable flag option
+      #
+      # Registers a positive entry for +names+ and a boolean-only negative entry for
+      # <tt>:no_<primary></tt>. An automatic conflict is added so that both being
+      # true at bind time raises ArgumentError.
+      def register_negatable_flag_pair(names, as:, required:, allow_nil:, max_times:)
+        primary = Array(names).first
+        validate_negatable_allow_nil!(primary, required: required, allow_nil: allow_nil)
+        prepare_negatable!(primary, names, as)
+
+        register_option(names, type: :flag, as: as, expected_type: nil, validator: nil,
+                               required: false, allow_nil: allow_nil, max_times: max_times)
+        register_negative_companion(primary, as: as, required: required)
+      end
+
+      # Register a positive flag-or-value entry and a boolean-only negative companion
+      # entry for a negatable flag-or-value option
+      def register_negatable_flag_or_value_pair(names, as:, type:, inline:, repeatable:, required:, allow_nil:)
+        primary = Array(names).first
+        validate_negatable_allow_nil!(primary, required: required, allow_nil: allow_nil)
+        prepare_negatable!(primary, names, as)
+
+        positive_type = inline ? :flag_or_inline_value : :flag_or_value
+        register_option(names, type: positive_type, as: as, expected_type: type,
+                               repeatable: repeatable, required: false, allow_nil: allow_nil)
+        register_negative_companion(primary, as: as, required: required)
+      end
+
+      # Run shared validations for a negatable option before registering either side
+      def prepare_negatable!(primary, names, as)
+        validate_negatable_primary_key!(primary)
+        validate_negatable_as_not_array!(primary, as)
+        validate_negatable_as_long_form!(primary, as)
+        no_name = :"no_#{primary}"
+        validate_no_negatable_collision!(no_name)
+        validate_no_companion_in_alias_list!(no_name, Array(names))
+      end
+
+      # Register the synthesized +no_<primary>+ flag entry, the auto-conflict, and
+      # (when +required: true+) the auto requires_one_of group
+      def register_negative_companion(primary, as:, required:)
+        no_name = :"no_#{primary}"
+        positive_flag = as || default_arg_spec(primary)
+        negative_flag = negate_flag(positive_flag)
+
+        register_option(no_name, type: :flag, as: negative_flag, expected_type: nil, validator: nil,
+                                 required: false, allow_nil: true)
+        @negatable_companions << no_name
+        @conflicts << [primary, no_name]
+        @requires_one_of << { names: [primary, no_name], condition: nil, single: false } if required
+      end
+
+      # Raise if `allow_nil: false` is combined with `negatable: true` and `required: true`
+      #
+      # When `negatable: true` and `required: true`, the "required" constraint is enforced
+      # by an auto `requires_one_of` group (either the primary or its `no_<name>` companion
+      # must be present). Because the primary option is internally registered with
+      # `required: false`, the `allow_nil: false` nil-check never runs, making the
+      # combination silently misleading. Fail at definition time instead.
+      #
+      # @param key [Symbol] the primary option name (for the error message)
+      #
+      # @param required [Boolean] whether the option is required
+      #
+      # @param allow_nil [Boolean] whether nil is allowed
+      #
+      # @raise [ArgumentError] if `required: true` and `allow_nil: false` are combined
+      #   with `negatable: true`
+      #
+      def validate_negatable_allow_nil!(key, required:, allow_nil:)
+        return unless required && allow_nil == false
+
+        raise ArgumentError,
+              "allow_nil: false cannot be used with negatable: true and required: true on :#{key} " \
+              '(nil is caught by the auto requires_one_of group, not allow_nil)'
+      end
+
+      # @raise [ArgumentError] if key is not snake_case
+      #
+      def validate_negatable_primary_key!(key)
+        return if key.to_s.match?(/\A[a-z][a-z0-9_]*\z/)
+
+        raise ArgumentError,
+              "negatable: true requires a snake_case primary key, got :#{key} " \
+              "(would generate :no_#{key} which is not a meaningful negative form)"
+      end
+
+      # Raise if as: is an Array when negatable: true
+      #
+      # Arrays for as: are not compatible with negatable: true regardless of the
+      # underlying option type — the synthesized +--no-<flag>+ form has no sensible
+      # mapping when the positive form expands to multiple CLI tokens.
+      def validate_negatable_as_not_array!(primary, as)
+        return unless as.is_a?(Array)
+
+        raise ArgumentError,
+              "arrays for as: parameter cannot be combined with negatable: true (option :#{primary})"
+      end
+
+      # Raise if as: is given as a short-form flag (e.g. +-S+) when negatable: true.
+      # Negation requires a long-form flag because the synthesized companion is
+      # always +--no-<flag>+; deriving it from a short flag would yield a
+      # nonexistent git form like +--no-S+.
+      def validate_negatable_as_long_form!(primary, as)
+        return if as.nil?
+        return if as.is_a?(String) && as.start_with?('--')
+
+        raise ArgumentError,
+              "negatable: true requires a long-form (--flag) value for as: on :#{primary}, got #{as.inspect}"
+      end
+
+      # Raise if the generated no_ companion key is already registered
+      #
+      def validate_no_negatable_collision!(no_name)
+        return unless @alias_map.key?(no_name)
+
+        raise ArgumentError,
+              "negatable: true would register :#{no_name} but that key is already registered"
+      end
+
+      # Raise if the synthesized companion key appears in the same declaration's alias list.
+      #
+      # This catches e.g. +flag_option %i[foo no_foo], negatable: true+ where :no_foo
+      # is listed as an alias and would be silently overwritten when the companion is
+      # registered, corrupting @alias_map and @option_definitions.
+      def validate_no_companion_in_alias_list!(no_name, keys)
+        return unless keys.include?(no_name)
+
+        raise ArgumentError,
+              "negatable: true would register :#{no_name} as a companion, but :#{no_name} " \
+              'is already listed as an alias in the same declaration'
       end
 
       # Validate that flag-producing options are not defined after a '--' boundary
@@ -1942,11 +2154,6 @@ module Git
 
       def validate_as_parameter!(definition, option_name)
         return unless definition[:as].is_a?(Array)
-
-        if definition[:type] == :negatable_flag
-          raise ArgumentError,
-                "arrays for as: parameter cannot be combined with negatable: true (option :#{option_name})"
-        end
 
         return if definition[:type] == :flag
 
@@ -2069,7 +2276,6 @@ module Git
 
       BUILDERS = {
         flag: :build_flag,
-        negatable_flag: :build_negatable_flag,
         value: lambda do |args, arg_spec, value, definition|
           if definition[:repeatable]
             Array(value).each { |v| args << arg_spec << v.to_s }
@@ -2079,9 +2285,7 @@ module Git
         end,
         inline_value: :build_inline_value,
         flag_or_inline_value: :build_flag_or_inline_value,
-        negatable_flag_or_inline_value: :build_negatable_flag_or_inline_value,
         flag_or_value: :build_flag_or_value,
-        negatable_flag_or_value: :build_negatable_flag_or_value,
         value_as_operand: lambda do |args, _, value, definition|
           # Validate array usage when repeatable is false
           if value.is_a?(Array) && !definition[:repeatable]
@@ -2194,18 +2398,6 @@ module Git
         end
       end
 
-      # Build negatable flag or inline value option with POSIX-compliant formatting
-      #
-      def build_negatable_flag_or_inline_value(args, arg_spec, value, definition)
-        each_flag_or_value_value(value, definition, 'negatable_flag_or_inline_value') do |v|
-          args << case v
-                  when true then arg_spec
-                  when false then negate_flag(arg_spec)
-                  else "#{arg_spec}#{inline_value_separator(arg_spec)}#{v}"
-                  end
-        end
-      end
-
       # Build flag or value option
       #
       def build_flag_or_value(args, arg_spec, value, definition)
@@ -2214,21 +2406,6 @@ module Git
 
           if v == true
             args << arg_spec
-          else
-            args << arg_spec << v.to_s
-          end
-        end
-      end
-
-      # Build negatable flag or value option with proper negation format for short options
-      #
-      def build_negatable_flag_or_value(args, arg_spec, value, definition)
-        each_flag_or_value_value(value, definition, 'negatable_flag_or_value') do |v|
-          case v
-          when true
-            args << arg_spec
-          when false
-            args << negate_flag(arg_spec)
           else
             args << arg_spec << v.to_s
           end
@@ -2277,21 +2454,6 @@ module Git
         append_repeated_flag(args, arg_spec, count)
       end
 
-      # Build negatable flag with proper negation format
-      #
-      # For negation, always use double-dash format (--no-x) even for short options,
-      # as this is the POSIX convention.
-      #
-      def build_negatable_flag(args, arg_spec, value, definition)
-        if value == false
-          args << negate_flag(arg_spec)
-          return
-        end
-
-        count = normalize_flag_value!(value, definition)
-        append_repeated_flag(args, arg_spec, count)
-      end
-
       def append_repeated_flag(args, arg_spec, count)
         return if count <= 0
 
@@ -2315,21 +2477,12 @@ module Git
       end
 
       def raise_flag_type_boolean_error!(value, definition)
-        if definition[:type] == :negatable_flag
-          raise_negatable_flag_boolean_error!(value)
-        else
-          raise_flag_boolean_error!(definition[:aliases].first, value)
-        end
+        raise_flag_boolean_error!(definition[:aliases].first, value)
       end
 
       def raise_flag_boolean_error!(option_name, value)
         raise ArgumentError,
               "flag_option :#{option_name} expects a boolean value, got #{value.inspect} (#{value.class})"
-      end
-
-      def raise_negatable_flag_boolean_error!(value)
-        raise ArgumentError,
-              "negatable_flag expects a boolean value, got #{value.inspect} (#{value.class})"
       end
 
       def normalize_flag_integer_value!(value, option_name, max_times)
@@ -2789,15 +2942,27 @@ module Git
 
       def validate_conflicts!(opts, allocated_positionals = {})
         @conflicts.each do |conflict_group|
-          provided = conflict_group.select do |name|
-            value = opts.key?(name) ? opts[name] : allocated_positionals[name]
-            argument_present_for_name?(name, value)
-          end
+          provided = conflict_group.select { |name| conflict_present?(name, opts, allocated_positionals) }
           next if provided.size <= 1
 
           formatted = provided.map { |name| ":#{name}" }.join(' and ')
           raise ArgumentError, "cannot specify #{formatted}"
         end
+      end
+
+      # Return true if a named argument should be counted as present during conflict checking
+      #
+      # For registered keyword options only looks in opts; positional slots use
+      # allocated_positionals. This prevents a positional operand that shares a
+      # name with a keyword option from spuriously triggering keyword conflicts.
+      def conflict_present?(name, opts, allocated_positionals)
+        canonical_name = @alias_map[name] || name
+        value = if @option_definitions.key?(canonical_name)
+                  opts[canonical_name]
+                else
+                  allocated_positionals[canonical_name]
+                end
+        argument_present?(value)
       end
 
       # Validate that no bound values match a forbidden exact-value tuple
@@ -2866,13 +3031,10 @@ module Git
       def validate_requires_one_of_entry!(entry, opts, allocated_positionals)
         condition = entry[:condition]
 
-        if condition
-          trigger_value = opts.key?(condition) ? opts[condition] : allocated_positionals[condition]
-          return unless argument_present?(trigger_value)
-        end
+        return if condition && !conflict_present?(condition, opts, allocated_positionals)
 
         names = entry[:names]
-        return if names.any? { |n| argument_present_for_name?(n, opts.key?(n) ? opts[n] : allocated_positionals[n]) }
+        return if names.any? { |n| conflict_present?(n, opts, allocated_positionals) }
 
         raise ArgumentError, requires_one_of_error_message(names, condition, entry[:single])
       end
@@ -2951,7 +3113,10 @@ module Git
       # Return true if a conflict-group value should be considered "present"
       #
       # A value is absent (not present) when it is nil, false, an empty array,
-      # or an empty string. All other values are present.
+      # or an empty string. All other values — including non-empty arrays — are
+      # present, regardless of their contents. This keeps validation consistent
+      # with CLI emission: repeatable options (value_option, inline_value, etc.)
+      # emit tokens for non-empty arrays even when every element is '' or false.
       #
       # @param value [Object] the argument value to test
       # @return [Boolean]
@@ -2962,43 +3127,6 @@ module Git
         return false if value == ''
 
         true
-      end
-
-      # Return true if the named argument's value should be considered "present"
-      # for conflict and requires-one-of *satisfied-by* checks.
-      #
-      # Unlike {#argument_present?}, this method is aware of negatable flag options.
-      # For a negatable flag, an explicit +false+ value represents the +--no-*+ form
-      # of the flag and is therefore considered *present* — the caller explicitly
-      # provided it, so it can participate in a conflict group or satisfy a
-      # requires-one-of group.
-      #
-      # This method is intentionally *not* used for +when:+ trigger evaluation.
-      # A negatable flag set to +false+ means the feature is disabled, so its
-      # dependent requirements should not be activated (use {#argument_present?}
-      # for that path instead).
-      #
-      # +nil+, +[]+, and <tt>''</tt> are always treated as absent regardless of the
-      # argument type.
-      #
-      # @param name [Symbol] the argument name (alias or canonical) to look up
-      # @param value [Object] the argument value to test
-      # @return [Boolean]
-      def argument_present_for_name?(name, value)
-        return false if value.nil? || value == [] || value == ''
-        return true  unless value == false
-
-        negatable_option?(name)
-      end
-
-      # Return true if the named option is a negatable flag type
-      #
-      # @param name [Symbol] the option name (alias or canonical)
-      # @return [Boolean]
-      def negatable_option?(name)
-        canonical = @alias_map[name] || name
-        defn = @option_definitions[canonical]
-        %i[negatable_flag negatable_flag_or_value negatable_flag_or_inline_value].include?(defn[:type])
       end
 
       # Bound arguments object returned by {Arguments#bind}
