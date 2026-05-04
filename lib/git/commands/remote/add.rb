@@ -20,7 +20,7 @@ module Git
       #
       # @example Track a specific branch and disable tag import
       #   add = Git::Commands::Remote::Add.new(execution_context)
-      #   add.call('origin', 'https://example.com/repo.git', track: 'main', tags: false)
+      #   add.call('origin', 'https://example.com/repo.git', track: 'main', no_tags: true)
       #
       # @note `arguments` block audited against https://git-scm.com/docs/git-remote/2.53.0
       #
@@ -72,9 +72,9 @@ module Git
         #
         #       Alias: :f
         #
-        #     @option options [Boolean] :tags (nil) control whether remote tags are imported during fetches
+        #     @option options [Boolean] :tags (false) import all tags from the remote (`--tags`)
         #
-        #       Pass `true` for `--tags` or `false` for `--no-tags`.
+        #     @option options [Boolean] :no_tags (false) disable importing tags from the remote (`--no-tags`)
         #
         #     @option options [String] :mirror (nil) set mirror mode
         #

@@ -294,9 +294,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(indent_heuristic: true)
       end
 
-      it 'includes --no-indent-heuristic when false' do
-        expect_command_capturing('diff', '--no-indent-heuristic').and_return(command_result(''))
-        command.call(indent_heuristic: false)
+      context 'when :no_indent_heuristic is true' do
+        it 'includes --no-indent-heuristic' do
+          expect_command_capturing('diff', '--no-indent-heuristic').and_return(command_result(''))
+          command.call(no_indent_heuristic: true)
+        end
       end
     end
 
@@ -466,9 +468,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(color: 'always')
       end
 
-      it 'includes --no-color when false' do
-        expect_command_capturing('diff', '--no-color').and_return(command_result(''))
-        command.call(color: false)
+      context 'when :no_color is true' do
+        it 'includes --no-color' do
+          expect_command_capturing('diff', '--no-color').and_return(command_result(''))
+          command.call(no_color: true)
+        end
       end
     end
 
@@ -483,9 +487,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(color_moved: 'zebra')
       end
 
-      it 'includes --no-color-moved when false' do
-        expect_command_capturing('diff', '--no-color-moved').and_return(command_result(''))
-        command.call(color_moved: false)
+      context 'when :no_color_moved is true' do
+        it 'includes --no-color-moved' do
+          expect_command_capturing('diff', '--no-color-moved').and_return(command_result(''))
+          command.call(no_color_moved: true)
+        end
       end
     end
 
@@ -501,9 +507,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(color_moved_ws: 'ignore-all-space')
       end
 
-      it 'includes --no-color-moved-ws when false' do
-        expect_command_capturing('diff', '--no-color-moved-ws').and_return(command_result(''))
-        command.call(color_moved_ws: false)
+      context 'when :no_color_moved_ws is true' do
+        it 'includes --no-color-moved-ws' do
+          expect_command_capturing('diff', '--no-color-moved-ws').and_return(command_result(''))
+          command.call(no_color_moved_ws: true)
+        end
       end
     end
 
@@ -551,9 +559,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(rename_empty: true)
       end
 
-      it 'includes --no-rename-empty when false' do
-        expect_command_capturing('diff', '--no-rename-empty').and_return(command_result(''))
-        command.call(rename_empty: false)
+      context 'when :no_rename_empty is true' do
+        it 'includes --no-rename-empty' do
+          expect_command_capturing('diff', '--no-rename-empty').and_return(command_result(''))
+          command.call(no_rename_empty: true)
+        end
       end
     end
 
@@ -763,9 +773,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(relative: 'lib/')
       end
 
-      it 'includes --no-relative when false' do
-        expect_command_capturing('diff', '--no-relative').and_return(command_result(''))
-        command.call(relative: false)
+      context 'when :no_relative is true' do
+        it 'includes --no-relative' do
+          expect_command_capturing('diff', '--no-relative').and_return(command_result(''))
+          command.call(no_relative: true)
+        end
       end
     end
 
@@ -893,9 +905,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(ext_diff: true)
       end
 
-      it 'includes --no-ext-diff when false' do
-        expect_command_capturing('diff', '--no-ext-diff').and_return(command_result(''))
-        command.call(ext_diff: false)
+      context 'when :no_ext_diff is true' do
+        it 'includes --no-ext-diff' do
+          expect_command_capturing('diff', '--no-ext-diff').and_return(command_result(''))
+          command.call(no_ext_diff: true)
+        end
       end
     end
 
@@ -905,9 +919,11 @@ RSpec.describe Git::Commands::Diff do
         command.call(textconv: true)
       end
 
-      it 'includes --no-textconv when false' do
-        expect_command_capturing('diff', '--no-textconv').and_return(command_result(''))
-        command.call(textconv: false)
+      context 'when :no_textconv is true' do
+        it 'includes --no-textconv' do
+          expect_command_capturing('diff', '--no-textconv').and_return(command_result(''))
+          command.call(no_textconv: true)
+        end
       end
     end
 

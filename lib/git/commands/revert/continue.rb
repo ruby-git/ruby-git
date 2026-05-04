@@ -37,13 +37,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :edit (nil) open the editor for the
-        #       commit message
-        #
-        #       `true` → `--edit`, `false` → `--no-edit`. Omit to use
-        #       git's default.
+        #     @option options [Boolean] :edit (false) open the editor for the
+        #       commit message (`--edit`)
         #
         #       Alias: `:e`
+        #
+        #     @option options [Boolean] :no_edit (false) suppress the editor for
+        #       the commit message (`--no-edit`)
         #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git revert --continue`

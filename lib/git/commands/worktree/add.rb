@@ -78,24 +78,26 @@ module Git
         #
         #       Alias: :d
         #
-        #     @option options [Boolean] :checkout (nil) control whether the working tree
-        #       is checked out after creation
+        #     @option options [Boolean] :checkout (false) control whether the working tree
+        #       is checked out after creation (`--checkout`)
         #
-        #       When `false`, passes `--no-checkout`, suppressing the initial checkout.
+        #     @option options [Boolean] :no_checkout (false) suppress the initial checkout
+        #       after worktree creation (`--no-checkout`)
         #
-        #     @option options [Boolean] :guess_remote (nil) base new branch on a matching
-        #       remote-tracking branch when no `commit_ish` is given
+        #     @option options [Boolean] :guess_remote (false) base new branch on a matching
+        #       remote-tracking branch when no `commit_ish` is given (`--guess-remote`)
         #
-        #       When `false`, passes `--no-guess-remote`.
+        #     @option options [Boolean] :no_guess_remote (false) disable guess-remote behavior (`--no-guess-remote`)
         #
-        #     @option options [Boolean] :relative_paths (nil) link worktrees using relative paths
+        #     @option options [Boolean] :relative_paths (false) link worktrees using relative paths,
+        #       overriding the `worktree.useRelativePaths` config option (`--relative-paths`)
         #
-        #       When `false`, passes `--no-relative-paths`, using absolute paths instead.
-        #       Overrides the `worktree.useRelativePaths` config option.
+        #     @option options [Boolean] :no_relative_paths (false) use absolute paths for worktree links,
+        #       overriding the `worktree.useRelativePaths` config option (`--no-relative-paths`)
         #
-        #     @option options [Boolean] :track (nil) mark the upstream branch for tracking
+        #     @option options [Boolean] :track (false) mark the upstream branch for tracking (`--track`)
         #
-        #       When `false`, passes `--no-track`.
+        #     @option options [Boolean] :no_track (false) do not mark the upstream branch for tracking (`--no-track`)
         #
         #     @option options [Boolean] :lock (false) lock the worktree immediately after creation
         #

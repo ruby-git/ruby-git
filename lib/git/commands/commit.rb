@@ -13,7 +13,7 @@ module Git
     #   commit = Git::Commands::Commit.new(execution_context)
     #   commit.call(message: 'Initial commit')
     #   commit.call(message: 'Add feature', all: true, author: 'Jane <jane@example.com>')
-    #   commit.call(amend: true, verify: false)  # emits --no-verify
+    #   commit.call(amend: true, no_verify: true)  # emits --no-verify
     #   commit.call('src/foo.rb', message: 'Update foo')
     #
     # @note `arguments` block audited against https://git-scm.com/docs/git-commit/2.53.0
@@ -111,12 +111,11 @@ module Git
       #
       #       Alias: `:a`
       #
-      #     @option options [Boolean, nil] :edit (nil) open an editor for the commit message
-      #
-      #       When `false`, adds `--no-edit` to suppress the editor. When `true`, adds
-      #       `--edit`. When `nil`, defers to git's default behavior.
+      #     @option options [Boolean] :edit (false) open an editor for the commit message (`--edit`)
       #
       #       Alias: `:e`
+      #
+      #     @option options [Boolean] :no_edit (false) suppress the editor (`--no-edit`)
       #
       #     @option options [Boolean] :amend (false) replace the tip of the current branch
       #       with a new commit
@@ -162,12 +161,11 @@ module Git
       #     @option options [String, Array<String>] :trailer (nil) add one or more
       #       `<token>[=<value>]` trailers to the commit message
       #
-      #     @option options [Boolean, nil] :verify (nil) run pre-commit and commit-msg hooks
-      #
-      #       When `false`, adds `--no-verify` to bypass the hooks. When `true`, adds
-      #       `--verify` to explicitly re-enable them. When `nil`, defers to git's default.
+      #     @option options [Boolean] :verify (false) run pre-commit and commit-msg hooks (`--verify`)
       #
       #       Alias: `:n`
+      #
+      #     @option options [Boolean] :no_verify (false) bypass pre-commit and commit-msg hooks (`--no-verify`)
       #
       #     @option options [Boolean] :allow_empty (false) allow committing with no changes
       #
@@ -217,11 +215,11 @@ module Git
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean, nil] :status (nil) include `git status` output in the
-      #       commit message template
+      #     @option options [Boolean] :status (false) include `git status` output in the
+      #       commit message template (`--status`)
       #
-      #       When `false`, adds `--no-status`. When `true`, adds `--status`. When `nil`,
-      #       defers to git's default (controlled by `commit.status` config).
+      #     @option options [Boolean] :no_status (false) omit `git status` output from the
+      #       commit message template (`--no-status`)
       #
       #     @option options [Integer] :unified (nil) generate verbose diff with the given
       #       number of context lines
@@ -231,20 +229,21 @@ module Git
       #     @option options [Integer] :inter_hunk_context (nil) show context between diff
       #       hunks up to the given number of lines (for use with `:verbose`)
       #
-      #     @option options [Boolean, nil] :signoff (nil) add a `Signed-off-by` trailer to
-      #       the commit message
-      #
-      #       When `false`, adds `--no-signoff`. When `nil`, defers to git's default.
+      #     @option options [Boolean] :signoff (false) add a `Signed-off-by` trailer to
+      #       the commit message (`--signoff`)
       #
       #       Alias: `:s`
       #
-      #     @option options [Boolean, String, nil] :gpg_sign (nil) GPG-sign the commit
+      #     @option options [Boolean] :no_signoff (false) suppress the `Signed-off-by` trailer (`--no-signoff`)
+      #
+      #     @option options [Boolean, String] :gpg_sign (false) GPG-sign the commit (`--gpg-sign`)
       #
       #       When `true`, uses the default key. When a `String`, uses the specified key ID.
-      #       When `false`, adds `--no-gpg-sign` to override `commit.gpgSign` config.
-      #       When `nil`, defers to git's default.
       #
       #       Alias: `:S`
+      #
+      #     @option options [Boolean] :no_gpg_sign (false) disable GPG signing, overriding
+      #       `commit.gpgSign` config (`--no-gpg-sign`)
       #
       #     @option options [Boolean, String] :untracked_files (nil) show untracked files
       #       in the dry-run status output

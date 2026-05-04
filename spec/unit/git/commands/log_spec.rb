@@ -212,10 +212,12 @@ RSpec.describe Git::Commands::Log do
         command.call(merges: true)
       end
 
-      it 'includes the --no-merges flag when false' do
-        expect_command_capturing('log', '--no-merges').and_return(command_result)
+      context 'when :no_merges is true' do
+        it 'includes the --no-merges flag' do
+          expect_command_capturing('log', '--no-merges').and_return(command_result)
 
-        command.call(merges: false)
+          command.call(no_merges: true)
+        end
       end
     end
 
@@ -586,10 +588,12 @@ RSpec.describe Git::Commands::Log do
         command.call(abbrev_commit: true)
       end
 
-      it 'includes the --no-abbrev-commit flag when false' do
-        expect_command_capturing('log', '--no-abbrev-commit').and_return(command_result)
+      context 'when :no_abbrev_commit is true' do
+        it 'includes the --no-abbrev-commit flag' do
+          expect_command_capturing('log', '--no-abbrev-commit').and_return(command_result)
 
-        command.call(abbrev_commit: false)
+          command.call(no_abbrev_commit: true)
+        end
       end
     end
 
@@ -622,10 +626,12 @@ RSpec.describe Git::Commands::Log do
         command.call(expand_tabs: '4')
       end
 
-      it 'includes the --no-expand-tabs flag when false' do
-        expect_command_capturing('log', '--no-expand-tabs').and_return(command_result)
+      context 'when :no_expand_tabs is true' do
+        it 'includes the --no-expand-tabs flag' do
+          expect_command_capturing('log', '--no-expand-tabs').and_return(command_result)
 
-        command.call(expand_tabs: false)
+          command.call(no_expand_tabs: true)
+        end
       end
     end
 
@@ -642,10 +648,12 @@ RSpec.describe Git::Commands::Log do
         command.call(notes: 'refs/notes/review')
       end
 
-      it 'includes the --no-notes flag when false' do
-        expect_command_capturing('log', '--no-notes').and_return(command_result)
+      context 'when :no_notes is true' do
+        it 'includes the --no-notes flag' do
+          expect_command_capturing('log', '--no-notes').and_return(command_result)
 
-        command.call(notes: false)
+          command.call(no_notes: true)
+        end
       end
     end
 
@@ -748,10 +756,12 @@ RSpec.describe Git::Commands::Log do
         command.call(decorate: 'full')
       end
 
-      it 'includes the --no-decorate flag when false' do
-        expect_command_capturing('log', '--no-decorate').and_return(command_result)
+      context 'when :no_decorate is true' do
+        it 'includes the --no-decorate flag' do
+          expect_command_capturing('log', '--no-decorate').and_return(command_result)
 
-        command.call(decorate: false)
+          command.call(no_decorate: true)
+        end
       end
     end
 
@@ -794,10 +804,12 @@ RSpec.describe Git::Commands::Log do
         command.call(use_mailmap: true)
       end
 
-      it 'includes the --no-use-mailmap flag when false' do
-        expect_command_capturing('log', '--no-use-mailmap').and_return(command_result)
+      context 'when :no_use_mailmap is true' do
+        it 'includes the --no-use-mailmap flag' do
+          expect_command_capturing('log', '--no-use-mailmap').and_return(command_result)
 
-        command.call(use_mailmap: false)
+          command.call(no_use_mailmap: true)
+        end
       end
     end
 
@@ -982,10 +994,12 @@ RSpec.describe Git::Commands::Log do
         command.call(color: 'always')
       end
 
-      it 'includes --no-color when color: false' do
-        expect_command_capturing('log', '--no-color').and_return(command_result)
+      context 'when :no_color is true' do
+        it 'includes --no-color' do
+          expect_command_capturing('log', '--no-color').and_return(command_result)
 
-        command.call(color: false)
+          command.call(no_color: true)
+        end
       end
     end
 
@@ -1076,10 +1090,12 @@ RSpec.describe Git::Commands::Log do
         command.call(relative: 'subdir/')
       end
 
-      it 'includes the --no-relative flag when false' do
-        expect_command_capturing('log', '--no-relative').and_return(command_result)
+      context 'when :no_relative is true' do
+        it 'includes the --no-relative flag' do
+          expect_command_capturing('log', '--no-relative').and_return(command_result)
 
-        command.call(relative: false)
+          command.call(no_relative: true)
+        end
       end
     end
 
@@ -1150,10 +1166,12 @@ RSpec.describe Git::Commands::Log do
         command.call(ext_diff: true)
       end
 
-      it 'includes the --no-ext-diff flag when false' do
-        expect_command_capturing('log', '--no-ext-diff').and_return(command_result)
+      context 'when :no_ext_diff is true' do
+        it 'includes the --no-ext-diff flag' do
+          expect_command_capturing('log', '--no-ext-diff').and_return(command_result)
 
-        command.call(ext_diff: false)
+          command.call(no_ext_diff: true)
+        end
       end
     end
 
@@ -1164,10 +1182,12 @@ RSpec.describe Git::Commands::Log do
         command.call(textconv: true)
       end
 
-      it 'includes the --no-textconv flag when false' do
-        expect_command_capturing('log', '--no-textconv').and_return(command_result)
+      context 'when :no_textconv is true' do
+        it 'includes the --no-textconv flag' do
+          expect_command_capturing('log', '--no-textconv').and_return(command_result)
 
-        command.call(textconv: false)
+          command.call(no_textconv: true)
+        end
       end
     end
 

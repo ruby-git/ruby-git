@@ -34,9 +34,11 @@ RSpec.describe Git::Commands::Revert::Start do
         command.call('abc123', edit: true)
       end
 
-      it 'adds --no-edit when false' do
-        expect_command_capturing('revert', '--no-edit', '--', 'abc123').and_return(command_result(''))
-        command.call('abc123', edit: false)
+      context 'when :no_edit is true' do
+        it 'adds --no-edit' do
+          expect_command_capturing('revert', '--no-edit', '--', 'abc123').and_return(command_result(''))
+          command.call('abc123', no_edit: true)
+        end
       end
 
       it 'supports the :e alias' do
@@ -70,9 +72,11 @@ RSpec.describe Git::Commands::Revert::Start do
         command.call('abc123', gpg_sign: true)
       end
 
-      it 'adds --no-gpg-sign when false' do
-        expect_command_capturing('revert', '--no-gpg-sign', '--', 'abc123').and_return(command_result(''))
-        command.call('abc123', gpg_sign: false)
+      context 'when :no_gpg_sign is true' do
+        it 'adds --no-gpg-sign' do
+          expect_command_capturing('revert', '--no-gpg-sign', '--', 'abc123').and_return(command_result(''))
+          command.call('abc123', no_gpg_sign: true)
+        end
       end
 
       it 'adds --gpg-sign=<keyid> when given a key ID string' do
@@ -92,9 +96,11 @@ RSpec.describe Git::Commands::Revert::Start do
         command.call('abc123', signoff: true)
       end
 
-      it 'adds --no-signoff when false' do
-        expect_command_capturing('revert', '--no-signoff', '--', 'abc123').and_return(command_result(''))
-        command.call('abc123', signoff: false)
+      context 'when :no_signoff is true' do
+        it 'adds --no-signoff' do
+          expect_command_capturing('revert', '--no-signoff', '--', 'abc123').and_return(command_result(''))
+          command.call('abc123', no_signoff: true)
+        end
       end
 
       it 'supports the :s alias' do
@@ -135,9 +141,11 @@ RSpec.describe Git::Commands::Revert::Start do
         command.call('abc123', rerere_autoupdate: true)
       end
 
-      it 'adds --no-rerere-autoupdate when false' do
-        expect_command_capturing('revert', '--no-rerere-autoupdate', '--', 'abc123').and_return(command_result(''))
-        command.call('abc123', rerere_autoupdate: false)
+      context 'when :no_rerere_autoupdate is true' do
+        it 'adds --no-rerere-autoupdate' do
+          expect_command_capturing('revert', '--no-rerere-autoupdate', '--', 'abc123').and_return(command_result(''))
+          command.call('abc123', no_rerere_autoupdate: true)
+        end
       end
     end
 

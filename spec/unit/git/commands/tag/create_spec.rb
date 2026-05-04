@@ -87,12 +87,14 @@ RSpec.describe Git::Commands::Tag::Create do
         expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'includes --no-sign flag when false' do
-        expect_command_capturing('tag', '--no-sign', '--', 'v1.0.0').and_return(command_result)
+      context 'when :no_sign is true' do
+        it 'includes --no-sign' do
+          expect_command_capturing('tag', '--no-sign', '--', 'v1.0.0').and_return(command_result)
 
-        result = command.call('v1.0.0', sign: false)
+          result = command.call('v1.0.0', no_sign: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLineResult)
+        end
       end
     end
 
@@ -211,12 +213,14 @@ RSpec.describe Git::Commands::Tag::Create do
         expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'includes --no-edit flag when false' do
-        expect_command_capturing('tag', '--message=Release', '--no-edit', '--', 'v1.0.0').and_return(command_result)
+      context 'when :no_edit is true' do
+        it 'includes --no-edit' do
+          expect_command_capturing('tag', '--message=Release', '--no-edit', '--', 'v1.0.0').and_return(command_result)
 
-        result = command.call('v1.0.0', edit: false, message: 'Release')
+          result = command.call('v1.0.0', message: 'Release', no_edit: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLineResult)
+        end
       end
     end
 

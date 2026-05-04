@@ -40,18 +40,22 @@ RSpec.describe Git::Commands::Worktree::Repair do
     end
 
     context 'with :relative_paths option' do
-      it 'adds --relative-paths when true' do
-        expect_command_capturing('worktree', 'repair', '--relative-paths', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --relative-paths flag' do
+          expect_command_capturing('worktree', 'repair', '--relative-paths', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call(relative_paths: true)
+          command.call(relative_paths: true)
+        end
       end
 
-      it 'adds --no-relative-paths when false' do
-        expect_command_capturing('worktree', 'repair', '--no-relative-paths', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when :no_relative_paths is true' do
+        it 'adds --no-relative-paths flag' do
+          expect_command_capturing('worktree', 'repair', '--no-relative-paths', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call(relative_paths: false)
+          command.call(no_relative_paths: true)
+        end
       end
 
       it 'combines --relative-paths with a path operand' do

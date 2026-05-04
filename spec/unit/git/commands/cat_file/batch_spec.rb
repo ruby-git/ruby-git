@@ -138,10 +138,10 @@ RSpec.describe Git::Commands::CatFile::Batch do
         command.call('HEAD', batch_check: true, use_mailmap: true)
       end
 
-      it 'passes --no-use-mailmap when use_mailmap: false' do
+      it 'passes --no-use-mailmap when :no_use_mailmap is true' do
         expect_batch_command('--batch-check', '--no-use-mailmap', stdin_content: "HEAD\n")
 
-        command.call('HEAD', batch_check: true, use_mailmap: false)
+        command.call('HEAD', batch_check: true, no_use_mailmap: true)
       end
     end
 

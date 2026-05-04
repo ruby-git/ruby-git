@@ -34,9 +34,9 @@ class TestFsck < Test::Unit::TestCase
     assert_command_line_eq(expected_command_line) { |git| git.fsck(dangling: true) }
   end
 
-  test 'fsck with dangling: false' do
+  test 'fsck with no_dangling: true' do
     expected_command_line = ['fsck', '--no-progress', '--no-dangling', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.fsck(dangling: false) }
+    assert_command_line_eq(expected_command_line) { |git| git.fsck(no_dangling: true) }
   end
 
   test 'fsck with full: true' do
@@ -44,15 +44,15 @@ class TestFsck < Test::Unit::TestCase
     assert_command_line_eq(expected_command_line) { |git| git.fsck(full: true) }
   end
 
-  test 'fsck with full: false' do
+  test 'fsck with no_full: true' do
     expected_command_line = ['fsck', '--no-progress', '--no-full', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.fsck(full: false) }
+    assert_command_line_eq(expected_command_line) { |git| git.fsck(no_full: true) }
   end
 
   test 'fsck with multiple options' do
     expected_command_line = ['fsck', '--no-progress', '--unreachable', '--strict', '--no-dangling', {}]
     assert_command_line_eq(expected_command_line) do |git|
-      git.fsck(unreachable: true, strict: true, dangling: false)
+      git.fsck(unreachable: true, strict: true, no_dangling: true)
     end
   end
 
@@ -61,9 +61,9 @@ class TestFsck < Test::Unit::TestCase
     assert_command_line_eq(expected_command_line) { |git| git.fsck(name_objects: true) }
   end
 
-  test 'fsck with name_objects: false' do
+  test 'fsck with no_name_objects: true' do
     expected_command_line = ['fsck', '--no-progress', '--no-name-objects', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.fsck(name_objects: false) }
+    assert_command_line_eq(expected_command_line) { |git| git.fsck(no_name_objects: true) }
   end
 
   test 'fsck with references: true' do
@@ -71,9 +71,9 @@ class TestFsck < Test::Unit::TestCase
     assert_command_line_eq(expected_command_line) { |git| git.fsck(references: true) }
   end
 
-  test 'fsck with references: false' do
+  test 'fsck with no_references: true' do
     expected_command_line = ['fsck', '--no-progress', '--no-references', {}]
-    assert_command_line_eq(expected_command_line) { |git| git.fsck(references: false) }
+    assert_command_line_eq(expected_command_line) { |git| git.fsck(no_references: true) }
   end
 
   test 'fsck with single object argument' do

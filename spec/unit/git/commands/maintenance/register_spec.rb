@@ -37,12 +37,14 @@ RSpec.describe Git::Commands::Maintenance::Register do
       end
     end
 
-    context 'with :config_file option as false' do
-      it 'includes the --no-config-file flag' do
-        expect_command_capturing('maintenance', 'register', '--no-config-file')
-          .and_return(command_result(''))
+    context 'with :config_file option' do
+      context 'when :no_config_file is true' do
+        it 'includes the --no-config-file flag' do
+          expect_command_capturing('maintenance', 'register', '--no-config-file')
+            .and_return(command_result(''))
 
-        command.call(config_file: false)
+          command.call(no_config_file: true)
+        end
       end
     end
 

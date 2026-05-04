@@ -73,18 +73,21 @@ module Git
       #       When `true`, git gc checks whether housekeeping is needed; if not, it
       #       exits without doing anything.
       #
-      #     @option options [Boolean] :detach (nil) run in the background if the
-      #       system supports it
+      #     @option options [Boolean] :detach (false) run in the background if the
+      #       system supports it (`--detach`)
       #
-      #       When `true`, passes `--detach`. When `false`, passes `--no-detach`.
-      #       Overrides the `gc.autoDetach` configuration. When `nil`, the option
-      #       is omitted.
+      #       Overrides the `gc.autoDetach` configuration.
       #
-      #     @option options [Boolean] :cruft (nil) pack unreachable objects into a
-      #       cruft pack instead of storing them as loose objects
+      #     @option options [Boolean] :no_detach (false) run in the foreground
+      #       (`--no-detach`)
       #
-      #       When `true`, passes `--cruft`. When `false`, passes `--no-cruft`.
-      #       When `nil`, the option is omitted and git uses its configured default.
+      #       Overrides the `gc.autoDetach` configuration.
+      #
+      #     @option options [Boolean] :cruft (false) pack unreachable objects into a
+      #       cruft pack instead of storing them as loose objects (`--cruft`)
+      #
+      #     @option options [Boolean] :no_cruft (false) do not create a cruft pack;
+      #       store unreachable objects as loose objects (`--no-cruft`)
       #
       #     @option options [String] :max_cruft_size (nil) limit the size of new
       #       cruft packs to at most `<n>` bytes when packing unreachable objects
@@ -98,13 +101,14 @@ module Git
       #       Only has an effect when used together with `:cruft`. Maps to
       #       `--expire-to=<dir>`.
       #
-      #     @option options [Boolean, String] :prune (nil) prune loose objects older
-      #       than the given date
+      #     @option options [Boolean, String] :prune (false) prune loose objects
+      #       older than the given date (`--prune`, `--prune=<date>`)
       #
       #       When `true`, passes `--prune` (uses git's default expiry of 2 weeks
-      #       ago). When a String, passes `--prune=<date>`. When `false`, passes
-      #       `--no-prune` to skip pruning entirely. When `nil`, the option is
-      #       omitted and git uses its configured default.
+      #       ago). When a String, passes `--prune=<date>`.
+      #
+      #     @option options [Boolean] :no_prune (false) do not prune any loose
+      #       objects (`--no-prune`)
       #
       #     @option options [Boolean] :quiet (false) suppress all progress reports
       #

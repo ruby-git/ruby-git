@@ -55,18 +55,20 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :all option' do
-      it 'adds --all to the command line' do
-        expect_command_capturing('fetch', '--all').and_return(command_result)
+      context 'when true' do
+        it 'adds --all to the command line' do
+          expect_command_capturing('fetch', '--all').and_return(command_result)
 
-        command.call(all: true)
+          command.call(all: true)
+        end
       end
-    end
 
-    context 'with the :all option negated' do
-      it 'adds --no-all to the command line' do
-        expect_command_capturing('fetch', '--no-all').and_return(command_result)
+      context 'when :no_all is true' do
+        it 'adds --no-all to the command line' do
+          expect_command_capturing('fetch', '--no-all').and_return(command_result)
 
-        command.call(all: false)
+          command.call(no_all: true)
+        end
       end
     end
 
@@ -157,16 +159,20 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :write_fetch_head option' do
-      it 'adds --write-fetch-head when true' do
-        expect_command_capturing('fetch', '--write-fetch-head').and_return(command_result)
+      context 'when true' do
+        it 'adds --write-fetch-head flag' do
+          expect_command_capturing('fetch', '--write-fetch-head').and_return(command_result)
 
-        command.call(write_fetch_head: true)
+          command.call(write_fetch_head: true)
+        end
       end
 
-      it 'adds --no-write-fetch-head when false' do
-        expect_command_capturing('fetch', '--no-write-fetch-head').and_return(command_result)
+      context 'when :no_write_fetch_head is true' do
+        it 'adds --no-write-fetch-head flag' do
+          expect_command_capturing('fetch', '--no-write-fetch-head').and_return(command_result)
 
-        command.call(write_fetch_head: false)
+          command.call(no_write_fetch_head: true)
+        end
       end
     end
 
@@ -251,30 +257,36 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :tags option' do
-      it 'adds --tags to the command line' do
-        expect_command_capturing('fetch', '--tags').and_return(command_result)
+      context 'when true' do
+        it 'adds --tags to the command line' do
+          expect_command_capturing('fetch', '--tags').and_return(command_result)
 
-        command.call(tags: true)
+          command.call(tags: true)
+        end
+
+        it 'supports the :t alias' do
+          expect_command_capturing('fetch', '--tags').and_return(command_result)
+
+          command.call(t: true)
+        end
       end
 
-      it 'supports the :t alias' do
-        expect_command_capturing('fetch', '--tags').and_return(command_result)
+      context 'when :no_tags is true' do
+        it 'adds --no-tags to the command line' do
+          expect_command_capturing('fetch', '--no-tags').and_return(command_result)
 
-        command.call(t: true)
-      end
-
-      it 'adds --no-tags when false' do
-        expect_command_capturing('fetch', '--no-tags').and_return(command_result)
-
-        command.call(tags: false)
+          command.call(no_tags: true)
+        end
       end
     end
 
     context 'with the :recurse_submodules option' do
-      it 'adds --recurse-submodules when true' do
-        expect_command_capturing('fetch', '--recurse-submodules').and_return(command_result)
+      context 'when true' do
+        it 'adds --recurse-submodules flag' do
+          expect_command_capturing('fetch', '--recurse-submodules').and_return(command_result)
 
-        command.call(recurse_submodules: true)
+          command.call(recurse_submodules: true)
+        end
       end
 
       it 'adds --recurse-submodules=yes when a string is given' do
@@ -283,10 +295,12 @@ RSpec.describe Git::Commands::Fetch do
         command.call(recurse_submodules: 'yes')
       end
 
-      it 'adds --no-recurse-submodules when false' do
-        expect_command_capturing('fetch', '--no-recurse-submodules').and_return(command_result)
+      context 'when :no_recurse_submodules is true' do
+        it 'adds --no-recurse-submodules flag' do
+          expect_command_capturing('fetch', '--no-recurse-submodules').and_return(command_result)
 
-        command.call(recurse_submodules: false)
+          command.call(no_recurse_submodules: true)
+        end
       end
     end
 
@@ -385,16 +399,20 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :show_forced_updates option' do
-      it 'adds --show-forced-updates when true' do
-        expect_command_capturing('fetch', '--show-forced-updates').and_return(command_result)
+      context 'when true' do
+        it 'adds --show-forced-updates flag' do
+          expect_command_capturing('fetch', '--show-forced-updates').and_return(command_result)
 
-        command.call(show_forced_updates: true)
+          command.call(show_forced_updates: true)
+        end
       end
 
-      it 'adds --no-show-forced-updates when false' do
-        expect_command_capturing('fetch', '--no-show-forced-updates').and_return(command_result)
+      context 'when :no_show_forced_updates is true' do
+        it 'adds --no-show-forced-updates flag' do
+          expect_command_capturing('fetch', '--no-show-forced-updates').and_return(command_result)
 
-        command.call(show_forced_updates: false)
+          command.call(no_show_forced_updates: true)
+        end
       end
     end
 
@@ -459,44 +477,56 @@ RSpec.describe Git::Commands::Fetch do
     end
 
     context 'with the :auto_maintenance option' do
-      it 'adds --auto-maintenance when true' do
-        expect_command_capturing('fetch', '--auto-maintenance').and_return(command_result)
+      context 'when true' do
+        it 'adds --auto-maintenance flag' do
+          expect_command_capturing('fetch', '--auto-maintenance').and_return(command_result)
 
-        command.call(auto_maintenance: true)
+          command.call(auto_maintenance: true)
+        end
       end
 
-      it 'adds --no-auto-maintenance when false' do
-        expect_command_capturing('fetch', '--no-auto-maintenance').and_return(command_result)
+      context 'when :no_auto_maintenance is true' do
+        it 'adds --no-auto-maintenance flag' do
+          expect_command_capturing('fetch', '--no-auto-maintenance').and_return(command_result)
 
-        command.call(auto_maintenance: false)
+          command.call(no_auto_maintenance: true)
+        end
       end
     end
 
     context 'with the :auto_gc option' do
-      it 'adds --auto-gc when true' do
-        expect_command_capturing('fetch', '--auto-gc').and_return(command_result)
+      context 'when true' do
+        it 'adds --auto-gc flag' do
+          expect_command_capturing('fetch', '--auto-gc').and_return(command_result)
 
-        command.call(auto_gc: true)
+          command.call(auto_gc: true)
+        end
       end
 
-      it 'adds --no-auto-gc when false' do
-        expect_command_capturing('fetch', '--no-auto-gc').and_return(command_result)
+      context 'when :no_auto_gc is true' do
+        it 'adds --no-auto-gc flag' do
+          expect_command_capturing('fetch', '--no-auto-gc').and_return(command_result)
 
-        command.call(auto_gc: false)
+          command.call(no_auto_gc: true)
+        end
       end
     end
 
     context 'with the :write_commit_graph option' do
-      it 'adds --write-commit-graph when true' do
-        expect_command_capturing('fetch', '--write-commit-graph').and_return(command_result)
+      context 'when true' do
+        it 'adds --write-commit-graph flag' do
+          expect_command_capturing('fetch', '--write-commit-graph').and_return(command_result)
 
-        command.call(write_commit_graph: true)
+          command.call(write_commit_graph: true)
+        end
       end
 
-      it 'adds --no-write-commit-graph when false' do
-        expect_command_capturing('fetch', '--no-write-commit-graph').and_return(command_result)
+      context 'when :no_write_commit_graph is true' do
+        it 'adds --no-write-commit-graph flag' do
+          expect_command_capturing('fetch', '--no-write-commit-graph').and_return(command_result)
 
-        command.call(write_commit_graph: false)
+          command.call(no_write_commit_graph: true)
+        end
       end
     end
 

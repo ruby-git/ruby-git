@@ -21,16 +21,12 @@ class TestCommitWithGPG < Test::Unit::TestCase
   end
 
   def test_disabling_gpg_sign
-    Git::Deprecation.expects(:warn).with(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
-
     message = 'My commit message'
     expected_command_line = ['commit', '--no-edit', "--message=#{message}", '--no-gpg-sign', {}]
     assert_command_line_eq(expected_command_line) { |g| g.commit(message, no_gpg_sign: true) }
   end
 
   def test_conflicting_gpg_sign_options
-    Git::Deprecation.expects(:warn).with(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
-
     Dir.mktmpdir do |dir|
       git = Git.init(dir)
       message = 'My commit message'

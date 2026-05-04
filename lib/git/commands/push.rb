@@ -87,7 +87,7 @@ module Git
 
         # Submodules
         flag_or_value_option :recurse_submodules,
-                             negatable: true, inline: true, type: [String, FalseClass]
+                             negatable: true, inline: true, type: String
 
         # Transfer
         flag_option :thin, negatable: true
@@ -132,13 +132,13 @@ module Git
       #
       #     @option options [Boolean] :tags (nil) Push all refs under `refs/tags/`
       #
-      #     @option options [Boolean] :follow_tags (nil) Push annotated tags reachable from pushed commits
+      #     @option options [Boolean] :follow_tags (false) push reachable annotated tags (`--follow-tags`)
       #
-      #       Pass `false` to emit `--no-follow-tags`.
+      #     @option options [Boolean] :no_follow_tags (false) do not push reachable annotated tags (`--no-follow-tags`)
       #
-      #     @option options [Boolean] :atomic (nil) Use an atomic transaction to update remote refs
+      #     @option options [Boolean] :atomic (false) Use an atomic transaction to update remote refs (`--atomic`)
       #
-      #       Pass `false` to emit `--no-atomic`.
+      #     @option options [Boolean] :no_atomic (false) disable atomic transaction for remote updates (`--no-atomic`)
       #
       #     @option options [Boolean] :dry_run (nil) Do not send updates, only report what would be pushed
       #
@@ -184,36 +184,40 @@ module Git
       #
       #       Alias: :o
       #
-      #     @option options [Boolean, String] :signed (nil) GPG-sign the push certificate
+      #     @option options [Boolean, String] :signed (false) GPG-sign the push certificate (`--signed`)
       #
-      #       When `true`, emits `--signed`. When a String (`'true'`, `'false'`, `'if-asked'`), passes
-      #       that value. When `false`, emits `--no-signed`.
+      #       When a String (`'true'`, `'false'`, `'if-asked'`), emits `--signed=<value>`.
       #
-      #     @option options [Boolean, String] :force_with_lease (nil) Refuse force pushes unless the remote
-      #       ref matches the expected value
+      #     @option options [Boolean] :no_signed (false) disable GPG signing of the push certificate (`--no-signed`)
       #
-      #       When `true`, emits `--force-with-lease`. When a String (e.g. `'main:abc123'`), emits
-      #       `--force-with-lease=<string>`. When `false`, emits `--no-force-with-lease`.
+      #     @option options [Boolean, String] :force_with_lease (false) Refuse force pushes unless the
+      #       remote ref matches the expected value (`--force-with-lease`)
       #
-      #     @option options [Boolean] :force_if_includes (nil) Force pushes only if commits being
-      #       pushed are already in the remote-tracking branch
+      #       When a String (e.g. `'main:abc123'`), emits `--force-with-lease=<string>`.
       #
-      #       Pass `false` to emit `--no-force-if-includes`.
+      #     @option options [Boolean] :no_force_with_lease (false) disable force-with-lease (`--no-force-with-lease`)
       #
-      #     @option options [Boolean] :verify (nil) Control pre-push hook execution
+      #     @option options [Boolean] :force_if_includes (false) Force pushes only if commits being
+      #       pushed are already in the remote-tracking branch (`--force-if-includes`)
       #
-      #       Pass `false` to emit `--no-verify`, bypassing the pre-push hook.
+      #     @option options [Boolean] :no_force_if_includes (false) disable force-if-includes (`--no-force-if-includes`)
       #
-      #     @option options [String, FalseClass] :recurse_submodules (nil) Control whether submodule
+      #     @option options [Boolean] :verify (false) run the pre-push hook (`--verify`)
+      #
+      #     @option options [Boolean] :no_verify (false) bypass the pre-push hook (`--no-verify`)
+      #
+      #     @option options [String] :recurse_submodules (nil) Control whether submodule
       #       commits are pushed
       #
       #       Pass a String (`'check'`, `'on-demand'`, `'only'`, `'no'`) to emit
-      #       `--recurse-submodules=<value>`. When `false`, emits `--no-recurse-submodules`.
-      #       Note: passing `true` is not valid; git requires an explicit value for this option.
+      #       `--recurse-submodules=<value>`. Note: passing `true` is not valid; git requires
+      #       an explicit value for this option.
       #
-      #     @option options [Boolean] :thin (nil) Send a "thin" pack to reduce network traffic
+      #     @option options [Boolean] :no_recurse_submodules (false) disable submodule push (`--no-recurse-submodules`)
       #
-      #       Pass `false` to emit `--no-thin`.
+      #     @option options [Boolean] :thin (false) Send a "thin" pack to reduce network traffic (`--thin`)
+      #
+      #     @option options [Boolean] :no_thin (false) send a full pack instead of a thin pack (`--no-thin`)
       #
       #     @option options [Boolean] :progress (nil) Force progress reporting even when stderr is not a terminal
       #

@@ -132,10 +132,12 @@ RSpec.describe Git::Commands::Push do
         command.call(follow_tags: true)
       end
 
-      it 'adds --no-follow-tags when false' do
-        expect_command_capturing('push', '--no-follow-tags').and_return(command_result)
+      context 'when :no_follow_tags is true' do
+        it 'adds --no-follow-tags' do
+          expect_command_capturing('push', '--no-follow-tags').and_return(command_result)
 
-        command.call(follow_tags: false)
+          command.call(no_follow_tags: true)
+        end
       end
     end
 
@@ -146,10 +148,12 @@ RSpec.describe Git::Commands::Push do
         command.call(atomic: true)
       end
 
-      it 'adds --no-atomic when false' do
-        expect_command_capturing('push', '--no-atomic').and_return(command_result)
+      context 'when :no_atomic is true' do
+        it 'adds --no-atomic' do
+          expect_command_capturing('push', '--no-atomic').and_return(command_result)
 
-        command.call(atomic: false)
+          command.call(no_atomic: true)
+        end
       end
     end
 
@@ -174,10 +178,12 @@ RSpec.describe Git::Commands::Push do
         command.call(force_with_lease: true)
       end
 
-      it 'adds --no-force-with-lease when false' do
-        expect_command_capturing('push', '--no-force-with-lease').and_return(command_result)
+      context 'when :no_force_with_lease is true' do
+        it 'adds --no-force-with-lease' do
+          expect_command_capturing('push', '--no-force-with-lease').and_return(command_result)
 
-        command.call(force_with_lease: false)
+          command.call(no_force_with_lease: true)
+        end
       end
 
       it 'adds --force-with-lease=<value> when given a string' do
@@ -194,10 +200,12 @@ RSpec.describe Git::Commands::Push do
         command.call(force_if_includes: true)
       end
 
-      it 'adds --no-force-if-includes when false' do
-        expect_command_capturing('push', '--no-force-if-includes').and_return(command_result)
+      context 'when :no_force_if_includes is true' do
+        it 'adds --no-force-if-includes' do
+          expect_command_capturing('push', '--no-force-if-includes').and_return(command_result)
 
-        command.call(force_if_includes: false)
+          command.call(no_force_if_includes: true)
+        end
       end
     end
 
@@ -247,13 +255,15 @@ RSpec.describe Git::Commands::Push do
       it 'raises ArgumentError when true is passed' do
         expect { command.call(recurse_submodules: true) }
           .to raise_error(ArgumentError,
-                          /The :recurse_submodules option must be a String or FalseClass, but was a TrueClass/)
+                          /The :recurse_submodules option must be a String, but was a TrueClass/)
       end
 
-      it 'adds --no-recurse-submodules when false' do
-        expect_command_capturing('push', '--no-recurse-submodules').and_return(command_result)
+      context 'when :no_recurse_submodules is true' do
+        it 'adds --no-recurse-submodules' do
+          expect_command_capturing('push', '--no-recurse-submodules').and_return(command_result)
 
-        command.call(recurse_submodules: false)
+          command.call(no_recurse_submodules: true)
+        end
       end
 
       it 'adds --recurse-submodules=<value> when given a string' do
@@ -270,10 +280,12 @@ RSpec.describe Git::Commands::Push do
         command.call(thin: true)
       end
 
-      it 'adds --no-thin when false' do
-        expect_command_capturing('push', '--no-thin').and_return(command_result)
+      context 'when :no_thin is true' do
+        it 'adds --no-thin' do
+          expect_command_capturing('push', '--no-thin').and_return(command_result)
 
-        command.call(thin: false)
+          command.call(no_thin: true)
+        end
       end
     end
 
@@ -314,10 +326,12 @@ RSpec.describe Git::Commands::Push do
         command.call(verify: true)
       end
 
-      it 'adds --no-verify when false' do
-        expect_command_capturing('push', '--no-verify').and_return(command_result)
+      context 'when :no_verify is true' do
+        it 'adds --no-verify' do
+          expect_command_capturing('push', '--no-verify').and_return(command_result)
 
-        command.call(verify: false)
+          command.call(no_verify: true)
+        end
       end
     end
 
@@ -328,10 +342,12 @@ RSpec.describe Git::Commands::Push do
         command.call(signed: true)
       end
 
-      it 'adds --no-signed when false' do
-        expect_command_capturing('push', '--no-signed').and_return(command_result)
+      context 'when :no_signed is true' do
+        it 'adds --no-signed' do
+          expect_command_capturing('push', '--no-signed').and_return(command_result)
 
-        command.call(signed: false)
+          command.call(no_signed: true)
+        end
       end
 
       it 'adds --signed=<value> when given a string' do

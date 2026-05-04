@@ -58,27 +58,30 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :patch (nil) interactively select hunks to stash
+        #     @option options [Boolean] :patch (false) interactively select hunks to stash
         #
         #       Alias: :p
         #
-        #     @option options [Boolean] :staged (nil) stash only staged changes
+        #     @option options [Boolean] :staged (false) stash only staged changes
         #
         #       Alias: :S
         #
-        #     @option options [Boolean] :keep_index (nil) keep staged changes in the index
+        #     @option options [Boolean] :keep_index (false) keep staged changes in the index (`--keep-index`)
         #
         #       Alias: :k
         #
-        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #     @option options [Boolean] :no_keep_index (false) do not preserve staged changes in the index
+        #       (`--no-keep-index`)
+        #
+        #     @option options [Boolean] :quiet (false) suppress informational messages
         #
         #       Alias: :q
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files in the stash
+        #     @option options [Boolean] :include_untracked (false) include untracked files in the stash
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :all (nil) include untracked and ignored files in the stash
+        #     @option options [Boolean] :all (false) include untracked and ignored files in the stash
         #
         #       Alias: :a
         #
@@ -88,7 +91,7 @@ module Git
         #
         #     @option options [String] :pathspec_from_file (nil) read pathspecs from the given file
         #
-        #     @option options [Boolean] :pathspec_file_nul (nil) pathspecs in the file are NUL-separated
+        #     @option options [Boolean] :pathspec_file_nul (false) pathspecs in the file are NUL-separated
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash push`
         #

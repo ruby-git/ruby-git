@@ -192,7 +192,7 @@ class TestGitClone < Test::Unit::TestCase
   test 'clone with single_branch false' do
     repository_url = 'https://github.com/ruby-git/ruby-git.git'
     destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, single_branch: false)
+    actual_command_line = capture_clone_command_line(repository_url, destination, no_single_branch: true)
 
     expected_command_line = [
       'clone',
@@ -236,7 +236,7 @@ class TestGitClone < Test::Unit::TestCase
       FileUtils.rm_rf(worktree_path)
 
       shallow_path = File.join(path, 'shallow')
-      shallow_clone = Git.clone(repository_path, shallow_path, depth: 1, single_branch: false)
+      shallow_clone = Git.clone(repository_path, shallow_path, depth: 1, no_single_branch: true)
       fetch_spec = shallow_clone.config('remote.origin.fetch')
 
       assert_equal('+refs/heads/*:refs/remotes/origin/*', fetch_spec)

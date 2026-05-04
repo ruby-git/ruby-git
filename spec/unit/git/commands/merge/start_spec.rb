@@ -41,23 +41,27 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_commit is true' do
         it 'adds --no-commit flag' do
           expect_command_capturing('merge', '--no-commit', '--', 'feature').and_return(command_result)
-          command.call('feature', commit: false)
+          command.call('feature', no_commit: true)
         end
       end
     end
 
     context 'with :edit option' do
-      it 'adds --no-edit when edit is false' do
-        expect_command_capturing('merge', '--no-edit', '--', 'feature').and_return(command_result)
-        command.call('feature', edit: false)
+      context 'when true' do
+        it 'adds --edit flag' do
+          expect_command_capturing('merge', '--edit', '--', 'feature').and_return(command_result)
+          command.call('feature', edit: true)
+        end
       end
 
-      it 'adds --edit when edit is true' do
-        expect_command_capturing('merge', '--edit', '--', 'feature').and_return(command_result)
-        command.call('feature', edit: true)
+      context 'when :no_edit is true' do
+        it 'adds --no-edit flag' do
+          expect_command_capturing('merge', '--no-edit', '--', 'feature').and_return(command_result)
+          command.call('feature', no_edit: true)
+        end
       end
 
       it 'omits --edit/--no-edit when edit is nil' do
@@ -87,10 +91,10 @@ RSpec.describe Git::Commands::Merge::Start do
           end
         end
 
-        context 'when false' do
+        context 'when :no_ff is true' do
           it 'adds --no-ff flag' do
             expect_command_capturing('merge', '--no-ff', '--', 'feature').and_return(command_result)
-            command.call('feature', ff: false)
+            command.call('feature', no_ff: true)
           end
         end
       end
@@ -116,10 +120,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_gpg_sign is true' do
         it 'adds --no-gpg-sign flag' do
           expect_command_capturing('merge', '--no-gpg-sign', '--', 'feature').and_return(command_result)
-          command.call('feature', gpg_sign: false)
+          command.call('feature', no_gpg_sign: true)
         end
       end
 
@@ -144,10 +148,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_log is true' do
         it 'adds --no-log flag' do
           expect_command_capturing('merge', '--no-log', '--', 'feature').and_return(command_result)
-          command.call('feature', log: false)
+          command.call('feature', no_log: true)
         end
       end
 
@@ -167,10 +171,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_signoff is true' do
         it 'adds --no-signoff flag' do
           expect_command_capturing('merge', '--no-signoff', '--', 'feature').and_return(command_result)
-          command.call('feature', signoff: false)
+          command.call('feature', no_signoff: true)
         end
       end
     end
@@ -183,10 +187,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_stat is true' do
         it 'adds --no-stat flag' do
           expect_command_capturing('merge', '--no-stat', '--', 'feature').and_return(command_result)
-          command.call('feature', stat: false)
+          command.call('feature', no_stat: true)
         end
       end
     end
@@ -223,10 +227,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_verify is true' do
         it 'adds --no-verify flag' do
           expect_command_capturing('merge', '--no-verify', '--', 'feature').and_return(command_result)
-          command.call('feature', verify: false)
+          command.call('feature', no_verify: true)
         end
       end
     end
@@ -270,10 +274,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_verify_signatures is true' do
         it 'adds --no-verify-signatures flag' do
           expect_command_capturing('merge', '--no-verify-signatures', '--', 'feature').and_return(command_result)
-          command.call('feature', verify_signatures: false)
+          command.call('feature', no_verify_signatures: true)
         end
       end
     end
@@ -310,10 +314,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_progress is true' do
         it 'adds --no-progress flag' do
           expect_command_capturing('merge', '--no-progress', '--', 'feature').and_return(command_result)
-          command.call('feature', progress: false)
+          command.call('feature', no_progress: true)
         end
       end
     end
@@ -326,10 +330,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_autostash is true' do
         it 'adds --no-autostash flag' do
           expect_command_capturing('merge', '--no-autostash', '--', 'feature').and_return(command_result)
-          command.call('feature', autostash: false)
+          command.call('feature', no_autostash: true)
         end
       end
     end
@@ -344,12 +348,12 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_allow_unrelated_histories is true' do
         it 'adds --no-allow-unrelated-histories flag' do
           expect_command_capturing(
             'merge', '--no-allow-unrelated-histories', '--', 'feature'
           ).and_return(command_result)
-          command.call('feature', allow_unrelated_histories: false)
+          command.call('feature', no_allow_unrelated_histories: true)
         end
       end
     end
@@ -393,10 +397,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_rerere_autoupdate is true' do
         it 'adds --no-rerere-autoupdate flag' do
           expect_command_capturing('merge', '--no-rerere-autoupdate', '--', 'feature').and_return(command_result)
-          command.call('feature', rerere_autoupdate: false)
+          command.call('feature', no_rerere_autoupdate: true)
         end
       end
     end
@@ -409,10 +413,10 @@ RSpec.describe Git::Commands::Merge::Start do
         end
       end
 
-      context 'when false' do
+      context 'when :no_overwrite_ignore is true' do
         it 'adds --no-overwrite-ignore flag' do
           expect_command_capturing('merge', '--no-overwrite-ignore', '--', 'feature').and_return(command_result)
-          command.call('feature', overwrite_ignore: false)
+          command.call('feature', no_overwrite_ignore: true)
         end
       end
     end
@@ -428,9 +432,9 @@ RSpec.describe Git::Commands::Merge::Start do
         ).and_return(command_result)
         command.call(
           'feature',
-          edit: false,
-          commit: false,
-          ff: false,
+          no_commit: true,
+          no_edit: true,
+          no_ff: true,
           m: 'Merge feature branch',
           strategy: 'ort',
           strategy_option: 'theirs'

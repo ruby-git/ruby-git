@@ -81,11 +81,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :edit (nil) let the editor open for
-        #       editing the commit message prior to committing the revert
+        #     @option options [Boolean] :edit (false) open the editor for the
+        #       commit message (`--edit`)
         #
-        #       `true` → `--edit`, `false` → `--no-edit`.
         #       Alias: `:e`
+        #
+        #     @option options [Boolean] :no_edit (false) suppress the editor for
+        #       the commit message (`--no-edit`)
         #
         #     @option options [Boolean] :no_commit (false) apply changes to index
         #       and working tree without committing
@@ -97,17 +99,22 @@ module Git
         #
         #       Alias: `:m`
         #
-        #     @option options [Boolean] :signoff (nil) add a Signed-off-by
-        #       trailer to the commit message
+        #     @option options [Boolean] :signoff (false) add a `Signed-off-by`
+        #       trailer to the commit message (`--signoff`)
         #
-        #       `true` → `--signoff`, `false` → `--no-signoff`.
         #       Alias: `:s`
         #
-        #     @option options [Boolean, String] :gpg_sign (nil) gpg-sign the
-        #       resulting commit
+        #     @option options [Boolean] :no_signoff (false) suppress the
+        #       `Signed-off-by` trailer (`--no-signoff`)
         #
-        #       `true` → `--gpg-sign`, a String key ID → `--gpg-sign=<keyid>`,
-        #       `false` → `--no-gpg-sign`. Alias: `:S`
+        #     @option options [Boolean, String] :gpg_sign (false) GPG-sign the
+        #       resulting commit (`--gpg-sign`)
+        #
+        #       When `true`, uses the default key. When a `String`, uses the
+        #       specified key ID. Alias: `:S`
+        #
+        #     @option options [Boolean] :no_gpg_sign (false) disable GPG signing
+        #       (`--no-gpg-sign`)
         #
         #     @option options [String] :cleanup (nil) commit message cleanup mode
         #
@@ -125,11 +132,12 @@ module Git
         #       Can be a single value or an array for multiple `-X` flags.
         #       Emits `--strategy-option=<option>`. Alias: `:X`
         #
-        #     @option options [Boolean] :rerere_autoupdate (nil) allow rerere to
+        #     @option options [Boolean] :rerere_autoupdate (false) allow rerere to
         #       update the index with the auto-resolved conflict result
+        #       (`--rerere-autoupdate`)
         #
-        #       `true` → `--rerere-autoupdate`,
-        #       `false` → `--no-rerere-autoupdate`
+        #     @option options [Boolean] :no_rerere_autoupdate (false) prevent rerere
+        #       from auto-updating the index (`--no-rerere-autoupdate`)
         #
         #     @option options [Boolean] :reference (false) use compact reference
         #       format in the revert commit message instead of the full object name

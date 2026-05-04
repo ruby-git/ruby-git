@@ -55,11 +55,13 @@ RSpec.describe Git::Commands::SymbolicRef::Read do
         command.call('HEAD', recurse: true)
       end
 
-      it 'adds --no-recurse to the command line when false' do
-        expect_command_capturing('symbolic-ref', '--no-recurse', '--', 'HEAD')
-          .and_return(command_result('refs/heads/main'))
+      context 'when :no_recurse is true' do
+        it 'adds --no-recurse to the command line' do
+          expect_command_capturing('symbolic-ref', '--no-recurse', '--', 'HEAD')
+            .and_return(command_result('refs/heads/main'))
 
-        command.call('HEAD', recurse: false)
+          command.call('HEAD', no_recurse: true)
+        end
       end
     end
 

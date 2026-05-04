@@ -76,10 +76,12 @@ RSpec.describe Git::Commands::Show do
         command.call(abbrev_commit: true)
       end
 
-      it 'adds --no-abbrev-commit when negated' do
-        expect_command_capturing('show', '--no-abbrev-commit', chomp: false).and_return(command_result)
+      context 'when :no_abbrev_commit is true' do
+        it 'adds --no-abbrev-commit' do
+          expect_command_capturing('show', '--no-abbrev-commit', chomp: false).and_return(command_result)
 
-        command.call(abbrev_commit: false)
+          command.call(no_abbrev_commit: true)
+        end
       end
     end
 
@@ -112,10 +114,12 @@ RSpec.describe Git::Commands::Show do
         command.call(expand_tabs: 4)
       end
 
-      it 'adds --no-expand-tabs when negated' do
-        expect_command_capturing('show', '--no-expand-tabs', chomp: false).and_return(command_result)
+      context 'when :no_expand_tabs is true' do
+        it 'adds --no-expand-tabs' do
+          expect_command_capturing('show', '--no-expand-tabs', chomp: false).and_return(command_result)
 
-        command.call(expand_tabs: false)
+          command.call(no_expand_tabs: true)
+        end
       end
     end
 
@@ -132,10 +136,12 @@ RSpec.describe Git::Commands::Show do
         command.call(notes: 'refs/notes/review')
       end
 
-      it 'adds --no-notes when negated' do
-        expect_command_capturing('show', '--no-notes', chomp: false).and_return(command_result)
+      context 'when :no_notes is true' do
+        it 'adds --no-notes' do
+          expect_command_capturing('show', '--no-notes', chomp: false).and_return(command_result)
 
-        command.call(notes: false)
+          command.call(no_notes: true)
+        end
       end
     end
 
@@ -168,10 +174,12 @@ RSpec.describe Git::Commands::Show do
         command.call(standard_notes: true)
       end
 
-      it 'adds --no-standard-notes when negated' do
-        expect_command_capturing('show', '--no-standard-notes', chomp: false).and_return(command_result)
+      context 'when :no_standard_notes is true' do
+        it 'adds --no-standard-notes' do
+          expect_command_capturing('show', '--no-standard-notes', chomp: false).and_return(command_result)
 
-        command.call(standard_notes: false)
+          command.call(no_standard_notes: true)
+        end
       end
     end
 
@@ -362,10 +370,12 @@ RSpec.describe Git::Commands::Show do
         command.call(indent_heuristic: true)
       end
 
-      it 'adds --no-indent-heuristic when negated' do
-        expect_command_capturing('show', '--no-indent-heuristic', chomp: false).and_return(command_result)
+      context 'when :no_indent_heuristic is true' do
+        it 'adds --no-indent-heuristic' do
+          expect_command_capturing('show', '--no-indent-heuristic', chomp: false).and_return(command_result)
 
-        command.call(indent_heuristic: false)
+          command.call(no_indent_heuristic: true)
+        end
       end
     end
 
@@ -597,10 +607,12 @@ RSpec.describe Git::Commands::Show do
         command.call(color: 'always')
       end
 
-      it 'adds --no-color when negated' do
-        expect_command_capturing('show', '--no-color', chomp: false).and_return(command_result)
+      context 'when :no_color is true' do
+        it 'adds --no-color' do
+          expect_command_capturing('show', '--no-color', chomp: false).and_return(command_result)
 
-        command.call(color: false)
+          command.call(no_color: true)
+        end
       end
     end
 
@@ -617,10 +629,12 @@ RSpec.describe Git::Commands::Show do
         command.call(color_moved: 'zebra')
       end
 
-      it 'adds --no-color-moved when negated' do
-        expect_command_capturing('show', '--no-color-moved', chomp: false).and_return(command_result)
+      context 'when :no_color_moved is true' do
+        it 'adds --no-color-moved' do
+          expect_command_capturing('show', '--no-color-moved', chomp: false).and_return(command_result)
 
-        command.call(color_moved: false)
+          command.call(no_color_moved: true)
+        end
       end
     end
 
@@ -637,10 +651,12 @@ RSpec.describe Git::Commands::Show do
         command.call(color_moved_ws: 'ignore-all-space')
       end
 
-      it 'adds --no-color-moved-ws when negated' do
-        expect_command_capturing('show', '--no-color-moved-ws', chomp: false).and_return(command_result)
+      context 'when :no_color_moved_ws is true' do
+        it 'adds --no-color-moved-ws' do
+          expect_command_capturing('show', '--no-color-moved-ws', chomp: false).and_return(command_result)
 
-        command.call(color_moved_ws: false)
+          command.call(no_color_moved_ws: true)
+        end
       end
     end
 
@@ -697,10 +713,12 @@ RSpec.describe Git::Commands::Show do
         command.call(rename_empty: true)
       end
 
-      it 'adds --no-rename-empty when negated' do
-        expect_command_capturing('show', '--no-rename-empty', chomp: false).and_return(command_result)
+      context 'when :no_rename_empty is true' do
+        it 'adds --no-rename-empty' do
+          expect_command_capturing('show', '--no-rename-empty', chomp: false).and_return(command_result)
 
-        command.call(rename_empty: false)
+          command.call(no_rename_empty: true)
+        end
       end
     end
 
@@ -939,10 +957,12 @@ RSpec.describe Git::Commands::Show do
         command.call(relative: 'src/')
       end
 
-      it 'adds --no-relative when negated' do
-        expect_command_capturing('show', '--no-relative', chomp: false).and_return(command_result)
+      context 'when :no_relative is true' do
+        it 'adds --no-relative' do
+          expect_command_capturing('show', '--no-relative', chomp: false).and_return(command_result)
 
-        command.call(relative: false)
+          command.call(no_relative: true)
+        end
       end
     end
 
@@ -1066,10 +1086,12 @@ RSpec.describe Git::Commands::Show do
         command.call(ext_diff: true)
       end
 
-      it 'adds --no-ext-diff when negated' do
-        expect_command_capturing('show', '--no-ext-diff', chomp: false).and_return(command_result)
+      context 'when :no_ext_diff is true' do
+        it 'adds --no-ext-diff' do
+          expect_command_capturing('show', '--no-ext-diff', chomp: false).and_return(command_result)
 
-        command.call(ext_diff: false)
+          command.call(no_ext_diff: true)
+        end
       end
     end
 
@@ -1080,10 +1102,12 @@ RSpec.describe Git::Commands::Show do
         command.call(textconv: true)
       end
 
-      it 'adds --no-textconv when negated' do
-        expect_command_capturing('show', '--no-textconv', chomp: false).and_return(command_result)
+      context 'when :no_textconv is true' do
+        it 'adds --no-textconv' do
+          expect_command_capturing('show', '--no-textconv', chomp: false).and_return(command_result)
 
-        command.call(textconv: false)
+          command.call(no_textconv: true)
+        end
       end
     end
 

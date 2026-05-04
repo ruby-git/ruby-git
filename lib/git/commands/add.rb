@@ -69,15 +69,15 @@ module Git
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :all (nil) add, modify, and remove index entries to match the worktree
-      #
-      #       Pass `true` for `--all`, `false` for `--no-all`.
+      #     @option options [Boolean] :all (false) add, modify, and remove index entries to match the worktree (--all)
       #
       #       Alias: :A
       #
-      #     @option options [Boolean] :ignore_removal (nil) add and modify files, but ignore removed files
+      #     @option options [Boolean] :no_all (false) add and modify index entries without staging removals (--no-all)
       #
-      #       Pass `true` for `--ignore-removal`, `false` for `--no-ignore-removal`.
+      #     @option options [Boolean] :ignore_removal (false) add and modify files; ignore removals (--ignore-removal)
+      #
+      #     @option options [Boolean] :no_ignore_removal (false) include file removals (--no-ignore-removal)
       #
       #     @option options [Boolean] :update (false) update tracked files only; does not add new files
       #
