@@ -84,16 +84,20 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Get do
     end
 
     context 'with the :includes option' do
-      it 'adds --includes when true' do
-        expect_command_capturing('config', '--get', '--includes', '--', 'user.name').and_return(command_result)
+      context 'when true' do
+        it 'adds --includes flag' do
+          expect_command_capturing('config', '--get', '--includes', '--', 'user.name').and_return(command_result)
 
-        command.call('user.name', includes: true)
+          command.call('user.name', includes: true)
+        end
       end
 
-      it 'adds --no-includes when false' do
-        expect_command_capturing('config', '--get', '--no-includes', '--', 'user.name').and_return(command_result)
+      context 'when :no_includes is true' do
+        it 'adds --no-includes flag' do
+          expect_command_capturing('config', '--get', '--no-includes', '--', 'user.name').and_return(command_result)
 
-        command.call('user.name', includes: false)
+          command.call('user.name', no_includes: true)
+        end
       end
     end
 
