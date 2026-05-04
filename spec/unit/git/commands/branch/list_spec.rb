@@ -35,9 +35,11 @@ RSpec.describe Git::Commands::Branch::List do
         command.call(color: 'always')
       end
 
-      it 'adds --no-color with false' do
-        expect_command_capturing(*expected_args('--no-color')).and_return(command_result(''))
-        command.call(color: false)
+      context 'when :no_color is true' do
+        it 'adds --no-color' do
+          expect_command_capturing(*expected_args('--no-color')).and_return(command_result(''))
+          command.call(no_color: true)
+        end
       end
     end
 
@@ -69,9 +71,11 @@ RSpec.describe Git::Commands::Branch::List do
         command.call(abbrev: true)
       end
 
-      it 'adds --no-abbrev with false' do
-        expect_command_capturing(*expected_args('--no-abbrev')).and_return(command_result(''))
-        command.call(abbrev: false)
+      context 'when :no_abbrev is true' do
+        it 'adds --no-abbrev' do
+          expect_command_capturing(*expected_args('--no-abbrev')).and_return(command_result(''))
+          command.call(no_abbrev: true)
+        end
       end
     end
 
@@ -86,9 +90,11 @@ RSpec.describe Git::Commands::Branch::List do
         command.call(column: 'dense')
       end
 
-      it 'adds --no-column with false' do
-        expect_command_capturing(*expected_args('--no-column')).and_return(command_result(''))
-        command.call(column: false)
+      context 'when :no_column is true' do
+        it 'adds --no-column' do
+          expect_command_capturing(*expected_args('--no-column')).and_return(command_result(''))
+          command.call(no_column: true)
+        end
       end
     end
 
