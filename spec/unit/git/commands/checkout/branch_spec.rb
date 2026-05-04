@@ -59,9 +59,11 @@ RSpec.describe Git::Commands::Checkout::Branch do
         command.call('main', progress: true)
       end
 
-      it 'adds --no-progress flag when false' do
-        expect_command_capturing('checkout', '--no-progress', 'main').and_return(command_result)
-        command.call('main', progress: false)
+      context 'when :no_progress is true' do
+        it 'adds --no-progress flag' do
+          expect_command_capturing('checkout', '--no-progress', 'main').and_return(command_result)
+          command.call('main', no_progress: true)
+        end
       end
     end
 
@@ -163,7 +165,7 @@ RSpec.describe Git::Commands::Checkout::Branch do
       context 'when false' do
         it 'adds --no-track flag' do
           expect_command_capturing('checkout', '--no-track', 'origin/feature').and_return(command_result)
-          command.call('origin/feature', track: false)
+          command.call('origin/feature', no_track: true)
         end
       end
 
@@ -198,7 +200,7 @@ RSpec.describe Git::Commands::Checkout::Branch do
       context 'when false' do
         it 'adds --no-guess flag' do
           expect_command_capturing('checkout', '--no-guess', 'feature').and_return(command_result)
-          command.call('feature', guess: false)
+          command.call('feature', no_guess: true)
         end
       end
     end
@@ -235,10 +237,10 @@ RSpec.describe Git::Commands::Checkout::Branch do
         end
       end
 
-      context 'when false' do
+      context 'when :no_recurse_submodules is true' do
         it 'adds --no-recurse-submodules flag' do
           expect_command_capturing('checkout', '--no-recurse-submodules', 'main').and_return(command_result)
-          command.call('main', recurse_submodules: false)
+          command.call('main', no_recurse_submodules: true)
         end
       end
     end
@@ -249,9 +251,11 @@ RSpec.describe Git::Commands::Checkout::Branch do
         command.call('main', overwrite_ignore: true)
       end
 
-      it 'adds --no-overwrite-ignore flag when false' do
-        expect_command_capturing('checkout', '--no-overwrite-ignore', 'main').and_return(command_result)
-        command.call('main', overwrite_ignore: false)
+      context 'when :no_overwrite_ignore is true' do
+        it 'adds --no-overwrite-ignore flag' do
+          expect_command_capturing('checkout', '--no-overwrite-ignore', 'main').and_return(command_result)
+          command.call('main', no_overwrite_ignore: true)
+        end
       end
     end
 
