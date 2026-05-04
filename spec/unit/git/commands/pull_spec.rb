@@ -80,10 +80,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(progress: true)
       end
 
-      it 'adds --no-progress when false' do
-        expect_command_capturing('pull', '--no-progress').and_return(command_result)
+      context 'when :no_progress is true' do
+        it 'adds --no-progress' do
+          expect_command_capturing('pull', '--no-progress').and_return(command_result)
 
-        command.call(progress: false)
+          command.call(no_progress: true)
+        end
       end
     end
 
@@ -94,10 +96,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(recurse_submodules: true)
       end
 
-      it 'adds --no-recurse-submodules when false' do
-        expect_command_capturing('pull', '--no-recurse-submodules').and_return(command_result)
+      context 'when :no_recurse_submodules is true' do
+        it 'adds --no-recurse-submodules' do
+          expect_command_capturing('pull', '--no-recurse-submodules').and_return(command_result)
 
-        command.call(recurse_submodules: false)
+          command.call(no_recurse_submodules: true)
+        end
       end
 
       it 'adds --recurse-submodules=<value> when given a string' do
@@ -114,10 +118,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(commit: true)
       end
 
-      it 'adds --no-commit when false' do
-        expect_command_capturing('pull', '--no-commit').and_return(command_result)
+      context 'when :no_commit is true' do
+        it 'adds --no-commit' do
+          expect_command_capturing('pull', '--no-commit').and_return(command_result)
 
-        command.call(commit: false)
+          command.call(no_commit: true)
+        end
       end
     end
 
@@ -136,10 +142,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(ff: true)
       end
 
-      it 'adds --no-ff when false' do
-        expect_command_capturing('pull', '--no-ff').and_return(command_result)
+      context 'when :no_ff is true' do
+        it 'adds --no-ff' do
+          expect_command_capturing('pull', '--no-ff').and_return(command_result)
 
-        command.call(ff: false)
+          command.call(no_ff: true)
+        end
       end
     end
 
@@ -158,10 +166,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(log: true)
       end
 
-      it 'adds --no-log when false' do
-        expect_command_capturing('pull', '--no-log').and_return(command_result)
+      context 'when :no_log is true' do
+        it 'adds --no-log' do
+          expect_command_capturing('pull', '--no-log').and_return(command_result)
 
-        command.call(log: false)
+          command.call(no_log: true)
+        end
       end
 
       it 'adds --log=<n> when given an integer' do
@@ -178,10 +188,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(squash: true)
       end
 
-      it 'adds --no-squash when false' do
-        expect_command_capturing('pull', '--no-squash').and_return(command_result)
+      context 'when :no_squash is true' do
+        it 'adds --no-squash' do
+          expect_command_capturing('pull', '--no-squash').and_return(command_result)
 
-        command.call(squash: false)
+          command.call(no_squash: true)
+        end
       end
     end
 
@@ -192,10 +204,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(verify: true)
       end
 
-      it 'adds --no-verify when false' do
-        expect_command_capturing('pull', '--no-verify').and_return(command_result)
+      context 'when :no_verify is true' do
+        it 'adds --no-verify' do
+          expect_command_capturing('pull', '--no-verify').and_return(command_result)
 
-        command.call(verify: false)
+          command.call(no_verify: true)
+        end
       end
     end
 
@@ -242,10 +256,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(verify_signatures: true)
       end
 
-      it 'adds --no-verify-signatures when false' do
-        expect_command_capturing('pull', '--no-verify-signatures').and_return(command_result)
+      context 'when :no_verify_signatures is true' do
+        it 'adds --no-verify-signatures' do
+          expect_command_capturing('pull', '--no-verify-signatures').and_return(command_result)
 
-        command.call(verify_signatures: false)
+          command.call(no_verify_signatures: true)
+        end
       end
     end
 
@@ -256,10 +272,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(summary: true)
       end
 
-      it 'adds --no-summary when false' do
-        expect_command_capturing('pull', '--no-summary').and_return(command_result)
+      context 'when :no_summary is true' do
+        it 'adds --no-summary' do
+          expect_command_capturing('pull', '--no-summary').and_return(command_result)
 
-        command.call(summary: false)
+          command.call(no_summary: true)
+        end
       end
     end
 
@@ -278,10 +296,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(rebase: true)
       end
 
-      it 'adds --no-rebase when false' do
-        expect_command_capturing('pull', '--no-rebase').and_return(command_result)
+      context 'when :no_rebase is true' do
+        it 'adds --no-rebase' do
+          expect_command_capturing('pull', '--no-rebase').and_return(command_result)
 
-        command.call(rebase: false)
+          command.call(no_rebase: true)
+        end
       end
 
       it 'adds --rebase=<mode> when given a string' do
@@ -304,10 +324,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(autostash: true)
       end
 
-      it 'adds --no-autostash when false' do
-        expect_command_capturing('pull', '--no-autostash').and_return(command_result)
+      context 'when :no_autostash is true' do
+        it 'adds --no-autostash' do
+          expect_command_capturing('pull', '--no-autostash').and_return(command_result)
 
-        command.call(autostash: false)
+          command.call(no_autostash: true)
+        end
       end
     end
 
@@ -318,10 +340,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(signoff: true)
       end
 
-      it 'adds --no-signoff when false' do
-        expect_command_capturing('pull', '--no-signoff').and_return(command_result)
+      context 'when :no_signoff is true' do
+        it 'adds --no-signoff' do
+          expect_command_capturing('pull', '--no-signoff').and_return(command_result)
 
-        command.call(signoff: false)
+          command.call(no_signoff: true)
+        end
       end
     end
 
@@ -354,10 +378,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(gpg_sign: true)
       end
 
-      it 'adds --no-gpg-sign when false' do
-        expect_command_capturing('pull', '--no-gpg-sign').and_return(command_result)
+      context 'when :no_gpg_sign is true' do
+        it 'adds --no-gpg-sign' do
+          expect_command_capturing('pull', '--no-gpg-sign').and_return(command_result)
 
-        command.call(gpg_sign: false)
+          command.call(no_gpg_sign: true)
+        end
       end
 
       it 'adds --gpg-sign=<keyid> when given a string' do
@@ -380,10 +406,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(all: true)
       end
 
-      it 'adds --no-all when false' do
-        expect_command_capturing('pull', '--no-all').and_return(command_result)
+      context 'when :no_all is true' do
+        it 'adds --no-all' do
+          expect_command_capturing('pull', '--no-all').and_return(command_result)
 
-        command.call(all: false)
+          command.call(no_all: true)
+        end
       end
     end
 
@@ -554,10 +582,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(tags: true)
       end
 
-      it 'adds --no-tags when false' do
-        expect_command_capturing('pull', '--no-tags').and_return(command_result)
+      context 'when :no_tags is true' do
+        it 'adds --no-tags' do
+          expect_command_capturing('pull', '--no-tags').and_return(command_result)
 
-        command.call(tags: false)
+          command.call(no_tags: true)
+        end
       end
 
       it 'supports the :t alias' do
@@ -628,10 +658,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(show_forced_updates: true)
       end
 
-      it 'adds --no-show-forced-updates when false' do
-        expect_command_capturing('pull', '--no-show-forced-updates').and_return(command_result)
+      context 'when :no_show_forced_updates is true' do
+        it 'adds --no-show-forced-updates' do
+          expect_command_capturing('pull', '--no-show-forced-updates').and_return(command_result)
 
-        command.call(show_forced_updates: false)
+          command.call(no_show_forced_updates: true)
+        end
       end
     end
 
@@ -697,10 +729,12 @@ RSpec.describe Git::Commands::Pull do
         command.call(edit: true)
       end
 
-      it 'adds --no-edit when false' do
-        expect_command_capturing('pull', '--no-edit').and_return(command_result)
+      context 'when :no_edit is true' do
+        it 'adds --no-edit' do
+          expect_command_capturing('pull', '--no-edit').and_return(command_result)
 
-        command.call(edit: false)
+          command.call(no_edit: true)
+        end
       end
 
       it 'supports the :e alias' do

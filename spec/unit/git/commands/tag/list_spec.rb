@@ -257,20 +257,22 @@ RSpec.describe Git::Commands::Tag::List do
         expect(result).to be_a(Git::CommandLineResult)
       end
 
-      it 'includes --no-column flag when false' do
-        expect_command_capturing('tag', '--list', '--no-column').and_return(command_result)
-
-        result = command.call(column: false)
-
-        expect(result).to be_a(Git::CommandLineResult)
-      end
-
       it 'includes --column=<value> when given a string' do
         expect_command_capturing('tag', '--list', '--column=always').and_return(command_result)
 
         result = command.call(column: 'always')
 
         expect(result).to be_a(Git::CommandLineResult)
+      end
+
+      context 'when :no_column is true' do
+        it 'includes --no-column flag' do
+          expect_command_capturing('tag', '--list', '--no-column').and_return(command_result)
+
+          result = command.call(no_column: true)
+
+          expect(result).to be_a(Git::CommandLineResult)
+        end
       end
     end
 

@@ -47,16 +47,19 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, String] :config_file (nil) use a specified
-        #       config file instead of the global config
+        #     @option options [Boolean, String] :config_file (false) use a specified
+        #       config file instead of the global config (`--config-file`)
         #
         #       When a String, the path is passed as `--config-file <file>`.
         #
-        #       Pass `true` for `--config-file`, `false` for `--no-config-file`.
+        #     @option options [Boolean] :no_config_file (false) disable the config file
+        #       (`--no-config-file`)
         #
-        #     @option options [Boolean] :force (nil) return success even if repository is not registered
+        #     @option options [Boolean] :force (false) return success even if repository is not registered
+        #       (`--force`)
         #
-        #       Pass `true` for `--force`, `false` for `--no-force`.
+        #     @option options [Boolean] :no_force (false) fail if the repository is not registered
+        #       (`--no-force`)
         #
         #     @option options [Hash] :env (nil) environment variables to set for the git
         #       process; merged with the default environment; not passed to the git CLI

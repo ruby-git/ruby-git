@@ -130,16 +130,18 @@ RSpec.describe Git::Commands::Reset do
         command.call(quiet: true)
       end
 
-      it 'adds --no-quiet when false' do
-        expect_command_capturing('reset', '--no-quiet').and_return(command_result)
-
-        command.call(quiet: false)
-      end
-
       it 'supports the :q alias' do
         expect_command_capturing('reset', '--quiet').and_return(command_result)
 
         command.call(q: true)
+      end
+
+      context 'when :no_quiet is true' do
+        it 'adds --no-quiet to the command line' do
+          expect_command_capturing('reset', '--no-quiet').and_return(command_result)
+
+          command.call(no_quiet: true)
+        end
       end
     end
 
@@ -150,10 +152,12 @@ RSpec.describe Git::Commands::Reset do
         command.call(refresh: true)
       end
 
-      it 'adds --no-refresh when false' do
-        expect_command_capturing('reset', '--no-refresh').and_return(command_result)
+      context 'when :no_refresh is true' do
+        it 'adds --no-refresh to the command line' do
+          expect_command_capturing('reset', '--no-refresh').and_return(command_result)
 
-        command.call(refresh: false)
+          command.call(no_refresh: true)
+        end
       end
     end
 
@@ -208,10 +212,12 @@ RSpec.describe Git::Commands::Reset do
         command.call(recurse_submodules: true)
       end
 
-      it 'adds --no-recurse-submodules when false' do
-        expect_command_capturing('reset', '--no-recurse-submodules').and_return(command_result)
+      context 'when :no_recurse_submodules is true' do
+        it 'adds --no-recurse-submodules to the command line' do
+          expect_command_capturing('reset', '--no-recurse-submodules').and_return(command_result)
 
-        command.call(recurse_submodules: false)
+          command.call(no_recurse_submodules: true)
+        end
       end
     end
 

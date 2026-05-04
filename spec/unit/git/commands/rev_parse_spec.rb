@@ -58,11 +58,13 @@ RSpec.describe Git::Commands::RevParse do
         command.call('HEAD', flags: true)
       end
 
-      it 'adds --no-flags when set to false' do
-        expect_command_capturing('rev-parse', '--no-flags', '--end-of-options', 'HEAD')
-          .and_return(command_result("HEAD\n"))
+      context 'when :no_flags is true' do
+        it 'adds --no-flags to the command line' do
+          expect_command_capturing('rev-parse', '--no-flags', '--end-of-options', 'HEAD')
+            .and_return(command_result("HEAD\n"))
 
-        command.call('HEAD', flags: false)
+          command.call('HEAD', no_flags: true)
+        end
       end
     end
 

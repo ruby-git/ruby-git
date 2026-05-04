@@ -64,14 +64,14 @@ module Git
       #       with more than one it is a merge commit. Initial (root) commits
       #       have no parents.
       #
-      #     @option options [Boolean, String] :gpg_sign (nil) sign the
-      #       commit with GPG
+      #     @option options [Boolean, String] :gpg_sign (false) sign the
+      #       commit with GPG (`--gpg-sign`)
       #
-      #       When `true`, signs with the default key. When a string, uses that
-      #       key ID. When `false`, adds `--no-gpg-sign` to countermand an
-      #       earlier `--gpg-sign`.
+      #       Pass a key-ID string to select the signing key; pass `true` to use
+      #       the committer identity. Alias: `:S`
       #
-      #       Alias: :S
+      #     @option options [Boolean] :no_gpg_sign (false) countermand commit.gpgSign
+      #       configuration (`--no-gpg-sign`)
       #
       #     @option options [String, Array<String>] :m (nil) a paragraph
       #       in the commit log message

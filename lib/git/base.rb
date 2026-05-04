@@ -756,7 +756,7 @@ module Git
     #     result.dangling.each { |obj| puts "#{obj.type}: #{obj.oid}" }
     #
     #   @example Check with strict mode and suppress dangling output
-    #     result = git.fsck(strict: true, dangling: false)
+    #     result = git.fsck(strict: true, no_dangling: true)
     #
     #   @example Check if repository has any issues
     #     result = git.fsck

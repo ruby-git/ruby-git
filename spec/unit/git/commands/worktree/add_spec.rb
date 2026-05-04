@@ -72,18 +72,22 @@ RSpec.describe Git::Commands::Worktree::Add do
     end
 
     context 'with :checkout option' do
-      it 'adds --checkout when true' do
-        expect_command_capturing('worktree', 'add', '--checkout', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --checkout flag' do
+          expect_command_capturing('worktree', 'add', '--checkout', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', checkout: true)
+          command.call('/tmp/wt', checkout: true)
+        end
       end
 
-      it 'adds --no-checkout when false' do
-        expect_command_capturing('worktree', 'add', '--no-checkout', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when :no_checkout is true' do
+        it 'adds --no-checkout flag' do
+          expect_command_capturing('worktree', 'add', '--no-checkout', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', checkout: false)
+          command.call('/tmp/wt', no_checkout: true)
+        end
       end
     end
 
@@ -131,50 +135,62 @@ RSpec.describe Git::Commands::Worktree::Add do
     end
 
     context 'with :guess_remote option' do
-      it 'adds --guess-remote when true' do
-        expect_command_capturing('worktree', 'add', '--guess-remote', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --guess-remote flag' do
+          expect_command_capturing('worktree', 'add', '--guess-remote', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', guess_remote: true)
+          command.call('/tmp/wt', guess_remote: true)
+        end
       end
 
-      it 'adds --no-guess-remote when false' do
-        expect_command_capturing('worktree', 'add', '--no-guess-remote', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when :no_guess_remote is true' do
+        it 'adds --no-guess-remote flag' do
+          expect_command_capturing('worktree', 'add', '--no-guess-remote', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', guess_remote: false)
+          command.call('/tmp/wt', no_guess_remote: true)
+        end
       end
     end
 
     context 'with :track option' do
-      it 'adds --track when true' do
-        expect_command_capturing('worktree', 'add', '--track', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --track flag' do
+          expect_command_capturing('worktree', 'add', '--track', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', track: true)
+          command.call('/tmp/wt', track: true)
+        end
       end
 
-      it 'adds --no-track when false' do
-        expect_command_capturing('worktree', 'add', '--no-track', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when :no_track is true' do
+        it 'adds --no-track flag' do
+          expect_command_capturing('worktree', 'add', '--no-track', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', track: false)
+          command.call('/tmp/wt', no_track: true)
+        end
       end
     end
 
     context 'with :relative_paths option' do
-      it 'adds --relative-paths when true' do
-        expect_command_capturing('worktree', 'add', '--relative-paths', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --relative-paths flag' do
+          expect_command_capturing('worktree', 'add', '--relative-paths', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', relative_paths: true)
+          command.call('/tmp/wt', relative_paths: true)
+        end
       end
 
-      it 'adds --no-relative-paths when false' do
-        expect_command_capturing('worktree', 'add', '--no-relative-paths', '--', '/tmp/wt', env: worktree_env)
-          .and_return(command_result(''))
+      context 'when :no_relative_paths is true' do
+        it 'adds --no-relative-paths flag' do
+          expect_command_capturing('worktree', 'add', '--no-relative-paths', '--', '/tmp/wt', env: worktree_env)
+            .and_return(command_result(''))
 
-        command.call('/tmp/wt', relative_paths: false)
+          command.call('/tmp/wt', no_relative_paths: true)
+        end
       end
     end
 

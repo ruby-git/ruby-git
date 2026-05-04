@@ -109,14 +109,16 @@ module Git
         #     @option options [Boolean] :keep_non_patch (nil) pass -b flag to
         #       git-mailinfo
         #
-        #     @option options [Boolean] :keep_cr (nil) retain CR at end of lines
+        #     @option options [Boolean] :keep_cr (false) retain CR at end of lines (`--keep-cr`)
         #
-        #       `true` → `--keep-cr`, `false` → `--no-keep-cr`
+        #     @option options [Boolean] :no_keep_cr (false) strip CR at end of lines (`--no-keep-cr`)
         #
-        #     @option options [Boolean] :scissors (nil) remove everything in the
-        #       body before a scissors line
+        #     @option options [Boolean] :scissors (false) remove everything in the
+        #       body before a scissors line (`--scissors`)
         #
-        #       `true` → `--scissors`, `false` → `--no-scissors`. Alias: `:c`
+        #       Alias: `:c`
+        #
+        #     @option options [Boolean] :no_scissors (false) disable scissors mode (`--no-scissors`)
         #
         #     @option options [String] :quoted_cr (nil) how to handle CR in quoted
         #       text passed to git-mailinfo
@@ -129,30 +131,35 @@ module Git
         #       Valid values: `'stop'` (fail, default), `'drop'` (skip the message),
         #       `'keep'` (create an empty commit).
         #
-        #     @option options [Boolean] :message_id (nil) pass -m flag to
-        #       git-mailinfo, adding the Message-ID header to the commit message
+        #     @option options [Boolean] :message_id (false) pass -m flag to
+        #       git-mailinfo, adding the Message-ID header to the commit message (`--message-id`)
         #
-        #       `true` → `--message-id`, `false` → `--no-message-id`. Alias: `:m`
+        #       Alias: `:m`
+        #
+        #     @option options [Boolean] :no_message_id (false) do not add the Message-ID header (`--no-message-id`)
         #
         #     @option options [Boolean] :quiet (nil) be quiet; only print error
         #       messages
         #
         #       Alias: `:q`
         #
-        #     @option options [Boolean] :utf8 (nil) re-code the commit log message
-        #       in UTF-8
+        #     @option options [Boolean] :utf8 (false) re-code the commit log message
+        #       in UTF-8 (`--utf8`)
         #
-        #       `true` → `--utf8`, `false` → `--no-utf8`. Alias: `:u`
+        #       Alias: `:u`
         #
-        #     @option options [Boolean] :three_way (nil) attempt 3-way merge when
-        #       context does not match
+        #     @option options [Boolean] :no_utf8 (false) do not re-code the commit log message (`--no-utf8`)
         #
-        #       `true` → `--3way`, `false` → `--no-3way`
+        #     @option options [Boolean] :three_way (false) attempt 3-way merge when
+        #       context does not match (`--3way`)
         #
-        #     @option options [Boolean] :rerere_autoupdate (nil) allow rerere to
-        #       update the index with auto-resolved conflicts
+        #     @option options [Boolean] :no_three_way (false) disable 3-way merge fallback (`--no-3way`)
         #
-        #       `true` → `--rerere-autoupdate`, `false` → `--no-rerere-autoupdate`
+        #     @option options [Boolean] :rerere_autoupdate (false) allow rerere to
+        #       update the index with auto-resolved conflicts (`--rerere-autoupdate`)
+        #
+        #     @option options [Boolean] :no_rerere_autoupdate (false) prevent rerere from
+        #       auto-updating the index (`--no-rerere-autoupdate`)
         #
         #     @option options [Boolean] :ignore_space_change (nil) ignore whitespace
         #       changes when applying (passed to git-apply)
@@ -206,11 +213,13 @@ module Git
         #
         #       Alias: `:i`
         #
-        #     @option options [Boolean] :verify (nil) run pre-applypatch and
-        #       applypatch-msg hooks
+        #     @option options [Boolean] :verify (false) run pre-applypatch and
+        #       applypatch-msg hooks (`--verify`)
         #
-        #       `true` → `--verify`, `false` → `--no-verify` (bypass hooks).
         #       Hooks are run by default when this option is omitted.
+        #
+        #     @option options [Boolean] :no_verify (false) bypass pre-applypatch and
+        #       applypatch-msg hooks (`--no-verify`)
         #
         #     @option options [Boolean] :committer_date_is_author_date (nil) use the
         #       author date as the committer date
@@ -218,11 +227,14 @@ module Git
         #     @option options [Boolean] :ignore_date (nil) use the committer date as
         #       the author date
         #
-        #     @option options [Boolean, String] :gpg_sign (nil) sign commits using
-        #       GPG
+        #     @option options [Boolean, String] :gpg_sign (false) sign commits using
+        #       GPG (`--gpg-sign`)
         #
         #       Pass a key-ID string to select the signing key; pass `true` to use
-        #       the committer identity. `false` → `--no-gpg-sign`. Alias: `:S`
+        #       the committer identity. Alias: `:S`
+        #
+        #     @option options [Boolean] :no_gpg_sign (false) countermand commit.gpgSign
+        #       configuration (`--no-gpg-sign`)
         #
         #     @option options [String] :chdir (nil) change to this directory before
         #       running git

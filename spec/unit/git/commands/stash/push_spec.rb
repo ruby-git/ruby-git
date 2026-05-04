@@ -56,19 +56,23 @@ RSpec.describe Git::Commands::Stash::Push do
     end
 
     context 'with :keep_index option' do
-      it 'adds --keep-index flag when true' do
-        expect_command_capturing('stash', 'push', '--keep-index').and_return(command_result(''))
-        command.call(keep_index: true)
+      context 'when true' do
+        it 'adds --keep-index flag' do
+          expect_command_capturing('stash', 'push', '--keep-index').and_return(command_result(''))
+          command.call(keep_index: true)
+        end
+
+        it 'accepts :k alias' do
+          expect_command_capturing('stash', 'push', '--keep-index').and_return(command_result(''))
+          command.call(k: true)
+        end
       end
 
-      it 'adds --no-keep-index flag when false' do
-        expect_command_capturing('stash', 'push', '--no-keep-index').and_return(command_result(''))
-        command.call(keep_index: false)
-      end
-
-      it 'accepts :k alias' do
-        expect_command_capturing('stash', 'push', '--keep-index').and_return(command_result(''))
-        command.call(k: true)
+      context 'when :no_keep_index is true' do
+        it 'adds --no-keep-index flag' do
+          expect_command_capturing('stash', 'push', '--no-keep-index').and_return(command_result(''))
+          command.call(no_keep_index: true)
+        end
       end
     end
 

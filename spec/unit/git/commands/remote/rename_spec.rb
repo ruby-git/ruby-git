@@ -22,18 +22,22 @@ RSpec.describe Git::Commands::Remote::Rename do
     end
 
     context 'with :progress option' do
-      it 'includes --progress when true' do
-        expect_command_capturing('remote', 'rename', '--progress', '--', 'origin',
-                                 'upstream').and_return(command_result)
+      context 'when true' do
+        it 'includes --progress flag' do
+          expect_command_capturing('remote', 'rename', '--progress', '--', 'origin',
+                                   'upstream').and_return(command_result)
 
-        command.call('origin', 'upstream', progress: true)
+          command.call('origin', 'upstream', progress: true)
+        end
       end
 
-      it 'includes --no-progress when false' do
-        expect_command_capturing('remote', 'rename', '--no-progress', '--', 'origin',
-                                 'upstream').and_return(command_result)
+      context 'when :no_progress is true' do
+        it 'includes --no-progress flag' do
+          expect_command_capturing('remote', 'rename', '--no-progress', '--', 'origin',
+                                   'upstream').and_return(command_result)
 
-        command.call('origin', 'upstream', progress: false)
+          command.call('origin', 'upstream', no_progress: true)
+        end
       end
     end
 

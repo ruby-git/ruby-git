@@ -91,18 +91,20 @@ module Git
         #
         #       Pass `true` for `--color`, or one of `'always'`, `'never'`, `'auto'`.
         #
-        #     @option options [Boolean] :ignore_case (nil) Sorting and filtering tags are
+        #     @option options [Boolean] :ignore_case (false) Sorting and filtering tags are
         #       case insensitive
         #
         #       Alias: :i
         #
-        #     @option options [Boolean] :omit_empty (nil) Do not print a newline after
+        #     @option options [Boolean] :omit_empty (false) Do not print a newline after
         #       formatted refs where the format expands to the empty string
         #
-        #     @option options [Boolean, String] :column (nil) Display tag listing in columns
+        #     @option options [Boolean, String] :column (false) Display tag listing in columns
         #
-        #       Pass `true` for `--column`, `false` for `--no-column`, or a comma-separated
-        #       options string (see `column.tag` configuration for syntax).
+        #       Pass `true` for `--column` or a comma-separated options string
+        #       (see `column.tag` configuration for syntax) for `--column=<options>`.
+        #
+        #     @option options [Boolean] :no_column (false) disable column output (`--no-column`)
         #
         #     @option options [Boolean, String] :contains (nil) List only tags that contain the
         #       specified commit

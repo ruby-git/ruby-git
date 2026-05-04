@@ -398,11 +398,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', color_moved: 'zebra')
       end
 
-      it 'includes --no-color-moved when color_moved: false' do
+      it 'includes --no-color-moved when no_color_moved: true' do
         expect_command_capturing('diff-index', '--no-color-moved', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', color_moved: false)
+        command.call('HEAD', no_color_moved: true)
       end
 
       it 'includes --color-moved-ws=allow-indentation-change when color_moved_ws: "allow-indentation-change"' do
@@ -614,11 +614,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', relative: 'src/')
       end
 
-      it 'includes --no-relative when relative: false' do
+      it 'includes --no-relative when no_relative: true' do
         expect_command_capturing('diff-index', '--no-relative', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', relative: false)
+        command.call('HEAD', no_relative: true)
       end
 
       it 'includes --text when text: true' do
@@ -663,11 +663,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', textconv: true)
       end
 
-      it 'includes --no-textconv when textconv: false' do
+      it 'includes --no-textconv when no_textconv: true' do
         expect_command_capturing('diff-index', '--no-textconv', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', textconv: false)
+        command.call('HEAD', no_textconv: true)
       end
 
       it 'includes --ignore-submodules when ignore_submodules: true' do
@@ -883,11 +883,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', indent_heuristic: true)
       end
 
-      it 'adds --no-indent-heuristic when indent_heuristic: false' do
+      it 'adds --no-indent-heuristic when no_indent_heuristic: true' do
         expect_command_capturing('diff-index', '--no-indent-heuristic', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', indent_heuristic: false)
+        command.call('HEAD', no_indent_heuristic: true)
       end
 
       it 'adds --color when color: true' do
@@ -897,11 +897,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', color: true)
       end
 
-      it 'adds --no-color when color: false' do
+      it 'adds --no-color when no_color: true' do
         expect_command_capturing('diff-index', '--no-color', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', color: false)
+        command.call('HEAD', no_color: true)
       end
 
       it 'adds --color=always when color: "always"' do
@@ -918,11 +918,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', ext_diff: true)
       end
 
-      it 'adds --no-ext-diff when ext_diff: false' do
+      it 'adds --no-ext-diff when no_ext_diff: true' do
         expect_command_capturing('diff-index', '--no-ext-diff', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', ext_diff: false)
+        command.call('HEAD', no_ext_diff: true)
       end
 
       it 'adds --rename-empty when rename_empty: true' do
@@ -932,11 +932,11 @@ RSpec.describe Git::Commands::DiffIndex do
         command.call('HEAD', rename_empty: true)
       end
 
-      it 'adds --no-rename-empty when rename_empty: false' do
+      it 'adds --no-rename-empty when no_rename_empty: true' do
         expect_command_capturing('diff-index', '--no-rename-empty', 'HEAD')
           .and_return(command_result(''))
 
-        command.call('HEAD', rename_empty: false)
+        command.call('HEAD', no_rename_empty: true)
       end
     end
 

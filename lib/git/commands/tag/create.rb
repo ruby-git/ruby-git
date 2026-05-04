@@ -74,12 +74,13 @@ module Git
         #
         #       Alias: :a
         #
-        #     @option options [Boolean] :sign (nil) make a cryptographically signed tag using the default signing key
+        #     @option options [Boolean] :sign (false) make a GPG-signed tag using the default signing key (`--sign`)
         #
-        #       Set to `false` to emit `--no-sign`, overriding the `tag.gpgSign` config.
         #       Requires a message via `:message` or `:file`.
         #
         #       Alias: :s
+        #
+        #     @option options [Boolean] :no_sign (false) override `tag.gpgSign` config to disable signing (`--no-sign`)
         #
         #     @option options [String] :local_user (nil) make a cryptographically signed tag using the given key
         #
@@ -104,11 +105,11 @@ module Git
         #
         #       Alias: :F
         #
-        #     @option options [Boolean] :edit (nil) let further edit the message taken from `:file` or `:message`
-        #
-        #       Pass `true` for `--edit`, `false` for `--no-edit`.
+        #     @option options [Boolean] :edit (false) open an editor to further edit the tag message (`--edit`)
         #
         #       Alias: :e
+        #
+        #     @option options [Boolean] :no_edit (false) suppress the editor (`--no-edit`)
         #
         #     @option options [Hash, Array<Array>] :trailer (nil) add trailers to the tag message
         #

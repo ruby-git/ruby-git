@@ -1200,9 +1200,8 @@ module Git
     #
     def commit(message, opts = {})
       opts = opts.merge(message: message) if message
-      deprecate_commit_no_gpg_sign_option!(opts)
       deprecate_commit_add_all_option!(opts)
-      Git::Commands::Commit.new(self).call(edit: false, **opts).stdout
+      Git::Commands::Commit.new(self).call(no_edit: true, **opts).stdout
     end
 
     # @return [String] the command output
@@ -1223,7 +1222,6 @@ module Git
     def revert(commitish, opts = {})
       assert_valid_opts(opts, REVERT_ALLOWED_OPTS)
       opts = { no_edit: true }.merge(opts)
-      opts[:edit] = false if opts.delete(:no_edit)
       Git::Commands::Revert::Start.new(self).call(commitish, **opts).stdout
     end
 
@@ -1416,12 +1414,12 @@ module Git
     # @param opts [Hash] merge options
     #
     # @option opts [Boolean] :no_commit (nil) stop before creating merge commit
-    #   (deprecated: use commit: false instead)
+    #   (deprecated: use no_commit: true instead)
     # @option opts [Boolean] :no_ff (nil) create merge commit even for fast-forward
-    #   (deprecated: use ff: false instead)
+    #   (deprecated: use no_ff: true instead)
     # @option opts [String] :m (nil) commit message (deprecated: use message: option)
-    # @option opts [Boolean] :commit (nil) true for --commit, false for --no-commit
-    # @option opts [Boolean] :ff (nil) true for --ff, false for --no-ff
+    # @option opts [Boolean] :commit (nil) true for --commit (`--commit`)
+    # @option opts [Boolean] :ff (nil) true for --ff (`--ff`)
     # @option opts [Boolean] :ff_only (nil) only merge if fast-forward possible
     # @option opts [Boolean] :squash (nil) squash commits into single commit
     # @option opts [String] :message (nil) commit message
@@ -1438,7 +1436,7 @@ module Git
       # Map legacy option names to new interface
       opts = translate_merge_options(opts)
 
-      Git::Commands::Merge::Start.new(self).call(*Array(branch), edit: false, **opts).stdout
+      Git::Commands::Merge::Start.new(self).call(*Array(branch), no_edit: true, **opts).stdout
     end
 
     # Find common ancestor commit(s) for merge
@@ -1738,7 +1736,7 @@ module Git
       assert_valid_opts(opts, PULL_ALLOWED_OPTS)
       allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
       positional_args = [remote, branch].compact
-      Git::Commands::Pull.new(self).call(*positional_args, edit: false, progress: false, **allowed_opts).stdout
+      Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, no_progress: true, **allowed_opts).stdout
     end
 
     # Return the SHA of a tag reference
@@ -1775,7 +1773,7 @@ module Git
     #
     # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
-      result = Git::Commands::Fsck.new(self).call(*objects, progress: false, **opts)
+      result = Git::Commands::Fsck.new(self).call(*objects, no_progress: true, **opts)
       Git::Parsers::Fsck.parse(result.stdout)
     end
     # rubocop:enable Style/ArgumentsForwarding
@@ -2334,17 +2332,6 @@ module Git
       opts[:all] = opts.delete(:add_all)
     end
 
-    # TODO: deprecate :no_gpg_sign in favor of :gpg_sign => false
-    def deprecate_commit_no_gpg_sign_option!(opts)
-      return unless opts[:no_gpg_sign]
-
-      Git::Deprecation.warn(':no_gpg_sign option is deprecated. Use :gpg_sign => false instead.')
-      raise ArgumentError, 'cannot specify :gpg_sign and :no_gpg_sign' if opts.key?(:gpg_sign)
-
-      opts.delete(:no_gpg_sign)
-      opts[:gpg_sign] = false
-    end
-
     # Extracts execution context options from clone options.
     #
     # @param opts [Hash] clone options
@@ -2364,12 +2351,6 @@ module Git
     #
     def translate_merge_options(opts)
       result = opts.dup
-
-      # :no_commit => true becomes :commit => false
-      result[:commit] = false if result.delete(:no_commit)
-
-      # :no_ff => true becomes :ff => false
-      result[:ff] = false if result.delete(:no_ff)
 
       # :message => 'msg' becomes :m => 'msg' (git merge uses -m, not --message)
       result[:m] = result.delete(:message) if result.key?(:message)
@@ -2821,7 +2802,7 @@ module Git
       log_or_empty_on_unborn do
         result = Git::Commands::Log.new(self).call(
           *revision_range_args,
-          color: false, pretty: 'raw',
+          no_color: true, pretty: 'raw',
           **call_opts
         )
         process_commit_log_data(result.stdout.split("\n"))

@@ -69,10 +69,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, String] :color (nil) color branches output
+        #     @option options [Boolean, String] :color (false) color branches output
         #
-        #       Pass `true` for `--color`, a string (`'always'`, `'never'`, `'auto'`) for
-        #       `--color=<when>`, or `false` for `--no-color`.
+        #       Pass `true` for `--color` or a string (`'always'`, `'never'`, `'auto'`) for `--color=<when>`.
+        #
+        #     @option options [Boolean] :no_color (false) suppress colored output (`--no-color`)
         #
         #     @option options [Boolean, Integer] :verbose (nil) show sha1 and commit
         #       subject for each branch
@@ -83,17 +84,20 @@ module Git
         #
         #       Alias: :v
         #
-        #     @option options [Boolean, Integer] :abbrev (nil) minimum sha1 display
+        #     @option options [Boolean, Integer] :abbrev (false) minimum sha1 display
         #       length when used with verbose mode
         #
-        #       Pass an integer for `--abbrev=<n>`, `true` for `--abbrev` (default length),
-        #       or `false` for `--no-abbrev` (full sha1s).
+        #       Pass an integer for `--abbrev=<n>` or `true` for `--abbrev` (default length).
         #
-        #     @option options [Boolean, String] :column (nil) display branch listing in
+        #     @option options [Boolean] :no_abbrev (false) show full sha1s (`--no-abbrev`)
+        #
+        #     @option options [Boolean, String] :column (false) display branch listing in
         #       columns
         #
-        #       Pass `true` for `--column`, a string of options for `--column=<options>`,
-        #       or `false` for `--no-column`. Only applicable in non-verbose mode.
+        #       Pass `true` for `--column` or a string of options for `--column=<options>`.
+        #       Only applicable in non-verbose mode.
+        #
+        #     @option options [Boolean] :no_column (false) disable column output (`--no-column`)
         #
         #     @option options [String, Array<String>] :sort (nil) sort branches by the
         #       specified key(s)

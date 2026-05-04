@@ -2,6 +2,8 @@
 *.kpf
 *.sw?
 .DS_Store
+.bundle/
+vendor/bundle/
 coverage
 doc
 .yardoc

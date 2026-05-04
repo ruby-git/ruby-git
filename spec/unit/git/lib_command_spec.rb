@@ -424,7 +424,7 @@ RSpec.describe Git::Lib do
     it 'parses the command output into a FsckResult' do
       fsck_output = "dangling blob 1234567890abcdef1234567890abcdef12345678\n"
       allow(fsck_command).to receive(:call)
-        .with(progress: false)
+        .with(no_progress: true)
         .and_return(command_result(fsck_output))
 
       result = lib.fsck
@@ -437,12 +437,12 @@ RSpec.describe Git::Lib do
 
     it 'forwards objects and options to the command' do
       allow(fsck_command).to receive(:call)
-        .with('abc1234', progress: false, strict: true)
+        .with('abc1234', no_progress: true, strict: true)
         .and_return(command_result(''))
 
       result = lib.fsck('abc1234', strict: true)
 
-      expect(fsck_command).to have_received(:call).with('abc1234', progress: false, strict: true)
+      expect(fsck_command).to have_received(:call).with('abc1234', no_progress: true, strict: true)
       expect(result).to be_a(Git::FsckResult)
     end
   end
@@ -807,31 +807,31 @@ RSpec.describe Git::Lib do
       allow(Git::Commands::Log).to receive(:new).with(lib).and_return(log_command)
     end
 
-    it 'passes color: false and pretty: "raw" as hardcoded parser-contract options' do
+    it 'passes no_color: true and pretty: "raw" as hardcoded parser-contract options' do
       allow(log_command).to receive(:call)
-        .with(color: false, pretty: 'raw')
+        .with(no_color: true, pretty: 'raw')
         .and_return(command_result(''))
 
       lib.full_log_commits
 
-      expect(log_command).to have_received(:call).with(color: false, pretty: 'raw')
+      expect(log_command).to have_received(:call).with(no_color: true, pretty: 'raw')
     end
 
     it 'forwards documented options to the command' do
       allow(log_command).to receive(:call)
-        .with(color: false, pretty: 'raw', max_count: 5, all: true)
+        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
         .and_return(command_result(''))
 
       lib.full_log_commits(count: 5, all: true)
 
       expect(log_command).to have_received(:call)
-        .with(color: false, pretty: 'raw', max_count: 5, all: true)
+        .with(no_color: true, pretty: 'raw', max_count: 5, all: true)
     end
 
     context 'with parser-contract options the facade owns' do
-      it 'rejects :no_color because it is not a recognized option (facade uses color: false)' do
-        expect { lib.full_log_commits(no_color: false) }
-          .to raise_error(ArgumentError, /Unknown options: no_color/)
+      it 'rejects :color because it is not a recognized option (facade uses no_color: true)' do
+        expect { lib.full_log_commits(color: true) }
+          .to raise_error(ArgumentError, /Unknown options: color/)
       end
 
       it 'rejects :pretty because the facade always sets it' do

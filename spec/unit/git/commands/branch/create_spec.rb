@@ -57,18 +57,22 @@ RSpec.describe Git::Commands::Branch::Create do
     end
 
     context 'with :create_reflog option' do
-      it 'adds --create-reflog flag' do
-        expect_command_capturing('branch', '--create-reflog', '--', 'feature-branch')
-          .and_return(command_result(''))
+      context 'when true' do
+        it 'adds --create-reflog flag' do
+          expect_command_capturing('branch', '--create-reflog', '--', 'feature-branch')
+            .and_return(command_result(''))
 
-        command.call('feature-branch', create_reflog: true)
+          command.call('feature-branch', create_reflog: true)
+        end
       end
 
-      it 'adds --no-create-reflog flag when false' do
-        expect_command_capturing('branch', '--no-create-reflog', '--', 'feature-branch')
-          .and_return(command_result(''))
+      context 'when :no_create_reflog is true' do
+        it 'adds --no-create-reflog flag' do
+          expect_command_capturing('branch', '--no-create-reflog', '--', 'feature-branch')
+            .and_return(command_result(''))
 
-        command.call('feature-branch', create_reflog: false)
+          command.call('feature-branch', no_create_reflog: true)
+        end
       end
     end
 
@@ -109,12 +113,12 @@ RSpec.describe Git::Commands::Branch::Create do
         end
       end
 
-      context 'when false' do
+      context 'when :no_track is true' do
         it 'adds --no-track flag' do
           expect_command_capturing('branch', '--no-track', '--', 'feature-branch', 'origin/main')
             .and_return(command_result(''))
 
-          command.call('feature-branch', 'origin/main', track: false)
+          command.call('feature-branch', 'origin/main', no_track: true)
         end
       end
 
@@ -160,7 +164,7 @@ RSpec.describe Git::Commands::Branch::Create do
         expect_command_capturing('branch', '--no-track', '--force', '--', 'feature-branch', 'main')
           .and_return(command_result(''))
 
-        command.call('feature-branch', 'main', force: true, track: false)
+        command.call('feature-branch', 'main', force: true, no_track: true)
       end
     end
 

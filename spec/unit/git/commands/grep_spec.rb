@@ -137,14 +137,14 @@ RSpec.describe Git::Commands::Grep do
 
         command.call('HEAD', pattern: 'search', textconv: true)
       end
-    end
 
-    context 'with :textconv false' do
-      it 'includes --no-textconv flag' do
-        expect_command_capturing('grep', '--no-textconv', '-e', 'search', 'HEAD')
-          .and_return(command_result(''))
+      context 'when :no_textconv is true' do
+        it 'includes --no-textconv flag' do
+          expect_command_capturing('grep', '--no-textconv', '-e', 'search', 'HEAD')
+            .and_return(command_result(''))
 
-        command.call('HEAD', pattern: 'search', textconv: false)
+          command.call('HEAD', pattern: 'search', no_textconv: true)
+        end
       end
     end
 
@@ -424,14 +424,14 @@ RSpec.describe Git::Commands::Grep do
 
         command.call('HEAD', pattern: 'search', recursive: true)
       end
-    end
 
-    context 'with :recursive false' do
-      it 'includes --no-recursive flag' do
-        expect_command_capturing('grep', '--no-recursive', '-e', 'search', 'HEAD')
-          .and_return(command_result(''))
+      context 'when :no_recursive is true' do
+        it 'includes --no-recursive flag' do
+          expect_command_capturing('grep', '--no-recursive', '-e', 'search', 'HEAD')
+            .and_return(command_result(''))
 
-        command.call('HEAD', pattern: 'search', recursive: false)
+          command.call('HEAD', pattern: 'search', no_recursive: true)
+        end
       end
     end
 
@@ -585,14 +585,14 @@ RSpec.describe Git::Commands::Grep do
 
         command.call(pattern: 'search', exclude_standard: true, untracked: true)
       end
-    end
 
-    context 'with :exclude_standard false' do
-      it 'includes --no-exclude-standard flag' do
-        expect_command_capturing('grep', '-e', 'search', '--no-exclude-standard', '--no-index')
-          .and_return(command_result(''))
+      context 'when :no_exclude_standard is true' do
+        it 'includes --no-exclude-standard flag' do
+          expect_command_capturing('grep', '-e', 'search', '--no-exclude-standard', '--no-index')
+            .and_return(command_result(''))
 
-        command.call(pattern: 'search', exclude_standard: false, no_index: true)
+          command.call(pattern: 'search', no_exclude_standard: true, no_index: true)
+        end
       end
     end
 

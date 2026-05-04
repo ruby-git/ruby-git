@@ -75,9 +75,11 @@ module Git
         #     @option options [Boolean] :short (false) shorten the ref output
         #       (e.g. `refs/heads/main` → `main`)
         #
-        #     @option options [Boolean] :recurse (nil) follow chain of symbolic refs
-        #       until result no longer points at a symbolic ref; pass +false+ to emit
-        #       `--no-recurse` and stop after a single level of dereferencing
+        #     @option options [Boolean] :recurse (false) follow chain of symbolic refs
+        #       until result no longer points at a symbolic ref (`--recurse`)
+        #
+        #     @option options [Boolean] :no_recurse (false) stop after a single level
+        #       of dereferencing (`--no-recurse`)
         #
         #     @return [Git::CommandLineResult] the result of calling
         #       `git symbolic-ref`

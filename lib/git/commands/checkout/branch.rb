@@ -69,8 +69,11 @@ module Git
         #
         #       Alias: `:q`
         #
-        #     @option options [Boolean] :progress (nil) force progress reporting even
-        #       when not attached to a terminal; use `false` for `--no-progress`
+        #     @option options [Boolean] :progress (false) force progress reporting even
+        #       when not attached to a terminal (`--progress`)
+        #
+        #     @option options [Boolean] :no_progress (false) disable progress reporting
+        #       even when attached to a terminal (`--no-progress`)
         #
         #     @option options [Boolean] :force (false) proceed even if the index or
         #       working tree differs from HEAD; discards local changes and untracked
@@ -84,15 +87,21 @@ module Git
         #     @option options [String] :B (nil) like `:b`, but reset the branch to the
         #       start point if it already exists
         #
-        #     @option options [Boolean, String] :track (nil) set up upstream tracking
-        #       configuration; `true` emits `--track`, `false` emits `--no-track`, and
-        #       `'direct'` or `'inherit'` emits `--track=direct` / `--track=inherit`
+        #     @option options [Boolean, String] :track (false) set up upstream tracking
+        #       configuration; `true` emits `--track`, `'direct'` emits
+        #       `--track=direct`, `'inherit'` emits `--track=inherit` (`--track`)
         #
         #       Alias: `:t`
         #
-        #     @option options [Boolean] :guess (nil) automatically create and check out
-        #       a local branch from a uniquely matching remote-tracking branch; use
-        #       `false` for `--no-guess`
+        #     @option options [Boolean] :no_track (false) do not set up branch tracking
+        #       even if `branch.autoSetupMerge` is configured (`--no-track`)
+        #
+        #     @option options [Boolean] :guess (false) automatically create and check out
+        #       a local branch from a uniquely matching remote-tracking branch
+        #       (`--guess`)
+        #
+        #     @option options [Boolean] :no_guess (false) disable automatic remote branch
+        #       matching (`--no-guess`)
         #
         #     @option options [Boolean] :l (false) create the new branch's reflog
         #
@@ -112,13 +121,19 @@ module Git
         #     @option options [Boolean] :ignore_other_worktrees (false) check out the
         #       branch even if it is already in use by another worktree
         #
-        #     @option options [Boolean] :overwrite_ignore (nil) silently overwrite
-        #       ignored files when switching branches; use `false` for
-        #       `--no-overwrite-ignore`
+        #     @option options [Boolean] :overwrite_ignore (false) silently overwrite
+        #       ignored files when switching branches (`--overwrite-ignore`)
         #
-        #     @option options [Boolean] :recurse_submodules (nil) update all active
-        #       submodule working trees to match the new branch; use `false` for
-        #       `--no-recurse-submodules`
+        #     @option options [Boolean] :no_overwrite_ignore (false) abort the checkout
+        #       if ignored files would be overwritten (`--no-overwrite-ignore`)
+        #
+        #     @option options [Boolean] :recurse_submodules (false) update all active
+        #       submodule working trees to match the new branch
+        #       (`--recurse-submodules`)
+        #
+        #     @option options [Boolean] :no_recurse_submodules (false) do not update
+        #       submodule working trees when switching branches
+        #       (`--no-recurse-submodules`)
         #
         #     @option options [String] :chdir (nil) change to this directory before
         #       running git; not passed to the git CLI

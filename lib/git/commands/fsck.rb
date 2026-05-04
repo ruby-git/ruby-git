@@ -15,7 +15,7 @@ module Git
     #   fsck.call
     #   fsck.call('abc1234', 'def5678')
     #   fsck.call(unreachable: true, strict: true)
-    #   fsck.call(dangling: false)
+    #   fsck.call(no_dangling: true)
     #
     # @note `arguments` block audited against https://git-scm.com/docs/git-fsck/2.53.0
     #
@@ -81,11 +81,12 @@ module Git
       #     @option options [Boolean] :no_reflogs (false) do not consider commits
       #       referenced only by reflogs to be reachable
       #
-      #     @option options [Boolean] :full (nil) check not just objects in
+      #     @option options [Boolean] :full (false) check not just objects in
       #       `GIT_OBJECT_DIRECTORY` but also those in alternate object pools and
-      #       packed archives
+      #       packed archives (`--full`)
       #
-      #       Pass `true` for `--full`, `false` for `--no-full`.
+      #     @option options [Boolean] :no_full (false) skip checking alternate object
+      #       pools and packed archives (`--no-full`)
       #
       #     @option options [Boolean] :strict (false) enable more strict checking,
       #       catching files with `g+w` bits set
@@ -95,31 +96,32 @@ module Git
       #     @option options [Boolean] :lost_found (false) write dangling objects
       #       into `.git/lost-found/commit/` or `.git/lost-found/other/`
       #
-      #     @option options [Boolean] :dangling (nil) print dangling objects
+      #     @option options [Boolean] :dangling (false) print dangling objects (`--dangling`)
       #
-      #       Pass `true` for `--dangling`, `false` for `--no-dangling` to
-      #       suppress dangling object reporting.
+      #     @option options [Boolean] :no_dangling (false) suppress dangling object
+      #       reporting (`--no-dangling`)
       #
-      #     @option options [Boolean] :progress (nil) show progress status on
-      #       standard error
+      #     @option options [Boolean] :progress (false) show progress status on
+      #       standard error (`--progress`)
       #
-      #       Pass `true` for `--progress`, `false` for `--no-progress` to
-      #       suppress progress output when attached to a terminal.
+      #     @option options [Boolean] :no_progress (false) suppress progress output
+      #       when attached to a terminal (`--no-progress`)
       #
       #     @option options [Boolean] :connectivity_only (false) check only the
       #       connectivity of reachable objects; faster but does not validate
       #       blob content
       #
-      #     @option options [Boolean] :name_objects (nil) show the name of each
-      #       reachable object alongside its identifier
+      #     @option options [Boolean] :name_objects (false) show the name of each
+      #       reachable object alongside its identifier (`--name-objects`)
       #
-      #       Pass `true` for `--name-objects`, `false` for `--no-name-objects`.
+      #     @option options [Boolean] :no_name_objects (false) suppress object name
+      #       display (`--no-name-objects`)
       #
-      #     @option options [Boolean] :references (nil) control whether to check
-      #       reference database consistency via `git refs verify`
+      #     @option options [Boolean] :references (false) check reference database
+      #       consistency via `git refs verify` (`--references`)
       #
-      #       Pass `true` for `--references`, `false` for `--no-references` to
-      #       skip reference checking.
+      #     @option options [Boolean] :no_references (false) skip reference checking
+      #       (`--no-references`)
       #
       #     @return [Git::CommandLineResult] the result of calling `git fsck`
       #

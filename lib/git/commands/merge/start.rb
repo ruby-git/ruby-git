@@ -111,13 +111,15 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :commit (nil) perform merge and commit the result
+        #     @option options [Boolean] :commit (false) perform merge and commit the result (`--commit`)
         #
-        #       `true` → `--commit`, `false` → `--no-commit`
+        #     @option options [Boolean] :no_commit (false) do not perform a merge commit (`--no-commit`)
         #
-        #     @option options [Boolean] :edit (nil) open an editor for the merge commit message
+        #     @option options [Boolean] :edit (false) open an editor for the merge commit message (`--edit`)
         #
-        #       `true` → `--edit`, `false` → `--no-edit`. Alias: `:e`
+        #       Alias: `:e`
+        #
+        #     @option options [Boolean] :no_edit (false) skip the editor for the merge commit message (`--no-edit`)
         #
         #     @option options [String] :cleanup (nil) how the merge message will be cleaned
         #       up before committing
@@ -125,33 +127,38 @@ module Git
         #       Accepted values include `strip`, `whitespace`, `verbatim`,
         #       `scissors`, and `default`. Emits `--cleanup=<mode>`.
         #
-        #     @option options [Boolean] :ff (nil) fast-forward behavior
+        #     @option options [Boolean] :ff (false) allow fast-forward merges (`--ff`)
         #
-        #       `true` → `--ff`, `false` → `--no-ff`
+        #     @option options [Boolean] :no_ff (false) create a merge commit even when fast-forward is
+        #       possible (`--no-ff`)
         #
         #     @option options [Boolean] :ff_only (false) refuse to merge unless
         #       fast-forward is possible; emits `--ff-only`
         #
-        #     @option options [Boolean, String] :gpg_sign (nil) GPG-sign the resulting
-        #       merge commit
+        #     @option options [Boolean, String] :gpg_sign (false) GPG-sign the resulting
+        #       merge commit (`--gpg-sign`)
         #
-        #       `true` → `--gpg-sign`, a String key ID → `--gpg-sign=<keyid>`,
-        #       `false` → `--no-gpg-sign`. Alias: `:S`
+        #       Pass a key ID string to select the signing key; pass `true` to use the
+        #       committer identity. Alias: `:S`
         #
-        #     @option options [Boolean, Integer] :log (nil) populate the merge message
-        #       with one-line commit descriptions
+        #     @option options [Boolean] :no_gpg_sign (false) countermand commit.gpgSign
+        #       configuration (`--no-gpg-sign`)
         #
-        #       `true` → `--log`, `false` → `--no-log`,
-        #       an Integer `n` → `--log=<n>` to limit entries
+        #     @option options [Boolean, Integer] :log (false) populate the merge message
+        #       with one-line commit descriptions (`--log`)
         #
-        #     @option options [Boolean] :signoff (nil) add a Signed-off-by trailer
-        #       to the commit message
+        #       Pass an Integer `n` to limit to `n` entries (`--log=<n>`).
         #
-        #       `true` → `--signoff`, `false` → `--no-signoff`
+        #     @option options [Boolean] :no_log (false) do not list one-line commit descriptions (`--no-log`)
         #
-        #     @option options [Boolean] :stat (nil) show a diffstat at the end of the merge
+        #     @option options [Boolean] :signoff (false) add a Signed-off-by trailer to the commit message (`--signoff`)
         #
-        #       `true` → `--stat`, `false` → `--no-stat`
+        #     @option options [Boolean] :no_signoff (false) remove a Signed-off-by trailer from the
+        #       commit message (`--no-signoff`)
+        #
+        #     @option options [Boolean] :stat (false) show a diffstat at the end of the merge (`--stat`)
+        #
+        #     @option options [Boolean] :no_stat (false) suppress the diffstat at the end of the merge (`--no-stat`)
         #
         #     @option options [Boolean] :compact_summary (false) show a compact summary
         #       at the end of the merge; emits `--compact-summary`
@@ -159,9 +166,9 @@ module Git
         #     @option options [Boolean] :squash (false) produce working tree and index
         #       state as if a real merge happened, but do not commit; emits `--squash`
         #
-        #     @option options [Boolean] :verify (nil) run pre-merge and commit-msg hooks
+        #     @option options [Boolean] :verify (false) run pre-merge and commit-msg hooks (`--verify`)
         #
-        #       `true` → `--verify`, `false` → `--no-verify`
+        #     @option options [Boolean] :no_verify (false) bypass pre-merge and commit-msg hooks (`--no-verify`)
         #
         #     @option options [String] :strategy (nil) merge strategy to use
         #       (e.g., `'ort'`, `'recursive'`, `'resolve'`, `'octopus'`, `'ours'`, `'subtree'`)
@@ -174,10 +181,11 @@ module Git
         #       Can be a single value or an array for multiple `--strategy-option` flags.
         #       Emits `--strategy-option=<option>`. Alias: `:X`
         #
-        #     @option options [Boolean] :verify_signatures (nil) verify commit signatures
-        #       on the tip of the side branch
+        #     @option options [Boolean] :verify_signatures (false) verify commit signatures
+        #       on the tip of the side branch (`--verify-signatures`)
         #
-        #       `true` → `--verify-signatures`, `false` → `--no-verify-signatures`
+        #     @option options [Boolean] :no_verify_signatures (false) do not verify commit
+        #       signatures (`--no-verify-signatures`)
         #
         #     @option options [Boolean] :quiet (false) operate quietly; emits `--quiet`
         #
@@ -187,20 +195,21 @@ module Git
         #
         #       Alias: `:v`
         #
-        #     @option options [Boolean] :progress (nil) turn progress reporting on or off
+        #     @option options [Boolean] :progress (false) force progress status reporting (`--progress`)
         #
-        #       `true` → `--progress`, `false` → `--no-progress`
+        #     @option options [Boolean] :no_progress (false) suppress progress status reporting (`--no-progress`)
         #
-        #     @option options [Boolean] :autostash (nil) automatically stash and unstash
-        #       the working tree before and after the operation
+        #     @option options [Boolean] :autostash (false) automatically stash and unstash
+        #       the working tree before and after the operation (`--autostash`)
         #
-        #       `true` → `--autostash`, `false` → `--no-autostash`
+        #     @option options [Boolean] :no_autostash (false) do not automatically stash and unstash
+        #       the working tree (`--no-autostash`)
         #
-        #     @option options [Boolean] :allow_unrelated_histories (nil) allow merging
-        #       histories that do not share a common ancestor
+        #     @option options [Boolean] :allow_unrelated_histories (false) allow merging
+        #       histories that do not share a common ancestor (`--allow-unrelated-histories`)
         #
-        #       `true` → `--allow-unrelated-histories`,
-        #       `false` → `--no-allow-unrelated-histories`
+        #     @option options [Boolean] :no_allow_unrelated_histories (false) disallow merging
+        #       unrelated histories (`--no-allow-unrelated-histories`)
         #
         #     @option options [String] :m (nil) commit message for the merge commit;
         #       emits `-m <msg>`
@@ -211,15 +220,17 @@ module Git
         #     @option options [String] :file (nil) read the commit message from the given
         #       file; emits `--file=<file>`. Alias: `:F`
         #
-        #     @option options [Boolean] :rerere_autoupdate (nil) allow rerere to update
-        #       the index with the auto-resolved conflict result
+        #     @option options [Boolean] :rerere_autoupdate (false) allow rerere to update
+        #       the index with the auto-resolved conflict result (`--rerere-autoupdate`)
         #
-        #       `true` → `--rerere-autoupdate`, `false` → `--no-rerere-autoupdate`
+        #     @option options [Boolean] :no_rerere_autoupdate (false) prevent rerere from
+        #       auto-updating the index (`--no-rerere-autoupdate`)
         #
-        #     @option options [Boolean] :overwrite_ignore (nil) silently overwrite ignored
-        #       files from the merge result
+        #     @option options [Boolean] :overwrite_ignore (false) silently overwrite ignored
+        #       files from the merge result (`--overwrite-ignore`)
         #
-        #       `true` → `--overwrite-ignore`, `false` → `--no-overwrite-ignore`
+        #     @option options [Boolean] :no_overwrite_ignore (false) abort if the merge result
+        #       would overwrite any ignored files (`--no-overwrite-ignore`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git merge`
         #

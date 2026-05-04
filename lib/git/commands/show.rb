@@ -205,10 +205,11 @@ module Git
       #     @option options [String] :format (nil) format string passed as
       #       `--format=<format>` (equivalent to `--pretty=tformat:<format>`)
       #
-      #     @option options [Boolean] :abbrev_commit (nil) show an abbreviated
-      #       commit hash prefix
+      #     @option options [Boolean] :abbrev_commit (false) show an abbreviated
+      #       commit hash prefix (`--abbrev-commit`)
       #
-      #       Pass `true` for `--abbrev-commit`, `false` for `--no-abbrev-commit`.
+      #     @option options [Boolean] :no_abbrev_commit (false) show the full commit
+      #       hash (`--no-abbrev-commit`)
       #
       #     @option options [Boolean] :oneline (false) shorthand for
       #       `--pretty=oneline --abbrev-commit`
@@ -216,17 +217,23 @@ module Git
       #     @option options [String] :encoding (nil) re-encode the commit log
       #       message in the specified encoding
       #
-      #     @option options [Boolean, Integer] :expand_tabs (nil) expand tabs in
+      #     @option options [Boolean, Integer] :expand_tabs (false) expand tabs in
       #       the log message before showing it
       #
-      #       Pass `true` for `--expand-tabs` (tab stop every 8 columns), an integer
-      #       for `--expand-tabs=<n>`, or `false` for `--no-expand-tabs`.
+      #       Pass `true` for `--expand-tabs` (tab stop every 8 columns) or an
+      #       integer for `--expand-tabs=<n>`.
       #
-      #     @option options [Boolean, String] :notes (nil) show notes that annotate
+      #     @option options [Boolean] :no_expand_tabs (false) disable tab expansion
+      #       (`--no-expand-tabs`)
+      #
+      #     @option options [Boolean, String] :notes (false) show notes that annotate
       #       the commit
       #
-      #       Pass `true` for `--notes`, `false` for `--no-notes`, or a string like
-      #       `'refs/notes/review'` for `--notes=<ref>`.
+      #       Pass `true` for `--notes` or a string like `'refs/notes/review'` for
+      #       `--notes=<ref>`.
+      #
+      #     @option options [Boolean] :no_notes (false) suppress notes output
+      #       (`--no-notes`)
       #
       #     @option options [Boolean] :show_notes_by_default (false) show the
       #       default notes unless options for displaying specific notes are given
@@ -234,10 +241,11 @@ module Git
       #     @option options [Boolean, String] :show_notes (nil) deprecated; use
       #       `:notes` instead
       #
-      #     @option options [Boolean] :standard_notes (nil) deprecated; use `:notes`
-      #       instead
+      #     @option options [Boolean] :standard_notes (false) deprecated; use `:notes`
+      #       instead (`--standard-notes`)
       #
-      #       Pass `true` for `--standard-notes`, `false` for `--no-standard-notes`.
+      #     @option options [Boolean] :no_standard_notes (false) deprecated; use
+      #       `:notes` instead (`--no-standard-notes`)
       #
       #     @option options [Boolean] :show_signature (false) check the validity
       #       of a signed commit by passing the signature to `gpg --verify`
@@ -301,11 +309,11 @@ module Git
       #     @option options [Boolean] :t (false) show tree objects in the diff
       #       output
       #
-      #     @option options [Boolean] :indent_heuristic (nil) enable or disable
-      #       the indent heuristic for patch readability
+      #     @option options [Boolean] :indent_heuristic (false) use the indent
+      #       heuristic to improve patch readability (`--indent-heuristic`)
       #
-      #       Pass `true` for `--indent-heuristic`, `false` for
-      #       `--no-indent-heuristic`.
+      #     @option options [Boolean] :no_indent_heuristic (false) disable the indent
+      #       heuristic (`--no-indent-heuristic`)
       #
       #     @option options [Boolean] :minimal (false) spend extra time to produce
       #       the smallest possible diff
@@ -385,23 +393,31 @@ module Git
       #       Pass `true` for `--submodule`; pass a string like `'log'` or `'diff'`
       #       for `--submodule=<format>`.
       #
-      #     @option options [Boolean, String] :color (nil) show colored diff
+      #     @option options [Boolean, String] :color (false) show colored diff
       #
-      #       Pass `true` for `--color`, `false` for `--no-color`, or a string like
-      #       `'always'` for `--color=always`.
+      #       Pass `true` for `--color` or a string like `'always'` for
+      #       `--color=always`.
       #
-      #     @option options [Boolean, String] :color_moved (nil) color moved lines
+      #     @option options [Boolean] :no_color (false) disable colored diff output
+      #       (`--no-color`)
+      #
+      #     @option options [Boolean, String] :color_moved (false) color moved lines
       #       differently
       #
-      #       Pass `true` for `--color-moved`, `false` for `--no-color-moved`, or a
-      #       string like `'zebra'` for `--color-moved=zebra`.
+      #       Pass `true` for `--color-moved` or a string like `'zebra'` for
+      #       `--color-moved=zebra`.
       #
-      #     @option options [Boolean, String] :color_moved_ws (nil) configure how
+      #     @option options [Boolean] :no_color_moved (false) disable coloring of
+      #       moved lines (`--no-color-moved`)
+      #
+      #     @option options [Boolean, String] :color_moved_ws (false) configure how
       #       whitespace is handled during move detection
       #
-      #       Pass `true` for `--color-moved-ws`, `false` for
-      #       `--no-color-moved-ws`, or a string like `'ignore-all-space'` for
-      #       `--color-moved-ws=ignore-all-space`.
+      #       Pass `true` for `--color-moved-ws` or a string like `'ignore-all-space'`
+      #       for `--color-moved-ws=ignore-all-space`.
+      #
+      #     @option options [Boolean] :no_color_moved_ws (false) disable whitespace
+      #       handling during move detection (`--no-color-moved-ws`)
       #
       #     @option options [Boolean, String] :word_diff (nil) show a word diff
       #
@@ -416,10 +432,11 @@ module Git
       #
       #     @option options [Boolean] :no_renames (false) turn off rename detection
       #
-      #     @option options [Boolean] :rename_empty (nil) whether to use empty blobs
-      #       as rename source
+      #     @option options [Boolean] :rename_empty (false) use empty blobs as rename
+      #       source (`--rename-empty`)
       #
-      #       Pass `true` for `--rename-empty`, `false` for `--no-rename-empty`.
+      #     @option options [Boolean] :no_rename_empty (false) do not use empty blobs
+      #       as rename source (`--no-rename-empty`)
       #
       #     @option options [Boolean] :check (false) warn if changes introduce
       #       conflict markers or whitespace errors
@@ -493,11 +510,13 @@ module Git
       #
       #     @option options [Boolean] :R (false) swap two inputs (reverse diff)
       #
-      #     @option options [Boolean, String] :relative (nil) show pathnames
+      #     @option options [Boolean, String] :relative (false) show pathnames
       #       relative to a subdirectory
       #
-      #       Pass `true` for `--relative`, `false` for `--no-relative`, or a
-      #       string for `--relative=<path>`.
+      #       Pass `true` for `--relative` or a string for `--relative=<path>`.
+      #
+      #     @option options [Boolean] :no_relative (false) show absolute pathnames
+      #       (`--no-relative`)
       #
       #     @option options [Boolean] :text (false) treat all files as text
       #
@@ -538,15 +557,17 @@ module Git
       #
       #       Alias: :W
       #
-      #     @option options [Boolean] :ext_diff (nil) allow or disallow an external
-      #       diff helper
+      #     @option options [Boolean] :ext_diff (false) allow an external diff helper
+      #       to be used (`--ext-diff`)
       #
-      #       Pass `true` for `--ext-diff`, `false` for `--no-ext-diff`.
+      #     @option options [Boolean] :no_ext_diff (false) disallow external diff
+      #       helpers (`--no-ext-diff`)
       #
-      #     @option options [Boolean] :textconv (nil) allow or disallow external
-      #       text conversion filters for binary files
+      #     @option options [Boolean] :textconv (false) allow external text conversion
+      #       filters for binary files (`--textconv`)
       #
-      #       Pass `true` for `--textconv`, `false` for `--no-textconv`.
+      #     @option options [Boolean] :no_textconv (false) disallow external text
+      #       conversion filters (`--no-textconv`)
       #
       #     @option options [Boolean, String] :ignore_submodules (nil) ignore
       #       changes to submodules in the diff

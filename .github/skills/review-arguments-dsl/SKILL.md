@@ -115,8 +115,12 @@ Key behaviors:
   per pair. `key_separator:` overrides `=`; `inline:` joins as `--flag=key=value`.
 - **`custom_option`** — block receives the raw value and returns CLI strings; String
   is appended, Array is concatenated, `nil`/empty emits nothing.
-- **nil / false suppression** — when a non-negatable option receives `nil` or
-  `false`, nothing is emitted.
+- **nil / false suppression** — for boolean-style options (`flag_option`,
+  `flag_or_value_option` in boolean mode), `false` or `nil` suppresses emission.
+  For `value_option` / `inline_value` options, `false` is treated as a value
+  (stringified to `"false"`) unless a type constraint rejects it. `nil` suppresses
+  emission for all option types (including negatable options — `false` is absent,
+  not `--no-*`).
 - **Output order matches definition order** — bound arguments are emitted in the
   order entries appear in `arguments do`.
 - **Name-to-flag mapping** — underscores become hyphens, single-char names map to
@@ -155,6 +159,10 @@ Key behaviors:
   Override with `as:` when the command uses a different token. See [CHECKLIST.md §
   Choosing the `as:` token](CHECKLIST.md#choosing-the-as-token) for the decision
   rule.
+- **Operand/option name collision** — if a positional operand and a keyword option
+  share the same name, the **option keeps its name** and the **operand is renamed**.
+  For repeatable operands, prefer the plural form (`:commit` → `:commits`). See
+  [CHECKLIST.md § Operand naming](CHECKLIST.md#operand-naming) for details.
 
 ## Workflow
 

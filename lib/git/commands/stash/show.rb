@@ -60,23 +60,26 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :patch (nil) include unified diff patches per file
+        #     @option options [Boolean] :patch (false) include unified diff patches per file
         #
-        #     @option options [Boolean] :numstat (nil) include per-file insertion/deletion counts
+        #     @option options [Boolean] :numstat (false) include per-file insertion/deletion counts
         #
-        #     @option options [Boolean] :raw (nil) include per-file mode/SHA/status metadata
+        #     @option options [Boolean] :raw (false) include per-file mode/SHA/status metadata
         #
-        #     @option options [Boolean] :shortstat (nil) include aggregate totals line
+        #     @option options [Boolean] :shortstat (false) include aggregate totals line
         #
         #     @option options [Integer, String] :unified (nil) generate diff with <n> lines of context
         #
         #       Alias: :U
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files
+        #     @option options [Boolean] :include_untracked (false) include untracked files (`--include-untracked`)
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :only_untracked (nil) show only untracked files
+        #     @option options [Boolean] :no_include_untracked (false) exclude untracked files
+        #       (`--no-include-untracked`)
+        #
+        #     @option options [Boolean] :only_untracked (false) show only untracked files
         #
         #     @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
         #       similarity threshold (e.g., 50 for 50%). Alias: :M
@@ -84,7 +87,7 @@ module Git
         #     @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
         #       optionally pass a threshold. Alias: :C
         #
-        #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #     @option options [Boolean] :find_copies_harder (false) inspect all files as copy sources; expensive
         #
         #     @option options [Integer, String] :inter_hunk_context (nil) show context between diff hunks, up to
         #       <n> lines, fusing hunks that are close to each other
@@ -101,23 +104,26 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :patch (nil) include unified diff patches per file
+        #     @option options [Boolean] :patch (false) include unified diff patches per file
         #
-        #     @option options [Boolean] :numstat (nil) include per-file insertion/deletion counts
+        #     @option options [Boolean] :numstat (false) include per-file insertion/deletion counts
         #
-        #     @option options [Boolean] :raw (nil) include per-file mode/SHA/status metadata
+        #     @option options [Boolean] :raw (false) include per-file mode/SHA/status metadata
         #
-        #     @option options [Boolean] :shortstat (nil) include aggregate totals line
+        #     @option options [Boolean] :shortstat (false) include aggregate totals line
         #
         #     @option options [Integer, String] :unified (nil) generate diff with <n> lines of context
         #
         #       Alias: :U
         #
-        #     @option options [Boolean] :include_untracked (nil) include untracked files
+        #     @option options [Boolean] :include_untracked (false) include untracked files (`--include-untracked`)
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :only_untracked (nil) show only untracked files
+        #     @option options [Boolean] :no_include_untracked (false) exclude untracked files
+        #       (`--no-include-untracked`)
+        #
+        #     @option options [Boolean] :only_untracked (false) show only untracked files
         #
         #     @option options [Boolean, Integer] :find_renames (nil) detect renames; optionally pass a
         #       similarity threshold (e.g., 50 for 50%). Alias: :M
@@ -125,7 +131,7 @@ module Git
         #     @option options [Boolean, Integer] :find_copies (nil) detect copies as well as renames;
         #       optionally pass a threshold. Alias: :C
         #
-        #     @option options [Boolean] :find_copies_harder (nil) inspect all files as copy sources; expensive
+        #     @option options [Boolean] :find_copies_harder (false) inspect all files as copy sources; expensive
         #
         #     @option options [Integer, String] :inter_hunk_context (nil) show context between diff hunks, up to
         #       <n> lines, fusing hunks that are close to each other

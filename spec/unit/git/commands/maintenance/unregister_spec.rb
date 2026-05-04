@@ -37,30 +37,32 @@ RSpec.describe Git::Commands::Maintenance::Unregister do
       end
     end
 
-    context 'with :config_file option as false' do
-      it 'includes the --no-config-file flag' do
-        expect_command_capturing('maintenance', 'unregister', '--no-config-file')
-          .and_return(command_result(''))
+    context 'with :config_file option' do
+      context 'when :no_config_file is true' do
+        it 'includes the --no-config-file flag' do
+          expect_command_capturing('maintenance', 'unregister', '--no-config-file')
+            .and_return(command_result(''))
 
-        command.call(config_file: false)
+          command.call(no_config_file: true)
+        end
       end
     end
 
-    context 'with :force option as true' do
+    context 'with :force option' do
       it 'includes the --force flag' do
         expect_command_capturing('maintenance', 'unregister', '--force')
           .and_return(command_result(''))
 
         command.call(force: true)
       end
-    end
 
-    context 'with :force option as false' do
-      it 'includes the --no-force flag' do
-        expect_command_capturing('maintenance', 'unregister', '--no-force')
-          .and_return(command_result(''))
+      context 'when :no_force is true' do
+        it 'includes the --no-force flag' do
+          expect_command_capturing('maintenance', 'unregister', '--no-force')
+            .and_return(command_result(''))
 
-        command.call(force: false)
+          command.call(no_force: true)
+        end
       end
     end
 

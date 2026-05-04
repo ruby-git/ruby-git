@@ -33,10 +33,12 @@ RSpec.describe Git::Commands::Fsck do
         command.call(progress: true)
       end
 
-      it 'includes --no-progress when false' do
-        expect_command_capturing('fsck', '--no-progress').and_return(command_result(''))
+      context 'when :no_progress is true' do
+        it 'includes --no-progress' do
+          expect_command_capturing('fsck', '--no-progress').and_return(command_result(''))
 
-        command.call(progress: false)
+          command.call(no_progress: true)
+        end
       end
     end
 
@@ -120,60 +122,66 @@ RSpec.describe Git::Commands::Fsck do
       end
     end
 
-    context 'with boolean_negatable options' do
-      context ':dangling' do
-        it 'includes --dangling when true' do
-          expect_command_capturing('fsck', '--dangling').and_return(command_result(''))
+    context 'with the :dangling option' do
+      it 'includes --dangling when true' do
+        expect_command_capturing('fsck', '--dangling').and_return(command_result(''))
 
-          command.call(dangling: true)
-        end
+        command.call(dangling: true)
+      end
 
-        it 'includes --no-dangling when false' do
+      context 'when :no_dangling is true' do
+        it 'includes --no-dangling' do
           expect_command_capturing('fsck', '--no-dangling').and_return(command_result(''))
 
-          command.call(dangling: false)
+          command.call(no_dangling: true)
         end
       end
+    end
 
-      context ':full' do
-        it 'includes --full when true' do
-          expect_command_capturing('fsck', '--full').and_return(command_result(''))
+    context 'with the :full option' do
+      it 'includes --full when true' do
+        expect_command_capturing('fsck', '--full').and_return(command_result(''))
 
-          command.call(full: true)
-        end
+        command.call(full: true)
+      end
 
-        it 'includes --no-full when false' do
+      context 'when :no_full is true' do
+        it 'includes --no-full' do
           expect_command_capturing('fsck', '--no-full').and_return(command_result(''))
 
-          command.call(full: false)
+          command.call(no_full: true)
         end
       end
+    end
 
-      context ':name_objects' do
-        it 'includes --name-objects when true' do
-          expect_command_capturing('fsck', '--name-objects').and_return(command_result(''))
+    context 'with the :name_objects option' do
+      it 'includes --name-objects when true' do
+        expect_command_capturing('fsck', '--name-objects').and_return(command_result(''))
 
-          command.call(name_objects: true)
-        end
+        command.call(name_objects: true)
+      end
 
-        it 'includes --no-name-objects when false' do
+      context 'when :no_name_objects is true' do
+        it 'includes --no-name-objects' do
           expect_command_capturing('fsck', '--no-name-objects').and_return(command_result(''))
 
-          command.call(name_objects: false)
+          command.call(no_name_objects: true)
         end
       end
+    end
 
-      context ':references' do
-        it 'includes --references when true' do
-          expect_command_capturing('fsck', '--references').and_return(command_result(''))
+    context 'with the :references option' do
+      it 'includes --references when true' do
+        expect_command_capturing('fsck', '--references').and_return(command_result(''))
 
-          command.call(references: true)
-        end
+        command.call(references: true)
+      end
 
-        it 'includes --no-references when false' do
+      context 'when :no_references is true' do
+        it 'includes --no-references' do
           expect_command_capturing('fsck', '--no-references').and_return(command_result(''))
 
-          command.call(references: false)
+          command.call(no_references: true)
         end
       end
     end

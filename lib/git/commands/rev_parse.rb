@@ -120,9 +120,11 @@ module Git
       #     @option options [Boolean] :no_revs (nil) do not output flags and
       #       parameters meant for `git rev-list`
       #
-      #     @option options [Boolean] :flags (nil) when `true`, emits
-      #       `--flags` (do not output non-flag parameters); when `false`,
-      #       emits `--no-flags` (do not output flag parameters)
+      #     @option options [Boolean] :flags (false) do not output non-flag
+      #       parameters (`--flags`)
+      #
+      #     @option options [Boolean] :no_flags (false) do not output flag
+      #       parameters (`--no-flags`)
       #
       #     @option options [String] :default (nil) use this value if no
       #       parameter is given by the user

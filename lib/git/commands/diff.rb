@@ -291,11 +291,11 @@ module Git
       #     @option options [Boolean] :patch_with_raw (false) synonym for
       #       `--patch --raw`
       #
-      #     @option options [Boolean] :indent_heuristic (nil) enable or
-      #       disable the indent heuristic for patch readability
+      #     @option options [Boolean] :indent_heuristic (false) enable the
+      #       indent heuristic for patch readability (`--indent-heuristic`)
       #
-      #       Pass `true` for `--indent-heuristic`, `false` for
-      #       `--no-indent-heuristic`.
+      #     @option options [Boolean] :no_indent_heuristic (false) disable
+      #       the indent heuristic (`--no-indent-heuristic`)
       #
       #     @option options [Boolean] :minimal (false) spend extra time to
       #       produce the smallest possible diff
@@ -377,24 +377,34 @@ module Git
       #       Pass `true` for `--submodule`; pass a string like `'log'`
       #       or `'diff'` for `--submodule=<format>`.
       #
-      #     @option options [Boolean, String] :color (nil) show colored
+      #     @option options [Boolean, String] :color (false) show colored
       #       diff
       #
-      #       Pass `true` for `--color`, `false` for `--no-color`, or a
-      #       string like `'always'` for `--color=always`.
+      #       Pass `true` for `--color` or a string like `'always'` for
+      #       `--color=always`.
       #
-      #     @option options [Boolean, String] :color_moved (nil) color
+      #     @option options [Boolean] :no_color (false) disable colored
+      #       diff (`--no-color`)
+      #
+      #     @option options [Boolean, String] :color_moved (false) color
       #       moved lines differently
       #
-      #       Pass `true` for `--color-moved`, `false` for
-      #       `--no-color-moved`, or a string like `'zebra'` for
-      #       `--color-moved=zebra`.
+      #       Pass `true` for `--color-moved` or a string like `'zebra'`
+      #       for `--color-moved=zebra`.
       #
-      #     @option options [Boolean, String] :color_moved_ws (nil)
+      #     @option options [Boolean] :no_color_moved (false) disable
+      #       coloring moved lines (`--no-color-moved`)
+      #
+      #     @option options [Boolean, String] :color_moved_ws (false)
       #       configure how whitespace is handled for move detection
       #
-      #       Pass `false` for `--no-color-moved-ws`, or a string like
-      #       `'ignore-all-space'` for `--color-moved-ws=ignore-all-space`.
+      #       Pass `true` for `--color-moved-ws` or a string like
+      #       `'ignore-all-space'` for
+      #       `--color-moved-ws=ignore-all-space`.
+      #
+      #     @option options [Boolean] :no_color_moved_ws (false) disable
+      #       whitespace handling for move detection
+      #       (`--no-color-moved-ws`)
       #
       #     @option options [Boolean, String] :word_diff (nil) show a
       #       word diff
@@ -411,11 +421,11 @@ module Git
       #     @option options [Boolean] :no_renames (false) turn off rename
       #       detection
       #
-      #     @option options [Boolean] :rename_empty (nil) whether to use
-      #       empty blobs as rename source
+      #     @option options [Boolean] :rename_empty (false) use empty blobs
+      #       as rename source (`--rename-empty`)
       #
-      #       Pass `true` for `--rename-empty`, `false` for
-      #       `--no-rename-empty`.
+      #     @option options [Boolean] :no_rename_empty (false) do not use
+      #       empty blobs as rename source (`--no-rename-empty`)
       #
       #     @option options [Boolean] :check (false) warn if changes
       #       introduce conflict markers or whitespace errors
@@ -492,11 +502,14 @@ module Git
       #     @option options [Boolean] :R (false) swap two inputs (reverse
       #       diff)
       #
-      #     @option options [Boolean, String] :relative (nil) show
+      #     @option options [Boolean, String] :relative (false) show
       #       pathnames relative to a subdirectory
       #
-      #       Pass `true` for `--relative`, `false` for `--no-relative`,
-      #       or a string for `--relative=<path>`.
+      #       Pass `true` for `--relative` or a string for
+      #       `--relative=<path>`.
+      #
+      #     @option options [Boolean] :no_relative (false) show pathnames
+      #       relative to the working directory (`--no-relative`)
       #
       #     @option options [Boolean] :text (false) treat all files as
       #       text
@@ -544,15 +557,18 @@ module Git
       #     @option options [Boolean] :quiet (false) disable all output of
       #       the program
       #
-      #     @option options [Boolean] :ext_diff (nil) allow or disallow an
-      #       external diff helper
+      #     @option options [Boolean] :ext_diff (false) allow an external
+      #       diff helper (`--ext-diff`)
       #
-      #       Pass `true` for `--ext-diff`, `false` for `--no-ext-diff`.
+      #     @option options [Boolean] :no_ext_diff (false) disallow an
+      #       external diff helper (`--no-ext-diff`)
       #
-      #     @option options [Boolean] :textconv (nil) allow or disallow
+      #     @option options [Boolean] :textconv (false) allow external
+      #       text conversion filters for binary files (`--textconv`)
+      #
+      #     @option options [Boolean] :no_textconv (false) disallow
       #       external text conversion filters for binary files
-      #
-      #       Pass `true` for `--textconv`, `false` for `--no-textconv`.
+      #       (`--no-textconv`)
       #
       #     @option options [Boolean, String] :ignore_submodules (nil)
       #       ignore changes to submodules in the diff

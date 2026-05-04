@@ -246,13 +246,13 @@ module Git
       #     @option options [Boolean] :remove_empty (false) stop when a given path disappears
       #       from the tree
       #
-      #     @option options [Boolean] :merges (nil) filter by merge status
+      #     @option options [Boolean] :merges (false) include only merge commits (`--merges`)
       #
-      #       `true` → `--merges` (only merge commits); `false` → `--no-merges`
-      #       (exclude merge commits); `nil` → no filter (neither flag is emitted).
+      #       Equivalent to `--min-parents=2`.
       #
-      #       Note: `--merges` is equivalent to `--min-parents=2` and `--no-merges` is
-      #       equivalent to `--max-parents=1`.
+      #     @option options [Boolean] :no_merges (false) exclude merge commits (`--no-merges`)
+      #
+      #       Equivalent to `--max-parents=1`.
       #
       #     @option options [Integer, String] :min_parents (nil) show only commits with at least this
       #       many parents
@@ -389,9 +389,9 @@ module Git
       #
       #       Alias: `:format`
       #
-      #     @option options [Boolean] :abbrev_commit (nil) abbreviate commit hash
+      #     @option options [Boolean] :abbrev_commit (false) abbreviate commit hash (`--abbrev-commit`)
       #
-      #       `true` → `--abbrev-commit`; `false` → `--no-abbrev-commit`; `nil` → neither
+      #     @option options [Boolean] :no_abbrev_commit (false) do not abbreviate commit hash (`--no-abbrev-commit`)
       #
       #     @option options [Boolean] :oneline (false) shorthand for
       #       `--pretty=oneline --abbrev-commit`
@@ -399,15 +399,18 @@ module Git
       #     @option options [String] :encoding (nil) re-encode the commit log message in the
       #       given character encoding before output
       #
-      #     @option options [Boolean, String] :expand_tabs (nil) expand tabs in log messages
+      #     @option options [Boolean, String] :expand_tabs (false) expand tabs in log messages (`--expand-tabs`)
       #
-      #       `true` → `--expand-tabs` (width 8); integer string like `"4"` →
-      #       `--expand-tabs=<n>`; `false` → `--no-expand-tabs`; `nil` → neither
+      #       Pass `true` for `--expand-tabs` (width 8); pass an integer string like `"4"` for
+      #       `--expand-tabs=<n>`
       #
-      #     @option options [Boolean, String] :notes (nil) show notes annotating the commit
+      #     @option options [Boolean] :no_expand_tabs (false) do not expand tabs in log messages (`--no-expand-tabs`)
       #
-      #       `true` → `--notes`; a ref string → `--notes=<ref>`;
-      #       `false` → `--no-notes`; `nil` → neither
+      #     @option options [Boolean, String] :notes (false) show notes annotating the commit (`--notes`)
+      #
+      #       Pass `true` for `--notes`; pass a ref string for `--notes=<ref>`
+      #
+      #     @option options [Boolean] :no_notes (false) suppress notes output (`--no-notes`)
       #
       #     @option options [Boolean] :show_notes_by_default (false) show the default notes unless
       #       options for displaying specific notes are given
@@ -442,10 +445,12 @@ module Git
       #     @option options [Boolean] :follow (false) continue listing the history of a file
       #       beyond renames; requires `:path` to be set to exactly one path element
       #
-      #     @option options [Boolean, String] :decorate (nil) print ref names of commits shown
+      #     @option options [Boolean, String] :decorate (false) print ref names of commits shown (`--decorate`)
       #
-      #       `true` → `--decorate` (short format); string `"full"` → `--decorate=full`;
-      #       `false` → `--no-decorate`; `nil` → neither
+      #       Pass `true` for `--decorate` (short format); pass a string such as `"full"` for
+      #       `--decorate=<format>`
+      #
+      #     @option options [Boolean] :no_decorate (false) do not print ref names (`--no-decorate`)
       #
       #     @option options [String] :decorate_refs (nil) use only refs matching this pattern
       #       for decorations
@@ -459,10 +464,10 @@ module Git
       #     @option options [Boolean] :source (false) print the ref name by which each commit
       #       was reached
       #
-      #     @option options [Boolean] :use_mailmap (nil) use the mailmap file to map author/
-      #       committer names and addresses to canonical real names
+      #     @option options [Boolean] :use_mailmap (false) use the mailmap file to map author/
+      #       committer names and addresses to canonical real names (`--use-mailmap`)
       #
-      #       `true` → `--use-mailmap`; `false` → `--no-use-mailmap`; `nil` → neither
+      #     @option options [Boolean] :no_use_mailmap (false) disable mailmap substitution (`--no-use-mailmap`)
       #
       #     @option options [Boolean] :full_diff (false) show full diff for commits touching the
       #       specified paths, not just the diff for those paths
@@ -528,10 +533,11 @@ module Git
       #       Pass `true` for `--submodule` (log format); pass `"short"`, `"log"`, or `"diff"`
       #       for `--submodule=<format>`
       #
-      #     @option options [Boolean, String] :color (nil) show colored diff output
+      #     @option options [Boolean, String] :color (false) show colored diff output (`--color`)
       #
-      #       `true` → `--color`; string `"always"` → `--color=always`;
-      #       `false` → `--no-color`; `nil` → neither
+      #       Pass `true` for `--color`; pass a string such as `"always"` for `--color=<when>`
+      #
+      #     @option options [Boolean] :no_color (false) suppress colored diff output (`--no-color`)
       #
       #     @option options [Boolean] :full_index (false) show the full pre- and post-image blob
       #       object names on the index line of patch output
@@ -560,11 +566,12 @@ module Git
       #     @option options [Boolean] :find_copies_harder (false) inspect unmodified files as
       #       candidates for copy source; expensive for large projects
       #
-      #     @option options [Boolean, String] :relative (nil) show pathnames relative to the
-      #       given subdirectory, or the current directory when run from a subdirectory
+      #     @option options [Boolean, String] :relative (false) show pathnames relative to the
+      #       given subdirectory, or the current directory when run from a subdirectory (`--relative`)
       #
-      #       `true` → `--relative`; path string → `--relative=<path>`;
-      #       `false` → `--no-relative`; `nil` → neither
+      #       Pass `true` for `--relative`; pass a path string for `--relative=<path>`
+      #
+      #     @option options [Boolean] :no_relative (false) show absolute pathnames (`--no-relative`)
       #
       #     @option options [Boolean] :text (false) treat all files as text; alias `-a`
       #
@@ -583,14 +590,15 @@ module Git
       #     @option options [String] :ignore_matching_lines (nil) ignore changes whose all lines
       #       match the given regular expression
       #
-      #     @option options [Boolean] :ext_diff (nil) allow (or disallow) external diff helpers
+      #     @option options [Boolean] :ext_diff (false) allow external diff helpers (`--ext-diff`)
       #
-      #       `true` → `--ext-diff`; `false` → `--no-ext-diff`; `nil` → neither
+      #     @option options [Boolean] :no_ext_diff (false) disallow external diff helpers (`--no-ext-diff`)
       #
-      #     @option options [Boolean] :textconv (nil) allow (or disallow) external text conversion
-      #       filters when comparing binary files
+      #     @option options [Boolean] :textconv (false) allow external text conversion filters
+      #       when comparing binary files (`--textconv`)
       #
-      #       `true` → `--textconv`; `false` → `--no-textconv`; `nil` → neither
+      #     @option options [Boolean] :no_textconv (false) disallow external text conversion filters
+      #       (`--no-textconv`)
       #
       #     @option options [Boolean] :no_prefix (false) do not show any source or destination
       #       prefix

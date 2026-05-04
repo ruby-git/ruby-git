@@ -85,7 +85,11 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :includes (nil) respect include directives in config files
+        #     @option options [Boolean] :includes (false) follow include directives in config files
+        #       (`--includes`)
+        #
+        #     @option options [Boolean] :no_includes (false) suppress include directive processing
+        #       (`--no-includes`)
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
