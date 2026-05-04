@@ -120,19 +120,23 @@ RSpec.describe Git::Commands::ReadTree do
       end
     end
 
-    context 'with the :recurse_submodules option' do
-      it 'adds --recurse-submodules when true' do
-        expect_command_capturing('read-tree', '--recurse-submodules', '--', 'HEAD')
-          .and_return(command_result)
+    context 'with :recurse_submodules option' do
+      context 'when true' do
+        it 'adds --recurse-submodules flag' do
+          expect_command_capturing('read-tree', '--recurse-submodules', '--', 'HEAD')
+            .and_return(command_result)
 
-        command.call('HEAD', recurse_submodules: true)
+          command.call('HEAD', recurse_submodules: true)
+        end
       end
 
-      it 'adds --no-recurse-submodules when false' do
-        expect_command_capturing('read-tree', '--no-recurse-submodules', '--', 'HEAD')
-          .and_return(command_result)
+      context 'when :no_recurse_submodules is true' do
+        it 'adds --no-recurse-submodules flag' do
+          expect_command_capturing('read-tree', '--no-recurse-submodules', '--', 'HEAD')
+            .and_return(command_result)
 
-        command.call('HEAD', recurse_submodules: false)
+          command.call('HEAD', no_recurse_submodules: true)
+        end
       end
     end
 

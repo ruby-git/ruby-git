@@ -120,12 +120,12 @@ module Git
       #
       #       Maps to `--index-output=<file>`.
       #
-      #     @option options [Boolean] :recurse_submodules (nil) update the
+      #     @option options [Boolean] :recurse_submodules (false) update the
       #       content of all active submodules according to the commit
-      #       recorded in the superproject
+      #       recorded in the superproject (`--recurse-submodules`)
       #
-      #       Pass `true` to emit `--recurse-submodules`; pass `false` to emit
-      #       `--no-recurse-submodules`.
+      #     @option options [Boolean] :no_recurse_submodules (false) disable
+      #       recursive submodule update (`--no-recurse-submodules`)
       #
       #     @option options [Boolean] :no_sparse_checkout (false) disable
       #       sparse checkout support even if `core.sparseCheckout` is true
