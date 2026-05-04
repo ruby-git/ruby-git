@@ -66,9 +66,12 @@ module Git
         #
         #       Alias: :S
         #
-        #     @option options [Boolean] :keep_index (nil) keep staged changes in the index
+        #     @option options [Boolean] :keep_index (false) keep staged changes in the index (`--keep-index`)
         #
         #       Alias: :k
+        #
+        #     @option options [Boolean] :no_keep_index (false) do not preserve staged changes in the index
+        #       (`--no-keep-index`)
         #
         #     @option options [Boolean] :quiet (nil) suppress informational messages
         #
