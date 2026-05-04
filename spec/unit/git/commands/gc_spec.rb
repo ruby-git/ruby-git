@@ -53,39 +53,49 @@ RSpec.describe Git::Commands::Gc do
       end
     end
 
-    context 'with :prune option as false' do
-      it 'passes --no-prune' do
-        expect_command_capturing('gc', '--no-prune').and_return(command_result)
+    context 'with :prune option' do
+      context 'when :no_prune is true' do
+        it 'passes --no-prune' do
+          expect_command_capturing('gc', '--no-prune').and_return(command_result)
 
-        command.call(prune: false)
+          command.call(no_prune: true)
+        end
       end
     end
 
     context 'with the :detach option' do
-      it 'adds --detach when true' do
-        expect_command_capturing('gc', '--detach').and_return(command_result)
+      context 'when true' do
+        it 'adds --detach flag' do
+          expect_command_capturing('gc', '--detach').and_return(command_result)
 
-        command.call(detach: true)
+          command.call(detach: true)
+        end
       end
 
-      it 'adds --no-detach when false' do
-        expect_command_capturing('gc', '--no-detach').and_return(command_result)
+      context 'when :no_detach is true' do
+        it 'adds --no-detach flag' do
+          expect_command_capturing('gc', '--no-detach').and_return(command_result)
 
-        command.call(detach: false)
+          command.call(no_detach: true)
+        end
       end
     end
 
     context 'with the :cruft option' do
-      it 'adds --cruft when true' do
-        expect_command_capturing('gc', '--cruft').and_return(command_result)
+      context 'when true' do
+        it 'adds --cruft flag' do
+          expect_command_capturing('gc', '--cruft').and_return(command_result)
 
-        command.call(cruft: true)
+          command.call(cruft: true)
+        end
       end
 
-      it 'adds --no-cruft when false' do
-        expect_command_capturing('gc', '--no-cruft').and_return(command_result)
+      context 'when :no_cruft is true' do
+        it 'adds --no-cruft flag' do
+          expect_command_capturing('gc', '--no-cruft').and_return(command_result)
 
-        command.call(cruft: false)
+          command.call(no_cruft: true)
+        end
       end
     end
 
