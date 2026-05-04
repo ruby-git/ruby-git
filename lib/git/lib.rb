@@ -1438,7 +1438,7 @@ module Git
       # Map legacy option names to new interface
       opts = translate_merge_options(opts)
 
-      Git::Commands::Merge::Start.new(self).call(*Array(branch), edit: false, **opts).stdout
+      Git::Commands::Merge::Start.new(self).call(*Array(branch), no_edit: true, **opts).stdout
     end
 
     # Find common ancestor commit(s) for merge
@@ -2364,12 +2364,6 @@ module Git
     #
     def translate_merge_options(opts)
       result = opts.dup
-
-      # :no_commit => true becomes :commit => false
-      result[:commit] = false if result.delete(:no_commit)
-
-      # :no_ff => true becomes :ff => false
-      result[:ff] = false if result.delete(:no_ff)
 
       # :message => 'msg' becomes :m => 'msg' (git merge uses -m, not --message)
       result[:m] = result.delete(:message) if result.key?(:message)
