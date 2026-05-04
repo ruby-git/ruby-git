@@ -20,7 +20,7 @@ module Git
       #
       # @example Suppress progress output during rename
       #   rename = Git::Commands::Remote::Rename.new(execution_context)
-      #   rename.call('origin', 'upstream', progress: false)
+      #   rename.call('origin', 'upstream', no_progress: true)
       #
       # @note `arguments` block audited against https://git-scm.com/docs/git-remote/2.53.0
       #
@@ -54,9 +54,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :progress (nil) control progress reporting during rename
+        #     @option options [Boolean] :progress (false) enable progress reporting (`--progress`)
         #
-        #       Pass `true` for `--progress` or `false` for `--no-progress`.
+        #     @option options [Boolean] :no_progress (false) suppress progress output (`--no-progress`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote rename`
         #
