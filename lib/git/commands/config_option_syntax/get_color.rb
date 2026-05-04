@@ -74,9 +74,11 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :includes (nil) respect include directives in config files
+        #     @option options [Boolean] :includes (false) respect include directives in config files
+        #       (`--includes`)
         #
-        #       Pass `true` for `--includes`, `false` for `--no-includes`.
+        #     @option options [Boolean] :no_includes (false) suppress include directive processing
+        #       (`--no-includes`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-color`
         #
