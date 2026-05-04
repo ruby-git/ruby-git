@@ -15,7 +15,7 @@ module Git
     #   fsck.call
     #   fsck.call('abc1234', 'def5678')
     #   fsck.call(unreachable: true, strict: true)
-    #   fsck.call(dangling: false)
+    #   fsck.call(no_dangling: true)
     #
     # @note `arguments` block audited against https://git-scm.com/docs/git-fsck/2.53.0
     #
