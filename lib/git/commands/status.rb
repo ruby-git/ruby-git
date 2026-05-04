@@ -133,19 +133,25 @@ module Git
       #
       #       Implies `--porcelain=v1`
       #
-      #     @option options [Boolean, String] :column (nil) display untracked files in
-      #       columns
+      #     @option options [Boolean, String] :column (false) display untracked files in
+      #       columns (`--column`)
       #
-      #       When `false`, adds `--no-column`. When a string, adds `--column=<options>`.
+      #       When `true`, adds `--column`. When a string, adds `--column=<options>`.
       #
-      #     @option options [Boolean] :ahead_behind (nil) show or suppress ahead/behind
-      #       counts for the branch
+      #     @option options [Boolean] :no_column (false) disable column display
+      #       (`--no-column`)
       #
-      #       When `false`, adds `--no-ahead-behind`.
+      #     @option options [Boolean] :ahead_behind (false) compute ahead/behind counts
+      #       for the branch (`--ahead-behind`)
       #
-      #     @option options [Boolean] :renames (nil) turn on/off rename detection
+      #     @option options [Boolean] :no_ahead_behind (false) suppress ahead/behind
+      #       counts (`--no-ahead-behind`)
       #
-      #       When `false`, adds `--no-renames`.
+      #     @option options [Boolean] :renames (false) turn on rename detection
+      #       (`--renames`)
+      #
+      #     @option options [Boolean] :no_renames (false) turn off rename detection
+      #       (`--no-renames`)
       #
       #     @option options [Boolean, String] :find_renames (nil) turn on rename detection
       #       with optional similarity threshold

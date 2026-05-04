@@ -148,10 +148,12 @@ RSpec.describe Git::Commands::Status do
         command.call(column: true)
       end
 
-      it 'adds --no-column when given false' do
-        expect_command_capturing('status', '--no-column').and_return(command_result)
+      context 'when :no_column is true' do
+        it 'adds --no-column' do
+          expect_command_capturing('status', '--no-column').and_return(command_result)
 
-        command.call(column: false)
+          command.call(no_column: true)
+        end
       end
 
       it 'adds --column=<options> when given a string' do
@@ -168,10 +170,12 @@ RSpec.describe Git::Commands::Status do
         command.call(ahead_behind: true)
       end
 
-      it 'adds --no-ahead-behind when given false' do
-        expect_command_capturing('status', '--no-ahead-behind').and_return(command_result)
+      context 'when :no_ahead_behind is true' do
+        it 'adds --no-ahead-behind' do
+          expect_command_capturing('status', '--no-ahead-behind').and_return(command_result)
 
-        command.call(ahead_behind: false)
+          command.call(no_ahead_behind: true)
+        end
       end
     end
 
@@ -182,10 +186,12 @@ RSpec.describe Git::Commands::Status do
         command.call(renames: true)
       end
 
-      it 'adds --no-renames when given false' do
-        expect_command_capturing('status', '--no-renames').and_return(command_result)
+      context 'when :no_renames is true' do
+        it 'adds --no-renames' do
+          expect_command_capturing('status', '--no-renames').and_return(command_result)
 
-        command.call(renames: false)
+          command.call(no_renames: true)
+        end
       end
     end
 
