@@ -44,10 +44,12 @@ RSpec.describe Git::Commands::Commit do
         command.call(edit: true)
       end
 
-      it 'includes --no-edit when false' do
-        expect_command_capturing('commit', '--no-edit').and_return(command_result)
+      context 'when :no_edit is true' do
+        it 'includes --no-edit' do
+          expect_command_capturing('commit', '--no-edit').and_return(command_result)
 
-        command.call(edit: false)
+          command.call(no_edit: true)
+        end
       end
 
       it 'accepts :e as an alias' do
@@ -207,16 +209,18 @@ RSpec.describe Git::Commands::Commit do
     # Hooks
 
     context 'with the :verify option' do
-      it 'includes --no-verify when false' do
-        expect_command_capturing('commit', '--no-verify').and_return(command_result)
-
-        command.call(verify: false)
-      end
-
       it 'includes --verify when true' do
         expect_command_capturing('commit', '--verify').and_return(command_result)
 
         command.call(verify: true)
+      end
+
+      context 'when :no_verify is true' do
+        it 'includes --no-verify' do
+          expect_command_capturing('commit', '--no-verify').and_return(command_result)
+
+          command.call(no_verify: true)
+        end
       end
 
       it 'accepts :n as an alias' do
@@ -377,10 +381,12 @@ RSpec.describe Git::Commands::Commit do
         command.call(status: true)
       end
 
-      it 'includes --no-status when false' do
-        expect_command_capturing('commit', '--no-status').and_return(command_result)
+      context 'when :no_status is true' do
+        it 'includes --no-status' do
+          expect_command_capturing('commit', '--no-status').and_return(command_result)
 
-        command.call(status: false)
+          command.call(no_status: true)
+        end
       end
     end
 
@@ -417,10 +423,12 @@ RSpec.describe Git::Commands::Commit do
         command.call(signoff: true)
       end
 
-      it 'includes --no-signoff when false' do
-        expect_command_capturing('commit', '--no-signoff').and_return(command_result)
+      context 'when :no_signoff is true' do
+        it 'includes --no-signoff' do
+          expect_command_capturing('commit', '--no-signoff').and_return(command_result)
 
-        command.call(signoff: false)
+          command.call(no_signoff: true)
+        end
       end
 
       it 'accepts :s as an alias' do
@@ -445,10 +453,12 @@ RSpec.describe Git::Commands::Commit do
         command.call(gpg_sign: 'DEADBEEF')
       end
 
-      it 'includes --no-gpg-sign when false' do
-        expect_command_capturing('commit', '--no-gpg-sign').and_return(command_result)
+      context 'when :no_gpg_sign is true' do
+        it 'includes --no-gpg-sign' do
+          expect_command_capturing('commit', '--no-gpg-sign').and_return(command_result)
 
-        command.call(gpg_sign: false)
+          command.call(no_gpg_sign: true)
+        end
       end
 
       it 'accepts :S as an alias' do
@@ -536,7 +546,7 @@ RSpec.describe Git::Commands::Commit do
           '--no-verify'
         ).and_return(command_result)
 
-        command.call(all: true, amend: true, message: 'Fix typo', verify: false)
+        command.call(all: true, amend: true, message: 'Fix typo', no_verify: true)
       end
     end
 
