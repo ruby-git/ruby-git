@@ -43,8 +43,7 @@ module Git
           flag_option %i[null z]
 
           # General read options
-          flag_option :includes
-          flag_option :no_includes
+          flag_option :includes, negatable: true
 
           # Operands
           end_of_options
@@ -89,7 +88,8 @@ module Git
         #
         #     @option options [Boolean] :includes (false) respect include directives in config files (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) disable include directives in config files (`--no-includes`)
+        #     @option options [Boolean] :no_includes (false) disable include directives
+        #       in config files (`--no-includes`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-urlmatch`
         #
