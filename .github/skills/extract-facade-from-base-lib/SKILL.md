@@ -28,7 +28,6 @@ preserve backward compatibility within the migration window.
   - [Pattern B — `Git::Lib`-only (public-by-exposure)](#pattern-b--gitlib-only-public-by-exposure)
   - [Pattern C — `Git::Base`-only (no `Git::Lib` method)](#pattern-c--gitbase-only-no-gitlib-method)
 - [Determining the option allowlist](#determining-the-option-allowlist)
-- [Negatable flag normalization](#negatable-flag-normalization)
 - [Workflow](#workflow)
   - [Branch setup](#branch-setup)
   - [Step 1 — Identify the source pattern](#step-1--identify-the-source-pattern)
@@ -191,50 +190,6 @@ documented and tested.
 4. If the underlying `Git::Commands::*` class supports additional options beyond the
    4.x map, note them in a follow-up issue rather than silently including them.
 
-## Negatable flag normalization
-
-Some options in `Git::Commands::*` classes are declared with `negatable: true`:
-
-```ruby
-flag_option %i[all A], negatable: true
-```
-
-A negatable flag maps its value to a different CLI flag depending on truthiness:
-
-| Ruby value | CLI flag emitted |
-| --- | --- |
-| `true` | `--all` |
-| `false` | `--no-all` |
-| `nil` / omitted | *(flag absent)* |
-
-In 4.x, boolean options were always simple flags — `false` or `nil` meant
-_omission_, never `--no-<flag>`. If a facade method passes a caller's `false`
-value straight through to a negatable command option, it silently emits
-`--no-<flag>`, breaking the 4.x contract.
-
-**Fix:** After `assert_valid_opts!`, strip any `false` values from the options
-hash before forwarding to the command:
-
-```ruby
-def add(paths = '.', **options)
-  Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **options)
-  normalized = options.reject { |_k, v| v == false }
-  Git::Commands::Add.new(@execution_context).call(*Array(paths), **normalized).stdout
-end
-```
-
-**How to detect negatable flags:** Open the command class
-(`lib/git/commands/<command>.rb`) and look for `flag_option` declarations with
-`negatable: true`. Cross-check every key in `*_ALLOWED_OPTS` against those
-declarations — any match requires the normalization step above.
-
-**Unit spec coverage:** For each allowlisted option that maps to a negatable
-flag, add two spec contexts:
-
-- `option: true` — verifies the key is forwarded as-is to the command
-- `option: false` — verifies the key is **omitted** (command receives no
-  keyword for that key, so `--no-<flag>` is never emitted)
-
 ## Workflow
 
 ### Branch setup
@@ -375,11 +330,6 @@ When copying option whitelisting logic, use only the keys from the 4.x
 `*_OPTION_MAP` for the `*_ALLOWED_OPTS` constant — do not expand to match the
 full `Git::Commands::*` argument DSL. See
 [Determining the option allowlist](#determining-the-option-allowlist).
-
-After building the allowlist, check each key against the command class's
-`arguments` block for `negatable: true` declarations. Any match requires the
-normalization step described in
-[Negatable flag normalization](#negatable-flag-normalization).
 
 For Pattern C migrations, port any pre-processing or filesystem logic from
 `Git::Base` to the facade method.
@@ -564,10 +514,6 @@ of Git::Base#<method_name>.
 - [ ] **`assert_valid_opts!` used.** The facade calls
   `Git::Repository::Internal.assert_valid_opts!(ALLOWED_OPTS, **)` before
   forwarding to the command.
-- [ ] **Negatable flags normalized.** For every key in `*_ALLOWED_OPTS` that
-  maps to a `negatable: true` entry in the command's `arguments` block, the
-  facade strips `false` values before forwarding (so `--no-<flag>` is never
-  emitted from the facade API).
 - [ ] **YARD docs complete.** Each allowed option has an `@option` tag with
   type, name, default, and description. `@param`, `@return`, `@raise` are
   present and accurate.
