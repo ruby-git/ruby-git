@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/execution_context/repository'
+require 'git/repository/committing'
 require 'git/repository/staging'
 
 module Git
@@ -29,7 +30,13 @@ module Git
   # @api public
   #
   class Repository
+    include Git::Repository::Committing
     include Git::Repository::Staging
+
+    # @return [Git::ExecutionContext::Repository] the execution context used to run
+    #   git commands for this repository
+    # @api private
+    attr_reader :execution_context
 
     # @param execution_context [Git::ExecutionContext::Repository] the context used
     #   to run git commands for this repository; must not be nil

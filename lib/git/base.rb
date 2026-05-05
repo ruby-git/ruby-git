@@ -513,15 +513,14 @@ module Git
     #   :author
     #
     def commit(message, opts = {})
-      lib.commit(message, opts)
+      facade_repository.commit(message, **opts)
     end
 
     # commits all pending changes in the index file to the git repository,
     # but automatically adds all modified files without having to explicitly
     # calling @git.add() on them.
     def commit_all(message, opts = {})
-      opts = { all: true }.merge(opts)
-      lib.commit(message, opts)
+      facade_repository.commit_all(message, **opts)
     end
 
     # checks out a branch as the new git working directory
@@ -828,12 +827,11 @@ module Git
     end
 
     def write_tree
-      lib.write_tree
+      facade_repository.write_tree
     end
 
     def write_and_commit_tree(opts = {})
-      tree = write_tree
-      commit_tree(tree, opts)
+      Git::Object::Commit.new(self, facade_repository.write_and_commit_tree(**opts))
     end
 
     def update_ref(branch, commit)
@@ -930,7 +928,7 @@ module Git
 
     # @return [Git::Object::Commit] a commit object
     def commit_tree(tree = nil, opts = {})
-      Git::Object::Commit.new(self, lib.commit_tree(tree, opts))
+      Git::Object::Commit.new(self, facade_repository.commit_tree(tree, **opts))
     end
 
     # @return [Git::Diff] a Git::Diff object
