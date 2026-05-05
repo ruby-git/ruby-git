@@ -318,8 +318,7 @@ module Git
 
     # returns +true+ if the branch exists locally
     def local_branch?(branch)
-      branch_names = branches.local.map(&:name)
-      branch_names.include?(branch)
+      facade_repository.local_branch?(branch)
     end
 
     def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
@@ -332,8 +331,7 @@ module Git
 
     # returns +true+ if the branch exists remotely
     def remote_branch?(branch)
-      branch_names = branches.remote.map(&:name)
-      branch_names.include?(branch)
+      facade_repository.remote_branch?(branch)
     end
 
     def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
@@ -346,8 +344,7 @@ module Git
 
     # returns +true+ if the branch exists
     def branch?(branch)
-      branch_names = branches.map(&:name)
-      branch_names.include?(branch)
+      facade_repository.branch?(branch)
     end
 
     def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix

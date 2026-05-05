@@ -95,4 +95,117 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  describe '#local_branch?' do
+    context 'when the branch exists locally' do
+      it 'returns true' do
+        expect(described_instance.local_branch?('main')).to be(true)
+      end
+    end
+
+    context 'when the branch does not exist locally' do
+      it 'returns false' do
+        expect(described_instance.local_branch?('nonexistent')).to be(false)
+      end
+    end
+  end
+
+  describe '#remote_branch?' do
+    context 'when no remotes are configured' do
+      it 'returns false for any branch name' do
+        expect(described_instance.remote_branch?('main')).to be(false)
+      end
+
+      it 'returns false for a combined remote/branch name' do
+        expect(described_instance.remote_branch?('origin/main')).to be(false)
+      end
+    end
+
+    context 'when a remote is configured and a branch has been pushed' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.add_remote('origin', bare_dir)
+        repo.push('origin', 'main')
+        repo.fetch('origin')
+      end
+
+      it 'returns true for the short branch name' do
+        expect(described_instance.remote_branch?('main')).to be(true)
+      end
+
+      it 'returns false for the combined remote/branch name' do
+        expect(described_instance.remote_branch?('origin/main')).to be(false)
+      end
+    end
+  end
+
+  describe '#branch?' do
+    context 'when the branch exists locally' do
+      it 'returns true' do
+        expect(described_instance.branch?('main')).to be(true)
+      end
+    end
+
+    context 'when the branch does not exist locally or remotely' do
+      it 'returns false' do
+        expect(described_instance.branch?('nonexistent')).to be(false)
+      end
+    end
+
+    context 'when the branch exists only as a remote-tracking branch' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.add_remote('origin', bare_dir)
+        repo.push('origin', 'main')
+        # Push a second branch to the remote, then fetch to ensure the
+        # remote-tracking ref exists, then delete locally so it only
+        # exists as a remote-tracking branch
+        repo.branch('remote-only').create
+        repo.push('origin', 'remote-only')
+        repo.fetch('origin')
+        repo.branch('remote-only').delete
+      end
+
+      it 'returns true' do
+        expect(described_instance.branch?('remote-only')).to be(true)
+      end
+    end
+
+    context '4.x backward-compatibility: combined remote/branch name' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.add_remote('origin', bare_dir)
+        repo.push('origin', 'main')
+        repo.fetch('origin')
+      end
+
+      it 'returns false for origin/main (remote branches matched by short name only)' do
+        expect(described_instance.branch?('origin/main')).to be(false)
+      end
+    end
+
+    context '4.x backward-compatibility: local branch with slashes' do
+      before do
+        repo.branch('topic/main').create
+        repo.checkout('topic/main')
+        repo.branch('main').delete
+      end
+
+      it 'returns false for main when only topic/main exists (exact-name matching, no suffix matching)' do
+        expect(described_instance.branch?('main')).to be(false)
+      end
+    end
+  end
 end

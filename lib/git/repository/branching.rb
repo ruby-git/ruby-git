@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'git/commands/branch/list'
 require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
 require 'git/commands/checkout/files'
@@ -160,6 +161,65 @@ module Git
         paths = normalize_pathspecs(options[:path_limiter], 'path_limiter')
         keyword_opts = options.except(:path_limiter)
         Git::Commands::CheckoutIndex.new(@execution_context).call(*paths.to_a, **keyword_opts).stdout
+      end
+
+      # Returns `true` if the named branch exists as a local branch
+      #
+      # @overload local_branch?(branch)
+      #
+      #   @example Check whether main exists locally
+      #     repo.local_branch?('main')  # => true
+      #
+      #   @param branch [String] the local branch name to look up
+      #
+      #   @return [Boolean] `true` if the branch exists locally, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def local_branch?(branch)
+        result = Git::Commands::Branch::List.new(@execution_context).call(branch, format: '%(refname:short)')
+        result.stdout.chomp == branch
+      end
+
+      # Returns `true` if the named branch exists as a remote-tracking branch
+      #
+      # The `branch` argument must be the **short branch name** (e.g. `'master'`),
+      # not the combined `remote/branch` form (e.g. `'origin/master'`).
+      #
+      # @overload remote_branch?(branch)
+      #
+      #   @example Check whether master exists on any remote
+      #     repo.remote_branch?('master')  # => true
+      #
+      #   @param branch [String] the short branch name to look up across all remotes
+      #
+      #   @return [Boolean] `true` if a remote-tracking branch with that short name
+      #     exists, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def remote_branch?(branch)
+        result = Git::Commands::Branch::List.new(@execution_context)
+                                            .call("*/#{branch}", remotes: true, format: '%(refname:lstrip=3)')
+        result.stdout.each_line.any? { |line| line.chomp == branch }
+      end
+
+      # Returns `true` if the named branch exists locally or as a remote-tracking branch
+      #
+      # @overload branch?(branch)
+      #
+      #   @example Check whether main exists anywhere
+      #     repo.branch?('main')  # => true
+      #
+      #   @param branch [String] the branch name to look up
+      #
+      #   @return [Boolean] `true` if the branch exists locally or remotely,
+      #     `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def branch?(branch)
+        local_branch?(branch) || remote_branch?(branch)
       end
 
       private
