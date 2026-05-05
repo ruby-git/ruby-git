@@ -150,10 +150,13 @@ module Test
       #   assert_command_line_eq(expected_command_line) { |git| git.fetch('origin', { ref: 'master', depth: '2' }) }
       #
       # @param expected_command_line [Array<String>] The expected arguments to be sent to Git::Lib#command_capturing
+      #
       # @param mocked_output [String] The mocked output to be returned by the Git::Lib#command_capturing method
       #
       # @yield [git] a block to call the method to be tested
+      #
       # @yieldparam git [Git::Base] The Git::Base object resulting from initializing the test project
+      #
       # @yieldreturn [void] the return value of the block is ignored
       #
       # @return [void]
@@ -187,6 +190,12 @@ module Test
           end
 
           git.lib.define_singleton_method(method, &mock_command)
+
+          # Also stub the facade repository's execution context for methods
+          # that have been migrated from Git::Lib to Git::Repository facade modules.
+          facade_ec = git.send(:facade_repository).execution_context
+          facade_ec.define_singleton_method(method, &mock_command)
+          facade_ec.define_singleton_method(:git_version) { git.lib.git_version }
 
           Dir.chdir 'test_project' do
             yield(git) if block_given?
