@@ -266,4 +266,179 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #local_branch?
+  # ---------------------------------------------------------------------------
+
+  describe '#local_branch?' do
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    context 'when the branch exists locally' do
+      subject(:result) { described_instance.local_branch?('main') }
+
+      it 'delegates to Branch::List#call with the branch name and short format' do
+        expect(list_command)
+          .to receive(:call).with('main', format: '%(refname:short)').and_return(command_result("main\n"))
+        result
+      end
+
+      it 'returns true' do
+        allow(list_command)
+          .to receive(:call).with('main', format: '%(refname:short)').and_return(command_result("main\n"))
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when the branch does not exist locally' do
+      subject(:result) { described_instance.local_branch?('nonexistent') }
+
+      it 'returns false' do
+        allow(list_command)
+          .to receive(:call).with('nonexistent', format: '%(refname:short)').and_return(command_result(''))
+        expect(result).to be(false)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remote_branch?
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_branch?' do
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    context 'when a remote tracking branch with that short name exists' do
+      subject(:result) { described_instance.remote_branch?('master') }
+
+      it 'delegates to Branch::List#call with remotes: true and lstrip format' do
+        expect(list_command)
+          .to receive(:call).with('*/master', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("master\n"))
+        result
+      end
+
+      it 'returns true' do
+        allow(list_command)
+          .to receive(:call).with('*/master', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("master\n"))
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when no remotes are configured' do
+      subject(:result) { described_instance.remote_branch?('master') }
+
+      it 'returns false' do
+        allow(list_command)
+          .to receive(:call).with('*/master', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result(''))
+        expect(result).to be(false)
+      end
+    end
+
+    context 'when the combined remote/branch name is passed (4.x compat)' do
+      subject(:result) { described_instance.remote_branch?('origin/master') }
+
+      it 'returns false because the list contains only short branch names' do
+        allow(list_command)
+          .to receive(:call).with('*/origin/master', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("master\n"))
+        expect(result).to be(false)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #branch?
+  # ---------------------------------------------------------------------------
+
+  describe '#branch?' do
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    context 'when the branch exists locally' do
+      subject(:result) { described_instance.branch?('main') }
+
+      it 'returns true without calling git branch --remotes' do
+        allow(list_command)
+          .to receive(:call).with('main', format: '%(refname:short)')
+          .and_return(command_result("main\n"))
+        # remote_branch? should not be called when local_branch? returns true
+        expect(list_command).not_to receive(:call).with(anything, remotes: true, format: '%(refname:lstrip=3)')
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when the branch exists only as a remote tracking branch' do
+      subject(:result) { described_instance.branch?('develop') }
+
+      it 'returns true after checking both local and remote branches' do
+        allow(list_command)
+          .to receive(:call).with('develop', format: '%(refname:short)')
+          .and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/develop', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("develop\n"))
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when the branch does not exist locally or remotely' do
+      subject(:result) { described_instance.branch?('nonexistent') }
+
+      it 'returns false after checking both local and remote branches' do
+        allow(list_command)
+          .to receive(:call).with('nonexistent', format: '%(refname:short)')
+          .and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/nonexistent', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("main\n"))
+        expect(result).to be(false)
+      end
+    end
+
+    context 'when passed a combined remote/branch name like origin/main' do
+      subject(:result) { described_instance.branch?('origin/main') }
+
+      it 'returns false (4.x compat: remote branches are matched by short name only)' do
+        allow(list_command)
+          .to receive(:call).with('origin/main', format: '%(refname:short)')
+          .and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/origin/main', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("main\n"))
+        expect(result).to be(false)
+      end
+    end
+
+    context 'when a local branch topic/main exists and querying main' do
+      subject(:result) { described_instance.branch?('main') }
+
+      it 'returns false (local slash-branch does not match short name)' do
+        # git branch --list main only matches the exact name, not topic/main
+        allow(list_command)
+          .to receive(:call).with('main', format: '%(refname:short)')
+          .and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/main', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result(''))
+        expect(result).to be(false)
+      end
+    end
+  end
 end
