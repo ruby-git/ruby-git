@@ -23,7 +23,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅, 4 ✅ staging module) |
+| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅, 4 ✅ staging module, 4 ✅ committing module, 4 ✅ branching module) |
 | Phase 4 | ⏳ Not Started | Final cleanup and release |
 
 ### Next Task
@@ -45,6 +45,14 @@ Phase 3, Tasks 1–4 (staging module) are complete:
   - `lib/git/repository/staging.rb` — `add` and `reset` facade methods
   - `lib/git/repository.rb` — includes `Git::Repository::Staging`
   - `spec/unit/git/repository/staging_spec.rb` — delegation unit tests
+- Task 4 (committing): `Git::Repository::Committing` facade module added.
+- Task 4 (branching): `Git::Repository::Branching` facade module added:
+  - `lib/git/repository/branching.rb` — `checkout`, `checkout_file`,
+    `checkout_index`, and `current_branch` facade methods
+  - `lib/git/repository.rb` — includes `Git::Repository::Branching`
+  - `spec/unit/git/repository/branching_spec.rb` — delegation unit tests
+  - `spec/integration/git/repository/branching_spec.rb` — integration tests
+  - `Git::Base` delegates all four methods to `facade_repository`
 
 The next step is to expand the facade by adding more modules. Continue with one
 module at a time following the same TDD pattern established by the staging module:

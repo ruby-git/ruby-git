@@ -525,12 +525,12 @@ module Git
 
     # checks out a branch as the new git working directory
     def checkout(*, **)
-      lib.checkout(*, **)
+      facade_repository.checkout(*, **)
     end
 
     # checks out an old version of a file
     def checkout_file(version, file)
-      lib.checkout_file(version, file)
+      facade_repository.checkout_file(version, file)
     end
 
     # fetches changes from a remote branch - this does not modify the working directory,
@@ -819,7 +819,7 @@ module Git
     end
 
     def checkout_index(opts = {})
-      lib.checkout_index(opts)
+      facade_repository.checkout_index(opts)
     end
 
     def read_tree(treeish, opts = {})
@@ -893,7 +893,7 @@ module Git
     # @return [String] the name of the branch HEAD refers to or 'HEAD' if detached
     #
     def current_branch
-      lib.branch_current
+      facade_repository.current_branch
     end
 
     # @return [Git::Branch] an object for branch_name
