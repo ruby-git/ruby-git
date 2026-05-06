@@ -213,4 +213,150 @@ RSpec.describe Git::Repository::Merging do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #merge_base
+  # ---------------------------------------------------------------------------
+
+  describe '#merge_base' do
+    let(:merge_base_command) { instance_double(Git::Commands::MergeBase) }
+    let(:merge_base_result) { command_result("abc123\n") }
+
+    before do
+      allow(Git::Commands::MergeBase)
+        .to receive(:new).with(execution_context).and_return(merge_base_command)
+    end
+
+    # --- Basic two-commit invocation -----------------------------------------
+
+    context 'with two branch names' do
+      subject(:result) { described_instance.merge_base('main', 'feature') }
+
+      it 'delegates to Git::Commands::MergeBase.new with the execution_context' do
+        expect(Git::Commands::MergeBase).to receive(:new).with(execution_context).and_return(merge_base_command)
+        allow(merge_base_command).to receive(:call).and_return(merge_base_result)
+        result
+      end
+
+      it 'calls MergeBase#call with the two commits and no options' do
+        expect(merge_base_command)
+          .to receive(:call).with('main', 'feature').and_return(merge_base_result)
+        result
+      end
+
+      it 'returns the stdout lines as an Array<String>' do
+        allow(merge_base_command)
+          .to receive(:call).with('main', 'feature').and_return(merge_base_result)
+        expect(result).to eq(['abc123'])
+      end
+    end
+
+    # --- Three commits (octopus merge ancestor search) -----------------------
+
+    context 'with three branch names' do
+      subject(:result) { described_instance.merge_base('main', 'branch-a', 'branch-b') }
+
+      it 'passes all three commits to MergeBase#call' do
+        expect(merge_base_command)
+          .to receive(:call).with('main', 'branch-a', 'branch-b').and_return(merge_base_result)
+        result
+      end
+    end
+
+    # --- Trailing hash extraction ---------------------------------------------
+
+    context 'with a trailing options hash' do
+      subject(:result) { described_instance.merge_base('main', 'feature', all: true) }
+
+      let(:merge_base_result) { command_result("abc123\ndef456\n") }
+
+      it 'extracts the trailing hash as keyword options' do
+        expect(merge_base_command)
+          .to receive(:call).with('main', 'feature', all: true).and_return(merge_base_result)
+        result
+      end
+
+      it 'returns all SHA lines as an Array<String>' do
+        allow(merge_base_command)
+          .to receive(:call).with('main', 'feature', all: true).and_return(merge_base_result)
+        expect(result).to eq(%w[abc123 def456])
+      end
+    end
+
+    # --- Return value parsing -------------------------------------------------
+
+    context 'when stdout contains trailing whitespace and blank lines' do
+      subject(:result) { described_instance.merge_base('main', 'feature') }
+
+      let(:merge_base_result) { command_result("  abc123  \n\n") }
+
+      it 'strips each line and removes blank lines' do
+        allow(merge_base_command)
+          .to receive(:call).with('main', 'feature').and_return(merge_base_result)
+        expect(result).to eq(['abc123'])
+      end
+    end
+
+    context 'when stdout is empty (no common ancestor)' do
+      subject(:result) { described_instance.merge_base('main', 'feature') }
+
+      let(:merge_base_result) { command_result('') }
+
+      it 'returns an empty Array' do
+        allow(merge_base_command)
+          .to receive(:call).with('main', 'feature').and_return(merge_base_result)
+        expect(result).to eq([])
+      end
+    end
+
+    # --- Option forwarding ----------------------------------------------------
+
+    context 'with octopus: true' do
+      subject(:result) { described_instance.merge_base('main', 'b1', 'b2', octopus: true) }
+
+      it 'forwards octopus: true to MergeBase#call' do
+        expect(merge_base_command)
+          .to receive(:call).with('main', 'b1', 'b2', octopus: true).and_return(merge_base_result)
+        result
+      end
+    end
+
+    context 'with independent: true' do
+      subject(:result) { described_instance.merge_base('sha1', 'main', 'feature', independent: true) }
+
+      it 'forwards independent: true to MergeBase#call' do
+        expect(merge_base_command)
+          .to receive(:call).with('sha1', 'main', 'feature', independent: true).and_return(merge_base_result)
+        result
+      end
+    end
+
+    context 'with fork_point: true' do
+      subject(:result) { described_instance.merge_base('main', 'feature', fork_point: true) }
+
+      it 'forwards fork_point: true to MergeBase#call' do
+        expect(merge_base_command)
+          .to receive(:call).with('main', 'feature', fork_point: true).and_return(merge_base_result)
+        result
+      end
+    end
+
+    # --- Option whitelisting --------------------------------------------------
+
+    context 'option whitelisting' do
+      it 'raises ArgumentError for an unknown option key' do
+        expect { described_instance.merge_base('main', 'feature', bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call MergeBase when an unknown option is given' do
+        expect(merge_base_command).not_to receive(:call)
+        begin
+          described_instance.merge_base('main', 'feature', bogus: true)
+        rescue ArgumentError
+          # expected
+        end
+      end
+    end
+  end
 end
