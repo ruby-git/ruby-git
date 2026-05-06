@@ -28,7 +28,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
     context 'in detached HEAD state' do
       before do
-        sha = repo.log(1).first.sha
+        sha = repo.log(1).execute.first.sha
         repo.lib.checkout(sha)
       end
 
