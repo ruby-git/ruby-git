@@ -987,8 +987,7 @@ module Git
     #
     # @return [Array<Git::Object::Commit>] a collection of common ancestors
     def merge_base(*)
-      shas = lib.merge_base(*)
-      shas.map { |sha| gcommit(sha) }
+      facade_repository.merge_base(*).map { |sha| gcommit(sha) }
     end
 
     # Returns a Git::Diff::Stats object for accessing diff statistics.

@@ -200,4 +200,95 @@ RSpec.describe Git::Repository::Merging, :integration do
       expect(status.type).to eq('A')
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #merge_base — basic ancestor lookup
+  # ---------------------------------------------------------------------------
+
+  describe '#merge_base' do
+    before do
+      # Record the SHA of the initial commit — that is the common ancestor
+      @common_ancestor_sha = repo.log(1).execute.first.sha
+
+      # Add a commit on feature that is NOT on main
+      repo.lib.branch_new('feature')
+      repo.lib.checkout('feature')
+      write_file('feature.txt', "feature\n")
+      repo.add('feature.txt')
+      repo.commit('Feature commit')
+      repo.lib.checkout('main')
+
+      # Add a commit on main that is NOT on feature (forces a real divergence)
+      write_file('main_extra.txt', "main extra\n")
+      repo.add('main_extra.txt')
+      repo.commit('Main extra commit')
+    end
+
+    it 'returns an Array' do
+      result = described_instance.merge_base('main', 'feature')
+      expect(result).to be_an(Array)
+    end
+
+    it 'returns an Array of String SHAs' do
+      result = described_instance.merge_base('main', 'feature')
+      expect(result).to all(be_a(String))
+    end
+
+    it 'returns the correct common ancestor SHA' do
+      result = described_instance.merge_base('main', 'feature')
+      expect(result).to eq([@common_ancestor_sha])
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #merge_base — all: true returns multiple bases when they exist
+  # ---------------------------------------------------------------------------
+
+  describe '#merge_base with all: true' do
+    before do
+      # Build a criss-cross merge history so there are two equally good bases.
+      #
+      # Starting from the initial commit A on main, diverge two independent
+      # branches — B (new_branch_1) and C (new_branch_2) — then cross-merge:
+      #
+      #   A ─── B (nb1) ─── merge(B,C) M1
+      #     └── C (nb2) ─── merge(C,B) M2
+      #
+      # merge_base(M1, M2) returns both B and C.
+
+      # B: commit on new_branch_1 (branches off main/A)
+      repo.lib.branch_new('new_branch_1')
+      repo.lib.checkout('new_branch_1')
+      write_file('b1_1.txt', "b1 first\n")
+      repo.add('b1_1.txt')
+      repo.commit('B: first commit on branch 1')
+      @first_commit_sha = repo.log(1).execute.first.sha
+
+      # C: commit on new_branch_2 (branches off main/A independently)
+      repo.lib.checkout('main')
+      repo.lib.branch_new('new_branch_2')
+      repo.lib.checkout('new_branch_2')
+      write_file('b2_1.txt', "b2 first\n")
+      repo.add('b2_1.txt')
+      repo.commit('C: first commit on branch 2')
+      @second_commit_sha = repo.log(1).execute.first.sha
+
+      # M2: nb2 merges B → merge commit with parents C and B
+      repo.merge(@first_commit_sha.to_s)
+
+      # M1: nb1 merges C → merge commit with parents B and C
+      repo.lib.checkout('new_branch_1')
+      repo.merge(@second_commit_sha.to_s)
+    end
+
+    it 'returns more than one ancestor when multiple equally good bases exist' do
+      result = described_instance.merge_base('new_branch_1', 'new_branch_2', all: true)
+      expect(result.size).to be >= 2
+    end
+
+    it 'returns Array<String> SHAs' do
+      result = described_instance.merge_base('new_branch_1', 'new_branch_2', all: true)
+      expect(result).to all(be_a(String))
+    end
+  end
 end
