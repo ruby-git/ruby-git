@@ -566,7 +566,7 @@ module Git
     #
     # you can specify more than one branch to merge by passing an array of branches
     def merge(branch, message = 'merge', opts = {})
-      lib.merge(branch, message, opts)
+      facade_repository.merge(branch, message, opts)
     end
 
     # iterates over the files which are unmerged
