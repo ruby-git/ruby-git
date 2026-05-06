@@ -3,6 +3,7 @@
 require 'git/execution_context/repository'
 require 'git/repository/branching'
 require 'git/repository/committing'
+require 'git/repository/merging'
 require 'git/repository/staging'
 
 module Git
@@ -33,6 +34,7 @@ module Git
   class Repository
     include Git::Repository::Branching
     include Git::Repository::Committing
+    include Git::Repository::Merging
     include Git::Repository::Staging
 
     # @return [Git::ExecutionContext::Repository] the execution context used to run
