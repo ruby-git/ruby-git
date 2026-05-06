@@ -15,6 +15,10 @@ end
 # Run only integration specs (real git, slower)
 RSpec::Core::RakeTask.new('spec:integration') do |t|
   t.pattern = 'spec/integration/**/*_spec.rb'
+  # On JRuby, override the default Fuubar formatter with 'documentation' so that
+  # each test name is printed before it runs. This makes CI logs useful when the
+  # suite hangs: the last printed test is the one that caused the hang.
+  t.rspec_opts = '--format documentation' if RUBY_ENGINE == 'jruby'
 end
 
 # Run all specs in parallel

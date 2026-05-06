@@ -50,6 +50,7 @@ jobs:
 
       - name: Run Build
         run: bundle exec rake default
+        timeout-minutes: 15
 
       - name: Test Gem
         run: bundle exec rake test:gem

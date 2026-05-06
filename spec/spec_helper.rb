@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# Force unbuffered output so that CI logs show progress even if the process hangs
+# before a normal exit (Fuubar/ruby-progressbar buffers output in non-TTY mode).
+$stdout.sync = true
+$stderr.sync = true
+
 # Load support files
 Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
 
