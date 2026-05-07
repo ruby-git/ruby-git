@@ -62,10 +62,11 @@ module Git
       # Parse git branch --list output into BranchInfo objects
       #
       # @example
-      #   BranchParser.parse_list("main|abc123|*|||\nfeature|def456||||\n")
-      #   # => [#<Git::BranchInfo name: "main", ...>, ...]
+      #   Git::Parsers::Branch.parse_list("refs/heads/main|abc1234|*|||\nrefs/heads/feature|def5678||||\n")
+      #   # => [#<data Git::BranchInfo refname="main", ...>, #<data Git::BranchInfo refname="feature", ...>]
       #
       # @param stdout [String] output from git branch --list --format=...
+      #
       # @return [Array<Git::BranchInfo>] parsed branch information
       #
       def parse_list(stdout)

@@ -17,8 +17,53 @@ module Git
   # @example Listing branches
   #   git.branches.each { |b| puts b.name }
   #
+  # @api public
+  #
   class Branch
-    attr_accessor :full, :remote, :name
+    # The full refname of this branch
+    #
+    # For local branches this is the short name (e.g. `'main'`). For
+    # remote-tracking branches obtained via {Git::Base#branches} this includes
+    # the `remotes/` prefix (e.g. `'remotes/origin/main'`). Branches constructed
+    # by {Git::Remote#branch} use the `<remote>/<branch>` form (e.g.
+    # `'origin/main'`) which does **not** populate {#remote}.
+    #
+    # @example
+    #   git.branch('main').full                  #=> 'main'
+    #   git.branch('remotes/origin/main').full   #=> 'remotes/origin/main'
+    #
+    # @return [String] the full refname
+    #
+    attr_accessor :full
+
+    # The remote for this branch, or `nil` for local or bare-name remote-tracking branches
+    #
+    # Set to a {Git::Remote} object only when this branch was initialized with a
+    # `remotes/<remote>/` or `refs/remotes/<remote>/` prefix. `nil` for local
+    # branches and for remote-tracking branches in `<remote>/<branch>` form
+    # (such as those returned by {Git::Remote#branch}).
+    #
+    # @example
+    #   git.branch('main').remote                  #=> nil
+    #   git.branch('remotes/origin/main').remote   #=> #<Git::Remote 'origin'>
+    #   git.remote('origin').branch('main').remote #=> nil  # uses 'origin/main' form
+    #
+    # @return [Git::Remote, nil] the remote object, or `nil`
+    #
+    attr_accessor :remote
+
+    # The short branch name without the remote prefix
+    #
+    # For both local and remote-tracking branches this is the bare branch
+    # name (e.g. `'main'` rather than `'remotes/origin/main'`).
+    #
+    # @example
+    #   git.branch('main').name                  #=> 'main'
+    #   git.branch('remotes/origin/main').name   #=> 'main'
+    #
+    # @return [String] the short branch name
+    #
+    attr_accessor :name
 
     # Initialize a new Branch object
     #
@@ -27,7 +72,9 @@ module Git
     # @note Use {Git::Base#branch} or {Git::Base#branches} instead of constructing directly
     #
     # @param base [Git::Base] the git repository
+    #
     # @param branch_info_or_name [Git::BranchInfo, String] branch info object or name string
+    #
     #   Passing a BranchInfo is preferred; String support is for backward compatibility.
     #
     def initialize(base, branch_info_or_name)
@@ -38,29 +85,104 @@ module Git
       initialize_from_argument(branch_info_or_name)
     end
 
+    # Returns the commit at the tip of this branch
+    #
+    # The result is memoized after the first call.
+    #
+    # @example Get the tip commit
+    #   git.branch('main').gcommit #=> #<Git::Object ...>
+    #
+    # @return [Git::Object] the commit at the tip of this branch
+    #
     def gcommit
       @gcommit ||= @base.gcommit(@full)
       @gcommit
     end
 
+    # Returns the stash list for this repository
+    #
+    # The result is memoized after the first call.
+    #
+    # @example Iterate over stash entries
+    #   git.branch('main').stashes.each { |s| puts s }
+    #
+    # @return [Git::Stashes] the stash list
+    #
     def stashes
       @stashes ||= Git::Stashes.new(@base)
     end
 
+    # Checks out this branch, attempting to create it first if it does not already exist
+    #
+    # Branch creation is attempted via {#check_if_create}; any error from that
+    # step is silently ignored and the checkout proceeds regardless.
+    #
+    # **Note:** for remote-tracking branches (where {#remote} is not `nil`),
+    # `check_if_create` will attempt to create a *local* branch named {#name}
+    # as a side-effect before checking out {#full} (which typically results in
+    # a detached HEAD). This is a known limitation; see
+    # [ruby-git#1280](https://github.com/ruby-git/ruby-git/issues/1280).
+    #
+    # @example Check out a branch
+    #   git = Git.open('.')
+    #   git.branch('main').checkout
+    #
+    # @return [String] git's stdout from the checkout
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def checkout
       check_if_create
       @base.checkout(@full)
     end
 
+    # Archives this branch and writes the result to a file
+    #
+    # @example Archive to a tar file
+    #   git.branch('main').archive('/tmp/main.tar')
+    #
+    # @example Archive to a zip file
+    #   git.branch('main').archive('/tmp/main.zip', format: 'zip')
+    #
+    # @param file [String] path to the destination archive file
+    #
+    # @param opts [Hash] archive options (see {Git::Base#archive})
+    #
+    # @return [String] the path to the written archive file
+    #
+    # @raise [Git::FailedError] if `git archive` fails
+    #
     def archive(file, opts = {})
       @base.lib.archive(@full, file, opts)
     end
 
-    # g.branch('new_branch').in_branch do
-    #   # create new file
-    #   # do other stuff
-    #   return true # auto commits and switches back
-    # end
+    # Checks out this branch for the duration of a block, then restores the original branch
+    #
+    # If the block returns a truthy value, all pending changes are committed with the
+    # given message before switching back to the original branch. If the block returns
+    # a falsy value, a hard reset is performed before switching back.
+    #
+    # **Note:** the restore checkout is not wrapped in `ensure`. If the block,
+    # the commit, or the reset raises an exception, the repository will be left
+    # checked out on this branch rather than restored to the original.
+    #
+    # @example Commit a new file on a feature branch
+    #   git.branch('feature').in_branch('Add README') do
+    #     File.write('README.md', '# Hello')
+    #     git.add('README.md')
+    #     true  # commit and return to original branch
+    #   end
+    #
+    # @param message [String] commit message used when the block returns truthy
+    #
+    # @yield Executes the block with this branch checked out
+    #
+    # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
+    #
+    # @return [String] git's stdout from the final checkout back to the original branch
+    #
+    # @raise [Git::FailedError] if any of the underlying git operations (checkout, commit, reset) fail
+    #
     def in_branch(message = 'in branch work')
       old_current = @base.lib.branch_current
       checkout
@@ -72,22 +194,110 @@ module Git
       @base.checkout(old_current)
     end
 
+    # Creates this branch if it does not already exist
+    #
+    # Silently ignores any error raised during branch creation (including the case
+    # where the branch already exists).
+    #
+    # @example Create a new branch
+    #   git.branch('feature').create
+    #
+    # @return [nil]
+    #
     def create
       check_if_create
     end
 
+    # Deletes this branch
+    #
+    # **Note:** this method only works correctly for local branches. Calling it on
+    # a remote-tracking branch (one where {#remote} is not `nil`) will attempt to
+    # delete a *local* branch with the same short name rather than the
+    # remote-tracking ref, which is almost certainly not what you want.
+    # See [ruby-git#1280](https://github.com/ruby-git/ruby-git/issues/1280) for
+    # the planned fix.
+    #
+    # @example Delete a local branch
+    #   git.branch('old-feature').delete
+    #
+    # @return [String] git's deletion output
+    #
+    # @raise [Git::Error] if the branch cannot be deleted
+    #
     def delete
       @base.lib.branch_delete(@name)
     end
 
+    # Returns true if this is the currently checked-out branch
+    #
+    # **Note:** this compares the current branch's short name against {#name}.
+    # For a remote-tracking branch (where {#remote} is not `nil`), {#name} is
+    # still the bare short name (e.g. `'main'`), so this will return `true`
+    # whenever the *local* branch with that name is checked out — not the
+    # remote-tracking ref itself.
+    #
+    # @example Check whether currently on main
+    #   git.branch('main').current #=> true
+    #
+    # @return [Boolean] whether this branch is currently checked out
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def current # rubocop:disable Naming/PredicateMethod
       @base.lib.branch_current == @name
     end
 
+    # Returns true if this branch contains the given commit
+    #
+    # **Note:** this queries local branches by short name. For a remote-tracking
+    # branch (where {#remote} is not `nil`), it checks the *local* branch with
+    # the same {#name} rather than the remote-tracking ref, which may give an
+    # inaccurate result.
+    #
+    # @example Check if a commit is reachable from this branch
+    #   git.branch('main').contains?('abc1234') #=> true
+    #
+    # @param commit [String] the commit SHA or ref to check
+    #
+    # @return [Boolean] whether this branch contains the given commit
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def contains?(commit)
       !@base.lib.branch_contains(commit, name).empty?
     end
 
+    # Merges a branch into this branch, or merges this branch into the current branch
+    #
+    # @overload merge(branch, message = nil)
+    #
+    #   Temporarily checks out this branch, merges the given branch into it,
+    #   then restores the original branch.
+    #
+    #   **Note:** if `self` is a remote-tracking branch (where {#remote} is not
+    #   `nil`), this delegates to {#checkout} which has the detached-HEAD
+    #   side-effect described there. The remote-tracking ref will not be updated.
+    #
+    #   @example Merge a feature branch into main
+    #     git.branch('main').merge('feature')
+    #
+    #   @param branch [String] the name of the branch to merge into this one
+    #
+    #   @param message [String, nil] commit message for the merge commit
+    #
+    #   @return [String] git's stdout from the final checkout back to the original branch
+    #
+    # @overload merge()
+    #
+    #   Merges this branch into the currently checked-out branch.
+    #
+    #   @example Merge main into the current branch
+    #     git.branch('main').merge
+    #
+    #   @return [String] git's stdout from the merge command
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def merge(branch = nil, message = nil)
       if branch
         in_branch do
@@ -101,6 +311,26 @@ module Git
       end
     end
 
+    # Updates the git ref for this branch to point to the given commit
+    #
+    # The target ref depends on whether {#remote} is set:
+    # - When {#remote} is not `nil` (i.e. the branch was initialized with a
+    #   `remotes/<remote>/` or `refs/remotes/<remote>/` prefix), updates
+    #   `refs/remotes/<remote>/<name>`.
+    # - Otherwise updates `refs/heads/<name>`. Note that branches in the
+    #   `<remote>/<branch>` form (e.g. those returned by {Git::Remote#branch})
+    #   have `remote == nil` and therefore update `refs/heads/<remote>/<name>`,
+    #   **not** `refs/remotes/...`.
+    #
+    # @example Advance a local branch to a new commit
+    #   git.branch('feature').update_ref('abc1234def5678')
+    #
+    # @param commit [String] the commit SHA to point this branch at
+    #
+    # @return [Git::CommandLineResult] the result of calling `git update-ref`
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def update_ref(commit)
       if @remote
         @base.lib.update_ref("refs/remotes/#{@remote.name}/#{@name}", commit)
@@ -109,17 +339,38 @@ module Git
       end
     end
 
+    # Returns this branch as a single-element array containing its full refname
+    #
+    # @example Get branch as array
+    #   git.branch('main').to_a #=> ['main']
+    #
+    # @return [Array<String>] a single-element array containing the full refname
+    #
     def to_a
       [@full]
     end
 
+    # Returns the full refname of this branch as a string
+    #
+    # @example Get branch as string
+    #   git.branch('main').to_s #=> 'main'
+    #
+    # @return [String] the full refname
+    #
     def to_s
       @full
     end
 
+    # Regular expression for parsing branch refnames
+    #
+    # Matches full and short refnames, capturing an optional remote name and the
+    # branch name. Used internally to identify remote-tracking branches.
+    #
+    # @api private
+    #
     BRANCH_NAME_REGEXP = %r{
       ^
-        # Optional 'refs/remotes/' at the beggining to specify a remote tracking branch
+        # Optional 'remotes/' or 'refs/remotes/' at the beginning to specify a remote tracking branch
         # with a <remote_name>. <remote_name> is nil if not present.
         (?:
           (?:(?:refs/)?remotes/)(?<remote_name>[^/]+)/
@@ -130,7 +381,14 @@ module Git
 
     private
 
+    # Dispatches initialization to the appropriate strategy
+    #
+    # @param branch_info_or_name [Git::BranchInfo, String] branch info or name string
+    #
+    # @return [nil]
+    #
     # @api private
+    #
     def initialize_from_argument(branch_info_or_name)
       if branch_info_or_name.is_a?(Git::BranchInfo)
         initialize_from_branch_info(branch_info_or_name)
@@ -143,41 +401,46 @@ module Git
     #
     # @param branch_info [Git::BranchInfo] the branch info
     #
+    # @return [nil]
+    #
     def initialize_from_branch_info(branch_info)
       @full = branch_info.refname
       @name = branch_info.short_name
       @remote = branch_info.remote_name ? Git::Remote.new(@base, branch_info.remote_name) : nil
     end
 
-    # Initialize from a string name (legacy path, deprecated)
+    # Initialize from a string name (legacy path for backward compatibility)
     #
     # @param name [String] the branch name
+    #
+    # @return [nil]
     #
     def initialize_from_name(name)
       @full = name
       @remote, @name = parse_name(name)
     end
 
-    # Given a full branch name return an Array containing the remote and branch names.
+    # Parses a full branch name into remote and short branch name components
     #
-    # Removes 'remotes' from the beggining of the name (if present).
-    # Takes the second part (splittign by '/') as the remote name.
-    # Takes the rest as the repo name (can also hold one or more '/').
+    # Strips an optional `remotes/` or `refs/remotes/` prefix. Only inputs that
+    # begin with one of those prefixes yield a remote object; all other inputs
+    # (including `'origin/master'`) are treated as local branch names with a
+    # `nil` remote.
     #
-    # Example:
-    #   # local branches
-    #   parse_name('master') #=> [nil, 'master']
-    #   parse_name('origin/master') #=> [nil, 'origin/master']
-    #   parse_name('origin/master/v2') #=> [nil, 'origin/master']
+    # @example Local branches
+    #   parse_name('master')            #=> [nil, 'master']
+    #   parse_name('origin/master')     #=> [nil, 'origin/master']
     #
-    #   # remote branches
-    #   parse_name('remotes/origin/master') #=> ['origin', 'master']
-    #   parse_name('remotes/origin/master/v2') #=> ['origin', 'master/v2']
-    #   parse_name('refs/remotes/origin/master') #=> ['origin', 'master']
-    #   parse_name('refs/remotes/origin/master/v2') #=> ['origin', 'master/v2']
+    # @example Remote-tracking branches
+    #   parse_name('remotes/origin/master')      #=> [#<Git::Remote 'origin'>, 'master']
+    #   parse_name('refs/remotes/origin/master') #=> [#<Git::Remote 'origin'>, 'master']
     #
-    # param [String] name branch full name.
-    # return [<Git::Remote,NilClass,String>] an Array containing the remote and branch names.
+    # @param name [String] the full branch name to parse
+    #
+    # @return [Array(Git::Remote, String)] a two-element array; the first element is
+    #   a {Git::Remote} for remote-tracking branches or `nil` for local branches,
+    #   and the second element is the short branch name
+    #
     def parse_name(name)
       # Expect this will always match
       match = name.match(BRANCH_NAME_REGEXP)
@@ -186,6 +449,10 @@ module Git
       [remote, branch_name]
     end
 
+    # Creates the branch if it does not already exist, ignoring errors
+    #
+    # @return [nil]
+    #
     def check_if_create
       @base.lib.branch_new(@name)
     rescue StandardError
