@@ -173,7 +173,7 @@ what the caller passes.
 The three architectural layers each play a distinct role:
 
 | Layer | Responsibility | Mechanism |
-|---|---|---|
+| --- | --- | --- |
 | **Command** (`Git::Commands::*`) | Neutral git CLI interface | Declares options via DSL (e.g. `flag_option :edit, negatable: true`) — no policy |
 | **Facade** (`Git::Lib`) | Safe defaults | Sets policy options at each call site (e.g. `edit: false`); callers may override |
 | **Execution** (`Git::CommandLine`) | Unconditional safety net | `GIT_EDITOR='true'` in every subprocess environment |

@@ -359,7 +359,7 @@ future work:
    **What command classes validate:**
 
    | Validation | Mechanism | Rationale |
-   |---|---|---|
+   | --- | --- | --- |
    | Unknown options | `validate_unsupported_options!` in Arguments DSL | Catches typos/misspellings before spawning a process. Git would also reject these, but the error message would be less clear about the Ruby-side fix needed. |
    | Required options | `required: true` in Arguments DSL | Enforces the minimum contract for a command to be meaningful. Avoids spawning a process that will certainly fail. |
    | Type checking | `type:` in Arguments DSL | Catches programming errors (e.g., passing an Integer where a String is expected) that would produce confusing git errors or silent coercion. |
@@ -368,7 +368,7 @@ future work:
    **What command classes do NOT validate (semantic concerns — delegated to git):**
 
    | Validation | Delegated to | Rationale |
-   |---|---|---|
+   | --- | --- | --- |
    | Option conflicts (`--soft` vs `--hard`) | Git (stderr → `Git::FailedError`) | Git is the authority on which options conflict. Constraints drift as git evolves. |
    | Option dependencies (`--all-match` requires `--grep`) | Git (stderr or silent behavior) | Same drift risk. Some dependencies are version-specific. |
    | At-least-one-of groups | Git (stderr → `Git::FailedError`) | Git enforces its own required-argument semantics. |

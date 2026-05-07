@@ -32,7 +32,7 @@ or explanation does not require a skill.
 ## Project Commands
 
 | Purpose | Command |
-|---|---|
+| --- | --- |
 | First-time setup | `bin/setup` |
 | Run all tests and linters(CI-equivalent) | `bundle exec rake default:parallel` |
 | Run all tests (both suites) | `bundle exec rake test-all:parallel` |
@@ -69,7 +69,7 @@ footer.
 ## Branch & PR Strategy
 
 | Target | When |
-|---|---|
+| --- | --- |
 | `main` | New features, breaking changes, all active development |
 | `4.x` | Security fixes and backward-compatible bug fixes for the v4.x series |
 
@@ -86,7 +86,7 @@ skill first.
 ## Key Documents
 
 | Document | Purpose |
-|---|---|
+| --- | --- |
 | `CONTRIBUTING.md` | Design philosophy, contribution guidelines |
 | `CHANGELOG.md` | Version history (auto-updated by release-please) |
 | `MAINTAINERS.md` | Maintainer list and responsibilities |

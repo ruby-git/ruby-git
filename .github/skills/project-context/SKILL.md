@@ -48,7 +48,7 @@ coding standard details, or implementation constraints.
 **Key modules and their roles:**
 
 | Class | Role |
-|---|---|
+| --- | --- |
 | `Git::Base` | Main facade — entry point for all user-facing operations |
 | `Git::Lib` | Low-level adapter/facade; calls `Git::Commands::*`, builds rich objects via parsers |
 | `Git::Commands::*` | Command classes: define CLI API, bind args, execute → return `CommandLineResult` |
@@ -139,14 +139,14 @@ incompatibilities — `conflicts` and/or `requires_one_of` are appropriate. Exam
 `cat-file --batch` uses both because `:objects` is `skip_cli: true`:
 
 | Validated by Commands | Mechanism |
-|---|---|
+| --- | --- |
 | Unknown options | `validate_unsupported_options!` in Arguments DSL |
 | Required options | `required: true` in Arguments DSL |
 | Type checking | `type:` in Arguments DSL |
 | Option-like operand rejection | Automatic for operands before `--` |
 
 | Delegated to git (semantic) | Surfaced as |
-|---|---|
+| --- | --- |
 | Option conflicts (`--soft` vs `--hard`) | `Git::FailedError` |
 | Option dependencies (`--all-match` requires `--grep`) | `Git::FailedError` |
 | At-least-one-of groups | `Git::FailedError` |
@@ -171,7 +171,7 @@ See `redesign/3_architecture_implementation.md` Insight 6 for the full policy an
 ### Naming
 
 | Kind | Convention | Example |
-|---|---|---|
+| --- | --- | --- |
 | Class/Module | PascalCase | `Git::CommandLine` |
 | Method/variable | snake_case | `current_branch` |
 | Constant | UPPER_SNAKE_CASE | `VERSION` |

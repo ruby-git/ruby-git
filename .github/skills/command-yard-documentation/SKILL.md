@@ -362,7 +362,7 @@ For each command file, run through these checks in order:
       declared exit-status range:
 
   | `allow_exit_status` | Canonical `@raise` wording |
-  |---|---|
+  | --- | --- |
   | none declared (default `0..0`) | `if git exits with a non-zero exit status` |
   | `allow_exit_status 0..1` | `if git exits outside the allowed range (exit code > 1)` |
   | `allow_exit_status 0..N` | `if git exits outside the allowed range (exit code > N)` |

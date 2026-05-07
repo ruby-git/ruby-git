@@ -49,7 +49,7 @@ module Git
     # argument types:
     #
     # | CLI (POSIX)            | Ruby Interface         | Description                                         |
-    # |------------------------|------------------------|-----------------------------------------------------|
+    # | ---------------------- | ---------------------- | --------------------------------------------------- |
     # | argument specification | DSL definition         | Declared command inputs and constraints             |
     # | arguments              | arguments              | Values passed when calling a command/method         |
     # | operands               | positional arguments   | Arguments identified by position                    |

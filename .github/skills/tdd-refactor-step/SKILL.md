@@ -61,8 +61,8 @@ If any condition is false, proceed with the relevant technique below.
 
 Check the code written or modified in this task for these smells, in priority order:
 
-| # | Smell | Threshold | Action |
-|---|-------|-----------|--------|
+|  #  | Smell | Threshold | Action |
+| --- | ----- | --------- | ------ |
 | 1 | **Hardcoded values** from GREEN step | Any | Generalize to actual logic |
 | 2 | **Duplication** between new code and existing code | ≥ 3 similar lines | Extract shared method or constant |
 | 3 | **Long method** | > 10 lines (body) | Extract private helper |
@@ -163,7 +163,7 @@ If the duplication is in tests, see Test Code Refactoring below.
 Test code deserves the same refactoring attention as production code:
 
 | Smell | Technique |
-|-------|-----------|
+| ----- | --------- |
 | Duplicated `let`/`before` across contexts | Move to nearest shared `describe` or `context` |
 | Long example bodies (> 5 lines of setup) | Extract to `let` declarations or `before` block |
 | Repeated literal values | Extract to `let` or constant at top of file |

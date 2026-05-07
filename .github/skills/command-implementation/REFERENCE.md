@@ -384,7 +384,7 @@ where no pre-call logic is needed.
 > (e.g. "if the branch doesn't exist"). Use:
 >
 > | `allow_exit_status` | Canonical `@raise` wording |
-> |---|---|
+> | --- | --- |
 > | none declared (default `0..0`) | `if git exits with a non-zero exit status` |
 > | `allow_exit_status 0..1` | `if git exits outside the allowed range (exit code > 1)` |
 > | `allow_exit_status 0..N` | `if git exits outside the allowed range (exit code > N)` |
@@ -598,7 +598,7 @@ string (e.g., `'2.29.0'`), not a `Git::Version` or `Range` — pre-release versi
 are not supported.
 
 | Scenario | Action |
-|---|---|
+| --- | --- |
 | Command exists in `Git::MINIMUM_GIT_VERSION` | Do **not** add `requires_git_version` |
 | Command was introduced after `Git::MINIMUM_GIT_VERSION` | Add `requires_git_version '<version>'` at the version the command was introduced |
 
@@ -611,7 +611,7 @@ options by version.
 For each option, make one of three decisions:
 
 | Decision | Reason | Action |
-|---|---|---|
+| --- | --- | --- |
 | **Include** | All behavioral options — including output-format flags (`--pretty=`, `--patch`, `--numstat`, `--name-only`, etc.) and filtering/selection flags | Add to `arguments do` |
 | **Exclude (wrong sub-action)** | Option belongs to a different sub-action than the one this class implements | Omit — see [Scoping options to sub-command classes](#scoping-options-to-sub-command-classes) below |
 | **Exclude (execution-model conflict)** | Requires TTY input or otherwise makes the command incompatible with non-interactive subprocess execution | Omit — see [Execution-model conflicts](#execution-model-conflicts) below |
@@ -713,7 +713,7 @@ will reject or misinterpret.
 **Example — `git branch`:**
 
 | Option | Create | List | Delete | Move/Copy |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `--track` | Yes | — | — | — |
 | `--force` | Yes | — | Yes | Yes |
 | `--sort` | — | Yes | — | — |
