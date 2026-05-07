@@ -83,29 +83,29 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :z (false) use NUL line termination and do not quote filenames
+      #     @option options [Boolean, nil] :z (nil) use NUL line termination and do not quote filenames
       #
-      #     @option options [Boolean] :t (false) show status tags together with filenames
+      #     @option options [Boolean, nil] :t (nil) show status tags together with filenames
       #
-      #     @option options [Boolean] :v (false) similar to `-t` but use lowercase letters for files
+      #     @option options [Boolean, nil] :v (nil) similar to `-t` but use lowercase letters for files
       #       that are marked as assume unchanged
       #
-      #     @option options [Boolean] :f (false) similar to `-t` but use lowercase letters for files
+      #     @option options [Boolean, nil] :f (nil) similar to `-t` but use lowercase letters for files
       #       that are marked as fsmonitor valid
       #
-      #     @option options [Boolean] :cached (false) show all files cached in the index
+      #     @option options [Boolean, nil] :cached (nil) show all files cached in the index
       #
       #       Alias: :c
       #
-      #     @option options [Boolean] :deleted (false) show files with an unstaged deletion
+      #     @option options [Boolean, nil] :deleted (nil) show files with an unstaged deletion
       #
       #       Alias: :d
       #
-      #     @option options [Boolean] :others (false) show other (i.e. untracked) files in the output
+      #     @option options [Boolean, nil] :others (nil) show other (i.e. untracked) files in the output
       #
       #       Alias: :o
       #
-      #     @option options [Boolean] :ignored (false) show only ignored files in the output
+      #     @option options [Boolean, nil] :ignored (nil) show only ignored files in the output
       #
       #       Must be used with either `:cached` or `:others`. When used with `:cached`, shows only
       #       cached files matching an exclude pattern. When used with `:others`, shows only
@@ -113,33 +113,33 @@ module Git
       #
       #       Alias: :i
       #
-      #     @option options [Boolean] :stage (false) show object name, mode bits, and stage number
+      #     @option options [Boolean, nil] :stage (nil) show object name, mode bits, and stage number
       #
       #       Alias: :s
       #
-      #     @option options [Boolean] :unmerged (false) show information about unmerged files
+      #     @option options [Boolean, nil] :unmerged (nil) show information about unmerged files
       #
       #       Alias: :u
       #
-      #     @option options [Boolean] :killed (false) show untracked files that need to be removed
+      #     @option options [Boolean, nil] :killed (nil) show untracked files that need to be removed
       #       due to file/directory conflicts for tracked files
       #
       #       Alias: :k
       #
-      #     @option options [Boolean] :modified (false) show files with an unstaged modification
+      #     @option options [Boolean, nil] :modified (nil) show files with an unstaged modification
       #
       #       Alias: :m
       #
-      #     @option options [Boolean] :resolve_undo (false) show files having resolve-undo information
+      #     @option options [Boolean, nil] :resolve_undo (nil) show files having resolve-undo information
       #
-      #     @option options [Boolean] :directory (false) show just the directory name (with trailing
+      #     @option options [Boolean, nil] :directory (nil) show just the directory name (with trailing
       #       slash) when a whole directory is classified as "other"
       #
-      #     @option options [Boolean] :no_empty_directory (false) do not list empty directories
+      #     @option options [Boolean, nil] :no_empty_directory (nil) do not list empty directories
       #
-      #     @option options [Boolean] :eol (false) show EOL and encoding attributes of files
+      #     @option options [Boolean, nil] :eol (nil) show EOL and encoding attributes of files
       #
-      #     @option options [Boolean] :deduplicate (false) suppress duplicate filenames when showing
+      #     @option options [Boolean, nil] :deduplicate (nil) suppress duplicate filenames when showing
       #       only filenames
       #
       #     @option options [String] :exclude (nil) skip untracked files matching the given pattern
@@ -153,27 +153,27 @@ module Git
       #     @option options [String] :exclude_per_directory (nil) read additional exclude patterns
       #       from the named file in each directory
       #
-      #     @option options [Boolean] :exclude_standard (false) add the standard git exclusions
+      #     @option options [Boolean, nil] :exclude_standard (nil) add the standard git exclusions
       #
-      #     @option options [Boolean] :error_unmatch (false) treat unmatched files as an error
+      #     @option options [Boolean, nil] :error_unmatch (nil) treat unmatched files as an error
       #
       #     @option options [String] :with_tree (nil) pretend paths removed since the named
       #       tree-ish are still present when using `--error-unmatch`
       #
-      #     @option options [Boolean] :full_name (false) force paths to be output relative to the
+      #     @option options [Boolean, nil] :full_name (nil) force paths to be output relative to the
       #       project top-level directory
       #
-      #     @option options [Boolean] :recurse_submodules (false) recursively calls ls-files on each
+      #     @option options [Boolean, nil] :recurse_submodules (nil) recursively calls ls-files on each
       #       active submodule in the repository
       #
-      #     @option options [Boolean, Integer, String] :abbrev (nil) show only a partial prefix of the
+      #     @option options [Boolean, Integer, String, nil] :abbrev (nil) show only a partial prefix of the
       #       object name; pass `true` for the default number of hex digits, or an Integer or String
       #       for a specific prefix length (e.g., `abbrev: 10` or `abbrev: "10"`)
       #
-      #     @option options [Boolean] :debug (false) after each filename, output raw index information
+      #     @option options [Boolean, nil] :debug (nil) after each filename, output raw index information
       #       (ctime data, mtime data, dev, ino, uid, gid, size, flags, flagsx)
       #
-      #     @option options [Boolean] :sparse (false) if the index is sparse, show the sparse directory
+      #     @option options [Boolean, nil] :sparse (nil) if the index is sparse, show the sparse directory
       #       entries rather than expanding to the contained files
       #
       #     @option options [String] :format (nil) a string that interpolates %(fieldname) from

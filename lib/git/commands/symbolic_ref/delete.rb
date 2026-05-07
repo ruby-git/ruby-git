@@ -49,7 +49,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (false) suppress error message
+        #     @option options [Boolean, nil] :quiet (nil) suppress error message
         #       when the name is not a symbolic ref
         #
         #       Alias: :q

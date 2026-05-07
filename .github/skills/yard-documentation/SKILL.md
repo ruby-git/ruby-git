@@ -78,7 +78,7 @@ continuation text within a YARD block:
 Correct — blank comment line keeps the block intact:
 
 ```ruby
-# @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
+# @option options [Boolean, nil] :ipv4 (nil) use IPv4 addresses only
 #
 #   Alias: :"4"
 ```
@@ -86,7 +86,7 @@ Correct — blank comment line keeps the block intact:
 Incorrect — raw blank line silently drops the alias note:
 
 ```ruby
-# @option options [Boolean] :ipv4 (nil) use IPv4 addresses only
+# @option options [Boolean, nil] :ipv4 (nil) use IPv4 addresses only
 
 #   Alias: :"4"
 ```
@@ -106,14 +106,14 @@ a `@param`, `@return`, `@raise`, etc. tag) must:
   `Represents a Git branch`)
 - **Tag short descriptions** (`@option`, `@param`, `@return`, `@raise`, `@yield`,
   `@yieldparam`, etc.) **all start with a lowercase letter** (e.g. `@option options
-  [Boolean] :force (nil) overwrite existing files`, `@param name [String] the branch
+  [Boolean, nil] :force (nil) overwrite existing files`, `@param name [String] the branch
   name`, `@return [String] the result`, `@raise [ArgumentError] when no name is provided`)
 
 For tags, the **summary text** is the description that follows the tag
 metadata (tag name, `[Type]`, option key, and `(default)`). For example, in:
 
 ```
-@option options [Boolean] :ignore_case (nil) ignore case distinctions
+@option options [Boolean, nil] :ignore_case (nil) ignore case distinctions
 ```
 
 the summary text is `ignore case distinctions`. The entire physical line —
@@ -134,7 +134,7 @@ Separate continuation paragraphs with a blank comment line.
 Correct — tag title without punctuation, blank line before continuation:
 
 ```ruby
-# @option options [Boolean] :ignore_case (nil) ignore case
+# @option options [Boolean, nil] :ignore_case (nil) ignore case
 #   distinctions in both the pattern and the file contents
 #
 #   Alias: :i
@@ -155,7 +155,7 @@ Correct — tag title without punctuation, blank line before continuation:
 Incorrect — trailing period on title, missing blank line before continuation:
 
 ```ruby
-# @option options [Boolean] :ignore_case (nil) ignore case
+# @option options [Boolean, nil] :ignore_case (nil) ignore case
 #   distinctions in both the pattern and the file contents.
 #   Alias: :i
 #
@@ -600,10 +600,10 @@ only:
 #
 #   @param options [Hash] command options
 #
-#   @option options [Boolean] :all add, modify, and remove index entries to
+#   @option options [Boolean, nil] :all (nil) add, modify, and remove index entries to
 #     match the worktree
 #
-#   @option options [Boolean] :force allow adding otherwise ignored files
+#   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored files
 #
 #   @return [String] the command output
 #

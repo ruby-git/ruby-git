@@ -71,45 +71,45 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :d (false) show only the named tree entry itself,
+      #     @option options [Boolean, nil] :d (nil) show only the named tree entry itself,
       #       not its children
       #
-      #     @option options [Boolean] :r (false) recurse into sub-trees
+      #     @option options [Boolean, nil] :r (nil) recurse into sub-trees
       #
-      #     @option options [Boolean] :t (false) show tree entries even when going to
+      #     @option options [Boolean, nil] :t (nil) show tree entries even when going to
       #       recurse them
       #
       #       Implies recursive listing (`:r`) in git.
       #
-      #     @option options [Boolean] :long (false) show object size of blob (file)
+      #     @option options [Boolean, nil] :long (nil) show object size of blob (file)
       #       objects
       #
       #       Cannot be combined with `:name_only` or `:object_only`.
       #
       #       Alias: :l
       #
-      #     @option options [Boolean] :z (false) use NUL (`\0`) as line terminator
+      #     @option options [Boolean, nil] :z (nil) use NUL (`\0`) as line terminator
       #       instead of newline, and do not quote filenames
       #
-      #     @option options [Boolean] :name_only (false) list only filenames, one per
+      #     @option options [Boolean, nil] :name_only (nil) list only filenames, one per
       #       line
       #
       #       Cannot be combined with `:object_only` or `:long`.
       #
       #       Alias: :name_status
       #
-      #     @option options [Boolean] :object_only (false) list only the object names
+      #     @option options [Boolean, nil] :object_only (nil) list only the object names
       #       (SHAs), one per line
       #
       #       Cannot be combined with `:name_only` or `:long`.
       #
-      #     @option options [Boolean] :full_name (false) show full path names instead
+      #     @option options [Boolean, nil] :full_name (nil) show full path names instead
       #       of paths relative to the current working directory
       #
-      #     @option options [Boolean] :full_tree (false) do not limit the listing to
+      #     @option options [Boolean, nil] :full_tree (nil) do not limit the listing to
       #       the current working directory; implies `:full_name`
       #
-      #     @option options [Boolean, String] :abbrev (nil) use abbreviated object names
+      #     @option options [Boolean, String, nil] :abbrev (nil) use abbreviated object names
       #
       #       When `true`, uses git's default abbreviated name length. When a string
       #       (e.g. `'8'`), uses exactly that many hex digits.

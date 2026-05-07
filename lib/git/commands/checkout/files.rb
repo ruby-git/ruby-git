@@ -60,17 +60,17 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (false) ignore unmerged entries
+        #     @option options [Boolean, nil] :force (nil) ignore unmerged entries
         #
         #       Alias: `:f`
         #
-        #     @option options [Boolean] :ours (false) for unmerged paths, check out
+        #     @option options [Boolean, nil] :ours (nil) for unmerged paths, check out
         #       stage #2 (our version)
         #
-        #     @option options [Boolean] :theirs (false) for unmerged paths, check out
+        #     @option options [Boolean, nil] :theirs (nil) for unmerged paths, check out
         #       stage #3 (their version)
         #
-        #     @option options [Boolean] :merge (false) recreate the conflicted merge in
+        #     @option options [Boolean, nil] :merge (nil) recreate the conflicted merge in
         #       the specified paths; cannot be used when checking out from a tree-ish
         #
         #       Alias: `:m`
@@ -78,20 +78,20 @@ module Git
         #     @option options [String] :conflict (nil) conflict marker style; valid
         #       values are `'merge'`, `'diff3'`, and `'zdiff3'`
         #
-        #     @option options [Boolean] :overlay (false) never remove files from the
+        #     @option options [Boolean, nil] :overlay (nil) never remove files from the
         #       index or working tree that are not present in the tree-ish (`--overlay`)
         #
-        #     @option options [Boolean] :no_overlay (false) remove files not present
+        #     @option options [Boolean, nil] :no_overlay (nil) remove files not present
         #       in the tree-ish from the index and working tree (`--no-overlay`)
         #
-        #     @option options [Boolean] :ignore_skip_worktree_bits (false) in sparse
+        #     @option options [Boolean, nil] :ignore_skip_worktree_bits (nil) in sparse
         #       checkout mode, ignore sparse patterns and update all files matched by
         #       pathspec
         #
         #     @option options [String] :pathspec_from_file (nil) read pathspec from
         #       this file; pass `'-'` to read from stdin
         #
-        #     @option options [Boolean] :pathspec_file_nul (false) with
+        #     @option options [Boolean, nil] :pathspec_file_nul (nil) with
         #       `:pathspec_from_file`, separate pathspec elements with NUL instead of
         #       newline
         #

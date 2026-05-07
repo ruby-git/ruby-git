@@ -59,7 +59,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) allow renaming even if new_branch already exists
+        #     @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already exists
         #
         #       Alias: :f
         #
@@ -79,7 +79,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) allow renaming even if new_branch already exists
+        #     @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already exists
         #
         #       Alias: :f
         #

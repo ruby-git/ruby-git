@@ -41,12 +41,12 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :dry_run (false) report what would be removed
+        #     @option options [Boolean, nil] :dry_run (nil) report what would be removed
         #       without removing anything
         #
         #       Alias: :n
         #
-        #     @option options [Boolean] :verbose (false) report all removals
+        #     @option options [Boolean, nil] :verbose (nil) report all removals
         #
         #       Alias: :v
         #

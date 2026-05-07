@@ -65,7 +65,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :tags (false) use only tags to name
+      #     @option options [Boolean, nil] :tags (nil) use only tags to name
       #       the commits, not branch names
       #
       #     @option options [String, Array<String>] :refs (nil) only use refs
@@ -74,7 +74,7 @@ module Git
       #       When given multiple times, uses refs whose names match any of the
       #       given shell patterns. Maps to `--refs=<pattern>`.
       #
-      #     @option options [Boolean] :no_refs (false) clear all previously given
+      #     @option options [Boolean, nil] :no_refs (nil) clear all previously given
       #       `--refs` patterns
       #
       #     @option options [String, Array<String>] :exclude (nil) do not use
@@ -83,24 +83,24 @@ module Git
       #       When given multiple times, a ref is excluded when it matches any
       #       of the given patterns. Maps to `--exclude=<pattern>`.
       #
-      #     @option options [Boolean] :no_exclude (false) clear all previously
+      #     @option options [Boolean, nil] :no_exclude (nil) clear all previously
       #       given `--exclude` patterns
       #
-      #     @option options [Boolean] :all (false) list all commits reachable
+      #     @option options [Boolean, nil] :all (nil) list all commits reachable
       #       from all refs
       #
-      #     @option options [Boolean] :annotate_stdin (false) transform stdin by
+      #     @option options [Boolean, nil] :annotate_stdin (nil) transform stdin by
       #       substituting all 40-character SHA-1 hexes with their symbolic
       #       names. Maps to `--annotate-stdin`.
       #
-      #     @option options [Boolean] :name_only (false) print only the symbolic
+      #     @option options [Boolean, nil] :name_only (nil) print only the symbolic
       #       name, not the SHA-1
       #
-      #     @option options [Boolean] :no_undefined (false) die with non-zero
+      #     @option options [Boolean, nil] :no_undefined (nil) die with non-zero
       #       exit code when a reference is undefined, instead of printing
       #       `undefined`
       #
-      #     @option options [Boolean] :always (false) show uniquely abbreviated
+      #     @option options [Boolean, nil] :always (nil) show uniquely abbreviated
       #       commit object as fallback
       #
       #     @return [Git::CommandLineResult] the result of calling

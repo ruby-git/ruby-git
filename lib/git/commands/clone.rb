@@ -84,41 +84,41 @@ module Git
       #     @option options [String] :template (nil) directory from which templates
       #       will be used
       #
-      #     @option options [Boolean] :local (false) bypass the normal Git-aware transport
+      #     @option options [Boolean, nil] :local (nil) bypass the normal Git-aware transport
       #       for local clones (`--local`)
       #
       #       Alias: `:l`
       #
-      #     @option options [Boolean] :no_local (false) disable the local optimization
+      #     @option options [Boolean, nil] :no_local (nil) disable the local optimization
       #       and use the normal transport (`--no-local`)
       #
-      #     @option options [Boolean] :shared (false) set up a shared clone using
+      #     @option options [Boolean, nil] :shared (nil) set up a shared clone using
       #       alternates instead of hardlinks
       #
       #       Alias: `:s`
       #
-      #     @option options [Boolean] :no_hardlinks (false) force file-copy instead of
+      #     @option options [Boolean, nil] :no_hardlinks (nil) force file-copy instead of
       #       hardlinks when cloning from a local filesystem
       #
-      #     @option options [Boolean] :quiet (false) suppress progress output to stderr
+      #     @option options [Boolean, nil] :quiet (nil) suppress progress output to stderr
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :verbose (false) run verbosely
+      #     @option options [Boolean, nil] :verbose (nil) run verbosely
       #
       #       Alias: `:v`
       #
-      #     @option options [Boolean] :progress (false) force progress status even when
+      #     @option options [Boolean, nil] :progress (nil) force progress status even when
       #       stderr is not a terminal
       #
-      #     @option options [Boolean] :no_checkout (false) skip checking out HEAD after
+      #     @option options [Boolean, nil] :no_checkout (nil) skip checking out HEAD after
       #       the clone
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :bare (false) clone as a bare repository
+      #     @option options [Boolean, nil] :bare (nil) clone as a bare repository
       #
-      #     @option options [Boolean] :mirror (false) set up a mirror clone (implies
+      #     @option options [Boolean, nil] :mirror (nil) set up a mirror clone (implies
       #       --bare)
       #
       #     @option options [String] :origin (nil) name of the remote to use instead of
@@ -144,7 +144,7 @@ module Git
       #     @option options [String, Array<String>] :reference_if_able (nil) like
       #       :reference but skip with a warning when the reference does not exist
       #
-      #     @option options [Boolean] :dissociate (false) stop borrowing from reference
+      #     @option options [Boolean, nil] :dissociate (nil) stop borrowing from reference
       #       repositories after the clone is complete
       #
       #     @option options [String] :separate_git_dir (nil) place the git directory at
@@ -162,31 +162,31 @@ module Git
       #     @option options [String, Array<String>] :shallow_exclude (nil) exclude
       #       commits reachable from the specified remote branch or tag
       #
-      #     @option options [Boolean] :single_branch (false) clone only the history for
+      #     @option options [Boolean, nil] :single_branch (nil) clone only the history for
       #       one branch (`--single-branch`)
       #
-      #     @option options [Boolean] :no_single_branch (false) clone history for all
+      #     @option options [Boolean, nil] :no_single_branch (nil) clone history for all
       #       branches (`--no-single-branch`)
       #
-      #     @option options [Boolean] :tags (false) include tags in the clone (`--tags`)
+      #     @option options [Boolean, nil] :tags (nil) include tags in the clone (`--tags`)
       #
-      #     @option options [Boolean] :no_tags (false) exclude tags from the clone
+      #     @option options [Boolean, nil] :no_tags (nil) exclude tags from the clone
       #       (`--no-tags`)
       #
-      #     @option options [Boolean, String, Array<String>] :recurse_submodules (nil)
+      #     @option options [Boolean, String, Array<String>, nil] :recurse_submodules (nil)
       #       initialize submodules after cloning; pass true for all submodules or a
       #       pathspec string/array for a subset
       #
-      #     @option options [Boolean] :shallow_submodules (false) clone submodules with
+      #     @option options [Boolean, nil] :shallow_submodules (nil) clone submodules with
       #       depth 1 (`--shallow-submodules`)
       #
-      #     @option options [Boolean] :no_shallow_submodules (false) clone submodules
+      #     @option options [Boolean, nil] :no_shallow_submodules (nil) clone submodules
       #       with full history (`--no-shallow-submodules`)
       #
-      #     @option options [Boolean] :remote_submodules (false) use submodule
+      #     @option options [Boolean, nil] :remote_submodules (nil) use submodule
       #       remote-tracking branch status (`--remote-submodules`)
       #
-      #     @option options [Boolean] :no_remote_submodules (false) use the locally
+      #     @option options [Boolean, nil] :no_remote_submodules (nil) use the locally
       #       recorded SHA-1 for submodules (`--no-remote-submodules`)
       #
       #     @option options [Integer, String] :jobs (nil) number of submodules fetched
@@ -194,19 +194,19 @@ module Git
       #
       #       Alias: `:j`
       #
-      #     @option options [Boolean] :sparse (false) enable sparse checkout with
+      #     @option options [Boolean, nil] :sparse (nil) enable sparse checkout with
       #       top-level files only
       #
-      #     @option options [Boolean] :reject_shallow (false) fail if source is shallow
+      #     @option options [Boolean, nil] :reject_shallow (nil) fail if source is shallow
       #       (`--reject-shallow`)
       #
-      #     @option options [Boolean] :no_reject_shallow (false) allow cloning from
+      #     @option options [Boolean, nil] :no_reject_shallow (nil) allow cloning from
       #       shallow sources (`--no-reject-shallow`)
       #
       #     @option options [String] :filter (nil) specify a partial clone filter
       #       (e.g., 'blob:none', 'tree:0')
       #
-      #     @option options [Boolean] :also_filter_submodules (false) apply the partial
+      #     @option options [Boolean, nil] :also_filter_submodules (nil) apply the partial
       #       clone filter to submodules; requires :filter and :recurse_submodules
       #
       #     @option options [String, Array<String>] :config (nil) set configuration

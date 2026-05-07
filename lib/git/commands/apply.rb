@@ -101,75 +101,75 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :stat (nil) show diffstat for the input
+      #     @option options [Boolean, nil] :stat (nil) show diffstat for the input
       #       instead of applying
       #
       #       Turns off apply mode.
       #
-      #     @option options [Boolean] :numstat (nil) show numeric diffstat for
+      #     @option options [Boolean, nil] :numstat (nil) show numeric diffstat for
       #       the input instead of applying
       #
       #       Turns off apply mode. Output is in machine-friendly decimal format.
       #
-      #     @option options [Boolean] :summary (nil) show a condensed summary of
+      #     @option options [Boolean, nil] :summary (nil) show a condensed summary of
       #       extended header information instead of applying
       #
       #       Turns off apply mode.
       #
-      #     @option options [Boolean] :check (nil) check whether the patch applies
+      #     @option options [Boolean, nil] :check (nil) check whether the patch applies
       #       cleanly without modifying any files
       #
       #       Turns off apply mode.
       #
-      #     @option options [Boolean] :index (nil) apply the patch to both the
+      #     @option options [Boolean, nil] :index (nil) apply the patch to both the
       #       index and the working tree
       #
-      #     @option options [Boolean] :intent_to_add (nil) mark new files added by
+      #     @option options [Boolean, nil] :intent_to_add (nil) mark new files added by
       #       the patch for later addition to the index
       #
       #       Alias: `:N`
       #
-      #     @option options [Boolean] :three_way (nil) attempt a 3-way merge if
+      #     @option options [Boolean, nil] :three_way (nil) attempt a 3-way merge if
       #       the patch does not apply cleanly (`--3way`)
       #
-      #     @option options [Boolean] :ours (nil) resolve 3-way conflicts by
+      #     @option options [Boolean, nil] :ours (nil) resolve 3-way conflicts by
       #       favouring our side of the conflict
       #
       #       Requires `:three_way`.
       #
-      #     @option options [Boolean] :theirs (nil) resolve 3-way conflicts by
+      #     @option options [Boolean, nil] :theirs (nil) resolve 3-way conflicts by
       #       favouring their side of the conflict
       #
       #       Requires `:three_way`.
       #
-      #     @option options [Boolean] :union (nil) resolve 3-way conflicts by
+      #     @option options [Boolean, nil] :union (nil) resolve 3-way conflicts by
       #       including both sides of the conflict
       #
       #       Requires `:three_way`.
       #
-      #     @option options [Boolean] :apply (nil) re-enable the apply step even
+      #     @option options [Boolean, nil] :apply (nil) re-enable the apply step even
       #       when a "turns off apply" flag such as `:stat` is also given
       #
-      #     @option options [Boolean] :no_add (nil) ignore additions made by the
+      #     @option options [Boolean, nil] :no_add (nil) ignore additions made by the
       #       patch; apply only the deletions
       #
       #     @option options [String] :build_fake_ancestor (nil) path to a
       #       temporary index file for building a fake ancestor from the embedded
       #       blob identities in the patch
       #
-      #     @option options [Boolean] :reverse (nil) apply the patch in reverse
+      #     @option options [Boolean, nil] :reverse (nil) apply the patch in reverse
       #
       #       Alias: `:R`
       #
-      #     @option options [Boolean] :allow_binary_replacement (nil) allow
+      #     @option options [Boolean, nil] :allow_binary_replacement (nil) allow
       #       binary patch application (no-op in Git 2.28+)
       #
       #       Alias: `:binary`
       #
-      #     @option options [Boolean] :reject (nil) leave rejected hunks in
+      #     @option options [Boolean, nil] :reject (nil) leave rejected hunks in
       #       `.rej` files instead of aborting
       #
-      #     @option options [Boolean] :z (nil) use NUL-terminated output for
+      #     @option options [Boolean, nil] :z (nil) use NUL-terminated output for
       #       `--numstat` pathnames (`-z`)
       #
       #     @option options [Integer] :p (nil) strip this many leading path
@@ -178,22 +178,22 @@ module Git
       #     @option options [Integer] :C (nil) require at least this many lines
       #       of surrounding context before and after each change (`-C<n>`)
       #
-      #     @option options [Boolean] :unidiff_zero (nil) bypass context-line
+      #     @option options [Boolean, nil] :unidiff_zero (nil) bypass context-line
       #       safety checks for diffs generated with `--unified=0`
       #
-      #     @option options [Boolean] :inaccurate_eof (nil) work around diffs
+      #     @option options [Boolean, nil] :inaccurate_eof (nil) work around diffs
       #       that do not correctly detect a missing newline at end of file
       #
-      #     @option options [Boolean] :recount (nil) infer hunk sizes from the
+      #     @option options [Boolean, nil] :recount (nil) infer hunk sizes from the
       #       patch content rather than trusting the hunk header counts
       #
-      #     @option options [Boolean] :cached (nil) apply the patch only to the
+      #     @option options [Boolean, nil] :cached (nil) apply the patch only to the
       #       index without touching the working tree
       #
-      #     @option options [Boolean] :ignore_space_change (nil) ignore changes
+      #     @option options [Boolean, nil] :ignore_space_change (nil) ignore changes
       #       in the amount of whitespace in context lines
       #
-      #     @option options [Boolean] :ignore_whitespace (nil) ignore all
+      #     @option options [Boolean, nil] :ignore_whitespace (nil) ignore all
       #       whitespace differences in context lines
       #
       #     @option options [String] :whitespace (nil) whitespace error handling
@@ -208,18 +208,18 @@ module Git
       #     @option options [String] :directory (nil) prepend this root to all
       #       filenames in the patch
       #
-      #     @option options [Boolean] :verbose (nil) report progress to stderr
+      #     @option options [Boolean, nil] :verbose (nil) report progress to stderr
       #
       #       Alias: `:v`
       #
-      #     @option options [Boolean] :quiet (nil) suppress stderr output
+      #     @option options [Boolean, nil] :quiet (nil) suppress stderr output
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :unsafe_paths (nil) override the safety
+      #     @option options [Boolean, nil] :unsafe_paths (nil) override the safety
       #       check that rejects patches affecting paths outside the working area
       #
-      #     @option options [Boolean] :allow_empty (nil) do not return an error
+      #     @option options [Boolean, nil] :allow_empty (nil) do not return an error
       #       for patches containing no diff
       #
       #     @option options [String] :chdir (nil) change to this directory before

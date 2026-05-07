@@ -66,13 +66,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) read from system config
+        #     @option options [Boolean, nil] :system (nil) read from system config
         #
-        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) read from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -82,13 +82,13 @@ module Git
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
-        #     @option options [Boolean] :null (false) terminate values with NUL byte instead of newline
+        #     @option options [Boolean, nil] :null (nil) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #
-        #     @option options [Boolean] :includes (false) respect include directives in config files (`--includes`)
+        #     @option options [Boolean, nil] :includes (nil) respect include directives in config files (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) disable include directives
+        #     @option options [Boolean, nil] :no_includes (nil) disable include directives
         #       in config files (`--no-includes`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-urlmatch`

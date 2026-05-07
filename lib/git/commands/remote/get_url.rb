@@ -51,9 +51,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :push (nil) query push URLs instead of fetch URLs
+        #     @option options [Boolean, nil] :push (nil) query push URLs instead of fetch URLs
         #
-        #     @option options [Boolean] :all (nil) return all configured URLs instead of only the first one
+        #     @option options [Boolean, nil] :all (nil) return all configured URLs instead of only the first one
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote get-url`
         #

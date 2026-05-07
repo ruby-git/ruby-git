@@ -46,7 +46,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :missing_ok (false) disable the check that
+      #     @option options [Boolean, nil] :missing_ok (nil) disable the check that
       #       all objects referenced by the directory exist in the object
       #       database
       #

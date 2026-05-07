@@ -68,13 +68,13 @@ module Git
         #
         #       Alias: :m
         #
-        #     @option options [Boolean] :fetch (nil) fetch the remote immediately after adding it
+        #     @option options [Boolean, nil] :fetch (nil) fetch the remote immediately after adding it
         #
         #       Alias: :f
         #
-        #     @option options [Boolean] :tags (false) import all tags from the remote (`--tags`)
+        #     @option options [Boolean, nil] :tags (nil) import all tags from the remote (`--tags`)
         #
-        #     @option options [Boolean] :no_tags (false) disable importing tags from the remote (`--no-tags`)
+        #     @option options [Boolean, nil] :no_tags (nil) disable importing tags from the remote (`--no-tags`)
         #
         #     @option options [String] :mirror (nil) set mirror mode
         #

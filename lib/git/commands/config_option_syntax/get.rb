@@ -75,13 +75,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) read from system config
+        #     @option options [Boolean, nil] :system (nil) read from system config
         #
-        #     @option options [Boolean] :local (nil) read from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) read from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -89,18 +89,18 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :includes (false) respect include directives in config files (`--includes`)
+        #     @option options [Boolean, nil] :includes (nil) respect include directives in config files (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) do not respect include directives
+        #     @option options [Boolean, nil] :no_includes (nil) do not respect include directives
         #       in config files (`--no-includes`)
         #
         #     @option options [String] :type (nil) ensure the value conforms to the given type
         #
-        #     @option options [Boolean] :show_origin (nil) show the origin of the config value
+        #     @option options [Boolean, nil] :show_origin (nil) show the origin of the config value
         #
-        #     @option options [Boolean] :show_scope (nil) show the scope of the config value
+        #     @option options [Boolean, nil] :show_scope (nil) show the scope of the config value
         #
-        #     @option options [Boolean] :null (nil) terminate values with NUL byte instead of newline
+        #     @option options [Boolean, nil] :null (nil) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #

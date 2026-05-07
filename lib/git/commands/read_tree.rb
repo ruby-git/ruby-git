@@ -82,16 +82,16 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :m (false) perform a merge, not just a
+      #     @option options [Boolean, nil] :m (nil) perform a merge, not just a
       #       read
       #
-      #     @option options [Boolean] :trivial (false) restrict three-way merge
+      #     @option options [Boolean, nil] :trivial (nil) restrict three-way merge
       #       to happen only if there is no file-level merging required
       #
-      #     @option options [Boolean] :aggressive (false) resolve a few more
+      #     @option options [Boolean, nil] :aggressive (nil) resolve a few more
       #       three-way merge cases internally beyond the trivial defaults
       #
-      #     @option options [Boolean] :reset (false) same as `-m`, except that
+      #     @option options [Boolean, nil] :reset (nil) same as `-m`, except that
       #       unmerged entries are discarded instead of failing
       #
       #     @option options [String] :prefix (nil) keep the current index
@@ -100,19 +100,19 @@ module Git
       #
       #       Maps to `--prefix=<prefix>`.
       #
-      #     @option options [Boolean] :u (false) after a successful merge,
+      #     @option options [Boolean, nil] :u (nil) after a successful merge,
       #       update the files in the work tree with the result
       #
-      #     @option options [Boolean] :i (false) disable the check with the
+      #     @option options [Boolean, nil] :i (nil) disable the check with the
       #       working tree, meant for creating a merge of trees not directly
       #       related to the current working tree status
       #
-      #     @option options [Boolean] :dry_run (false) check if the command
+      #     @option options [Boolean, nil] :dry_run (nil) check if the command
       #       would error out, without updating the index or files for real
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :v (false) show the progress of checking
+      #     @option options [Boolean, nil] :v (nil) show the progress of checking
       #       files out
       #
       #     @option options [String] :index_output (nil) write the resulting
@@ -120,20 +120,20 @@ module Git
       #
       #       Maps to `--index-output=<file>`.
       #
-      #     @option options [Boolean] :recurse_submodules (false) update the
+      #     @option options [Boolean, nil] :recurse_submodules (nil) update the
       #       content of all active submodules according to the commit
       #       recorded in the superproject (`--recurse-submodules`)
       #
-      #     @option options [Boolean] :no_recurse_submodules (false) disable
+      #     @option options [Boolean, nil] :no_recurse_submodules (nil) disable
       #       recursive submodule update (`--no-recurse-submodules`)
       #
-      #     @option options [Boolean] :no_sparse_checkout (false) disable
+      #     @option options [Boolean, nil] :no_sparse_checkout (nil) disable
       #       sparse checkout support even if `core.sparseCheckout` is true
       #
-      #     @option options [Boolean] :empty (false) empty the index instead of
+      #     @option options [Boolean, nil] :empty (nil) empty the index instead of
       #       reading tree object(s)
       #
-      #     @option options [Boolean] :quiet (false) suppress feedback messages
+      #     @option options [Boolean, nil] :quiet (nil) suppress feedback messages
       #
       #       Alias: `:q`
       #

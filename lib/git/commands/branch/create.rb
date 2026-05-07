@@ -65,7 +65,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, String] :track (false)
+        #     @option options [Boolean, String, nil] :track (nil)
         #       configure upstream tracking for the new branch
         #
         #       - `true`: Set up tracking using the start-point branch itself (`--track`)
@@ -74,34 +74,34 @@ module Git
         #
         #       Alias: :t
         #
-        #     @option options [Boolean] :no_track (false)
+        #     @option options [Boolean, nil] :no_track (nil)
         #       do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
         #
-        #     @option options [Boolean] :force (false)
+        #     @option options [Boolean, nil] :force (nil)
         #       reset the branch to start point even if it already exists
         #
         #       Without this, git branch refuses to change an existing branch.
         #
         #       Alias: :f
         #
-        #     @option options [Boolean] :recurse_submodules (false)
+        #     @option options [Boolean, nil] :recurse_submodules (nil)
         #       create the branch in the superproject and all submodules
         #
         #       This is an experimental feature.
         #
-        #     @option options [Boolean] :quiet (false)
+        #     @option options [Boolean, nil] :quiet (nil)
         #       suppress informational messages
         #
         #       Alias: :q
         #
-        #     @option options [Boolean] :create_reflog (false)
+        #     @option options [Boolean, nil] :create_reflog (nil)
         #       create the branch's reflog (`--create-reflog`)
         #
         #       Enables date-based sha1 expressions such as `branch@{yesterday}`.
         #       In non-bare repositories, reflogs are usually enabled by default
         #       via `core.logAllRefUpdates`.
         #
-        #     @option options [Boolean] :no_create_reflog (false)
+        #     @option options [Boolean, nil] :no_create_reflog (nil)
         #       forcibly disable the branch's reflog (`--no-create-reflog`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git branch`
@@ -123,7 +123,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, String] :track (false)
+        #     @option options [Boolean, String, nil] :track (nil)
         #       configure upstream tracking for the new branch
         #
         #       - `true`: Set up tracking using the start-point branch itself (`--track`)
@@ -132,34 +132,34 @@ module Git
         #
         #       Alias: :t
         #
-        #     @option options [Boolean] :no_track (false)
+        #     @option options [Boolean, nil] :no_track (nil)
         #       do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
         #
-        #     @option options [Boolean] :force (false)
+        #     @option options [Boolean, nil] :force (nil)
         #       reset the branch to start point even if it already exists
         #
         #       Without this, git branch refuses to change an existing branch.
         #
         #       Alias: :f
         #
-        #     @option options [Boolean] :recurse_submodules (false)
+        #     @option options [Boolean, nil] :recurse_submodules (nil)
         #       create the branch in the superproject and all submodules
         #
         #       This is an experimental feature.
         #
-        #     @option options [Boolean] :quiet (false)
+        #     @option options [Boolean, nil] :quiet (nil)
         #       suppress informational messages
         #
         #       Alias: :q
         #
-        #     @option options [Boolean] :create_reflog (false)
+        #     @option options [Boolean, nil] :create_reflog (nil)
         #       create the branch's reflog (`--create-reflog`)
         #
         #       Enables date-based sha1 expressions such as `branch@{yesterday}`.
         #       In non-bare repositories, reflogs are usually enabled by default
         #       via `core.logAllRefUpdates`.
         #
-        #     @option options [Boolean] :no_create_reflog (false)
+        #     @option options [Boolean, nil] :no_create_reflog (nil)
         #       forcibly disable the branch's reflog (`--no-create-reflog`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git branch`

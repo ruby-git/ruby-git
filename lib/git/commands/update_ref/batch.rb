@@ -94,13 +94,13 @@ module Git
         #   @option options [String] :m (nil) a reflog message for each
         #     update
         #
-        #   @option options [Boolean] :no_deref (nil) overwrite refs
+        #   @option options [Boolean, nil] :no_deref (nil) overwrite refs
         #     themselves rather than following symbolic refs
         #
-        #   @option options [Boolean] :z (nil) use NUL-delimited input
+        #   @option options [Boolean, nil] :z (nil) use NUL-delimited input
         #     instead of newline-delimited
         #
-        #   @option options [Boolean] :batch_updates (nil) allow individual updates to fail
+        #   @option options [Boolean, nil] :batch_updates (nil) allow individual updates to fail
         #
         #     When set, each instruction is applied independently; failed instructions are
         #     reported but do not abort the remaining updates. System-level failures (I/O,

@@ -84,24 +84,24 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (nil) suppress all output
+        #     @option options [Boolean, nil] :quiet (nil) suppress all output
         #
         #       Useful when you only care whether the ref exists.
         #
         #       Alias: `:q`
         #
-        #     @option options [Boolean] :dereference (nil) dereference annotated tags,
+        #     @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
         #       emitting an extra `^{}` line per tag
         #
         #       Alias: `:d`
         #
-        #     @option options [Boolean, Integer] :hash (nil) show only the SHA part
+        #     @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part
         #
         #       Pass `true` for full-length SHAs or an integer for abbreviation length.
         #
         #       Alias: `:s`
         #
-        #     @option options [Boolean, Integer] :abbrev (nil) abbreviate object names
+        #     @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
         #
         #       Pass `true` for the default length or an integer for a specific length.
         #

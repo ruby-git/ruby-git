@@ -87,71 +87,71 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :short (false) give output in short format
+      #     @option options [Boolean, nil] :short (nil) give output in short format
       #
       #       Alias: :s
       #
-      #     @option options [Boolean] :branch (false) show the branch and tracking info
+      #     @option options [Boolean, nil] :branch (nil) show the branch and tracking info
       #       even in short-format
       #
       #       Alias: :b
       #
-      #     @option options [Boolean] :show_stash (false) show the number of entries
+      #     @option options [Boolean, nil] :show_stash (nil) show the number of entries
       #       currently stashed away
       #
-      #     @option options [Boolean, String] :porcelain (nil) give the output in an
+      #     @option options [Boolean, String, nil] :porcelain (nil) give the output in an
       #       easy-to-parse format for scripts
       #
       #       When `true`, gives porcelain format. When a string (e.g. `'v1'`, `'v2'`),
       #       gives the specified porcelain format version.
       #
-      #     @option options [Boolean] :long (false) give output in long format (the default)
+      #     @option options [Boolean, nil] :long (nil) give output in long format (the default)
       #
-      #     @option options [Boolean] :verbose (false) in addition to names of files that
+      #     @option options [Boolean, nil] :verbose (nil) in addition to names of files that
       #       have been changed, also show the textual changes that are staged
       #
       #       Alias: :v
       #
-      #     @option options [Boolean, String] :untracked_files (nil) show untracked files
+      #     @option options [Boolean, String, nil] :untracked_files (nil) show untracked files
       #
       #       Mode can be `'no'`, `'normal'`, or `'all'`. When `true`, uses the default
       #       mode.
       #
       #       Alias: :u
       #
-      #     @option options [Boolean, String] :ignore_submodules (nil) ignore changes
+      #     @option options [Boolean, String, nil] :ignore_submodules (nil) ignore changes
       #       to submodules
       #
       #       Mode can be `'none'`, `'untracked'`, `'dirty'`, or `'all'`.
       #
-      #     @option options [Boolean, String] :ignored (nil) show ignored files as well
+      #     @option options [Boolean, String, nil] :ignored (nil) show ignored files as well
       #
       #       Mode can be `'traditional'`, `'no'`, or `'matching'`.
       #
-      #     @option options [Boolean] :z (false) terminate entries with NUL instead of
+      #     @option options [Boolean, nil] :z (nil) terminate entries with NUL instead of
       #       newline (`-z`)
       #
       #       Implies `--porcelain=v1`
       #
-      #     @option options [Boolean, String] :column (false) display untracked files in
+      #     @option options [Boolean, String, nil] :column (nil) display untracked files in
       #       columns (`--column`)
       #
       #       Pass `true` for `--column` or a string of options for `--column=<options>`.
       #
-      #     @option options [Boolean] :no_column (false) disable column output (`--no-column`)
+      #     @option options [Boolean, nil] :no_column (nil) disable column output (`--no-column`)
       #
-      #     @option options [Boolean] :ahead_behind (false) show ahead/behind counts for
+      #     @option options [Boolean, nil] :ahead_behind (nil) show ahead/behind counts for
       #       the branch (`--ahead-behind`)
       #
-      #     @option options [Boolean] :no_ahead_behind (false) suppress ahead/behind counts
+      #     @option options [Boolean, nil] :no_ahead_behind (nil) suppress ahead/behind counts
       #       for the branch (`--no-ahead-behind`)
       #
-      #     @option options [Boolean] :renames (false) turn on rename detection (`--renames`)
+      #     @option options [Boolean, nil] :renames (nil) turn on rename detection (`--renames`)
       #
-      #     @option options [Boolean] :no_renames (false) turn off rename detection
+      #     @option options [Boolean, nil] :no_renames (nil) turn off rename detection
       #       (`--no-renames`)
       #
-      #     @option options [Boolean, String] :find_renames (nil) turn on rename detection
+      #     @option options [Boolean, String, nil] :find_renames (nil) turn on rename detection
       #       with optional similarity threshold
       #
       #       When `true`, enables rename detection without a threshold. When a string

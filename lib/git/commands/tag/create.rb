@@ -68,19 +68,21 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :annotate (false) make an unsigned, annotated tag object
+        #     @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
         #
         #       Requires a message via `:message` or `:file`.
         #
         #       Alias: :a
         #
-        #     @option options [Boolean] :sign (false) make a GPG-signed tag using the default signing key (`--sign`)
+        #     @option options [Boolean, nil] :sign (nil) make a GPG-signed tag using the default signing
+        #       key (`--sign`)
         #
         #       Requires a message via `:message` or `:file`.
         #
         #       Alias: :s
         #
-        #     @option options [Boolean] :no_sign (false) override `tag.gpgSign` config to disable signing (`--no-sign`)
+        #     @option options [Boolean, nil] :no_sign (nil) override `tag.gpgSign` config to disable
+        #       signing (`--no-sign`)
         #
         #     @option options [String] :local_user (nil) make a cryptographically signed tag using the given key
         #
@@ -88,7 +90,7 @@ module Git
         #
         #       Alias: :u
         #
-        #     @option options [Boolean] :force (false) replace an existing tag with the given name instead of failing
+        #     @option options [Boolean, nil] :force (nil) replace an existing tag with the given name instead of failing
         #
         #       Alias: :f
         #
@@ -105,11 +107,11 @@ module Git
         #
         #       Alias: :F
         #
-        #     @option options [Boolean] :edit (false) open an editor to further edit the tag message (`--edit`)
+        #     @option options [Boolean, nil] :edit (nil) open an editor to further edit the tag message (`--edit`)
         #
         #       Alias: :e
         #
-        #     @option options [Boolean] :no_edit (false) suppress the editor (`--no-edit`)
+        #     @option options [Boolean, nil] :no_edit (nil) suppress the editor (`--no-edit`)
         #
         #     @option options [Hash, Array<Array>] :trailer (nil) add trailers to the tag message
         #
@@ -121,7 +123,7 @@ module Git
         #       Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
         #       whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
         #
-        #     @option options [Boolean] :create_reflog (false) create a reflog for the tag
+        #     @option options [Boolean, nil] :create_reflog (nil) create a reflog for the tag
         #
         #       Enables date-based sha1 expressions such as `tag@{yesterday}`.
         #

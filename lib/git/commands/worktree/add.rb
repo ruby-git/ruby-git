@@ -63,7 +63,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :force (false) override safety guards
+        #     @option options [Boolean, Integer, nil] :force (nil) override safety guards
         #
         #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
         #       `--force --force`, which also allows adding worktrees for locked branches.
@@ -74,36 +74,36 @@ module Git
         #
         #     @option options [String] :B (nil) create or reset a branch with this name and check it out
         #
-        #     @option options [Boolean] :detach (false) check out in detached-HEAD state
+        #     @option options [Boolean, nil] :detach (nil) check out in detached-HEAD state
         #
         #       Alias: :d
         #
-        #     @option options [Boolean] :checkout (false) control whether the working tree
+        #     @option options [Boolean, nil] :checkout (nil) control whether the working tree
         #       is checked out after creation (`--checkout`)
         #
-        #     @option options [Boolean] :no_checkout (false) suppress the initial checkout
+        #     @option options [Boolean, nil] :no_checkout (nil) suppress the initial checkout
         #       after worktree creation (`--no-checkout`)
         #
-        #     @option options [Boolean] :guess_remote (false) base new branch on a matching
+        #     @option options [Boolean, nil] :guess_remote (nil) base new branch on a matching
         #       remote-tracking branch when no `commit_ish` is given (`--guess-remote`)
         #
-        #     @option options [Boolean] :no_guess_remote (false) disable guess-remote behavior (`--no-guess-remote`)
+        #     @option options [Boolean, nil] :no_guess_remote (nil) disable guess-remote behavior (`--no-guess-remote`)
         #
-        #     @option options [Boolean] :relative_paths (false) link worktrees using relative paths,
+        #     @option options [Boolean, nil] :relative_paths (nil) link worktrees using relative paths,
         #       overriding the `worktree.useRelativePaths` config option (`--relative-paths`)
         #
-        #     @option options [Boolean] :no_relative_paths (false) use absolute paths for worktree links,
+        #     @option options [Boolean, nil] :no_relative_paths (nil) use absolute paths for worktree links,
         #       overriding the `worktree.useRelativePaths` config option (`--no-relative-paths`)
         #
-        #     @option options [Boolean] :track (false) mark the upstream branch for tracking (`--track`)
+        #     @option options [Boolean, nil] :track (nil) mark the upstream branch for tracking (`--track`)
         #
-        #     @option options [Boolean] :no_track (false) do not mark the upstream branch for tracking (`--no-track`)
+        #     @option options [Boolean, nil] :no_track (nil) do not mark the upstream branch for tracking (`--no-track`)
         #
-        #     @option options [Boolean] :lock (false) lock the worktree immediately after creation
+        #     @option options [Boolean, nil] :lock (nil) lock the worktree immediately after creation
         #
-        #     @option options [Boolean] :orphan (false) create an empty worktree associated with a new unborn branch
+        #     @option options [Boolean, nil] :orphan (nil) create an empty worktree associated with a new unborn branch
         #
-        #     @option options [Boolean] :quiet (false) suppress informational messages
+        #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
         #       Alias: :q
         #

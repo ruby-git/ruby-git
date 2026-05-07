@@ -65,17 +65,17 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (false) suppress feedback messages
+        #     @option options [Boolean, nil] :quiet (nil) suppress feedback messages
         #
         #       Alias: `:q`
         #
-        #     @option options [Boolean] :progress (false) force progress reporting even
+        #     @option options [Boolean, nil] :progress (nil) force progress reporting even
         #       when not attached to a terminal (`--progress`)
         #
-        #     @option options [Boolean] :no_progress (false) disable progress reporting
+        #     @option options [Boolean, nil] :no_progress (nil) disable progress reporting
         #       even when attached to a terminal (`--no-progress`)
         #
-        #     @option options [Boolean] :force (false) proceed even if the index or
+        #     @option options [Boolean, nil] :force (nil) proceed even if the index or
         #       working tree differs from HEAD; discards local changes and untracked
         #       files that are in the way
         #
@@ -87,25 +87,25 @@ module Git
         #     @option options [String] :B (nil) like `:b`, but reset the branch to the
         #       start point if it already exists
         #
-        #     @option options [Boolean, String] :track (false) set up upstream tracking
+        #     @option options [Boolean, String, nil] :track (nil) set up upstream tracking
         #       configuration; `true` emits `--track`, `'direct'` emits
         #       `--track=direct`, `'inherit'` emits `--track=inherit` (`--track`)
         #
         #       Alias: `:t`
         #
-        #     @option options [Boolean] :no_track (false) do not set up branch tracking
+        #     @option options [Boolean, nil] :no_track (nil) do not set up branch tracking
         #       even if `branch.autoSetupMerge` is configured (`--no-track`)
         #
-        #     @option options [Boolean] :guess (false) automatically create and check out
+        #     @option options [Boolean, nil] :guess (nil) automatically create and check out
         #       a local branch from a uniquely matching remote-tracking branch
         #       (`--guess`)
         #
-        #     @option options [Boolean] :no_guess (false) disable automatic remote branch
+        #     @option options [Boolean, nil] :no_guess (nil) disable automatic remote branch
         #       matching (`--no-guess`)
         #
-        #     @option options [Boolean] :l (false) create the new branch's reflog
+        #     @option options [Boolean, nil] :l (nil) create the new branch's reflog
         #
-        #     @option options [Boolean] :detach (false) detach HEAD at the specified
+        #     @option options [Boolean, nil] :detach (nil) detach HEAD at the specified
         #       commit rather than pointing a branch at it
         #
         #       Alias: `:d`
@@ -113,25 +113,25 @@ module Git
         #     @option options [String] :orphan (nil) create a new unborn branch with no
         #       history; the positional `branch` argument becomes the start point
         #
-        #     @option options [Boolean] :merge (false) perform a three-way merge when
+        #     @option options [Boolean, nil] :merge (nil) perform a three-way merge when
         #       local modifications conflict with the target branch
         #
         #       Alias: `:m`
         #
-        #     @option options [Boolean] :ignore_other_worktrees (false) check out the
+        #     @option options [Boolean, nil] :ignore_other_worktrees (nil) check out the
         #       branch even if it is already in use by another worktree
         #
-        #     @option options [Boolean] :overwrite_ignore (false) silently overwrite
+        #     @option options [Boolean, nil] :overwrite_ignore (nil) silently overwrite
         #       ignored files when switching branches (`--overwrite-ignore`)
         #
-        #     @option options [Boolean] :no_overwrite_ignore (false) abort the checkout
+        #     @option options [Boolean, nil] :no_overwrite_ignore (nil) abort the checkout
         #       if ignored files would be overwritten (`--no-overwrite-ignore`)
         #
-        #     @option options [Boolean] :recurse_submodules (false) update all active
+        #     @option options [Boolean, nil] :recurse_submodules (nil) update all active
         #       submodule working trees to match the new branch
         #       (`--recurse-submodules`)
         #
-        #     @option options [Boolean] :no_recurse_submodules (false) do not update
+        #     @option options [Boolean, nil] :no_recurse_submodules (nil) do not update
         #       submodule working trees when switching branches
         #       (`--no-recurse-submodules`)
         #

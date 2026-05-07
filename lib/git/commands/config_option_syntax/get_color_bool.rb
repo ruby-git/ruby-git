@@ -64,13 +64,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) read from system config
+        #     @option options [Boolean, nil] :system (nil) read from system config
         #
-        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) read from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -78,9 +78,9 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :includes (false) respect include directives in config files (`--includes`)
+        #     @option options [Boolean, nil] :includes (nil) respect include directives in config files (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) disable include directive processing (`--no-includes`)
+        #     @option options [Boolean, nil] :no_includes (nil) disable include directive processing (`--no-includes`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-colorbool`
         #

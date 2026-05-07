@@ -90,62 +90,62 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :branches (false) Limit output to refs under `refs/heads/`
+      #     @option options [Boolean, nil] :branches (nil) limit output to refs under `refs/heads/`
       #
       #       Alias: :b
       #
-      #     @option options [Boolean] :heads (false) Limit output to refs under `refs/heads/`
+      #     @option options [Boolean, nil] :heads (nil) limit output to refs under `refs/heads/`
       #
       #       Deprecated: use `:branches` instead. Kept for backward compatibility with
       #       older git versions where `--heads` is the only supported flag.
       #
       #       Alias: :h
       #
-      #     @option options [Boolean] :tags (false) Limit output to refs under `refs/tags/`
+      #     @option options [Boolean, nil] :tags (nil) limit output to refs under `refs/tags/`
       #
       #       Alias: :t
       #
-      #     @option options [Boolean] :refs (false) Exclude peeled tags and pseudorefs
+      #     @option options [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
       #       like `HEAD` from the output
       #
-      #     @option options [String] :upload_pack (nil) Full path to `git-upload-pack`
+      #     @option options [String] :upload_pack (nil) full path to `git-upload-pack`
       #       on the remote host
       #
       #       Useful when accessing repositories via SSH where the daemon does not
       #       use the PATH configured by the user.
       #
-      #     @option options [Boolean] :quiet (false) Do not print the remote URL to stderr
+      #     @option options [Boolean, nil] :quiet (nil) do not print the remote URL to stderr
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :exit_code (false) Exit with status `2` when no
+      #     @option options [Boolean, nil] :exit_code (nil) exit with status `2` when no
       #       matching refs are found in the remote repository
       #
       #       Without this option, the command exits `0` whenever it successfully
       #       communicates with the remote, even if no refs match.
       #
-      #     @option options [Boolean] :get_url (false) Expand and print the remote URL
+      #     @option options [Boolean, nil] :get_url (nil) expand and print the remote URL
       #       (respecting `url.<base>.insteadOf` config) and exit without contacting
       #       the remote
       #
-      #     @option options [String] :sort (nil) Sort output by the given key
+      #     @option options [String] :sort (nil) sort output by the given key
       #
       #       Prefix `-` for descending order. Supports `"version:refname"` or
       #       `"v:refname"`. See `git for-each-ref` for sort key documentation.
       #
-      #     @option options [Boolean] :symref (false) Show the underlying ref pointed to by
+      #     @option options [Boolean, nil] :symref (nil) show the underlying ref pointed to by
       #       symbolic refs
       #
       #       The `upload-pack` protocol currently surfaces only the `HEAD` symref,
       #       so that is typically the only symref shown.
       #
-      #     @option options [String, Array<String>] :server_option (nil) Transmit a
+      #     @option options [String, Array<String>] :server_option (nil) transmit a
       #       string to the server when communicating using protocol version 2
       #
       #       The string must not contain NUL or LF characters. Repeatable by
       #       passing an Array. Alias: :o
       #
-      #     @option options [Numeric] :timeout (nil) Execution timeout in seconds
+      #     @option options [Numeric] :timeout (nil) execution timeout in seconds
       #
       #     @return [Git::CommandLineResult] the result of calling `git ls-remote`
       #

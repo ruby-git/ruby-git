@@ -70,13 +70,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) write to global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) write to global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) write to system config
+        #     @option options [Boolean, nil] :system (nil) write to system config
         #
-        #     @option options [Boolean] :local (false) write to repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) write to repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) write to worktree config
+        #     @option options [Boolean, nil] :worktree (nil) write to worktree config
         #
         #     @option options [String] :file (nil) write to the specified file
         #
@@ -86,11 +86,11 @@ module Git
         #
         #     @option options [String] :comment (nil) append a comment at the end of new or modified lines
         #
-        #     @option options [Boolean] :fixed_value (false) treat the value regex as an exact string
+        #     @option options [Boolean, nil] :fixed_value (nil) treat the value regex as an exact string
         #
         #     @option options [String] :type (nil) ensure the value conforms to the given type
         #
-        #     @option options [Boolean] :no_type (false) unset the previously set type specifier;
+        #     @option options [Boolean, nil] :no_type (nil) unset the previously set type specifier;
         #       `true` emits `--no-type`
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --replace-all`

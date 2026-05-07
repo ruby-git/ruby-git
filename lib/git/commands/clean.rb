@@ -51,9 +51,9 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :d (false) recurse into untracked directories
+      #     @option options [Boolean, nil] :d (nil) recurse into untracked directories
       #
-      #     @option options [Boolean, Integer] :force (false) force the removal of untracked files
+      #     @option options [Boolean, Integer, nil] :force (nil) force the removal of untracked files
       #
       #       When `clean.requireForce` is not set to `false`, git-clean will refuse to
       #       delete files or directories unless this option is given.
@@ -64,12 +64,12 @@ module Git
       #
       #       Alias: `:f`
       #
-      #     @option options [Boolean] :dry_run (false) don't actually remove anything, just
+      #     @option options [Boolean, nil] :dry_run (nil) don't actually remove anything, just
       #       show what would be done
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :quiet (false) be quiet, only report errors
+      #     @option options [Boolean, nil] :quiet (nil) be quiet, only report errors
       #
       #       Alias: `:q`
       #
@@ -78,9 +78,9 @@ module Git
       #
       #       May be specified multiple times. Alias: `:e`
       #
-      #     @option options [Boolean] :x (false) don't use the standard ignore rules
+      #     @option options [Boolean, nil] :x (nil) don't use the standard ignore rules
       #
-      #     @option options [Boolean] :X (false) remove only files ignored by Git
+      #     @option options [Boolean, nil] :X (nil) remove only files ignored by Git
       #
       #     @option options [String, Array<String>] :pathspec (nil) limit cleaning to files
       #       matching the given pathspec(s)

@@ -77,29 +77,29 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :all (false) use any ref found in the
+      #     @option options [Boolean, nil] :all (nil) use any ref found in the
       #       `refs/` namespace, not just tags
       #
-      #     @option options [Boolean] :tags (false) use any tag found in the
+      #     @option options [Boolean, nil] :tags (nil) use any tag found in the
       #       `refs/tags` namespace, instead of only annotated tags
       #
-      #     @option options [Boolean] :contains (false) find the tag that
+      #     @option options [Boolean, nil] :contains (nil) find the tag that
       #       comes after the commit and thus contains it, rather than the
       #       most recent tag reachable from it
       #
-      #     @option options [Boolean, String] :abbrev (nil) use this many
+      #     @option options [Boolean, String, nil] :abbrev (nil) use this many
       #       digits for the abbreviated commit object name
       #
       #       When `true`, emits bare `--abbrev` (which uses git's default
       #       length). Pass a string to emit `--abbrev=<n>`.
       #
-      #     @option options [Boolean, String] :dirty (nil) describe the
+      #     @option options [Boolean, String, nil] :dirty (nil) describe the
       #       working tree
       #
       #       When `true`, appends `-dirty`; when a String, appends that
       #       string as the dirty mark. Maps to `--dirty[=<mark>]`.
       #
-      #     @option options [Boolean, String] :broken (nil) describe the
+      #     @option options [Boolean, String, nil] :broken (nil) describe the
       #       working tree, treating broken links as dirty
       #
       #       When `true`, appends `-broken`; when a String, appends that
@@ -112,13 +112,13 @@ module Git
       #       longer time but may produce a more accurate result. Maps to
       #       `--candidates=<n>`.
       #
-      #     @option options [Boolean] :exact_match (false) only output exact
+      #     @option options [Boolean, nil] :exact_match (nil) only output exact
       #       matches (a tag directly references the supplied commit object)
       #
-      #     @option options [Boolean] :debug (false) verbosely display
+      #     @option options [Boolean, nil] :debug (nil) verbosely display
       #       information about the searching strategy being employed
       #
-      #     @option options [Boolean] :long (false) always output the long
+      #     @option options [Boolean, nil] :long (nil) always output the long
       #       format (the tag, the number of commits, and the abbreviated
       #       object name) even when it matches a tag exactly
       #
@@ -134,11 +134,11 @@ module Git
       #       Pass an array to exclude multiple patterns. Maps to
       #       `--exclude <pattern>`.
       #
-      #     @option options [Boolean] :always (false) show uniquely
+      #     @option options [Boolean, nil] :always (nil) show uniquely
       #       abbreviated commit object as fallback when the commit cannot
       #       be described
       #
-      #     @option options [Boolean] :first_parent (false) follow only the
+      #     @option options [Boolean, nil] :first_parent (nil) follow only the
       #       first parent of a merge commit
       #
       #     @return [Git::CommandLineResult] the result of calling

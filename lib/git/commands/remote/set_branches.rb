@@ -50,7 +50,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :add (nil) append the given branches instead of replacing them
+        #     @option options [Boolean, nil] :add (nil) append the given branches instead of replacing them
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote set-branches`
         #

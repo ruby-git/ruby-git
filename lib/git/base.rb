@@ -177,10 +177,10 @@ module Git
     #
     #   @param options [Hash] options for the add command
     #
-    #   @option options [Boolean] :all (false) add, modify, and remove index
+    #   @option options [Boolean, nil] :all (nil) add, modify, and remove index
     #     entries to match the worktree
     #
-    #   @option options [Boolean] :force (false) allow adding otherwise ignored
+    #   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
     #     files
     #
     #   @return [String] git's stdout from the add
@@ -411,9 +411,9 @@ module Git
     #   of paths to limit the search to or nil for no limit
     # @param opts [Hash] options to pass to the underlying `git grep` command
     #
-    # @option opts [Boolean] :ignore_case (false) ignore case when matching
-    # @option opts [Boolean] :invert_match (false) select non-matching lines
-    # @option opts [Boolean] :extended_regexp (false) use extended regular expressions
+    # @option opts [Boolean, nil] :ignore_case (nil) ignore case when matching
+    # @option opts [Boolean, nil] :invert_match (nil) select non-matching lines
+    # @option opts [Boolean, nil] :extended_regexp (nil) use extended regular expressions
     # @option opts [String] :object (HEAD) the object to search from
     #
     # @return [Hash<String, Array>] a hash of arrays
@@ -543,15 +543,22 @@ module Git
     # Push changes to a remote repository
     #
     # @overload push(remote = nil, branch = nil, options = {})
+    #
     #   @param remote [String] the remote repository to push to
+    #
     #   @param branch [String] the branch to push
+    #
     #   @param options [Hash] options to pass to the push command
     #
-    #   @option opts [Boolean] :mirror (false) Push all refs under refs/heads/, refs/tags/ and refs/remotes/
-    #   @option opts [Boolean] :delete (false) Delete refs that don't exist on the remote
-    #   @option opts [Boolean] :force (false) Force updates
-    #   @option opts [Boolean] :tags (false) Push all refs under refs/tags/
-    #   @option opts [Array, String] :push_options (nil) Push options to transmit
+    #   @option options [Boolean, nil] :mirror (nil) push all refs under refs/heads/, refs/tags/ and refs/remotes/
+    #
+    #   @option options [Boolean, nil] :delete (nil) delete refs that don't exist on the remote
+    #
+    #   @option options [Boolean, nil] :force (nil) force updates
+    #
+    #   @option options [Boolean, nil] :tags (nil) push all refs under refs/tags/
+    #
+    #   @option options [String, Array<String>] :push_option (nil) push options to transmit
     #
     #   @return [Void]
     #
@@ -580,7 +587,7 @@ module Git
     # @param branch [String] the branch to pull from
     # @param opts [Hash] options to pass to the pull command
     #
-    # @option opts [Boolean] :allow_unrelated_histories (false) Merges histories of
+    # @option opts [Boolean, nil] :allow_unrelated_histories (nil) merges histories of
     #   two projects that started their lives independently
     # @example pulls from origin/master
     #   @git.pull
@@ -670,15 +677,15 @@ module Git
     #   repo.add_tag('tag_name', {:options => 'here'})
     #
     # @param [String] name The name of the tag to add
-    # @param [Hash] options Opstions to pass to `git tag`.
+    # @param [Hash] options Options to pass to `git tag`.
     #   See [git-tag](https://git-scm.com/docs/git-tag) for more details.
-    # @option options [boolean] :annotate Make an unsigned, annotated tag object
-    # @option options [boolean] :a An alias for the `:annotate` option
-    # @option options [boolean] :d Delete existing tag with the given names.
-    # @option options [boolean] :f Replace an existing tag with the given name (instead of failing)
+    # @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
+    # @option options [Boolean, nil] :a (nil) an alias for the `:annotate` option
+    # @option options [Boolean, nil] :d (nil) delete existing tag with the given names
+    # @option options [Boolean, nil] :f (nil) replace an existing tag with the given name (instead of failing)
     # @option options [String] :message Use the given tag message
     # @option options [String] :m An alias for the `:message` option
-    # @option options [boolean] :s Make a GPG-signed tag.
+    # @option options [Boolean, nil] :s (nil) make a GPG-signed tag
     #
     def add_tag(name, *options)
       lib.tag(name, *options)
@@ -731,14 +738,14 @@ module Git
     #     references in the refs namespace, and all reflogs.
     #   @param [Hash] options options to pass to the underlying `git fsck` command
     #
-    #   @option options [Boolean] :unreachable print unreachable objects
-    #   @option options [Boolean] :strict enable strict checking
-    #   @option options [Boolean] :connectivity_only check only connectivity (faster)
-    #   @option options [Boolean] :root report root nodes
-    #   @option options [Boolean] :tags report tags
-    #   @option options [Boolean] :cache consider objects in the index
-    #   @option options [Boolean] :no_reflogs do not consider reflogs
-    #   @option options [Boolean] :lost_found write dangling objects to .git/lost-found
+    #   @option options [Boolean, nil] :unreachable (nil) print unreachable objects
+    #   @option options [Boolean, nil] :strict (nil) enable strict checking
+    #   @option options [Boolean, nil] :connectivity_only (nil) check only connectivity (faster)
+    #   @option options [Boolean, nil] :root (nil) report root nodes
+    #   @option options [Boolean, nil] :tags (nil) report tags
+    #   @option options [Boolean, nil] :cache (nil) consider objects in the index
+    #   @option options [Boolean, nil] :no_reflogs (nil) do not consider reflogs
+    #   @option options [Boolean, nil] :lost_found (nil) write dangling objects to .git/lost-found
     #     (note: this modifies the repository by creating files)
     #   @option options [Boolean, nil] :dangling print dangling objects (true/false/nil for default)
     #   @option options [Boolean, nil] :full check objects in alternate pools (true/false/nil for default)

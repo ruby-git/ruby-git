@@ -57,19 +57,19 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :octopus (false) compute best common
+      #     @option options [Boolean, nil] :octopus (nil) compute best common
       #       ancestor for an n-way merge (intersection of all merge bases)
       #
-      #     @option options [Boolean] :independent (false) list commits not
+      #     @option options [Boolean, nil] :independent (nil) list commits not
       #       reachable from any other; useful for finding minimal merge points
       #
-      #     @option options [Boolean] :is_ancestor (false) check if the first
+      #     @option options [Boolean, nil] :is_ancestor (nil) check if the first
       #       commit is an ancestor of the second; exits 0 if true, 1 if not
       #
-      #     @option options [Boolean] :fork_point (false) find the fork point
+      #     @option options [Boolean, nil] :fork_point (nil) find the fork point
       #       where a branch diverged from another, consulting the reflog
       #
-      #     @option options [Boolean] :all (false) output all merge bases instead
+      #     @option options [Boolean, nil] :all (nil) output all merge bases instead
       #       of just one when multiple equally good bases exist
       #
       #       Alias: :a

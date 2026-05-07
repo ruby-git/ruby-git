@@ -137,10 +137,10 @@ to:
 #
 #   @param options [Hash] options for the add command
 #
-#   @option options [Boolean] :all (false) add, modify, and remove index
+#   @option options [Boolean, nil] :all (nil) add, modify, and remove index
 #     entries to match the worktree
 #
-#   @option options [Boolean] :force (false) allow adding otherwise ignored
+#   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
 #     files
 #
 #   @return [String] git's stdout from the add
@@ -178,7 +178,7 @@ the `def` has a named parameter for every documented argument, `@param` and
 #
 # @param opts [Hash] commit options
 #
-# @option opts [Boolean] :amend (false) amend the previous commit
+# @option opts [Boolean, nil] :amend (nil) amend the previous commit
 #
 # @return [String] git's stdout from the commit
 #

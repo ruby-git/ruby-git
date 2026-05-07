@@ -124,112 +124,116 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :all (nil) Push all branches
+      #     @option options [Boolean, nil] :all (nil) push all branches
       #
       #       Alias: :branches
       #
-      #     @option options [Boolean] :mirror (nil) Push all refs under `refs/` to the remote
+      #     @option options [Boolean, nil] :mirror (nil) push all refs under `refs/` to the remote
       #
-      #     @option options [Boolean] :tags (nil) Push all refs under `refs/tags/`
+      #     @option options [Boolean, nil] :tags (nil) push all refs under `refs/tags/`
       #
-      #     @option options [Boolean] :follow_tags (false) push reachable annotated tags (`--follow-tags`)
+      #     @option options [Boolean, nil] :follow_tags (nil) push reachable annotated tags (`--follow-tags`)
       #
-      #     @option options [Boolean] :no_follow_tags (false) do not push reachable annotated tags (`--no-follow-tags`)
+      #     @option options [Boolean, nil] :no_follow_tags (nil) do not push reachable annotated tags
+      #       (`--no-follow-tags`)
       #
-      #     @option options [Boolean] :atomic (false) Use an atomic transaction to update remote refs (`--atomic`)
+      #     @option options [Boolean, nil] :atomic (nil) use an atomic transaction to update remote refs (`--atomic`)
       #
-      #     @option options [Boolean] :no_atomic (false) disable atomic transaction for remote updates (`--no-atomic`)
+      #     @option options [Boolean, nil] :no_atomic (nil) disable atomic transaction for remote updates
+      #       (`--no-atomic`)
       #
-      #     @option options [Boolean] :dry_run (nil) Do not send updates, only report what would be pushed
+      #     @option options [Boolean, nil] :dry_run (nil) do not send updates, only report what would be pushed
       #
       #       Alias: :n
       #
-      #     @option options [Boolean] :porcelain (nil) Produce machine-readable output
+      #     @option options [Boolean, nil] :porcelain (nil) produce machine-readable output
       #
-      #     @option options [String] :receive_pack (nil) Path to the git-receive-pack program on the remote end
+      #     @option options [String] :receive_pack (nil) path to the git-receive-pack program on the remote end
       #
       #       Alias: :exec
       #
-      #     @option options [String] :repo (nil) Use this repository instead of the
+      #     @option options [String] :repo (nil) use this repository instead of the
       #       positional repository argument
       #
       #       Equivalent to the positional `<repository>` argument. If both are given, the
       #       positional argument takes precedence.
       #
-      #     @option options [Boolean] :force (nil) Force updates, overriding the fast-forward check
+      #     @option options [Boolean, nil] :force (nil) force updates, overriding the fast-forward check
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :delete (nil) Delete all listed refs from the remote repository
+      #     @option options [Boolean, nil] :delete (nil) delete all listed refs from the remote repository
       #
       #       Alias: :d
       #
-      #     @option options [Boolean] :prune (nil) Remove remote branches that have no local counterpart
+      #     @option options [Boolean, nil] :prune (nil) remove remote branches that have no local counterpart
       #
-      #     @option options [Boolean] :quiet (nil) Suppress all output
+      #     @option options [Boolean, nil] :quiet (nil) suppress all output
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :verbose (nil) Run verbosely
+      #     @option options [Boolean, nil] :verbose (nil) run verbosely
       #
       #       Alias: :v
       #
-      #     @option options [Boolean] :set_upstream (nil) Set upstream tracking for each successfully pushed branch
+      #     @option options [Boolean, nil] :set_upstream (nil) set upstream tracking for each successfully pushed branch
       #
       #       Alias: :u
       #
-      #     @option options [String, Array<String>] :push_option (nil) Transmit one or more server-side options
+      #     @option options [String, Array<String>] :push_option (nil) transmit one or more server-side options
       #
       #       Repeatable. Each occurrence emits a separate `--push-option=<value>` flag.
       #
       #       Alias: :o
       #
-      #     @option options [Boolean, String] :signed (false) GPG-sign the push certificate (`--signed`)
+      #     @option options [Boolean, String, nil] :signed (nil) GPG-sign the push certificate (`--signed`)
       #
       #       When a String (`'true'`, `'false'`, `'if-asked'`), emits `--signed=<value>`.
       #
-      #     @option options [Boolean] :no_signed (false) disable GPG signing of the push certificate (`--no-signed`)
+      #     @option options [Boolean, nil] :no_signed (nil) disable GPG signing of the push certificate (`--no-signed`)
       #
-      #     @option options [Boolean, String] :force_with_lease (false) Refuse force pushes unless the
+      #     @option options [Boolean, String, nil] :force_with_lease (nil) refuse force pushes unless the
       #       remote ref matches the expected value (`--force-with-lease`)
       #
       #       When a String (e.g. `'main:abc123'`), emits `--force-with-lease=<string>`.
       #
-      #     @option options [Boolean] :no_force_with_lease (false) disable force-with-lease (`--no-force-with-lease`)
+      #     @option options [Boolean, nil] :no_force_with_lease (nil) disable force-with-lease (`--no-force-with-lease`)
       #
-      #     @option options [Boolean] :force_if_includes (false) Force pushes only if commits being
+      #     @option options [Boolean, nil] :force_if_includes (nil) force pushes only if commits being
       #       pushed are already in the remote-tracking branch (`--force-if-includes`)
       #
-      #     @option options [Boolean] :no_force_if_includes (false) disable force-if-includes (`--no-force-if-includes`)
+      #     @option options [Boolean, nil] :no_force_if_includes (nil) disable force-if-includes
+      #       (`--no-force-if-includes`)
       #
-      #     @option options [Boolean] :verify (false) run the pre-push hook (`--verify`)
+      #     @option options [Boolean, nil] :verify (nil) run the pre-push hook (`--verify`)
       #
-      #     @option options [Boolean] :no_verify (false) bypass the pre-push hook (`--no-verify`)
+      #     @option options [Boolean, nil] :no_verify (nil) bypass the pre-push hook (`--no-verify`)
       #
-      #     @option options [String] :recurse_submodules (nil) Control whether submodule
+      #     @option options [String] :recurse_submodules (nil) control whether submodule
       #       commits are pushed
       #
       #       Pass a String (`'check'`, `'on-demand'`, `'only'`, `'no'`) to emit
       #       `--recurse-submodules=<value>`. Note: passing `true` is not valid; git requires
       #       an explicit value for this option.
       #
-      #     @option options [Boolean] :no_recurse_submodules (false) disable submodule push (`--no-recurse-submodules`)
+      #     @option options [Boolean, nil] :no_recurse_submodules (nil) disable submodule push
+      #       (`--no-recurse-submodules`)
       #
-      #     @option options [Boolean] :thin (false) Send a "thin" pack to reduce network traffic (`--thin`)
+      #     @option options [Boolean, nil] :thin (nil) send a "thin" pack to reduce network traffic (`--thin`)
       #
-      #     @option options [Boolean] :no_thin (false) send a full pack instead of a thin pack (`--no-thin`)
+      #     @option options [Boolean, nil] :no_thin (nil) send a full pack instead of a thin pack (`--no-thin`)
       #
-      #     @option options [Boolean] :progress (nil) Force progress reporting even when stderr is not a terminal
+      #     @option options [Boolean, nil] :progress (nil) force progress reporting even when stderr is not a terminal
       #
-      #     @option options [Boolean] :ipv4 (nil) Use IPv4 addresses only
+      #     @option options [Boolean, nil] :ipv4 (nil) use IPv4 addresses only
       #
       #       Alias: :"4"
       #
-      #     @option options [Boolean] :ipv6 (nil) Use IPv6 addresses only
+      #     @option options [Boolean, nil] :ipv6 (nil) use IPv6 addresses only
       #
       #       Alias: :"6"
       #
-      #     @option options [Integer] :timeout (nil) Maximum seconds to wait for the command to complete
+      #     @option options [Integer] :timeout (nil) maximum seconds to wait for the command to complete
       #
       #     @return [Git::CommandLineResult] the result of calling `git push`
       #

@@ -58,10 +58,10 @@ module Git
       #
       # @param opts [Hash] additional options forwarded to `git merge`
       #
-      # @option opts [Boolean] :no_commit (false) stop before creating the merge commit
+      # @option opts [Boolean, nil] :no_commit (nil) stop before creating the merge commit
       #   (`--no-commit`)
       #
-      # @option opts [Boolean] :no_ff (false) create a merge commit even when
+      # @option opts [Boolean, nil] :no_ff (nil) create a merge commit even when
       #   fast-forward is possible (`--no-ff`)
       #
       # @option opts [String] :message (nil) commit message
@@ -114,16 +114,16 @@ module Git
       #
       #   @param options [Hash] merge-base options
       #
-      #   @option options [Boolean] :octopus (false) compute the best common
+      #   @option options [Boolean, nil] :octopus (nil) compute the best common
       #     ancestor for an n-way merge (intersection of all merge bases)
       #
-      #   @option options [Boolean] :independent (false) list commits not
+      #   @option options [Boolean, nil] :independent (nil) list commits not
       #     reachable from any other; useful for finding minimal merge points
       #
-      #   @option options [Boolean] :fork_point (false) find the fork point
+      #   @option options [Boolean, nil] :fork_point (nil) find the fork point
       #     where a branch diverged from another, consulting the reflog
       #
-      #   @option options [Boolean] :all (false) output all merge bases instead
+      #   @option options [Boolean, nil] :all (nil) output all merge bases instead
       #     of just the first when multiple equally good bases exist
       #
       #   @return [Array<String>] commit SHAs of the common ancestor(s); empty

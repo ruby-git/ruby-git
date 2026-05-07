@@ -631,17 +631,17 @@ documentation.
 two separate `@option` entries are required: one for the positive key (`:foo`) and
 one for the negative companion key (`:no_foo`). Both follow standard boolean
 semantics (`true` emits the flag, `false`/`nil`/omitted emits nothing); both use
-`(false)` as the default value. A single merged tag or "Pass `false` for `--no-foo`" prose
+`(nil)` as the default value. A single merged tag or "Pass `false` for `--no-foo`" prose
 does not satisfy this requirement.
 
 ```ruby
 # ❌ Missing negative companion tag
-# @option options [Boolean] :create_reflog (false) create the branch's reflog
+# @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
 
 # ✅ Both forms documented with separate tags
-# @option options [Boolean] :create_reflog (false) create the branch's reflog
+# @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
 #
-# @option options [Boolean] :no_create_reflog (false) suppress branch reflog
+# @option options [Boolean, nil] :no_create_reflog (nil) suppress branch reflog
 #   creation (`--no-create-reflog`)
 ```
 
@@ -652,11 +652,11 @@ is misleading and must be corrected to the long form:
 
 ```ruby
 # ❌ Misleading — describes -v as emitted
-# @option options [Boolean, Integer] :verbose (false) ...
+# @option options [Boolean, Integer, nil] :verbose (nil) ...
 #   Pass `true` for `-v`; pass `2` for `-v -v`.
 
 # ✅ Correct — describes the emitted flag
-# @option options [Boolean, Integer] :verbose (false) ...
+# @option options [Boolean, Integer, nil] :verbose (nil) ...
 #   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
 ```
 

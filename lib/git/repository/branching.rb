@@ -92,16 +92,16 @@ module Git
       #
       #   @param options [Hash] options for the checkout command
       #
-      #   @option options [Boolean] :force (false) discard local changes when
+      #   @option options [Boolean, nil] :force (nil) discard local changes when
       #     switching branches
       #
-      #   @option options [Boolean, String] :new_branch (false) when `true`,
+      #   @option options [Boolean, String, nil] :new_branch (nil) when `true`,
       #     creates a new branch named `branch` from `:start_point`; when a
       #     `String`, creates a new branch with that name from `branch`
       #
-      #   @option options [Boolean] :b (false) alias for `:new_branch`
+      #   @option options [Boolean, String, nil] :b (nil) alias for `:new_branch`
       #
-      #   @option options [Boolean] :f (false) alias for `:force`
+      #   @option options [Boolean, nil] :f (nil) alias for `:force`
       #
       #   @option options [String] :start_point the commit or branch to start the
       #     new branch from; used together with `new_branch: true`
@@ -139,9 +139,9 @@ module Git
       #
       #   @param options [Hash] options for the checkout-index command
       #
-      #   @option options [Boolean] :all (false) check out all files in the index
+      #   @option options [Boolean, nil] :all (nil) check out all files in the index
       #
-      #   @option options [Boolean] :force (false) overwrite existing files
+      #   @option options [Boolean, nil] :force (nil) overwrite existing files
       #
       #   @option options [String] :prefix write files under this path prefix
       #     rather than the working directory root

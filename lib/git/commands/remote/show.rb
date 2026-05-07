@@ -52,11 +52,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :verbose (nil) show the remote URL after the remote name
+        #     @option options [Boolean, nil] :verbose (nil) show the remote URL after the remote name
         #
         #       Alias: :v
         #
-        #     @option options [Boolean] :n (nil) do not query remote heads with `git ls-remote`
+        #     @option options [Boolean, nil] :n (nil) do not query remote heads with `git ls-remote`
         #
         #       Uses cached information instead of contacting the remote server.
         #

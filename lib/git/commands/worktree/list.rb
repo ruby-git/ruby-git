@@ -36,11 +36,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :porcelain (false) produce machine-readable output
+        #     @option options [Boolean, nil] :porcelain (nil) produce machine-readable output
         #
-        #     @option options [Boolean] :z (false) NUL-terminate lines (use with `:porcelain`)
+        #     @option options [Boolean, nil] :z (nil) NUL-terminate lines (use with `:porcelain`)
         #
-        #     @option options [Boolean] :verbose (false) output additional information about worktrees
+        #     @option options [Boolean, nil] :verbose (nil) output additional information about worktrees
         #
         #       Alias: :v
         #

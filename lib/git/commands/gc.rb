@@ -61,32 +61,32 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :aggressive (false) be more thorough at the
+      #     @option options [Boolean, nil] :aggressive (nil) be more thorough at the
       #       expense of increased runtime
       #
       #       When `true`, git gc runs more aggressively to optimize the repository.
       #       The effects are mostly persistent.
       #
-      #     @option options [Boolean] :auto (false) check whether housekeeping is
+      #     @option options [Boolean, nil] :auto (nil) check whether housekeeping is
       #       required before performing any work
       #
       #       When `true`, git gc checks whether housekeeping is needed; if not, it
       #       exits without doing anything.
       #
-      #     @option options [Boolean] :detach (false) run in the background if the
+      #     @option options [Boolean, nil] :detach (nil) run in the background if the
       #       system supports it (`--detach`)
       #
       #       Overrides the `gc.autoDetach` configuration.
       #
-      #     @option options [Boolean] :no_detach (false) run in the foreground
+      #     @option options [Boolean, nil] :no_detach (nil) run in the foreground
       #       (`--no-detach`)
       #
       #       Overrides the `gc.autoDetach` configuration.
       #
-      #     @option options [Boolean] :cruft (false) pack unreachable objects into a
+      #     @option options [Boolean, nil] :cruft (nil) pack unreachable objects into a
       #       cruft pack instead of storing them as loose objects (`--cruft`)
       #
-      #     @option options [Boolean] :no_cruft (false) do not create a cruft pack;
+      #     @option options [Boolean, nil] :no_cruft (nil) do not create a cruft pack;
       #       store unreachable objects as loose objects (`--no-cruft`)
       #
       #     @option options [String] :max_cruft_size (nil) limit the size of new
@@ -101,21 +101,21 @@ module Git
       #       Only has an effect when used together with `:cruft`. Maps to
       #       `--expire-to=<dir>`.
       #
-      #     @option options [Boolean, String] :prune (false) prune loose objects
+      #     @option options [Boolean, String, nil] :prune (nil) prune loose objects
       #       older than the given date (`--prune`, `--prune=<date>`)
       #
       #       When `true`, passes `--prune` (uses git's default expiry of 2 weeks
       #       ago). When a String, passes `--prune=<date>`.
       #
-      #     @option options [Boolean] :no_prune (false) do not prune any loose
+      #     @option options [Boolean, nil] :no_prune (nil) do not prune any loose
       #       objects (`--no-prune`)
       #
-      #     @option options [Boolean] :quiet (false) suppress all progress reports
+      #     @option options [Boolean, nil] :quiet (nil) suppress all progress reports
       #
-      #     @option options [Boolean] :force (false) force running gc even if
+      #     @option options [Boolean, nil] :force (nil) force running gc even if
       #       another gc instance may be running on this repository
       #
-      #     @option options [Boolean] :keep_largest_pack (false) repack all packs
+      #     @option options [Boolean, nil] :keep_largest_pack (nil) repack all packs
       #       except the largest non-cruft pack and those marked with a `.keep` file
       #
       #       When `true`, `gc.bigPackThreshold` is ignored.

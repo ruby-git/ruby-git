@@ -124,100 +124,100 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :text (false) process binary files as if they
+      #     @option options [Boolean, nil] :text (nil) process binary files as if they
       #       were text
       #
       #       Alias: :a
       #
-      #     @option options [Boolean] :I (false) do not match the pattern in binary
+      #     @option options [Boolean, nil] :I (nil) do not match the pattern in binary
       #       files
       #
-      #     @option options [Boolean] :textconv (false) honor textconv filter
+      #     @option options [Boolean, nil] :textconv (nil) honor textconv filter
       #       settings (`--textconv`)
       #
-      #     @option options [Boolean] :no_textconv (false) suppress textconv filter
+      #     @option options [Boolean, nil] :no_textconv (nil) suppress textconv filter
       #       processing (`--no-textconv`)
       #
-      #     @option options [Boolean] :ignore_case (false) ignore case distinctions
+      #     @option options [Boolean, nil] :ignore_case (nil) ignore case distinctions
       #       in both the pattern and the file contents
       #
       #       Alias: :i
       #
-      #     @option options [Boolean] :word_regexp (false) match the pattern only at
+      #     @option options [Boolean, nil] :word_regexp (nil) match the pattern only at
       #       word boundary
       #
       #       Alias: :w
       #
-      #     @option options [Boolean] :invert_match (false) select non-matching lines
+      #     @option options [Boolean, nil] :invert_match (nil) select non-matching lines
       #
       #       Alias: :v
       #
-      #     @option options [Boolean] :h (false) suppress the filename prefix for
+      #     @option options [Boolean, nil] :h (nil) suppress the filename prefix for
       #       each match
       #
-      #     @option options [Boolean] :H (false) print the filename for each match;
+      #     @option options [Boolean, nil] :H (nil) print the filename for each match;
       #       overrides `:h` given earlier
       #
-      #     @option options [Boolean] :full_name (false) output paths relative to
+      #     @option options [Boolean, nil] :full_name (nil) output paths relative to
       #       the project top directory rather than the current directory
       #
-      #     @option options [Boolean] :extended_regexp (false) use POSIX extended
+      #     @option options [Boolean, nil] :extended_regexp (nil) use POSIX extended
       #       regular expressions for the pattern
       #
       #       Alias: :E
       #
-      #     @option options [Boolean] :basic_regexp (false) use POSIX basic regular
+      #     @option options [Boolean, nil] :basic_regexp (nil) use POSIX basic regular
       #       expressions for the pattern (the default regexp flavour)
       #
       #       Alias: :G
       #
-      #     @option options [Boolean] :perl_regexp (false) use Perl-compatible
+      #     @option options [Boolean, nil] :perl_regexp (nil) use Perl-compatible
       #       regular expressions for the pattern
       #
       #       Alias: :P
       #
-      #     @option options [Boolean] :fixed_strings (false) treat the pattern as a
+      #     @option options [Boolean, nil] :fixed_strings (nil) treat the pattern as a
       #       fixed string rather than a regular expression
       #
       #       Alias: :F
       #
-      #     @option options [Boolean] :line_number (false) prefix each matching line
+      #     @option options [Boolean, nil] :line_number (nil) prefix each matching line
       #       with its line number within the file
       #
       #       Alias: :n
       #
-      #     @option options [Boolean] :column (false) prefix the 1-indexed
+      #     @option options [Boolean, nil] :column (nil) prefix the 1-indexed
       #       byte-offset of the first match from the start of the matching line
       #
-      #     @option options [Boolean] :files_with_matches (false) show only the
+      #     @option options [Boolean, nil] :files_with_matches (nil) show only the
       #       names of files that contain matches, not the matching lines
       #
       #       Aliases: :name_only, :l
       #
-      #     @option options [Boolean] :files_without_match (false) show only the
+      #     @option options [Boolean, nil] :files_without_match (nil) show only the
       #       names of files that do not contain matches
       #
       #       Alias: :L
       #
-      #     @option options [Boolean] :null (false) use NUL as the delimiter for
+      #     @option options [Boolean, nil] :null (nil) use NUL as the delimiter for
       #       pathnames in the output, printing them verbatim
       #
       #       Alias: :z
       #
-      #     @option options [Boolean] :only_matching (false) print only the matched
+      #     @option options [Boolean, nil] :only_matching (nil) print only the matched
       #       (non-empty) parts of a matching line, each on a separate output line
       #
       #       Alias: :o
       #
-      #     @option options [Boolean] :count (false) show the number of matching
+      #     @option options [Boolean, nil] :count (nil) show the number of matching
       #       lines per file instead of the matching lines themselves
       #
       #       Alias: :c
       #
-      #     @option options [Boolean] :all_match (false) when using multiple `--or`
+      #     @option options [Boolean, nil] :all_match (nil) when using multiple `--or`
       #       patterns, limit matches to files that have lines matching all of them
       #
-      #     @option options [Boolean] :quiet (false) do not output matching lines;
+      #     @option options [Boolean, nil] :quiet (nil) do not output matching lines;
       #       exit 0 when there is a match and non-zero when there is not
       #
       #       Alias: :q
@@ -225,29 +225,29 @@ module Git
       #     @option options [Integer, String] :max_depth (nil) descend at most this
       #       many directory levels for each pathspec argument
       #
-      #     @option options [Boolean] :recursive (false) recurse into subdirectories
+      #     @option options [Boolean, nil] :recursive (nil) recurse into subdirectories
       #       (same as `--max-depth=-1`; this is the default)
       #
       #       Alias: :r
       #
-      #     @option options [Boolean] :no_recursive (false) do not recurse into
+      #     @option options [Boolean, nil] :no_recursive (nil) do not recurse into
       #       subdirectories (`--no-recursive`, equivalent to `--max-depth=0`)
       #
-      #     @option options [Boolean, String] :color (nil) show colored matches
+      #     @option options [Boolean, String, nil] :color (nil) show colored matches
       #
       #       When `true`, emits bare `--color`. Pass a string to emit
       #       `--color=<when>` (values: `'always'`, `'never'`, `'auto'`).
       #
-      #     @option options [Boolean] :no_color (false) turn off match highlighting,
+      #     @option options [Boolean, nil] :no_color (nil) turn off match highlighting,
       #       even when the configuration file gives the default to color output
       #
-      #     @option options [Boolean] :break (false) print an empty line between
+      #     @option options [Boolean, nil] :break (nil) print an empty line between
       #       matches from different files
       #
-      #     @option options [Boolean] :heading (false) show the filename above the
+      #     @option options [Boolean, nil] :heading (nil) show the filename above the
       #       matches in that file instead of at the start of each shown line
       #
-      #     @option options [Boolean] :show_function (false) show the nearest
+      #     @option options [Boolean, nil] :show_function (nil) show the nearest
       #       function name preceding each match
       #
       #       Alias: :p
@@ -267,7 +267,7 @@ module Git
       #
       #       Alias: :C
       #
-      #     @option options [Boolean] :function_context (false) show the surrounding
+      #     @option options [Boolean, nil] :function_context (nil) show the surrounding
       #       text from the previous function name up to the next
       #
       #       Alias: :W
@@ -291,26 +291,26 @@ module Git
       #       Pass an Array of raw CLI arguments for compound boolean
       #       expressions (e.g. `['-e', 'foo', '--and', '-e', 'bar']`).
       #
-      #     @option options [Boolean] :recurse_submodules (false) recursively search
+      #     @option options [Boolean, nil] :recurse_submodules (nil) recursively search
       #       in each active, checked-out submodule
       #
       #     @option options [String] :parent_basename (nil) override the name used
       #       as a prefix for submodule output when used with `:recurse_submodules`
       #
-      #     @option options [Boolean] :exclude_standard (false) honor the `.gitignore`
+      #     @option options [Boolean, nil] :exclude_standard (nil) honor the `.gitignore`
       #       mechanism when searching untracked files (`--exclude-standard`)
       #
-      #     @option options [Boolean] :no_exclude_standard (false) do not honor the
+      #     @option options [Boolean, nil] :no_exclude_standard (nil) do not honor the
       #       `.gitignore` mechanism; also search ignored files
       #       (`--no-exclude-standard`); only useful with `:untracked` or `:no_index`
       #
-      #     @option options [Boolean] :cached (false) search blobs registered in the
+      #     @option options [Boolean, nil] :cached (nil) search blobs registered in the
       #       index instead of tracked files in the working tree
       #
-      #     @option options [Boolean] :untracked (false) search untracked files in
+      #     @option options [Boolean, nil] :untracked (nil) search untracked files in
       #       addition to tracked files in the working tree
       #
-      #     @option options [Boolean] :no_index (false) search files in the current
+      #     @option options [Boolean, nil] :no_index (nil) search files in the current
       #       directory without regard to whether it is managed by Git
       #
       #     @option options [String, Array<String>] :pathspec (nil) limit the

@@ -109,7 +109,7 @@ without a method definition in the subclass:
 #
 #     @param options [Hash] command options
 #
-#     @option options [Boolean] :force (false) ...
+#     @option options [Boolean, nil] :force (nil) ...
 #
 #     @return [Git::CommandLineResult]
 ```
@@ -140,7 +140,7 @@ method:
 #
 #   @param options [Hash] command options
 #
-#   @option options [Boolean] :all (false) ...
+#   @option options [Boolean, nil] :all (nil) ...
 #
 #   @return [Git::CommandLineResult] the result of calling `git log`
 #
@@ -160,11 +160,11 @@ conflicting documentation for the method.
 
 | DSL method | YARD type |
 | --- | --- |
-| `flag_option` | `[Boolean]` — default `(false)` (flag not emitted by default) |
-| `flag_option ..., max_times: N` | `[Boolean, Integer]` |
-| `flag_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean]` (`true` → `--flag`; default `(false)` → nothing), negative key `[Boolean]` (`true` → `--no-flag`; default `(false)` → nothing) |
-| `flag_or_value_option` | `[Boolean, String]` (or the specific value type) |
-| `flag_or_value_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean, String]` (`true` → `--flag`; string → `--flag=value` with `inline: true`, or `--flag <value>` without; default `(false)` → nothing), negative key `[Boolean]` (`true` → `--no-flag`; default `(false)` → nothing) |
+| `flag_option` | `[Boolean, nil]` — default `(nil)` (flag not emitted by default; both `false` and `nil` suppress the flag) |
+| `flag_option ..., max_times: N` | `[Boolean, Integer, nil]` |
+| `flag_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean, nil]` (`true` → `--flag`; default `(nil)` → nothing), negative key `[Boolean, nil]` (`true` → `--no-flag`; default `(nil)` → nothing) |
+| `flag_or_value_option` | `[Boolean, String, nil]` (or the specific value type with `nil` appended) |
+| `flag_or_value_option ..., negatable: true` | registers two entries; document **two** `@option` tags: positive key `[Boolean, String, nil]` (`true` → `--flag`; string → `--flag=value` with `inline: true`, or `--flag <value>` without; default `(nil)` → nothing), negative key `[Boolean, nil]` (`true` → `--no-flag`; default `(nil)` → nothing) |
 | `value_option` | `[String]` — `value_option` does not enforce types; it accepts any non-nil value and converts it to a string. Use `[String]` unless callers are expected to pass a narrower type, in which case widen the annotation to reflect reality (e.g. `[Integer, String]` for options documented as taking `<n>` lines/bytes). Never use a bare numeric type such as `[Integer]` alone — that misrepresents what the implementation accepts. |
 | `operand` (repeatable) | `[Array<String>]` |
 | `operand` (single) | `[String]` |
@@ -177,22 +177,6 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
-- **`(nil)` default for `flag_option` entries** — the DSL-to-YARD type mapping
-  requires `(false)` for plain `flag_option` entries (the flag is not emitted by
-  default). Using `(nil)` implies the caller explicitly passes `nil` to opt out,
-  which is not the intended semantics.
-
-  ```ruby
-  # ❌ Wrong — (nil) implies explicit nil opt-out
-  # @option options [Boolean] :tags (nil) limit output to refs/tags/
-
-  # ✅ Correct — (false) means the flag is not emitted when the caller omits the option
-  # @option options [Boolean] :tags (false) limit output to refs/tags/
-  ```
-
-  This applies to negatable flags as well — both the positive key and the negative
-  `no_` companion key use `(false)`. There is no three-state exception: `false` and
-  `nil` both mean omit for every key.
 - **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
   every `@overload` that includes `**options` requires
   `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
@@ -223,12 +207,12 @@ conflicting documentation for the method.
 
   ```ruby
   # ❌ Missing negative companion tag
-  # @option options [Boolean] :create_reflog (false) create the branch's reflog
+  # @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
 
   # ✅ Both forms documented with separate tags
-  # @option options [Boolean] :create_reflog (false) create the branch's reflog
+  # @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
   #
-  # @option options [Boolean] :no_create_reflog (false) suppress branch reflog
+  # @option options [Boolean, nil] :no_create_reflog (nil) suppress branch reflog
   #   creation (`--no-create-reflog`)
   ```
 - Missing/incorrect `@raise` guidance for `allow_exit_status`
@@ -259,11 +243,11 @@ conflicting documentation for the method.
 
   ```ruby
   # ❌ Wrong — describes -v as if it is emitted
-  # @option options [Boolean, Integer] :verbose (false) ...
+  # @option options [Boolean, Integer, nil] :verbose (nil) ...
   #   Pass `true` for `-v`; pass `2` for `-v -v`.
 
   # ✅ Correct — describes the actually emitted flag
-  # @option options [Boolean, Integer] :verbose (false) ...
+  # @option options [Boolean, Integer, nil] :verbose (nil) ...
   #   Pass `true` for `--verbose`; pass `2` for `--verbose --verbose`.
   ```
 
@@ -278,10 +262,10 @@ conflicting documentation for the method.
 
   ```ruby
   # ❌ Copied verbatim from the git man page
-  # @option options [Boolean] :force (false) Allow renaming even if target already exists.
+  # @option options [Boolean, nil] :force (nil) Allow renaming even if target already exists.
 
   # ✅ Correct — lowercase start, no trailing period
-  # @option options [Boolean] :force (false) allow renaming even if target already exists
+  # @option options [Boolean, nil] :force (nil) allow renaming even if target already exists
   ```
 - **Raw blank line inside a doc comment block** — a raw blank line (an empty line
   with no leading `#`) silently terminates the YARD block. Any comment lines after
@@ -290,7 +274,7 @@ conflicting documentation for the method.
   continuation paragraphs and alias notes. Correct form:
 
   ```ruby
-  # @option options [Boolean] :ipv4 (false) use IPv4 addresses only
+  # @option options [Boolean, nil] :ipv4 (nil) use IPv4 addresses only
   #
   #   Alias: :"4"
   ```
@@ -302,7 +286,7 @@ conflicting documentation for the method.
   short-description rule. Correct form:
 
   ```ruby
-  # @option options [Boolean] :update_head_ok (false) allow updating HEAD ref
+  # @option options [Boolean, nil] :update_head_ok (nil) allow updating HEAD ref
   #
   #   When true, passes --update-head-ok. By default git fetch refuses to update HEAD.
   ```
@@ -335,12 +319,10 @@ For each command file, run through these checks in order:
 - [ ] `@option` types match the DSL method (see
       [DSL-to-YARD type mapping](#dsl-to-yard-type-mapping))
 - [ ] `@option` defaults match the DSL method — `flag_option` (plain or negatable)
-      always uses `(false)` for both the positive and negative `no_` companion tag;
-      `value_option` uses `(nil)`. Using `(nil)` on any `flag_option` entry is a bug:
-      it implies the caller can pass explicit `nil` to opt out, which is not the
-      intended semantics. Check every `@option` default tag against the DSL entry.
+      always uses `(nil)` for both the positive and negative `no_` companion tag;
+      `value_option` uses `(nil)`. Check every `@option` default tag against the DSL entry.
       For `negatable:` options, verify that **two** `@option` tags are present (one
-      for the positive key, one for the `no_` companion key) and that both use `(false)`.
+      for the positive key, one for the `no_` companion key) and that both use `(nil)`.
 - [ ] option defaults/types are consistent with DSL definitions
 - [ ] `@option` descriptions for options that have an `allowed_values` declaration
       enumerate the accepted values in the description text, e.g.: `@option options

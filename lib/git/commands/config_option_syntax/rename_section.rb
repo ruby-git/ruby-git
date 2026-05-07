@@ -53,13 +53,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (nil) operate on global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) operate on global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (nil) operate on system config
+        #     @option options [Boolean, nil] :system (nil) operate on system config
         #
-        #     @option options [Boolean] :local (nil) operate on repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) operate on repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (nil) operate on worktree config
+        #     @option options [Boolean, nil] :worktree (nil) operate on worktree config
         #
         #     @option options [String] :file (nil) operate on the specified file
         #

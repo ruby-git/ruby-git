@@ -44,16 +44,16 @@ module Git
       #
       #   @param options [Hash] options for the commit command
       #
-      #   @option options [Boolean] :all (false) automatically stage modified and
+      #   @option options [Boolean, nil] :all (nil) automatically stage modified and
       #     deleted files before committing
       #
-      #   @option options [Boolean] :amend (false) replace the tip of the current
+      #   @option options [Boolean, nil] :amend (nil) replace the tip of the current
       #     branch with a new commit
       #
-      #   @option options [Boolean] :allow_empty (false) allow committing with no
+      #   @option options [Boolean, nil] :allow_empty (nil) allow committing with no
       #     changes
       #
-      #   @option options [Boolean] :allow_empty_message (false) allow committing
+      #   @option options [Boolean, nil] :allow_empty_message (nil) allow committing
       #     with an empty message
       #
       #   @option options [String] :author (nil) override the commit author in
@@ -61,11 +61,11 @@ module Git
       #
       #   @option options [String] :date (nil) override the author date
       #
-      #   @option options [Boolean] :gpg_sign (false) GPG-sign the commit
+      #   @option options [Boolean, nil] :gpg_sign (nil) GPG-sign the commit
       #
-      #   @option options [Boolean] :no_gpg_sign (false) disable GPG signing
+      #   @option options [Boolean, nil] :no_gpg_sign (nil) disable GPG signing
       #
-      #   @option options [Boolean] :no_verify (false) bypass the pre-commit and
+      #   @option options [Boolean, nil] :no_verify (nil) bypass the pre-commit and
       #     commit-msg hooks
       #
       #   @return [String] git's stdout from the commit

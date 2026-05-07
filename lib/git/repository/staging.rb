@@ -35,10 +35,10 @@ module Git
       #
       #   @param options [Hash] options for the add command
       #
-      #   @option options [Boolean] :all (false) add, modify, and remove index
+      #   @option options [Boolean, nil] :all (nil) add, modify, and remove index
       #     entries to match the worktree
       #
-      #   @option options [Boolean] :force (false) allow adding otherwise ignored
+      #   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
       #     files
       #
       #   @return [String] git's stdout from the add
@@ -71,7 +71,7 @@ module Git
       #
       #   @param options [Hash] options for the reset command
       #
-      #   @option options [Boolean] :hard (false) reset the index and working
+      #   @option options [Boolean, nil] :hard (nil) reset the index and working
       #     tree; discards all tracked changes
       #
       #   @return [String] git's stdout from the reset
