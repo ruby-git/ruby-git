@@ -84,6 +84,7 @@ module Git
   #   info.upstream.remote_name  #=> 'origin'
   #
   # @see Git::Branch for the full-featured branch object with operations
+  #
   # @see Git::Commands::Branch::List for the command that produces these
   #
   # @api public
