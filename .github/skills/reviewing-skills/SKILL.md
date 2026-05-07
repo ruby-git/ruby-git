@@ -157,8 +157,8 @@ For each reviewed skill, produce:
 
 1. A per-check result table:
 
-   | # | Check | Status | Issue |
-   |---|-------|--------|-------|
+   |  #  | Check | Status | Issue |
+   | --- | ----- | ------ | ----- |
 
 2. A summary of required fixes (if any)
 
@@ -173,7 +173,7 @@ practices at
 Key principles distilled:
 
 | Principle | One-liner |
-|-----------|-----------|
+| --------- | --------- |
 | Concise is key | Only add context the model does not already have |
 | Degrees of freedom | Match specificity to task fragility |
 | Progressive disclosure | SKILL.md is an overview; details in separate files |

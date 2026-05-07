@@ -47,7 +47,7 @@ Releases are **fully automated** via
 Key config files:
 
 | File | Purpose |
-|------|---------|
+| ---- | ------- |
 | `.release-please-config.json` | Release-please settings (release type, changelog sections, versioning strategy) |
 | `.release-please-manifest.json` | Tracks the current released version |
 | `lib/git/version.rb` | Version constant (updated automatically by release-please) |

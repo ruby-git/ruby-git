@@ -115,7 +115,7 @@ Present diagnostic findings to the user:
 ## Step 4: Determine Fix Strategy
 
 | Scenario | Strategy | Commit Type |
-|---|---|---|
+| --- | --- | --- |
 | **Production code bug** (test caught a real bug) | Fix production code using the development-workflow TDD process. The failing test is the RED step. | `fix(component): <description>` |
 | **Test needs updating** (intentional API change) | Get user confirmation first. Update test assertions. | `test(component): update test for <change>` |
 | **Flaky test** (non-determinism) | Make test deterministic. Run 20+ times to verify. | `test(component): fix flaky test in <test_name>` |

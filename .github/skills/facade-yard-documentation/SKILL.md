@@ -260,7 +260,7 @@ The `@return` annotation must reflect the **public contract** of the facade
 method, not the type of the underlying call expression.
 
 | Facade does | `@return` type |
-|---|---|
+| --- | --- |
 | Returns the raw `CommandLineResult` | `[Git::CommandLineResult]` |
 | Returns `result.stdout` (chomped or raw) | `[String]` |
 | Returns parsed structured data via a parser | The parser's return type (e.g. `[Array<Git::BranchInfo>]`, `[Hash]`) |
@@ -278,7 +278,7 @@ documented contract is to expose raw results.
   command's exit-status range:
 
   | Command's `allow_exit_status` | Facade `@raise` wording |
-  |---|---|
+  | --- | --- |
   | none / `0..0` | `if git exits with a non-zero exit status` |
   | `0..1` | `if git exits outside the allowed range (exit code > 1)` |
 

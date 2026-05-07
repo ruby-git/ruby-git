@@ -5,6 +5,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
 
 ## Contents
 
+- [Contents](#contents)
 - [Files to generate](#files-to-generate)
 - [Topic module selection](#topic-module-selection)
   - [Existing modules](#existing-modules)
@@ -541,7 +542,7 @@ Modules under `lib/git/repository/` use **bare nouns**, never role-suffixes like
 `*Helpers` or `*Utils`:
 
 | Module                              | Distinguished by               |
-|-------------------------------------|--------------------------------|
+| ----------------------------------- | ------------------------------ |
 | `Git::Repository::Staging`          | `include`d, `@api public`      |
 | `Git::Repository::Branching`        | `include`d, `@api public`      |
 | `Git::Repository::Internal`         | not `include`d, `@api private` |

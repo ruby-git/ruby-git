@@ -630,7 +630,7 @@ checklist above. No additional structured output is required.
 1. A per-rule compliance table:
 
    | Rule | Status | Issue |
-   |------|--------|-------|
+   | ---- | ------ | ----- |
 
    Use **Pass**, **Fail**, or **N/A** for each rule.
 
