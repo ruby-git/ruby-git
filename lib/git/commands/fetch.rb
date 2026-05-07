@@ -133,16 +133,16 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :all (false) fetch all remotes (`--all`)
+      #     @option options [Boolean, nil] :all (nil) fetch all remotes (`--all`)
       #
-      #     @option options [Boolean] :no_all (false) do not fetch all remotes (`--no-all`)
+      #     @option options [Boolean, nil] :no_all (nil) do not fetch all remotes (`--no-all`)
       #
-      #     @option options [Boolean] :append (false) append ref names and object
+      #     @option options [Boolean, nil] :append (nil) append ref names and object
       #       names of fetched refs to the existing contents of `.git/FETCH_HEAD`
       #
       #       Alias: :a
       #
-      #     @option options [Boolean] :atomic (false) use an atomic transaction
+      #     @option options [Boolean, nil] :atomic (nil) use an atomic transaction
       #       to update local refs
       #
       #     @option options [String] :depth (nil) limit fetching to the specified
@@ -159,11 +159,11 @@ module Git
       #
       #       Repeatable.
       #
-      #     @option options [Boolean] :unshallow (false) convert a shallow
+      #     @option options [Boolean, nil] :unshallow (nil) convert a shallow
       #       repository to a complete one, or fetch as much as possible from
       #       a shallow source
       #
-      #     @option options [Boolean] :update_shallow (false) accept refs that
+      #     @option options [Boolean, nil] :update_shallow (nil) accept refs that
       #       would normally require updating `.git/shallow`
       #
       #     @option options [String, Array<String>] :negotiation_tip (nil) only
@@ -172,73 +172,73 @@ module Git
       #       Repeatable. The argument may be a ref, a glob on ref names, or an
       #       abbreviated SHA-1.
       #
-      #     @option options [Boolean] :negotiate_only (false) do not fetch
+      #     @option options [Boolean, nil] :negotiate_only (nil) do not fetch
       #       anything from the server; print ancestors of `--negotiation-tip`
       #       arguments that we have in common
       #
-      #     @option options [Boolean] :dry_run (false) show what would be done
+      #     @option options [Boolean, nil] :dry_run (nil) show what would be done
       #       without making changes
       #
-      #     @option options [Boolean] :porcelain (false) print the output to
+      #     @option options [Boolean, nil] :porcelain (nil) print the output to
       #       standard output in an easy-to-parse format for scripts
       #
-      #     @option options [Boolean] :write_fetch_head (false) write the fetched
+      #     @option options [Boolean, nil] :write_fetch_head (nil) write the fetched
       #       remote refs to `.git/FETCH_HEAD` (`--write-fetch-head`)
       #
-      #     @option options [Boolean] :no_write_fetch_head (false) do not write
+      #     @option options [Boolean, nil] :no_write_fetch_head (nil) do not write
       #       fetched remote refs to `.git/FETCH_HEAD` (`--no-write-fetch-head`)
       #
-      #     @option options [Boolean] :force (false) override the fast-forward
+      #     @option options [Boolean, nil] :force (nil) override the fast-forward
       #       check when using explicit refspecs
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :keep (false) keep the downloaded pack
+      #     @option options [Boolean, nil] :keep (nil) keep the downloaded pack
       #
       #       Alias: :k
       #
-      #     @option options [Boolean] :multiple (false) allow several repository
+      #     @option options [Boolean, nil] :multiple (nil) allow several repository
       #       and group arguments to be specified
       #
       #       When using this option, pass additional repository or group names
       #       as extra positional arguments; they are bound to the `:refspec`
       #       slot in the DSL but are passed through to git correctly.
       #
-      #     @option options [Boolean] :auto_maintenance (false) run automatic
+      #     @option options [Boolean, nil] :auto_maintenance (nil) run automatic
       #       repository maintenance after fetching (`--auto-maintenance`)
       #
-      #     @option options [Boolean] :no_auto_maintenance (false) do not run
+      #     @option options [Boolean, nil] :no_auto_maintenance (nil) do not run
       #       automatic repository maintenance after fetching
       #       (`--no-auto-maintenance`)
       #
-      #     @option options [Boolean] :auto_gc (false) run automatic garbage
+      #     @option options [Boolean, nil] :auto_gc (nil) run automatic garbage
       #       collection after fetching — deprecated alias for `:auto_maintenance`
       #       (`--auto-gc`)
       #
-      #     @option options [Boolean] :no_auto_gc (false) do not run automatic
+      #     @option options [Boolean, nil] :no_auto_gc (nil) do not run automatic
       #       garbage collection after fetching (`--no-auto-gc`)
       #
-      #     @option options [Boolean] :write_commit_graph (false) write a
+      #     @option options [Boolean, nil] :write_commit_graph (nil) write a
       #       commit-graph after fetching (`--write-commit-graph`)
       #
-      #     @option options [Boolean] :no_write_commit_graph (false) do not write
+      #     @option options [Boolean, nil] :no_write_commit_graph (nil) do not write
       #       a commit-graph after fetching (`--no-write-commit-graph`)
       #
-      #     @option options [Boolean] :prefetch (false) modify the configured
+      #     @option options [Boolean, nil] :prefetch (nil) modify the configured
       #       refspec to place all refs into the `refs/prefetch/` namespace
       #
-      #     @option options [Boolean] :prune (false) before fetching, remove any
+      #     @option options [Boolean, nil] :prune (nil) before fetching, remove any
       #       remote-tracking references that no longer exist on the remote
       #
       #       Alias: :p
       #
-      #     @option options [Boolean] :prune_tags (false) before fetching, remove
+      #     @option options [Boolean, nil] :prune_tags (nil) before fetching, remove
       #       any local tags that no longer exist on the remote (requires
       #       `--prune`)
       #
       #       Alias: :P
       #
-      #     @option options [Boolean] :refetch (false) fetch all objects as a
+      #     @option options [Boolean, nil] :refetch (nil) fetch all objects as a
       #       fresh clone would, bypassing negotiation
       #
       #     @option options [String, Array<String>] :refmap (nil) use the
@@ -247,21 +247,21 @@ module Git
       #
       #       Repeatable.
       #
-      #     @option options [Boolean] :tags (false) fetch all tags from the
+      #     @option options [Boolean, nil] :tags (nil) fetch all tags from the
       #       remote (`--tags`)
       #
       #       Alias: :t
       #
-      #     @option options [Boolean] :no_tags (false) disable automatic tag
+      #     @option options [Boolean, nil] :no_tags (nil) disable automatic tag
       #       following (`--no-tags`)
       #
-      #     @option options [Boolean, String] :recurse_submodules (false) control
+      #     @option options [Boolean, String, nil] :recurse_submodules (nil) control
       #       whether new commits of submodules should be fetched
       #
       #       When `true`, uses `--recurse-submodules`. When a string (e.g.
       #       `'yes'`, `'on-demand'`, `'no'`), passes that value.
       #
-      #     @option options [Boolean] :no_recurse_submodules (false) do not
+      #     @option options [Boolean, nil] :no_recurse_submodules (nil) do not
       #       recurse into submodules (`--no-recurse-submodules`)
       #
       #     @option options [String] :jobs (nil) number of submodules or parallel
@@ -269,7 +269,7 @@ module Git
       #
       #       Alias: :j
       #
-      #     @option options [Boolean] :set_upstream (false) add upstream tracking
+      #     @option options [Boolean, nil] :set_upstream (nil) add upstream tracking
       #       reference if the remote is fetched successfully
       #
       #     @option options [String] :submodule_prefix (nil) prepend the given
@@ -282,7 +282,7 @@ module Git
       #
       #       Used internally.
       #
-      #     @option options [Boolean] :update_head_ok (false) allow updating the
+      #     @option options [Boolean, nil] :update_head_ok (nil) allow updating the
       #       HEAD that corresponds to the current branch
       #
       #       Used internally by `git pull`.
@@ -292,15 +292,15 @@ module Git
       #     @option options [String] :upload_pack (nil) specify a non-default
       #       path for `git-upload-pack` on the remote side
       #
-      #     @option options [Boolean] :quiet (false) suppress all output
+      #     @option options [Boolean, nil] :quiet (nil) suppress all output
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :verbose (false) be verbose
+      #     @option options [Boolean, nil] :verbose (nil) be verbose
       #
       #       Alias: :v
       #
-      #     @option options [Boolean] :progress (false) force progress status on
+      #     @option options [Boolean, nil] :progress (nil) force progress status on
       #       standard error even when the stream is not attached to a terminal
       #
       #     @option options [String, Array<String>] :server_option (nil) transmit
@@ -311,22 +311,22 @@ module Git
       #
       #       Alias: :o
       #
-      #     @option options [Boolean] :show_forced_updates (false) check for
+      #     @option options [Boolean, nil] :show_forced_updates (nil) check for
       #       force-updated branches during fetch (`--show-forced-updates`)
       #
-      #     @option options [Boolean] :no_show_forced_updates (false) do not
+      #     @option options [Boolean, nil] :no_show_forced_updates (nil) do not
       #       check for force-updated branches during fetch
       #       (`--no-show-forced-updates`)
       #
-      #     @option options [Boolean] :ipv4 (false) use IPv4 addresses only
+      #     @option options [Boolean, nil] :ipv4 (nil) use IPv4 addresses only
       #
       #       Alias: :"4"
       #
-      #     @option options [Boolean] :ipv6 (false) use IPv6 addresses only
+      #     @option options [Boolean, nil] :ipv6 (nil) use IPv6 addresses only
       #
       #       Alias: :"6"
       #
-      #     @option options [Boolean] :stdin (false) read refspecs from stdin in
+      #     @option options [Boolean, nil] :stdin (nil) read refspecs from stdin in
       #       addition to those provided as arguments
       #
       #     @option options [Numeric, nil] :timeout (nil) maximum seconds to wait
@@ -334,7 +334,7 @@ module Git
       #
       #       If nil, uses the global timeout from {Git::Config}.
       #
-      #     @option options [Boolean] :merge (nil) merge stderr into stdout in
+      #     @option options [Boolean, nil] :merge (nil) merge stderr into stdout in
       #       the returned result
       #
       #       Pass `true` to capture git fetch output (which is written to stderr

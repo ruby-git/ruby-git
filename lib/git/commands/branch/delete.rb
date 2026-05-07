@@ -56,13 +56,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :force (nil) Allow deleting the branch irrespective of its merged
+        #     @option options [Boolean, nil] :force (nil) allow deleting the branch irrespective of its merged
         #       status, or whether it even points to a valid commit. This is equivalent
         #       to the `-D` shortcut (`--delete --force`).
         #
         #       Alias: :f
         #
-        #     @option options [Boolean] :remotes (nil) Delete remote-tracking branches. Use this together
+        #     @option options [Boolean, nil] :remotes (nil) delete remote-tracking branches. Use this together
         #       with `--delete` to delete remote-tracking branches. Note that this only
         #       makes sense if the remote-tracking branches no longer exist in the remote
         #       repository or if `git fetch` was configured not to fetch them again.

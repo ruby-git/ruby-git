@@ -54,9 +54,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :progress (false) enable progress reporting (`--progress`)
+        #     @option options [Boolean, nil] :progress (nil) enable progress reporting (`--progress`)
         #
-        #     @option options [Boolean] :no_progress (false) suppress progress output (`--no-progress`)
+        #     @option options [Boolean, nil] :no_progress (nil) suppress progress output (`--no-progress`)
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote rename`
         #

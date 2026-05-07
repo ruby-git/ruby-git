@@ -71,13 +71,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) read from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) read from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) read from system config
+        #     @option options [Boolean, nil] :system (nil) read from system config
         #
-        #     @option options [Boolean] :local (false) read from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) read from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) read from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) read from worktree config
         #
         #     @option options [String] :file (nil) read from the specified file
         #
@@ -85,22 +85,22 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :includes (false) follow include directives in config files
+        #     @option options [Boolean, nil] :includes (nil) follow include directives in config files
         #       (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) suppress include directive processing
+        #     @option options [Boolean, nil] :no_includes (nil) suppress include directive processing
         #       (`--no-includes`)
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
-        #     @option options [Boolean] :no_type (false) unset the previously set type specifier;
+        #     @option options [Boolean, nil] :no_type (nil) unset the previously set type specifier;
         #       `true` emits `--no-type`
         #
-        #     @option options [Boolean] :show_origin (false) show the origin of each config value
+        #     @option options [Boolean, nil] :show_origin (nil) show the origin of each config value
         #
-        #     @option options [Boolean] :show_scope (false) show the scope of each config value
+        #     @option options [Boolean, nil] :show_scope (nil) show the scope of each config value
         #
-        #     @option options [Boolean] :null (false) terminate values with NUL byte instead of newline
+        #     @option options [Boolean, nil] :null (nil) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #

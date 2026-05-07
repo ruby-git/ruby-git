@@ -55,25 +55,25 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :index (false) update stat information for the
+      #     @option options [Boolean, nil] :index (nil) update stat information for the
       #       checked out entries in the index file
       #
       #       Alias: `:u`
       #
-      #     @option options [Boolean] :quiet (false) suppress messages when files
+      #     @option options [Boolean, nil] :quiet (nil) suppress messages when files
       #       exist or are not in the index
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :all (false) check out all files in the index
+      #     @option options [Boolean, nil] :all (nil) check out all files in the index
       #
       #       Alias: `:a`
       #
-      #     @option options [Boolean] :force (false) force overwrite of existing files
+      #     @option options [Boolean, nil] :force (nil) force overwrite of existing files
       #
       #       Alias: `:f`
       #
-      #     @option options [Boolean] :no_create (false) don't checkout new files,
+      #     @option options [Boolean, nil] :no_create (nil) don't checkout new files,
       #       only refresh files already checked out
       #
       #       Alias: `:n`
@@ -86,10 +86,10 @@ module Git
       #       Pass `'1'`, `'2'`, or `'3'` for a specific stage number, or `'all'` to
       #       check out all stages (automatically implies `--temp`).
       #
-      #     @option options [Boolean] :temp (false) write file content to temporary
+      #     @option options [Boolean, nil] :temp (nil) write file content to temporary
       #       files near the target location instead of checking them out
       #
-      #     @option options [Boolean] :ignore_skip_worktree_bits (false) check out
+      #     @option options [Boolean, nil] :ignore_skip_worktree_bits (nil) check out
       #       all files, including those with the skip-worktree bit set
       #
       #     @return [Git::CommandLineResult] the result of calling `git checkout-index`

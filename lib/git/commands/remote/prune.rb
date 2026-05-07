@@ -46,7 +46,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :dry_run (nil) report what would be pruned without deleting refs
+        #     @option options [Boolean, nil] :dry_run (nil) report what would be pruned without deleting refs
         #
         #       Alias: :n
         #

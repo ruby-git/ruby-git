@@ -72,7 +72,7 @@ module Git
         #     @option options [String] :m (nil) a reflog message for
         #       the deletion
         #
-        #     @option options [Boolean] :no_deref (nil) overwrite the ref
+        #     @option options [Boolean, nil] :no_deref (nil) overwrite the ref
         #       itself rather than following symbolic refs
         #
         #     @option options [Numeric] :timeout (nil) abort the command after this many

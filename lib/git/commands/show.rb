@@ -196,7 +196,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean, String] :pretty (nil) pretty-print commit
+      #     @option options [Boolean, String, nil] :pretty (nil) pretty-print commit
       #       log messages in the given format
       #
       #       Pass `true` for `--pretty` (defaults to `medium`); pass a string like
@@ -205,81 +205,81 @@ module Git
       #     @option options [String] :format (nil) format string passed as
       #       `--format=<format>` (equivalent to `--pretty=tformat:<format>`)
       #
-      #     @option options [Boolean] :abbrev_commit (false) show an abbreviated
+      #     @option options [Boolean, nil] :abbrev_commit (nil) show an abbreviated
       #       commit hash prefix (`--abbrev-commit`)
       #
-      #     @option options [Boolean] :no_abbrev_commit (false) show the full commit
+      #     @option options [Boolean, nil] :no_abbrev_commit (nil) show the full commit
       #       hash (`--no-abbrev-commit`)
       #
-      #     @option options [Boolean] :oneline (false) shorthand for
+      #     @option options [Boolean, nil] :oneline (nil) shorthand for
       #       `--pretty=oneline --abbrev-commit`
       #
       #     @option options [String] :encoding (nil) re-encode the commit log
       #       message in the specified encoding
       #
-      #     @option options [Boolean, Integer] :expand_tabs (false) expand tabs in
+      #     @option options [Boolean, Integer, nil] :expand_tabs (nil) expand tabs in
       #       the log message before showing it
       #
       #       Pass `true` for `--expand-tabs` (tab stop every 8 columns) or an
       #       integer for `--expand-tabs=<n>`.
       #
-      #     @option options [Boolean] :no_expand_tabs (false) disable tab expansion
+      #     @option options [Boolean, nil] :no_expand_tabs (nil) disable tab expansion
       #       (`--no-expand-tabs`)
       #
-      #     @option options [Boolean, String] :notes (false) show notes that annotate
+      #     @option options [Boolean, String, nil] :notes (nil) show notes that annotate
       #       the commit
       #
       #       Pass `true` for `--notes` or a string like `'refs/notes/review'` for
       #       `--notes=<ref>`.
       #
-      #     @option options [Boolean] :no_notes (false) suppress notes output
+      #     @option options [Boolean, nil] :no_notes (nil) suppress notes output
       #       (`--no-notes`)
       #
-      #     @option options [Boolean] :show_notes_by_default (false) show the
+      #     @option options [Boolean, nil] :show_notes_by_default (nil) show the
       #       default notes unless options for displaying specific notes are given
       #
-      #     @option options [Boolean, String] :show_notes (nil) deprecated; use
+      #     @option options [Boolean, String, nil] :show_notes (nil) deprecated; use
       #       `:notes` instead
       #
-      #     @option options [Boolean] :standard_notes (false) deprecated; use `:notes`
+      #     @option options [Boolean, nil] :standard_notes (nil) deprecated; use `:notes`
       #       instead (`--standard-notes`)
       #
-      #     @option options [Boolean] :no_standard_notes (false) deprecated; use
+      #     @option options [Boolean, nil] :no_standard_notes (nil) deprecated; use
       #       `:notes` instead (`--no-standard-notes`)
       #
-      #     @option options [Boolean] :show_signature (false) check the validity
+      #     @option options [Boolean, nil] :show_signature (nil) check the validity
       #       of a signed commit by passing the signature to `gpg --verify`
       #
-      #     @option options [Boolean] :m (false) show diffs for merge commits in
+      #     @option options [Boolean, nil] :m (nil) show diffs for merge commits in
       #       the default format (no output unless `-p` is also given)
       #
-      #     @option options [Boolean] :c (false) produce combined diff output for
+      #     @option options [Boolean, nil] :c (nil) produce combined diff output for
       #       merge commits; shortcut for `--diff-merges=combined -p`
       #
-      #     @option options [Boolean] :cc (false) produce dense combined diff
+      #     @option options [Boolean, nil] :cc (nil) produce dense combined diff
       #       output for merge commits; shortcut for `--diff-merges=dense-combined -p`
       #
-      #     @option options [Boolean] :dd (false) produce diff with respect to
+      #     @option options [Boolean, nil] :dd (nil) produce diff with respect to
       #       first parent; shortcut for `--diff-merges=first-parent -p`
       #
-      #     @option options [Boolean] :remerge_diff (false) produce remerge-diff
+      #     @option options [Boolean, nil] :remerge_diff (nil) produce remerge-diff
       #       output for merge commits; shortcut for `--diff-merges=remerge -p`
       #
-      #     @option options [Boolean] :no_diff_merges (false) disable diff output
+      #     @option options [Boolean, nil] :no_diff_merges (nil) disable diff output
       #       for merge commits; synonym for `--diff-merges=off`
       #
       #     @option options [String] :diff_merges (nil) specify the diff format for
       #       merge commits (`off`, `on`, `first-parent`, `separate`, `combined`,
       #       `dense-combined`, or `remerge`)
       #
-      #     @option options [Boolean] :combined_all_paths (false) show paths from
+      #     @option options [Boolean, nil] :combined_all_paths (nil) show paths from
       #       all parents when generating a combined diff
       #
-      #     @option options [Boolean] :patch (false) generate patch output
+      #     @option options [Boolean, nil] :patch (nil) generate patch output
       #
       #       Alias: :p, :u
       #
-      #     @option options [Boolean] :no_patch (false) suppress all diff output
+      #     @option options [Boolean, nil] :no_patch (nil) suppress all diff output
       #
       #       Alias: :s
       #
@@ -300,28 +300,28 @@ module Git
       #     @option options [String] :output_indicator_context (nil) character to
       #       indicate context lines in the patch
       #
-      #     @option options [Boolean] :raw (false) show a summary of changes in
+      #     @option options [Boolean, nil] :raw (nil) show a summary of changes in
       #       raw diff format
       #
-      #     @option options [Boolean] :patch_with_raw (false) synonym for
+      #     @option options [Boolean, nil] :patch_with_raw (nil) synonym for
       #       `--patch --raw`
       #
-      #     @option options [Boolean] :t (false) show tree objects in the diff
+      #     @option options [Boolean, nil] :t (nil) show tree objects in the diff
       #       output
       #
-      #     @option options [Boolean] :indent_heuristic (false) use the indent
+      #     @option options [Boolean, nil] :indent_heuristic (nil) use the indent
       #       heuristic to improve patch readability (`--indent-heuristic`)
       #
-      #     @option options [Boolean] :no_indent_heuristic (false) disable the indent
+      #     @option options [Boolean, nil] :no_indent_heuristic (nil) disable the indent
       #       heuristic (`--no-indent-heuristic`)
       #
-      #     @option options [Boolean] :minimal (false) spend extra time to produce
+      #     @option options [Boolean, nil] :minimal (nil) spend extra time to produce
       #       the smallest possible diff
       #
-      #     @option options [Boolean] :patience (false) use the patience diff
+      #     @option options [Boolean, nil] :patience (nil) use the patience diff
       #       algorithm
       #
-      #     @option options [Boolean] :histogram (false) use the histogram diff
+      #     @option options [Boolean, nil] :histogram (nil) use the histogram diff
       #       algorithm
       #
       #     @option options [String, Array<String>] :anchored (nil) generate a diff
@@ -333,7 +333,7 @@ module Git
       #     @option options [String] :diff_algorithm (nil) choose a diff algorithm
       #       (`patience`, `minimal`, `histogram`, or `myers`)
       #
-      #     @option options [Boolean, String] :stat (nil) generate a diffstat
+      #     @option options [Boolean, String, nil] :stat (nil) generate a diffstat
       #
       #       Pass `true` for `--stat`; pass a string like `'100,40,10'` for
       #       `--stat=100,40,10`.
@@ -350,16 +350,16 @@ module Git
       #     @option options [Integer, String] :stat_graph_width (nil) limit the
       #       graph width of `--stat` output
       #
-      #     @option options [Boolean] :compact_summary (false) output a condensed
+      #     @option options [Boolean, nil] :compact_summary (nil) output a condensed
       #       summary of extended header information
       #
-      #     @option options [Boolean] :numstat (false) show per-file
+      #     @option options [Boolean, nil] :numstat (nil) show per-file
       #       insertion/deletion counts in decimal notation
       #
-      #     @option options [Boolean] :shortstat (false) output only the aggregate
+      #     @option options [Boolean, nil] :shortstat (nil) output only the aggregate
       #       totals line from `--stat`
       #
-      #     @option options [Boolean, String] :dirstat (nil) output the distribution
+      #     @option options [Boolean, String, nil] :dirstat (nil) output the distribution
       #       of relative amount of changes per sub-directory
       #
       #       Pass `true` for `--dirstat`; pass a string like
@@ -367,59 +367,59 @@ module Git
       #
       #       Alias: :X
       #
-      #     @option options [Boolean] :cumulative (false) synonym for
+      #     @option options [Boolean, nil] :cumulative (nil) synonym for
       #       `--dirstat=cumulative`
       #
-      #     @option options [Boolean, String] :dirstat_by_file (nil) synonym for
+      #     @option options [Boolean, String, nil] :dirstat_by_file (nil) synonym for
       #       `--dirstat=files,...`
       #
-      #     @option options [Boolean] :summary (false) output a condensed summary
+      #     @option options [Boolean, nil] :summary (nil) output a condensed summary
       #       of extended header information
       #
-      #     @option options [Boolean] :patch_with_stat (false) synonym for
+      #     @option options [Boolean, nil] :patch_with_stat (nil) synonym for
       #       `--patch --stat`
       #
-      #     @option options [Boolean] :z (false) use NUL as output field terminators
+      #     @option options [Boolean, nil] :z (nil) use NUL as output field terminators
       #
-      #     @option options [Boolean] :name_only (false) show only the name of each
+      #     @option options [Boolean, nil] :name_only (nil) show only the name of each
       #       changed file
       #
-      #     @option options [Boolean] :name_status (false) show only the name and
+      #     @option options [Boolean, nil] :name_status (nil) show only the name and
       #       status of each changed file
       #
-      #     @option options [Boolean, String] :submodule (nil) specify how
+      #     @option options [Boolean, String, nil] :submodule (nil) specify how
       #       differences in submodules are shown
       #
       #       Pass `true` for `--submodule`; pass a string like `'log'` or `'diff'`
       #       for `--submodule=<format>`.
       #
-      #     @option options [Boolean, String] :color (false) show colored diff
+      #     @option options [Boolean, String, nil] :color (nil) show colored diff
       #
       #       Pass `true` for `--color` or a string like `'always'` for
       #       `--color=always`.
       #
-      #     @option options [Boolean] :no_color (false) disable colored diff output
+      #     @option options [Boolean, nil] :no_color (nil) disable colored diff output
       #       (`--no-color`)
       #
-      #     @option options [Boolean, String] :color_moved (false) color moved lines
+      #     @option options [Boolean, String, nil] :color_moved (nil) color moved lines
       #       differently
       #
       #       Pass `true` for `--color-moved` or a string like `'zebra'` for
       #       `--color-moved=zebra`.
       #
-      #     @option options [Boolean] :no_color_moved (false) disable coloring of
+      #     @option options [Boolean, nil] :no_color_moved (nil) disable coloring of
       #       moved lines (`--no-color-moved`)
       #
-      #     @option options [Boolean, String] :color_moved_ws (false) configure how
+      #     @option options [Boolean, String, nil] :color_moved_ws (nil) configure how
       #       whitespace is handled during move detection
       #
       #       Pass `true` for `--color-moved-ws` or a string like `'ignore-all-space'`
       #       for `--color-moved-ws=ignore-all-space`.
       #
-      #     @option options [Boolean] :no_color_moved_ws (false) disable whitespace
+      #     @option options [Boolean, nil] :no_color_moved_ws (nil) disable whitespace
       #       handling during move detection (`--no-color-moved-ws`)
       #
-      #     @option options [Boolean, String] :word_diff (nil) show a word diff
+      #     @option options [Boolean, String, nil] :word_diff (nil) show a word diff
       #
       #       Pass `true` for `--word-diff`; pass a string like `'color'` for
       #       `--word-diff=color`.
@@ -427,53 +427,53 @@ module Git
       #     @option options [String] :word_diff_regex (nil) use this regex to
       #       decide what a word is
       #
-      #     @option options [Boolean, String] :color_words (nil) equivalent to
+      #     @option options [Boolean, String, nil] :color_words (nil) equivalent to
       #       `--word-diff=color` plus optional regex
       #
-      #     @option options [Boolean] :no_renames (false) turn off rename detection
+      #     @option options [Boolean, nil] :no_renames (nil) turn off rename detection
       #
-      #     @option options [Boolean] :rename_empty (false) use empty blobs as rename
+      #     @option options [Boolean, nil] :rename_empty (nil) use empty blobs as rename
       #       source (`--rename-empty`)
       #
-      #     @option options [Boolean] :no_rename_empty (false) do not use empty blobs
+      #     @option options [Boolean, nil] :no_rename_empty (nil) do not use empty blobs
       #       as rename source (`--no-rename-empty`)
       #
-      #     @option options [Boolean] :check (false) warn if changes introduce
+      #     @option options [Boolean, nil] :check (nil) warn if changes introduce
       #       conflict markers or whitespace errors
       #
       #     @option options [String] :ws_error_highlight (nil) highlight whitespace
       #       errors in `context`, `old`, or `new` lines
       #
-      #     @option options [Boolean] :full_index (false) show full pre- and
+      #     @option options [Boolean, nil] :full_index (nil) show full pre- and
       #       post-image blob object names
       #
-      #     @option options [Boolean] :binary (false) output a binary diff that can
+      #     @option options [Boolean, nil] :binary (nil) output a binary diff that can
       #       be applied with `git apply`
       #
-      #     @option options [Boolean, Integer] :abbrev (nil) show only a partial
+      #     @option options [Boolean, Integer, nil] :abbrev (nil) show only a partial
       #       prefix of object names
       #
       #       Pass `true` for `--abbrev`; pass an integer for `--abbrev=<n>`.
       #
-      #     @option options [Boolean, String] :break_rewrites (nil) break complete
+      #     @option options [Boolean, String, nil] :break_rewrites (nil) break complete
       #       rewrite changes into delete/create pairs
       #
       #       Alias: :B
       #
-      #     @option options [Boolean, String] :find_renames (nil) detect renames,
+      #     @option options [Boolean, String, nil] :find_renames (nil) detect renames,
       #       optionally specifying a similarity threshold
       #
       #       Alias: :M
       #
-      #     @option options [Boolean, String] :find_copies (nil) detect copies as
+      #     @option options [Boolean, String, nil] :find_copies (nil) detect copies as
       #       well as renames
       #
       #       Alias: :C
       #
-      #     @option options [Boolean] :find_copies_harder (false) inspect all files
+      #     @option options [Boolean, nil] :find_copies_harder (nil) inspect all files
       #       as candidates for the source of copy
       #
-      #     @option options [Boolean] :irreversible_delete (false) omit the
+      #     @option options [Boolean, nil] :irreversible_delete (nil) omit the
       #       preimage for deletes
       #
       #       Alias: :D
@@ -493,10 +493,10 @@ module Git
       #     @option options [String] :find_object (nil) look for differences that
       #       change the number of occurrences of an object
       #
-      #     @option options [Boolean] :pickaxe_all (false) when `-S` or `-G` finds
+      #     @option options [Boolean, nil] :pickaxe_all (nil) when `-S` or `-G` finds
       #       a change, show all changes in that changeset
       #
-      #     @option options [Boolean] :pickaxe_regex (false) treat the `-S` string
+      #     @option options [Boolean, nil] :pickaxe_regex (nil) treat the `-S` string
       #       as an extended POSIX regular expression
       #
       #     @option options [String] :O (nil) control the order in which files
@@ -508,37 +508,37 @@ module Git
       #     @option options [String] :rotate_to (nil) move files before the named
       #       file to the end of the output
       #
-      #     @option options [Boolean] :R (false) swap two inputs (reverse diff)
+      #     @option options [Boolean, nil] :R (nil) swap two inputs (reverse diff)
       #
-      #     @option options [Boolean, String] :relative (false) show pathnames
+      #     @option options [Boolean, String, nil] :relative (nil) show pathnames
       #       relative to a subdirectory
       #
       #       Pass `true` for `--relative` or a string for `--relative=<path>`.
       #
-      #     @option options [Boolean] :no_relative (false) show absolute pathnames
+      #     @option options [Boolean, nil] :no_relative (nil) show absolute pathnames
       #       (`--no-relative`)
       #
-      #     @option options [Boolean] :text (false) treat all files as text
+      #     @option options [Boolean, nil] :text (nil) treat all files as text
       #
       #       Alias: :a
       #
-      #     @option options [Boolean] :ignore_cr_at_eol (false) ignore
+      #     @option options [Boolean, nil] :ignore_cr_at_eol (nil) ignore
       #       carriage-return at end of line
       #
-      #     @option options [Boolean] :ignore_space_at_eol (false) ignore changes
+      #     @option options [Boolean, nil] :ignore_space_at_eol (nil) ignore changes
       #       in whitespace at end of line
       #
-      #     @option options [Boolean] :ignore_space_change (false) ignore changes
+      #     @option options [Boolean, nil] :ignore_space_change (nil) ignore changes
       #       in amount of whitespace
       #
       #       Alias: :b
       #
-      #     @option options [Boolean] :ignore_all_space (false) ignore whitespace
+      #     @option options [Boolean, nil] :ignore_all_space (nil) ignore whitespace
       #       when comparing lines
       #
       #       Alias: :w
       #
-      #     @option options [Boolean] :ignore_blank_lines (false) ignore changes
+      #     @option options [Boolean, nil] :ignore_blank_lines (nil) ignore changes
       #       whose lines are all blank
       #
       #     @option options [String, Array<String>] :ignore_matching_lines (nil)
@@ -552,24 +552,24 @@ module Git
       #     @option options [Integer, String] :inter_hunk_context (nil) show the
       #       context between diff hunks, fusing nearby hunks
       #
-      #     @option options [Boolean] :function_context (false) show whole function
+      #     @option options [Boolean, nil] :function_context (nil) show whole function
       #       as context lines for each change
       #
       #       Alias: :W
       #
-      #     @option options [Boolean] :ext_diff (false) allow an external diff helper
+      #     @option options [Boolean, nil] :ext_diff (nil) allow an external diff helper
       #       to be used (`--ext-diff`)
       #
-      #     @option options [Boolean] :no_ext_diff (false) disallow external diff
+      #     @option options [Boolean, nil] :no_ext_diff (nil) disallow external diff
       #       helpers (`--no-ext-diff`)
       #
-      #     @option options [Boolean] :textconv (false) allow external text conversion
+      #     @option options [Boolean, nil] :textconv (nil) allow external text conversion
       #       filters for binary files (`--textconv`)
       #
-      #     @option options [Boolean] :no_textconv (false) disallow external text
+      #     @option options [Boolean, nil] :no_textconv (nil) disallow external text
       #       conversion filters (`--no-textconv`)
       #
-      #     @option options [Boolean, String] :ignore_submodules (nil) ignore
+      #     @option options [Boolean, String, nil] :ignore_submodules (nil) ignore
       #       changes to submodules in the diff
       #
       #       Pass `true` for `--ignore-submodules`; pass a string like `'all'`
@@ -581,19 +581,19 @@ module Git
       #     @option options [String] :dst_prefix (nil) destination prefix for diff
       #       headers (e.g. `'b/'`)
       #
-      #     @option options [Boolean] :no_prefix (false) do not show any source or
+      #     @option options [Boolean, nil] :no_prefix (nil) do not show any source or
       #       destination prefix
       #
-      #     @option options [Boolean] :default_prefix (false) use the default source
+      #     @option options [Boolean, nil] :default_prefix (nil) use the default source
       #       and destination prefixes
       #
       #     @option options [String] :line_prefix (nil) prepend an additional prefix
       #       to every line of output
       #
-      #     @option options [Boolean] :ita_invisible_in_index (false) make
+      #     @option options [Boolean, nil] :ita_invisible_in_index (nil) make
       #       intent-to-add entries appear as new files in `git diff`
       #
-      #     @option options [Boolean] :ita_visible_in_index (false) revert
+      #     @option options [Boolean, nil] :ita_visible_in_index (nil) revert
       #       `--ita-invisible-in-index`
       #
       #     @option options [Integer, String] :max_depth (nil) descend at most this

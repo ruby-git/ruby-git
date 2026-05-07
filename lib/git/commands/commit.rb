@@ -106,18 +106,18 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :all (false) automatically stage modified and deleted
+      #     @option options [Boolean, nil] :all (nil) automatically stage modified and deleted
       #       files before committing
       #
       #       Alias: `:a`
       #
-      #     @option options [Boolean] :edit (false) open an editor for the commit message (`--edit`)
+      #     @option options [Boolean, nil] :edit (nil) open an editor for the commit message (`--edit`)
       #
       #       Alias: `:e`
       #
-      #     @option options [Boolean] :no_edit (false) suppress the editor (`--no-edit`)
+      #     @option options [Boolean, nil] :no_edit (nil) suppress the editor (`--no-edit`)
       #
-      #     @option options [Boolean] :amend (false) replace the tip of the current branch
+      #     @option options [Boolean, nil] :amend (nil) replace the tip of the current branch
       #       with a new commit
       #
       #     @option options [String] :reuse_message (nil) reuse the log message and
@@ -148,7 +148,7 @@ module Git
       #
       #       Alias: `:t`
       #
-      #     @option options [Boolean] :reset_author (false) when used with `:reuse_message`
+      #     @option options [Boolean, nil] :reset_author (nil) when used with `:reuse_message`
       #       or `:amend`, declare the committer as the new author
       #
       #     @option options [String] :author (nil) override the commit author
@@ -161,64 +161,64 @@ module Git
       #     @option options [String, Array<String>] :trailer (nil) add one or more
       #       `<token>[=<value>]` trailers to the commit message
       #
-      #     @option options [Boolean] :verify (false) run pre-commit and commit-msg hooks (`--verify`)
+      #     @option options [Boolean, nil] :verify (nil) run pre-commit and commit-msg hooks (`--verify`)
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :no_verify (false) bypass pre-commit and commit-msg hooks (`--no-verify`)
+      #     @option options [Boolean, nil] :no_verify (nil) bypass pre-commit and commit-msg hooks (`--no-verify`)
       #
-      #     @option options [Boolean] :allow_empty (false) allow committing with no changes
+      #     @option options [Boolean, nil] :allow_empty (nil) allow committing with no changes
       #
-      #     @option options [Boolean] :allow_empty_message (false) allow committing with an
+      #     @option options [Boolean, nil] :allow_empty_message (nil) allow committing with an
       #       empty message
       #
-      #     @option options [Boolean] :no_post_rewrite (false) bypass the post-rewrite hook
+      #     @option options [Boolean, nil] :no_post_rewrite (nil) bypass the post-rewrite hook
       #
-      #     @option options [Boolean] :include (false) stage the listed paths before
+      #     @option options [Boolean, nil] :include (nil) stage the listed paths before
       #       committing in addition to already-staged contents
       #
       #       Alias: `:i`
       #
-      #     @option options [Boolean] :only (false) commit only the listed paths from the
+      #     @option options [Boolean, nil] :only (nil) commit only the listed paths from the
       #       working tree, ignoring staged changes for other paths
       #
       #       Alias: `:o`
       #
-      #     @option options [Boolean] :dry_run (false) do not create a commit; show what
+      #     @option options [Boolean, nil] :dry_run (nil) do not create a commit; show what
       #       would be committed
       #
-      #     @option options [Boolean] :short (false) show short-format dry-run output;
+      #     @option options [Boolean, nil] :short (nil) show short-format dry-run output;
       #       implies `:dry_run`
       #
-      #     @option options [Boolean] :branch (false) show branch and tracking info in
+      #     @option options [Boolean, nil] :branch (nil) show branch and tracking info in
       #       short-format dry-run output
       #
-      #     @option options [Boolean] :porcelain (false) show porcelain-format dry-run
+      #     @option options [Boolean, nil] :porcelain (nil) show porcelain-format dry-run
       #       output; implies `:dry_run`
       #
-      #     @option options [Boolean] :long (false) show long-format dry-run output;
+      #     @option options [Boolean, nil] :long (nil) show long-format dry-run output;
       #       implies `:dry_run`
       #
-      #     @option options [Boolean] :null (false) terminate dry-run output entries with
+      #     @option options [Boolean, nil] :null (nil) terminate dry-run output entries with
       #       NUL instead of LF
       #
       #       Alias: `:z`
       #
-      #     @option options [Boolean, Integer] :verbose (false) show unified diff between
+      #     @option options [Boolean, Integer, nil] :verbose (nil) show unified diff between
       #       HEAD and what would be committed at the bottom of the commit message template
       #
       #       Pass `2` to also show the unified diff between staged and working-tree changes.
       #
       #       Alias: `:v`
       #
-      #     @option options [Boolean] :quiet (false) suppress commit summary message
+      #     @option options [Boolean, nil] :quiet (nil) suppress commit summary message
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :status (false) include `git status` output in the
+      #     @option options [Boolean, nil] :status (nil) include `git status` output in the
       #       commit message template (`--status`)
       #
-      #     @option options [Boolean] :no_status (false) omit `git status` output from the
+      #     @option options [Boolean, nil] :no_status (nil) omit `git status` output from the
       #       commit message template (`--no-status`)
       #
       #     @option options [Integer] :unified (nil) generate verbose diff with the given
@@ -229,23 +229,23 @@ module Git
       #     @option options [Integer] :inter_hunk_context (nil) show context between diff
       #       hunks up to the given number of lines (for use with `:verbose`)
       #
-      #     @option options [Boolean] :signoff (false) add a `Signed-off-by` trailer to
+      #     @option options [Boolean, nil] :signoff (nil) add a `Signed-off-by` trailer to
       #       the commit message (`--signoff`)
       #
       #       Alias: `:s`
       #
-      #     @option options [Boolean] :no_signoff (false) suppress the `Signed-off-by` trailer (`--no-signoff`)
+      #     @option options [Boolean, nil] :no_signoff (nil) suppress the `Signed-off-by` trailer (`--no-signoff`)
       #
-      #     @option options [Boolean, String] :gpg_sign (false) GPG-sign the commit (`--gpg-sign`)
+      #     @option options [Boolean, String, nil] :gpg_sign (nil) GPG-sign the commit (`--gpg-sign`)
       #
       #       When `true`, uses the default key. When a `String`, uses the specified key ID.
       #
       #       Alias: `:S`
       #
-      #     @option options [Boolean] :no_gpg_sign (false) disable GPG signing, overriding
+      #     @option options [Boolean, nil] :no_gpg_sign (nil) disable GPG signing, overriding
       #       `commit.gpgSign` config (`--no-gpg-sign`)
       #
-      #     @option options [Boolean, String] :untracked_files (nil) show untracked files
+      #     @option options [Boolean, String, nil] :untracked_files (nil) show untracked files
       #       in the dry-run status output
       #
       #       When `true`, uses git's default mode (`all`). Pass a `String` (`"no"`,
@@ -256,7 +256,7 @@ module Git
       #     @option options [String] :pathspec_from_file (nil) read pathspec from the given
       #       file instead of the command line
       #
-      #     @option options [Boolean] :pathspec_file_nul (false) pathspec elements in
+      #     @option options [Boolean, nil] :pathspec_file_nul (nil) pathspec elements in
       #       `:pathspec_from_file` are NUL-separated instead of newline-separated
       #
       #     @return [Git::CommandLineResult] the result of calling `git commit`

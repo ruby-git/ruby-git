@@ -57,53 +57,56 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :verbose (false) be verbose
+      #     @option options [Boolean, nil] :verbose (nil) be verbose
       #
       #       Alias: :v
       #
-      #     @option options [Boolean] :dry_run (false) don't actually add files; show what would be added
+      #     @option options [Boolean, nil] :dry_run (nil) don't actually add files; show what would be added
       #
       #       Alias: :n
       #
-      #     @option options [Boolean] :force (false) allow adding otherwise ignored files
+      #     @option options [Boolean, nil] :force (nil) allow adding otherwise ignored files
       #
       #       Alias: :f
       #
-      #     @option options [Boolean] :all (false) add, modify, and remove index entries to match the worktree (--all)
+      #     @option options [Boolean, nil] :all (nil) add, modify, and remove index entries to
+      #       match the worktree (--all)
       #
       #       Alias: :A
       #
-      #     @option options [Boolean] :no_all (false) add and modify index entries without staging removals (--no-all)
+      #     @option options [Boolean, nil] :no_all (nil) add and modify index entries without staging
+      #       removals (--no-all)
       #
-      #     @option options [Boolean] :ignore_removal (false) add and modify files; ignore removals (--ignore-removal)
+      #     @option options [Boolean, nil] :ignore_removal (nil) add and modify files; ignore removals
+      #       (--ignore-removal)
       #
-      #     @option options [Boolean] :no_ignore_removal (false) include file removals (--no-ignore-removal)
+      #     @option options [Boolean, nil] :no_ignore_removal (nil) include file removals (--no-ignore-removal)
       #
-      #     @option options [Boolean] :update (false) update tracked files only; does not add new files
+      #     @option options [Boolean, nil] :update (nil) update tracked files only; does not add new files
       #
       #       Alias: :u
       #
-      #     @option options [Boolean] :sparse (false) allow updating index entries outside the
+      #     @option options [Boolean, nil] :sparse (nil) allow updating index entries outside the
       #       sparse-checkout cone
       #
-      #     @option options [Boolean] :intent_to_add (false) record that the path will be added later,
+      #     @option options [Boolean, nil] :intent_to_add (nil) record that the path will be added later,
       #       placing an empty entry in the index
       #
       #       Alias: :N
       #
-      #     @option options [Boolean] :refresh (false) refresh stat() information in the index without
+      #     @option options [Boolean, nil] :refresh (nil) refresh stat() information in the index without
       #       adding files
       #
-      #     @option options [Boolean] :ignore_errors (false) continue adding other files if some files
+      #     @option options [Boolean, nil] :ignore_errors (nil) continue adding other files if some files
       #       cannot be added due to indexing errors
       #
-      #     @option options [Boolean] :ignore_missing (false) check whether any given files would be
+      #     @option options [Boolean, nil] :ignore_missing (nil) check whether any given files would be
       #       ignored
       #
-      #     @option options [Boolean] :renormalize (false) apply the "clean" process freshly to all tracked
+      #     @option options [Boolean, nil] :renormalize (nil) apply the "clean" process freshly to all tracked
       #       files to forcibly re-add them with correct line endings
       #
-      #     @option options [Boolean] :no_warn_embedded_repo (false) suppress warning when adding an
+      #     @option options [Boolean, nil] :no_warn_embedded_repo (nil) suppress warning when adding an
       #       embedded repository without using `git submodule add`
       #
       #     @option options [String] :chmod (nil) override the executable bit of added files in the index
@@ -113,7 +116,7 @@ module Git
       #     @option options [String] :pathspec_from_file (nil) read pathspec from the given file
       #       (use `'-'` for stdin)
       #
-      #     @option options [Boolean] :pathspec_file_nul (false) separate pathspec elements with NUL
+      #     @option options [Boolean, nil] :pathspec_file_nul (nil) separate pathspec elements with NUL
       #       when reading from a file
       #
       #     @return [Git::CommandLineResult] the result of calling `git add`

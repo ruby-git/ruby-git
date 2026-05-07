@@ -68,59 +68,59 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :tags (false) report tags
+      #     @option options [Boolean, nil] :tags (nil) report tags
       #
-      #     @option options [Boolean] :root (false) report root nodes
+      #     @option options [Boolean, nil] :root (nil) report root nodes
       #
-      #     @option options [Boolean] :unreachable (false) print out objects that
+      #     @option options [Boolean, nil] :unreachable (nil) print out objects that
       #       exist but are not reachable from any of the reference nodes
       #
-      #     @option options [Boolean] :cache (false) consider any object recorded
+      #     @option options [Boolean, nil] :cache (nil) consider any object recorded
       #       in the index also as a head node for reachability
       #
-      #     @option options [Boolean] :no_reflogs (false) do not consider commits
+      #     @option options [Boolean, nil] :no_reflogs (nil) do not consider commits
       #       referenced only by reflogs to be reachable
       #
-      #     @option options [Boolean] :full (false) check not just objects in
+      #     @option options [Boolean, nil] :full (nil) check not just objects in
       #       `GIT_OBJECT_DIRECTORY` but also those in alternate object pools and
       #       packed archives (`--full`)
       #
-      #     @option options [Boolean] :no_full (false) skip checking alternate object
+      #     @option options [Boolean, nil] :no_full (nil) skip checking alternate object
       #       pools and packed archives (`--no-full`)
       #
-      #     @option options [Boolean] :strict (false) enable more strict checking,
+      #     @option options [Boolean, nil] :strict (nil) enable more strict checking,
       #       catching files with `g+w` bits set
       #
-      #     @option options [Boolean] :verbose (false) be chatty
+      #     @option options [Boolean, nil] :verbose (nil) be chatty
       #
-      #     @option options [Boolean] :lost_found (false) write dangling objects
+      #     @option options [Boolean, nil] :lost_found (nil) write dangling objects
       #       into `.git/lost-found/commit/` or `.git/lost-found/other/`
       #
-      #     @option options [Boolean] :dangling (false) print dangling objects (`--dangling`)
+      #     @option options [Boolean, nil] :dangling (nil) print dangling objects (`--dangling`)
       #
-      #     @option options [Boolean] :no_dangling (false) suppress dangling object
+      #     @option options [Boolean, nil] :no_dangling (nil) suppress dangling object
       #       reporting (`--no-dangling`)
       #
-      #     @option options [Boolean] :progress (false) show progress status on
+      #     @option options [Boolean, nil] :progress (nil) show progress status on
       #       standard error (`--progress`)
       #
-      #     @option options [Boolean] :no_progress (false) suppress progress output
+      #     @option options [Boolean, nil] :no_progress (nil) suppress progress output
       #       when attached to a terminal (`--no-progress`)
       #
-      #     @option options [Boolean] :connectivity_only (false) check only the
+      #     @option options [Boolean, nil] :connectivity_only (nil) check only the
       #       connectivity of reachable objects; faster but does not validate
       #       blob content
       #
-      #     @option options [Boolean] :name_objects (false) show the name of each
+      #     @option options [Boolean, nil] :name_objects (nil) show the name of each
       #       reachable object alongside its identifier (`--name-objects`)
       #
-      #     @option options [Boolean] :no_name_objects (false) suppress object name
+      #     @option options [Boolean, nil] :no_name_objects (nil) suppress object name
       #       display (`--no-name-objects`)
       #
-      #     @option options [Boolean] :references (false) check reference database
+      #     @option options [Boolean, nil] :references (nil) check reference database
       #       consistency via `git refs verify` (`--references`)
       #
-      #     @option options [Boolean] :no_references (false) skip reference checking
+      #     @option options [Boolean, nil] :no_references (nil) skip reference checking
       #       (`--no-references`)
       #
       #     @return [Git::CommandLineResult] the result of calling `git fsck`

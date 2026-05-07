@@ -114,16 +114,16 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :revs_only (nil) do not output flags
+      #     @option options [Boolean, nil] :revs_only (nil) do not output flags
       #       and parameters not meant for `git rev-list`
       #
-      #     @option options [Boolean] :no_revs (nil) do not output flags and
+      #     @option options [Boolean, nil] :no_revs (nil) do not output flags and
       #       parameters meant for `git rev-list`
       #
-      #     @option options [Boolean] :flags (false) do not output non-flag
+      #     @option options [Boolean, nil] :flags (nil) do not output non-flag
       #       parameters (`--flags`)
       #
-      #     @option options [Boolean] :no_flags (false) do not output flag
+      #     @option options [Boolean, nil] :no_flags (nil) do not output flag
       #       parameters (`--no-flags`)
       #
       #     @option options [String] :default (nil) use this value if no
@@ -132,10 +132,10 @@ module Git
       #     @option options [String] :prefix (nil) behave as if invoked from
       #       this subdirectory of the working tree
       #
-      #     @option options [Boolean] :verify (nil) verify that exactly one
+      #     @option options [Boolean, nil] :verify (nil) verify that exactly one
       #       parameter is provided and that it can be resolved to an object
       #
-      #     @option options [Boolean] :quiet (nil) do not output an error
+      #     @option options [Boolean, nil] :quiet (nil) do not output an error
       #       message if the first argument is not a valid object name;
       #       exit with non-zero status silently
       #
@@ -143,28 +143,28 @@ module Git
       #
       #       Alias: :q
       #
-      #     @option options [Boolean] :sq (nil) output a single line
+      #     @option options [Boolean, nil] :sq (nil) output a single line
       #       properly quoted for shell consumption
       #
-      #     @option options [Boolean, String] :short (nil) shorten the
+      #     @option options [Boolean, String, nil] :short (nil) shorten the
       #       object name to a unique prefix
       #
       #       When `true`, emits `--short` (git default length). When a
       #       String, emits `--short=<length>`.
       #
-      #     @option options [Boolean] :not (nil) prefix object names with
+      #     @option options [Boolean, nil] :not (nil) prefix object names with
       #       `^` and strip `^` from names that already have one
       #
-      #     @option options [Boolean, String] :abbrev_ref (nil) output a
+      #     @option options [Boolean, String, nil] :abbrev_ref (nil) output a
       #       non-ambiguous short name of the object
       #
       #       When `true`, emits `--abbrev-ref`. When a String (`"strict"`
       #       or `"loose"`), emits `--abbrev-ref=<mode>`.
       #
-      #     @option options [Boolean] :symbolic (nil) output object names
+      #     @option options [Boolean, nil] :symbolic (nil) output object names
       #       in a form as close to the original input as possible
       #
-      #     @option options [Boolean] :symbolic_full_name (nil) like
+      #     @option options [Boolean, nil] :symbolic_full_name (nil) like
       #       `:symbolic` but omit non-ref input and show full refnames
       #
       #     @option options [String] :output_object_format (nil) translate
@@ -172,21 +172,21 @@ module Git
       #
       #       Accepted values are `"sha1"`, `"sha256"`, and `"storage"`.
       #
-      #     @option options [Boolean] :all (nil) show all refs found in
+      #     @option options [Boolean, nil] :all (nil) show all refs found in
       #       `refs/`
       #
-      #     @option options [Boolean, String] :branches (nil) show all
+      #     @option options [Boolean, String, nil] :branches (nil) show all
       #       branches
       #
       #       When `true`, emits `--branches`. When a String, emits
       #       `--branches=<pattern>`.
       #
-      #     @option options [Boolean, String] :tags (nil) show all tags
+      #     @option options [Boolean, String, nil] :tags (nil) show all tags
       #
       #       When `true`, emits `--tags`. When a String, emits
       #       `--tags=<pattern>`.
       #
-      #     @option options [Boolean, String] :remotes (nil) show all
+      #     @option options [Boolean, String, nil] :remotes (nil) show all
       #       remote-tracking branches
       #
       #       When `true`, emits `--remotes`. When a String, emits
@@ -209,7 +209,7 @@ module Git
       #       Affects the next `--all` or `--glob` and is cleared after
       #       processing them.
       #
-      #     @option options [Boolean] :local_env_vars (nil) list the
+      #     @option options [Boolean, nil] :local_env_vars (nil) list the
       #       `GIT_*` environment variables local to the repository
       #
       #     @option options [String, Array<String>] :path_format (nil) control
@@ -220,26 +220,26 @@ module Git
       #       given multiple times; each instance affects the arguments
       #       that follow it on the command line.
       #
-      #     @option options [Boolean] :git_dir (nil) show `$GIT_DIR` if
+      #     @option options [Boolean, nil] :git_dir (nil) show `$GIT_DIR` if
       #       defined, otherwise show the path to the `.git` directory
       #
-      #     @option options [Boolean] :absolute_git_dir (nil) like
+      #     @option options [Boolean, nil] :absolute_git_dir (nil) like
       #       `:git_dir` but always output the canonicalized absolute path
       #
-      #     @option options [Boolean] :git_common_dir (nil) show
+      #     @option options [Boolean, nil] :git_common_dir (nil) show
       #       `$GIT_COMMON_DIR` if defined, else `$GIT_DIR`
       #
-      #     @option options [Boolean] :is_inside_git_dir (nil) print
+      #     @option options [Boolean, nil] :is_inside_git_dir (nil) print
       #       `"true"` when the current working directory is below the
       #       repository directory, `"false"` otherwise
       #
-      #     @option options [Boolean] :is_inside_work_tree (nil) print
+      #     @option options [Boolean, nil] :is_inside_work_tree (nil) print
       #       `"true"` when inside the work tree, `"false"` otherwise
       #
-      #     @option options [Boolean] :is_bare_repository (nil) print
+      #     @option options [Boolean, nil] :is_bare_repository (nil) print
       #       `"true"` when the repository is bare, `"false"` otherwise
       #
-      #     @option options [Boolean] :is_shallow_repository (nil) print
+      #     @option options [Boolean, nil] :is_shallow_repository (nil) print
       #       `"true"` when the repository is shallow, `"false"` otherwise
       #
       #     @option options [String] :resolve_git_dir (nil) check if the
@@ -249,23 +249,23 @@ module Git
       #     @option options [String] :git_path (nil) resolve
       #       `"$GIT_DIR/<path>"` taking relocation variables into account
       #
-      #     @option options [Boolean] :show_cdup (nil) show the path of
+      #     @option options [Boolean, nil] :show_cdup (nil) show the path of
       #       the top-level directory relative to the current directory
       #
-      #     @option options [Boolean] :show_prefix (nil) show the path of
+      #     @option options [Boolean, nil] :show_prefix (nil) show the path of
       #       the current directory relative to the top-level directory
       #
-      #     @option options [Boolean] :show_toplevel (nil) show the
+      #     @option options [Boolean, nil] :show_toplevel (nil) show the
       #       absolute path of the top-level directory of the working tree
       #
-      #     @option options [Boolean] :show_superproject_working_tree (nil)
+      #     @option options [Boolean, nil] :show_superproject_working_tree (nil)
       #       show the absolute path of the root of the superproject's
       #       working tree if the current repository is a submodule
       #
-      #     @option options [Boolean] :shared_index_path (nil) show the
+      #     @option options [Boolean, nil] :shared_index_path (nil) show the
       #       path to the shared index file in split index mode
       #
-      #     @option options [Boolean, String] :show_object_format (nil)
+      #     @option options [Boolean, String, nil] :show_object_format (nil)
       #       show the object format (hash algorithm) used for the
       #       repository
       #
@@ -273,7 +273,7 @@ module Git
       #       `"storage"`). When a String (`"storage"`, `"input"`, or
       #       `"output"`), emits `--show-object-format=<mode>`.
       #
-      #     @option options [Boolean] :show_ref_format (nil) show the
+      #     @option options [Boolean, nil] :show_ref_format (nil) show the
       #       reference storage format used for the repository
       #
       #     @option options [String] :since (nil) parse the date string

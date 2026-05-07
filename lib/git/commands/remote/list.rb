@@ -39,7 +39,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :verbose (nil) show remote URLs alongside remote names
+        #     @option options [Boolean, nil] :verbose (nil) show remote URLs alongside remote names
         #
         #       Alias: :v
         #

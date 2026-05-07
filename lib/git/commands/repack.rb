@@ -92,24 +92,24 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :a (false) pack all objects into a single pack
+      #     @option options [Boolean, nil] :a (nil) pack all objects into a single pack
       #
       #       When `true`, passes `-a`. Especially useful when packing a repository
       #       used for private development. Use with `:d` to clean up objects.
       #
-      #     @option options [Boolean] :A (false) pack all objects, loosening unreachable
+      #     @option options [Boolean, nil] :A (nil) pack all objects, loosening unreachable
       #       objects when combined with `:d`
       #
       #       When `true`, passes `-A`. Like `:a`, but any unreachable objects in a
       #       previous pack become loose unpacked objects instead of being removed. The
       #       loose unreachable objects are pruned by the next `git gc` invocation.
       #
-      #     @option options [Boolean] :d (false) delete redundant packs after repacking
+      #     @option options [Boolean, nil] :d (nil) delete redundant packs after repacking
       #
       #       When `true`, passes `-d`. After packing, removes any existing packs that
       #       are made redundant by the newly created pack. Also runs `git prune-packed`.
       #
-      #     @option options [Boolean] :cruft (false) pack unreachable objects into a
+      #     @option options [Boolean, nil] :cruft (nil) pack unreachable objects into a
       #       separate cruft pack when combined with `:d`
       #
       #       When `true`, passes `--cruft`. Like `:a`, but any unreachable objects are
@@ -139,29 +139,29 @@ module Git
       #
       #       Passed as `--expire-to=<dir>`. Only useful with `--cruft -d`.
       #
-      #     @option options [Boolean] :l (false) pass `--local` to `git pack-objects`
+      #     @option options [Boolean, nil] :l (nil) pass `--local` to `git pack-objects`
       #
       #       When `true`, passes `-l`. Ignores objects that come from an alternates
       #       object store.
       #
-      #     @option options [Boolean] :f (false) pass `--no-reuse-delta` to
+      #     @option options [Boolean, nil] :f (nil) pass `--no-reuse-delta` to
       #       `git pack-objects`
       #
       #       When `true`, passes `-f`. Forces reconstruction of all pack deltas.
       #
-      #     @option options [Boolean] :F (false) pass `--no-reuse-object` to
+      #     @option options [Boolean, nil] :F (nil) pass `--no-reuse-object` to
       #       `git pack-objects`
       #
       #       When `true`, passes `-F`. Forces reconstruction of all object data, not
       #       just deltas.
       #
-      #     @option options [Boolean] :quiet (false) suppress progress reporting
+      #     @option options [Boolean, nil] :quiet (nil) suppress progress reporting
       #
       #       When `true`, passes `--quiet`.
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :n (false) do not update server information
+      #     @option options [Boolean, nil] :n (nil) do not update server information
       #
       #       When `true`, passes `-n`. Skips running `git update-server-info`, which
       #       updates local catalog files needed to publish the repository
@@ -203,7 +203,7 @@ module Git
       #
       #       Passed as `--filter-to=<dir>`. Only useful with `:filter`.
       #
-      #     @option options [Boolean] :write_bitmap_index (false) write a reachability
+      #     @option options [Boolean, nil] :write_bitmap_index (nil) write a reachability
       #       bitmap index as part of the repack
       #
       #       When `true`, passes `--write-bitmap-index`. Only meaningful when used with
@@ -211,7 +211,7 @@ module Git
       #
       #       Alias: `:b`
       #
-      #     @option options [Boolean] :pack_kept_objects (false) include objects in
+      #     @option options [Boolean, nil] :pack_kept_objects (nil) include objects in
       #       `.keep` files when repacking
       #
       #       When `true`, passes `--pack-kept-objects`. Generally only useful when
@@ -224,7 +224,7 @@ module Git
       #       or an array of pack file names. Each value is passed as a separate
       #       `--keep-pack=<name>` argument.
       #
-      #     @option options [Boolean] :write_midx (false) write a multi-pack index
+      #     @option options [Boolean, nil] :write_midx (nil) write a multi-pack index
       #       containing the non-redundant packs
       #
       #       When `true`, passes `--write-midx`.
@@ -238,7 +238,7 @@ module Git
       #       are not loosened, since they would be immediately pruned by a follow-up
       #       `git prune`.
       #
-      #     @option options [Boolean] :keep_unreachable (false) keep unreachable objects
+      #     @option options [Boolean, nil] :keep_unreachable (nil) keep unreachable objects
       #       in the new packfile rather than removing them
       #
       #       When `true`, passes `--keep-unreachable`. Appends unreachable objects from
@@ -246,7 +246,7 @@ module Git
       #
       #       Alias: `:k`
       #
-      #     @option options [Boolean] :delta_islands (false) pass `--delta-islands` to
+      #     @option options [Boolean, nil] :delta_islands (nil) pass `--delta-islands` to
       #       `git pack-objects`
       #
       #       When `true`, passes `--delta-islands`.
@@ -264,7 +264,7 @@ module Git
       #     @option options [Integer, String] :name_hash_version (nil) pass
       #       `--name-hash-version=<n>` to `git pack-objects`
       #
-      #     @option options [Boolean] :path_walk (false) pass `--path-walk` to
+      #     @option options [Boolean, nil] :path_walk (nil) pass `--path-walk` to
       #       `git pack-objects`
       #
       #     @return [Git::CommandLineResult] the result of calling `git repack`

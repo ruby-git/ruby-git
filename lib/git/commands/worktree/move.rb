@@ -43,7 +43,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :force (false) allow moving a locked worktree
+        #     @option options [Boolean, Integer, nil] :force (nil) allow moving a locked worktree
         #
         #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
         #       `--force --force`, which also handles locked or missing destinations.

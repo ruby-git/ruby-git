@@ -53,19 +53,19 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :verbose (false) Report the names of files as they are moved
+      #     @option options [Boolean, nil] :verbose (nil) report the names of files as they are moved
       #
       #       Alias: `:v`
       #
-      #     @option options [Boolean] :force (false) Force renaming or moving even if the destination exists
+      #     @option options [Boolean, nil] :force (nil) force renaming or moving even if the destination exists
       #
       #       Alias: `:f`
       #
-      #     @option options [Boolean] :dry_run (false) Do nothing; only show what would happen
+      #     @option options [Boolean, nil] :dry_run (nil) do nothing; only show what would happen
       #
       #       Alias: `:n`
       #
-      #     @option options [Boolean] :k (false) Skip move or rename actions which would lead to an error
+      #     @option options [Boolean, nil] :k (nil) skip move or rename actions which would lead to an error
       #
       #     @return [Git::CommandLineResult] the result of calling `git mv`
       #

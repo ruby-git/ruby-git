@@ -56,12 +56,12 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :quiet (false) suppress all output except errors
+      #     @option options [Boolean, nil] :quiet (nil) suppress all output except errors
       #       and warnings
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean] :bare (false) create a bare repository
+      #     @option options [Boolean, nil] :bare (nil) create a bare repository
       #
       #     @option options [String] :template (nil) path to the directory from which
       #       templates will be used
@@ -80,7 +80,7 @@ module Git
       #
       #       Alias: `:b`
       #
-      #     @option options [Boolean, String] :shared (nil) configure the repository
+      #     @option options [Boolean, String, nil] :shared (nil) configure the repository
       #       to be shared among multiple users
       #
       #       Pass `true` to emit `--shared` (which defaults to `group` permissions).

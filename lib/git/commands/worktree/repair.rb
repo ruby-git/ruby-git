@@ -48,10 +48,10 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :relative_paths (false) link worktrees using relative paths,
+        #     @option options [Boolean, nil] :relative_paths (nil) link worktrees using relative paths,
         #       overriding the `worktree.useRelativePaths` config option (`--relative-paths`)
         #
-        #     @option options [Boolean] :no_relative_paths (false) use absolute paths for worktree links,
+        #     @option options [Boolean, nil] :no_relative_paths (nil) use absolute paths for worktree links,
         #       overriding the `worktree.useRelativePaths` config option (`--no-relative-paths`)
         #
         #       Also causes repair to update linking files if there is an absolute/relative

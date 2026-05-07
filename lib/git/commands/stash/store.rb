@@ -50,7 +50,7 @@ module Git
         #
         #       Alias: :m
         #
-        #     @option options [Boolean] :quiet (nil) suppress output
+        #     @option options [Boolean, nil] :quiet (nil) suppress output
         #
         #       Alias: :q
         #

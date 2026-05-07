@@ -104,34 +104,34 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :head (nil) show the HEAD ref even when filtered
+        #     @option options [Boolean, nil] :head (nil) show the HEAD ref even when filtered
         #
-        #     @option options [Boolean] :dereference (nil) dereference annotated tags,
+        #     @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
         #       emitting an extra line per tag whose SHA points to the tagged object
         #
         #       Alias: `:d`
         #
-        #     @option options [Boolean, Integer] :hash (nil) show only the SHA part of each ref
+        #     @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part of each ref
         #
         #       Pass `true` for full-length SHAs or an integer for the abbreviation length
         #       (e.g. `hash: 7`).
         #
         #       Alias: `:s`
         #
-        #     @option options [Boolean, Integer] :abbrev (nil) abbreviate object names
+        #     @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
         #
         #       Pass `true` for the default length or an integer for a specific length.
         #
-        #     @option options [Boolean] :branches (false) limit output to local branches (refs/heads/)
+        #     @option options [Boolean, nil] :branches (nil) limit output to local branches (refs/heads/)
         #
         #       Prefer `:branches` over `:heads` on git >= 2.46; `:heads` emits the deprecated
         #       `--heads` flag.
         #
-        #     @option options [Boolean] :heads (false) limit output to refs under refs/heads/
+        #     @option options [Boolean, nil] :heads (nil) limit output to refs under refs/heads/
         #
         #       Deprecated at the git level in git 2.46. Use `:branches` instead.
         #
-        #     @option options [Boolean] :tags (nil) limit output to refs under refs/tags/
+        #     @option options [Boolean, nil] :tags (nil) limit output to refs under refs/tags/
         #
         #     @option options [Numeric] :timeout (nil) abort the command after this many seconds
         #

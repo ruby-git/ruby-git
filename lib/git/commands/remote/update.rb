@@ -53,11 +53,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :verbose (nil) show remote URLs alongside remote names
+        #     @option options [Boolean, nil] :verbose (nil) show remote URLs alongside remote names
         #
         #       Alias: :v
         #
-        #     @option options [Boolean] :prune (nil) prune stale tracking refs while updating remotes
+        #     @option options [Boolean, nil] :prune (nil) prune stale tracking refs while updating remotes
         #
         #       Alias: :p
         #

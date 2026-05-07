@@ -82,10 +82,10 @@ module Git
         #     @option options [String] :m (nil) a reflog message for
         #       the update
         #
-        #     @option options [Boolean] :no_deref (nil) overwrite the ref
+        #     @option options [Boolean, nil] :no_deref (nil) overwrite the ref
         #       itself rather than following symbolic refs
         #
-        #     @option options [Boolean] :create_reflog (nil) create a reflog
+        #     @option options [Boolean, nil] :create_reflog (nil) create a reflog
         #       even if one would not ordinarily be created
         #
         #     @option options [Numeric] :timeout (nil) abort the command after this many

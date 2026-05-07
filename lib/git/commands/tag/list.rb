@@ -74,7 +74,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :n (nil) Number of annotation lines to print
+        #     @option options [Boolean, Integer, nil] :n (nil) Number of annotation lines to print
         #
         #       Pass `true` to print the first annotation line, or an integer to print that
         #       many lines. If the tag is not annotated, the commit message is displayed instead.
@@ -86,47 +86,47 @@ module Git
         #       '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
         #       version sorting).
         #
-        #     @option options [Boolean, String] :color (nil) Colorize output per colors
+        #     @option options [Boolean, String, nil] :color (nil) Colorize output per colors
         #       specified in `--format`
         #
         #       Pass `true` for `--color`, or one of `'always'`, `'never'`, `'auto'`.
         #
-        #     @option options [Boolean] :ignore_case (false) Sorting and filtering tags are
+        #     @option options [Boolean, nil] :ignore_case (nil) Sorting and filtering tags are
         #       case insensitive
         #
         #       Alias: :i
         #
-        #     @option options [Boolean] :omit_empty (false) Do not print a newline after
+        #     @option options [Boolean, nil] :omit_empty (nil) Do not print a newline after
         #       formatted refs where the format expands to the empty string
         #
-        #     @option options [Boolean, String] :column (false) Display tag listing in columns
+        #     @option options [Boolean, String, nil] :column (nil) Display tag listing in columns
         #
         #       Pass `true` for `--column` or a comma-separated options string
         #       (see `column.tag` configuration for syntax) for `--column=<options>`.
         #
-        #     @option options [Boolean] :no_column (false) disable column output (`--no-column`)
+        #     @option options [Boolean, nil] :no_column (nil) disable column output (`--no-column`)
         #
-        #     @option options [Boolean, String] :contains (nil) List only tags that contain the
+        #     @option options [Boolean, String, nil] :contains (nil) List only tags that contain the
         #       specified commit
         #
         #       Pass `true` to use HEAD, or a commit reference string.
         #
-        #     @option options [Boolean, String] :no_contains (nil) List only tags that don't contain
+        #     @option options [Boolean, String, nil] :no_contains (nil) List only tags that don't contain
         #       the specified commit
         #
         #       Pass `true` to use HEAD, or a commit reference string.
         #
-        #     @option options [Boolean, String] :merged (nil) List only tags whose commits are
+        #     @option options [Boolean, String, nil] :merged (nil) List only tags whose commits are
         #       reachable from the specified commit
         #
         #       Pass `true` to use HEAD, or a commit reference string.
         #
-        #     @option options [Boolean, String] :no_merged (nil) List only tags whose commits are
+        #     @option options [Boolean, String, nil] :no_merged (nil) List only tags whose commits are
         #       not reachable from the specified commit
         #
         #       Pass `true` to use HEAD, or a commit reference string.
         #
-        #     @option options [Boolean, String] :points_at (nil) List only tags that point at the
+        #     @option options [Boolean, String, nil] :points_at (nil) List only tags that point at the
         #       specified object
         #
         #       Pass `true` to use HEAD, or an object reference string.

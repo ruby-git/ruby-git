@@ -40,7 +40,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer] :force (false) remove even if the worktree has
+        #     @option options [Boolean, Integer, nil] :force (nil) remove even if the worktree has
         #       uncommitted changes
         #
         #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit `--force --force`,

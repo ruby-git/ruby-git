@@ -46,9 +46,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :index (nil) restore the index state as well
+        #     @option options [Boolean, nil] :index (nil) restore the index state as well
         #
-        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
         #       Alias: :q
         #
@@ -60,9 +60,9 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :index (nil) restore the index state as well
+        #     @option options [Boolean, nil] :index (nil) restore the index state as well
         #
-        #     @option options [Boolean] :quiet (nil) suppress informational messages
+        #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
         #       Alias: :q
         #

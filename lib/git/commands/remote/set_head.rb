@@ -63,11 +63,11 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :auto (nil) detect the remote HEAD by querying the remote
+        #     @option options [Boolean, nil] :auto (nil) detect the remote HEAD by querying the remote
         #
         #       Mutually exclusive with `:delete`. Alias: :a
         #
-        #     @option options [Boolean] :delete (nil) delete the configured remote HEAD symbolic ref
+        #     @option options [Boolean, nil] :delete (nil) delete the configured remote HEAD symbolic ref
         #
         #       Mutually exclusive with `:auto`. Alias: :d
         #

@@ -37,12 +37,12 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :edit (false) open the editor for the
+        #     @option options [Boolean, nil] :edit (nil) open the editor for the
         #       commit message (`--edit`)
         #
         #       Alias: `:e`
         #
-        #     @option options [Boolean] :no_edit (false) suppress the editor for
+        #     @option options [Boolean, nil] :no_edit (nil) suppress the editor for
         #       the commit message (`--no-edit`)
         #
         #     @return [Git::CommandLineResult] the result of calling

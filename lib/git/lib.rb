@@ -84,17 +84,21 @@ module Git
       end
     end
 
-    # creates or reinitializes the repository in the current directory
+    # Creates or reinitializes the repository in the current directory
     #
     # This is a low-level method that just runs `git init` with the given options.
     # For full repository initialization including directory creation and path
     # resolution, use Git.init instead.
     #
     # @param opts [Hash] command options
-    # @option opts [Boolean] :bare Create a bare repository
-    # @option opts [String] :initial_branch Use the specified name for the initial branch
-    # @option opts [String] :separate_git_dir Path to put the .git directory (`--separate-git-dir`)
-    # @option opts [String] :repository Deprecated — use :separate_git_dir instead
+    #
+    # @option opts [Boolean, nil] :bare (nil) create a bare repository
+    #
+    # @option opts [String, nil] :initial_branch (nil) use the specified name for the initial branch
+    #
+    # @option opts [String, nil] :separate_git_dir (nil) path to put the .git directory (`--separate-git-dir`)
+    #
+    # @option opts [String, nil] :repository (nil) deprecated — use `:separate_git_dir` instead
     #
     # @return [String] the command output
     #
@@ -115,39 +119,42 @@ module Git
     #
     # @param [Hash] opts the options for this command
     #
-    # @option opts [Boolean] :bare (false) if true, clone as a bare repository
+    # @option opts [Boolean, nil] :bare (nil) if true, clone as a bare repository
     #
-    # @option opts [String] :branch the branch to checkout
+    # @option opts [String, nil] :branch (nil) the branch to checkout
     #
-    # @option opts [String, Array] :config one or more configuration options to set
+    # @option opts [String, Array<String>, nil] :config (nil) one or more configuration options to set
     #
-    # @option opts [Integer] :depth the number of commits back to pull
+    # @option opts [Integer, nil] :depth (nil) the number of commits back to pull
     #
-    # @option opts [String] :filter specify partial clone
+    # @option opts [String, nil] :filter (nil) specify partial clone
     #
-    # @option opts [String, nil] :git_ssh SSH command or binary to use for git over SSH
+    # @option opts [String, nil] :git_ssh (nil) SSH command or binary to use for git over SSH
     #
-    # @option opts [Logger] :log Logger instance to use for git operations
+    # @option opts [Logger, nil] :log (nil) Logger instance to use for git operations
     #
-    # @option opts [String] :mirror set up a mirror of the source repository
+    # @option opts [Boolean, nil] :mirror (nil) set up a mirror of the source repository
     #
-    # @option opts [String] :origin the name of the remote
+    # @option opts [String, nil] :origin (nil) the name of the remote
     #
-    # @option opts [String] :chdir run `git clone` from this directory
+    # @option opts [String, nil] :chdir (nil) run `git clone` from this directory
     #
     #   When given, `directory` (or the repository basename when `directory` is nil)
     #   is resolved relative to `:chdir`, just as if you had `cd`'d into it before
     #   running `git clone`. The returned path is the join of `:chdir` and the
     #   cloned directory path.
     #
-    # @option opts [String] :path Deprecated. Use `:chdir` instead.
+    # @option opts [String] :path deprecated: use `:chdir` instead.
     #
-    # @option opts [String] :remote the name of the remote
+    # @option opts [String] :remote deprecated: use `:origin` instead.
     #
-    # @option opts [Boolean] :recursive after the clone is created, initialize all
-    #    within, using their default settings
+    # @option opts [Boolean, String, Array<String>, nil] :recurse_submodules (nil) initialize
+    #   submodules after cloning; pass `true` for all submodules, or a pathspec string/array
+    #   for a subset
     #
-    # @option opts [Numeric, nil] :timeout the number of seconds to wait for the
+    # @option opts [Boolean, String, Array<String>, nil] :recursive (nil) deprecated: use `:recurse_submodules` instead
+    #
+    # @option opts [Numeric, nil] :timeout (nil) the number of seconds to wait for the
     #   command to complete
     #
     #   See {Git::Lib#command} for more information about :timeout
@@ -196,13 +203,13 @@ module Git
     #
     # @param opts [Hash] the given options
     #
-    # @option opts :all [Boolean]
-    # @option opts :tags [Boolean]
-    # @option opts :contains [Boolean]
-    # @option opts :debug [Boolean]
-    # @option opts :long [Boolean]
-    # @option opts :always [Boolean]
-    # @option opts :exact_match [Boolean]
+    # @option opts [Boolean, nil] :all (nil) use refs from all branches, tags, and remotes
+    # @option opts [Boolean, nil] :tags (nil) consider any tag, not just annotated ones
+    # @option opts [Boolean, nil] :contains (nil) find the tag that comes after the commit
+    # @option opts [Boolean, nil] :debug (nil) enable verbose searching strategy output
+    # @option opts [Boolean, nil] :long (nil) always output the long format
+    # @option opts [Boolean, nil] :always (nil) show uniquely abbreviated commit as a fallback
+    # @option opts [Boolean, nil] :exact_match (nil) only output exact tag matches
     # @option opts :dirty [true, String]
     # @option opts :abbrev [String]
     # @option opts :candidates [String]
@@ -232,9 +239,9 @@ module Git
     # @option opts :count [Integer] the maximum number of commits to return (maps to
     #   max-count)
     #
-    # @option opts :all [Boolean]
+    # @option opts [Boolean, nil] :all (nil) include commits reachable from any ref
     #
-    # @option opts :cherry [Boolean]
+    # @option opts [Boolean, nil] :cherry (nil) omit commits equivalent to cherry-picked commits
     #
     # @option opts :since [String]
     #
@@ -1144,8 +1151,8 @@ module Git
     # @param [String, Array<String>] paths files to be added to the repository (relative to the worktree root)
     # @param [Hash] options
     #
-    # @option options [Boolean] :all Add, modify, and remove index entries to match the worktree
-    # @option options [Boolean] :force Allow adding otherwise ignored files
+    # @option options [Boolean, nil] :all (nil) add, modify, and remove index entries to match the worktree
+    # @option options [Boolean, nil] :force (nil) allow adding otherwise ignored files
     #
     # @return [String] the command output (typically empty on success)
     #
@@ -1158,9 +1165,9 @@ module Git
     # @param path [String, Array<String>] files or directories to remove
     # @param opts [Hash] command options
     #
-    # @option opts [Boolean] :force Force removal, bypassing the up-to-date check. Alias: :f
-    # @option opts [Boolean] :recursive Remove directories and their contents recursively
-    # @option opts [Boolean] :cached Only remove from the index, keeping working tree files
+    # @option opts [Boolean, nil] :force (nil) force removal, bypassing the up-to-date check; alias: `:f`
+    # @option opts [Boolean, nil] :recursive (nil) remove directories and their contents recursively
+    # @option opts [Boolean, nil] :cached (nil) only remove from the index, keeping working tree files
     #
     # @return [String] the command output
     #
@@ -1346,8 +1353,8 @@ module Git
     #
     # @param branches [Array<String>] the name(s) of the branch(es) to delete
     # @param options [Hash] command options (see {Git::Commands::Branch::Delete#call})
-    # @option options [Boolean] :force allow deleting unmerged branches (default: true for backward compatibility)
-    # @option options [Boolean] :remotes delete remote-tracking branches
+    # @option options [Boolean, nil] :force (nil) allow deleting unmerged branches (defaults to `true` when not given)
+    # @option options [Boolean, nil] :remotes (nil) delete remote-tracking branches
     #
     # @return [String] newline-separated list of "Deleted branch <name> (was <sha>)." messages
     #
@@ -1413,19 +1420,19 @@ module Git
     # @param message [String, nil] commit message for merge commit
     # @param opts [Hash] merge options
     #
-    # @option opts [Boolean] :no_commit (nil) stop before creating merge commit
+    # @option opts [Boolean, nil] :no_commit (nil) stop before creating merge commit
     #   (deprecated: use no_commit: true instead)
-    # @option opts [Boolean] :no_ff (nil) create merge commit even for fast-forward
+    # @option opts [Boolean, nil] :no_ff (nil) create merge commit even for fast-forward
     #   (deprecated: use no_ff: true instead)
     # @option opts [String] :m (nil) commit message (deprecated: use message: option)
-    # @option opts [Boolean] :commit (nil) true for --commit (`--commit`)
-    # @option opts [Boolean] :ff (nil) true for --ff (`--ff`)
-    # @option opts [Boolean] :ff_only (nil) only merge if fast-forward possible
-    # @option opts [Boolean] :squash (nil) squash commits into single commit
+    # @option opts [Boolean, nil] :commit (nil) true for --commit (`--commit`)
+    # @option opts [Boolean, nil] :ff (nil) true for --ff (`--ff`)
+    # @option opts [Boolean, nil] :ff_only (nil) only merge if fast-forward possible
+    # @option opts [Boolean, nil] :squash (nil) squash commits into single commit
     # @option opts [String] :message (nil) commit message
     # @option opts [String] :strategy (nil) merge strategy (e.g., 'ort', 'ours')
     # @option opts [String, Array<String>] :strategy_option (nil) strategy-specific options
-    # @option opts [Boolean] :allow_unrelated_histories (nil) allow merging unrelated histories
+    # @option opts [Boolean, nil] :allow_unrelated_histories (nil) allow merging unrelated histories
     #
     # @return [String] the command output
     #
@@ -1447,10 +1454,10 @@ module Git
     #
     #   @param options [Hash] merge-base options
     #
-    #   @option options [Boolean] :octopus (nil) compute best ancestor for n-way merge
-    #   @option options [Boolean] :independent (nil) list commits not reachable from others
-    #   @option options [Boolean] :fork_point (nil) find fork point
-    #   @option options [Boolean] :all (nil) output all merge bases
+    #   @option options [Boolean, nil] :octopus (nil) compute best ancestor for n-way merge
+    #   @option options [Boolean, nil] :independent (nil) list commits not reachable from others
+    #   @option options [Boolean, nil] :fork_point (nil) find fork point
+    #   @option options [Boolean, nil] :all (nil) output all merge bases
     #
     # @return [Array<String>] array of commit SHAs
     #
@@ -1541,16 +1548,16 @@ module Git
     #
     #   @param opts [Hash] options for creating the tag
     #
-    #   @option opts [Boolean] :annotate (nil) create an unsigned, annotated tag object.
+    #   @option opts [Boolean, nil] :annotate (nil) create an unsigned, annotated tag object.
     #     Requires `:message` or `:file`.
     #
     #     Alias: `:a`
     #
-    #   @option opts [Boolean] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
+    #   @option opts [Boolean, nil] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
     #
     #     Alias: `:s`
     #
-    #   @option opts [Boolean] :force (nil) replace an existing tag with the given name.
+    #   @option opts [Boolean, nil] :force (nil) replace an existing tag with the given name.
     #
     #     Alias: `:f`
     #
@@ -1567,16 +1574,16 @@ module Git
     #
     #   @param opts [Hash] options for creating the tag
     #
-    #   @option opts [Boolean] :annotate (nil) create an unsigned, annotated tag object.
+    #   @option opts [Boolean, nil] :annotate (nil) create an unsigned, annotated tag object.
     #     Requires `:message` or `:file`.
     #
     #     Alias: `:a`
     #
-    #   @option opts [Boolean] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
+    #   @option opts [Boolean, nil] :sign (nil) create a GPG-signed tag. Requires `:message` or `:file`.
     #
     #     Alias: `:s`
     #
-    #   @option opts [Boolean] :force (nil) replace an existing tag with the given name.
+    #   @option opts [Boolean, nil] :force (nil) replace an existing tag with the given name.
     #
     #     Alias: `:f`
     #
@@ -1593,7 +1600,7 @@ module Git
     #
     #   @param opts [Hash] options
     #
-    #   @option opts [Boolean] :delete (nil) delete the named tag.
+    #   @option opts [Boolean, nil] :delete (nil) delete the named tag.
     #
     #     Alias: `:d`
     #
@@ -1637,17 +1644,17 @@ module Git
     #
     #   @param options [Hash] push options
     #
-    #   @option options [Boolean] :all (nil) Push all branches
+    #   @option options [Boolean, nil] :all (nil) push all branches
     #
-    #   @option options [Boolean] :mirror (nil) Push all refs
+    #   @option options [Boolean, nil] :mirror (nil) push all refs
     #
-    #   @option options [Boolean] :tags (nil) Push all tags
+    #   @option options [Boolean, nil] :tags (nil) push all tags
     #
-    #   @option options [Boolean] :force (nil) Force updates
+    #   @option options [Boolean, nil] :force (nil) force updates
     #
-    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #   @option options [Boolean, nil] :delete (nil) delete the named remote ref
     #
-    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #   @option options [String, Array<String>] :push_option (nil) server-side push option values
     #
     #   @return [String] the stdout from the final `git push` invocation
     #
@@ -1660,17 +1667,17 @@ module Git
     #
     #   @param options [Hash] push options
     #
-    #   @option options [Boolean] :all (nil) Push all branches
+    #   @option options [Boolean, nil] :all (nil) push all branches
     #
-    #   @option options [Boolean] :mirror (nil) Push all refs
+    #   @option options [Boolean, nil] :mirror (nil) push all refs
     #
-    #   @option options [Boolean] :tags (nil) Push all tags
+    #   @option options [Boolean, nil] :tags (nil) push all tags
     #
-    #   @option options [Boolean] :force (nil) Force updates
+    #   @option options [Boolean, nil] :force (nil) force updates
     #
-    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #   @option options [Boolean, nil] :delete (nil) delete the named remote ref
     #
-    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #   @option options [String, Array<String>] :push_option (nil) server-side push option values
     #
     #   @return [String] the stdout from the final `git push` invocation
     #
@@ -1685,17 +1692,17 @@ module Git
     #
     #   @param options [Hash] push options
     #
-    #   @option options [Boolean] :all (nil) Push all branches
+    #   @option options [Boolean, nil] :all (nil) push all branches
     #
-    #   @option options [Boolean] :mirror (nil) Push all refs
+    #   @option options [Boolean, nil] :mirror (nil) push all refs
     #
-    #   @option options [Boolean] :tags (nil) Push all tags
+    #   @option options [Boolean, nil] :tags (nil) push all tags
     #
-    #   @option options [Boolean] :force (nil) Force updates
+    #   @option options [Boolean, nil] :force (nil) force updates
     #
-    #   @option options [Boolean] :delete (nil) Delete the named remote ref
+    #   @option options [Boolean, nil] :delete (nil) delete the named remote ref
     #
-    #   @option options [String, Array<String>] :push_option (nil) Server-side push option values
+    #   @option options [String, Array<String>] :push_option (nil) server-side push option values
     #
     #   @return [String] the stdout from the final `git push` invocation
     #
@@ -1834,7 +1841,7 @@ module Git
     # @option opts [String] :format archive format — `'tar'`, `'tgz'`, or `'zip'`
     #   (default: `'zip'`)
     #
-    # @option opts [Boolean] :add_gzip wrap the archive in gzip compression
+    # @option opts [Boolean, nil] :add_gzip (nil) wrap the archive in gzip compression
     #
     # @return [String] the path to the written archive file
     #
@@ -2048,17 +2055,17 @@ module Git
     #
     # @option options_hash [IO, String, #write, nil] :err the destination for captured stderr
     #
-    # @option options_hash [Boolean] :normalize true to normalize the output encoding to UTF-8
+    # @option options_hash [Boolean, nil] :normalize (true) normalize the output encoding to UTF-8
     #
-    # @option options_hash [Boolean] :chomp true to remove trailing newlines from the output
+    # @option options_hash [Boolean, nil] :chomp (true) remove trailing newlines from the output
     #
-    # @option options_hash [Boolean] :merge true to merge stdout and stderr into a single output
+    # @option options_hash [Boolean, nil] :merge (false) merge stdout and stderr into a single output
     #
     # @option options_hash [String, nil] :chdir the directory to run the command in
     #
     # @option options_hash [Hash] :env additional environment variable overrides for this command
     #
-    # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
+    # @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on non-zero exit
     #
     # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command to complete
     #
@@ -2077,6 +2084,7 @@ module Git
     #   of a command that exposes `:timeout`.
     #
     # @see Git::CommandLine::Capturing#run
+    #
     # @see #command_line_capturing
     #
     # @return [Git::CommandLineResult] the result of the command
@@ -2127,31 +2135,46 @@ module Git
     # content from cat-file) without creating memory pressure.
     #
     # @overload command_streaming(*args, **options_hash)
+    #
     #   @param args [Array<String>] the git command and its arguments
+    #
     #   @param options_hash [Hash] the options to pass to the command
     #
     # @option options_hash [IO, nil] :in stdin IO object
+    #
     # @option options_hash [#write, nil] :out destination for streamed stdout
+    #
     # @option options_hash [#write, nil] :err an optional additional destination to receive stderr output
     #   in real time. Stderr is always captured internally; when `err:` is supplied, writes are teed
     #   to both the internal buffer and this destination. `result.stderr` always reflects the internal capture.
+    #
     # @option options_hash [String, nil] :chdir the directory to run the command in
+    #
     # @option options_hash [Hash] :env additional environment variable overrides for this command
-    # @option options_hash [Boolean] :raise_on_failure (true) whether to raise on non-zero exit
+    #
+    # @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on non-zero exit
+    #
     # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for the command
+    #
     #   If nil, the global timeout from {Git::Config} is used.
     #
     # @return [Git::CommandLineResult] the result of the command
+    #
     #   `result.stdout` will always be `''` — stdout was streamed to `out:`.
     #   `result.stderr` contains any stderr output captured for diagnostics.
     #
     # @raise [ArgumentError] if an unknown option is passed
+    #
     # @raise [Git::FailedError] if the command failed (when raise_on_failure is true)
+    #
     # @raise [Git::SignaledError] if the command was signaled
+    #
     # @raise [Git::TimeoutError] if the command times out
+    #
     # @raise [Git::ProcessIOError] if an exception was raised while collecting subprocess output
     #
     # @see Git::CommandLine::Streaming#run
+    #
     # @see #command_line_streaming
     #
     def command_streaming(*, **options_hash)

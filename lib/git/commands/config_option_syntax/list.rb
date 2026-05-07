@@ -64,13 +64,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) list only global config entries
+        #     @option options [Boolean, nil] :global (nil) list only global config entries
         #
-        #     @option options [Boolean] :system (false) list only system config entries
+        #     @option options [Boolean, nil] :system (nil) list only system config entries
         #
-        #     @option options [Boolean] :local (false) list only repository config entries
+        #     @option options [Boolean, nil] :local (nil) list only repository config entries
         #
-        #     @option options [Boolean] :worktree (false) list only worktree config entries
+        #     @option options [Boolean, nil] :worktree (nil) list only worktree config entries
         #
         #     @option options [String] :file (nil) list entries from the specified file
         #
@@ -78,21 +78,21 @@ module Git
         #
         #     @option options [String] :blob (nil) list entries from the specified blob
         #
-        #     @option options [Boolean] :includes (false) respect include directives in config files
+        #     @option options [Boolean, nil] :includes (nil) respect include directives in config files
         #       (`--includes`)
         #
-        #     @option options [Boolean] :no_includes (false) suppress include directive processing
+        #     @option options [Boolean, nil] :no_includes (nil) suppress include directive processing
         #       (`--no-includes`)
         #
-        #     @option options [Boolean] :show_origin (false) show the origin of each config entry
+        #     @option options [Boolean, nil] :show_origin (nil) show the origin of each config entry
         #
-        #     @option options [Boolean] :show_scope (false) show the scope of each config entry
+        #     @option options [Boolean, nil] :show_scope (nil) show the scope of each config entry
         #
-        #     @option options [Boolean] :null (false) terminate values with NUL byte instead of newline
+        #     @option options [Boolean, nil] :null (nil) terminate values with NUL byte instead of newline
         #
         #       Alias: :z
         #
-        #     @option options [Boolean] :name_only (false) output only the names of config keys
+        #     @option options [Boolean, nil] :name_only (nil) output only the names of config keys
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #

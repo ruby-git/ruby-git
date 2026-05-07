@@ -56,13 +56,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) write to global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) write to global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) write to system config
+        #     @option options [Boolean, nil] :system (nil) write to system config
         #
-        #     @option options [Boolean] :local (false) write to repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) write to repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) write to worktree config
+        #     @option options [Boolean, nil] :worktree (nil) write to worktree config
         #
         #     @option options [String] :file (nil) write to the specified file
         #

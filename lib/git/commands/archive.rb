@@ -75,11 +75,11 @@ module Git
       #     @option options [String] :format (nil) archive format — `tar`, `zip`, `tar.gz`,
       #       `tgz`, or any format defined via `tar.<format>.command`
       #
-      #     @option options [Boolean] :list (false) show all available archive formats
+      #     @option options [Boolean, nil] :list (nil) show all available archive formats
       #
       #       Alias: :l
       #
-      #     @option options [Boolean] :verbose (false) report progress to stderr
+      #     @option options [Boolean, nil] :verbose (nil) report progress to stderr
       #
       #       Alias: :v
       #
@@ -97,7 +97,7 @@ module Git
       #     @option options [String, Array<String>] :add_virtual_file (nil) add one or
       #       more virtual files by `<path>:<content>`; may be passed multiple times
       #
-      #     @option options [Boolean] :worktree_attributes (false) look for attributes in
+      #     @option options [Boolean, nil] :worktree_attributes (nil) look for attributes in
       #       `.gitattributes` files in the working tree as well
       #
       #     @option options [String] :mtime (nil) set modification time of archive entries

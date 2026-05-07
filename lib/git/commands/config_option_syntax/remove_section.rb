@@ -49,13 +49,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) remove from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) remove from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) remove from system config
+        #     @option options [Boolean, nil] :system (nil) remove from system config
         #
-        #     @option options [Boolean] :local (false) remove from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) remove from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) remove from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) remove from worktree config
         #
         #     @option options [String] :file (nil) remove from the specified file
         #

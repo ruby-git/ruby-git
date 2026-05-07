@@ -58,7 +58,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :push (nil) update push URLs instead of fetch URLs
+        #     @option options [Boolean, nil] :push (nil) update push URLs instead of fetch URLs
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote set-url`
         #

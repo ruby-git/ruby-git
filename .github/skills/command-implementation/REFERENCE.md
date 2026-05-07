@@ -341,23 +341,23 @@ module Git
         #
         #     Execute the git ... command.
         #
-        #     @param operand [String, nil] (nil) Short description without trailing period
+        #     @param operand [String, nil] (nil) short description without trailing period
         #
         #       Continuation paragraph separated by a blank comment line. Only needed
         #       when the short description alone is insufficient.
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :simple_flag (false) One-sentence description without period
+        #     @option options [Boolean, nil] :simple_flag (nil) one-sentence description without period
         #
-        #     @option options [Boolean, Integer] :force (false) Short description without period
+        #     @option options [Boolean, Integer, nil] :force (nil) short description without period
         #
         #       When an integer is given, the flag is repeated that many times (up to the
         #       configured `max_times:` limit).
         #
         #       Alias: :f
         #
-        #     @option options [Boolean, String, nil] :complex_flag (nil) Short description without period
+        #     @option options [Boolean, String, nil] :complex_flag (nil) short description without period
         #
         #       Continuation: explain the `true`/`false`/string forms here, each separated by
         #       a blank comment line from the short description above.
@@ -455,7 +455,7 @@ an explicit override.
 #
 #   @param options [Hash] command options
 #
-#   @option options [Boolean] :unordered (false) Unordered output
+#   @option options [Boolean, nil] :unordered (nil) unordered output
 #
 #   @return [Git::CommandLineResult] the result of calling `git cat-file --batch`
 #

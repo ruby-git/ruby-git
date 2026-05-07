@@ -62,13 +62,13 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :global (false) remove from global config (`~/.gitconfig`)
+        #     @option options [Boolean, nil] :global (nil) remove from global config (`~/.gitconfig`)
         #
-        #     @option options [Boolean] :system (false) remove from system config
+        #     @option options [Boolean, nil] :system (nil) remove from system config
         #
-        #     @option options [Boolean] :local (false) remove from repository config (`.git/config`)
+        #     @option options [Boolean, nil] :local (nil) remove from repository config (`.git/config`)
         #
-        #     @option options [Boolean] :worktree (false) remove from worktree config
+        #     @option options [Boolean, nil] :worktree (nil) remove from worktree config
         #
         #     @option options [String] :file (nil) remove from the specified file
         #
@@ -76,7 +76,7 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @option options [Boolean] :fixed_value (false) treat the value regex as an exact string
+        #     @option options [Boolean, nil] :fixed_value (nil) treat the value regex as an exact string
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --unset-all`
         #

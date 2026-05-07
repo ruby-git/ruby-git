@@ -50,7 +50,7 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :push (nil) add a push URL instead of a fetch URL
+        #     @option options [Boolean, nil] :push (nil) add a push URL instead of a fetch URL
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote set-url --add`
         #

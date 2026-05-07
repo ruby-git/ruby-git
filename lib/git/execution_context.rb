@@ -237,21 +237,21 @@ module Git
     #   @option options_hash [IO, String, #write, nil] :err the destination for
     #     captured stderr
     #
-    #   @option options_hash [Boolean] :normalize true to normalize the output
+    #   @option options_hash [Boolean, nil] :normalize (true) normalize the output
     #     encoding to UTF-8
     #
-    #   @option options_hash [Boolean] :chomp true to remove trailing newlines from
-    #     the output
+    #   @option options_hash [Boolean, nil] :chomp (true) remove trailing newlines
+    #     from the output
     #
-    #   @option options_hash [Boolean] :merge true to merge stdout and stderr into a
-    #     single output
+    #   @option options_hash [Boolean, nil] :merge (false) merge stdout and stderr
+    #     into a single output
     #
     #   @option options_hash [String, nil] :chdir the directory to run the command in
     #
     #   @option options_hash [Hash] :env additional environment variable overrides
     #     for this command
     #
-    #   @option options_hash [Boolean] :raise_on_failure (true) whether to raise on
+    #   @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
     #     non-zero exit
     #
     #   @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for
@@ -344,7 +344,7 @@ module Git
     #   @option options_hash [Hash] :env additional environment variable overrides
     #     for this command
     #
-    #   @option options_hash [Boolean] :raise_on_failure (true) whether to raise on
+    #   @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
     #     non-zero exit
     #
     #   @option options_hash [Numeric, nil] :timeout

@@ -40,7 +40,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @option options [Boolean] :build_options (false) include build options in the output
+      #     @option options [Boolean, nil] :build_options (nil) include build options in the output
       #
       #     @return [Git::CommandLineResult] the result of calling `git version`
       #

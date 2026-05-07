@@ -51,33 +51,33 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :auto (false) run tasks only if thresholds are met (`--auto`)
+        #     @option options [Boolean, nil] :auto (nil) run tasks only if thresholds are met (`--auto`)
         #
         #       Not compatible with the `:schedule` option.
         #
-        #     @option options [Boolean] :no_auto (false) disable threshold-based execution (`--no-auto`)
+        #     @option options [Boolean, nil] :no_auto (nil) disable threshold-based execution (`--no-auto`)
         #
-        #     @option options [Boolean] :detach (false) detach the maintenance process from the current terminal
+        #     @option options [Boolean, nil] :detach (nil) detach the maintenance process from the current terminal
         #       (`--detach`)
         #
-        #     @option options [Boolean] :no_detach (false) do not detach the maintenance process (`--no-detach`)
+        #     @option options [Boolean, nil] :no_detach (nil) do not detach the maintenance process (`--no-detach`)
         #
-        #     @option options [Boolean] :scheduled (false) run tasks that are due according to schedule config
+        #     @option options [Boolean, nil] :scheduled (nil) run tasks that are due according to schedule config
         #       (`--scheduled`)
         #
-        #     @option options [Boolean] :no_scheduled (false) do not limit runs to scheduled tasks (`--no-scheduled`)
+        #     @option options [Boolean, nil] :no_scheduled (nil) do not limit runs to scheduled tasks (`--no-scheduled`)
         #
-        #     @option options [Boolean, String] :schedule (false) run tasks only if time conditions are met
+        #     @option options [Boolean, String, nil] :schedule (nil) run tasks only if time conditions are met
         #       (`--schedule`)
         #
         #       When a String (`'hourly'`, `'daily'`, or `'weekly'`), runs only tasks scheduled
         #       for that frequency; the string is emitted as `--schedule=<frequency>`.
         #
-        #     @option options [Boolean] :no_schedule (false) disable schedule-based filtering (`--no-schedule`)
+        #     @option options [Boolean, nil] :no_schedule (nil) disable schedule-based filtering (`--no-schedule`)
         #
-        #     @option options [Boolean] :quiet (false) suppress progress and informational messages (`--quiet`)
+        #     @option options [Boolean, nil] :quiet (nil) suppress progress and informational messages (`--quiet`)
         #
-        #     @option options [Boolean] :no_quiet (false) enable progress and informational messages (`--no-quiet`)
+        #     @option options [Boolean, nil] :no_quiet (nil) enable progress and informational messages (`--no-quiet`)
         #
         #     @option options [Array<String>, String] :task (nil) specify which task(s) to run
         #

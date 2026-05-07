@@ -67,18 +67,18 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean] :quiet (false) suppress error message
+        #     @option options [Boolean, nil] :quiet (nil) suppress error message
         #       when the name is not a symbolic ref
         #
         #       Alias: :q
         #
-        #     @option options [Boolean] :short (false) shorten the ref output
+        #     @option options [Boolean, nil] :short (nil) shorten the ref output
         #       (e.g. `refs/heads/main` → `main`)
         #
-        #     @option options [Boolean] :recurse (false) follow chain of symbolic refs
+        #     @option options [Boolean, nil] :recurse (nil) follow chain of symbolic refs
         #       until result no longer points at a symbolic ref (`--recurse`)
         #
-        #     @option options [Boolean] :no_recurse (false) stop after a single level
+        #     @option options [Boolean, nil] :no_recurse (nil) stop after a single level
         #       of dereferencing (`--no-recurse`)
         #
         #     @return [Git::CommandLineResult] the result of calling
