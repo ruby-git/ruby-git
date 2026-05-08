@@ -359,4 +359,138 @@ RSpec.describe Git::Repository::Merging do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #each_conflict
+  # ---------------------------------------------------------------------------
+
+  describe '#each_conflict' do
+    let(:diff_command) { instance_double(Git::Commands::Diff) }
+    let(:show_command) { instance_double(Git::Commands::Show) }
+    let(:show_result) { instance_double(Git::CommandLineResult) }
+
+    before do
+      allow(Git::Commands::Diff).to receive(:new).with(execution_context).and_return(diff_command)
+      allow(Git::Commands::Show).to receive(:new).with(execution_context).and_return(show_command)
+      allow(show_command).to receive(:call).and_return(show_result)
+    end
+
+    # --- No conflicts ---------------------------------------------------------
+
+    context 'when there are no unmerged files' do
+      before do
+        allow(diff_command).to receive(:call).with(cached: true).and_return(command_result(''))
+      end
+
+      it 'does not yield' do
+        expect { |b| described_instance.each_conflict(&b) }.not_to yield_control
+      end
+
+      it 'returns an empty Array' do
+        expect(described_instance.each_conflict { nil }).to eq([])
+      end
+    end
+
+    # --- One unmerged file ----------------------------------------------------
+
+    context 'when there is one unmerged file' do
+      let(:diff_stdout) { "* Unmerged path example.txt\n" }
+
+      before do
+        allow(diff_command)
+          .to receive(:call).with(cached: true).and_return(command_result(diff_stdout))
+      end
+
+      it 'delegates to Git::Commands::Diff.new with execution_context' do
+        expect(Git::Commands::Diff).to receive(:new).with(execution_context).and_return(diff_command)
+        described_instance.each_conflict { nil }
+      end
+
+      it 'calls Diff#call with cached: true' do
+        expect(diff_command).to receive(:call).with(cached: true).and_return(command_result(diff_stdout))
+        described_instance.each_conflict { nil }
+      end
+
+      it 'yields once' do
+        expect { |b| described_instance.each_conflict(&b) }.to yield_control.once
+      end
+
+      it 'yields the file path as the first argument' do
+        described_instance.each_conflict do |file, _your, _their|
+          expect(file).to eq('example.txt')
+        end
+      end
+
+      it 'yields a String path for your_version' do
+        described_instance.each_conflict do |_file, your, _their|
+          expect(your).to be_a(String)
+        end
+      end
+
+      it 'yields a String path for their_version' do
+        described_instance.each_conflict do |_file, _your, their|
+          expect(their).to be_a(String)
+        end
+      end
+
+      it 'calls Show with the stage-2 reference' do
+        expect(show_command).to receive(:call).with(':2:example.txt', out: anything)
+        expect(show_command).to receive(:call).with(':3:example.txt', out: anything)
+        described_instance.each_conflict { nil }
+      end
+
+      it 'delegates Show.new with the execution_context' do
+        expect(Git::Commands::Show).to receive(:new).with(execution_context).and_return(show_command).twice
+        described_instance.each_conflict { nil }
+      end
+
+      it 'returns an Array containing the unmerged file path' do
+        result = described_instance.each_conflict { nil }
+        expect(result).to eq(['example.txt'])
+      end
+    end
+
+    # --- Multiple unmerged files ----------------------------------------------
+
+    context 'when there are multiple unmerged files' do
+      let(:diff_stdout) { "* Unmerged path file1.txt\n* Unmerged path file2.txt\n" }
+
+      before do
+        allow(diff_command)
+          .to receive(:call).with(cached: true).and_return(command_result(diff_stdout))
+      end
+
+      it 'yields once per unmerged file' do
+        expect { |b| described_instance.each_conflict(&b) }.to yield_control.twice
+      end
+
+      it 'yields file paths in order' do
+        yielded_files = []
+        described_instance.each_conflict { |file, _y, _t| yielded_files << file }
+        expect(yielded_files).to eq(%w[file1.txt file2.txt])
+      end
+
+      it 'returns an Array of all unmerged file paths' do
+        result = described_instance.each_conflict { nil }
+        expect(result).to eq(%w[file1.txt file2.txt])
+      end
+    end
+
+    # --- Output format of diff lines ------------------------------------------
+
+    context 'when the diff output contains non-unmerged lines' do
+      let(:diff_stdout) do
+        "diff --cc example.txt\nindex abc123..def456\n* Unmerged path example.txt\n--- a/example.txt\n"
+      end
+
+      before do
+        allow(diff_command)
+          .to receive(:call).with(cached: true).and_return(command_result(diff_stdout))
+      end
+
+      it 'yields only for lines matching the unmerged path pattern' do
+        expect { |b| described_instance.each_conflict(&b) }.to yield_control.once
+      end
+    end
+  end
 end

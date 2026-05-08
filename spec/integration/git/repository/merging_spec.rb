@@ -291,4 +291,73 @@ RSpec.describe Git::Repository::Merging, :integration do
       expect(result).to all(be_a(String))
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #each_conflict
+  # ---------------------------------------------------------------------------
+
+  describe '#each_conflict' do
+    context 'when there are no conflicts' do
+      it 'does not yield' do
+        expect { |b| described_instance.each_conflict(&b) }.not_to yield_control
+      end
+
+      it 'returns an empty Array' do
+        expect(described_instance.each_conflict { nil }).to eq([])
+      end
+    end
+
+    context 'when there is a conflict' do
+      before do
+        repo.lib.branch_new('branch_ours')
+        repo.lib.checkout('branch_ours')
+        write_file('example.txt', "1\n2\n3\n")
+        repo.add('example.txt')
+        repo.commit('ours: add example.txt')
+
+        repo.lib.checkout('main')
+        repo.lib.branch_new('branch_theirs')
+        repo.lib.checkout('branch_theirs')
+        write_file('example.txt', "1\n4\n3\n")
+        repo.add('example.txt')
+        repo.commit('theirs: add example.txt')
+
+        repo.lib.checkout('main')
+        repo.merge('branch_ours')
+
+        begin
+          repo.merge('branch_theirs')
+        rescue Git::FailedError
+          # expected conflict
+        end
+      end
+
+      it 'yields once for the conflicting file' do
+        expect { |b| described_instance.each_conflict(&b) }.to yield_control.once
+      end
+
+      it 'yields the relative path of the conflicting file as the first argument' do
+        described_instance.each_conflict do |file, _your, _their|
+          expect(file).to eq('example.txt')
+        end
+      end
+
+      it 'yields a readable path for your_version containing stage-2 content' do
+        described_instance.each_conflict do |_file, your, _their|
+          expect(File.read(your)).to eq("1\n2\n3\n")
+        end
+      end
+
+      it 'yields a readable path for their_version containing stage-3 content' do
+        described_instance.each_conflict do |_file, _your, their|
+          expect(File.read(their)).to eq("1\n4\n3\n")
+        end
+      end
+
+      it 'returns an Array of unmerged file paths' do
+        result = described_instance.each_conflict { nil }
+        expect(result).to eq(['example.txt'])
+      end
+    end
+  end
 end

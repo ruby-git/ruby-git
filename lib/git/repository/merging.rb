@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
+require 'tempfile'
+require 'git/commands/diff'
 require 'git/commands/merge/start'
 require 'git/commands/merge_base'
+require 'git/commands/show'
 require 'git/repository/internal'
 
 module Git
@@ -139,6 +142,79 @@ module Git
         Git::Repository::Internal.assert_valid_opts!(MERGE_BASE_ALLOWED_OPTS, **opts)
         result = Git::Commands::MergeBase.new(@execution_context).call(*args, **opts)
         result.stdout.lines.map(&:strip).reject(&:empty?)
+      end
+
+      # Iterate over files with merge conflicts, yielding conflict details for each
+      #
+      # For each unmerged file, the staged content for both sides of the conflict
+      # (stage 2 "ours" and stage 3 "theirs") is written to temporary files whose
+      # paths are yielded alongside the file path. The temporary files are deleted
+      # automatically when the block returns.
+      #
+      # @example Inspect conflicting files
+      #   repo.each_conflict do |file, your_version, their_version|
+      #     puts "Conflict in #{file}"
+      #     puts "Your version:"
+      #     puts File.read(your_version)
+      #     puts "Their version:"
+      #     puts File.read(their_version)
+      #   end
+      #
+      # @yieldparam file [String] path to the conflicting file, relative to the
+      #   working tree
+      #
+      # @yieldparam your_version [String] path to a temporary file containing the
+      #   stage-2 (ours) content for the conflicting file
+      #
+      # @yieldparam their_version [String] path to a temporary file containing the
+      #   stage-3 (theirs) content for the conflicting file
+      #
+      # @return [Array<String>] the list of unmerged file paths
+      #
+      # @raise [Git::FailedError] if `git diff --cached` exits with a non-zero status
+      #
+      def each_conflict
+        unmerged_paths.each do |file_path|
+          write_staged_file(file_path, 2) do |your_file|
+            write_staged_file(file_path, 3) do |their_file|
+              yield(file_path, your_file.path, their_file.path)
+            end
+          end
+        end
+      end
+
+      private
+
+      STAGE_PREFIXES = { 2 => 'YOUR-', 3 => 'THEIR-' }.freeze
+      private_constant :STAGE_PREFIXES
+
+      # Returns the list of file paths with unresolved merge conflicts
+      #
+      # @return [Array<String>] unmerged file paths
+      #
+      # @api private
+      #
+      def unmerged_paths
+        result = Git::Commands::Diff.new(@execution_context).call(cached: true)
+        result.stdout.split("\n").filter_map do |line|
+          ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
+        end
+      end
+
+      # Creates a Tempfile with the staged content for +file_path+ at +stage+
+      # and yields the open IO object to the block.
+      #
+      # @param file_path [String] repository-relative path to the conflicting file
+      # @param stage [Integer] git stage index (2 = ours, 3 = theirs)
+      #
+      # @api private
+      #
+      def write_staged_file(file_path, stage)
+        Tempfile.create([STAGE_PREFIXES[stage], File.basename(file_path)]) do |f|
+          Git::Commands::Show.new(@execution_context).call(":#{stage}:#{file_path}", out: f)
+          f.flush
+          yield f
+        end
       end
     end
   end
