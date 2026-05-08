@@ -5,6 +5,13 @@
 
 # Change Log
 
+## [4.3.3](https://github.com/ruby-git/ruby-git/compare/v4.3.2...v4.3.3) (2026-05-08)
+
+
+### Other Changes
+
+* Improve YARD documentation for Git::Branch ([#1277](https://github.com/ruby-git/ruby-git/issues/1277)) ([0769bf9](https://github.com/ruby-git/ruby-git/commit/0769bf91a21ecb24d48a31439de073b689bc62b6))
+
 ## [4.3.2](https://github.com/ruby-git/ruby-git/compare/v4.3.1...v4.3.2) (2026-03-31)
 
 
