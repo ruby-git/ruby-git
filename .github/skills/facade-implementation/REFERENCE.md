@@ -31,7 +31,8 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Why this works](#why-this-works)
   - [Naming rules](#naming-rules)
   - [Growth path](#growth-path)
-  - [When a helper needs `@execution_context`](#when-a-helper-needs-execution_context)
+  - [Decision 1 — Where does the helper live?](#decision-1--where-does-the-helper-live)
+  - [Decision 2 — How is state passed to the helper?](#decision-2--how-is-state-passed-to-the-helper)
   - [Why not `ActiveSupport::Concern`?](#why-not-activesupportconcern)
 - [Parser vs. raw stdout](#parser-vs-raw-stdout)
 - [Result-class factory methods](#result-class-factory-methods)
@@ -196,7 +197,7 @@ preserving `Git::Lib#current_branch`'s `String` contract:
 #
 # @return [String] the current branch name
 #
-# @raise [Git::FailedError] if `git rev-parse` exits with a non-zero status
+# @raise [Git::FailedError] when `git rev-parse` exits with a non-zero status
 #
 def current_branch
   Git::Commands::RevParse.new(@execution_context).call('--abbrev-ref', 'HEAD').stdout.chomp
@@ -233,7 +234,7 @@ def branches_all
 end
 
 def commit(message, opts = {})
-  Git::Repository::Internal.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
+  SharedPrivate.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
   opts = opts.merge(message: message) if message
   opts = deprecate_commit_no_gpg_sign_option(opts)
   Git::Commands::Commit.new(@execution_context).call(no_edit: true, **opts).stdout
@@ -342,7 +343,7 @@ Accept `String` or `Array<String>` for path arguments and splat into the command
 
 ```ruby
 def add(paths = '.', **)
-  Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
+  SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
   Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
 end
 ```
@@ -358,7 +359,7 @@ typically exposes many more options than the public facade contract. Without
 filtering, callers could pass options that happen to match command DSL names but
 were never part of the facade's public API — silently expanding the contract.
 
-Use a per-method whitelist constant + `Git::Repository::Internal.assert_valid_opts!`:
+Use a per-method whitelist constant + `SharedPrivate.assert_valid_opts!`:
 
 ```ruby
 PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
@@ -367,7 +368,7 @@ private_constant :PULL_ALLOWED_OPTS
 def pull(remote = nil, branch = nil, **)
   raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
 
-  Git::Repository::Internal.assert_valid_opts!(PULL_ALLOWED_OPTS, **)
+  SharedPrivate.assert_valid_opts!(PULL_ALLOWED_OPTS, **)
   positional_args = [remote, branch].compact
   Git::Commands::Pull.new(@execution_context)
                      .call(*positional_args, no_edit: true, **)
@@ -389,7 +390,7 @@ Rules:
 - Place the constant immediately before the method definition.
 - The whitelist must match the `@option` tags in the YARD doc exactly. Reviewers
   should verify the two lists are equal in both directions.
-- `Git::Repository::Internal.assert_valid_opts!` raises
+- `SharedPrivate.assert_valid_opts!` raises
   `ArgumentError: Unknown options: <key>` for any unrecognized key. Document this
   with `@raise [ArgumentError]` on the facade method.
 - Every facade method that accepts an options hash **must** have a unit test
@@ -488,17 +489,17 @@ This:
 
 Put shared helpers in a sibling **internal module** under `lib/git/repository/`
 that is **not** `include`d into `Git::Repository`. Use `module_function` so
-methods are called as fully-qualified singleton methods:
+methods are called as singleton methods from the topic modules:
 
 ```ruby
-# lib/git/repository/internal.rb
+# lib/git/repository/shared_private.rb
 module Git
   class Repository
     # Namespace for internal helpers shared across facade topic modules
     #
     # @api private
     #
-    module Internal
+    module SharedPrivate
       module_function
 
       def assert_valid_opts!(allowed, **options)
@@ -508,16 +509,19 @@ module Git
         raise ArgumentError, "Unknown options: #{unknown.join(', ')}"
       end
     end
+
+    private_constant :SharedPrivate
   end
 end
 ```
 
-Call sites use the fully-qualified name:
+Call sites use the short unqualified form (since the constant is private,
+fully-qualified external references are not possible):
 
 ```ruby
 # lib/git/repository/staging.rb
 def add(paths = '.', **)
-  Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
+  SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
   Git::Commands::Add.new(@execution_context)
                     .call(*Array(paths), **)
                     .stdout
@@ -533,20 +537,23 @@ end
 - **Stateless by contract.** Without `include`, helpers cannot access
   `@execution_context` or other instance state — they must take everything as
   arguments. This keeps them pure and trivially unit-testable.
-- **`@api private` is enforceable.** YARD respects the tag; downstream tooling
-  can flag external use.
+- **Truly private constant.** `private_constant :SharedPrivate` causes
+  fully-qualified external references (`Git::Repository::SharedPrivate`) to
+  raise a `NameError` at runtime. Callers inside the `Git::Repository` class
+  body (i.e. the topic modules) use the short `SharedPrivate.foo(...)` form
+  and are unaffected.
 
 ### Naming rules
 
 Modules under `lib/git/repository/` use **bare nouns**, never role-suffixes like
 `*Helpers` or `*Utils`:
 
-| Module                              | Distinguished by               |
-| ----------------------------------- | ------------------------------ |
-| `Git::Repository::Staging`          | `include`d, `@api public`      |
-| `Git::Repository::Branching`        | `include`d, `@api public`      |
-| `Git::Repository::Internal`         | not `include`d, `@api private` |
-| `Git::Repository::OptionValidation` | not `include`d, `@api private` |
+| Module                                             | Distinguished by                                   |
+| -------------------------------------------------- | -------------------------------------------------- |
+| `Git::Repository::Staging`                         | `include`d, `@api public`                          |
+| `Git::Repository::Branching`                       | `include`d, `@api public`                          |
+| `Git::Repository::SharedPrivate`                   | not `include`d, `@api private`, `private_constant` |
+| `Git::Repository::SharedPrivate::OptionValidation` | nested under `SharedPrivate`, `@api private`       |
 
 Reasons:
 
@@ -560,39 +567,137 @@ Reasons:
 
 ### Growth path
 
-Start with a single `Git::Repository::Internal` catch-all. Split when **either**
-trigger fires:
+**Every time a new method is added to `SharedPrivate`**, count the total methods
+and look for sub-themes. If **either** trigger fires, extract before committing
+the new method:
 
-1. `Internal` accumulates more than ~5 methods.
-2. Clear sub-themes emerge (validation vs. normalization vs. error wrapping).
+1. `SharedPrivate` would exceed ~5 methods after the addition.
+2. Clear sub-themes are visible (validation vs. normalization vs. error wrapping).
 
-Then extract responsibility-named sibling modules:
+Then extract responsibility-named submodules **nested under `SharedPrivate`**:
 
 ```text
-Git::Repository::Internal              # catch-all (initial)
+Git::Repository::SharedPrivate                       # catch-all (initial)
         ↓ grows / develops sub-themes
-Git::Repository::OptionValidation      # extracted by responsibility
-Git::Repository::PathNormalization
-Git::Repository::Internal              # remaining miscellany (or deleted)
+Git::Repository::SharedPrivate::OptionValidation     # extracted by responsibility
+Git::Repository::SharedPrivate::PathNormalization
+Git::Repository::SharedPrivate                       # remaining miscellany (or deleted)
 ```
 
-The extraction is mechanical — call sites change from
-`Git::Repository::Internal.foo(...)` to `Git::Repository::OptionValidation.foo(...)`.
+Submodules live in `lib/git/repository/shared_private/option_validation.rb`.
+They do not need their own `private_constant` since the parent is already
+private. The extraction is mechanical — call sites change from
+`SharedPrivate.foo(...)` to `SharedPrivate::OptionValidation.foo(...)`.
 
-### When a helper needs `@execution_context`
+### Decision 1 — Where does the helper live?
 
-`module_function` helpers cannot access instance state. If a helper needs the
-execution context, prefer in this order:
+Choose placement by working through these questions in order:
 
-1. **Pass it explicitly** as a method argument — keeps the helper stateless.
-2. **Extract a small PORO** under `lib/git/repository/` (e.g.
-   `Git::Repository::CommitOperation.new(execution_context).call(...)`),
-   marked `@api private` and not `include`d.
-3. **Inline private instance method on the topic module** — last resort, only
-   when the helper is truly local to one topic. Mark `@api private`.
+1. **Is it used by only one topic module?** → `module Private` nested inside
+   that topic module.
+2. **Is it used by two or more modules, and does an existing `SharedPrivate::*`
+   submodule cover this concern?** → Add the method to that submodule.
+3. **Is it used by two or more modules, and no fitting submodule exists?** →
+   Add it directly to `SharedPrivate`, then apply the growth-path check (see
+   [Growth path](#growth-path)) to decide whether a new submodule is now
+   warranted.
 
-Avoid: re-introducing instance-method mixins on `Git::Repository` for "shared"
-behavior. That is the exact pattern this rule prohibits.
+| Condition | Placement |
+| --- | --- |
+| Used by one topic module only | `module Private` nested inside that topic module |
+| Shared; fitting `SharedPrivate::*` submodule exists | That submodule (e.g. `SharedPrivate::OptionValidation`) |
+| Shared; no fitting submodule exists | `SharedPrivate` directly |
+
+**Nested `module Private`** — for helpers local to one topic module.
+Nest it inside the topic module, mark it `@api private`, and call its methods
+as `Private.foo(...)`:
+
+```ruby
+module Git
+  class Repository
+    module Branching
+      # ... public facade methods ...
+
+      # Helpers private to the `Branching` topic module
+      #
+      # @api private
+      module Private
+        module_function
+
+        # Translates checkout options into git command arguments
+        #
+        # @param branch [String, nil] the target branch name
+        #
+        # @param options [Hash] caller-supplied checkout options
+        #
+        # @return [Array] a two-element tuple of translated arguments
+        #
+        # @api private
+        def translate_checkout_opts(branch, options)
+          # ...
+        end
+      end
+      private_constant :Private
+    end
+  end
+end
+```
+
+**Existing `SharedPrivate::*` submodule** — check
+`lib/git/repository/shared_private/` for a file whose name matches the
+concern (e.g. `option_validation.rb`). If one exists, add the method there.
+
+**`SharedPrivate` directly** — when no fitting submodule exists yet.
+See [The pattern](#the-pattern) for the full skeleton. Call sites use
+`SharedPrivate.foo(...)`. After adding, re-run the growth-path check.
+
+### Decision 2 — How is state passed to the helper?
+
+`module_function` helpers (whether in `module Private` or `SharedPrivate`) are
+stateless by design — they cannot access `@execution_context` or any other
+instance state. This is intentional: stateless helpers are trivially
+unit-testable and have no hidden dependencies.
+
+When a helper needs state, pass it explicitly rather than making the helper
+stateful:
+
+1. **Pass state as an argument** — the preferred approach. Add the execution
+   context (or whatever state is needed) as a positional argument:
+
+   ```ruby
+   module Private
+     module_function
+
+     def build_result(execution_context, name)
+       Git::Commands::Foo.new(execution_context).call(name)
+     end
+   end
+   ```
+
+2. **Extract a PORO** — when the helper has enough state and behavior to
+   justify its own object. Place it under `lib/git/repository/`, mark it
+   `@api private`, and do not `include` it. In `lib/git/repository/commit_operation.rb`:
+
+   ```ruby
+   # Callable helper for executing a git commit
+   #
+   # @api private
+   class Git::Repository::CommitOperation
+     def initialize(execution_context)
+       @execution_context = execution_context
+     end
+
+     def call(...)
+       # ...
+     end
+   end
+   ```
+
+Avoid: inline private instance methods directly on the topic module (i.e.,
+`def` after `private` in the module body without a `Private` namespace). This
+pollutes the `Git::Repository` instance namespace with methods reachable via
+`repo.send(:helper, ...)`, which is the exact problem these patterns exist to
+prevent.
 
 ### Why not `ActiveSupport::Concern`?
 
@@ -695,8 +800,8 @@ command call at all.
 ### Skipping option whitelisting on opaque opts hashes
 
 If the facade accepts an options hash (positional `opts = {}` *or* keyword
-`**options`), it must call `Git::Repository::Internal.assert_valid_opts!` against
-a `private_constant`-marked `<METHOD>_ALLOWED_OPTS` constant. Without it,
+`**options`), it must call `SharedPrivate.assert_valid_opts!` against a
+`private_constant`-marked `<METHOD>_ALLOWED_OPTS` constant. Without it,
 callers can silently pass any key the command DSL happens to accept, which is
 API expansion that the facade did not commit to.
 

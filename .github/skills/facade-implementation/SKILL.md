@@ -101,11 +101,11 @@ See [REFERENCE.md](REFERENCE.md) for the full reference covering:
 - Topic module skeleton (file layout)
 - The five facade responsibilities as a checklist
 - Argument pre-processing patterns (path normalization, option whitelisting via
-  `Git::Repository::Internal.assert_valid_opts!` + `private_constant`,
+  `SharedPrivate.assert_valid_opts!` + `private_constant`,
   deprecation handling, defaults)
 - Internal helpers and encapsulation (sibling `module_function` modules under
   `lib/git/repository/` instead of private methods on `Git::Repository`;
-  bare-noun naming; growth path from `Internal` to responsibility-named
+  bare-noun naming; growth path from `SharedPrivate` to responsibility-named
   modules)
 - When to call multiple commands (orchestration sequences)
 - When to use a parser vs. raw stdout
@@ -178,13 +178,13 @@ This skill supports three modes. Determine which mode applies before starting:
 
    d. **Review Facade Tests (subagent)** — delegate to a subagent: load and apply
       **[Facade Test Conventions](../facade-test-conventions/SKILL.md)** against the
-      unit and integration spec files. Fix all findings, then repeat the review
-      until clean.
+      unit and integration spec files. In *scaffold/update* modes, fix all findings
+      and repeat until clean. In *review* mode, record findings only.
 
    e. **Review YARD Documentation (subagent)** — delegate to a subagent: load and
       apply **[Facade YARD Documentation](../facade-yard-documentation/SKILL.md)**
-      against the topic module file. Fix all findings, then repeat the review
-      until clean.
+      against the topic module file. In *scaffold/update* modes, fix all findings
+      and repeat until clean. In *review* mode, record findings only.
 
 4. **Review facade shape and orchestration** — load
    [REFERENCE.md](REFERENCE.md) and verify against the [Five facade
@@ -198,7 +198,7 @@ This skill supports three modes. Determine which mode applies before starting:
      that is the documented return type for the entire topic module
    - whitelists forwarded options when the caller's hash is opaque
      (per-method `<METHOD>_ALLOWED_OPTS` constant +
-     `Git::Repository::Internal.assert_valid_opts!(allowed, **)` — do **not**
+     `SharedPrivate.assert_valid_opts!(allowed, **)` — do **not**
      also `slice`; see [Option
      whitelisting](REFERENCE.md#option-whitelisting-preventing-api-expansion))
    - handles defaults and deprecations explicitly, not by relying on command
