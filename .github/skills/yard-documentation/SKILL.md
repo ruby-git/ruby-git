@@ -161,7 +161,7 @@ first tag line joined with all continuation lines — must not exceed
 shorten it and move the excess detail into a paragraph after a blank `#` line.
 
 For example, this tag has a description of 84 characters (within
-`SUMMARY_LIMIT`), but the single physical line is 103 characters (exceeds
+`SUMMARY_LIMIT`), but the single physical line is 102 characters (exceeds
 `LINE_LIMIT`) and must be split:
 
 ```ruby
@@ -181,7 +181,9 @@ appears on the first physical line.
 
 If more explanation is needed, add continuation paragraphs after a blank
 comment line (`#`). Every physical line — in the summary and in any
-continuation paragraph — must independently fit within `LINE_LIMIT`.
+continuation paragraph — must independently fit within `LINE_LIMIT`
+(or `LINE_MAX` for unwrappable content such as URLs, long inline code
+spans, long `[Type]` expressions, `@example` code, or table rows).
 
 These rules apply equally to tag text (`@param`, `@return`, etc.) — the first
 sentence of a tag is its short description. The no-punctuation rule applies only to
