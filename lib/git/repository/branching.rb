@@ -6,7 +6,7 @@ require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
 require 'git/commands/checkout/files'
 require 'git/commands/checkout_index'
-require 'git/repository/internal'
+require 'git/repository/shared_private'
 
 module Git
   class Repository
@@ -43,7 +43,7 @@ module Git
       #   @return [String] the current branch name, or `'HEAD'` when in detached
       #     HEAD state
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def current_branch
         result = Git::Commands::Branch::ShowCurrent.new(@execution_context).call
@@ -65,7 +65,7 @@ module Git
       #
       #   @return [String] git's stdout from the checkout
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def checkout_file(version, file)
         Git::Commands::Checkout::Files.new(@execution_context).call(version, pathspec: [file]).stdout
@@ -108,9 +108,9 @@ module Git
       #
       #   @return [String] git's stdout from the checkout
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def checkout(branch = nil, options = {})
         if branch.is_a?(Hash) && options.empty?
@@ -118,9 +118,9 @@ module Git
           branch = nil
         end
 
-        Git::Repository::Internal.assert_valid_opts!(CHECKOUT_ALLOWED_OPTS, **options)
+        SharedPrivate.assert_valid_opts!(CHECKOUT_ALLOWED_OPTS, **options)
 
-        target, translated_opts = translate_checkout_opts(branch, options)
+        target, translated_opts = Private.translate_checkout_opts(branch, options)
         Git::Commands::Checkout::Branch.new(@execution_context).call(target, **translated_opts).stdout
       end
 
@@ -146,19 +146,19 @@ module Git
       #   @option options [String] :prefix write files under this path prefix
       #     rather than the working directory root
       #
-      #   @option options [String, Pathname, Array<String, Pathname>] :path_limiter limit the check
-      #     out to the given path(s)
+      #   @option options [String, Pathname, Array<String, Pathname>] :path_limiter
+      #     limit the check out to the given path(s)
       #
       #   @return [String] git's stdout from the checkout-index command
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def checkout_index(options = {})
-        Git::Repository::Internal.assert_valid_opts!(CHECKOUT_INDEX_ALLOWED_OPTS, **options)
+        SharedPrivate.assert_valid_opts!(CHECKOUT_INDEX_ALLOWED_OPTS, **options)
 
-        paths = normalize_pathspecs(options[:path_limiter], 'path_limiter')
+        paths = Private.normalize_pathspecs(options[:path_limiter], 'path_limiter')
         keyword_opts = options.except(:path_limiter)
         Git::Commands::CheckoutIndex.new(@execution_context).call(*paths.to_a, **keyword_opts).stdout
       end
@@ -174,7 +174,7 @@ module Git
       #
       #   @return [Boolean] `true` if the branch exists locally, `false` otherwise
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def local_branch?(branch)
         result = Git::Commands::Branch::List.new(@execution_context).call(branch, format: '%(refname:short)')
@@ -196,7 +196,7 @@ module Git
       #   @return [Boolean] `true` if a remote-tracking branch with that short name
       #     exists, `false` otherwise
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def remote_branch?(branch)
         result = Git::Commands::Branch::List.new(@execution_context)
@@ -216,66 +216,92 @@ module Git
       #   @return [Boolean] `true` if the branch exists locally or remotely,
       #     `false` otherwise
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def branch?(branch)
         local_branch?(branch) || remote_branch?(branch)
       end
 
-      private
+      # Private helpers local to {Git::Repository::Branching}
+      #
+      # @api private
+      module Private
+        module_function
 
-      # Translates legacy checkout options to the new command interface.
-      #
-      # Legacy callers passed combinations like:
-      #   checkout('branch', new_branch: true, start_point: 'main')
-      # which should map to:
-      #   checkout('main', b: 'branch')
-      #
-      # @param branch [String, nil] the branch argument passed to {#checkout}
-      # @param options [Hash] the raw options passed to {#checkout}
-      # @return [Array] a two-element tuple +[target, options]+ where +target+ is
-      #   the branch or commit to check out (+String+ or +nil+) and +options+ is
-      #   a +Hash+ of translated keyword arguments for
-      #   +Git::Commands::Checkout::Branch#call+
-      #
-      def translate_checkout_opts(branch, options)
-        if options[:new_branch] == true || options[:b] == true
-          [options[:start_point], options.except(:new_branch, :b, :start_point).merge(b: branch)]
-        elsif options[:new_branch].is_a?(String)
-          [branch, options.except(:new_branch).merge(b: options[:new_branch])]
-        else
-          [branch, options]
+        # Translates legacy checkout options to the new command interface
+        #
+        # Legacy callers passed combinations like:
+        #   checkout('branch', new_branch: true, start_point: 'main')
+        # which should map to:
+        #   checkout('main', b: 'branch')
+        #
+        # @param branch [String, nil] the branch argument passed to {#checkout}
+        #
+        # @param options [Hash] the raw options passed to {#checkout}
+        #
+        # @return [Array] a two-element tuple `[target, options]` containing the
+        #   translated checkout arguments
+        #
+        #   `target` (`String` or `nil`) is the branch or commit to check out.
+        #   `options` is a `Hash` of keyword arguments for
+        #   `Git::Commands::Checkout::Branch#call`
+        #
+        # @api private
+        #
+        def translate_checkout_opts(branch, options)
+          if options[:new_branch] == true || options[:b] == true
+            [options[:start_point], options.except(:new_branch, :b, :start_point).merge(b: branch)]
+          elsif options[:new_branch].is_a?(String)
+            [branch, options.except(:new_branch).merge(b: options[:new_branch])]
+          else
+            [branch, options]
+          end
+        end
+
+        # Normalizes path specifications for Git commands
+        #
+        # @param pathspecs [String, Pathname, Array<String, Pathname>, nil]
+        #   the path(s) to normalize
+        #
+        # @param arg_name [String] the argument name used in error messages
+        #
+        # @return [Array<String>, nil] the normalized paths, or `nil` if none are valid
+        #
+        # @raise [ArgumentError] when any path is not a `String` or `Pathname`
+        #
+        # @api private
+        #
+        def normalize_pathspecs(pathspecs, arg_name)
+          return nil unless pathspecs
+
+          normalized = Array(pathspecs)
+          validate_pathspec_types(normalized, arg_name)
+
+          normalized = normalized.map(&:to_s).reject(&:empty?)
+          return nil if normalized.empty?
+
+          normalized
+        end
+
+        # Raises an error if any element of `pathspecs` is not a `String` or `Pathname`
+        #
+        # @param pathspecs [Array] the path elements to validate
+        #
+        # @param arg_name [String] the argument name used in error messages
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] when any element is not a `String` or `Pathname`
+        #
+        # @api private
+        #
+        def validate_pathspec_types(pathspecs, arg_name)
+          return if pathspecs.all? { |path| path.is_a?(String) || path.is_a?(Pathname) }
+
+          raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
         end
       end
-
-      # Normalizes path specifications for Git commands.
-      #
-      # @param pathspecs [String, Pathname, Array<String, Pathname>, nil]
-      # @param arg_name [String] used in error messages
-      # @return [Array<String>, nil]
-      # @raise [ArgumentError] if any path is not a String or Pathname
-      #
-      def normalize_pathspecs(pathspecs, arg_name)
-        return nil unless pathspecs
-
-        normalized = Array(pathspecs)
-        validate_pathspec_types(normalized, arg_name)
-
-        normalized = normalized.map(&:to_s).reject(&:empty?)
-        return nil if normalized.empty?
-
-        normalized
-      end
-
-      # @param pathspecs [Array]
-      # @param arg_name [String]
-      # @raise [ArgumentError] if any element is not a String or Pathname
-      #
-      def validate_pathspec_types(pathspecs, arg_name)
-        return if pathspecs.all? { |path| path.is_a?(String) || path.is_a?(Pathname) }
-
-        raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
-      end
+      private_constant :Private
     end
   end
 end

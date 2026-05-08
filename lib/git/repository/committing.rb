@@ -3,7 +3,7 @@
 require 'git/commands/commit'
 require 'git/commands/commit_tree'
 require 'git/commands/write_tree'
-require 'git/repository/internal'
+require 'git/repository/shared_private'
 
 module Git
   class Repository
@@ -70,9 +70,9 @@ module Git
       #
       #   @return [String] git's stdout from the commit
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def commit(message = nil, **opts)
         if opts.key?(:add_all)
@@ -80,7 +80,7 @@ module Git
           opts[:all] = opts.delete(:add_all)
         end
 
-        Git::Repository::Internal.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
 
         call_opts = { no_edit: true }
         call_opts[:message] = message if message
@@ -94,7 +94,7 @@ module Git
       #
       # @overload commit_all(message, **options)
       #
-      #   @example
+      #   @example Commit all changes with a message
       #     repo.commit_all('Update everything')
       #
       #   @param message [String] the commit message
@@ -103,9 +103,9 @@ module Git
       #
       #   @return [String] git's stdout from the commit
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def commit_all(*, **)
         commit(*, all: true, **)
@@ -140,12 +140,12 @@ module Git
       #
       #   @return [String] the SHA of the newly created commit object
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def commit_tree(tree, **opts)
-        Git::Repository::Internal.assert_valid_opts!(COMMIT_TREE_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(COMMIT_TREE_ALLOWED_OPTS, **opts)
 
         opts[:p] = opts.delete(:parents) if opts.key?(:parents)
         opts[:p] = opts.delete(:parent) if opts.key?(:parent)
@@ -157,12 +157,12 @@ module Git
 
       # Write the current index to a tree object in the object store
       #
-      # @example
+      # @example Get the tree SHA of the current index
       #   tree_sha = repo.write_tree
       #
       # @return [String] the SHA of the tree object written
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def write_tree
         Git::Commands::WriteTree.new(@execution_context).call.stdout
@@ -174,14 +174,14 @@ module Git
       #
       # @overload write_and_commit_tree(**options)
       #
-      #   @example
+      #   @example Commit the current index as a snapshot
       #     commit_sha = repo.write_and_commit_tree(message: 'snapshot')
       #
       #   @param options [Hash] options forwarded to {#commit_tree}
       #
       #   @return [String] the SHA of the newly created commit object
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def write_and_commit_tree(**)
         commit_tree(write_tree, **)
