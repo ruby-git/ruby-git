@@ -2,7 +2,7 @@
 
 require 'git/commands/add'
 require 'git/commands/reset'
-require 'git/repository/internal'
+require 'git/repository/shared_private'
 
 module Git
   class Repository
@@ -43,12 +43,12 @@ module Git
       #
       #   @return [String] git's stdout from the add
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def add(paths = '.', **)
-        Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
+        SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, **)
         Git::Commands::Add.new(@execution_context).call(*Array(paths), **).stdout
       end
 
@@ -76,12 +76,12 @@ module Git
       #
       #   @return [String] git's stdout from the reset
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def reset(commitish = nil, **)
-        Git::Repository::Internal.assert_valid_opts!(RESET_ALLOWED_OPTS, **)
+        SharedPrivate.assert_valid_opts!(RESET_ALLOWED_OPTS, **)
         Git::Commands::Reset.new(@execution_context).call(commitish, **).stdout
       end
     end

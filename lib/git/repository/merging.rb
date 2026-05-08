@@ -5,7 +5,7 @@ require 'git/commands/diff'
 require 'git/commands/merge/start'
 require 'git/commands/merge_base'
 require 'git/commands/show'
-require 'git/repository/internal'
+require 'git/repository/shared_private'
 
 module Git
   class Repository
@@ -76,12 +76,12 @@ module Git
       #
       # @return [String] git's stdout from the merge command
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      # @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def merge(branch, message = nil, opts = {})
-        Git::Repository::Internal.assert_valid_opts!(MERGE_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(MERGE_ALLOWED_OPTS, **opts)
 
         # Dup so callers who reuse the same opts hash are not affected
         opts = opts.dup
@@ -132,14 +132,14 @@ module Git
       #   @return [Array<String>] commit SHAs of the common ancestor(s); empty
       #     when no common ancestor exists or `--fork-point` finds none
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if `git merge-base` exits outside the allowed
-      #   range (exit code > 1)
+      #   @raise [Git::FailedError] when `git merge-base` exits outside the
+      #     allowed range (exit code > 1)
       #
       def merge_base(*args)
         opts = args.last.is_a?(Hash) ? args.pop : {}
-        Git::Repository::Internal.assert_valid_opts!(MERGE_BASE_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(MERGE_BASE_ALLOWED_OPTS, **opts)
         result = Git::Commands::MergeBase.new(@execution_context).call(*args, **opts)
         result.stdout.lines.map(&:strip).reject(&:empty?)
       end
@@ -160,6 +160,13 @@ module Git
       #     puts File.read(their_version)
       #   end
       #
+      # @return [Array<String>] the list of unmerged file paths
+      #
+      # @raise [Git::FailedError] when `git diff --cached` exits with a non-zero status
+      #
+      # @yield [file, your_version, their_version] passes conflict details for
+      #   each unmerged file
+      #
       # @yieldparam file [String] path to the conflicting file, relative to the
       #   working tree
       #
@@ -169,53 +176,72 @@ module Git
       # @yieldparam their_version [String] path to a temporary file containing the
       #   stage-3 (theirs) content for the conflicting file
       #
-      # @return [Array<String>] the list of unmerged file paths
-      #
-      # @raise [Git::FailedError] if `git diff --cached` exits with a non-zero status
+      # @yieldreturn [void]
       #
       def each_conflict
-        unmerged_paths.each do |file_path|
-          write_staged_file(file_path, 2) do |your_file|
-            write_staged_file(file_path, 3) do |their_file|
+        Private.unmerged_paths(@execution_context).each do |file_path|
+          Private.write_staged_file(@execution_context, file_path, 2) do |your_file|
+            Private.write_staged_file(@execution_context, file_path, 3) do |their_file|
               yield(file_path, your_file.path, their_file.path)
             end
           end
         end
       end
 
-      private
-
-      STAGE_PREFIXES = { 2 => 'YOUR-', 3 => 'THEIR-' }.freeze
-      private_constant :STAGE_PREFIXES
-
-      # Returns the list of file paths with unresolved merge conflicts
-      #
-      # @return [Array<String>] unmerged file paths
+      # Private helpers local to {Git::Repository::Merging}
       #
       # @api private
-      #
-      def unmerged_paths
-        result = Git::Commands::Diff.new(@execution_context).call(cached: true)
-        result.stdout.split("\n").filter_map do |line|
-          ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
-        end
-      end
+      module Private
+        # Tempfile name prefixes for staged content, keyed by git stage index
+        STAGE_PREFIXES = { 2 => 'YOUR-', 3 => 'THEIR-' }.freeze
 
-      # Creates a Tempfile with the staged content for +file_path+ at +stage+
-      # and yields the open IO object to the block.
-      #
-      # @param file_path [String] repository-relative path to the conflicting file
-      # @param stage [Integer] git stage index (2 = ours, 3 = theirs)
-      #
-      # @api private
-      #
-      def write_staged_file(file_path, stage)
-        Tempfile.create([STAGE_PREFIXES[stage], File.basename(file_path)]) do |f|
-          Git::Commands::Show.new(@execution_context).call(":#{stage}:#{file_path}", out: f)
-          f.flush
-          yield f
+        module_function
+
+        # Returns the list of file paths with unresolved merge conflicts
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #   used to run git commands
+        #
+        # @return [Array<String>] unmerged file paths
+        #
+        # @api private
+        #
+        def unmerged_paths(execution_context)
+          result = Git::Commands::Diff.new(execution_context).call(cached: true)
+          result.stdout.split("\n").filter_map do |line|
+            ::Regexp.last_match(1) if line =~ /^\* Unmerged path (.*)/
+          end
+        end
+
+        # Creates a Tempfile with the staged content for `file_path` at `stage`
+        # and yields the open IO object to the block
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #   used to run git commands
+        #
+        # @param file_path [String] repository-relative path to the conflicting file
+        #
+        # @param stage [Integer] git stage index (2 = ours, 3 = theirs)
+        #
+        # @yield [f] yields the open Tempfile containing the staged content
+        #
+        # @yieldparam f [Tempfile] open IO object for the staged content
+        #
+        # @yieldreturn [void]
+        #
+        # @return [void]
+        #
+        # @api private
+        #
+        def write_staged_file(execution_context, file_path, stage)
+          Tempfile.create([STAGE_PREFIXES[stage], File.basename(file_path)]) do |f|
+            Git::Commands::Show.new(execution_context).call(":#{stage}:#{file_path}", out: f)
+            f.flush
+            yield f
+          end
         end
       end
+      private_constant :Private
     end
   end
 end

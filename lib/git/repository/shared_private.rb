@@ -5,12 +5,16 @@ module Git
     # Internal helpers shared by `Git::Repository::*` topic modules
     #
     # Methods defined here use `module_function` so they are callable as
-    # `Git::Repository::Internal.foo(...)` from any topic module without being
-    # added to `Git::Repository`'s instance namespace via `include`.
+    # `SharedPrivate.foo(...)` from any topic module within `Git::Repository`
+    # without being added to `Git::Repository`'s instance namespace via `include`.
+    #
+    # The constant is declared `private_constant` so it is inaccessible from
+    # outside the `Git::Repository` class body; callers inside topic modules use
+    # the short unqualified form `SharedPrivate.foo(...)`.
     #
     # @api private
     #
-    module Internal
+    module SharedPrivate
       module_function
 
       # Validate that `options` contains only keys listed in `allowed`
@@ -23,7 +27,7 @@ module Git
       # @example Reject an undocumented option
       #   ADD_ALLOWED_OPTS = %i[all force].freeze
       #
-      #   Git::Repository::Internal.assert_valid_opts!(ADD_ALLOWED_OPTS, bogus: true)
+      #   SharedPrivate.assert_valid_opts!(ADD_ALLOWED_OPTS, bogus: true)
       #   #=> raises ArgumentError: Unknown options: bogus
       #
       # @param allowed [Array<Symbol>] the keys permitted by the facade method
@@ -41,5 +45,7 @@ module Git
         raise ArgumentError, "Unknown options: #{unknown.join(', ')}"
       end
     end
+
+    private_constant :SharedPrivate
   end
 end
