@@ -577,8 +577,8 @@ module Git
     end
 
     # iterates over the files which are unmerged
-    def each_conflict(&) # :yields: file, your_version, their_version
-      lib.conflicts(&)
+    def each_conflict(&)
+      facade_repository.each_conflict(&)
     end
 
     # Pulls the given branch from the given remote into the current branch
