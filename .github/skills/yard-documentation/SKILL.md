@@ -51,6 +51,34 @@ Doc comments are rendered as **markdown** via the redcarpet gem. Write all
 free-text descriptions, tag values, and examples using markdown syntax. These rules
 apply to all documentation regardless of element type:
 
+**Named length limits**
+
+Three named limits govern line and description length throughout this document:
+
+- **`LINE_LIMIT`** (90 characters) — the preferred maximum length of any
+  physical YARD comment line, measured from column 1 and including every
+  character: indentation, `#`, tag metadata, and all text. Wrap prose at
+  this limit wherever possible.
+- **`LINE_MAX`** (120 characters) — the hard ceiling for lines that cannot
+  be wrapped without breaking their meaning. The following content may
+  exceed `LINE_LIMIT` up to `LINE_MAX`; it must not exceed `LINE_MAX`:
+  - **URLs** — in `@see` tags or markdown links; a URL cannot be split
+  - **Long inline code spans** — a `` `backtick` `` span whose content
+    alone approaches or exceeds `LINE_LIMIT`
+  - **Long `[Type]` expressions** — a type such as
+    `[String, Pathname, Array<String, Pathname>]` that fills the tag
+    metadata column before any description text begins
+  - **`@example` code lines** — real code inside an example block that
+    cannot be reflowed without changing its meaning
+  - **Markdown table rows** — pipe-delimited table rows that cannot be
+    split across lines
+- **`SUMMARY_LIMIT`** (90 characters) — the maximum length of a tag's
+  description text, measured by concatenating the description from the first
+  tag line with all immediately following indented continuation lines
+  (stripping the leading `#   ` from each and joining with a single space).
+  Applies to the description text only — not the tag name, `[Type]`, option
+  key, or `(default)`.
+
 **Doc comment placement**
 
 YARD doc comments must appear immediately above the element they document (class,
@@ -116,15 +144,44 @@ metadata (tag name, `[Type]`, option key, and `(default)`). For example, in:
 @option options [Boolean, nil] :ignore_case (nil) ignore case distinctions
 ```
 
-the summary text is `ignore case distinctions`. The entire physical line —
-including indentation, `#`, tag metadata, and summary text — must fit within
-the 90-character line limit. If the tag metadata is long, start the summary
-on an indented continuation line.
+the summary text is `ignore case distinctions`.
 
-If more explanation is needed, use additional paragraphs after the short description.
-Separate each paragraph from the next with a blank comment line (`#`). Wrap
-individual lines at 90 characters total — counting every character from column 1,
-including leading indentation, the `#`, and all text.
+**Tag line and summary length**
+
+Every physical YARD doc line should not exceed `LINE_LIMIT`. When a tag's
+description would push a line past `LINE_LIMIT`, split it at a word boundary
+onto a continuation line indented two extra spaces. For content that cannot
+be wrapped (URLs, long inline code spans, long `[Type]` expressions,
+`@example` code lines, markdown table rows), lines may extend up to
+`LINE_MAX` but must not exceed it.
+
+Additionally, the concatenated description — the description text from the
+first tag line joined with all continuation lines — must not exceed
+`SUMMARY_LIMIT`. If the concatenated description exceeds `SUMMARY_LIMIT`,
+shorten it and move the excess detail into a paragraph after a blank `#` line.
+
+For example, this tag has a description of 84 characters (within
+`SUMMARY_LIMIT`), but the single physical line is 103 characters (exceeds
+`LINE_LIMIT`) and must be split:
+
+```ruby
+# @return [Array] a two-element tuple `[target, options]` containing the translated checkout arguments
+```
+
+Split so each physical line fits within `LINE_LIMIT`:
+
+```ruby
+# @return [Array] a two-element tuple `[target, options]` containing the
+#   translated checkout arguments
+```
+
+If the tag metadata itself is long (e.g. a long `[Type]` or `@option` key),
+start the description on an indented continuation line so only the metadata
+appears on the first physical line.
+
+If more explanation is needed, add continuation paragraphs after a blank
+comment line (`#`). Every physical line — in the summary and in any
+continuation paragraph — must independently fit within `LINE_LIMIT`.
 
 These rules apply equally to tag text (`@param`, `@return`, etc.) — the first
 sentence of a tag is its short description. The no-punctuation rule applies only to
@@ -152,7 +209,7 @@ Correct — tag title without punctuation, blank line before continuation:
 #   lines were selected (not an error).
 ```
 
-Incorrect — trailing period on title, missing blank line before continuation:
+Incorrect — trailing period on title, missing blank line before continuation, and `@return` concatenated summary exceeds `SUMMARY_LIMIT` (132 chars):
 
 ```ruby
 # @option options [Boolean, nil] :ignore_case (nil) ignore case
@@ -669,6 +726,23 @@ bundle exec yard doc 2>&1 | grep -i "warn"
 
 Verify `@example` code runs correctly in `bundle exec bin/console`.
 Check that all `@see` references point to valid targets.
+
+**Review checklist — tag line length**
+
+For every `@param`, `@return`, `@raise`, `@option`, `@yield`, `@yieldparam`,
+and `@yieldreturn` tag, check both limits:
+
+1. **`LINE_LIMIT`**: Count every character from column 1 (indentation, `#`,
+   metadata, text) on each physical line. If any wrappable line exceeds
+   `LINE_LIMIT`, split at a word boundary onto a continuation line (indented
+   two extra spaces). Apply this check to every continuation line
+   independently. Lines containing URLs, long inline code spans, long `[Type]`
+   expressions, `@example` code, or markdown table rows may extend up to
+   `LINE_MAX`.
+2. **`SUMMARY_LIMIT`**: Strip `#   ` from each continuation line and join
+   with a single space. If the concatenated description exceeds
+   `SUMMARY_LIMIT`, shorten it and move the excess into a paragraph after
+   a blank `#` line.
 
 ## Command Reference
 
