@@ -493,4 +493,103 @@ RSpec.describe Git::Repository::Merging do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #revert
+  # ---------------------------------------------------------------------------
+
+  describe '#revert' do
+    let(:revert_start_command) { instance_double(Git::Commands::Revert::Start) }
+
+    before do
+      allow(Git::Commands::Revert::Start)
+        .to receive(:new).with(execution_context).and_return(revert_start_command)
+    end
+
+    # --- Default invocation ---------------------------------------------------
+
+    context 'with a commit SHA' do
+      subject(:result) { described_instance.revert('abc1234') }
+
+      let(:revert_result) { command_result("[main 1234abc] Revert \"first commit\"\n") }
+
+      it 'delegates to Git::Commands::Revert::Start.new with the execution_context' do
+        expect(Git::Commands::Revert::Start).to receive(:new).with(execution_context).and_return(revert_start_command)
+        allow(revert_start_command).to receive(:call).and_return(revert_result)
+        result
+      end
+
+      it 'calls Revert::Start#call with the commit and no_edit: true' do
+        expect(revert_start_command)
+          .to receive(:call).with('abc1234', no_edit: true).and_return(revert_result)
+        result
+      end
+
+      it 'returns the command stdout as a String' do
+        allow(revert_start_command)
+          .to receive(:call).with('abc1234', no_edit: true).and_return(revert_result)
+        expect(result).to eq("[main 1234abc] Revert \"first commit\"\n")
+      end
+    end
+
+    # --- nil commitish --------------------------------------------------------
+
+    context 'with a nil commitish' do
+      subject(:result) { described_instance.revert(nil) }
+
+      let(:revert_result) { command_result('') }
+
+      it 'passes nil as the commit positional argument' do
+        expect(revert_start_command)
+          .to receive(:call).with(nil, no_edit: true).and_return(revert_result)
+        result
+      end
+    end
+
+    # --- no_edit default can be overridden -----------------------------------
+
+    context 'with no_edit: false' do
+      subject(:result) { described_instance.revert('abc1234', no_edit: false) }
+
+      let(:revert_result) { command_result('') }
+
+      it 'passes no_edit: false through to Revert::Start#call, overriding the default' do
+        expect(revert_start_command)
+          .to receive(:call).with('abc1234', no_edit: false).and_return(revert_result)
+        result
+      end
+    end
+
+    # --- no_edit: true explicit (same as default) ----------------------------
+
+    context 'with no_edit: true explicitly' do
+      subject(:result) { described_instance.revert('abc1234', no_edit: true) }
+
+      let(:revert_result) { command_result('') }
+
+      it 'passes no_edit: true to Revert::Start#call' do
+        expect(revert_start_command)
+          .to receive(:call).with('abc1234', no_edit: true).and_return(revert_result)
+        result
+      end
+    end
+
+    # --- Option whitelisting --------------------------------------------------
+
+    context 'option whitelisting' do
+      it 'raises ArgumentError for an unknown option key' do
+        expect { described_instance.revert('abc1234', bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call Revert::Start when an unknown option is given' do
+        expect(revert_start_command).not_to receive(:call)
+        begin
+          described_instance.revert('abc1234', bogus: true)
+        rescue ArgumentError
+          # expected
+        end
+      end
+    end
+  end
 end

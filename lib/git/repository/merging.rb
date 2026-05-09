@@ -4,6 +4,7 @@ require 'tempfile'
 require 'git/commands/diff'
 require 'git/commands/merge/start'
 require 'git/commands/merge_base'
+require 'git/commands/revert/start'
 require 'git/commands/show'
 require 'git/repository/shared_private'
 
@@ -186,6 +187,51 @@ module Git
             end
           end
         end
+      end
+
+      # Option keys accepted by {#revert}
+      #
+      # Derived from the 4.x option map for `Git::Lib#revert`.
+      REVERT_ALLOWED_OPTS = %i[no_edit].freeze
+      private_constant :REVERT_ALLOWED_OPTS
+
+      # Revert one or more existing commits by creating new commits that undo
+      # the changes those commits introduced
+      #
+      # The working tree must be clean before calling this method. By default
+      # the editor is suppressed (`--no-edit`) so the commit message is taken
+      # from git's default revert message without prompting.
+      #
+      # @example Revert the most recent commit
+      #   repo.revert('HEAD')
+      #
+      # @example Revert a specific commit by SHA
+      #   repo.revert('abc1234')
+      #
+      # @example Revert a range of commits
+      #   repo.revert('HEAD~3..HEAD~1')
+      #
+      # @example Revert without suppressing the editor
+      #   repo.revert('HEAD', no_edit: false)
+      #
+      # @param commitish [String, nil] the commit, ref, or rev range to revert;
+      #   see `gitrevisions(7)` for accepted forms
+      #
+      # @param opts [Hash] additional options forwarded to `git revert`
+      #
+      # @option opts [Boolean, nil] :no_edit (true) suppress the commit-message
+      #   editor (`--no-edit`); pass `false` to open the editor
+      #
+      # @return [String] git's stdout from the revert command
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def revert(commitish = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(REVERT_ALLOWED_OPTS, **opts)
+        opts = { no_edit: true }.merge(opts)
+        Git::Commands::Revert::Start.new(@execution_context).call(commitish, **opts).stdout
       end
 
       # Private helpers local to {Git::Repository::Merging}
