@@ -498,7 +498,7 @@ module Git
     #   :no_edit
     #
     def revert(commitish = nil, opts = {})
-      lib.revert(commitish, opts)
+      facade_repository.revert(commitish, **opts)
     end
 
     # commits all pending changes in the index file to the git repository
