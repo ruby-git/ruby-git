@@ -1623,13 +1623,8 @@ module Git
       end
     end
 
-    FETCH_KEY_NORMALIZATIONS = { 'update-head-ok': :update_head_ok, 'prune-tags': :prune_tags }.freeze
-
     def fetch(remote, opts)
-      opts = opts.transform_keys do |k|
-        sym = k.is_a?(Symbol) ? k : k.to_sym
-        FETCH_KEY_NORMALIZATIONS.fetch(sym, sym)
-      end
+      opts = opts.dup
       refspecs = Array(opts.delete(:ref)).compact
       positionals = [*([remote] if remote), *refspecs]
       Git::Commands::Fetch.new(self).call(*positionals, **opts, merge: true).stdout
