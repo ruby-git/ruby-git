@@ -532,16 +532,16 @@ RSpec.describe Git::Repository::Merging do
       end
     end
 
-    # --- nil commitish --------------------------------------------------------
+    # --- nil commitish defaults to HEAD ---------------------------------------
 
     context 'with a nil commitish' do
       subject(:result) { described_instance.revert(nil) }
 
       let(:revert_result) { command_result('') }
 
-      it 'passes nil as the commit positional argument' do
+      it 'maps nil to HEAD and calls Revert::Start#call with HEAD' do
         expect(revert_start_command)
-          .to receive(:call).with(nil, no_edit: true).and_return(revert_result)
+          .to receive(:call).with('HEAD', no_edit: true).and_return(revert_result)
         result
       end
     end

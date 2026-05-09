@@ -362,13 +362,40 @@ RSpec.describe Git::Repository::Merging, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #revert — no integration test
-  #
-  # Git::Repository::Merging#revert is a single-command facade whose only
-  # pre-processing is the pure-Ruby `no_edit: true` default and option
-  # allowlisting. Both are proven by unit tests. The end-to-end git behavior
-  # is already covered by:
-  #   - tests/units/test_index_ops.rb#test_revert (legacy Test::Unit)
-  #   - spec/unit/git/commands/revert/start_spec.rb (command integration)
+  # #revert
   # ---------------------------------------------------------------------------
+
+  describe '#revert' do
+    before do
+      write_file('feature.txt', "feature content\n")
+      repo.add('feature.txt')
+      repo.commit('Add feature file')
+    end
+
+    let(:head_sha) { repo.log(1).execute.first.sha }
+
+    it 'returns a String' do
+      result = described_instance.revert(head_sha)
+      expect(result).to be_a(String)
+    end
+
+    it 'creates a new revert commit' do
+      sha = head_sha
+      log_before = repo.log(10_000).execute.count
+      described_instance.revert(sha)
+      expect(repo.log(10_000).execute.count).to eq(log_before + 1)
+    end
+
+    it 'undoes the file addition introduced by the reverted commit' do
+      sha = head_sha
+      described_instance.revert(sha)
+      expect(File.exist?(File.join(repo_dir, 'feature.txt'))).to be(false)
+    end
+
+    it 'treats a nil commitish as HEAD and reverts HEAD' do
+      log_before = repo.log(10_000).execute.count
+      described_instance.revert(nil)
+      expect(repo.log(10_000).execute.count).to eq(log_before + 1)
+    end
+  end
 end
