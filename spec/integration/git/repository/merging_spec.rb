@@ -360,4 +360,15 @@ RSpec.describe Git::Repository::Merging, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #revert — no integration test
+  #
+  # Git::Repository::Merging#revert is a single-command facade whose only
+  # pre-processing is the pure-Ruby `no_edit: true` default and option
+  # allowlisting. Both are proven by unit tests. The end-to-end git behavior
+  # is already covered by:
+  #   - tests/units/test_index_ops.rb#test_revert (legacy Test::Unit)
+  #   - spec/unit/git/commands/revert/start_spec.rb (command integration)
+  # ---------------------------------------------------------------------------
 end
