@@ -215,7 +215,8 @@ module Git
       #   repo.revert('HEAD', no_edit: false)
       #
       # @param commitish [String, nil] the commit, ref, or rev range to revert;
-      #   see `gitrevisions(7)` for accepted forms
+      #   see `gitrevisions(7)` for accepted forms; defaults to `'HEAD'` when
+      #   `nil`
       #
       # @param opts [Hash] additional options forwarded to `git revert`
       #
@@ -229,6 +230,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def revert(commitish = nil, opts = {})
+        commitish = 'HEAD' if commitish.nil?
         SharedPrivate.assert_valid_opts!(REVERT_ALLOWED_OPTS, **opts)
         opts = { no_edit: true }.merge(opts)
         Git::Commands::Revert::Start.new(@execution_context).call(commitish, **opts).stdout
