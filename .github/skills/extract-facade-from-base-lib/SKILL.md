@@ -514,6 +514,9 @@ of Git::Base#<method_name>.
 - [ ] **`assert_valid_opts!` used.** The facade calls
   `Git::Repository::Internal.assert_valid_opts!(ALLOWED_OPTS, **)` before
   forwarding to the command.
+- [ ] **`*_ALLOWED_OPTS` placement correct.** Each `<METHOD>_ALLOWED_OPTS`
+  constant is declared **immediately before** the public facade method that
+  uses it (not grouped at the top of the module, not inside `Private`).
 - [ ] **YARD docs complete.** Each allowed option has an `@option` tag with
   type, name, default, and description. `@param`, `@return`, `@raise` are
   present and accurate.

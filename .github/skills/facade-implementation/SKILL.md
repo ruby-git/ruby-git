@@ -201,6 +201,8 @@ This skill supports three modes. Determine which mode applies before starting:
      `SharedPrivate.assert_valid_opts!(allowed, **)` — do **not**
      also `slice`; see [Option
      whitelisting](REFERENCE.md#option-whitelisting-preventing-api-expansion))
+   - places each `<METHOD>_ALLOWED_OPTS` constant **immediately before** the
+     method that uses it (not grouped at the top of the module)
    - handles defaults and deprecations explicitly, not by relying on command
      internals
 
@@ -235,6 +237,7 @@ For **review** mode, produce:
 | Orchestration via `@execution_context` | Pass/Fail | ... |
 | Argument pre-processing complete | Pass/Fail | ... |
 | Option whitelisting (where required) | Pass/Fail | ... |
+| `*_ALLOWED_OPTS` placed immediately before its method | Pass/Fail | ... |
 | Return value matches documented contract | Pass/Fail | ... |
 | Parser/result-class wiring correct | Pass/Fail | ... |
 | YARD docs complete | Pass/Fail | ... |
