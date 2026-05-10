@@ -3,6 +3,7 @@
 require 'git/commands/fetch'
 require 'git/commands/pull'
 require 'git/commands/push'
+require 'git/commands/remote'
 require 'git/repository/shared_private'
 
 module Git
@@ -347,11 +348,8 @@ module Git
       #
       #   @return [String] the stdout from the push command
       #
-      #   @raise [ArgumentError] if `remote` is nil when `branch` is given
-      #
-      # @raise [ArgumentError] when unsupported option keys are provided
-      #
-      # @raise [Git::FailedError] when git exits with a non-zero status
+      #   @raise [ArgumentError] when unsupported option keys are provided or if a branch
+      #     is supplied and remote is nil
       #
       def push(remote = nil, branch = nil, opts = nil)
         remote, branch, opts = Private.normalize_push_args(remote, branch, opts)
@@ -362,6 +360,59 @@ module Git
         return first_result.stdout unless Private.push_tags_separately?(opts)
 
         Private.push_tags(@execution_context, remote, opts).stdout
+      end
+
+      # Option keys accepted by {#add_remote}
+      #
+      # Derived from the 4.x `REMOTE_ADD_OPTION_MAP` in `Git::Lib`.
+      ADD_REMOTE_ALLOWED_OPTS = %i[fetch track].freeze
+      private_constant :ADD_REMOTE_ALLOWED_OPTS
+
+      # Register a new remote in the local repository
+      #
+      # Associates `name` with `url` and optionally fetches immediately or
+      # configures which branches are tracked.
+      #
+      # @example Add a remote
+      #   repo.add_remote('upstream', 'https://github.com/user/repo.git')
+      #
+      # @example Add a remote and fetch immediately
+      #   repo.add_remote('upstream', 'https://github.com/user/repo.git', fetch: true)
+      #
+      # @example Add a remote tracking a specific branch
+      #   repo.add_remote('upstream', 'https://github.com/user/repo.git', track: 'main')
+      #
+      # @param name [String] the name for the new remote
+      #
+      # @param url [String, Git::Base] the URL of the remote repository
+      #
+      #   A {Git::Base} instance is accepted for local references and converted
+      #   to `url.repo.to_s`.
+      #
+      # @param opts [Hash] options for adding the remote
+      #
+      # @option opts [Boolean, nil] :fetch (nil) fetch from the remote immediately
+      #   after adding it (`-f`)
+      #
+      #   The deprecated alias `:with_fetch` is accepted and normalized
+      #   automatically.
+      #
+      # @option opts [String, nil] :track (nil) track only the given branch during
+      #   fetch (`-t`)
+      #
+      # @return [Git::Remote]
+      #
+      # @raise [ArgumentError] when unsupported option keys are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def add_remote(name, url, opts = {})
+        url = url.repo.to_s if url.is_a?(Git::Base)
+        opts = Private.normalize_add_remote_keys(opts)
+        SharedPrivate.assert_valid_opts!(ADD_REMOTE_ALLOWED_OPTS, **opts)
+        Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
+
+        Git::Remote.new(@execution_context.base_object, name)
       end
 
       # Helpers private to the `RemoteOperations` topic module
@@ -499,6 +550,23 @@ module Git
         #
         def push_tags(execution_context, remote, opts)
           Git::Commands::Push.new(execution_context).call(*[remote].compact, **opts)
+        end
+
+        # Normalize deprecated {#add_remote} option keys to their canonical equivalents
+        #
+        # Renames the deprecated `:with_fetch` key to `:fetch`, removing it from
+        # the copy. When both keys are present, `:with_fetch` takes precedence.
+        #
+        # @param opts [Hash] the raw options hash passed by the caller
+        #
+        # @return [Hash] a new hash with all applicable keys normalized
+        #
+        # @api private
+        #
+        def normalize_add_remote_keys(opts)
+          normalized = opts.dup
+          normalized[:fetch] = normalized.delete(:with_fetch) if normalized.key?(:with_fetch)
+          normalized
         end
       end
       private_constant :Private

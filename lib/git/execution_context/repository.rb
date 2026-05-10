@@ -49,6 +49,7 @@ module Git
           git_dir: base_object.repo.to_s,
           git_index_file: base_object.index&.to_s,
           git_work_dir: base_object.dir&.to_s,
+          base_object: base_object,
           git_ssh: base_object.git_ssh,
           binary_path: base_object.binary_path,
           logger: logger
@@ -95,6 +96,8 @@ module Git
       #
       # @param git_index_file [String, nil] path to the index file
       #
+      # @param base_object [Git::Base, nil] originating base object
+      #
       # @param binary_path [String, :use_global_config] path to the git binary
       #
       #   Give `:use_global_config` (the default) to use `Git::Base.config.binary_path`.
@@ -116,6 +119,7 @@ module Git
         git_dir:,
         git_work_dir: nil,
         git_index_file: nil,
+        base_object: nil,
         binary_path: :use_global_config,
         git_ssh: :use_global_config,
         logger: nil
@@ -124,6 +128,7 @@ module Git
         @git_dir = git_dir
         @git_work_dir = git_work_dir
         @git_index_file = git_index_file
+        @base_object = base_object
       end
 
       # @return [String, nil] path to the `.git` directory
@@ -134,6 +139,9 @@ module Git
 
       # @return [String, nil] path to the index file
       attr_reader :git_index_file
+
+      # @return [Git::Base, nil] originating base object
+      attr_reader :base_object
     end
   end
 end
