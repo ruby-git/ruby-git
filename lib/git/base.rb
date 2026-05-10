@@ -592,12 +592,12 @@ module Git
     # @example pulls from upstream/develop
     #   @git.pull('upstream', 'develop')
     #
-    # @return [Void]
+    # @return [String] the stdout output from the pull command
     #
     # @raise [Git::FailedError] if the pull fails
     # @raise [ArgumentError] if a branch is given without a remote
     def pull(remote = nil, branch = nil, opts = {})
-      lib.pull(remote, branch, opts)
+      facade_repository.pull(remote, branch, opts)
     end
 
     # returns an array of Git:Remote objects
