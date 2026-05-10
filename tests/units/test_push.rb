@@ -68,13 +68,14 @@ class TestPush < Test::Unit::TestCase
   test 'push with tags: true does a second tags push and returns its stdout' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      push_cmd = Git::Commands::Push.new(git.lib)
+      execution_context = git.send(:facade_repository).execution_context
+      push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
       first_result = Git::CommandLineResult.new(%w[git push], status, 'first push', '')
       second_result = Git::CommandLineResult.new(%w[git push], status, 'tags push', '')
 
-      Git::Commands::Push.expects(:new).with(git.lib).twice.returns(push_cmd)
+      Git::Commands::Push.expects(:new).with(execution_context).twice.returns(push_cmd)
       push_cmd.expects(:call).with('origin', 'master').returns(first_result)
       push_cmd.expects(:call).with('origin', tags: true).returns(second_result)
 
@@ -85,12 +86,13 @@ class TestPush < Test::Unit::TestCase
   test 'push with mirror: true and tags: true silently drops tags push' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      push_cmd = Git::Commands::Push.new(git.lib)
+      execution_context = git.send(:facade_repository).execution_context
+      push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
       result = Git::CommandLineResult.new(%w[git push], status, 'mirror push', '')
 
-      Git::Commands::Push.expects(:new).with(git.lib).once.returns(push_cmd)
+      Git::Commands::Push.expects(:new).with(execution_context).once.returns(push_cmd)
       push_cmd.expects(:call).with('origin', 'master', mirror: true).returns(result)
 
       assert_equal('mirror push', git.push('origin', 'master', mirror: true, tags: true))
@@ -100,13 +102,14 @@ class TestPush < Test::Unit::TestCase
   test 'push with all: true and tags: true allows the mutually exclusive combination' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      push_cmd = Git::Commands::Push.new(git.lib)
+      execution_context = git.send(:facade_repository).execution_context
+      push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
       first_result = Git::CommandLineResult.new(%w[git push], status, 'all push', '')
       second_result = Git::CommandLineResult.new(%w[git push], status, 'all tags push', '')
 
-      Git::Commands::Push.expects(:new).with(git.lib).twice.returns(push_cmd)
+      Git::Commands::Push.expects(:new).with(execution_context).twice.returns(push_cmd)
       push_cmd.expects(:call).with('origin', all: true).returns(first_result)
       push_cmd.expects(:call).with('origin', all: true, tags: true).returns(second_result)
 

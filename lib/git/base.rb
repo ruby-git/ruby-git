@@ -556,13 +556,13 @@ module Git
     #
     #   @option options [String, Array<String>] :push_option (nil) push options to transmit
     #
-    #   @return [Void]
+    #   @return [String] the stdout output from the push command
     #
     #   @raise [Git::FailedError] if the push fails
     #   @raise [ArgumentError] if a branch is given without a remote
     #
     def push(*, **)
-      lib.push(*, **)
+      facade_repository.push(*, **)
     end
 
     # merges one or more branches into the current working branch
