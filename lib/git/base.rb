@@ -204,9 +204,7 @@ module Git
     #   :fetch => true
     #   :track => <branch_name>
     def add_remote(name, url, opts = {})
-      url = url.repo.to_s if url.is_a?(Git::Base)
-      lib.remote_add(name, url, opts)
-      Git::Remote.new(self, name)
+      facade_repository.add_remote(name, url, opts)
     end
 
     # changes current working directory for a block
