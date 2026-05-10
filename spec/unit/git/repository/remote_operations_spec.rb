@@ -682,4 +682,37 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #remove_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#remove_remote' do
+    let(:remove_command) { instance_double(Git::Commands::Remote::Remove) }
+    let(:remove_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Remote::Remove)
+        .to receive(:new).with(execution_context).and_return(remove_command)
+    end
+
+    subject(:result) { described_instance.remove_remote('upstream') }
+
+    it 'delegates to Git::Commands::Remote::Remove.new with the execution_context' do
+      expect(Git::Commands::Remote::Remove)
+        .to receive(:new).with(execution_context).and_return(remove_command)
+      allow(remove_command).to receive(:call).and_return(remove_result)
+      result
+    end
+
+    it 'calls Remove#call with the remote name' do
+      expect(remove_command).to receive(:call).with('upstream').and_return(remove_result)
+      result
+    end
+
+    it 'returns the Git::CommandLineResult' do
+      allow(remove_command).to receive(:call).and_return(remove_result)
+      expect(result).to be(remove_result)
+    end
+  end
 end
