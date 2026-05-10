@@ -242,6 +242,8 @@ RSpec.describe Git::Repository::RemoteOperations do
   end
 
   # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
   # #pull
   # ---------------------------------------------------------------------------
 
@@ -301,7 +303,7 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
-    # --- Branch without remote -----------------------------------------------
+    # --- Branch without remote ----------------------------------------------
 
     context 'when branch is specified without a remote' do
       it 'raises ArgumentError before calling the command' do
@@ -311,7 +313,7 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
-    # --- :allow_unrelated_histories option -----------------------------------
+    # --- :allow_unrelated_histories option ----------------------------------
 
     context 'with allow_unrelated_histories: true' do
       subject(:result) { described_instance.pull('origin', 'main', allow_unrelated_histories: true) }
@@ -332,6 +334,244 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect(pull_command).not_to receive(:call)
         expect { described_instance.pull('origin', nil, unknown_opt: true) }
           .to raise_error(ArgumentError, /unknown_opt/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #push
+  # ---------------------------------------------------------------------------
+
+  describe '#push' do
+    let(:push_command) { instance_double(Git::Commands::Push) }
+    let(:push_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Push)
+        .to receive(:new).with(execution_context).and_return(push_command)
+    end
+
+    # --- Default invocation (no args) ---------------------------------------
+
+    context 'with no arguments' do
+      subject(:result) { described_instance.push }
+
+      it 'delegates to Git::Commands::Push.new with the execution_context' do
+        expect(Git::Commands::Push).to receive(:new).with(execution_context).and_return(push_command)
+        allow(push_command).to receive(:call).and_return(push_result)
+        result
+      end
+
+      it 'calls Push#call with no positional args and no options' do
+        expect(push_command).to receive(:call).with(no_args).and_return(push_result)
+        result
+      end
+
+      it 'returns the command stdout as a String' do
+        allow(push_command).to receive(:call).and_return(command_result("To origin\n"))
+        expect(result).to eq("To origin\n")
+      end
+    end
+
+    # --- Named remote only ---------------------------------------------------
+
+    context 'with an explicit remote name' do
+      subject(:result) { described_instance.push('upstream') }
+
+      it 'passes the remote as the first positional argument' do
+        expect(push_command).to receive(:call).with('upstream').and_return(push_result)
+        result
+      end
+    end
+
+    # --- Named remote + branch ----------------------------------------------
+
+    context 'with a remote and branch' do
+      subject(:result) { described_instance.push('origin', 'main') }
+
+      it 'passes both remote and branch as positional arguments' do
+        expect(push_command).to receive(:call).with('origin', 'main').and_return(push_result)
+        result
+      end
+    end
+
+    # --- Hash as first argument (opts-only, no remote) ----------------------
+
+    context 'when the first argument is a Hash (opts-only form)' do
+      subject(:result) { described_instance.push(force: true) }
+
+      it 'treats the Hash as opts and omits the remote positional argument' do
+        expect(push_command).to receive(:call).with(force: true).and_return(push_result)
+        result
+      end
+    end
+
+    # --- Hash as second argument (remote + opts form) -----------------------
+
+    context 'when the second argument is a Hash (remote + opts form)' do
+      subject(:result) { described_instance.push('origin', force: true) }
+
+      it 'treats the Hash as opts and passes only the remote positionally' do
+        expect(push_command).to receive(:call).with('origin', force: true).and_return(push_result)
+        result
+      end
+    end
+
+    # --- :tags option (two-push orchestration) ------------------------------
+
+    context 'with tags: true' do
+      let(:first_result) { command_result('first push') }
+      let(:second_result) { command_result('tags push') }
+
+      it 'issues two Git::Commands::Push calls' do
+        expect(push_command).to receive(:call).with('origin', 'main').and_return(first_result)
+        expect(push_command).to receive(:call).with('origin', tags: true).and_return(second_result)
+        described_instance.push('origin', 'main', tags: true)
+      end
+
+      it 'returns the stdout from the tags push (second call)' do
+        allow(push_command).to receive(:call).with('origin', 'main').and_return(first_result)
+        allow(push_command).to receive(:call).with('origin', tags: true).and_return(second_result)
+        expect(described_instance.push('origin', 'main', tags: true)).to eq('tags push')
+      end
+    end
+
+    # --- :mirror + :tags (single-push, tags suppressed) ---------------------
+
+    context 'with mirror: true and tags: true' do
+      let(:mirror_result) { command_result('mirror push') }
+
+      it 'issues only one Git::Commands::Push call (mirror subsumes tags)' do
+        expect(push_command).to receive(:call).once.with('origin', 'main', mirror: true).and_return(mirror_result)
+        described_instance.push('origin', 'main', mirror: true, tags: true)
+      end
+
+      it 'returns the stdout from the single mirror push' do
+        allow(push_command).to receive(:call).with('origin', 'main', mirror: true).and_return(mirror_result)
+        expect(described_instance.push('origin', 'main', mirror: true, tags: true)).to eq('mirror push')
+      end
+    end
+
+    # --- :all + :tags (two-push orchestration) ------------------------------
+
+    context 'with all: true and tags: true' do
+      let(:all_result) { command_result('all push') }
+      let(:all_tags_result) { command_result('all tags push') }
+
+      it 'issues two Git::Commands::Push calls' do
+        expect(push_command).to receive(:call).with('origin', all: true).and_return(all_result)
+        expect(push_command).to receive(:call).with('origin', all: true, tags: true).and_return(all_tags_result)
+        described_instance.push('origin', all: true, tags: true)
+      end
+
+      it 'returns the stdout from the tags push (second call)' do
+        allow(push_command).to receive(:call).with('origin', all: true).and_return(all_result)
+        allow(push_command).to receive(:call).with('origin', all: true, tags: true).and_return(all_tags_result)
+        expect(described_instance.push('origin', all: true, tags: true)).to eq('all tags push')
+      end
+    end
+
+    # --- Legacy Boolean shorthand (backward compatibility) ------------------
+
+    context 'with Boolean true as third argument (legacy shorthand)' do
+      let(:refs_result) { command_result('refs') }
+      let(:tags_result) { command_result('tags') }
+
+      it 'converts the Boolean to tags: true and issues two calls' do
+        expect(push_command).to receive(:call).with('origin', 'main').and_return(refs_result)
+        expect(push_command).to receive(:call).with('origin', tags: true).and_return(tags_result)
+        described_instance.push('origin', 'main', true)
+      end
+    end
+
+    context 'with Boolean false as third argument (legacy shorthand)' do
+      it 'converts the Boolean to tags: false and issues one call (no tags)' do
+        expect(push_command).to receive(:call).once.with('origin', 'main').and_return(push_result)
+        described_instance.push('origin', 'main', false)
+      end
+    end
+
+    # --- :force option -------------------------------------------------------
+
+    context 'with force: true' do
+      it 'forwards :force to the Push command' do
+        expect(push_command)
+          .to receive(:call).with('origin', 'main', force: true).and_return(push_result)
+        described_instance.push('origin', 'main', force: true)
+      end
+    end
+
+    # --- :f alias ------------------------------------------------------------
+
+    context 'with f: true (alias for :force)' do
+      it 'forwards :f to the Push command' do
+        expect(push_command)
+          .to receive(:call).with('origin', 'main', f: true).and_return(push_result)
+        described_instance.push('origin', 'main', f: true)
+      end
+    end
+
+    # --- :delete option ------------------------------------------------------
+
+    context 'with delete: true' do
+      it 'forwards :delete to the Push command' do
+        expect(push_command)
+          .to receive(:call).with('origin', 'main', delete: true).and_return(push_result)
+        described_instance.push('origin', 'main', delete: true)
+      end
+    end
+
+    # --- :push_option --------------------------------------------------------
+
+    context 'with a single :push_option value' do
+      it 'forwards :push_option to the Push command' do
+        expect(push_command)
+          .to receive(:call).with('origin', push_option: 'ci.skip').and_return(push_result)
+        described_instance.push('origin', push_option: 'ci.skip')
+      end
+    end
+
+    context 'with an Array :push_option value' do
+      it 'forwards the full Array to the Push command' do
+        expect(push_command)
+          .to receive(:call).with('origin', push_option: %w[foo bar]).and_return(push_result)
+        described_instance.push('origin', push_option: %w[foo bar])
+      end
+    end
+
+    # --- branch without remote raises ---------------------------------------
+
+    context 'when branch is given without a remote' do
+      it 'raises ArgumentError before calling the command' do
+        expect(push_command).not_to receive(:call)
+        expect { described_instance.push(nil, 'main') }
+          .to raise_error(ArgumentError, /remote is required/)
+      end
+    end
+
+    # --- Option whitelisting -------------------------------------------------
+
+    context 'with an unknown option key' do
+      it 'raises ArgumentError before calling the command' do
+        expect(push_command).not_to receive(:call)
+        expect { described_instance.push('origin', unknown_key: true) }
+          .to raise_error(ArgumentError, /unknown_key/)
+      end
+    end
+
+    context 'with :branches option (supported by command but not 4.x facade)' do
+      it 'raises ArgumentError' do
+        expect(push_command).not_to receive(:call)
+        expect { described_instance.push('origin', branches: true) }
+          .to raise_error(ArgumentError, /branches/)
+      end
+    end
+
+    context 'with :timeout option (supported by command but not 4.x facade)' do
+      it 'raises ArgumentError' do
+        expect(push_command).not_to receive(:call)
+        expect { described_instance.push('origin', timeout: 30) }
+          .to raise_error(ArgumentError, /timeout/)
       end
     end
   end
