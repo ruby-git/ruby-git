@@ -26,6 +26,7 @@ RSpec.describe Git::ExecutionContext::Repository do
           git_dir: git_dir,
           git_work_dir: git_work_dir,
           git_index_file: git_index_file,
+          base_object: nil,
           git_ssh: '/usr/bin/ssh',
           binary_path: '/usr/local/bin/git',
           logger: nil
@@ -208,6 +209,10 @@ RSpec.describe Git::ExecutionContext::Repository do
 
     it 'extracts git_index_file from base.index.to_s' do
       expect(context.git_index_file).to eq(git_index_file)
+    end
+
+    it 'stores the originating base object' do
+      expect(context.base_object).to eq(base)
     end
 
     context 'when base.binary_path is an explicit path' do

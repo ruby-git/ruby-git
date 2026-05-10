@@ -10,7 +10,8 @@ require 'git/repository/remote_operations'
 # option whitelisting, delegation contracts).
 
 RSpec.describe Git::Repository::RemoteOperations do
-  let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
+  let(:base_object) { instance_double(Git::Base) }
+  let(:execution_context) { instance_double(Git::ExecutionContext::Repository, base_object: base_object) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # ---------------------------------------------------------------------------
@@ -568,6 +569,116 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect(push_command).not_to receive(:call)
         expect { described_instance.push('origin', timeout: 30) }
           .to raise_error(ArgumentError, /timeout/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #add_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#add_remote' do
+    let(:add_remote_command) { instance_double(Git::Commands::Remote::Add) }
+    let(:add_remote_result) { command_result('') }
+    let(:remote_object) { instance_double(Git::Remote) }
+
+    before do
+      allow(Git::Commands::Remote::Add)
+        .to receive(:new).with(execution_context).and_return(add_remote_command)
+      allow(add_remote_command).to receive(:call).and_return(add_remote_result)
+      allow(Git::Remote).to receive(:new).and_return(remote_object)
+    end
+
+    # --- Default invocation --------------------------------------------------
+
+    context 'with name and url only' do
+      subject(:result) { described_instance.add_remote('upstream', 'https://example.com/repo.git') }
+
+      it 'delegates to Git::Commands::Remote::Add.new with the execution_context' do
+        expect(Git::Commands::Remote::Add).to receive(:new).with(execution_context).and_return(add_remote_command)
+        result
+      end
+
+      it 'calls Add#call with name and url' do
+        expect(add_remote_command)
+          .to receive(:call).with('upstream', 'https://example.com/repo.git').and_return(add_remote_result)
+        result
+      end
+
+      it 'returns Git::Remote' do
+        expect(Git::Remote).to receive(:new).with(base_object, 'upstream').and_return(remote_object)
+        expect(result).to eq(remote_object)
+      end
+    end
+
+    context 'with url as Git::Base' do
+      let(:url_base) do
+        Object.new.tap do |obj|
+          def obj.repo
+            Pathname.new('/tmp/source.git')
+          end
+
+          def obj.is_a?(klass)
+            klass == Git::Base || super
+          end
+        end
+      end
+
+      subject(:result) { described_instance.add_remote('upstream', url_base) }
+
+      it 'normalizes url to repo.to_s before calling the command' do
+        expect(add_remote_command)
+          .to receive(:call).with('upstream', '/tmp/source.git').and_return(add_remote_result)
+        result
+      end
+    end
+
+    # --- :fetch option -------------------------------------------------------
+
+    context 'with fetch: true' do
+      subject(:result) { described_instance.add_remote('upstream', 'https://example.com/repo.git', fetch: true) }
+
+      it 'forwards :fetch to the command' do
+        expect(add_remote_command)
+          .to receive(:call).with('upstream', 'https://example.com/repo.git', fetch: true)
+          .and_return(add_remote_result)
+        result
+      end
+    end
+
+    # --- :track option -------------------------------------------------------
+
+    context 'with track: "main"' do
+      subject(:result) { described_instance.add_remote('upstream', 'https://example.com/repo.git', track: 'main') }
+
+      it 'forwards :track to the command' do
+        expect(add_remote_command)
+          .to receive(:call).with('upstream', 'https://example.com/repo.git', track: 'main')
+          .and_return(add_remote_result)
+        result
+      end
+    end
+
+    # --- :with_fetch alias (deprecated) --------------------------------------
+
+    context 'with the deprecated :with_fetch alias' do
+      subject(:result) { described_instance.add_remote('upstream', 'https://example.com/repo.git', with_fetch: true) }
+
+      it 'normalizes :with_fetch to :fetch before calling the command' do
+        expect(add_remote_command)
+          .to receive(:call).with('upstream', 'https://example.com/repo.git', fetch: true)
+          .and_return(add_remote_result)
+        result
+      end
+    end
+
+    # --- Option whitelisting -------------------------------------------------
+
+    context 'with an unknown option key' do
+      it 'raises ArgumentError before calling the command' do
+        expect(add_remote_command).not_to receive(:call)
+        expect { described_instance.add_remote('upstream', 'https://example.com/repo.git', unknown_opt: true) }
+          .to raise_error(ArgumentError, /unknown_opt/)
       end
     end
   end

@@ -135,4 +135,56 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
         .to raise_error(ArgumentError, /unknown_opt/)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #add_remote — basic invocations
+  # ---------------------------------------------------------------------------
+
+  describe '#add_remote' do
+    let(:remote_dir) { Dir.mktmpdir('remote_repo') }
+
+    after do
+      FileUtils.rm_rf(remote_dir)
+    end
+
+    before do
+      Git.init(remote_dir, bare: true)
+    end
+
+    it 'returns Git::Remote' do
+      result = described_instance.add_remote('secondary', remote_dir)
+      expect(result).to be_a(Git::Remote)
+      expect(result.name).to eq('secondary')
+    end
+
+    it 'registers the remote so it appears in the repository config' do
+      described_instance.add_remote('secondary', remote_dir)
+      expect(repo.remotes.map(&:name)).to include('secondary')
+    end
+
+    context 'with fetch: true' do
+      it 'does not raise an error' do
+        expect { described_instance.add_remote('secondary', remote_dir, fetch: true) }.not_to raise_error
+      end
+    end
+
+    context 'with track: "main"' do
+      it 'does not raise an error' do
+        expect { described_instance.add_remote('secondary', remote_dir, track: 'main') }.not_to raise_error
+      end
+    end
+
+    context 'with the deprecated :with_fetch alias' do
+      it 'does not raise an error' do
+        expect { described_instance.add_remote('secondary', remote_dir, with_fetch: true) }.not_to raise_error
+      end
+    end
+
+    context 'with an unknown option key' do
+      it 'raises ArgumentError before calling git' do
+        expect { described_instance.add_remote('secondary', remote_dir, unknown_key: true) }
+          .to raise_error(ArgumentError, /unknown_key/)
+      end
+    end
+  end
 end
