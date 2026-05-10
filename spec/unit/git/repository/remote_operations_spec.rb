@@ -240,4 +240,99 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #pull
+  # ---------------------------------------------------------------------------
+
+  describe '#pull' do
+    let(:pull_command) { instance_double(Git::Commands::Pull) }
+    let(:pull_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Pull)
+        .to receive(:new).with(execution_context).and_return(pull_command)
+    end
+
+    # --- Default invocation --------------------------------------------------
+
+    context 'with default arguments' do
+      subject(:result) { described_instance.pull }
+
+      it 'delegates to Git::Commands::Pull.new with the execution_context' do
+        expect(Git::Commands::Pull).to receive(:new).with(execution_context).and_return(pull_command)
+        allow(pull_command).to receive(:call).and_return(pull_result)
+        result
+      end
+
+      it 'calls Pull#call with no positional args and policy options' do
+        expect(pull_command)
+          .to receive(:call).with(no_edit: true, no_progress: true).and_return(pull_result)
+        result
+      end
+
+      it 'returns the command stdout as a String' do
+        allow(pull_command).to receive(:call).and_return(command_result("From origin\n * branch HEAD -> FETCH_HEAD\n"))
+        expect(result).to eq("From origin\n * branch HEAD -> FETCH_HEAD\n")
+      end
+    end
+
+    # --- Named remote --------------------------------------------------------
+
+    context 'with an explicit remote name' do
+      subject(:result) { described_instance.pull('upstream') }
+
+      it 'passes the remote as the first positional argument' do
+        expect(pull_command)
+          .to receive(:call).with('upstream', no_edit: true, no_progress: true).and_return(pull_result)
+        result
+      end
+    end
+
+    # --- Remote and branch ---------------------------------------------------
+
+    context 'with a remote and a branch' do
+      subject(:result) { described_instance.pull('origin', 'main') }
+
+      it 'passes remote and branch as positional arguments' do
+        expect(pull_command)
+          .to receive(:call).with('origin', 'main', no_edit: true, no_progress: true).and_return(pull_result)
+        result
+      end
+    end
+
+    # --- Branch without remote -----------------------------------------------
+
+    context 'when branch is specified without a remote' do
+      it 'raises ArgumentError before calling the command' do
+        expect(pull_command).not_to receive(:call)
+        expect { described_instance.pull(nil, 'main') }
+          .to raise_error(ArgumentError, /You must specify a remote if a branch is specified/)
+      end
+    end
+
+    # --- :allow_unrelated_histories option -----------------------------------
+
+    context 'with allow_unrelated_histories: true' do
+      subject(:result) { described_instance.pull('origin', 'main', allow_unrelated_histories: true) }
+
+      it 'forwards the option to the command' do
+        expect(pull_command)
+          .to receive(:call)
+          .with('origin', 'main', no_edit: true, no_progress: true, allow_unrelated_histories: true)
+          .and_return(pull_result)
+        result
+      end
+    end
+
+    # --- Option whitelisting -------------------------------------------------
+
+    context 'with an unknown option key' do
+      it 'raises ArgumentError before calling the command' do
+        expect(pull_command).not_to receive(:call)
+        expect { described_instance.pull('origin', nil, unknown_opt: true) }
+          .to raise_error(ArgumentError, /unknown_opt/)
+      end
+    end
+  end
 end

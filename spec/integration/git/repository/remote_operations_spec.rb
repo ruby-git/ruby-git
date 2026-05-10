@@ -61,4 +61,33 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #pull — basic invocations
+  # ---------------------------------------------------------------------------
+
+  describe '#pull' do
+    it 'returns a String' do
+      result = described_instance.pull('origin', 'main')
+      expect(result).to be_a(String)
+    end
+
+    it 'succeeds when the local branch is already up to date' do
+      expect { described_instance.pull('origin', 'main') }.not_to raise_error
+    end
+
+    it 'raises ArgumentError when a branch is given without a remote' do
+      expect { described_instance.pull(nil, 'main') }
+        .to raise_error(ArgumentError, /You must specify a remote if a branch is specified/)
+    end
+
+    it 'raises Git::FailedError when the remote does not exist' do
+      expect { described_instance.pull('nonexistent-remote', 'main') }.to raise_error(Git::FailedError)
+    end
+
+    it 'raises ArgumentError before calling git when an unknown option is given' do
+      expect { described_instance.pull('origin', 'main', unknown_opt: true) }
+        .to raise_error(ArgumentError, /unknown_opt/)
+    end
+  end
 end

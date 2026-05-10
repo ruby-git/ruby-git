@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/fetch'
+require 'git/commands/pull'
 require 'git/repository/shared_private'
 
 module Git
@@ -130,6 +131,71 @@ module Git
         positionals = [*([remote] if remote), *refspecs]
 
         Git::Commands::Fetch.new(@execution_context).call(*positionals, **opts, merge: true).stdout
+      end
+
+      # Option keys accepted by {#pull}
+      #
+      # Derived from the 4.x `PULL_OPTION_MAP` in `Git::Lib`.
+      #
+      # @return [Array<Symbol>]
+      #
+      # @api private
+      #
+      PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
+      private_constant :PULL_ALLOWED_OPTS
+
+      # Incorporate changes from a remote repository into the current branch
+      #
+      # Fetches from the given remote and merges into the current branch. In its
+      # default mode, `git pull` is shorthand for `git fetch` followed by
+      # `git merge FETCH_HEAD`. The merge editor is suppressed (`--no-edit`) and
+      # progress output is silenced (`--no-progress`) by default.
+      #
+      # @example Pull from the default remote and branch
+      #   repo.pull
+      #
+      # @example Pull from a named remote
+      #   repo.pull('upstream')
+      #
+      # @example Pull a specific branch from a remote
+      #   repo.pull('origin', 'main')
+      #
+      # @example Pull allowing unrelated histories
+      #   repo.pull('origin', 'main', allow_unrelated_histories: true)
+      #
+      # @overload pull(remote = nil, branch = nil, opts = {})
+      #
+      #   @param remote [String, nil] the remote name or URL to pull from
+      #
+      #     When nil, git uses the tracking remote for the current branch.
+      #
+      #   @param branch [String, nil] the remote branch name to pull
+      #
+      #     When nil, git uses the tracking branch for the current branch.
+      #     A branch may not be specified without also specifying a remote.
+      #
+      #   @param opts [Hash] options for the pull command
+      #
+      #   @option opts [Boolean, nil] :allow_unrelated_histories (nil) allow merging
+      #     histories that do not share a common ancestor
+      #     (`--allow-unrelated-histories`)
+      #
+      #   @return [String] the stdout from the pull command
+      #
+      #   @raise [ArgumentError] when a branch is given without a remote, or when
+      #     unsupported option keys are provided
+      #
+      #   @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def pull(remote = nil, branch = nil, opts = {})
+        raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
+
+        SharedPrivate.assert_valid_opts!(PULL_ALLOWED_OPTS, **opts)
+        positional_args = [remote, branch].compact
+        Git::Commands::Pull
+          .new(@execution_context)
+          .call(*positional_args, no_edit: true, no_progress: true, **opts)
+          .stdout
       end
 
       # Helpers private to the `RemoteOperations` topic module
