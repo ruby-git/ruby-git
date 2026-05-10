@@ -187,4 +187,25 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #remove_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#remove_remote' do
+    it 'removes the named remote' do
+      described_instance.remove_remote('origin')
+      expect(repo.remotes.map(&:name)).not_to include('origin')
+    end
+
+    it 'returns a Git::CommandLineResult' do
+      result = described_instance.remove_remote('origin')
+      expect(result).to be_a(Git::CommandLineResult)
+    end
+
+    it 'raises Git::FailedError when the remote does not exist' do
+      expect { described_instance.remove_remote('nonexistent') }
+        .to raise_error(Git::FailedError)
+    end
+  end
 end
