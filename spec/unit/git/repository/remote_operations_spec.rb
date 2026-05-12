@@ -108,16 +108,12 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
-    # Known bug: when :ref is supplied without an explicit remote, the refspec is
-    # promoted to the :repository operand slot, causing git to treat it as a remote
-    # name/URL. This will be fixed in issue #1291.
     context 'with :ref and no remote (Hash form)' do
       subject(:result) { described_instance.fetch(ref: 'refs/heads/main') }
 
-      it 'passes the refspec as the repository positional (pre-#1291 behaviour)' do
-        expect(fetch_command)
-          .to receive(:call).with('refs/heads/main', merge: true).and_return(fetch_result)
-        result
+      it 'raises ArgumentError instead of promoting the refspec to the :repository slot' do
+        expect(Git::Commands::Fetch).not_to receive(:new)
+        expect { result }.to raise_error(ArgumentError, /:ref requires an explicit remote/)
       end
     end
 
