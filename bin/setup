@@ -1,13 +1,158 @@
 #!/usr/bin/env bash
+#
+# Bootstrap the ruby-git development environment.
+#
+# This script:
+#   * verifies that the required Ruby and git versions are installed
+#   * installs Ruby gem dependencies via Bundler
+#   * installs the optional Node.js tooling used for the Conventional Commit
+#     commit-msg hook (Husky + commitlint)
+#   * verifies the toolchain by listing the available rake tasks
+#
+# Run this from the project root after cloning the repository.
+
 set -euo pipefail
 IFS=$'\n\t'
-set -vx
 
-bundle install
+GEMSPEC="git.gemspec"
 
-if [ -x "$(command -v npm)" ]; then
-  npm install
-else
-  echo "npm is not installed"
-  echo "Install npm then re-run this script to enable the conventional commit git hook."
+red()   { printf '\033[31m%s\033[0m\n' "$*" >&2; }
+green() { printf '\033[32m%s\033[0m\n' "$*"; }
+warn()  { printf '\033[33m%s\033[0m\n' "$*" >&2; }
+info()  { printf '%s\n' "$*"; }
+
+# Compare two dotted version strings. Returns 0 (true) if $1 >= $2.
+version_ge() {
+  # Use sort -V to get the lower of the two; if it equals $2, then $1 >= $2.
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+}
+
+# Extract the minimum Ruby version from required_ruby_version in the gemspec
+# (e.g., `spec.required_ruby_version = '>= 3.2.0'`). The gemspec is the
+# authoritative source; bin/setup must not duplicate it.
+required_ruby_version() {
+  local v
+  v=$(sed -n "s/^[[:space:]]*spec\.required_ruby_version[[:space:]]*=[[:space:]]*['\"]>=[[:space:]]*\([0-9.]*\)['\"].*/\1/p" "${GEMSPEC}")
+  if [ -z "${v}" ]; then
+    red "ERROR: could not parse required_ruby_version from ${GEMSPEC}."
+    red "       Expected a line like: spec.required_ruby_version = '>= X.Y.Z'"
+    exit 1
+  fi
+  printf '%s' "${v}"
+}
+
+# Extract the minimum git version from the gemspec requirements line
+# (e.g., `spec.requirements = ['git 2.28.0 or greater']`). The gemspec is the
+# authoritative source; bin/setup must not duplicate it.
+required_git_version() {
+  local v
+  v=$(sed -n "s/.*git[[:space:]]\([0-9.][0-9.]*\)[[:space:]]or[[:space:]]greater.*/\1/p" "${GEMSPEC}")
+  if [ -z "${v}" ]; then
+    red "ERROR: could not parse the required git version from ${GEMSPEC}."
+    red "       Expected a line like: spec.requirements = ['git X.Y.Z or greater']"
+    exit 1
+  fi
+  printf '%s' "${v}"
+}
+
+check_ruby() {
+  local required="$1"
+  if ! command -v ruby >/dev/null 2>&1; then
+    red "ERROR: ruby is not installed or not on PATH."
+    red "       ruby-git requires Ruby >= ${required}."
+    red "       See CONTRIBUTING.md → Local development setup for installation guidance."
+    exit 1
+  fi
+
+  local ruby_version
+  ruby_version=$(ruby -e 'print RUBY_VERSION')
+  if ! version_ge "${ruby_version}" "${required}"; then
+    red "ERROR: Ruby ${ruby_version} is too old."
+    red "       ruby-git requires Ruby >= ${required} (per ${GEMSPEC})."
+    red "       Use rbenv, asdf, chruby, or rvm to install a supported version."
+    exit 1
+  fi
+  green "✓ Ruby ${ruby_version} (>= ${required})"
+}
+
+check_git() {
+  local required="$1"
+  if ! command -v git >/dev/null 2>&1; then
+    red "ERROR: git is not installed or not on PATH."
+    red "       ruby-git requires git >= ${required}."
+    exit 1
+  fi
+
+  local git_version
+  # `git --version` prints e.g. "git version 2.43.0" or "git version 2.43.0.windows.1".
+  git_version=$(git --version | awk '{print $3}' | cut -d. -f1-3)
+  if ! version_ge "${git_version}" "${required}"; then
+    red "ERROR: git ${git_version} is too old."
+    red "       ruby-git requires git >= ${required} (per ${GEMSPEC})."
+    exit 1
+  fi
+  green "✓ git ${git_version} (>= ${required})"
+}
+
+check_bundler() {
+  if ! command -v bundle >/dev/null 2>&1; then
+    red "ERROR: bundler is not installed."
+    red "       Install it with: gem install bundler"
+    exit 1
+  fi
+  # `bundle --version` prints either "Bundler version X.Y.Z" or just "X.Y.Z"
+  # depending on the bundler release; handle both.
+  local bundler_version
+  bundler_version=$(bundle --version | awk '{print $NF}')
+  green "✓ bundler ${bundler_version}"
+}
+
+install_gems() {
+  info ""
+  info "Installing Ruby gem dependencies (bundle install)..."
+  bundle install
+}
+
+install_npm_tooling() {
+  info ""
+  if command -v npm >/dev/null 2>&1; then
+    green "✓ npm $(npm --version) found — installing commit-msg hook tooling"
+    npm install
+  else
+    warn "npm is not installed — skipping installation of the Conventional Commit commit-msg hook."
+    warn "Consequence: commit messages will NOT be validated locally before push."
+    warn "             CI will still validate them and fail the build for non-conforming commits."
+    warn "Install Node.js / npm and re-run bin/setup to enable the local hook."
+  fi
+}
+
+verify_toolchain() {
+  info ""
+  info "Verifying the toolchain (bundle exec rake --tasks)..."
+  if ! bundle exec rake --tasks >/dev/null; then
+    red "ERROR: 'bundle exec rake --tasks' failed."
+    red "       The toolchain is not in a working state. Inspect the output above."
+    exit 1
+  fi
+  green "✓ Toolchain verified"
+}
+
+if [ ! -f "${GEMSPEC}" ]; then
+  red "ERROR: ${GEMSPEC} not found. Run bin/setup from the project root."
+  exit 1
 fi
+
+REQUIRED_RUBY_VERSION=$(required_ruby_version)
+REQUIRED_GIT_VERSION=$(required_git_version)
+
+info "Checking prerequisites (minimums read from ${GEMSPEC})..."
+check_ruby "${REQUIRED_RUBY_VERSION}"
+check_git "${REQUIRED_GIT_VERSION}"
+check_bundler
+
+install_gems
+install_npm_tooling
+verify_toolchain
+
+info ""
+green "Setup complete. Run 'bundle exec rake' to execute the full test and lint suite before requesting review."

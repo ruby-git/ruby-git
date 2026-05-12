@@ -8,10 +8,16 @@
 - [Summary](#summary)
 - [How to contribute](#how-to-contribute)
 - [How to report an issue or request a feature](#how-to-report-an-issue-or-request-a-feature)
+- [Local development setup](#local-development-setup)
+  - [Prerequisites](#prerequisites)
+  - [Bootstrap the project](#bootstrap-the-project)
+  - [Verify the toolchain](#verify-the-toolchain)
+  - [Contributor validation policy](#contributor-validation-policy)
 - [How to submit a code or documentation change](#how-to-submit-a-code-or-documentation-change)
   - [Commit your changes to a fork of `ruby-git`](#commit-your-changes-to-a-fork-of-ruby-git)
   - [Create a pull request](#create-a-pull-request)
   - [Get your pull request reviewed](#get-your-pull-request-reviewed)
+  - [Before requesting review](#before-requesting-review)
 - [Branch strategy](#branch-strategy)
 - [AI-assisted contributions](#ai-assisted-contributions)
 - [Design philosophy](#design-philosophy)
@@ -76,6 +82,60 @@ To report an issue or request a feature, please [create a `ruby-git` GitHub
 issue](https://github.com/ruby-git/ruby-git/issues/new). Fill in the template as
 thoroughly as possible to describe the issue or feature request.
 
+## Local development setup
+
+Before submitting a change, set up a working local development environment.
+`bin/setup` automates the bootstrap and fails fast with a clear message when a
+prerequisite is missing.
+
+### Prerequisites
+
+| Tool | Required version | Notes |
+| --- | --- | --- |
+| Ruby | `>= 3.2.0` (matches `required_ruby_version` in [`git.gemspec`](git.gemspec)) | A version manager such as [rbenv](https://github.com/rbenv/rbenv), [asdf](https://asdf-vm.com/), [chruby](https://github.com/postmodern/chruby), or [rvm](https://rvm.io/) is recommended so you can match the project's CI matrix. |
+| Bundler | Any 2.x or 4.x | Install with `gem install bundler`. |
+| git | `>= 2.28.0` (matches `git.gemspec` `requirements`) | Older git versions are not supported and the test suite will not pass against them. |
+| Node.js / npm | Optional | Required only to install the local Conventional Commit `commit-msg` hook (Husky + commitlint). If npm is missing, `bin/setup` will warn and continue — CI will still validate commit messages. |
+
+### Bootstrap the project
+
+From the project root, run:
+
+```shell
+bin/setup
+```
+
+`bin/setup` will:
+
+1. Verify the prerequisites above and exit with a non-zero status if any are
+   missing or out of date.
+2. Run `bundle install` to install Ruby gem dependencies.
+3. Run `npm install` (when npm is available) to install the Conventional Commit
+   `commit-msg` hook used by this project (Husky + commitlint). A separate
+   `pre-commit` hook is also installed that blocks direct commits to the
+   protected branches (`main`, `4.x`).
+4. Verify the toolchain by running `bundle exec rake --tasks`.
+
+### Verify the toolchain
+
+Once `bin/setup` succeeds, confirm the full test and lint suite passes locally:
+
+```shell
+bundle exec rake
+```
+
+This is the same default task that runs in CI and is the canonical way to
+validate a change before requesting review.
+
+### Contributor validation policy
+
+Contributors are expected to run `bundle exec rake` locally and confirm it
+passes before requesting review on a pull request — trivial documentation-only
+fixes (e.g., typo corrections in markdown files) are excepted. "CI passed" is
+not a substitute for local validation; it is a backstop. This applies equally to
+human-authored and AI-assisted contributions — see
+[AI-assisted contributions](#ai-assisted-contributions).
+
 ## How to submit a code or documentation change
 
 There is a three-step process for submitting code or documentation changes:
@@ -114,6 +174,20 @@ At least one approval from a project maintainer is required before your pull req
 can be merged. The maintainer is responsible for ensuring that the pull request meets
 [the project's coding standards](#coding-standards).
 
+### Before requesting review
+
+Before moving a pull request out of draft or requesting a review, confirm:
+
+- [ ] `bundle exec rake` passes locally on your branch (see
+  [Local development setup](#local-development-setup)).
+- [ ] New or changed code has accompanying tests under `spec/`
+  (see [Unit tests](#unit-tests)).
+- [ ] Every commit message follows [Conventional Commits](#commit-message-guidelines).
+- [ ] User-facing changes are documented in `README.md` and/or YARD as appropriate.
+
+These checks mirror what reviewers and CI will look for; running them locally
+first keeps the review cycle short.
+
 ## Branch strategy
 
 This project maintains two active branches:
@@ -139,6 +213,13 @@ AI-assisted contributions are welcome. Please review and apply our [AI
 Policy](AI_POLICY.md) before submitting changes. You are responsible for
 understanding and verifying any AI-assisted work included in PRs and ensuring it
 meets our standards for quality, security, and licensing.
+
+The **human submitter** — not the AI agent — is responsible for ensuring that
+`bundle exec rake` passes locally before requesting review. This is true even
+when the change was authored end-to-end by an agent. "The agent ran the tests"
+and "CI is green" are not substitutes for the submitter running
+[the local validation step](#contributor-validation-policy) themselves; CI is a
+backstop, not a primary validation surface.
 
 ## Design philosophy
 
@@ -684,8 +765,11 @@ Commits standard](https://www.conventionalcommits.org/en/v1.0.0/). Commits not
 adhering to this standard will cause the CI build to fail. PRs will not be merged if
 they include non-conventional commits.
 
-A git pre-commit hook may be installed to validate your conventional commit messages
-before pushing them to GitHub by running `bin/setup` in the project root.
+A git `commit-msg` hook (Husky + commitlint) that validates your Conventional
+Commit messages locally is installed automatically as part of the project
+bootstrap — see [Local development setup](#local-development-setup). The hook
+depends on Node.js and npm; if those are not installed, `bin/setup` will warn
+and skip the hook, and commit-message validation will only run in CI.
 
 #### What to know about Conventional Commits
 
