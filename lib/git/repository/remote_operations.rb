@@ -110,19 +110,18 @@ module Git
       #     from each branch tip (`--depth=N`)
       #
       #   @option opts [String, Array<String>] :ref (nil) one or more refspecs to
-      #     fetch; forwarded as positional arguments after the remote name
+      #     fetch; forwarded as positional arguments after the remote name. An
+      #     explicit `remote` is required when `:ref` is given.
       #
       #   @return [String] the merged stdout from the fetch command
       #
-      #   @raise [ArgumentError] when unsupported option keys are provided
+      #   @raise [ArgumentError] when unsupported option keys are provided or `:ref`
+      #     is supplied without an explicit remote
       #
       #   @raise [Git::FailedError] when git exits with a non-zero status
       #
       def fetch(remote = 'origin', opts = {})
-        if remote.is_a?(Hash)
-          opts = remote
-          remote = nil
-        end
+        remote, opts = Private.resolve_fetch_target(remote, opts)
 
         opts = Private.normalize_fetch_keys(opts)
         SharedPrivate.assert_valid_opts!(FETCH_ALLOWED_OPTS, **opts)
@@ -371,6 +370,33 @@ module Git
       #
       module Private
         module_function
+
+        # Resolve the (remote, opts) pair for {#fetch}, supporting the hash-only form
+        #
+        # `fetch` may be called as `fetch(remote, opts)` or `fetch(opts)`. When a bare
+        # options hash is passed the remote is treated as nil. A `:ref` is only
+        # meaningful with an explicit remote, so requesting one without a remote (it
+        # would otherwise be silently promoted to the remote-name slot) is rejected.
+        #
+        # @param remote [String, Hash, nil] the remote name, or an options hash
+        # @param opts [Hash] the options hash when remote is given positionally
+        #
+        # @return [Array(String, Hash), Array(nil, Hash)] the resolved remote and opts
+        #
+        # @raise [ArgumentError] when :ref is supplied without an explicit remote
+        #
+        # @api private
+        #
+        def resolve_fetch_target(remote, opts)
+          if remote.is_a?(Hash)
+            opts = remote
+            remote = nil
+          end
+
+          raise ArgumentError, ':ref requires an explicit remote' if remote.nil? && opts.key?(:ref)
+
+          [remote, opts]
+        end
 
         # Normalize dash-style option keys to their underscore equivalents
         #
