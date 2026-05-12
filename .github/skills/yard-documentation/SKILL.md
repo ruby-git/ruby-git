@@ -512,9 +512,15 @@ Follow the YARD documentation templates below. Use the **standard template** whe
 method has a single call signature. Use the **overload template** when a method has
 distinct call signatures with different parameters or return types.
 
-**Do NOT mix top-level `@param`/`@return`/`@raise` with `@overload` blocks** — YARD
-silently ignores top-level tags when overloads are present. In both templates
-below, include only the tags that apply to the method.
+When `@overload` blocks are present:
+
+- Keep `@param`, `@option`, and `@return` inside overload blocks only
+- Keep overload-specific `@raise` inside the relevant overload block
+- Keep shared `@raise` at top level only once (do not duplicate inside overloads)
+- Keep non-signature tags (`@note`, `@deprecated`, `@see`, `@api`) at top level
+
+Avoid duplicating the same `@raise` at both top level and overload level. This
+causes conflicting or noisy generated docs.
 
 **Trigger: always use `@overload` when the signature contains `*`, `**`, or `...`**
 
@@ -634,6 +640,21 @@ at the top level:
 def method_name(name, options = {})
 end
 ```
+
+### Overload decision matrix
+
+Use this matrix to decide whether to use `@overload` and where to place tags:
+
+| Method signature or behavior | Documentation form |
+| --- | --- |
+| Single named signature, no `*`/`**`/`...` | Standard template (no `@overload`) |
+| Uses anonymous `*`, `**`, or `...` | `@overload` required |
+| Multiple call shapes (different params and/or return types) | One `@overload` per shape |
+| Shared errors across all call shapes | Top-level `@raise` once |
+| Error only for specific call shape | `@raise` only in that overload |
+
+For overload docs, keep `@param`/`@option`/`@return` in overload blocks. Use
+top-level `@raise` only for errors that apply to every overload.
 
 ### Documenting anonymous splats with `@overload`
 
