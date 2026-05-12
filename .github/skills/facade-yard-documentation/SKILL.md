@@ -254,6 +254,20 @@ See the general
 [YARD Documentation — Documenting anonymous splats with `@overload`](../yard-documentation/SKILL.md#documenting-anonymous-splats-with-overload)
 for the underlying rule.
 
+Decision rules for facade methods:
+
+- Use `@overload` when the method uses anonymous `*`, `**`, or `...`
+- Use `@overload` when call shapes differ meaningfully (different params and/or
+  return contracts)
+- Skip `@overload` only when a single named signature fully describes the API
+
+When using `@overload`, place tags as follows:
+
+- Put `@param`, `@option`, and `@return` in overload blocks
+- Put overload-specific `@raise` only in the relevant overload block
+- Put shared `@raise` once at top level
+- Do not duplicate the same `@raise` at both levels
+
 ### Return type rules
 
 The `@return` annotation must reflect the **public contract** of the facade
@@ -289,6 +303,12 @@ documented contract is to expose raw results.
   [ArgumentError]` line that names the constraint.
 - Do **not** enumerate specific git failure causes (no "if the branch doesn't
   exist", no "if the working tree is dirty"). Use the generic form.
+
+Scope `@raise` tags by call-shape:
+
+- Shared across all overloads: keep as one top-level `@raise`
+- Specific to one or more overloads: keep only in those overload blocks
+- Never duplicate identical `@raise` tags at both top level and overload level
 
 ### Cross-referencing the implementation
 
@@ -369,6 +389,9 @@ For each facade module file, run through these checks in order:
 - [ ] `@return` matches the actual return value type per [Return type
   rules](#return-type-rules)
 - [ ] `@raise` tags follow [`@raise` rules](#raise-rules)
+- [ ] shared `@raise` tags are top-level; overload-specific `@raise` tags are in
+  the relevant overload only
+- [ ] no duplicate identical `@raise` appears at both top level and overload level
 - [ ] `@see` tags appear at the end and are limited to non-obvious cross-links
 
 ### 3. Formatting consistency
