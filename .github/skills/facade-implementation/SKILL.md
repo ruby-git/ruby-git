@@ -137,11 +137,15 @@ This skill supports three modes. Determine which mode applies before starting:
    selection](REFERENCE.md#topic-module-selection):
 
    - Prefer extending an existing module under `lib/git/repository/`.
-   - Create a new module only when there are at least 3 related facade methods that
-     do not fit any existing module.
-   - New module names are inspired by (not slavishly following) the categories at
-     <https://git-scm.com/docs> (Working tree, Branching, History, Sharing,
-     Patching, Inspection, Configuration, etc.).
+   - Create a new module only when the topic is recognizable — preferably
+     matching a git-scm category (<https://git-scm.com/docs>) — and the methods
+     would be awkward to place in any existing module. The deciding factor is
+     topic fit, not method count; a single method that is genuinely distinct
+     can start its own module.
+   - New module names follow the two-tier convention: gerund (`Staging`, `Logging`,
+     `Diffing`) for single-action modules; `Noun + Operations` (`RemoteOperations`,
+     `ObjectOperations`) for mixed-bag modules. See
+     [REFERENCE.md §Naming a new topic module](REFERENCE.md#naming-a-new-topic-module).
 
 3. **For the facade method**, repeat steps 3a–3e:
 
