@@ -45,7 +45,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
   - [Placing an overridable policy default after caller options](#placing-an-overridable-policy-default-after-caller-options)
   - [Skipping option whitelisting on opaque opts hashes](#skipping-option-whitelisting-on-opaque-opts-hashes)
   - [Mixing facade and command responsibilities](#mixing-facade-and-command-responsibilities)
-  - [Adding a new topic module for a single method](#adding-a-new-topic-module-for-a-single-method)
+  - [Adding a topic module whose methods fit an existing one](#adding-a-topic-module-whose-methods-fit-an-existing-one)
 
 ## Files to generate
 
@@ -72,18 +72,18 @@ an existing one would do.
 
 ### Decision rules for adding a new module
 
-Create a new topic module only when **all** of the following are true:
+Create a new topic module only when **both** of the following are true:
 
-1. At least three related facade methods share the topic and do not fit any
-   existing module. "Related methods" may be **already implemented**, **planned
-   in the migration tracker** (`redesign/3_architecture_implementation.md`), or
-   **identified by grepping `Git::Base` / `Git::Lib`** for siblings that will be
-   extracted to the same topic.
-2. The topic is recognizable to a reader familiar with git — preferably matching
+1. The topic is recognizable to a reader familiar with git — preferably matching
    one of the categories at <https://git-scm.com/docs> (Working tree, Branching,
    History, Sharing, Patching, Inspection, Configuration, Plumbing).
-3. The methods would be awkward to place in any existing module without diluting
+2. The methods would be awkward to place in any existing module without diluting
    that module's topic.
+
+There is no fixed method-count requirement. A module that starts with one or two
+methods is fine when the topic is genuinely distinct; the question is always
+*fit*, not count. Default to extending an existing module whenever the new method
+plausibly fits there.
 
 #### One-at-a-time extraction from `Git::Base` / `Git::Lib`
 
@@ -92,11 +92,11 @@ When migrating a single method without a planned batch:
 1. Before deciding placement, scan `Git::Base` and `Git::Lib` for sibling methods
    on the same git topic (e.g. when extracting `branches_all`, also look for
    `branch`, `branch_current`, `branch_delete`, `current_branch_state`).
-2. If ≥3 siblings (including the current one) will plausibly land in the same
-   topic, create the new module on this first extraction so subsequent
-   extractions have a home.
+2. If those siblings form a coherent topic that does not fit any existing module,
+   create the new module on this first extraction so subsequent extractions have
+   a home.
 3. Otherwise place the method in the closest existing module. Revisit module
-   organization when a third sibling joins; promote the cluster to its own
+   organization later if a distinct topic emerges; promote the cluster to its own
    module in a single `refactor(repository):` commit at that point.
 
 For a one-off method that does not fit any existing module and does not justify a
@@ -105,12 +105,22 @@ organization when more methods join it.
 
 ### Naming a new topic module
 
-- Use a single PascalCase word matching the file name (`Branching` →
+Topic modules follow a **two-tier** convention (documented in
+[redesign/3_architecture_implementation.md §Facade module naming convention](../../../redesign/3_architecture_implementation.md#facade-module-naming-convention)):
+
+- **Gerund** (`verb-ing`) when a single action word clearly names the whole module:
+  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`.
+- **Noun + `Operations`** when the module groups a mixed bag of methods by git
+  concept rather than a single action: `RemoteOperations`, `ObjectOperations`,
+  `StatusOperations`, `WorktreeOperations`.
+
+Additional rules:
+
+- Use PascalCase; the file name is the snake_case equivalent (`Branching` →
   `branching.rb`).
-- Prefer the gerund/noun form used by the git documentation categories
-  (`Branching`, not `Branches`; `Inspection`, not `Inspect`).
-- Avoid names that overlap with existing classes (`Branch`, `Diff`, `Log`) — those
-  belong to result classes, not topic modules.
+- Do **not** use plain nouns that clash with existing public or domain-object class names such
+  as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc. Those names
+  belong to existing domain/query/value objects, not topic modules.
 - Do not use the `*Info` or `*Result` suffix — reserved for parsed result structs.
 
 ## Designing a facade method
@@ -545,13 +555,20 @@ end
 
 ### Naming rules
 
-Modules under `lib/git/repository/` use **bare nouns**, never role-suffixes like
-`*Helpers` or `*Utils`:
+**Topic modules** (those `include`d in `Git::Repository`) follow the two-tier
+naming convention in [Naming a new topic module](#naming-a-new-topic-module):
+gerund for single-action modules, `Noun + Operations` for mixed-bag modules.
+
+**Internal helper modules** (those **not** `include`d) use descriptive nouns,
+never generic role-suffixes like `*Helpers`, `*Utils`, or `*Support`. The
+`*Operations` suffix is a topic-module convention — it is not a generic role
+suffix and is not prohibited here:
 
 | Module                                             | Distinguished by                                   |
 | -------------------------------------------------- | -------------------------------------------------- |
-| `Git::Repository::Staging`                         | `include`d, `@api public`                          |
-| `Git::Repository::Branching`                       | `include`d, `@api public`                          |
+| `Git::Repository::Staging`                         | `include`d, `@api public` (gerund topic module)    |
+| `Git::Repository::Branching`                       | `include`d, `@api public` (gerund topic module)    |
+| `Git::Repository::RemoteOperations`                | `include`d, `@api public` (`*Operations` topic module) |
 | `Git::Repository::SharedPrivate`                   | not `include`d, `@api private`, `private_constant` |
 | `Git::Repository::SharedPrivate::OptionValidation` | nested under `SharedPrivate`, `@api private`       |
 
@@ -812,8 +829,12 @@ arguments or parse output. If a facade method calls `command(...)` directly
 (rather than `Git::Commands::*.new(...).call(...)`) it is bypassing the command
 layer; refactor by introducing or extending the appropriate command class first.
 
-### Adding a new topic module for a single method
+### Adding a topic module whose methods fit an existing one
 
-A topic module is justified by ≥3 related methods. Single-method modules
-fragment the API surface; place the method in the closest existing module and
-revisit when more methods join.
+A topic module is not justified when its method(s) would fit naturally in an
+existing module. Before creating a new module, scan existing modules for a
+plausible home. The absence of a method-count threshold is not an invitation
+to fragment the API — place the method in the closest existing module unless
+the topic is genuinely distinct and the method would be awkward there. See
+[Decision rules for adding a new module](#decision-rules-for-adding-a-new-module)
+for the full two-criteria test.

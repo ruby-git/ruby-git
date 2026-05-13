@@ -6,8 +6,12 @@ functional and passes its test suite after each major step. This approach minimi
 risk and allows for a gradual, controlled migration to the new architecture.
 
 - [Progress Tracker](#progress-tracker)
+  - [Facade Modules Completed](#facade-modules-completed)
+    - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Workflow](#workflow)
+    - [Delivery iterations](#delivery-iterations)
+    - [Domain Object Migration Checklist](#domain-object-migration-checklist)
+    - [Per-iteration quality gates](#per-iteration-quality-gates)
     - [Reference Files](#reference-files)
 - [Phase 1: Foundation and Scaffolding](#phase-1-foundation-and-scaffolding)
 - [Phase 2: The Strangler Fig Pattern - Migrating Commands](#phase-2-the-strangler-fig-pattern---migrating-commands)
@@ -23,78 +27,114 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- |
 | Phase 1 | ✅ Complete | Foundation and scaffolding |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface (Tasks 1 ✅, 2 ✅, 3 ✅, 4 ✅ staging module, 4 ✅ committing module, 4 ✅ branching module) |
-| Phase 4 | ⏳ Not Started | Final cleanup and release |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Domain Object Migration Checklist](#domain-object-migration-checklist) |
+| Phase 4 | 🔲 Not Started | Final cleanup and release |
+
+### Facade Modules Completed
+
+| Module | File | Included in `Git::Repository` | `Git::Base` delegates |
+| ------ | ---- | ------------------------------ | --------------------- |
+| `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset` |
+| `Git::Repository::Committing` | `lib/git/repository/committing.rb` | ✅ | `commit`, `commit_all`, `write_tree`; `commit_tree` and `write_and_commit_tree` wrap the SHA result in `Git::Object::Commit.new(self, ...)` |
+| `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?` |
+| `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
+| `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote` |
+
+#### Facade module naming convention
+
+New topic modules follow a **two-tier** convention:
+
+- **Gerund** (verb-ing) when a single action word clearly names the whole module:
+  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`.
+- **Noun + `Operations`** when the module is a mixed bag of methods grouped by git
+  concept rather than a single action: `RemoteOperations`, `ObjectOperations`,
+  `StatusOperations`, `WorktreeOperations`.
+
+Do **not** use plain nouns that clash with existing domain-object class names
+such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3, Task 4 (continued): Add more `Git::Repository` facade modules**
+**Phase 3 — Domain object migration (interleaved A→B iterations)**
 
-Phase 3, Tasks 1–4 (staging module) are complete:
-- Tasks 1 and 2: `Git::ExecutionContext` has a `binary_path:` constructor argument;
-  all subclasses accept and store it; `command_line_capturing` /
-  `command_line_streaming` use `@binary_path` instead of reading
-  `Git::Base.config.binary_path` at definition time; `Git.run_git_version` uses
-  `Git::Commands::Version` via `Git::ExecutionContext::Global` — the `Open3` stopgap
-  is gone.
-- Task 3: `Git::Base` has a per-instance `binary_path` attribute (mirrors `git_ssh`);
-  `Git::ExecutionContext::Repository.from_base` forwards it, completing the builder
-  chain so every context can carry an instance-specific binary path end-to-end.
-- Task 4 (staging): `Git::Repository` has a proper `initialize(execution_context:)`
-  constructor and includes `Git::Repository::Staging` (first facade module):
-  - `lib/git/repository/staging.rb` — `add` and `reset` facade methods
-  - `lib/git/repository.rb` — includes `Git::Repository::Staging`
-  - `spec/unit/git/repository/staging_spec.rb` — delegation unit tests
-- Task 4 (committing): `Git::Repository::Committing` facade module added.
-- Task 4 (branching): `Git::Repository::Branching` facade module added:
-  - `lib/git/repository/branching.rb` — `checkout`, `checkout_file`,
-    `checkout_index`, and `current_branch` facade methods
-  - `lib/git/repository.rb` — includes `Git::Repository::Branching`
-  - `spec/unit/git/repository/branching_spec.rb` — delegation unit tests
-  - `spec/integration/git/repository/branching_spec.rb` — integration tests
-  - `Git::Base` delegates all four methods to `facade_repository`
+The next major piece of Phase 3 is migrating all domain objects
+(`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
+`Git::Log`, `Git::Diff`, `Git::DiffStats`, `Git::Status`,
+`Git::Branch`, `Git::Remote`, `Git::Branches`, `Git::Worktree`, `Git::Worktrees`)
+away from `Git::Base` and onto `Git::Repository`.
 
-The next step is to expand the facade by adding more modules. Continue with one
-module at a time following the same TDD pattern established by the staging module:
+The full scope is tracked in **[issue #1299](https://github.com/ruby-git/ruby-git/issues/1299)**.
 
-1. **Choose the next topic group** from `Git::Base` public methods (e.g., `commit`,
-   `push`, `pull`, `fetch`, `branch`, `tag`, `status`, etc.).
+Each iteration follows an interleaved A→B pattern (some iterations only need a small A step — e.g., iter 8 just adds the `branches` factory because the broader Branching extension was already delivered in iter 7):
 
-2. **Implement** (one module at a time, TDD):
-   - Create `lib/git/repository/<topic>.rb` with a module
-     `Git::Repository::<Topic>` containing one-line facade methods, e.g.:
-     ```ruby
-     def commit(message, **)
-       Git::Commands::Commit.new(@execution_context).call(message: message, **).stdout
-     end
-     ```
-   - `include` the module in `lib/git/repository.rb`
-   - Each method should delegate entirely to the corresponding `Git::Commands::*`
-     class; no logic beyond argument forwarding belongs in the facade
+1. Add any missing `Git::Repository` facade methods needed by the target domain
+   object(s) (**Phase A** work — extend or create a topic module). Skip if all
+   required facade methods already exist. For methods that already exist on
+   `Git::Base`, update the existing wrapper to call
+   `facade_repository.<method>(...)` (preserving the legacy signature and return
+   type). Do **not** add new `Git::Base` wrappers for methods that have no
+   existing `Git::Base` counterpart — those are new API surface introduced only
+   on `Git::Repository`.
+2. Migrate the domain object to accept `Git::Repository` via constructor
+   polymorphism and replace `@base.lib.*` calls with facade calls (**Phase B** work).
+3. Open one PR per iteration.
 
-3. **TDD**: For each facade module:
-   - `spec/unit/git/repository/<topic>_spec.rb` — stub the command class and assert
-     the facade delegates correctly; do NOT exercise real git commands in unit specs
+After all 9 domain-object iterations, **verify facade coverage**: every public `Git::Base` method must have a corresponding `Git::Repository` facade before the cleanup PR can run. Methods such as `clean`, `rm`, `tags`/`add_tag`, `fsck`, `show`, `remotes`, and remote URL/branch helpers are not covered by the 9 domain-object iterations and will need dedicated facade PRs first. Once coverage is complete, open a final **cleanup PR** (`feat/cleanup-base-object-bridge`): C0 — update `Git::Base` domain-object factory methods (`branch`, `branches`, `gcommit`/`gblob`/`gtree`, `log`, `diff`, `object`, `remote`, `status`, `tag`, etc.) to delegate to `facade_repository` rather than constructing domain objects directly with `self`; C1 — update top-level entry-point methods (`Git.open`, `Git.clone`, `Git.init`, `Git.bare`) to construct and return `Git::Repository` instead of `Git::Base`; C2 — remove `base_object` bridge from `Git::ExecutionContext::Repository`; C3 — remove `is_a?(Git::Base)` polymorphism guards.
 
-4. **Verify**:
-   - `bundle exec rspec` — all RSpec tests pass
-   - `bundle exec rake test` — legacy TestUnit tests pass
-   - `bundle exec rubocop` — no lint errors
-   - `bundle exec yard` — no yardoc errors
+#### Delivery iterations
 
-5. **Update Checklist**: Update the Phase 3 progress tracker in this document after
-   each module. When all `Git::Base` public methods are covered, update the "Next
-   Task" heading to describe Task 5 (update `Git.open` / `Git.bare` etc. to return
-   `Git::Repository` instead of `Git::Base`).
+| Iter | PR scope | A work | B work |
+| ---- | -------- | ------ | ------ |
+| 1 | `feat/migrate-stash-to-repository` | New `Git::Repository::Stashing` (`stash_save`, `stash_apply`, `stash_clear`, `stashes_all`) | Migrate `Git::Stash` (B2) + `Git::Stashes` (B3) |
+| 2 | `feat/migrate-diff-path-status-to-repository` | Create new `Git::Repository::Diffing` module; add `diff_path_status` factory (returns `Git::DiffPathStatus`) and `diff_name_status` alias — no separate raw-data provider needed because `Git::DiffPathStatus` will be redesigned to receive pre-fetched data during B work | Migrate `Git::DiffPathStatus` (B1): redesign to accept either a pre-fetched name-status hash (new form used by `diff_path_status`) or the old `(base, from, to, path)` constructor shape — constructor polymorphism is required because `Git::Diff#path_status_provider` still calls the old form and `Git::Diff` is not migrated until iter 5; `diff_path_status` fetches the hash and passes it to the new form |
+| 3 | `feat/migrate-objects-to-repository` | New `Git::Repository::ObjectOperations` (raw query methods only: `cat_file_*`, `rev_parse`, `tag_sha`, `grep_objects` [⚠️ renamed from `grep` to avoid signature conflict with `Git::Base#grep(string, path_limiter, opts)`], `archive`, `ls_tree`, `full_tree`, `tree_depth`, `name_rev`; domain-object factories `gcommit`/`gblob`/`gtree`/`tag`/`object` are **deferred to iter 5 B work** because they need to pass `self` to domain objects and `@execution_context.base_object` is `nil` for `Git::Repository` instances constructed directly rather than via `Git::Base#facade_repository`) | Migrate `Git::Object::*` (B4); `AbstractObject#log` and `#diff` call `Git::Log.new(@base, ...)` / `Git::Diff.new(@base, ...)` internally — since `Git::Log` and `Git::Diff` are not migrated until iters 4–5, these two methods are **left unchanged** in iter 3; `#log` is updated in iter 4 and `#diff` is updated in iter 5 once those classes no longer depend on a `lib` reference |
+| 4 | `feat/migrate-log-to-repository` | New `Git::Repository::Logging` module with `full_log_commits` + `log` factory | Migrate `Git::Log` (B5) |
+| 5 | `feat/migrate-diff-to-repository` | Extend `Git::Repository::Diffing` with `diff_full` (raw diff text) + `diff_numstat` (raw numstat hash — distinct name avoids conflicting with the `diff_stats` factory, which is added in B work when `Git::DiffStats` is migrated); extend `Git::Repository::ObjectOperations` with deferred `gcommit`/`gblob`/`gtree`/`tag`/`object` domain-object factories (deferred from iter 3; now safe to pass `self` because both `Git::Log` and `Git::Diff` are migrated in this iteration — factories belong in `ObjectOperations` because that is the object-access module introduced in iter 3, not in `Diffing`) | Migrate `Git::Diff` (B6) + `Git::DiffStats`; add `diff` factory returning `Git::Diff` and `diff_stats` factory returning `Git::DiffStats` |
+| 6 | `feat/migrate-status-to-repository` | New `Git::Repository::StatusOperations` (`ls_files`, `diff_files`, `diff_index`, `no_commits?` [renamed from `empty?` — `Git::Lib#empty?` means "repository has no commits"; the bare name `empty?` is ambiguous as a public facade method], `untracked_files`, `status` factory → `Git::Status`); new `Git::Repository::Configuration` module (`config`, `config_get`, `config_set`) **must also be introduced in this iteration** — `Git::Status#ignore_case?` calls `@base.config('core.ignoreCase')` and since `Git::Status` will hold a `Git::Repository` reference after migration, `config` must be available on `Git::Repository` before the status migration can complete; `config` still does not belong inside `StatusOperations` | Migrate `Git::Status` |
+| 7 | `feat/migrate-branch-remote-to-repository` | Extend `Git::Repository::Branching` (`branch_delete`, `branch_new`, `branch_contains`, `branches_all`, `update_ref`, `branch` factory → `Git::Branch`) + extend `Git::Repository::RemoteOperations` (`config_remote`, `remote` factory — note: `remove_remote` already merged) | Migrate `Git::Branch` + `Git::Remote` together (B7 — circular dependency); also update `RemoteOperations#add_remote` to construct `Git::Remote` with `self` instead of `@execution_context.base_object` |
+| 8 | `feat/migrate-branches-to-repository` | Add `branches` factory → `Git::Branches` (the Branching module extension was completed in iter 7) | Migrate `Git::Branches` (B8); ⚠️ prereq: iter 7 — `Git::Branches` constructs `Git::Branch` instances, so `Git::Branch` must accept `Git::Repository` before `Git::Branches` is migrated |
+| 9 | `feat/migrate-worktree-to-repository` | New `Git::Repository::WorktreeOperations` (`worktrees_all`, `worktree_add`, `worktree_remove`, `worktree_prune`, `worktree` factory → `Git::Worktree`, `worktrees` factory → `Git::Worktrees`) | Migrate `Git::Worktree` + `Git::Worktrees` (prereq: iter 5 for `gcommit` factory — deferred from iter 3) |
+
+#### Domain Object Migration Checklist
+
+| Domain Object | Status | Iteration |
+| ------------- | ------ | --------- |
+| `Git::Stash` | ⏳ Not started | iter 1 |
+| `Git::Stashes` | ⏳ Not started | iter 1 |
+| `Git::DiffPathStatus` | ⏳ Not started | iter 2 |
+| `Git::Object::*` | ⏳ Not started | iter 3 |
+| `Git::Log` | ⏳ Not started | iter 4 |
+| `Git::Diff` | ⏳ Not started | iter 5 |
+| `Git::DiffStats` | ⏳ Not started | iter 5 |
+| `Git::Status` | ⏳ Not started | iter 6 |
+| `Git::Branch` | ⏳ Not started | iter 7 |
+| `Git::Remote` | ⏳ Not started | iter 7 |
+| `Git::Branches` | ⏳ Not started | iter 8 |
+| `Git::Worktree` | ⏳ Not started | iter 9 |
+| `Git::Worktrees` | ⏳ Not started | iter 9 |
+
+> **Note**: Several internal/private nested classes also hold `@base` and must be migrated alongside their parent domain object in the same iteration:
+>
+> - iter 5: `Git::Diff::DiffFile`, `Git::Diff::FullDiffParser` (migrated with `Git::Diff`)
+> - iter 6: `Git::Status::StatusFile`, `Git::Status::StatusFileFactory` (migrated with `Git::Status`)
+>
+> They are not separate iterations but each parent's B work must include them.
+
+#### Per-iteration quality gates
+
+For each iteration, run these in order before opening the PR:
+
+1. Run the focused spec(s) for any new or extended module (e.g., `bundle exec rspec spec/unit/git/repository/stashing_spec.rb` for iter 1; `spec/unit/git/repository/branching_spec.rb` for an extension iteration)
+2. Run the full suite: `bundle exec rake` — covers Test::Unit, RSpec, rubocop, yard, and build
 
 #### Reference Files
 
 - Facade shell: `lib/git/repository.rb`
 - Staging module (pattern reference): `lib/git/repository/staging.rb`
 - Staging spec (pattern reference): `spec/unit/git/repository/staging_spec.rb`
-- Existing public API to replicate: `lib/git/base.rb` public methods
+- RemoteOperations (more complex example): `lib/git/repository/remote_operations.rb`
 - Command classes: `lib/git/commands/`
-- Phase 3 plan: see "Phase 3: Refactoring the Public Interface" section below
+- Full scope: [issue #1299](https://github.com/ruby-git/ruby-git/issues/1299)
 
 ## Phase 1: Foundation and Scaffolding
 
@@ -104,7 +144,7 @@ logic. The gem will be fully functional after this phase.*
 1. **Create New Directory Structure**
 
    - `lib/git/commands/` ✅
-   - `lib/git/repository/` (for the facade modules) - to be populated in Phase 3
+   - `lib/git/repository/` ✅ — populated with 5 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
 
 2. **Eliminate Custom Path Classes**
 
@@ -126,7 +166,7 @@ logic. The gem will be fully functional after this phase.*
      - `Git::ExecutionContext::Global` subclass in `lib/git/execution_context/global.rb` ✅
 
    - `Git::Repository` in `lib/git/repository.rb` ✅
-     - Currently an empty shell, to be populated in Phase 3
+     - Now includes 5 facade modules (see [Facade Modules Completed](#facade-modules-completed))
 
    - `Git::Commands::Arguments` DSL in `lib/git/commands/arguments.rb` ✅
      - Provides declarative argument definition for command classes
@@ -1007,65 +1047,25 @@ order: Basic Snapshotting → Branching & Merging → etc.
 ***Goal**: Switch the public-facing classes to use the new architecture directly,
 breaking the final ties to the old implementation.*
 
-1. **Add `binary_path:` to `Git::ExecutionContext`**:
+> **Status**: Task 1 below is complete; Task 2 is in progress — see the [Next Task](#next-task) section above for the current plan.
 
-   Add a `binary_path:` constructor argument to `Git::ExecutionContext` (base class)
-   so that all context subclasses can target an arbitrary git binary rather than
-   always reading `Git::Base.config.binary_path` at runtime.
+1. **Add `binary_path:` to `Git::ExecutionContext`** ✅
 
-   - `Git::ExecutionContext#initialize` gains `binary_path: Git::Base.config.binary_path`
-   - `command_line_capturing` and `command_line_streaming` use `@binary_path` instead
-     of `Git::Base.config.binary_path`
-   - `Git::ExecutionContext::Repository.from_base` and `.from_hash` forward
-     `binary_path:` when constructing the context
-   - Once in place, remove the `Open3` stopgap in `Git.run_git_version` and replace
-     it with `Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout`
+   `Git::ExecutionContext` gained `binary_path:` in its constructor; all subclasses
+   forward it. `command_line_capturing`/`command_line_streaming` use `@binary_path`.
+   `Git::ExecutionContext::Repository.from_base` forwards `binary_path:`. The `Open3`
+   stopgap in `Git.run_git_version` was replaced with
+   `Git::Commands::Version.new(Git::ExecutionContext::Global.new(...)).call`.
 
-2. **Refactor Factory Methods**:
+2. **Implement the Facade** ⏳
 
-   - Modify the factory methods in the top-level `Git` module (`.open`, `.clone`,
-     etc.).
-
-   - These methods will now be responsible for creating an instance of the
-     appropriate `Git::ExecutionContext` subclass and injecting it:
-     - `Git.init` and `Git.clone`: Use `Git::ExecutionContext::Global` to run the command, then
-       open the repository
-     - `Git.open` and `Git.bare`: Create `Git::ExecutionContext::Repository` and inject it into
-       `Git::Repository`
-
-    The return value of these factories will now be a `Git::Repository` instance, not
-    a `Git::Base` instance.
-
-2. **Implement the Facade**:
-
-   - Populate the `Git::Repository` class with the simple, one-line facade methods
-     that delegate to the `Command` objects. For example:
-
-        ```ruby
-        def commit(msg)
-          Git::Commands::Commit.new(@execution_context, msg).run
-        end
-        ```
-
-   - Organize these facade methods into modules as planned
-     (`lib/git/repository/branching.rb`, etc.) and include them in the main
-     `Git::Repository` class.
-
-3. **Deprecate and Alias `Git::Base`**:
-
-   - To maintain a degree of backward compatibility through the transition, make
-     `Git::Base` a deprecated constant that points to `Git::Repository`.
-
-        ```ruby
-        Git::Base = ActiveSupport::Deprecation::DeprecatedConstantProxy.new(
-          'Git::Base',
-          'Git::Repository',
-          Git::Deprecation
-        )
-        ```
-
-   - This ensures that any user code checking `is_a?(Git::Base)` will not immediately
-     break.
+   `Git::Repository` now includes 5 facade modules (see
+   [Facade Modules Completed](#facade-modules-completed)). `Git::Base` wraps the
+   corresponding methods via `facade_repository`. The domain-object migration
+   iterations (iters 1–9) add further facade methods, but full `Git::Base`
+   coverage requires additional facade PRs for methods not touched by those
+   iterations (e.g. `clean`, `rm`, `tags`/`add_tag`, `fsck`, `show`, `remotes`,
+   remote URL/branch helpers) before the cleanup PR can run.
 
 ## Phase 4: Final Cleanup and Release Preparation
 
@@ -1076,7 +1076,7 @@ release.*
 
    - Delete the `Git::Lib` class entirely.
 
-   - Delete the `Git::Base` class file and remove the deprecation proxy.
+   - Delete the `Git::Base` class file.
 
    - Remove any other dead code that was part of the old implementation.
 
