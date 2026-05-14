@@ -104,4 +104,49 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
   end
+
+  describe '#cat_file_commit' do
+    context 'with HEAD' do
+      subject(:result) { described_instance.cat_file_commit('HEAD') }
+
+      it 'returns a Hash' do
+        expect(result).to be_a(Hash)
+      end
+
+      it 'sets sha to the requested object name' do
+        expect(result['sha']).to eq('HEAD')
+      end
+
+      it 'includes tree, parent, author, committer, and message keys' do
+        expect(result).to include('tree', 'parent', 'author', 'committer', 'message')
+      end
+
+      it 'sets parent to an Array' do
+        expect(result['parent']).to be_a(Array)
+      end
+
+      it 'sets message with a trailing newline' do
+        expect(result['message']).to end_with("\n")
+      end
+
+      it 'sets message to the commit message used when the commit was created' do
+        expect(result['message']).to eq("Initial commit\n")
+      end
+    end
+
+    context 'when called with a commit SHA' do
+      it 'sets sha to the given SHA string' do
+        sha = repo.lib.rev_parse('HEAD')
+        result = described_instance.cat_file_commit(sha)
+        expect(result['sha']).to eq(sha)
+      end
+    end
+
+    context 'when the object does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.cat_file_commit('0000000000000000000000000000000000000000') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
 end
