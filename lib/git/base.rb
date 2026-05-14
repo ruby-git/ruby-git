@@ -1002,25 +1002,36 @@ module Git
       Git::DiffStats.new(self, objectish, obj2, opts[:path_limiter])
     end
 
-    # Returns a Git::Diff::PathStatus object for accessing the name-status report.
+    # Returns the file path status between two commits
     #
-    # @param objectish [String] The first commit or object to compare. Defaults to 'HEAD'.
-    # @param obj2 [String, nil] The second commit or object to compare.
-    # @param opts [Hash] Options to filter the diff.
-    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter Limit status to specified path(s).
-    # @option opts [String, Pathname, Array<String, Pathname>] :path (deprecated) Legacy alias for :path_limiter.
-    # @return [Git::DiffPathStatus]
+    # @example Get all changed files between HEAD and the previous commit
+    #   repo.diff_path_status.to_h #=> { "README.md" => "M", "lib/foo.rb" => "A" }
+    #
+    # @param objectish [String] the first commit or object to compare; defaults to
+    #   `'HEAD'`
+    #
+    # @param obj2 [String, nil] the second commit or object to compare
+    #
+    # @param opts [Hash] options to filter the diff
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter (nil)
+    #   limit the status report to specified path(s)
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>] :path (nil)
+    #   deprecated; use `:path_limiter` instead
+    #
+    # @return [Git::DiffPathStatus] the name-status report for the comparison
+    #
+    # @raise [ArgumentError] when `objectish` or `obj2` starts with `"-"`
+    #
+    # @raise [Git::FailedError] when git exits with a non-zero exit status
+    #
+    # @see Git::Repository::Diffing#diff_path_status
+    #
     def diff_path_status(objectish = 'HEAD', obj2 = nil, opts = {})
-      path_limiter = if opts.key?(:path_limiter)
-                       opts[:path_limiter]
-                     elsif opts.key?(:path)
-                       Git::Deprecation.warn(
-                         'Git::Base#diff_path_status :path option is deprecated. Use :path_limiter instead.'
-                       )
-                       opts[:path]
-                     end
-
-      Git::DiffPathStatus.new(self, objectish, obj2, path_limiter)
+      # Slice to only the supported keys for backward compatibility with 4.x,
+      # which silently ignored any extra keys in opts.
+      facade_repository.diff_path_status(objectish, obj2, opts.slice(:path_limiter, :path))
     end
 
     # Provided for backwards compatibility

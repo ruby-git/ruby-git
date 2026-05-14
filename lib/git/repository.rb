@@ -3,6 +3,7 @@
 require 'git/execution_context/repository'
 require 'git/repository/branching'
 require 'git/repository/committing'
+require 'git/repository/diffing'
 require 'git/repository/merging'
 require 'git/repository/remote_operations'
 require 'git/repository/staging'
@@ -36,6 +37,7 @@ module Git
   class Repository
     include Git::Repository::Branching
     include Git::Repository::Committing
+    include Git::Repository::Diffing
     include Git::Repository::Merging
     include Git::Repository::RemoteOperations
     include Git::Repository::Staging
