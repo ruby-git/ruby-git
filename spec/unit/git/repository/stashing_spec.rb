@@ -91,4 +91,23 @@ RSpec.describe Git::Repository::Stashing do
       end
     end
   end
+
+  describe '#stash_clear' do
+    let(:clear_command) { instance_double(Git::Commands::Stash::Clear) }
+    let(:clear_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Stash::Clear).to receive(:new).with(execution_context).and_return(clear_command)
+    end
+
+    it 'calls Git::Commands::Stash::Clear with the execution context' do
+      expect(clear_command).to receive(:call).with(no_args).and_return(clear_result)
+      described_instance.stash_clear
+    end
+
+    it 'returns the stdout string' do
+      allow(clear_command).to receive(:call).and_return(clear_result)
+      expect(described_instance.stash_clear).to eq('')
+    end
+  end
 end
