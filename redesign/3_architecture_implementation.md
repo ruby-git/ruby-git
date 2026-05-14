@@ -39,6 +39,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?` |
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
 | `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote` |
+| `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
 
 #### Facade module naming convention
 
@@ -55,9 +56,11 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3 — Domain object migration (interleaved A→B iterations)**
+**Phase 3 — Iteration 2: `Git::DiffPathStatus` (A+B)**
 
-The next major piece of Phase 3 is migrating all domain objects
+Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Proceed to iter 2.
+
+The full scope is still migrating all domain objects
 (`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
 `Git::Log`, `Git::Diff`, `Git::DiffStats`, `Git::Status`,
 `Git::Branch`, `Git::Remote`, `Git::Branches`, `Git::Worktree`, `Git::Worktrees`)
@@ -99,8 +102,8 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 
 | Domain Object | Status | Iteration |
 | ------------- | ------ | --------- |
-| `Git::Stash` | ⏳ Not started | iter 1 |
-| `Git::Stashes` | ⏳ Not started | iter 1 |
+| `Git::Stash` | ✅ Complete | iter 1 |
+| `Git::Stashes` | ✅ Complete | iter 1 |
 | `Git::DiffPathStatus` | ⏳ Not started | iter 2 |
 | `Git::Object::*` | ⏳ Not started | iter 3 |
 | `Git::Log` | ⏳ Not started | iter 4 |
