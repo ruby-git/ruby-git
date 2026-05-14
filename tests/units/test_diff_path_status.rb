@@ -41,7 +41,7 @@ class TestDiffPathStatus < Test::Unit::TestCase
   end
 
   def test_path_status_path_option_deprecated
-    Git::Deprecation.expects(:warn).with('Git::Base#diff_path_status :path option is deprecated. Use :path_limiter instead.')
+    Git::Deprecation.expects(:warn).with('Git::Repository#diff_path_status :path option is deprecated. Use :path_limiter instead.')
 
     status_hash = @git.diff_path_status('gitsearch1', 'v2.5', path: 'scott/').to_h
     assert(status_hash.key?('scott/newfile'))
