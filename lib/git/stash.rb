@@ -1,13 +1,39 @@
 # frozen_string_literal: true
 
+require 'git/base'
+
 module Git
-  # A stash in a Git repository
+  # Represents a single stash entry in a Git repository
+  #
+  # @example Create a stash and inspect the result
+  #   stash = Git::Stash.new(repo, 'WIP: feature work')
+  #   stash.message  #=> "WIP: feature work"
+  #   stash.saved?   #=> true
+  #
+  # @api public
+  #
   class Stash
     # Initialize a Stash object
     #
-    # @param base [Git::Base] the git repository
+    # When `existing` is `false` (the default), immediately calls {#save} to push
+    # the current working-directory state onto the stash stack.
+    #
+    # @param base [Git::Repository, Git::Base] the git repository
+    #
     # @param message [String] the stash message
-    # @param existing [Boolean] (false) if true, this is an existing stash (don't create)
+    #
+    # @param existing [Boolean] (false) when `true`, wraps an existing stash entry
+    #   without pushing any changes
+    #
+    # @return [void]
+    #
+    # @example Create a new stash entry
+    #   stash = Git::Stash.new(repo, 'WIP: feature work')
+    #   stash.saved?  #=> true
+    #
+    # @example Reference an existing stash without pushing
+    #   stash = Git::Stash.new(repo, 'WIP: feature work', existing: true)
+    #   stash.saved?  #=> nil
     #
     def initialize(base, message, existing: false)
       @base = base
@@ -15,18 +41,67 @@ module Git
       save unless existing
     end
 
+    # Saves the current working-directory state to the stash stack
+    #
+    # @return [Boolean] `true` if changes were stashed, `false` if there were no
+    #   local changes to save
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    # @example Save changes to the stash stack
+    #   stash = Git::Stash.new(repo, 'WIP', existing: true)
+    #   stash.save  #=> true
+    #
     def save
-      @saved = @base.lib.stash_save(@message)
+      @saved = stash_repository.stash_save(@message)
     end
 
+    # Returns whether the stash was saved successfully
+    #
+    # @return [Boolean, nil] `true` if changes were stashed, `false` if there were no
+    #   local changes, `nil` if {#save} has not been called (e.g. `existing: true`)
+    #
+    # @example Check if changes were stashed
+    #   stash = Git::Stash.new(repo, 'WIP: feature work')
+    #   stash.saved?  #=> true
+    #
     def saved?
       @saved
     end
 
+    # Returns the stash description
+    #
+    # @return [String] the stash message
+    #
+    # @example Read the stash message
+    #   stash = Git::Stash.new(repo, 'WIP: feature work', existing: true)
+    #   stash.message  #=> "WIP: feature work"
+    #
     attr_reader :message
 
+    # Returns the stash description as a string
+    #
+    # @return [String] the stash message
+    #
+    # @example Convert stash to string
+    #   stash = Git::Stash.new(repo, 'WIP: feature work', existing: true)
+    #   stash.to_s  #=> "WIP: feature work"
+    #
     def to_s
       message
+    end
+
+    private
+
+    # Returns the facade interface for stash operations
+    #
+    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+    # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
+    #
+    # @return [Git::Repository]
+    #
+    def stash_repository
+      @base.is_a?(Git::Base) ? @base.facade_repository : @base
     end
   end
 end
