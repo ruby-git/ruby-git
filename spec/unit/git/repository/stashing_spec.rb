@@ -4,13 +4,13 @@ require 'spec_helper'
 require 'git/repository'
 require 'git/repository/stashing'
 
-# Integration-level coverage for Git::Repository::Stashing#stash_save is provided
-# by the underlying command integration test:
-#   spec/integration/git/commands/stash/push_spec.rb
-# The facade delegates to a single Git::Commands::Stash::Push class with no
-# multi-command orchestration. The unit spec below covers the facade's own
-# behavior (Boolean return-value derivation from stdout); the command integration
-# spec covers end-to-end git execution.
+# Integration-level coverage for Git::Repository::Stashing facade methods is
+# provided by the underlying command integration tests:
+#   spec/integration/git/commands/stash/push_spec.rb   (stash_save)
+#   spec/integration/git/commands/stash/apply_spec.rb  (stash_apply)
+# Each facade method delegates to a single Git::Commands::Stash::* class with no
+# multi-command orchestration. The unit specs below cover each facade method's own
+# behavior; the command integration specs cover end-to-end git execution.
 
 RSpec.describe Git::Repository::Stashing do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
@@ -48,6 +48,46 @@ RSpec.describe Git::Repository::Stashing do
       it 'returns false' do
         allow(push_command).to receive(:call).with(message: 'empty').and_return(push_result)
         expect(described_instance.stash_save('empty')).to be(false)
+      end
+    end
+  end
+
+  describe '#stash_apply' do
+    let(:apply_command) { instance_double(Git::Commands::Stash::Apply) }
+    let(:apply_result) { command_result('HEAD is now at abc1234 Initial commit') }
+
+    before do
+      allow(Git::Commands::Stash::Apply).to receive(:new).with(execution_context).and_return(apply_command)
+    end
+
+    context 'when no id is given' do
+      it 'calls Git::Commands::Stash::Apply#call with nil' do
+        expect(apply_command).to receive(:call).with(nil).and_return(apply_result)
+        described_instance.stash_apply
+      end
+
+      it 'returns the stdout string' do
+        allow(apply_command).to receive(:call).with(nil).and_return(apply_result)
+        expect(described_instance.stash_apply).to eq('HEAD is now at abc1234 Initial commit')
+      end
+    end
+
+    context 'when a string stash reference is given' do
+      it 'calls Git::Commands::Stash::Apply#call with the reference' do
+        expect(apply_command).to receive(:call).with('stash@{1}').and_return(apply_result)
+        described_instance.stash_apply('stash@{1}')
+      end
+
+      it 'returns the stdout string' do
+        allow(apply_command).to receive(:call).with('stash@{1}').and_return(apply_result)
+        expect(described_instance.stash_apply('stash@{1}')).to eq('HEAD is now at abc1234 Initial commit')
+      end
+    end
+
+    context 'when an integer index is given' do
+      it 'calls Git::Commands::Stash::Apply#call with the integer' do
+        expect(apply_command).to receive(:call).with(2).and_return(apply_result)
+        described_instance.stash_apply(2)
       end
     end
   end
