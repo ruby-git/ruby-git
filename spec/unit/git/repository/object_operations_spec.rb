@@ -152,6 +152,63 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#cat_file_type' do
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new)
+        .with(execution_context)
+        .and_return(raw_command)
+    end
+
+    context 'with a commit reference' do
+      subject(:result) { described_instance.cat_file_type('HEAD') }
+
+      let(:type_result) { command_result("commit\n") }
+
+      it 'constructs Git::Commands::CatFile::Raw with the execution context' do
+        expect(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+        allow(raw_command).to receive(:call).and_return(type_result)
+        result
+      end
+
+      it 'calls Git::Commands::CatFile::Raw#call with the object and t: true' do
+        expect(raw_command).to receive(:call).with('HEAD', t: true).and_return(type_result)
+        result
+      end
+
+      it 'returns the type as a String with no trailing newline' do
+        allow(raw_command).to receive(:call).with('HEAD', t: true).and_return(type_result)
+        expect(result).to eq('commit')
+      end
+    end
+
+    context 'with a treeish path reference to a blob' do
+      subject(:result) { described_instance.cat_file_type('HEAD:README.md') }
+
+      let(:blob_result) { command_result("blob\n") }
+
+      it 'forwards the treeish reference to Git::Commands::CatFile::Raw#call' do
+        expect(raw_command).to receive(:call).with('HEAD:README.md', t: true).and_return(blob_result)
+        result
+      end
+
+      it 'returns "blob"' do
+        allow(raw_command).to receive(:call).with('HEAD:README.md', t: true).and_return(blob_result)
+        expect(result).to eq('blob')
+      end
+    end
+
+    context 'when object starts with a hyphen' do
+      subject(:result) { described_instance.cat_file_type('--batch') }
+
+      it 'raises ArgumentError before calling the command' do
+        expect(Git::Commands::CatFile::Raw).not_to receive(:new)
+        expect { result }.to raise_error(ArgumentError, "Invalid object: '--batch'")
+      end
+    end
+  end
+
   describe '#cat_file_commit' do
     let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
 
