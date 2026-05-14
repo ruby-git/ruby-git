@@ -5,8 +5,16 @@
 $stdout.sync = true
 $stderr.sync = true
 
+# On JRuby, print a loading-phase marker so that CI logs can distinguish a hang
+# during file loading from a hang during a specific test. Without this, a hang
+# before the first RSpec example produces no output at all.
+warn "[spec_helper] JRuby #{RUBY_VERSION}: beginning spec_helper load" if RUBY_ENGINE == 'jruby'
+
 # Load support files
-Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each do |f|
+  warn "[spec_helper] requiring #{f}" if RUBY_ENGINE == 'jruby'
+  require f
+end
 
 # Configure RSpec
 RSpec.configure do |config|
@@ -135,6 +143,8 @@ if SIMPLECOV_ENABLED
 end
 
 require 'git'
+
+warn '[spec_helper] spec_helper fully loaded' if RUBY_ENGINE == 'jruby'
 
 # Helper to create a mock CommandLineResult for use in specs
 #

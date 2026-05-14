@@ -10,6 +10,10 @@ end
 # Run only unit specs (mocked, fast)
 RSpec::Core::RakeTask.new('spec:unit') do |t|
   t.pattern = 'spec/unit/**/*_spec.rb'
+  # On JRuby, use 'documentation' formatter so each test name is printed before
+  # it runs. When the suite hangs, the last printed line identifies the blocking
+  # test. Mirrors the same diagnostic added to spec:integration in PR #1274.
+  t.rspec_opts = '--format documentation' if RUBY_ENGINE == 'jruby'
 end
 
 # Run only integration specs (real git, slower)
