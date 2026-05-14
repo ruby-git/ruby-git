@@ -54,6 +54,25 @@ module Git
       def stash_apply(id = nil)
         Git::Commands::Stash::Apply.new(@execution_context).call(id).stdout
       end
+
+      # Remove all stash entries
+      #
+      # Removes all entries from the stash list. Use with caution as this
+      # operation cannot be undone.
+      #
+      # @return [String] the output from the git stash clear command
+      #   (typically empty)
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @example Clear all stashes
+      #   repo.stash_clear #=> ""
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      def stash_clear
+        Git::Commands::Stash::Clear.new(@execution_context).call.stdout
+      end
     end
   end
 end
