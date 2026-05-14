@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/stash'
+require 'git/parsers/stash'
 
 module Git
   class Repository
@@ -11,6 +12,34 @@ module Git
     # @api public
     #
     module Stashing
+      # Returns all stash entries as an array of index and message pairs
+      #
+      # Lists all stash entries in the repository ordered from oldest to newest.
+      # The index is a sequential number starting from 0 for the oldest stash. The
+      # message is the stash description with the leading branch prefix (e.g.
+      # `"On main:"` or `"WIP on main:"`) stripped.
+      #
+      # @example List all stashes (oldest first)
+      #   repo.stashes_all #=> [[0, "Fix bug"], [1, "Add feature"]]
+      #
+      # @return [Array<Array(Integer, String)>] array of `[index, message]` pairs
+      #   where index is the sequential position (0 is oldest) and message is the
+      #   stash description with the branch prefix stripped
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      def stashes_all
+        result = Git::Commands::Stash::List.new(@execution_context).call
+        stashes = Git::Parsers::Stash.parse_list(result.stdout)
+        stashes.reverse.each_with_index.map do |info, i|
+          match_data = info.message.match(/^[^:]+:(.*)$/)
+          message = match_data ? match_data[1].strip : info.message
+          [i, message]
+        end
+      end
+
       # Save the current working directory and index state to a new stash
       #
       # @param message [String] the stash message
