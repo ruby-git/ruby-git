@@ -19,42 +19,40 @@ module Git
       # memory buffering — safe for large blobs.
       #
       # @overload cat_file_contents(object)
-      #   Returns the object's raw content as a string.
+      #   Returns the object's raw content as a string
+      #
+      #   @example Get the contents of a blob
+      #     repo.cat_file_contents('HEAD:README.md') # => "This is a README file\n"
       #
       #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
       #
       #   @return [String] the raw content of the object
       #
-      #   @raise [ArgumentError] if `object` starts with a hyphen
-      #
-      #   @raise [Git::FailedError] if the object does not exist or the command fails
-      #
-      #   @example Get the contents of a blob
-      #     repo.cat_file_contents('HEAD:README.md') # => "This is a README file\n"
-      #
       # @overload cat_file_contents(object, &block)
-      #   Streams the object's raw content to a temporary file and yields it.
+      #   Streams the object's raw content to a temporary file and yields it
       #
       #   Git output is written directly to a file on disk without being buffered in
       #   memory first, then the file is rewound and yielded to the block. The return
       #   value is whatever the block returns.
       #
+      #   @example Read a large blob without buffering it in memory
+      #     repo.cat_file_contents('HEAD:large_file.bin') { |f| process(f) }
+      #
       #   @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
       #
-      #   @yield [file] the temporary file containing the streamed content, positioned at the start
+      #   @yield [file] the temporary file containing the streamed content,
+      #     positioned at the start
       #
-      #   @yieldparam file [File] readable `IO` object positioned at the beginning of the content
+      #   @yieldparam file [File] readable `IO` object positioned at the beginning
+      #     of the content
       #
       #   @yieldreturn [Object] the value to return from this method
       #
       #   @return [Object] the value returned by the block
       #
-      #   @raise [ArgumentError] if `object` starts with a hyphen
+      # @raise [ArgumentError] if `object` starts with a hyphen
       #
-      #   @raise [Git::FailedError] if the object does not exist or the command fails
-      #
-      #   @example Read a large blob without buffering it in memory
-      #     repo.cat_file_contents('HEAD:large_file.bin') { |f| process(f) }
+      # @raise [Git::FailedError] if the object does not exist or the command fails
       #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
       #
