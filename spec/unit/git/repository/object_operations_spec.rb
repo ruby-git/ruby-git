@@ -151,4 +151,79 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
   end
+
+  describe '#cat_file_commit' do
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new)
+        .with(execution_context)
+        .and_return(raw_command)
+    end
+
+    context 'with a single-parent commit' do
+      subject(:result) { described_instance.cat_file_commit('HEAD') }
+
+      let(:commit_body) do
+        "tree abc123\nparent def456\nauthor A <a@example.com> 1 +0000\n" \
+          "committer A <a@example.com> 1 +0000\n\nInitial commit\n"
+      end
+      let(:commit_result) { command_result(commit_body) }
+
+      it 'constructs Git::Commands::CatFile::Raw with the execution context' do
+        expect(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+        allow(raw_command).to receive(:call).and_return(commit_result)
+        result
+      end
+
+      it 'calls Git::Commands::CatFile::Raw#call with type commit and the object' do
+        expect(raw_command).to receive(:call).with('commit', 'HEAD').and_return(commit_result)
+        result
+      end
+
+      it 'returns a Hash with the expected commit data' do
+        allow(raw_command).to receive(:call).with('commit', 'HEAD').and_return(commit_result)
+        expect(result).to include(
+          'sha' => 'HEAD',
+          'tree' => 'abc123',
+          'parent' => ['def456'],
+          'author' => 'A <a@example.com> 1 +0000',
+          'committer' => 'A <a@example.com> 1 +0000',
+          'message' => "Initial commit\n"
+        )
+      end
+    end
+
+    context 'with a root commit (no parent lines)' do
+      subject(:result) { described_instance.cat_file_commit('abc123') }
+
+      let(:commit_body) do
+        "tree def456\nauthor A <a@example.com> 1 +0000\n" \
+          "committer A <a@example.com> 1 +0000\n\nRoot commit\n"
+      end
+
+      it 'returns an empty parent array' do
+        allow(raw_command).to receive(:call)
+          .with('commit', 'abc123')
+          .and_return(command_result(commit_body))
+        expect(result).to include('parent' => [])
+      end
+    end
+
+    context 'with a merge commit (multiple parents)' do
+      subject(:result) { described_instance.cat_file_commit('HEAD') }
+
+      let(:commit_body) do
+        "tree abc123\nparent def456\nparent ghi789\nauthor A <a@example.com> 1 +0000\n" \
+          "committer A <a@example.com> 1 +0000\n\nMerge branch 'feature'\n"
+      end
+
+      it 'returns all parent SHAs in the parent array' do
+        allow(raw_command).to receive(:call)
+          .with('commit', 'HEAD')
+          .and_return(command_result(commit_body))
+        expect(result).to include('parent' => %w[def456 ghi789])
+      end
+    end
+  end
 end
