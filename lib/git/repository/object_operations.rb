@@ -95,6 +95,30 @@ module Git
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, s: true).stdout.chomp.to_i
       end
 
+      # Returns the type of a git object
+      #
+      # @example Get the type of a commit reference
+      #   repo.cat_file_type('HEAD') #=> "commit"
+      #
+      # @example Get the type of a blob via treeish path
+      #   repo.cat_file_type('HEAD:README.md') #=> "blob"
+      #
+      # @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
+      #
+      # @return [String] the object type — one of `"blob"`, `"commit"`, `"tag"`, or `"tree"`
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def cat_file_type(object)
+        raise ArgumentError, "Invalid object: '#{object}'" if object&.start_with?('-')
+
+        Git::Commands::CatFile::Raw.new(@execution_context).call(object, t: true).stdout.chomp
+      end
+
       # Returns parsed commit data for the given git object
       #
       # @example Get commit data for HEAD

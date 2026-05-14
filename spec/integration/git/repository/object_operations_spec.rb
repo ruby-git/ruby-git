@@ -105,6 +105,41 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#cat_file_type' do
+    context 'with a commit reference' do
+      it 'returns "commit"' do
+        expect(described_instance.cat_file_type('HEAD')).to eq('commit')
+      end
+    end
+
+    context 'with a tree reference' do
+      it 'returns "tree"' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        expect(described_instance.cat_file_type(tree_sha)).to eq('tree')
+      end
+    end
+
+    context 'with a blob via treeish path' do
+      it 'returns "blob"' do
+        expect(described_instance.cat_file_type('HEAD:README.md')).to eq('blob')
+      end
+    end
+
+    context 'when object starts with a hyphen' do
+      it 'raises ArgumentError without calling git' do
+        expect { described_instance.cat_file_type('--batch') }
+          .to raise_error(ArgumentError, "Invalid object: '--batch'")
+      end
+    end
+
+    context 'when the object does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.cat_file_type('0000000000000000000000000000000000000000') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
+
   describe '#cat_file_commit' do
     context 'with HEAD' do
       subject(:result) { described_instance.cat_file_commit('HEAD') }
