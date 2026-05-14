@@ -5,6 +5,7 @@ require 'git/repository/branching'
 require 'git/repository/committing'
 require 'git/repository/diffing'
 require 'git/repository/merging'
+require 'git/repository/object_operations'
 require 'git/repository/remote_operations'
 require 'git/repository/staging'
 require 'git/repository/stashing'
@@ -39,6 +40,7 @@ module Git
     include Git::Repository::Committing
     include Git::Repository::Diffing
     include Git::Repository::Merging
+    include Git::Repository::ObjectOperations
     include Git::Repository::RemoteOperations
     include Git::Repository::Staging
     include Git::Repository::Stashing
