@@ -3,10 +3,14 @@
 require 'spec_helper'
 
 RSpec.describe Git::Stashes do
-  let(:base) { double('Git::Base') }
-  let(:lib) { double('Git::Lib') }
+  # Git::Stashes accepts either Git::Repository (new form) or Git::Base (legacy).
+  # These specs cover the Git::Repository path; the Git::Base path is exercised by
+  # the legacy integration tests in tests/units/test_stashes.rb.
 
-  # Git::Lib#stashes_all returns stashes in oldest-first order
+  let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
+  let(:repository) { Git::Repository.new(execution_context: execution_context) }
+
+  # Git::Repository#stashes_all returns stashes in oldest-first order
   let(:mocked_stashes_all_result) do
     [
       [0, 'abc1234 Test'],
@@ -15,13 +19,12 @@ RSpec.describe Git::Stashes do
   end
 
   before do
-    allow(base).to receive(:lib).and_return(lib)
-    allow(lib).to receive(:stashes_all).and_return(mocked_stashes_all_result)
+    allow(repository).to receive(:stashes_all).and_return(mocked_stashes_all_result)
   end
 
   describe '#initialize' do
     it 'loads stashes from the repository' do
-      stashes = described_class.new(base)
+      stashes = described_class.new(repository)
       expect(stashes.size).to eq(2)
     end
 
@@ -29,15 +32,15 @@ RSpec.describe Git::Stashes do
       stash_double = double('Stash', saved?: true)
       allow(Git::Stash).to receive(:new).and_return(stash_double)
 
-      described_class.new(base)
+      described_class.new(repository)
 
-      expect(Git::Stash).to have_received(:new).with(base, 'abc1234 Test', existing: true)
-      expect(Git::Stash).to have_received(:new).with(base, 'def5678 Work', existing: true)
+      expect(Git::Stash).to have_received(:new).with(repository, 'abc1234 Test', existing: true)
+      expect(Git::Stash).to have_received(:new).with(repository, 'def5678 Work', existing: true)
     end
   end
 
   describe '#all' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     it 'returns an array of [index, message] pairs' do
       result = stashes.all
@@ -45,7 +48,7 @@ RSpec.describe Git::Stashes do
       expect(result).to eq(mocked_stashes_all_result)
     end
 
-    it 'returns stashes in oldest-first order matching Git::Lib#stashes_all' do
+    it 'returns stashes in oldest-first order matching Git::Repository#stashes_all' do
       result = stashes.all
       # Index 0 should be the oldest stash (first in the reflog)
       # Index 1 should be the newer stash
@@ -53,11 +56,11 @@ RSpec.describe Git::Stashes do
       expect(result[1]).to eq([1, 'def5678 Work'])
     end
 
-    it 'returns fresh data from the repository' do
+    it 'returns fresh data from the repository on each call' do
       stashes
 
       new_data = [[0, 'new stash']]
-      allow(lib).to receive(:stashes_all).and_return(new_data)
+      allow(repository).to receive(:stashes_all).and_return(new_data)
 
       result = stashes.all
       expect(result).to eq(new_data)
@@ -65,7 +68,7 @@ RSpec.describe Git::Stashes do
   end
 
   describe '#each' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     before do
       allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
@@ -94,7 +97,7 @@ RSpec.describe Git::Stashes do
   end
 
   describe '#[]' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     before do
       allow(Git::Stash).to receive(:new).and_wrap_original do |_method, _base, message, **_kwargs|
@@ -117,7 +120,7 @@ RSpec.describe Git::Stashes do
   end
 
   describe '#size' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     before do
       allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
@@ -129,36 +132,36 @@ RSpec.describe Git::Stashes do
   end
 
   describe '#clear' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     before do
       allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
-      allow(lib).to receive(:stash_clear)
+      allow(repository).to receive(:stash_clear)
     end
 
-    it 'clears all stashes' do
+    it 'clears all stashes by calling stash_clear on the repository' do
       stashes.clear
-      expect(lib).to have_received(:stash_clear)
+      expect(repository).to have_received(:stash_clear)
       expect(stashes.size).to eq(0)
     end
   end
 
   describe '#apply' do
-    subject(:stashes) { described_class.new(base) }
+    subject(:stashes) { described_class.new(repository) }
 
     before do
       allow(Git::Stash).to receive(:new).and_return(double('Stash', saved?: true))
-      allow(lib).to receive(:stash_apply)
+      allow(repository).to receive(:stash_apply)
     end
 
     it 'applies the stash at the given index' do
       stashes.apply(1)
-      expect(lib).to have_received(:stash_apply).with(1)
+      expect(repository).to have_received(:stash_apply).with(1)
     end
 
     it 'applies the latest stash when no index given' do
       stashes.apply
-      expect(lib).to have_received(:stash_apply).with(nil)
+      expect(repository).to have_received(:stash_apply).with(nil)
     end
   end
 end
