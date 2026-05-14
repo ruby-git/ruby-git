@@ -22,6 +22,94 @@ RSpec.describe Git::Repository::Stashing do
     allow(Git::Commands::Stash::Push).to receive(:new).with(execution_context).and_return(push_command)
   end
 
+  describe '#stashes_all' do
+    let(:list_command) { instance_double(Git::Commands::Stash::List) }
+
+    before do
+      allow(Git::Commands::Stash::List).to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    context 'when there are no stash entries' do
+      let(:list_result) { command_result('') }
+      let(:stash_infos) { [] }
+
+      before do
+        allow(list_command).to receive(:call).with(no_args).and_return(list_result)
+        allow(Git::Parsers::Stash).to receive(:parse_list).with('').and_return(stash_infos)
+      end
+
+      it 'returns an empty array' do
+        expect(described_instance.stashes_all).to eq([])
+      end
+    end
+
+    context 'when there are stash entries with branch-prefixed messages' do
+      let(:list_result) { command_result('fixture') }
+      let(:stash_info_older) { instance_double(Git::StashInfo, message: 'On main: Fix bug') }
+      let(:stash_info_newer) { instance_double(Git::StashInfo, message: 'On main: Add feature') }
+      # parse_list returns newest-first; reversed to oldest-first
+      let(:stash_infos) { [stash_info_newer, stash_info_older] }
+
+      before do
+        allow(list_command).to receive(:call).with(no_args).and_return(list_result)
+        allow(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(stash_infos)
+      end
+
+      it 'constructs Git::Commands::Stash::List with the execution context' do
+        expect(Git::Commands::Stash::List).to receive(:new).with(execution_context).and_return(list_command)
+        allow(list_command).to receive(:call).and_return(list_result)
+        described_instance.stashes_all
+      end
+
+      it 'calls Git::Commands::Stash::List#call with no arguments' do
+        expect(list_command).to receive(:call).with(no_args).and_return(list_result)
+        described_instance.stashes_all
+      end
+
+      it 'passes the command stdout to Git::Parsers::Stash.parse_list' do
+        expect(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(stash_infos)
+        described_instance.stashes_all
+      end
+
+      it 'returns stash entries in oldest-first order with sequential indices' do
+        expect(described_instance.stashes_all).to eq([[0, 'Fix bug'], [1, 'Add feature']])
+      end
+
+      it 'strips the branch prefix from the message' do
+        result = described_instance.stashes_all
+        expect(result.map(&:last)).to eq(['Fix bug', 'Add feature'])
+      end
+    end
+
+    context 'when a stash entry has no branch prefix (custom message)' do
+      let(:list_result) { command_result('fixture') }
+      let(:stash_info) { instance_double(Git::StashInfo, message: 'custom message') }
+
+      before do
+        allow(list_command).to receive(:call).and_return(list_result)
+        allow(Git::Parsers::Stash).to receive(:parse_list).and_return([stash_info])
+      end
+
+      it 'returns the message unchanged' do
+        expect(described_instance.stashes_all).to eq([[0, 'custom message']])
+      end
+    end
+
+    context 'when a stash entry has a message with an internal colon (e.g. "saving: note")' do
+      let(:list_result) { command_result('fixture') }
+      let(:stash_info) { instance_double(Git::StashInfo, message: 'On main: saving: note') }
+
+      before do
+        allow(list_command).to receive(:call).and_return(list_result)
+        allow(Git::Parsers::Stash).to receive(:parse_list).and_return([stash_info])
+      end
+
+      it 'strips only the first prefix, keeping subsequent colons in the message' do
+        expect(described_instance.stashes_all).to eq([[0, 'saving: note']])
+      end
+    end
+  end
+
   describe '#stash_save' do
     context 'when there are local changes to save' do
       let(:push_result) { command_result('Saved working directory and index state On main: WIP: feature work') }
