@@ -6,6 +6,7 @@ require 'git/repository/committing'
 require 'git/repository/merging'
 require 'git/repository/remote_operations'
 require 'git/repository/staging'
+require 'git/repository/stashing'
 
 module Git
   # The main public interface for interacting with a Git repository
@@ -38,6 +39,7 @@ module Git
     include Git::Repository::Merging
     include Git::Repository::RemoteOperations
     include Git::Repository::Staging
+    include Git::Repository::Stashing
 
     # @return [Git::ExecutionContext::Repository] the execution context used to run
     #   git commands for this repository
