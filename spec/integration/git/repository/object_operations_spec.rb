@@ -287,6 +287,134 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#archive' do
+    context 'with no file argument (temp file)' do
+      it 'returns a non-nil String path to a written file' do
+        result = described_instance.archive('HEAD')
+        expect(result).to be_a(String)
+        expect(File.size(result)).to be_positive
+      ensure
+        File.delete(result) if result && File.exist?(result)
+      end
+    end
+
+    context 'with an explicit output file' do
+      let(:tmpfile) do
+        t = Tempfile.new('archive_test')
+        t.close # Release the handle so File.rename can atomically replace this path on all platforms
+        t
+      end
+
+      after { tmpfile.close! }
+
+      context 'with a commit treeish and a zip format' do
+        it 'returns the given file path' do
+          result = described_instance.archive('HEAD', tmpfile.path, format: 'zip')
+          expect(result).to eq(tmpfile.path)
+        end
+
+        it 'writes a non-empty file' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'zip')
+          expect(File.size(tmpfile.path)).to be_positive
+        end
+      end
+
+      context 'with a tar format' do
+        it 'writes a non-empty archive file' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'tar')
+          expect(File.size(tmpfile.path)).to be_positive
+        end
+      end
+
+      context 'with a tgz format' do
+        it 'writes a gzip-compressed archive file' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'tgz')
+          expect(File.size(tmpfile.path)).to be_positive
+          # Verify the file is a valid gzip stream
+          Zlib::GzipReader.open(tmpfile.path, &:read)
+        end
+      end
+
+      context 'with a prefix option' do
+        it 'writes a non-empty archive file' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'tar', prefix: 'myproject/')
+          expect(File.size(tmpfile.path)).to be_positive
+        end
+      end
+
+      context 'with add_gzip: true' do
+        it 'writes a gzip-compressed archive file' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'tar', add_gzip: true)
+          expect(File.size(tmpfile.path)).to be_positive
+          Zlib::GzipReader.open(tmpfile.path, &:read)
+        end
+      end
+
+      context 'with an unknown option' do
+        it 'raises ArgumentError without calling git' do
+          expect { described_instance.archive('HEAD', tmpfile.path, bad_opt: true) }
+            .to raise_error(ArgumentError)
+        end
+      end
+
+      context 'when the destination already exists with specific permissions' do
+        before { skip 'POSIX file modes are not supported on Windows' if Gem.win_platform? }
+        before { File.chmod(0o640, tmpfile.path) }
+
+        it 'preserves the existing file mode on the written archive' do
+          described_instance.archive('HEAD', tmpfile.path, format: 'zip')
+          expect(File.stat(tmpfile.path).mode & 0o777).to eq(0o640)
+        end
+      end
+
+      context 'when the archive command fails' do
+        it 'leaves the existing destination file intact' do
+          File.write(tmpfile.path, 'original content')
+          expect { described_instance.archive('invalid-sha-does-not-exist', tmpfile.path) }
+            .to raise_error(Git::FailedError)
+          expect(File.read(tmpfile.path)).to eq('original content')
+        end
+      end
+
+      context 'when dest is a symlink to an existing non-directory file' do
+        let(:link_target) { Tempfile.new('archive_target').tap(&:close) }
+        let(:link_path) do
+          File.join(File.dirname(tmpfile.path), "archive_symlink_#{Process.pid}")
+        end
+
+        before do
+          File.symlink(link_target.path, link_path)
+        rescue NotImplementedError, SystemCallError
+          skip 'Symlinks are not supported or not permitted on this platform'
+        end
+
+        after do
+          File.unlink(link_path) if File.exist?(link_path) || File.symlink?(link_path)
+          link_target.close!
+        end
+
+        it 'replaces the symlink with a regular archive file' do
+          described_instance.archive('HEAD', link_path, format: 'zip')
+          expect(File.symlink?(link_path)).to be(false)
+          expect(File.size(link_path)).to be_positive
+        end
+
+        it 'does not modify the symlink target' do
+          target_size_before = File.size(link_target.path)
+          described_instance.archive('HEAD', link_path, format: 'zip')
+          expect(File.size(link_target.path)).to eq(target_size_before)
+        end
+      end
+    end
+
+    context 'with a directory path as file' do
+      it 'raises ArgumentError without creating an archive file' do
+        expect { described_instance.archive('HEAD', Dir.tmpdir) }
+          .to raise_error(ArgumentError, /is a directory/)
+      end
+    end
+  end
+
   describe '#grep' do
     before do
       write_file('src/foo.rb', "# TODO: fix this\nsome other line\n")

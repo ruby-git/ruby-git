@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+require 'git/commands/archive'
 require 'git/commands/cat_file/raw'
 require 'git/commands/grep'
 require 'git/commands/rev_parse'
 require 'git/repository/shared_private'
 require 'tempfile'
+require 'zlib'
 
 module Git
   class Repository
@@ -305,8 +308,103 @@ module Git
         Private.process_grep_result(result)
       end
 
-      # Private parsing helpers for {#cat_file_commit}, {#cat_file_tag}, and
-      # {#grep}
+      # Option keys accepted by {#archive}
+      ARCHIVE_ALLOWED_OPTS = %i[prefix remote path format add_gzip].freeze
+      private_constant :ARCHIVE_ALLOWED_OPTS
+
+      # Create an archive of the repository tree and write it to a file
+      #
+      # Writes the archive content to a file and returns the file path. The
+      # default format is `zip`. Pass `format: 'tar'` for an uncompressed tar
+      # archive, or `format: 'tgz'` for a gzip-compressed tar archive
+      # (equivalent to `format: 'tar'` with `add_gzip: true`).
+      #
+      # When no `file` path is given, a temporary file is created and its path
+      # is returned.
+      #
+      # **File replacement behavior when `file` is given:**
+      #
+      # The archive is first written to a staging file in the same directory as
+      # `file`. This means write permission is required on the parent directory
+      # of `file`, not just on `file` itself. Once the archive is fully written,
+      # the staging file atomically replaces `file` via rename.
+      #
+      # If `file` already exists, only its numeric permission bits are applied to
+      # the new archive; ownership, ACLs, and extended attributes are not
+      # transferred. If `file` does not exist, the archive receives the standard
+      # file creation mode (`0666 & ~umask`). On Windows, `File.chmod` has no
+      # effect, so the archive always receives the default creation mode
+      # regardless of whether `file` already exists.
+      #
+      # If `file` is a symlink that does not point to a directory, the symlink
+      # itself is replaced by the new archive file rather than writing through
+      # the link to its target. A symlink that points to a directory is treated
+      # as a directory and rejected with `ArgumentError`.
+      #
+      # @example Archive HEAD as a zip file
+      #   repo.archive('HEAD', '/tmp/release.zip') #=> "/tmp/release.zip"
+      #
+      # @example Archive a tag as a tar file
+      #   repo.archive('v1.0', '/tmp/release.tar', format: 'tar') #=> "/tmp/release.tar"
+      #
+      # @example Archive with a path prefix applied to every entry
+      #   repo.archive('HEAD', '/tmp/out.tar', format: 'tar', prefix: 'myproject/')
+      #   #=> "/tmp/out.tar"
+      #
+      # @example Archive a subdirectory only
+      #   repo.archive('HEAD', '/tmp/src.tar', format: 'tar', path: 'src/')
+      #   #=> "/tmp/src.tar"
+      #
+      # @param treeish [String] tree-ish to archive — commit SHA, tag, branch
+      #   name, or tree SHA
+      #
+      # @param file [String, nil] (nil) destination file path; when `nil`, a
+      #   unique temporary file is created and its path is returned
+      #
+      # @param opts [Hash] archive options
+      #
+      # @option opts [String] :format ('zip') archive format — `'tar'`, `'zip'`,
+      #   or `'tgz'`; `'tgz'` is internally converted to `'tar'` with gzip
+      #   post-processing
+      #
+      # @option opts [String] :prefix (nil) prefix prepended to every filename
+      #   in the archive; typically ends with `/`
+      #
+      # @option opts [String] :path (nil) path within the tree to include in the
+      #   archive; when given, only files under that path are archived
+      #
+      # @option opts [String] :remote (nil) retrieve the archive from a remote
+      #   repository rather than the local one
+      #
+      # @option opts [Boolean, nil] :add_gzip (nil) apply gzip compression after
+      #   writing the archive; set automatically when `format: 'tgz'` is given
+      #
+      # @return [String] path to the written archive file
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if `file` is an existing directory
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-archive git-archive documentation
+      #
+      def archive(treeish, file = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(ARCHIVE_ALLOWED_OPTS, **opts)
+        raise ArgumentError, "#{file.inspect} is a directory" if file && File.directory?(file)
+
+        tmp = Private.write_archive_tmp(@execution_context, treeish, opts, dest_dir: Private.staging_dir_for(file))
+        return tmp unless file
+
+        Private.atomic_replace(tmp, file)
+        file
+      rescue StandardError
+        FileUtils.rm_f(tmp) if tmp
+        raise
+      end
+
+      # Private helpers for {#cat_file_commit}, {#cat_file_tag}, {#grep},
+      # and {#archive}
       #
       # @api private
       #
@@ -364,6 +462,175 @@ module Git
           end
         end
 
+        # Resolve the staging directory for a git archive temp file
+        #
+        # Always returns `Dir.tmpdir` when `file` is nil, or the parent
+        # directory of `file` otherwise. Staging the temp file in the same
+        # directory as the destination keeps both paths on the same filesystem
+        # so that {#atomic_replace} can use an atomic rename that
+        # requires no extra disk space.
+        #
+        # @param file [String, nil] the explicit destination path, or nil
+        #
+        # @return [String] directory path to pass to `Tempfile.create`
+        #
+        # @api private
+        #
+        def staging_dir_for(file)
+          return Dir.tmpdir unless file
+
+          File.dirname(File.expand_path(file))
+        end
+
+        # Write a git archive to a fresh temporary file and return its path
+        #
+        # Always writes to a new temporary file so that on error the caller's
+        # destination file is never truncated. Format and gzip post-processing
+        # are determined from `opts` via {#parse_archive_format_options}.
+        #
+        # @param execution_context [Git::ExecutionContext] for the git command
+        # @param treeish [String] tree-ish passed to `git archive`
+        # @param opts [Hash] caller-supplied options (read-only)
+        # @param dest_dir [String] directory for the staging temp file; use
+        #   {#staging_dir_for} to select the optimal directory for the destination
+        #
+        # @return [String] path to the populated temporary file
+        #
+        # @api private
+        #
+        def write_archive_tmp(execution_context, treeish, opts, dest_dir: Dir.tmpdir)
+          format, gzip = parse_archive_format_options(opts)
+          tmp_file = create_archive_tempfile(execution_context, treeish, opts, format, dest_dir)
+          apply_gzip(tmp_file.path) if gzip
+          tmp_file.path
+        rescue StandardError
+          tmp_file.close unless tmp_file.nil? || tmp_file.closed?
+          FileUtils.rm_f(tmp_file.path) if tmp_file
+          raise
+        end
+
+        # Create a staging file, write the archive into it, close it, and return it
+        #
+        # Uses `Tempfile.create` (not `Tempfile.new`) so that no GC finalizer is
+        # registered on the returned object — the file path remains valid after this
+        # method returns and after the caller stores only the path string.
+        #
+        # @param execution_context [Git::ExecutionContext] for the git command
+        # @param treeish [String] tree-ish passed to `git archive`
+        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
+        #   :remote, and :path)
+        # @param format [String] archive format string (e.g. `'zip'` or `'tar'`)
+        # @param dest_dir [String] directory in which to create the temp file
+        #
+        # @return [File] the closed file containing the archive
+        #
+        # @api private
+        #
+        def create_archive_tempfile(execution_context, treeish, opts, format, dest_dir)
+          tmp_file = Tempfile.create('archive', dest_dir).tap(&:binmode)
+          run_archive_command(execution_context, treeish, opts, format, tmp_file)
+          tmp_file.close
+          tmp_file
+        rescue StandardError
+          tmp_file&.close
+          FileUtils.rm_f(tmp_file.path) if tmp_file
+          raise
+        end
+
+        # Invoke `git archive` and stream output into `tmp_file`
+        #
+        # @param execution_context [Git::ExecutionContext] for the git command
+        # @param treeish [String] tree-ish passed to `git archive`
+        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
+        #   :remote, and :path)
+        # @param format [String] archive format to pass to `git archive --format`
+        # @param tmp_file [File] open, binary-mode IO to write archive data to
+        #
+        # @return [Git::CommandLineResult] the result of the git command
+        #
+        # @api private
+        #
+        def run_archive_command(execution_context, treeish, opts, format, tmp_file)
+          command_opts = opts.slice(:prefix, :remote).merge(format: format)
+          path_args = opts[:path] ? [opts[:path]] : []
+          Git::Commands::Archive.new(execution_context).call(treeish, *path_args, **command_opts, out: tmp_file)
+        end
+
+        # Atomically rename the staging file `src` to `dest`, replacing any
+        # existing file at `dest`. Both paths must be on the same filesystem
+        # (guaranteed when `src` is created by {#staging_dir_for}).
+        #
+        # Before the rename, the staging file's permissions are set to the
+        # existing file's numeric mode (if `dest` already existed) or to
+        # `0666 & ~umask` (standard creation mode) for new files. The chmod
+        # is applied to `src` before the rename so that, if chmod fails, `src`
+        # is still present and can be cleaned up by the rescue. Only the
+        # numeric permission bits are carried over; ownership, ACLs, and
+        # extended attributes from an existing `dest` are not preserved.
+        #
+        # If `dest` is a symlink, the symlink itself is replaced by the renamed
+        # staging file rather than writing through the link to its target.
+        #
+        # @param src [String] staging file path to rename; removed on success
+        # @param dest [String] destination file path
+        #
+        # @return [void]
+        #
+        # @api private
+        #
+        def atomic_replace(src, dest)
+          mode = File.exist?(dest) ? (File.stat(dest).mode & 0o777) : (0o666 & ~File.umask)
+          File.chmod(mode, src)
+          File.rename(src, dest)
+        rescue StandardError
+          FileUtils.rm_f(src)
+          raise
+        end
+
+        # Determine the archive format and whether to apply gzip post-processing
+        #
+        # The `tgz` pseudo-format is not understood by `git archive` directly;
+        # it is converted to `tar` and the gzip flag is set so that {#archive}
+        # applies gzip compression after the archive is written.
+        #
+        # @param opts [Hash] caller-supplied options hash (read-only)
+        #
+        # @return [Array(String, Boolean)] a two-element array `[format, gzip]`
+        #
+        #   `format` is the string to pass to `git archive --format`; `gzip` is
+        #   `true` when the caller should apply gzip post-processing after writing
+        #   the archive.
+        #
+        # @api private
+        #
+        def parse_archive_format_options(opts)
+          format = opts[:format] || 'zip'
+          gzip = opts[:add_gzip] == true || format == 'tgz'
+          [format == 'tgz' ? 'tar' : format, gzip]
+        end
+
+        # Apply gzip compression to the given file in place
+        #
+        # Streams from the source file through a {Zlib::GzipWriter} into a sibling
+        # temporary file, then replaces the original.  Peak memory is proportional
+        # to the stream buffer rather than the full archive size.
+        #
+        # @param file [String] path to the file to compress in place
+        #
+        # @return [void]
+        #
+        # @api private
+        #
+        def apply_gzip(file)
+          gz_tmp = Tempfile.create('archive_gz', File.dirname(file)).tap(&:close).path
+          Zlib::GzipWriter.open(gz_tmp) { |gz| File.open(file, 'rb') { |f| IO.copy_stream(f, gz) } }
+          FileUtils.rm_f(file)
+          File.rename(gz_tmp, file)
+        rescue StandardError
+          FileUtils.rm_f(gz_tmp) if gz_tmp
+          raise
+        end
+
         # Assembles the commit Hash from parsed lines
         #
         # @param data [Array<String>] mutable cat-file output lines, consumed
@@ -418,9 +685,7 @@ module Git
         #
         def process_tag_data(data, name)
           hsh = { 'name' => name }
-          each_cat_file_header(data) do |key, value|
-            hsh[key] = value
-          end
+          each_cat_file_header(data) { |key, value| hsh[key] = value }
           hsh['message'] = "#{data.join("\n")}\n"
           hsh
         end
