@@ -184,4 +184,56 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
   end
+
+  describe '#cat_file_tag' do
+    before do
+      repo.add_tag('v1.0', annotate: true, message: 'Release v1.0')
+    end
+
+    context 'with a valid annotated tag' do
+      subject(:result) { described_instance.cat_file_tag('v1.0') }
+
+      it 'returns a Hash' do
+        expect(result).to be_a(Hash)
+      end
+
+      it 'sets name to the tag name passed by the caller' do
+        expect(result['name']).to eq('v1.0')
+      end
+
+      it 'includes the expected keys' do
+        expect(result).to include('name', 'object', 'type', 'tag', 'tagger', 'message')
+      end
+
+      it 'sets type to "commit"' do
+        expect(result['type']).to eq('commit')
+      end
+
+      it 'sets tag to the tag name' do
+        expect(result['tag']).to eq('v1.0')
+      end
+
+      it 'sets message to the tag message with a trailing newline' do
+        expect(result['message']).to eq("Release v1.0\n")
+      end
+
+      it 'sets object to a 40-character SHA' do
+        expect(result['object']).to match(/\A[0-9a-f]{40}\z/)
+      end
+    end
+
+    context 'when object starts with a hyphen' do
+      it 'raises ArgumentError without calling git' do
+        expect { described_instance.cat_file_tag('--all') }
+          .to raise_error(ArgumentError, "Invalid object: '--all'")
+      end
+    end
+
+    context 'when the object does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.cat_file_tag('nonexistent_tag') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
 end

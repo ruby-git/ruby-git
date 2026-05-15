@@ -283,4 +283,62 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
   end
+
+  describe '#cat_file_tag' do
+    let(:raw_command) { instance_double(Git::Commands::CatFile::Raw) }
+
+    before do
+      allow(Git::Commands::CatFile::Raw).to receive(:new)
+        .with(execution_context)
+        .and_return(raw_command)
+    end
+
+    context 'with a valid annotated tag' do
+      subject(:result) { described_instance.cat_file_tag('v1.0') }
+
+      let(:tag_body) do
+        "object deadbeef\ntype commit\ntag v1.0\ntagger A <a@example.com> 1 +0000\n\nRelease v1.0"
+      end
+
+      it 'constructs Git::Commands::CatFile::Raw with the execution context' do
+        expect(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
+        allow(raw_command).to receive(:call).and_return(command_result(tag_body))
+        result
+      end
+
+      it 'calls Git::Commands::CatFile::Raw#call with type tag and the object' do
+        expect(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
+        result
+      end
+
+      it 'returns a Hash with name set to the object argument' do
+        allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
+        expect(result['name']).to eq('v1.0')
+      end
+
+      it 'returns a Hash with the parsed tag headers' do
+        allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
+        expect(result).to include(
+          'object' => 'deadbeef',
+          'type' => 'commit',
+          'tag' => 'v1.0',
+          'tagger' => 'A <a@example.com> 1 +0000'
+        )
+      end
+
+      it 'returns a Hash with message including a trailing newline' do
+        allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
+        expect(result['message']).to eq("Release v1.0\n")
+      end
+    end
+
+    context 'when object starts with a hyphen' do
+      subject(:result) { described_instance.cat_file_tag('--all') }
+
+      it 'raises ArgumentError before calling the command' do
+        expect(Git::Commands::CatFile::Raw).not_to receive(:new)
+        expect { result }.to raise_error(ArgumentError, "Invalid object: '--all'")
+      end
+    end
+  end
 end
