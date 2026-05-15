@@ -155,7 +155,56 @@ module Git
         Private.process_commit_data(result.stdout.split("\n"), object)
       end
 
-      # Private parsing helpers for {#cat_file_commit}
+      # Returns parsed tag data for the given annotated tag object
+      #
+      # Does not work with lightweight tags. To list all annotated tags in a
+      # repository:
+      #
+      # ```sh
+      # git for-each-ref --format='%(refname:strip=2)' refs/tags | \
+      #   while read tag; do
+      #     git cat-file tag "$tag" >/dev/null 2>&1 && echo "$tag"
+      #   done
+      # ```
+      #
+      # @example Get tag data for an annotated tag
+      #   repo.cat_file_tag('v1.0')
+      #   # => {
+      #   #   'name'    => 'v1.0',
+      #   #   'object'  => 'abc1234...',
+      #   #   'type'    => 'commit',
+      #   #   'tag'     => 'v1.0',
+      #   #   'tagger'  => 'A U Thor <author@example.com> 1234567890 +0000',
+      #   #   'message' => "Release v1.0\n"
+      #   # }
+      #
+      # @param object [String] the annotated tag name or SHA
+      #
+      # @return [Hash] tag data
+      #
+      #   String-keyed hash with the following keys:
+      #
+      #   * `name` — the `object` argument as passed by the caller
+      #   * `object` — the SHA of the tagged object
+      #   * `type` — the type of the tagged object (usually `"commit"`)
+      #   * `tag` — the tag name
+      #   * `tagger` — tagger identity string and timestamp
+      #   * `message` — the tag message (includes trailing newline)
+      #
+      # @raise [ArgumentError] if `object` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def cat_file_tag(object)
+        raise ArgumentError, "Invalid object: '#{object}'" if object&.start_with?('-')
+
+        tdata = Git::Commands::CatFile::Raw.new(@execution_context).call('tag', object).stdout.split("\n")
+        Private.process_tag_data(tdata, object)
+      end
+
+      # Private parsing helpers for {#cat_file_commit} and {#cat_file_tag}
       #
       # @api private
       #
@@ -207,6 +256,26 @@ module Git
             end
           end
           headers
+        end
+
+        # Assembles the tag Hash from parsed lines
+        #
+        # @param data [Array<String>] mutable cat-file output lines, consumed
+        #   in place during header parsing; remaining lines become the message
+        #
+        # @param name [String] the tag name passed by the caller
+        #
+        # @return [Hash] tag data hash with string keys
+        #
+        # @api private
+        #
+        def process_tag_data(data, name)
+          hsh = { 'name' => name }
+          each_cat_file_header(data) do |key, value|
+            hsh[key] = value
+          end
+          hsh['message'] = "#{data.join("\n")}\n"
+          hsh
         end
 
         # Yields parsed header key/value pairs from `git cat-file` output lines
