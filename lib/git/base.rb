@@ -868,7 +868,7 @@ module Git
     #   git.rev_parse('v2.4:/doc/index.html')
     #
     def rev_parse(objectish)
-      lib.rev_parse(objectish)
+      facade_repository.rev_parse(objectish)
     end
 
     # For backwards compatibility

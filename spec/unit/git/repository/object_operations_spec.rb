@@ -341,4 +341,54 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
   end
+
+  describe '#rev_parse' do
+    let(:rev_parse_command) { instance_double(Git::Commands::RevParse) }
+
+    before do
+      allow(Git::Commands::RevParse).to receive(:new)
+        .with(execution_context)
+        .and_return(rev_parse_command)
+    end
+
+    context 'with a valid revision specifier' do
+      subject(:result) { described_instance.rev_parse('HEAD') }
+
+      let(:sha) { '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d' }
+      let(:rev_parse_result) { command_result(sha) }
+
+      it 'constructs Git::Commands::RevParse with the execution context' do
+        expect(Git::Commands::RevParse).to receive(:new).with(execution_context).and_return(rev_parse_command)
+        allow(rev_parse_command).to receive(:call).and_return(rev_parse_result)
+        result
+      end
+
+      it 'calls Git::Commands::RevParse#call with the revision, "--", and revs_only: true' do
+        expect(rev_parse_command).to receive(:call).with('HEAD', '--', revs_only: true).and_return(rev_parse_result)
+        result
+      end
+
+      it 'returns the stdout of the command as a String' do
+        allow(rev_parse_command).to receive(:call).with('HEAD', '--', revs_only: true).and_return(rev_parse_result)
+        expect(result).to eq(sha)
+      end
+    end
+
+    context 'with an abbreviated SHA' do
+      subject(:result) { described_instance.rev_parse('9b9b31e') }
+
+      let(:sha) { '9b9b31e704c0b85ffdd8d2af2ded85170a5af87d' }
+      let(:rev_parse_result) { command_result(sha) }
+
+      it 'calls Git::Commands::RevParse#call with the abbreviated SHA' do
+        expect(rev_parse_command).to receive(:call).with('9b9b31e', '--', revs_only: true).and_return(rev_parse_result)
+        result
+      end
+
+      it 'returns the full SHA' do
+        allow(rev_parse_command).to receive(:call).with('9b9b31e', '--', revs_only: true).and_return(rev_parse_result)
+        expect(result).to eq(sha)
+      end
+    end
+  end
 end

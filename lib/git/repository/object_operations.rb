@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/cat_file/raw'
+require 'git/commands/rev_parse'
 require 'tempfile'
 
 module Git
@@ -105,7 +106,8 @@ module Git
       #
       # @param object [String] the object name (SHA, ref, `HEAD`, treeish path, etc.)
       #
-      # @return [String] the object type — one of `"blob"`, `"commit"`, `"tag"`, or `"tree"`
+      # @return [String] the object type — one of `"blob"`, `"commit"`,
+      #   `"tag"`, or `"tree"`
       #
       # @raise [ArgumentError] if `object` starts with a hyphen
       #
@@ -202,6 +204,35 @@ module Git
 
         tdata = Git::Commands::CatFile::Raw.new(@execution_context).call('tag', object).stdout.split("\n")
         Private.process_tag_data(tdata, object)
+      end
+
+      # Resolve a revision specifier to its full object ID
+      #
+      # Passes the given revision specifier to `git rev-parse` and returns the
+      # full object ID.
+      #
+      # @example Resolve HEAD to its full object ID
+      #   repo.rev_parse('HEAD') #=> "9b9b31e704c0b85ffdd8d2af2ded85170a5af87d"
+      #
+      # @example Resolve an abbreviated SHA
+      #   repo.rev_parse('9b9b31e') #=> "9b9b31e704c0b85ffdd8d2af2ded85170a5af87d"
+      #
+      # @example Resolve a tree object via rev-parse syntax
+      #   repo.rev_parse('HEAD^{tree}') #=> "94c827875e2cadb8bc8d4cdd900f19aa9e8634c7"
+      #
+      # @param objectish [String] the revision specifier to resolve (branch name,
+      #   tag, abbreviated SHA, refspec, etc.)
+      #
+      # @return [String] the full object ID of the resolved object
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-rev-parse git-rev-parse documentation
+      #
+      # @see https://git-scm.com/docs/git-rev-parse#_specifying_revisions Valid ways to specify revisions
+      #
+      def rev_parse(objectish)
+        Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
 
       # Private parsing helpers for {#cat_file_commit} and {#cat_file_tag}
