@@ -301,10 +301,10 @@ module Git
         # @api private
         #
         def each_cat_file_header(data)
-          while (match = CAT_FILE_HEADER_LINE.match(data.shift))
+          while (line = data.shift) && (match = CAT_FILE_HEADER_LINE.match(line))
             key = match[:key]
             value_lines = [match[:value]]
-            value_lines << data.shift.lstrip while data.first.start_with?(' ')
+            value_lines << data.shift.lstrip while data.first&.start_with?(' ')
             yield key, value_lines.join("\n")
           end
         end
