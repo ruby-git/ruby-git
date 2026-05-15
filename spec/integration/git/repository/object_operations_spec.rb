@@ -251,4 +251,39 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
   end
+
+  describe '#rev_parse' do
+    context 'with HEAD' do
+      it 'returns a 40-character lowercase hex SHA' do
+        result = described_instance.rev_parse('HEAD')
+        expect(result).to match(/\A[0-9a-f]{40}\z/)
+      end
+
+      it 'returns a String' do
+        expect(described_instance.rev_parse('HEAD')).to be_a(String)
+      end
+    end
+
+    context 'with an abbreviated SHA' do
+      it 'expands the abbreviated SHA to the full 40-character SHA' do
+        full_sha = repo.lib.rev_parse('HEAD')
+        abbreviated = full_sha[0, 7]
+        expect(described_instance.rev_parse(abbreviated)).to eq(full_sha)
+      end
+    end
+
+    context 'with a tree object via rev-parse syntax' do
+      it 'resolves the tree SHA' do
+        result = described_instance.rev_parse('HEAD^{tree}')
+        expect(result).to match(/\A[0-9a-f]{40}\z/)
+      end
+    end
+
+    context 'when the revision is unknown' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.rev_parse('NOTFOUND') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
 end
