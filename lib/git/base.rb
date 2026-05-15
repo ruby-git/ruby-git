@@ -698,19 +698,25 @@ module Git
     #
     # @param treeish [String] the commit, tag, branch, or tree to archive
     #
-    # @param file [String, nil] destination file path; a temp file is created if `nil`
+    # @param file [String, nil] destination file path; a temp file is created
+    #   if `nil`
     #
-    # @param opts [Hash] archive options (see {Git::Lib#archive})
+    # @param opts [Hash] archive options (see {Git::Repository::ObjectOperations#archive})
     #
     # @return [String] the path to the written archive file
     #
-    # @raise [Git::FailedError] if `git archive` fails
+    # @raise [ArgumentError] if unsupported options are provided
+    #
+    # @raise [ArgumentError] if `file` is an existing directory
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
     # @example Archive HEAD to a zip file
     #   git.archive('HEAD', '/tmp/release.zip', format: 'zip')
+    #   #=> "/tmp/release.zip"
     #
     def archive(treeish, file = nil, opts = {})
-      object(treeish).archive(file, opts)
+      facade_repository.archive(treeish, file, opts)
     end
 
     # repacks the repository

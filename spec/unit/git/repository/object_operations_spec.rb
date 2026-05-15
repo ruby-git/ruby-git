@@ -392,6 +392,144 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#archive' do
+    let(:archive_command) { instance_double(Git::Commands::Archive) }
+    let(:archive_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Archive).to receive(:new)
+        .with(execution_context)
+        .and_return(archive_command)
+      allow(archive_command).to receive(:call).and_return(archive_result)
+    end
+
+    context 'with no file path (temp file path)' do
+      subject(:result) { described_instance.archive('HEAD').tap { |p| @tmp_archive = p } }
+
+      after { File.unlink(@tmp_archive) if @tmp_archive && File.exist?(@tmp_archive) }
+
+      it 'returns a non-nil String path' do
+        expect(result).to be_a(String)
+      end
+    end
+
+    context 'with an explicit output file' do
+      let(:tmpfile) do
+        t = Tempfile.new(['archive_unit', '.zip'])
+        t.close # Release the handle so File.rename can atomically replace this path on all platforms
+        t
+      end
+
+      after { tmpfile.close! }
+
+      context 'with a treeish and an explicit file path' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path) }
+
+        it 'constructs Git::Commands::Archive with the execution context' do
+          expect(Git::Commands::Archive).to receive(:new).with(execution_context).and_return(archive_command)
+          result
+        end
+
+        it 'calls Git::Commands::Archive#call with treeish, format: zip, and an out: File' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', format: 'zip', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+
+        it 'returns the given file path' do
+          expect(result).to eq(tmpfile.path)
+        end
+      end
+
+      context 'with format: tar' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, format: 'tar') }
+
+        it 'calls Git::Commands::Archive#call with format: tar' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', format: 'tar', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+      end
+
+      context 'with format: tgz' do
+        subject(:result) { described_instance.archive('v1.0', tmpfile.path, format: 'tgz') }
+
+        it 'converts tgz to tar when calling Git::Commands::Archive#call' do
+          expect(archive_command).to receive(:call)
+            .with('v1.0', format: 'tar', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+      end
+
+      context 'with add_gzip: true' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, add_gzip: true) }
+
+        it 'calls Git::Commands::Archive#call with format: zip (unchanged by add_gzip)' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', format: 'zip', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+
+        it 'returns the given file path' do
+          expect(result).to eq(tmpfile.path)
+        end
+      end
+
+      context 'with a prefix option' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, format: 'tar', prefix: 'myproject/') }
+
+        it 'forwards prefix to Git::Commands::Archive#call' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', format: 'tar', prefix: 'myproject/', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+      end
+
+      context 'with a path option' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, format: 'tar', path: 'src/') }
+
+        it 'passes path as a positional argument to Git::Commands::Archive#call' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', 'src/', format: 'tar', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+      end
+
+      context 'with a remote option' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, remote: 'origin') }
+
+        it 'forwards remote to Git::Commands::Archive#call' do
+          expect(archive_command).to receive(:call)
+            .with('HEAD', format: 'zip', remote: 'origin', out: instance_of(File))
+            .and_return(archive_result)
+          result
+        end
+      end
+
+      context 'with an unknown option' do
+        subject(:result) { described_instance.archive('HEAD', tmpfile.path, unknown_opt: true) }
+
+        it 'raises ArgumentError before calling Git::Commands::Archive' do
+          expect(Git::Commands::Archive).not_to receive(:new)
+          expect { result }.to raise_error(ArgumentError)
+        end
+      end
+    end
+
+    context 'with a directory path as file' do
+      it 'raises ArgumentError before calling Git::Commands::Archive' do
+        expect(Git::Commands::Archive).not_to receive(:new)
+        expect { described_instance.archive('HEAD', Dir.tmpdir) }.to raise_error(ArgumentError, /is a directory/)
+      end
+    end
+  end
+
   describe '#grep' do
     let(:grep_command) { instance_double(Git::Commands::Grep) }
 
