@@ -286,4 +286,104 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
   end
+
+  describe '#grep' do
+    before do
+      write_file('src/foo.rb', "# TODO: fix this\nsome other line\n")
+      write_file('src/bar.rb', "# NOTE: nothing here\n# TODO: also here\n")
+      repo.add('.')
+      repo.commit('Add files')
+    end
+
+    context 'with a pattern that matches files' do
+      it 'returns a Hash with treeish:filename keys' do
+        result = described_instance.grep('TODO')
+        expect(result).to be_a(Hash)
+        expect(result.keys).to all(match(%r{\AHEAD:src/}))
+      end
+
+      it 'maps each key to an array of [line_number, text] pairs' do
+        result = described_instance.grep('TODO')
+        result.each_value do |matches|
+          expect(matches).to all(match([be_a(Integer), be_a(String)]))
+        end
+      end
+
+      it 'includes the correct line number and text for each match' do
+        result = described_instance.grep('TODO')
+        foo_matches = result['HEAD:src/foo.rb']
+        expect(foo_matches).to include([1, '# TODO: fix this'])
+      end
+    end
+
+    context 'with a path_limiter String that restricts results' do
+      it 'returns only matches under the given path' do
+        result = described_instance.grep('TODO', 'src/foo.rb')
+        expect(result.keys).to eq(['HEAD:src/foo.rb'])
+      end
+    end
+
+    context 'with a path_limiter Array' do
+      it 'returns matches from all paths in the array' do
+        result = described_instance.grep('TODO', ['src/foo.rb', 'src/bar.rb'])
+        expect(result.keys).to contain_exactly('HEAD:src/foo.rb', 'HEAD:src/bar.rb')
+      end
+    end
+
+    context 'with :ignore_case option' do
+      it 'returns matches regardless of case' do
+        result = described_instance.grep('todo', nil, ignore_case: true)
+        expect(result).not_to be_empty
+      end
+
+      it 'returns no matches without ignore_case when pattern case differs' do
+        result = described_instance.grep('todo')
+        expect(result).to be_empty
+      end
+    end
+
+    context 'with :invert_match option' do
+      it 'returns lines that do not match the pattern' do
+        result = described_instance.grep('TODO', 'src/foo.rb', invert_match: true)
+        expect(result['HEAD:src/foo.rb']).to include([2, 'some other line'])
+        expect(result['HEAD:src/foo.rb'].map(&:last)).not_to include(match(/TODO/))
+      end
+    end
+
+    context 'with :extended_regexp option' do
+      it 'matches using POSIX extended regular expressions' do
+        result = described_instance.grep('TODO|NOTE', nil, extended_regexp: true)
+        expect(result.keys).to contain_exactly('HEAD:src/foo.rb', 'HEAD:src/bar.rb')
+      end
+    end
+
+    context 'with :object option pointing to a specific commit' do
+      it 'searches in that commit instead of HEAD' do
+        sha = repo.lib.rev_parse('HEAD')
+        result = described_instance.grep('TODO', nil, object: sha)
+        expect(result).not_to be_empty
+      end
+    end
+
+    context 'when no lines match' do
+      it 'returns an empty hash' do
+        result = described_instance.grep('NOMATCH_UNIQUE_XYZ')
+        expect(result).to eq({})
+      end
+    end
+
+    context 'with an unknown option' do
+      it 'raises ArgumentError without calling git' do
+        expect { described_instance.grep('TODO', nil, line_number: true) }
+          .to raise_error(ArgumentError, 'Unknown options: line_number')
+      end
+    end
+
+    context 'with an invalid object reference' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.grep('TODO', nil, object: 'nonexistent_ref') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
 end

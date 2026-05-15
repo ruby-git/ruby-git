@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require 'git/commands/cat_file/raw'
+require 'git/commands/grep'
 require 'git/commands/rev_parse'
+require 'git/repository/shared_private'
 require 'tempfile'
 
 module Git
@@ -235,7 +237,76 @@ module Git
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
 
-      # Private parsing helpers for {#cat_file_commit} and {#cat_file_tag}
+      # Option keys accepted by {#grep}
+      GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E object].freeze
+      private_constant :GREP_ALLOWED_OPTS
+
+      # Search tracked file contents in a git tree for a pattern
+      #
+      # Runs `git grep` against the given tree-ish and returns every match as a
+      # filename-keyed hash of `[line_number, text]` pairs.
+      #
+      # @example Search HEAD for a pattern
+      #   repo.grep('TODO')
+      #   # => { "HEAD:src/foo.rb" => [[12, "# TODO: fix this"]], ... }
+      #
+      # @example Limit the search to a path
+      #   repo.grep('TODO', 'src/')
+      #
+      # @example Search a specific commit
+      #   repo.grep('TODO', nil, object: 'abc1234')
+      #
+      # @example Case-insensitive search
+      #   repo.grep('todo', nil, ignore_case: true)
+      #
+      # @param pattern [String] the pattern to search for
+      #
+      # @param path_limiter [String, Pathname, Array<String, Pathname>, nil]
+      #   a path or array of paths to limit the search to, or `nil` for no limit
+      #
+      # @param opts [Hash] additional options for the grep command
+      #
+      # @option opts [String] :object ('HEAD') the tree-ish to search
+      #
+      # @option opts [Boolean, nil] :ignore_case (nil) ignore case
+      #   distinctions in both the pattern and the file contents
+      #
+      #   Alias: :i
+      #
+      # @option opts [Boolean, nil] :invert_match (nil) select non-matching
+      #   lines
+      #
+      #   Alias: :v
+      #
+      # @option opts [Boolean, nil] :extended_regexp (nil) use POSIX extended
+      #   regular expressions for the pattern
+      #
+      #   Alias: :E
+      #
+      # @return [Hash<String, Array<Array(Integer, String)>>] a hash mapping
+      #   each `"treeish:filename"` key to an array of `[line_number, text]`
+      #   pairs; returns an empty hash when no lines match
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero status and
+      #   stderr is non-empty (e.g. bad object reference)
+      #
+      # @see https://git-scm.com/docs/git-grep git-grep documentation
+      #
+      def grep(pattern, path_limiter = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(GREP_ALLOWED_OPTS, **opts)
+        opts = opts.dup
+        object = opts.delete(:object) || 'HEAD'
+        opts[:pathspec] = Array(path_limiter).map(&:to_s) if path_limiter
+        result = Git::Commands::Grep.new(@execution_context).call(
+          object, pattern:, **opts, no_color: true, line_number: true
+        )
+        Private.process_grep_result(result)
+      end
+
+      # Private parsing helpers for {#cat_file_commit}, {#cat_file_tag}, and
+      # {#grep}
       #
       # @api private
       #
@@ -247,6 +318,51 @@ module Git
         # @api private
         #
         CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
+
+        # Interprets a `Git::Commands::Grep` result and returns parsed matches
+        #
+        # Exit status 1 with empty stderr means no lines matched — returns `{}`.
+        # Exit status 1 with non-empty stderr is a real error and raises.
+        # Exit status 0 parses the output lines.
+        #
+        # @param result [Git::CommandLineResult] the result from the grep command
+        #
+        # @return [Hash<String, Array<Array(Integer, String)>>] parsed match hash
+        #
+        # @raise [Git::FailedError] if exit status is 1 and stderr is non-empty
+        #
+        # @api private
+        #
+        def process_grep_result(result)
+          exitstatus = result.status.exitstatus
+          return {} if exitstatus == 1 && result.stderr.empty?
+
+          raise Git::FailedError, result if exitstatus == 1
+
+          parse_grep_output(result.stdout.split("\n"))
+        end
+
+        # Parses `git grep` output lines into a filename-keyed hash of matches
+        #
+        # Each line is expected in the format produced by
+        # `git grep --line-number --no-color`: `treeish:filename:linenum:text`.
+        #
+        # @param lines [Array<String>] output lines from `git grep`
+        #
+        # @return [Hash<String, Array<Array(Integer, String)>>] hash mapping
+        #   `"treeish:filename"` keys to arrays of `[line_number, text]` pairs
+        #
+        # @api private
+        #
+        def parse_grep_output(lines)
+          lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
+            match = line.match(/\A(.*?):(\d+):(.*)/)
+            next unless match
+
+            _full, filename, line_num, text = match.to_a
+            hsh[filename] << [line_num.to_i, text]
+          end
+        end
 
         # Assembles the commit Hash from parsed lines
         #

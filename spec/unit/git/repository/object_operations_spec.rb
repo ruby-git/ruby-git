@@ -391,4 +391,147 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
   end
+
+  describe '#grep' do
+    let(:grep_command) { instance_double(Git::Commands::Grep) }
+
+    before do
+      allow(Git::Commands::Grep).to receive(:new)
+        .with(execution_context)
+        .and_return(grep_command)
+    end
+
+    context 'with a pattern and no options' do
+      subject(:result) { described_instance.grep('TODO') }
+
+      let(:grep_output) { "HEAD:src/foo.rb:12:# TODO: fix this\n" }
+      let(:grep_result) { command_result(grep_output) }
+
+      it 'constructs Git::Commands::Grep with the execution context' do
+        expect(Git::Commands::Grep).to receive(:new).with(execution_context).and_return(grep_command)
+        allow(grep_command).to receive(:call).and_return(grep_result)
+        result
+      end
+
+      it 'calls Git::Commands::Grep#call with HEAD, the pattern, no_color, and line_number' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'TODO', no_color: true, line_number: true)
+          .and_return(grep_result)
+        result
+      end
+
+      it 'returns a Hash keyed by treeish:filename with [line_number, text] arrays' do
+        allow(grep_command).to receive(:call).and_return(grep_result)
+        expect(result).to eq('HEAD:src/foo.rb' => [[12, '# TODO: fix this']])
+      end
+    end
+
+    context 'with a path_limiter String' do
+      subject(:result) { described_instance.grep('TODO', 'src/') }
+
+      it 'forwards pathspec as an Array to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'TODO', pathspec: ['src/'], no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with a path_limiter Array' do
+      subject(:result) { described_instance.grep('TODO', ['src/', 'lib/']) }
+
+      it 'forwards pathspec as the same Array to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'TODO', pathspec: ['src/', 'lib/'], no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with an :object option' do
+      subject(:result) { described_instance.grep('TODO', nil, object: 'abc1234') }
+
+      it 'uses the given object instead of HEAD' do
+        expect(grep_command).to receive(:call)
+          .with('abc1234', pattern: 'TODO', no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with :ignore_case option' do
+      subject(:result) { described_instance.grep('todo', nil, ignore_case: true) }
+
+      it 'forwards ignore_case to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'todo', ignore_case: true, no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with :i alias' do
+      subject(:result) { described_instance.grep('todo', nil, i: true) }
+
+      it 'forwards :i to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'todo', i: true, no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with :invert_match option' do
+      subject(:result) { described_instance.grep('TODO', nil, invert_match: true) }
+
+      it 'forwards invert_match to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'TODO', invert_match: true, no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'with :extended_regexp option' do
+      subject(:result) { described_instance.grep('foo|bar', nil, extended_regexp: true) }
+
+      it 'forwards extended_regexp to the command' do
+        expect(grep_command).to receive(:call)
+          .with('HEAD', pattern: 'foo|bar', extended_regexp: true, no_color: true, line_number: true)
+          .and_return(command_result(''))
+        result
+      end
+    end
+
+    context 'when no lines match (exit status 1, empty stderr)' do
+      subject(:result) { described_instance.grep('NOMATCH') }
+
+      let(:no_match_result) { command_result('', exitstatus: 1) }
+
+      it 'returns an empty hash' do
+        allow(grep_command).to receive(:call).and_return(no_match_result)
+        expect(result).to eq({})
+      end
+    end
+
+    context 'when git exits with status 1 and non-empty stderr (bad object reference)' do
+      subject(:result) { described_instance.grep('TODO', nil, object: 'bad_ref') }
+
+      let(:error_result) { command_result('', exitstatus: 1, stderr: "fatal: bad object bad_ref\n") }
+
+      it 'raises Git::FailedError' do
+        allow(grep_command).to receive(:call).and_return(error_result)
+        expect { result }.to raise_error(Git::FailedError)
+      end
+    end
+
+    context 'with an unknown option' do
+      subject(:result) { described_instance.grep('TODO', nil, line_number: true) }
+
+      it 'raises ArgumentError before calling the command' do
+        expect(Git::Commands::Grep).not_to receive(:new)
+        expect { result }.to raise_error(ArgumentError, 'Unknown options: line_number')
+      end
+    end
+  end
 end

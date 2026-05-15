@@ -424,7 +424,8 @@ module Git
     #   ```
     #
     def grep(string, path_limiter = nil, opts = {})
-      object('HEAD').grep(string, path_limiter, opts)
+      opts = opts.merge(object: facade_repository.rev_parse('HEAD')) unless opts.key?(:object)
+      facade_repository.grep(string, path_limiter, opts)
     end
 
     # List the files in the worktree that are ignored by git
