@@ -235,5 +235,20 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
           .to raise_error(Git::FailedError)
       end
     end
+
+    context 'with an annotated tag whose message is empty' do
+      before do
+        repo.add_tag('v2.0', annotate: true, message: '')
+      end
+
+      it 'returns a Hash without raising NoMethodError' do
+        expect { described_instance.cat_file_tag('v2.0') }.not_to raise_error
+      end
+
+      it 'sets message to a single newline' do
+        result = described_instance.cat_file_tag('v2.0')
+        expect(result['message']).to eq("\n")
+      end
+    end
   end
 end
