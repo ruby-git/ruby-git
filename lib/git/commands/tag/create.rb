@@ -41,7 +41,7 @@ module Git
           flag_option %i[sign s], negatable: true
           value_option %i[local_user u], inline: true
           flag_option %i[force f]
-          value_option %i[message m], inline: true
+          value_option %i[message m], inline: true, allow_empty: true
           value_option %i[file F], inline: true
           flag_option %i[edit e], negatable: true
           key_value_option :trailer, key_separator: ': '
