@@ -325,6 +325,37 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#name_rev' do
+    context 'with a commit SHA that has a symbolic name' do
+      it 'returns a String' do
+        sha = repo.lib.rev_parse('HEAD')
+        result = described_instance.name_rev(sha)
+        expect(result).to be_a(String)
+      end
+
+      it 'returns the symbolic name without a trailing newline' do
+        sha = repo.lib.rev_parse('HEAD')
+        result = described_instance.name_rev(sha)
+        expect(result).not_to end_with("\n")
+      end
+    end
+
+    context 'with a branch ref that resolves to a commit' do
+      it 'returns a non-nil String' do
+        result = described_instance.name_rev('HEAD')
+        expect(result).to be_a(String)
+        expect(result).not_to be_empty
+      end
+    end
+
+    context 'when commit_ish starts with a hyphen' do
+      it 'raises ArgumentError without calling git' do
+        expect { described_instance.name_rev('--tags') }
+          .to raise_error(ArgumentError, "Invalid commit_ish: '--tags'")
+      end
+    end
+  end
+
   describe '#archive' do
     context 'with no file argument (temp file)' do
       it 'returns a non-nil String path to a written file' do

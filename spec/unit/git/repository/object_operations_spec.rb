@@ -440,6 +440,56 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#name_rev' do
+    let(:name_rev_command) { instance_double(Git::Commands::NameRev) }
+
+    before do
+      allow(Git::Commands::NameRev).to receive(:new)
+        .with(execution_context)
+        .and_return(name_rev_command)
+    end
+
+    context 'with a valid commit SHA' do
+      subject(:result) { described_instance.name_rev('abc1234') }
+
+      let(:name_rev_result) { command_result("abc1234 main~5\n") }
+
+      it 'constructs Git::Commands::NameRev with the execution context' do
+        expect(Git::Commands::NameRev).to receive(:new).with(execution_context).and_return(name_rev_command)
+        allow(name_rev_command).to receive(:call).and_return(name_rev_result)
+        result
+      end
+
+      it 'calls Git::Commands::NameRev#call with the commit_ish' do
+        expect(name_rev_command).to receive(:call).with('abc1234').and_return(name_rev_result)
+        result
+      end
+
+      it 'returns the symbolic name (second word of stdout)' do
+        allow(name_rev_command).to receive(:call).with('abc1234').and_return(name_rev_result)
+        expect(result).to eq('main~5')
+      end
+    end
+
+    context 'when stdout has only one word (no symbolic name found)' do
+      subject(:result) { described_instance.name_rev('deadbeef') }
+
+      it 'returns nil' do
+        allow(name_rev_command).to receive(:call).with('deadbeef').and_return(command_result("deadbeef\n"))
+        expect(result).to be_nil
+      end
+    end
+
+    context 'when commit_ish starts with a hyphen' do
+      subject(:result) { described_instance.name_rev('--tags') }
+
+      it 'raises ArgumentError before calling the command' do
+        expect(Git::Commands::NameRev).not_to receive(:new)
+        expect { result }.to raise_error(ArgumentError, "Invalid commit_ish: '--tags'")
+      end
+    end
+  end
+
   describe '#archive' do
     let(:archive_command) { instance_double(Git::Commands::Archive) }
     let(:archive_result) { command_result('') }
