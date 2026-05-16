@@ -5,6 +5,7 @@ require 'git/commands/archive'
 require 'git/commands/cat_file/raw'
 require 'git/commands/grep'
 require 'git/commands/ls_tree'
+require 'git/commands/name_rev'
 require 'git/commands/rev_parse'
 require 'git/repository/shared_private'
 require 'tempfile'
@@ -267,6 +268,31 @@ module Git
       #
       def full_tree(sha)
         Git::Commands::LsTree.new(@execution_context).call(sha, r: true).stdout.split("\n")
+      end
+
+      # Find the first symbolic name for a commit-ish
+      #
+      # @example Find the symbolic name for a commit
+      #   repo.name_rev('abc123') #=> "main~5"
+      #
+      # @example Returns nil when the commit-ish has no symbolic name
+      #   repo.name_rev('0000000000000000000000000000000000000000') #=> nil
+      #
+      # @param commit_ish [String] the commit-ish to find the symbolic name of
+      #
+      # @return [String, nil] the first symbolic name, or nil if no symbolic name
+      #   was found
+      #
+      # @raise [ArgumentError] if commit_ish starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero status
+      #
+      # @see https://git-scm.com/docs/git-name-rev git-name-rev documentation
+      #
+      def name_rev(commit_ish)
+        raise ArgumentError, "Invalid commit_ish: '#{commit_ish}'" if commit_ish&.start_with?('-')
+
+        Git::Commands::NameRev.new(@execution_context).call(commit_ish).stdout.split[1]
       end
 
       # Option keys accepted by {#grep}
