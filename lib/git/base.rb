@@ -881,6 +881,23 @@ module Git
     # For backwards compatibility
     alias revparse rev_parse
 
+    # Returns the number of entries in a git tree object
+    #
+    # @example Count recursive entries in the HEAD tree
+    #   git.tree_depth('HEAD^{tree}') #=> 42
+    #
+    # @param objectish [String] the tree-ish object to recurse into
+    #
+    # @return [Integer] the number of entries in the recursive tree listing
+    #
+    # @raise [Git::FailedError] when git exits with a non-zero exit status
+    #
+    # @see Git::Repository::ObjectOperations#tree_depth
+    #
+    def tree_depth(objectish)
+      facade_repository.tree_depth(objectish)
+    end
+
     # Lists the objects in a git tree object
     #
     # @example List all top-level objects

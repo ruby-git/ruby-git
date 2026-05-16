@@ -440,6 +440,51 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#tree_depth' do
+    let(:ls_tree_command) { instance_double(Git::Commands::LsTree) }
+
+    before do
+      allow(Git::Commands::LsTree).to receive(:new)
+        .with(execution_context)
+        .and_return(ls_tree_command)
+    end
+
+    context 'with a tree SHA' do
+      subject(:result) { described_instance.tree_depth('abc1234') }
+
+      let(:tree_output) do
+        "100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tex_dir/ex.txt\n" \
+          "100644 blob abcdef0123456789abcdef0123456789abcdef01\tlib/git.rb\n"
+      end
+      let(:tree_result) { command_result(tree_output) }
+
+      it 'constructs Git::Commands::LsTree with the execution context' do
+        expect(Git::Commands::LsTree).to receive(:new).with(execution_context).and_return(ls_tree_command)
+        allow(ls_tree_command).to receive(:call).and_return(tree_result)
+        result
+      end
+
+      it 'calls Git::Commands::LsTree#call with the sha and r: true' do
+        expect(ls_tree_command).to receive(:call).with('abc1234', r: true).and_return(tree_result)
+        result
+      end
+
+      it 'returns the number of recursive tree entries as an Integer' do
+        allow(ls_tree_command).to receive(:call).with('abc1234', r: true).and_return(tree_result)
+        expect(result).to eq(2)
+      end
+    end
+
+    context 'when the tree is empty' do
+      subject(:result) { described_instance.tree_depth('abc1234') }
+
+      it 'returns 0' do
+        allow(ls_tree_command).to receive(:call).with('abc1234', r: true).and_return(command_result(''))
+        expect(result).to eq(0)
+      end
+    end
+  end
+
   describe '#name_rev' do
     let(:name_rev_command) { instance_double(Git::Commands::NameRev) }
 

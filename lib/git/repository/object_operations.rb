@@ -245,9 +245,9 @@ module Git
 
       # Returns all recursive entries for a given tree object
       #
-      # Equivalent to running `git ls-tree -r <sha>` and splitting the output on
-      # newlines. Each returned line describes a single file in the tree in the
-      # format produced by `git ls-tree`: `<mode> <type> <object>\t<file>`.
+      # Equivalent to running `git ls-tree -r <objectish>` and splitting the
+      # output on newlines. Each returned line describes a single entry in the
+      # tree in the format produced by `git ls-tree`: `<mode> <type> <object>\t<file>`.
       #
       # @example List all files in the tree rooted at HEAD
       #   repo.full_tree('HEAD^{tree}')
@@ -256,9 +256,10 @@ module Git
       #   #   "100644 blob abc1234...\tlib/git.rb"
       #   # ]
       #
-      # @param sha [String] the tree SHA or tree-ish specifier to recurse into
+      # @param objectish [String] the tree SHA or tree-ish specifier to recurse
+      #   into
       #
-      # @return [Array<String>] one entry per file, in the format
+      # @return [Array<String>] one entry per path, in the format
       #   `<mode> <type> <object>\t<file>`
       #
       #   Returns an empty array for an empty tree.
@@ -267,8 +268,29 @@ module Git
       #
       # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
       #
-      def full_tree(sha)
-        Git::Commands::LsTree.new(@execution_context).call(sha, r: true).stdout.split("\n")
+      def full_tree(objectish)
+        Git::Commands::LsTree.new(@execution_context).call(objectish, r: true).stdout.split("\n")
+      end
+
+      # Returns the number of entries in a tree
+      #
+      # Runs `git ls-tree -r <objectish>` and counts output lines.
+      # This matches `Git::Lib#tree_depth` behavior in the 4.x branch.
+      #
+      # @example Count entries in the tree rooted at HEAD
+      #   repo.tree_depth('HEAD^{tree}') #=> 42
+      #
+      # @param objectish [String] the tree SHA or tree-ish specifier to recurse
+      #   into
+      #
+      # @return [Integer] the number of entries in the recursive tree listing
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
+      #
+      def tree_depth(objectish)
+        Git::Commands::LsTree.new(@execution_context).call(objectish, r: true).stdout.each_line.count
       end
 
       # Find the first symbolic name for a commit-ish
