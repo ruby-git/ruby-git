@@ -3,6 +3,9 @@
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/object_operations'
+require 'git/parsers/cat_file'
+require 'git/parsers/grep'
+require 'git/parsers/ls_tree'
 
 # Integration-level coverage for Git::Repository::ObjectOperations is
 # provided by spec/integration/git/repository/object_operations_spec.rb.
@@ -226,60 +229,33 @@ RSpec.describe Git::Repository::ObjectOperations do
           "committer A <a@example.com> 1 +0000\n\nInitial commit\n"
       end
       let(:commit_result) { command_result(commit_body) }
+      let(:parsed_commit) { { 'sha' => 'HEAD', 'tree' => 'abc123', 'parent' => ['def456'] } }
 
       it 'constructs Git::Commands::CatFile::Raw with the execution context' do
         expect(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
         allow(raw_command).to receive(:call).and_return(commit_result)
+        allow(Git::Parsers::CatFile).to receive(:parse_commit).and_return(parsed_commit)
         result
       end
 
       it 'calls Git::Commands::CatFile::Raw#call with type commit and the object' do
         expect(raw_command).to receive(:call).with('commit', 'HEAD').and_return(commit_result)
+        allow(Git::Parsers::CatFile).to receive(:parse_commit).and_return(parsed_commit)
         result
       end
 
-      it 'returns a Hash with the expected commit data' do
+      it 'delegates to Git::Parsers::CatFile.parse_commit with split lines and the object name' do
         allow(raw_command).to receive(:call).with('commit', 'HEAD').and_return(commit_result)
-        expect(result).to include(
-          'sha' => 'HEAD',
-          'tree' => 'abc123',
-          'parent' => ['def456'],
-          'author' => 'A <a@example.com> 1 +0000',
-          'committer' => 'A <a@example.com> 1 +0000',
-          'message' => "Initial commit\n"
-        )
-      end
-    end
-
-    context 'with a root commit (no parent lines)' do
-      subject(:result) { described_instance.cat_file_commit('abc123') }
-
-      let(:commit_body) do
-        "tree def456\nauthor A <a@example.com> 1 +0000\n" \
-          "committer A <a@example.com> 1 +0000\n\nRoot commit\n"
+        expect(Git::Parsers::CatFile).to receive(:parse_commit)
+          .with(commit_body.split("\n"), 'HEAD')
+          .and_return(parsed_commit)
+        result
       end
 
-      it 'returns an empty parent array' do
-        allow(raw_command).to receive(:call)
-          .with('commit', 'abc123')
-          .and_return(command_result(commit_body))
-        expect(result).to include('parent' => [])
-      end
-    end
-
-    context 'with a merge commit (multiple parents)' do
-      subject(:result) { described_instance.cat_file_commit('HEAD') }
-
-      let(:commit_body) do
-        "tree abc123\nparent def456\nparent ghi789\nauthor A <a@example.com> 1 +0000\n" \
-          "committer A <a@example.com> 1 +0000\n\nMerge branch 'feature'\n"
-      end
-
-      it 'returns all parent SHAs in the parent array' do
-        allow(raw_command).to receive(:call)
-          .with('commit', 'HEAD')
-          .and_return(command_result(commit_body))
-        expect(result).to include('parent' => %w[def456 ghi789])
+      it 'returns the value from Git::Parsers::CatFile.parse_commit' do
+        allow(raw_command).to receive(:call).with('commit', 'HEAD').and_return(commit_result)
+        allow(Git::Parsers::CatFile).to receive(:parse_commit).and_return(parsed_commit)
+        expect(result).to eq(parsed_commit)
       end
     end
   end
@@ -299,36 +275,33 @@ RSpec.describe Git::Repository::ObjectOperations do
       let(:tag_body) do
         "object deadbeef\ntype commit\ntag v1.0\ntagger A <a@example.com> 1 +0000\n\nRelease v1.0"
       end
+      let(:parsed_tag) { { 'name' => 'v1.0', 'object' => 'deadbeef', 'type' => 'commit' } }
 
       it 'constructs Git::Commands::CatFile::Raw with the execution context' do
         expect(Git::Commands::CatFile::Raw).to receive(:new).with(execution_context).and_return(raw_command)
         allow(raw_command).to receive(:call).and_return(command_result(tag_body))
+        allow(Git::Parsers::CatFile).to receive(:parse_tag).and_return(parsed_tag)
         result
       end
 
       it 'calls Git::Commands::CatFile::Raw#call with type tag and the object' do
         expect(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
+        allow(Git::Parsers::CatFile).to receive(:parse_tag).and_return(parsed_tag)
         result
       end
 
-      it 'returns a Hash with name set to the object argument' do
+      it 'delegates to Git::Parsers::CatFile.parse_tag with split lines and the object name' do
         allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
-        expect(result['name']).to eq('v1.0')
+        expect(Git::Parsers::CatFile).to receive(:parse_tag)
+          .with(tag_body.split("\n"), 'v1.0')
+          .and_return(parsed_tag)
+        result
       end
 
-      it 'returns a Hash with the parsed tag headers' do
+      it 'returns the value from Git::Parsers::CatFile.parse_tag' do
         allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
-        expect(result).to include(
-          'object' => 'deadbeef',
-          'type' => 'commit',
-          'tag' => 'v1.0',
-          'tagger' => 'A <a@example.com> 1 +0000'
-        )
-      end
-
-      it 'returns a Hash with message including a trailing newline' do
-        allow(raw_command).to receive(:call).with('tag', 'v1.0').and_return(command_result(tag_body))
-        expect(result['message']).to eq("Release v1.0\n")
+        allow(Git::Parsers::CatFile).to receive(:parse_tag).and_return(parsed_tag)
+        expect(result).to eq(parsed_tag)
       end
     end
 
@@ -552,34 +525,36 @@ RSpec.describe Git::Repository::ObjectOperations do
           "040000 tree abcdef0123456789abcdef0123456789abcdef01\tlib\n"
       end
       let(:ls_tree_result) { command_result(ls_tree_output) }
+      let(:parsed_tree) do
+        {
+          'blob' => { 'README.md' => { mode: '100644', sha: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391' } },
+          'tree' => { 'lib' => { mode: '040000', sha: 'abcdef0123456789abcdef0123456789abcdef01' } },
+          'commit' => {}
+        }
+      end
 
       before { allow(ls_tree_command).to receive(:call).and_return(ls_tree_result) }
 
       it 'constructs Git::Commands::LsTree with the execution context' do
         expect(Git::Commands::LsTree).to receive(:new).with(execution_context).and_return(ls_tree_command)
+        allow(Git::Parsers::LsTree).to receive(:parse).and_return(parsed_tree)
         result
       end
 
       it 'calls Git::Commands::LsTree#call with the sha and no extra options' do
         expect(ls_tree_command).to receive(:call).with('abc1234').and_return(ls_tree_result)
+        allow(Git::Parsers::LsTree).to receive(:parse).and_return(parsed_tree)
         result
       end
 
-      it 'returns a Hash keyed by object type' do
-        expect(result).to be_a(Hash)
-        expect(result.keys).to contain_exactly('blob', 'tree', 'commit')
+      it 'delegates to Git::Parsers::LsTree.parse with the stdout' do
+        expect(Git::Parsers::LsTree).to receive(:parse).with(ls_tree_output).and_return(parsed_tree)
+        result
       end
 
-      it 'parses blob entries into the blob sub-hash' do
-        expect(result['blob']['README.md']).to eq(
-          { mode: '100644', sha: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391' }
-        )
-      end
-
-      it 'parses tree entries into the tree sub-hash' do
-        expect(result['tree']['lib']).to eq(
-          { mode: '040000', sha: 'abcdef0123456789abcdef0123456789abcdef01' }
-        )
+      it 'returns the value from Git::Parsers::LsTree.parse' do
+        allow(Git::Parsers::LsTree).to receive(:parse).and_return(parsed_tree)
+        expect(result).to eq(parsed_tree)
       end
     end
 
@@ -799,9 +774,19 @@ RSpec.describe Git::Repository::ObjectOperations do
         result
       end
 
-      it 'returns a Hash keyed by treeish:filename with [line_number, text] arrays' do
+      it 'delegates to Git::Parsers::Grep.parse with the output lines' do
         allow(grep_command).to receive(:call).and_return(grep_result)
-        expect(result).to eq('HEAD:src/foo.rb' => [[12, '# TODO: fix this']])
+        expect(Git::Parsers::Grep).to receive(:parse)
+          .with(grep_output.split("\n"))
+          .and_return('HEAD:src/foo.rb' => [[12, '# TODO: fix this']])
+        result
+      end
+
+      it 'returns the value from Git::Parsers::Grep.parse' do
+        allow(grep_command).to receive(:call).and_return(grep_result)
+        parsed = { 'HEAD:src/foo.rb' => [[12, '# TODO: fix this']] }
+        allow(Git::Parsers::Grep).to receive(:parse).and_return(parsed)
+        expect(result).to eq(parsed)
       end
     end
 
