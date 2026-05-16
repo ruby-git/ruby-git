@@ -882,7 +882,7 @@ module Git
     alias revparse rev_parse
 
     def ls_tree(objectish, opts = {})
-      lib.ls_tree(objectish, opts)
+      facade_repository.ls_tree(objectish, opts)
     end
 
     def cat_file(objectish)
