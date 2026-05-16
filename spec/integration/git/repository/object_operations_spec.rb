@@ -287,6 +287,44 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#full_tree' do
+    context 'with the tree SHA for a commit containing one file' do
+      it 'returns an Array<String>' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        result = described_instance.full_tree(tree_sha)
+        expect(result).to be_a(Array)
+        expect(result).to all(be_a(String))
+      end
+
+      it 'returns one entry per file in the tree' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        result = described_instance.full_tree(tree_sha)
+        expect(result.size).to eq(1)
+      end
+
+      it 'returns entries in the git ls-tree format <mode> <type> <object>\\t<file>' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        result = described_instance.full_tree(tree_sha)
+        expect(result.first).to match(/\A\d{6} \w+ [0-9a-f]{40}\t\S+\z/)
+      end
+    end
+
+    context 'with a treeish specifier (HEAD^{tree})' do
+      it 'resolves and recurses into the tree' do
+        result = described_instance.full_tree('HEAD^{tree}')
+        expect(result).to be_a(Array)
+        expect(result).not_to be_empty
+      end
+    end
+
+    context 'when the sha does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.full_tree('0000000000000000000000000000000000000000') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
+
   describe '#archive' do
     context 'with no file argument (temp file)' do
       it 'returns a non-nil String path to a written file' do
