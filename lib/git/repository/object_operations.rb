@@ -4,6 +4,7 @@ require 'fileutils'
 require 'git/commands/archive'
 require 'git/commands/cat_file/raw'
 require 'git/commands/grep'
+require 'git/commands/ls_tree'
 require 'git/commands/rev_parse'
 require 'git/repository/shared_private'
 require 'tempfile'
@@ -238,6 +239,34 @@ module Git
       #
       def rev_parse(objectish)
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
+      end
+
+      # Returns all recursive entries for a given tree object
+      #
+      # Equivalent to running `git ls-tree -r <sha>` and splitting the output on
+      # newlines. Each returned line describes a single file in the tree in the
+      # format produced by `git ls-tree`: `<mode> <type> <object>\t<file>`.
+      #
+      # @example List all files in the tree rooted at HEAD
+      #   repo.full_tree('HEAD^{tree}')
+      #   # => [
+      #   #   "100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tex_dir/ex.txt",
+      #   #   "100644 blob abc1234...\tlib/git.rb"
+      #   # ]
+      #
+      # @param sha [String] the tree SHA or tree-ish specifier to recurse into
+      #
+      # @return [Array<String>] one entry per file, in the format
+      #   `<mode> <type> <object>\t<file>`
+      #
+      #   Returns an empty array for an empty tree.
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
+      #
+      def full_tree(sha)
+        Git::Commands::LsTree.new(@execution_context).call(sha, r: true).stdout.split("\n")
       end
 
       # Option keys accepted by {#grep}
