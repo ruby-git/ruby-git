@@ -356,6 +356,72 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#ls_tree' do
+    before do
+      write_file('lib/git.rb', "# frozen_string_literal: true\n")
+      repo.add('lib/git.rb')
+      repo.commit('Add lib/git.rb')
+    end
+
+    context 'when listing a tree that contains a blob and a subtree' do
+      it 'returns a Hash keyed by object type' do
+        result = described_instance.ls_tree('HEAD')
+        expect(result.keys).to contain_exactly('blob', 'tree', 'commit')
+      end
+
+      it 'includes the top-level blob in the blob sub-hash' do
+        result = described_instance.ls_tree('HEAD')
+        expect(result['blob']).to have_key('README.md')
+      end
+
+      it 'includes the subtree in the tree sub-hash' do
+        result = described_instance.ls_tree('HEAD')
+        expect(result['tree']).to have_key('lib')
+      end
+
+      it 'includes mode and sha values for each entry' do
+        result = described_instance.ls_tree('HEAD')
+        entry = result['blob']['README.md']
+        expect(entry).to include(:mode, :sha)
+        expect(entry[:mode]).to match(/\A\d{6}\z/)
+        expect(entry[:sha]).to match(/\A[0-9a-f]{40}\z/)
+      end
+    end
+
+    context 'with recursive: true' do
+      it 'lists files inside subtrees' do
+        result = described_instance.ls_tree('HEAD', recursive: true)
+        expect(result['blob']).to have_key('lib/git.rb')
+      end
+
+      it 'does not include the subtree itself in the tree sub-hash' do
+        result = described_instance.ls_tree('HEAD', recursive: true)
+        expect(result['tree']).not_to have_key('lib')
+      end
+    end
+
+    context 'with a path option' do
+      it 'limits the listing to entries under the given path' do
+        result = described_instance.ls_tree('HEAD', path: 'lib')
+        expect(result['tree']).to have_key('lib')
+        expect(result['blob']).not_to have_key('README.md')
+      end
+    end
+
+    context 'with an unsupported option' do
+      it 'raises ArgumentError' do
+        expect { described_instance.ls_tree('HEAD', bogus: true) }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'when the sha does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.ls_tree('0000000000000000000000000000000000000000') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
+
   describe '#archive' do
     context 'with no file argument (temp file)' do
       it 'returns a non-nil String path to a written file' do

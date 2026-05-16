@@ -8,6 +8,7 @@ require 'git/commands/ls_tree'
 require 'git/commands/name_rev'
 require 'git/commands/rev_parse'
 require 'git/repository/shared_private'
+require 'git/escaped_path'
 require 'tempfile'
 require 'zlib'
 
@@ -295,6 +296,57 @@ module Git
         Git::Commands::NameRev.new(@execution_context).call(commit_ish).stdout.split[1]
       end
 
+      # Option keys accepted by {#ls_tree}
+      LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze
+      private_constant :LS_TREE_ALLOWED_OPTS
+
+      # List the objects in a git tree
+      #
+      # Runs `git ls-tree` against the given sha and returns a Hash of tree
+      # entries organised by object type.
+      #
+      # @example List the top-level tree
+      #   repo.ls_tree('HEAD')
+      #   # => { 'blob' => { 'README.md' => { mode: '100644', sha: 'abc...' } },
+      #   #      'tree' => { 'lib' => { mode: '040000', sha: 'def...' } },
+      #   #      'commit' => {} }
+      #
+      # @example List the tree recursively
+      #   repo.ls_tree('HEAD', recursive: true)
+      #   # => { 'blob' => { 'lib/git.rb' => { mode: '100644', sha: '...' } }, ... }
+      #
+      # @example Limit the listing to a path
+      #   repo.ls_tree('HEAD', path: 'lib/')
+      #
+      # @param sha [String] the tree-ish object to list
+      #
+      # @param opts [Hash] additional options
+      #
+      # @option opts [Boolean] :recursive (false) recurse into subtrees
+      #
+      # @option opts [String, Array<String>] :path (nil) path or array of paths
+      #   to limit the listing to
+      #
+      # @return [Hash<String, Hash<String, Hash>>] a three-level Hash keyed by
+      #   object type (`'blob'`, `'tree'`, `'commit'`), then by filename, then
+      #   holding `:mode` and `:sha` values
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
+      #
+      def ls_tree(sha, opts = {})
+        SharedPrivate.assert_valid_opts!(LS_TREE_ALLOWED_OPTS, **opts)
+        paths = Array(opts[:path]).compact
+        r_value = opts[:recursive]
+        safe_options = {}
+        safe_options[:r] = r_value unless r_value.nil?
+        result = Git::Commands::LsTree.new(@execution_context).call(sha, *paths, **safe_options)
+        Private.parse_ls_tree_output(result.stdout)
+      end
+
       # Option keys accepted by {#grep}
       GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E object].freeze
       private_constant :GREP_ALLOWED_OPTS
@@ -459,10 +511,11 @@ module Git
       end
 
       # Private helpers for {#cat_file_commit}, {#cat_file_tag}, {#grep},
-      # and {#archive}
+      # {#ls_tree}, and {#archive}
       #
       # @api private
       #
+      # rubocop:disable Metrics/ModuleLength
       module Private
         module_function
 
@@ -775,7 +828,48 @@ module Git
             yield key, value_lines.join("\n")
           end
         end
+
+        # Parses `git ls-tree` output into a type-keyed hash of entries
+        #
+        # Each line of output is expected in the format produced by
+        # `git ls-tree`: `<mode> <type> <sha>\t<file>`.
+        #
+        # @param output [String] raw stdout from `git ls-tree`
+        #
+        # @return [Hash<String, Hash<String, Hash>>] hash keyed by object type
+        #   (`'blob'`, `'tree'`, `'commit'`), then by filename, holding
+        #   `:mode` and `:sha` values
+        #
+        # @api private
+        #
+        def parse_ls_tree_output(output)
+          data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
+          output.split("\n").each do |line|
+            info, filenm = line.split("\t", 2)
+            filenm = unescape_quoted_path(filenm) if filenm
+            mode, type, entry_sha = info.split
+            data[type][filenm] = { mode: mode, sha: entry_sha }
+          end
+          data
+        end
+
+        # Converts a git-quoted path back to its original form
+        #
+        # @param path [String] the path, possibly git-quoted
+        #
+        # @return [String] the unquoted path
+        #
+        # @api private
+        #
+        def unescape_quoted_path(path)
+          if path.start_with?('"') && path.end_with?('"')
+            Git::EscapedPath.new(path[1..-2]).unescape
+          else
+            path
+          end
+        end
       end
+      # rubocop:enable Metrics/ModuleLength
       private_constant :Private
     end
   end
