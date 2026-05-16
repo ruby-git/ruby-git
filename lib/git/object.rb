@@ -166,7 +166,7 @@ module Git
       end
 
       def depth
-        @base.lib.tree_depth(@objectish)
+        @base.tree_depth(@objectish)
       end
 
       def tree?

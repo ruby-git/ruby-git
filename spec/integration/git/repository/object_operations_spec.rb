@@ -325,6 +325,36 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#tree_depth' do
+    context 'with the tree SHA for a commit containing one file' do
+      it 'returns the recursive entry count as an Integer' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        result = described_instance.tree_depth(tree_sha)
+        expect(result).to be_a(Integer)
+      end
+
+      it 'returns one for the initial repository tree' do
+        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        result = described_instance.tree_depth(tree_sha)
+        expect(result).to eq(1)
+      end
+    end
+
+    context 'with a treeish specifier (HEAD^{tree})' do
+      it 'returns a positive count' do
+        result = described_instance.tree_depth('HEAD^{tree}')
+        expect(result).to be_positive
+      end
+    end
+
+    context 'when the sha does not exist' do
+      it 'raises Git::FailedError' do
+        expect { described_instance.tree_depth('0000000000000000000000000000000000000000') }
+          .to raise_error(Git::FailedError)
+      end
+    end
+  end
+
   describe '#name_rev' do
     context 'with a commit SHA that has a symbolic name' do
       it 'returns a String' do
