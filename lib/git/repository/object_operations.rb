@@ -275,17 +275,17 @@ module Git
       # @example Find the symbolic name for a commit
       #   repo.name_rev('abc123') #=> "main~5"
       #
-      # @example Returns nil when the commit-ish has no symbolic name
-      #   repo.name_rev('0000000000000000000000000000000000000000') #=> nil
+      # @example Find the symbolic name for HEAD
+      #   repo.name_rev('HEAD') #=> "main"
       #
       # @param commit_ish [String] the commit-ish to find the symbolic name of
       #
-      # @return [String, nil] the first symbolic name, or nil if no symbolic name
-      #   was found
+      # @return [String, nil] the first symbolic name, or nil if stdout contains
+      #   fewer than two words
       #
       # @raise [ArgumentError] if commit_ish starts with a hyphen
       #
-      # @raise [Git::FailedError] if git exits with a non-zero status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       # @see https://git-scm.com/docs/git-name-rev git-name-rev documentation
       #
