@@ -490,6 +490,104 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#ls_tree' do
+    let(:ls_tree_command) { instance_double(Git::Commands::LsTree) }
+
+    before do
+      allow(Git::Commands::LsTree).to receive(:new)
+        .with(execution_context)
+        .and_return(ls_tree_command)
+    end
+
+    context 'with a sha and no options' do
+      subject(:result) { described_instance.ls_tree('abc1234') }
+
+      let(:ls_tree_output) do
+        "100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tREADME.md\n" \
+          "040000 tree abcdef0123456789abcdef0123456789abcdef01\tlib\n"
+      end
+      let(:ls_tree_result) { command_result(ls_tree_output) }
+
+      before { allow(ls_tree_command).to receive(:call).and_return(ls_tree_result) }
+
+      it 'constructs Git::Commands::LsTree with the execution context' do
+        expect(Git::Commands::LsTree).to receive(:new).with(execution_context).and_return(ls_tree_command)
+        result
+      end
+
+      it 'calls Git::Commands::LsTree#call with the sha and no extra options' do
+        expect(ls_tree_command).to receive(:call).with('abc1234').and_return(ls_tree_result)
+        result
+      end
+
+      it 'returns a Hash keyed by object type' do
+        expect(result).to be_a(Hash)
+        expect(result.keys).to contain_exactly('blob', 'tree', 'commit')
+      end
+
+      it 'parses blob entries into the blob sub-hash' do
+        expect(result['blob']['README.md']).to eq(
+          { mode: '100644', sha: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391' }
+        )
+      end
+
+      it 'parses tree entries into the tree sub-hash' do
+        expect(result['tree']['lib']).to eq(
+          { mode: '040000', sha: 'abcdef0123456789abcdef0123456789abcdef01' }
+        )
+      end
+    end
+
+    context 'with recursive: true' do
+      subject(:result) { described_instance.ls_tree('abc1234', recursive: true) }
+
+      let(:ls_tree_result) { command_result("100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tlib/git.rb\n") }
+
+      it 'calls Git::Commands::LsTree#call with r: true' do
+        expect(ls_tree_command).to receive(:call).with('abc1234', r: true).and_return(ls_tree_result)
+        result
+      end
+    end
+
+    context 'with a path option' do
+      subject(:result) { described_instance.ls_tree('abc1234', path: 'lib/') }
+
+      let(:ls_tree_result) { command_result("040000 tree abcdef0123456789abcdef0123456789abcdef01\tlib\n") }
+
+      it 'calls Git::Commands::LsTree#call with the path as a positional argument' do
+        expect(ls_tree_command).to receive(:call).with('abc1234', 'lib/').and_return(ls_tree_result)
+        result
+      end
+    end
+
+    context 'with an array path option' do
+      subject(:result) { described_instance.ls_tree('abc1234', path: %w[lib/ src/]) }
+
+      let(:ls_tree_result) { command_result('') }
+
+      it 'calls Git::Commands::LsTree#call with each path as a positional argument' do
+        expect(ls_tree_command).to receive(:call).with('abc1234', 'lib/', 'src/').and_return(ls_tree_result)
+        result
+      end
+    end
+
+    context 'with an unsupported option' do
+      it 'raises ArgumentError' do
+        expect { described_instance.ls_tree('abc1234', bogus: true) }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'when the tree is empty' do
+      subject(:result) { described_instance.ls_tree('abc1234') }
+
+      before { allow(ls_tree_command).to receive(:call).and_return(command_result('')) }
+
+      it 'returns a Hash with empty sub-hashes for each object type' do
+        expect(result).to eq({ 'blob' => {}, 'tree' => {}, 'commit' => {} })
+      end
+    end
+  end
+
   describe '#archive' do
     let(:archive_command) { instance_double(Git::Commands::Archive) }
     let(:archive_result) { command_result('') }
