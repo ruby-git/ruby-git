@@ -651,6 +651,16 @@ module Git
     # Allowed option keys for {#ls_tree}
     LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze
 
+    # Lists the objects in a git tree
+    #
+    # @param sha [String] the tree-ish object to list
+    #
+    # @param opts [Hash] additional options
+    #
+    # @return [Hash<String, Hash<String, Hash>>] parsed ls-tree output
+    #
+    # @api private
+    #
     def ls_tree(sha, opts = {})
       assert_valid_opts(opts, LS_TREE_ALLOWED_OPTS)
       r_value = opts[:recursive]

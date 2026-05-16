@@ -318,11 +318,11 @@ module Git
       # @example Limit the listing to a path
       #   repo.ls_tree('HEAD', path: 'lib/')
       #
-      # @param sha [String] the tree-ish object to list
+      # @param objectish [String] the tree-ish object to list
       #
       # @param opts [Hash] additional options
       #
-      # @option opts [Boolean] :recursive (false) recurse into subtrees
+      # @option opts [Boolean, nil] :recursive (nil) recurse into subtrees
       #
       # @option opts [String, Array<String>] :path (nil) path or array of paths
       #   to limit the listing to
@@ -331,19 +331,19 @@ module Git
       #   object type (`'blob'`, `'tree'`, `'commit'`), then by filename, then
       #   holding `:mode` and `:sha` values
       #
-      # @raise [ArgumentError] if unsupported options are provided
+      # @raise [ArgumentError] when unsupported options are provided
       #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       # @see https://git-scm.com/docs/git-ls-tree git-ls-tree documentation
       #
-      def ls_tree(sha, opts = {})
+      def ls_tree(objectish, opts = {})
         SharedPrivate.assert_valid_opts!(LS_TREE_ALLOWED_OPTS, **opts)
         paths = Array(opts[:path]).compact
         r_value = opts[:recursive]
         safe_options = {}
         safe_options[:r] = r_value unless r_value.nil?
-        result = Git::Commands::LsTree.new(@execution_context).call(sha, *paths, **safe_options)
+        result = Git::Commands::LsTree.new(@execution_context).call(objectish, *paths, **safe_options)
         Private.parse_ls_tree_output(result.stdout)
       end
 
