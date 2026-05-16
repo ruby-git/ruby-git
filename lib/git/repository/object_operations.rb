@@ -7,6 +7,9 @@ require 'git/commands/grep'
 require 'git/commands/ls_tree'
 require 'git/commands/name_rev'
 require 'git/commands/rev_parse'
+require 'git/parsers/cat_file'
+require 'git/parsers/grep'
+require 'git/parsers/ls_tree'
 require 'git/repository/shared_private'
 require 'git/escaped_path'
 require 'tempfile'
@@ -162,7 +165,7 @@ module Git
       #
       def cat_file_commit(object)
         result = Git::Commands::CatFile::Raw.new(@execution_context).call('commit', object)
-        Private.process_commit_data(result.stdout.split("\n"), object)
+        Git::Parsers::CatFile.parse_commit(result.stdout.split("\n"), object)
       end
 
       # Returns parsed tag data for the given annotated tag object
@@ -211,7 +214,7 @@ module Git
         raise ArgumentError, "Invalid object: '#{object}'" if object&.start_with?('-')
 
         tdata = Git::Commands::CatFile::Raw.new(@execution_context).call('tag', object).stdout.split("\n")
-        Private.process_tag_data(tdata, object)
+        Git::Parsers::CatFile.parse_tag(tdata, object)
       end
 
       # Resolve a revision specifier to its full object ID
@@ -366,7 +369,7 @@ module Git
         safe_options = {}
         safe_options[:r] = r_value unless r_value.nil?
         result = Git::Commands::LsTree.new(@execution_context).call(objectish, *paths, **safe_options)
-        Private.parse_ls_tree_output(result.stdout)
+        Git::Parsers::LsTree.parse(result.stdout)
       end
 
       # Option keys accepted by {#grep}
@@ -434,8 +437,20 @@ module Git
         result = Git::Commands::Grep.new(@execution_context).call(
           object, pattern:, **opts, no_color: true, line_number: true
         )
-        Private.process_grep_result(result)
+        parse_grep_result(result)
       end
+
+      private
+
+      def parse_grep_result(result)
+        exitstatus = result.status.exitstatus
+        return {} if exitstatus == 1 && result.stderr.empty?
+        raise Git::FailedError, result if exitstatus == 1
+
+        Git::Parsers::Grep.parse(result.stdout.split("\n"))
+      end
+
+      public
 
       # Option keys accepted by {#archive}
       ARCHIVE_ALLOWED_OPTS = %i[prefix remote path format add_gzip].freeze
@@ -532,65 +547,12 @@ module Git
         raise
       end
 
-      # Private helpers for {#cat_file_commit}, {#cat_file_tag}, {#grep},
-      # {#ls_tree}, and {#archive}
+      # Private helpers for {#archive}
       #
       # @api private
       #
-      # rubocop:disable Metrics/ModuleLength
       module Private
         module_function
-
-        # Matches a single `git cat-file` header line
-        #
-        # @api private
-        #
-        CAT_FILE_HEADER_LINE = /\A(?<key>\w+) (?<value>.*)\z/
-
-        # Interprets a `Git::Commands::Grep` result and returns parsed matches
-        #
-        # Exit status 1 with empty stderr means no lines matched — returns `{}`.
-        # Exit status 1 with non-empty stderr is a real error and raises.
-        # Exit status 0 parses the output lines.
-        #
-        # @param result [Git::CommandLineResult] the result from the grep command
-        #
-        # @return [Hash<String, Array<Array(Integer, String)>>] parsed match hash
-        #
-        # @raise [Git::FailedError] if exit status is 1 and stderr is non-empty
-        #
-        # @api private
-        #
-        def process_grep_result(result)
-          exitstatus = result.status.exitstatus
-          return {} if exitstatus == 1 && result.stderr.empty?
-
-          raise Git::FailedError, result if exitstatus == 1
-
-          parse_grep_output(result.stdout.split("\n"))
-        end
-
-        # Parses `git grep` output lines into a filename-keyed hash of matches
-        #
-        # Each line is expected in the format produced by
-        # `git grep --line-number --no-color`: `treeish:filename:linenum:text`.
-        #
-        # @param lines [Array<String>] output lines from `git grep`
-        #
-        # @return [Hash<String, Array<Array(Integer, String)>>] hash mapping
-        #   `"treeish:filename"` keys to arrays of `[line_number, text]` pairs
-        #
-        # @api private
-        #
-        def parse_grep_output(lines)
-          lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
-            match = line.match(/\A(.*?):(\d+):(.*)/)
-            next unless match
-
-            _full, filename, line_num, text = match.to_a
-            hsh[filename] << [line_num.to_i, text]
-          end
-        end
 
         # Resolve the staging directory for a git archive temp file
         #
@@ -760,138 +722,7 @@ module Git
           FileUtils.rm_f(gz_tmp) if gz_tmp
           raise
         end
-
-        # Assembles the commit Hash from parsed lines
-        #
-        # @param data [Array<String>] mutable cat-file output lines, consumed
-        #   in place during header parsing
-        #
-        # @param sha [String] the object name passed by the caller
-        #
-        # @return [Hash] commit data hash with string keys
-        #
-        # @api private
-        #
-        def process_commit_data(data, sha)
-          headers = process_commit_headers(data)
-          message = "#{data.join("\n")}\n"
-          { 'sha' => sha, 'message' => message }.merge(headers)
-        end
-
-        # Extracts and returns headers from the front of `data`
-        #
-        # Mutates `data` in place, consuming header lines and the blank
-        # separator line. After the call `data` contains only message lines.
-        #
-        # @param data [Array<String>] mutable cat-file output lines
-        #
-        # @return [Hash] parsed header key/value pairs; `parent` is always
-        #   an Array
-        #
-        # @api private
-        #
-        def process_commit_headers(data)
-          headers = { 'parent' => [] }
-          each_cat_file_header(data) do |key, value|
-            if key == 'parent'
-              headers['parent'] << value
-            else
-              headers[key] = value
-            end
-          end
-          headers
-        end
-
-        # Assembles the tag Hash from parsed lines
-        #
-        # @param data [Array<String>] mutable cat-file output lines, consumed
-        #   in place during header parsing; remaining lines become the message
-        #
-        # @param name [String] the tag name passed by the caller
-        #
-        # @return [Hash] tag data hash with string keys
-        #
-        # @api private
-        #
-        def process_tag_data(data, name)
-          hsh = { 'name' => name }
-          each_cat_file_header(data) { |key, value| hsh[key] = value }
-          hsh['message'] = "#{data.join("\n")}\n"
-          hsh
-        end
-
-        # Yields parsed header key/value pairs from `git cat-file` output lines
-        #
-        # Consumes header lines from the front of `data` until a blank line is
-        # encountered. Continuation lines that begin with a space are folded
-        # into the previous header value using newline separators.
-        #
-        # @param data [Array<String>] mutable output lines from a cat-file response
-        #
-        # @yield [key, value] each parsed header pair
-        #
-        # @yieldparam key [String] header field name
-        #
-        # @yieldparam value [String] unfolded header value text
-        #
-        # @yieldreturn [void]
-        #
-        # @return [void]
-        #
-        # @raise [NoMethodError] if `data` contains non-string entries
-        #
-        # @api private
-        #
-        def each_cat_file_header(data)
-          while (line = data.shift) && (match = CAT_FILE_HEADER_LINE.match(line))
-            key = match[:key]
-            value_lines = [match[:value]]
-            value_lines << data.shift.lstrip while data.first&.start_with?(' ')
-            yield key, value_lines.join("\n")
-          end
-        end
-
-        # Parses `git ls-tree` output into a type-keyed hash of entries
-        #
-        # Each line of output is expected in the format produced by
-        # `git ls-tree`: `<mode> <type> <sha>\t<file>`.
-        #
-        # @param output [String] raw stdout from `git ls-tree`
-        #
-        # @return [Hash<String, Hash<String, Hash>>] hash keyed by object type
-        #   (`'blob'`, `'tree'`, `'commit'`), then by filename, holding
-        #   `:mode` and `:sha` values
-        #
-        # @api private
-        #
-        def parse_ls_tree_output(output)
-          data = { 'blob' => {}, 'tree' => {}, 'commit' => {} }
-          output.split("\n").each do |line|
-            info, filenm = line.split("\t", 2)
-            filenm = unescape_quoted_path(filenm) if filenm
-            mode, type, entry_sha = info.split
-            data[type][filenm] = { mode: mode, sha: entry_sha }
-          end
-          data
-        end
-
-        # Converts a git-quoted path back to its original form
-        #
-        # @param path [String] the path, possibly git-quoted
-        #
-        # @return [String] the unquoted path
-        #
-        # @api private
-        #
-        def unescape_quoted_path(path)
-          if path.start_with?('"') && path.end_with?('"')
-            Git::EscapedPath.new(path[1..-2]).unescape
-          else
-            path
-          end
-        end
       end
-      # rubocop:enable Metrics/ModuleLength
       private_constant :Private
     end
   end
