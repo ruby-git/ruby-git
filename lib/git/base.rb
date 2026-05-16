@@ -881,6 +881,29 @@ module Git
     # For backwards compatibility
     alias revparse rev_parse
 
+    # Lists the objects in a git tree object
+    #
+    # @example List all top-level objects
+    #   git.ls_tree('HEAD')
+    #   # => { 'blob' => { 'README.md' => { mode: '100644', sha: '...' } }, ... }
+    #
+    # @param objectish [String] the tree-ish object to list
+    #
+    # @param opts [Hash] additional options
+    #
+    # @option opts [Boolean, nil] :recursive (nil) recurse into subtrees
+    #
+    # @option opts [String, Array<String>] :path (nil) limit the listing to
+    #   the given path or array of paths
+    #
+    # @return [Hash<String, Hash<String, Hash>>] a three-level Hash keyed by
+    #   object type (`'blob'`, `'tree'`, `'commit'`), then by filename, then
+    #   holding `:mode` and `:sha` values
+    #
+    # @raise [ArgumentError] when unsupported options are provided
+    #
+    # @raise [Git::FailedError] when git exits with a non-zero exit status
+    #
     def ls_tree(objectish, opts = {})
       facade_repository.ls_tree(objectish, opts)
     end
