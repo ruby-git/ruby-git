@@ -4,6 +4,7 @@ require 'git/author'
 require 'git/diff'
 require 'git/errors'
 require 'git/log'
+require 'git/base'
 
 module Git
   # represents a git object
@@ -24,11 +25,11 @@ module Git
       end
 
       def sha
-        @sha ||= @base.lib.rev_parse(@objectish)
+        @sha ||= object_repository.rev_parse(@objectish)
       end
 
       def size
-        @size ||= @base.lib.cat_file_size(@objectish)
+        @size ||= object_repository.cat_file_size(@objectish)
       end
 
       # Returns the raw content of this git object or streams it into a temporary file
@@ -70,9 +71,9 @@ module Git
       #
       def contents(&)
         if block_given?
-          @base.lib.cat_file_contents(@objectish, &)
+          object_repository.cat_file_contents(@objectish, &)
         else
-          @contents ||= @base.lib.cat_file_contents(@objectish)
+          @contents ||= object_repository.cat_file_contents(@objectish)
         end
       end
 
@@ -85,8 +86,7 @@ module Git
       end
 
       def grep(string, path_limiter = nil, opts = {})
-        opts = { object: sha, path_limiter: path_limiter }.merge(opts)
-        @base.lib.grep(string, opts)
+        object_repository.grep(string, path_limiter, opts.merge(object: sha))
       end
 
       def diff(objectish)
@@ -113,7 +113,7 @@ module Git
       #   git.object('v1.0').archive('/tmp/release.zip', format: 'zip')
       #
       def archive(file = nil, opts = {})
-        @base.lib.archive(@objectish, file, opts)
+        object_repository.archive(@objectish, file, opts)
       end
 
       def tree? = false
@@ -123,6 +123,19 @@ module Git
       def commit? = false
 
       def tag? = false
+
+      private
+
+      # Returns the facade interface for git object queries.
+      #
+      # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+      # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
+      #
+      # @return [Git::Repository]
+      #
+      def object_repository
+        @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      end
     end
 
     # A Git blob object
@@ -162,11 +175,11 @@ module Git
       alias subdirectories trees
 
       def full_tree
-        @base.lib.full_tree(@objectish)
+        object_repository.full_tree(@objectish)
       end
 
       def depth
-        @base.tree_depth(@objectish)
+        object_repository.tree_depth(@objectish)
       end
 
       def tree?
@@ -180,7 +193,7 @@ module Git
         @trees = {}
         @blobs = {}
 
-        data = @base.lib.ls_tree(@objectish)
+        data = object_repository.ls_tree(@objectish)
 
         data['tree'].each do |key, tree|
           @trees[key] = Git::Object::Tree.new(@base, tree[:sha], tree[:mode])
@@ -214,7 +227,7 @@ module Git
       end
 
       def name
-        @base.lib.name_rev(sha)
+        object_repository.name_rev(sha)
       end
 
       def gtree
@@ -284,7 +297,7 @@ module Git
       def check_commit
         return if @tree
 
-        data = @base.lib.cat_file_commit(@objectish)
+        data = object_repository.cat_file_commit(@objectish)
         from_data(data)
       end
     end
@@ -313,7 +326,8 @@ module Git
       def initialize(base, sha, name = nil)
         if name.nil?
           name = sha
-          sha = base.lib.tag_sha(name)
+          repo = base.is_a?(Git::Base) ? base.facade_repository : base
+          sha = repo.tag_sha(name)
           raise Git::UnexpectedResultError, "Tag '#{name}' does not exist." if sha == ''
         end
 
@@ -325,7 +339,7 @@ module Git
       end
 
       def annotated?
-        @annotated = @annotated.nil? ? (@base.lib.cat_file_type(name) == 'tag') : @annotated
+        @annotated = @annotated.nil? ? (object_repository.cat_file_type(name) == 'tag') : @annotated
       end
 
       def message
@@ -348,7 +362,7 @@ module Git
         return if @loaded
 
         if annotated?
-          tdata = @base.lib.cat_file_tag(@name)
+          tdata = object_repository.cat_file_tag(@name)
           @message = tdata['message'].chomp
           @tagger = Git::Author.new(tdata['tagger'])
         else
@@ -364,7 +378,7 @@ module Git
     def self.new(base, objectish, type = nil, is_tag = false) # rubocop:disable Style/OptionalBooleanParameter
       return new_tag(base, objectish) if is_tag
 
-      type ||= base.lib.cat_file_type(objectish)
+      type ||= object_repository_for(base).cat_file_type(objectish)
       # TODO: why not handle tag case here too?
       klass =
         case type
@@ -378,6 +392,17 @@ module Git
     private_class_method def self.new_tag(base, objectish)
       Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
       Git::Object::Tag.new(base, objectish)
+    end
+
+    # Returns the facade interface for git object queries.
+    #
+    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+    # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
+    #
+    # @return [Git::Repository]
+    #
+    private_class_method def self.object_repository_for(base)
+      base.is_a?(Git::Base) ? base.facade_repository : base
     end
   end
 end
