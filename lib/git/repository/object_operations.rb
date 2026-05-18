@@ -7,6 +7,7 @@ require 'git/commands/grep'
 require 'git/commands/ls_tree'
 require 'git/commands/name_rev'
 require 'git/commands/rev_parse'
+require 'git/commands/show_ref/list'
 require 'git/parsers/cat_file'
 require 'git/parsers/grep'
 require 'git/parsers/ls_tree'
@@ -246,6 +247,32 @@ module Git
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
 
+      # Returns the SHA of a named tag
+      #
+      # Returns an empty string when the tag does not exist.
+      #
+      # @example Get the SHA of an existing tag
+      #   repo.tag_sha('v1.0')
+      #   #=> "abc1234567890abcdef1234567890abcdef123456"
+      #
+      # @example Get the SHA of a non-existent tag
+      #   repo.tag_sha('nonexistent') #=> ""
+      #
+      # @param tag_name [String] the tag name to look up
+      #
+      # @return [String] the SHA of the named tag, or an empty string if the
+      #   tag does not exist
+      #
+      # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation
+      #
+      def tag_sha(tag_name)
+        tags_dir = File.expand_path(File.join(@execution_context.git_dir, 'refs', 'tags'))
+        head = File.expand_path(File.join(tags_dir, tag_name))
+        return File.read(head).chomp if head.start_with?("#{tags_dir}#{File::SEPARATOR}") && File.file?(head)
+
+        Private.show_ref_tag_sha(@execution_context, tag_name)
+      end
+
       # Returns all recursive entries for a given tree object
       #
       # Equivalent to running `git ls-tree -r <objectish>` and splitting the
@@ -437,20 +464,8 @@ module Git
         result = Git::Commands::Grep.new(@execution_context).call(
           object, pattern:, **opts, no_color: true, line_number: true
         )
-        parse_grep_result(result)
+        Private.parse_grep_result(result)
       end
-
-      private
-
-      def parse_grep_result(result)
-        exitstatus = result.status.exitstatus
-        return {} if exitstatus == 1 && result.stderr.empty?
-        raise Git::FailedError, result if exitstatus == 1
-
-        Git::Parsers::Grep.parse(result.stdout.split("\n"))
-      end
-
-      public
 
       # Option keys accepted by {#archive}
       ARCHIVE_ALLOWED_OPTS = %i[prefix remote path format add_gzip].freeze
@@ -547,12 +562,29 @@ module Git
         raise
       end
 
-      # Private helpers for {#archive}
+      # Private helpers
       #
       # @api private
       #
       module Private
         module_function
+
+        def show_ref_tag_sha(execution_context, tag_name)
+          ref = "refs/tags/#{tag_name}"
+          result = Git::Commands::ShowRef::List.new(execution_context).call(ref)
+          return '' if result.status.exitstatus == 1
+
+          line = result.stdout.lines.find { |l| l.split[1] == ref }
+          line ? line.split[0] : ''
+        end
+
+        def parse_grep_result(result)
+          exitstatus = result.status.exitstatus
+          return {} if exitstatus == 1 && result.stderr.empty?
+          raise Git::FailedError, result if exitstatus == 1
+
+          Git::Parsers::Grep.parse(result.stdout.split("\n"))
+        end
 
         # Resolve the staging directory for a git archive temp file
         #

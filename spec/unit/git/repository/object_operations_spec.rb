@@ -3,6 +3,7 @@
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/object_operations'
+require 'git/commands/show_ref/verify'
 require 'git/parsers/cat_file'
 require 'git/parsers/grep'
 require 'git/parsers/ls_tree'
@@ -96,6 +97,13 @@ RSpec.describe Git::Repository::ObjectOperations do
         expect { result }.to raise_error(ArgumentError, "Invalid object: '--batch'")
       end
     end
+
+    context 'when object is nil' do
+      it 'does not raise ArgumentError' do
+        allow(raw_command).to receive(:call).with(nil, p: true).and_return(command_result("content\n"))
+        expect { described_instance.cat_file_contents(nil) }.not_to raise_error
+      end
+    end
   end
 
   describe '#cat_file_size' do
@@ -153,6 +161,13 @@ RSpec.describe Git::Repository::ObjectOperations do
         expect { result }.to raise_error(ArgumentError, "Invalid object: '--batch'")
       end
     end
+
+    context 'when object is nil' do
+      it 'does not raise ArgumentError' do
+        allow(raw_command).to receive(:call).with(nil, s: true).and_return(command_result("0\n"))
+        expect { described_instance.cat_file_size(nil) }.not_to raise_error
+      end
+    end
   end
 
   describe '#cat_file_type' do
@@ -208,6 +223,13 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'raises ArgumentError before calling the command' do
         expect(Git::Commands::CatFile::Raw).not_to receive(:new)
         expect { result }.to raise_error(ArgumentError, "Invalid object: '--batch'")
+      end
+    end
+
+    context 'when object is nil' do
+      it 'does not raise ArgumentError' do
+        allow(raw_command).to receive(:call).with(nil, t: true).and_return(command_result("commit\n"))
+        expect { described_instance.cat_file_type(nil) }.not_to raise_error
       end
     end
   end
@@ -313,6 +335,14 @@ RSpec.describe Git::Repository::ObjectOperations do
         expect { result }.to raise_error(ArgumentError, "Invalid object: '--all'")
       end
     end
+
+    context 'when object is nil' do
+      it 'does not raise ArgumentError' do
+        allow(raw_command).to receive(:call).with('tag', nil).and_return(command_result(''))
+        allow(Git::Parsers::CatFile).to receive(:parse_tag).and_return({})
+        expect { described_instance.cat_file_tag(nil) }.not_to raise_error
+      end
+    end
   end
 
   describe '#rev_parse' do
@@ -361,6 +391,125 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'returns the full SHA' do
         allow(rev_parse_command).to receive(:call).with('9b9b31e', '--', revs_only: true).and_return(rev_parse_result)
         expect(result).to eq(sha)
+      end
+    end
+  end
+
+  describe '#tag_sha' do
+    let(:show_ref_list_command) { instance_double(Git::Commands::ShowRef::List) }
+    let(:git_dir) { '/fake/.git' }
+    let(:tags_dir) { File.expand_path(File.join(git_dir, 'refs', 'tags')) }
+    let(:tag_ref_path) { File.expand_path(File.join(tags_dir, 'v1.0')) }
+
+    before do
+      allow(execution_context).to receive(:git_dir).and_return(git_dir)
+      allow(Git::Commands::ShowRef::List).to receive(:new)
+        .with(execution_context)
+        .and_return(show_ref_list_command)
+    end
+
+    context 'when the loose ref file exists under refs/tags/' do
+      before do
+        allow(File).to receive(:file?).with(tag_ref_path).and_return(true)
+        allow(File).to receive(:read).with(tag_ref_path).and_return("abc1234\n")
+      end
+
+      it 'reads the SHA directly from the file without forking a git process' do
+        expect(described_instance.tag_sha('v1.0')).to eq('abc1234')
+        expect(Git::Commands::ShowRef::List).not_to have_received(:new)
+      end
+    end
+
+    context 'when the loose ref path is a directory (e.g. a namespaced tag prefix like "release")' do
+      before do
+        allow(File).to receive(:file?).with(tag_ref_path).and_return(false)
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result('', exitstatus: 1))
+      end
+
+      it 'does not attempt to read the directory' do
+        expect(File).not_to receive(:read)
+        described_instance.tag_sha('v1.0')
+      end
+
+      it 'falls through to git show-ref and returns an empty string' do
+        expect(described_instance.tag_sha('v1.0')).to eq('')
+      end
+    end
+
+    context 'when the tag name contains path traversal sequences' do
+      before do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result('', exitstatus: 1))
+      end
+
+      it 'does not read from the filesystem' do
+        expect(File).not_to receive(:read)
+        described_instance.tag_sha('../../config')
+      end
+
+      it 'falls through to git show-ref and returns an empty string' do
+        expect(described_instance.tag_sha('../../config')).to eq('')
+      end
+    end
+
+    context 'when the loose ref file does not exist (packed ref or missing tag)' do
+      before do
+        allow(File).to receive(:file?).with(tag_ref_path).and_return(false)
+      end
+
+      it 'constructs Git::Commands::ShowRef::List with the execution context' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result("abc1234 refs/tags/v1.0\n"))
+
+        expect(Git::Commands::ShowRef::List).to receive(:new)
+          .with(execution_context)
+          .and_return(show_ref_list_command)
+
+        described_instance.tag_sha('v1.0')
+      end
+
+      it 'calls git show-ref with the full tag ref pattern' do
+        expect(show_ref_list_command).to receive(:call)
+          .with('refs/tags/v1.0')
+          .and_return(command_result("abc1234 refs/tags/v1.0\n"))
+
+        described_instance.tag_sha('v1.0')
+      end
+
+      it 'returns the SHA when the tag exists' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result("abc1234 refs/tags/v1.0\n"))
+
+        expect(described_instance.tag_sha('v1.0')).to eq('abc1234')
+      end
+
+      it 'returns only the exact-match SHA when output contains partial-match refs' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result("abc1234 refs/tags/v1.0\ndef5678 refs/tags/v1.0.1\n"))
+
+        expect(described_instance.tag_sha('v1.0')).to eq('abc1234')
+      end
+
+      it 'returns an empty string when the tag is not found (exit status 1)' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result('', exitstatus: 1))
+
+        expect(described_instance.tag_sha('v1.0')).to eq('')
+      end
+
+      it 're-raises Git::FailedError for operational failures (e.g. not a git repository)' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_raise(Git::FailedError.new(command_result('', stderr: 'fatal: not a git repository', exitstatus: 128)))
+
+        expect { described_instance.tag_sha('v1.0') }.to raise_error(Git::FailedError)
+      end
+
+      it 'returns an empty string when show-ref exits 0 but no line matches the exact ref' do
+        allow(show_ref_list_command).to receive(:call)
+          .and_return(command_result("def5678 refs/tags/v1.0.1\n"))
+
+        expect(described_instance.tag_sha('v1.0')).to eq('')
       end
     end
   end
@@ -504,6 +653,13 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'raises ArgumentError before calling the command' do
         expect(Git::Commands::NameRev).not_to receive(:new)
         expect { result }.to raise_error(ArgumentError, "Invalid commit_ish: '--tags'")
+      end
+    end
+
+    context 'when commit_ish is nil' do
+      it 'does not raise ArgumentError' do
+        allow(name_rev_command).to receive(:call).with(nil).and_return(command_result("undefined\n"))
+        expect { described_instance.name_rev(nil) }.not_to raise_error
       end
     end
   end
@@ -742,6 +898,94 @@ RSpec.describe Git::Repository::ObjectOperations do
       it 'raises ArgumentError before calling Git::Commands::Archive' do
         expect(Git::Commands::Archive).not_to receive(:new)
         expect { described_instance.archive('HEAD', Dir.tmpdir) }.to raise_error(ArgumentError, /is a directory/)
+      end
+    end
+
+    context 'when the archive command raises during staging' do
+      before do
+        allow(archive_command).to receive(:call).and_raise(RuntimeError, 'archive failed')
+      end
+
+      it 'cleans up the staging temp file and re-raises' do
+        expect { described_instance.archive('HEAD') }.to raise_error(RuntimeError, /archive failed/)
+      end
+    end
+
+    context 'when gzip post-processing raises an error' do
+      before do
+        allow(Zlib::GzipWriter).to receive(:open).and_raise(RuntimeError, 'gzip failed')
+      end
+
+      it 'cleans up temp files and re-raises' do
+        expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(RuntimeError, /gzip failed/)
+      end
+    end
+
+    context 'when atomically renaming the staging file to the destination fails' do
+      let(:tmpfile) do
+        t = Tempfile.new(['archive_unit', '.zip'])
+        t.close
+        t
+      end
+
+      after { tmpfile.close! }
+
+      before do
+        allow(File).to receive(:rename).and_raise(RuntimeError, 'rename failed')
+      end
+
+      it 'cleans up the staging file and re-raises' do
+        expect { described_instance.archive('HEAD', tmpfile.path) }.to raise_error(RuntimeError, /rename failed/)
+      end
+    end
+
+    context 'with an output path that does not yet exist' do
+      let(:new_dest) { File.join(Dir.tmpdir, "archive_unit_new_#{Process.pid}.zip") }
+
+      after { File.unlink(new_dest) if File.exist?(new_dest) }
+
+      it 'archives to the new destination path' do
+        result = described_instance.archive('HEAD', new_dest)
+        expect(result).to eq(new_dest)
+      end
+    end
+
+    context 'when creating the staging temp file raises before assignment' do
+      before do
+        allow(Tempfile).to receive(:create).with('archive', anything).and_raise(Errno::ENOSPC, 'No space left on device')
+      end
+
+      it 'propagates the error' do
+        expect { described_instance.archive('HEAD') }.to raise_error(Errno::ENOSPC)
+      end
+    end
+
+    context 'when creating the gzip temp file raises before assignment' do
+      before do
+        allow(Tempfile).to receive(:create).and_call_original
+        allow(Tempfile).to receive(:create).with('archive_gz', anything).and_raise(Errno::ENOSPC, 'No space left on device')
+      end
+
+      it 'propagates the error' do
+        expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(Errno::ENOSPC)
+      end
+    end
+
+    context 'when gzip raises and the staging file is not yet closed when rescue runs' do
+      let(:staging_file_path) { File.join(Dir.tmpdir, "fake_archive_#{Process.pid}") }
+      let(:staging_file) { instance_double(File, path: staging_file_path) }
+
+      before do
+        allow(staging_file).to receive(:binmode)
+        allow(staging_file).to receive(:close)
+        allow(staging_file).to receive(:closed?).and_return(false)
+        allow(Tempfile).to receive(:create).and_call_original
+        allow(Tempfile).to receive(:create).with('archive', anything).and_return(staging_file)
+        allow(Zlib::GzipWriter).to receive(:open).and_raise(RuntimeError, 'gzip error')
+      end
+
+      it 'closes the staging file and re-raises' do
+        expect { described_instance.archive('HEAD', nil, add_gzip: true) }.to raise_error(RuntimeError, /gzip error/)
       end
     end
   end
