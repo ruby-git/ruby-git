@@ -287,6 +287,31 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
+  describe '#tag_sha' do
+    context 'when the tag exists' do
+      before do
+        repo.add_tag('v1.0')
+      end
+
+      it 'returns the SHA of the tagged commit as a String' do
+        result = described_instance.tag_sha('v1.0')
+        expect(result.chomp).to match(/\A[0-9a-f]{40}\z/)
+      end
+
+      it 'returns the same SHA as rev_parse for the tag' do
+        expected = repo.lib.rev_parse('v1.0')
+        result = described_instance.tag_sha('v1.0')
+        expect(result.chomp).to eq(expected.chomp)
+      end
+    end
+
+    context 'when the tag does not exist' do
+      it 'returns an empty string' do
+        expect(described_instance.tag_sha('nonexistent')).to eq('')
+      end
+    end
+  end
+
   describe '#full_tree' do
     context 'with the tree SHA for a commit containing one file' do
       it 'returns an Array<String>' do
