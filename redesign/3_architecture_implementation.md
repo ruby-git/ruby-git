@@ -105,7 +105,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Stash` | ✅ Complete | iter 1 |
 | `Git::Stashes` | ✅ Complete | iter 1 |
 | `Git::DiffPathStatus` | ✅ Complete | iter 2 |
-| `Git::Object::*` | ⏳ Not started | iter 3 |
+| `Git::Object::*` | ✅ Complete | iter 3 |
 | `Git::Log` | ⏳ Not started | iter 4 |
 | `Git::Diff` | ⏳ Not started | iter 5 |
 | `Git::DiffStats` | ⏳ Not started | iter 5 |
