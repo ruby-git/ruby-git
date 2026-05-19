@@ -26,4 +26,22 @@ RSpec.describe Git::Base do
       end
     end
   end
+
+  describe '#full_log_commits' do
+    subject(:result) { described_instance.full_log_commits(opts) }
+
+    let(:described_instance) { described_class.new }
+    let(:opts) { { count: 3 } }
+    let(:facade_repository) { instance_double(Git::Repository) }
+    let(:log_data) { [{ 'sha' => 'abc123' }] }
+
+    before do
+      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
+    end
+
+    it 'delegates to facade_repository with opts and returns the facade result' do
+      expect(facade_repository).to receive(:full_log_commits).with(opts).and_return(log_data)
+      expect(result).to eq(log_data)
+    end
+  end
 end
