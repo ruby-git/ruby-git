@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'pathname'
+require 'git/log'
 require 'git/repository'
 require 'git/repository/logging'
 
@@ -272,6 +273,31 @@ RSpec.describe Git::Repository::Logging do
         it 'raises ArgumentError with an explanatory message' do
           expect { result }.to raise_error(ArgumentError, /must be an Integer but was false/)
         end
+      end
+    end
+  end
+
+  describe '#log' do
+    subject(:result) { described_instance.log(count) }
+
+    let(:count) { 30 }
+    let(:log_instance) { instance_double(Git::Log) }
+
+    before do
+      allow(Git::Log).to receive(:new).with(described_instance, count).and_return(log_instance)
+    end
+
+    it 'constructs Git::Log with self and the given count and returns it' do
+      expect(Git::Log).to receive(:new).with(described_instance, count).and_return(log_instance)
+      expect(result).to be(log_instance)
+    end
+
+    context 'with default count' do
+      subject(:result) { described_instance.log }
+
+      it 'passes 30 as the default count' do
+        expect(Git::Log).to receive(:new).with(described_instance, 30).and_return(log_instance)
+        expect(result).to be(log_instance)
       end
     end
   end

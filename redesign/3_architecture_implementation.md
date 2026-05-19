@@ -56,9 +56,9 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3 — Iteration 3: `Git::Object::*` (A+B)**
+**Phase 3 — Iteration 5: `Git::Diff` + `Git::DiffStats` (A+B)**
 
-Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Proceed to iter 3.
+Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327) + `feat/migrate-log-to-repository`). Proceed to iter 5.
 
 The full scope is still migrating all domain objects
 (`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
@@ -106,7 +106,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Stashes` | ✅ Complete | iter 1 |
 | `Git::DiffPathStatus` | ✅ Complete | iter 2 |
 | `Git::Object::*` | ✅ Complete | iter 3 |
-| `Git::Log` | ⏳ Not started | iter 4 |
+| `Git::Log` | ✅ Complete | iter 4 |
 | `Git::Diff` | ⏳ Not started | iter 5 |
 | `Git::DiffStats` | ⏳ Not started | iter 5 |
 | `Git::Status` | ⏳ Not started | iter 6 |

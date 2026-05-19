@@ -44,4 +44,36 @@ RSpec.describe Git::Base do
       expect(result).to eq(log_data)
     end
   end
+
+  describe '#log' do
+    subject(:result) { described_instance.log(count) }
+
+    let(:described_instance) { described_class.new }
+    let(:count) { 5 }
+    let(:facade_repository) { instance_double(Git::Repository) }
+    let(:log_instance) { instance_double(Git::Log) }
+
+    before do
+      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
+      allow(facade_repository).to receive(:log).with(count).and_return(log_instance)
+    end
+
+    it 'delegates to facade_repository.log with count and returns the result' do
+      expect(facade_repository).to receive(:log).with(count).and_return(log_instance)
+      expect(result).to be(log_instance)
+    end
+
+    context 'with default count' do
+      subject(:result) { described_instance.log }
+
+      before do
+        allow(facade_repository).to receive(:log).with(30).and_return(log_instance)
+      end
+
+      it 'passes 30 as the default count' do
+        expect(facade_repository).to receive(:log).with(30).and_return(log_instance)
+        expect(result).to be(log_instance)
+      end
+    end
+  end
 end

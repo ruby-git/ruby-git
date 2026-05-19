@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/log'
 require 'git/repository'
 require 'git/repository/logging'
 require 'git/execution_context/repository'
@@ -51,6 +52,42 @@ RSpec.describe Git::Repository::Logging, :integration do
 
         expect(result.length).to eq(1)
         expect(result.first['message']).to eq("Initial commit\n")
+      end
+    end
+  end
+
+  describe '#log' do
+    context 'when the repository has commits' do
+      before do
+        write_file('README.md', "line one\n")
+        repo.add('README.md')
+        repo.commit('Initial commit')
+
+        write_file('CHANGELOG.md', "entry\n")
+        repo.add('CHANGELOG.md')
+        repo.commit('Add changelog')
+      end
+
+      it 'returns a Git::Log that executes to a result containing Git::Object::Commit entries' do
+        result = described_instance.log.execute
+
+        expect(result).to be_a(Git::Log::Result)
+        expect(result.size).to eq(2)
+        expect(result).to all(be_a(Git::Object::Commit))
+      end
+
+      it 'respects count when set via the fluent interface' do
+        result = described_instance.log(1).execute
+
+        expect(result.size).to eq(1)
+        expect(result.first.message.strip).to eq('Add changelog')
+      end
+
+      it 'returns commits in reverse-chronological order' do
+        result = described_instance.log.execute
+
+        expect(result.first.message.strip).to eq('Add changelog')
+        expect(result.last.message.strip).to eq('Initial commit')
       end
     end
   end

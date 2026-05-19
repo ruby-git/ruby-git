@@ -998,7 +998,7 @@ module Git
 
     # @return [Git::Log] a log with the specified number of commits
     def log(count = 30)
-      Git::Log.new(self, count)
+      facade_repository.log(count)
     end
 
     # Return commits that are within the given revision range
