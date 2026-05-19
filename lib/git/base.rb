@@ -1001,6 +1001,14 @@ module Git
       Git::Log.new(self, count)
     end
 
+    # Return commits that are within the given revision range
+    #
+    # @param opts [Hash] options for the log query
+    # @return [Array<Hash>] the parsed raw log output for each commit
+    def full_log_commits(opts = {})
+      facade_repository.full_log_commits(opts)
+    end
+
     # returns a Git::Object of the appropriate type
     # you can also call @git.gtree('tree'), but that's
     # just for readability.  If you call @git.gtree('HEAD') it will

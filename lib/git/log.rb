@@ -160,7 +160,7 @@ module Git
     def run_log_if_dirty
       return unless @dirty
 
-      log_data = @base.lib.full_log_commits(@options)
+      log_data = @base.full_log_commits(@options)
       @commits = log_data.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       @dirty = false
     end
