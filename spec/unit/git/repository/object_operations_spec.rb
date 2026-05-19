@@ -942,7 +942,7 @@ RSpec.describe Git::Repository::ObjectOperations do
     context 'with an output path that does not yet exist' do
       let(:new_dest) { File.join(Dir.tmpdir, "archive_unit_new_#{Process.pid}.zip") }
 
-      after { File.unlink(new_dest) if File.exist?(new_dest) }
+      after { FileUtils.rm_f(new_dest) }
 
       it 'archives to the new destination path' do
         result = described_instance.archive('HEAD', new_dest)
@@ -952,7 +952,8 @@ RSpec.describe Git::Repository::ObjectOperations do
 
     context 'when creating the staging temp file raises before assignment' do
       before do
-        allow(Tempfile).to receive(:create).with('archive', anything).and_raise(Errno::ENOSPC, 'No space left on device')
+        allow(Tempfile).to receive(:create).with('archive', anything)
+                                           .and_raise(Errno::ENOSPC, 'No space left on device')
       end
 
       it 'propagates the error' do
@@ -963,7 +964,8 @@ RSpec.describe Git::Repository::ObjectOperations do
     context 'when creating the gzip temp file raises before assignment' do
       before do
         allow(Tempfile).to receive(:create).and_call_original
-        allow(Tempfile).to receive(:create).with('archive_gz', anything).and_raise(Errno::ENOSPC, 'No space left on device')
+        allow(Tempfile).to receive(:create).with('archive_gz', anything)
+                                           .and_raise(Errno::ENOSPC, 'No space left on device')
       end
 
       it 'propagates the error' do
