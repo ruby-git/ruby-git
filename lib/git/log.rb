@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'git/base'
+
 module Git
   # Builds and executes a `git log` query
   #
@@ -42,7 +44,7 @@ module Git
     #   git = Git.open('.')
     #   Git::Log.new(git)
     #
-    # @param base [Git::Base] the git repository object
+    # @param base [Git::Repository, Git::Base] the git repository object
     # @param max_count [Integer, Symbol, nil] the number of commits to return, or
     #   `:all` or `nil` to return all
     #
@@ -157,10 +159,21 @@ module Git
       self
     end
 
+    # Returns the facade interface for log operations.
+    #
+    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+    # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
+    #
+    # @return [Git::Repository]
+    #
+    def log_repository
+      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+    end
+
     def run_log_if_dirty
       return unless @dirty
 
-      log_data = @base.full_log_commits(@options)
+      log_data = log_repository.full_log_commits(@options)
       @commits = log_data.map { |c| Git::Object::Commit.new(@base, c['sha'], c) }
       @dirty = false
     end

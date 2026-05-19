@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/log'
+require 'git/log'
 require 'git/repository/shared_private'
 
 module Git
@@ -78,6 +79,23 @@ module Git
         call_opts = Private.log_base_call_options(opts, skip: opts[:skip], merges: opts[:merges])
         revision_range_args = Private.log_revision_range_args(opts)
         Private.run_log_command(@execution_context, revision_range_args, call_opts)
+      end
+
+      # Returns a new {Git::Log} query builder scoped to this repository
+      #
+      # @example Build a log query and execute it
+      #   results = repo.log(50).author('Alice').since('2 weeks ago').execute
+      #   results.each { |commit| puts commit.sha }
+      #
+      # @param count [Integer, Symbol, nil] the maximum number of commits to return,
+      #   or `:all` / `nil` to return all commits; passed directly to {Git::Log#initialize}
+      #
+      # @return [Git::Log] a new log query builder
+      #
+      # @see Git::Log
+      #
+      def log(count = 30)
+        Git::Log.new(self, count)
       end
 
       # Internal helpers for {Logging} that should not be mixed into
