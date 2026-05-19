@@ -8,13 +8,69 @@ require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Mixin that adds diff path-status facade methods
+    # Mixin that adds diff facade methods
     #
     # Included by {Git::Repository}.
     #
     # @api public
     #
     module Diffing
+      # Option keys accepted by {#diff_full}
+      #
+      # @return [Array<Symbol>]
+      #
+      # @api private
+      #
+      DIFF_FULL_ALLOWED_OPTS = %i[path_limiter].freeze
+      private_constant :DIFF_FULL_ALLOWED_OPTS
+
+      # Returns the full unified diff patch text between two commits
+      #
+      # Compares two commits (or a commit against the index/working tree) and
+      # returns the raw unified diff patch output, equivalent to
+      # `git diff -p <obj1> [<obj2>]`.
+      #
+      # @example Get the patch for the most recent commit
+      #   repo.diff_full #=> "diff --git a/lib/foo.rb b/lib/foo.rb\n..."
+      #
+      # @example Compare two specific commits
+      #   repo.diff_full('abc1234', 'def5678')
+      #
+      # @example Limit the diff to a sub-path
+      #   repo.diff_full('HEAD~1', 'HEAD', path_limiter: 'lib/')
+      #
+      # @param obj1 [String] the first commit or object to compare; defaults to
+      #   `'HEAD'`
+      #
+      # @param obj2 [String, nil] the second commit or object to compare
+      #
+      #   When `nil`, the comparison is against the index or working tree.
+      #
+      # @param opts [Hash] options to filter the diff
+      #
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the diff to the given path(s)
+      #
+      # @return [String] the unified diff patch output
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @see https://git-scm.com/docs/git-diff git-diff documentation
+      #
+      def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(DIFF_FULL_ALLOWED_OPTS, **opts)
+        pathspecs = Private.normalize_pathspecs(opts[:path_limiter], 'path limiter')
+        result = Git::Commands::Diff.new(@execution_context).call(
+          *[obj1, obj2].compact,
+          patch: true, numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: pathspecs
+        )
+        Private.extract_patch_text(result.stdout)
+      end
+
       # Option keys accepted by {#diff_path_status}
       #
       # @return [Array<Symbol>]
@@ -44,24 +100,25 @@ module Git
       # @param from [String] the first commit or object to compare; defaults to
       #   `'HEAD'`
       #
-      # @param to [String, nil] the second commit or object to compare; when `nil`
-      #   the comparison is against the index/working tree
+      # @param to [String, nil] the second commit or object to compare
+      #
+      #   When `nil`, the comparison is against the index or working tree.
       #
       # @param opts [Hash] options to filter the diff
       #
-      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter
-      #   (nil) limit the status report to the given path(s)
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the status report to the given path(s)
       #
-      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path
-      #   (nil) **deprecated** — use `:path_limiter` instead
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
+      #   **deprecated** — use `:path_limiter` instead
       #
       # @return [Git::DiffPathStatus] the name-status report for the comparison
       #
-      # @raise [ArgumentError] when unsupported options are provided
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] when `from` or `to` starts with `"-"`
+      # @raise [ArgumentError] if `from` or `to` starts with `"-"`
       #
-      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
@@ -76,6 +133,12 @@ module Git
         Git::DiffPathStatus.new(Private.extract_name_status_from_raw(result.stdout))
       end
 
+      # Alias for {#diff_path_status}; provided for backward compatibility
+      #
+      # @return [Git::DiffPathStatus] the name-status report for the comparison
+      #
+      # @deprecated Use {#diff_path_status} instead
+      #
       # @see #diff_path_status
       alias diff_name_status diff_path_status
 
@@ -94,7 +157,8 @@ module Git
         #
         # @param opts [Hash] the options hash from {#diff_path_status}
         #
-        # @return [String, Pathname, Array, nil] the effective path limiter
+        # @return [String, Pathname, Array<String, Pathname>, nil]
+        #   the effective path limiter
         #
         def resolve_path_limiter(opts)
           if opts.key?(:path_limiter)
@@ -113,12 +177,30 @@ module Git
         #
         # @return [void]
         #
-        # @raise [ArgumentError] when any ref starts with `"-"`
+        # @raise [ArgumentError] if any ref starts with `"-"`
         #
         def validate_ref_arguments!(*refs)
           refs.compact.each do |arg|
             raise ArgumentError, "Invalid argument: '#{arg}'" if arg.start_with?('-')
           end
+        end
+
+        # Extracts only the patch text from combined diff command output
+        #
+        # When {Git::Commands::Diff} is called with `patch: true, numstat: true,
+        # shortstat: true`, the stdout contains numstat lines, a shortstat summary
+        # line, and then the unified patch text starting at `"diff --git "`. This
+        # method strips the leading numstat/shortstat lines and returns only the
+        # patch portion.
+        #
+        # @param output [String] combined command output
+        #
+        # @return [String] only the patch text (may be empty when there are no
+        #   changes)
+        #
+        def extract_patch_text(output)
+          match = output.match(/^diff --git /m)
+          match ? output[match.begin(0)..] : output
         end
 
         # Runs git-diff with `--raw` format options and returns the result
@@ -132,7 +214,7 @@ module Git
         #
         # @param pathspecs [Array<String>, nil] path limiters
         #
-        # @return [Git::CommandLineResult]
+        # @return [Git::CommandLineResult] the result of calling `git diff`
         #
         def call_diff_command(execution_context, from, to, pathspecs)
           Git::Commands::Diff.new(execution_context).call(
@@ -152,7 +234,7 @@ module Git
         #
         # @return [Array<String>, nil] the normalized paths, or `nil` if none are valid
         #
-        # @raise [ArgumentError] when any path is not a `String` or `Pathname`
+        # @raise [ArgumentError] if any path is not a `String` or `Pathname`
         #
         def normalize_pathspecs(pathspecs, arg_name)
           return nil unless pathspecs
@@ -174,7 +256,7 @@ module Git
         #
         # @return [void]
         #
-        # @raise [ArgumentError] when any element is not a `String` or `Pathname`
+        # @raise [ArgumentError] if any element is not a `String` or `Pathname`
         #
         def validate_pathspec_types(pathspecs, arg_name)
           return if pathspecs.all? { |p| p.is_a?(String) || p.is_a?(Pathname) }

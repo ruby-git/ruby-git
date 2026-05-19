@@ -1046,6 +1046,35 @@ module Git
       facade_repository.merge_base(*).map { |sha| gcommit(sha) }
     end
 
+    # Returns the full unified diff patch text between two commits
+    #
+    # @example Get the patch for the most recent commit
+    #   repo.diff_full #=> "diff --git a/lib/foo.rb b/lib/foo.rb\n..."
+    #
+    # @param obj1 [String] the first commit or object to compare; defaults to
+    #   `'HEAD'`
+    #
+    # @param obj2 [String, nil] the second commit or object to compare
+    #
+    #   When `nil`, the comparison is against the index or working tree.
+    #
+    # @param opts [Hash] options to filter the diff
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+    #   limit the diff to the given path(s)
+    #
+    # @return [String] the unified diff patch output
+    #
+    # @raise [ArgumentError] if unsupported options are provided
+    #
+    # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+    #
+    # @see Git::Repository::Diffing#diff_full
+    #
+    def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
+      facade_repository.diff_full(obj1, obj2, opts)
+    end
+
     # Returns a Git::Diff::Stats object for accessing diff statistics.
     #
     # @param objectish [String] The first commit or object to compare. Defaults to 'HEAD'.
@@ -1069,17 +1098,17 @@ module Git
     #
     # @param opts [Hash] options to filter the diff
     #
-    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter (nil)
+    # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
     #   limit the status report to specified path(s)
     #
-    # @option opts [String, Pathname, Array<String, Pathname>] :path (nil)
+    # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
     #   deprecated; use `:path_limiter` instead
     #
     # @return [Git::DiffPathStatus] the name-status report for the comparison
     #
-    # @raise [ArgumentError] when `objectish` or `obj2` starts with `"-"`
+    # @raise [ArgumentError] if `objectish` or `obj2` starts with `"-"`
     #
-    # @raise [Git::FailedError] when git exits with a non-zero exit status
+    # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
     #
     # @see Git::Repository::Diffing#diff_path_status
     #
@@ -1089,7 +1118,13 @@ module Git
       facade_repository.diff_path_status(objectish, obj2, opts.slice(:path_limiter, :path))
     end
 
-    # Provided for backwards compatibility
+    # Alias for {#diff_path_status}; provided for backward compatibility
+    #
+    # @return [Git::DiffPathStatus] the name-status report for the comparison
+    #
+    # @deprecated Use {#diff_path_status} instead
+    #
+    # @see #diff_path_status
     alias diff_name_status diff_path_status
 
     private
