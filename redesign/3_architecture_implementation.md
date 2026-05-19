@@ -40,6 +40,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
 | `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote` |
 | `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
+| `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
+| `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive` |
+| `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
 
 #### Facade module naming convention
 
@@ -147,7 +150,7 @@ logic. The gem will be fully functional after this phase.*
 1. **Create New Directory Structure**
 
    - `lib/git/commands/` ✅
-   - `lib/git/repository/` ✅ — populated with 5 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
+   - `lib/git/repository/` ✅ — populated with 9 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
 
 2. **Eliminate Custom Path Classes**
 
@@ -169,7 +172,7 @@ logic. The gem will be fully functional after this phase.*
      - `Git::ExecutionContext::Global` subclass in `lib/git/execution_context/global.rb` ✅
 
    - `Git::Repository` in `lib/git/repository.rb` ✅
-     - Now includes 5 facade modules (see [Facade Modules Completed](#facade-modules-completed))
+     - Now includes 9 facade modules (see [Facade Modules Completed](#facade-modules-completed))
 
    - `Git::Commands::Arguments` DSL in `lib/git/commands/arguments.rb` ✅
      - Provides declarative argument definition for command classes
