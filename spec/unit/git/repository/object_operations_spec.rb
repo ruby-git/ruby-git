@@ -1144,4 +1144,69 @@ RSpec.describe Git::Repository::ObjectOperations do
       end
     end
   end
+
+  describe '#gblob' do
+    subject(:result) { described_instance.gblob('HEAD:README.md') }
+
+    let(:blob_object) { instance_double(Git::Object::Blob) }
+
+    it 'delegates to Git::Object.new with the repository as base and type blob' do
+      expect(Git::Object).to receive(:new)
+        .with(described_instance, 'HEAD:README.md', 'blob')
+        .and_return(blob_object)
+      expect(result).to be(blob_object)
+    end
+  end
+
+  describe '#gcommit' do
+    subject(:result) { described_instance.gcommit('HEAD') }
+
+    let(:commit_object) { instance_double(Git::Object::Commit) }
+
+    it 'delegates to Git::Object.new with the repository as base and type commit' do
+      expect(Git::Object).to receive(:new)
+        .with(described_instance, 'HEAD', 'commit')
+        .and_return(commit_object)
+      expect(result).to be(commit_object)
+    end
+  end
+
+  describe '#gtree' do
+    subject(:result) { described_instance.gtree('HEAD^{tree}') }
+
+    let(:tree_object) { instance_double(Git::Object::Tree) }
+
+    it 'delegates to Git::Object.new with the repository as base and type tree' do
+      expect(Git::Object).to receive(:new)
+        .with(described_instance, 'HEAD^{tree}', 'tree')
+        .and_return(tree_object)
+      expect(result).to be(tree_object)
+    end
+  end
+
+  describe '#tag' do
+    subject(:result) { described_instance.tag('v1.0') }
+
+    let(:tag_object) { instance_double(Git::Object::Tag) }
+
+    it 'delegates to Git::Object::Tag.new with the repository as base' do
+      expect(Git::Object::Tag).to receive(:new)
+        .with(described_instance, 'v1.0')
+        .and_return(tag_object)
+      expect(result).to be(tag_object)
+    end
+  end
+
+  describe '#object' do
+    subject(:result) { described_instance.object('HEAD') }
+
+    let(:commit_object) { instance_double(Git::Object::Commit) }
+
+    it 'delegates to Git::Object.new with the repository as base and no type hint' do
+      expect(Git::Object).to receive(:new)
+        .with(described_instance, 'HEAD')
+        .and_return(commit_object)
+      expect(result).to be(commit_object)
+    end
+  end
 end
