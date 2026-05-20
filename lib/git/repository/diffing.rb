@@ -71,6 +71,74 @@ module Git
         Private.extract_patch_text(result.stdout)
       end
 
+      # Option keys accepted by {#diff_numstat}
+      #
+      # @return [Array<Symbol>]
+      #
+      # @api private
+      #
+      DIFF_NUMSTAT_ALLOWED_OPTS = %i[path_limiter].freeze
+      private_constant :DIFF_NUMSTAT_ALLOWED_OPTS
+
+      # Returns per-file insertion/deletion counts and totals between two commits
+      #
+      # Compares two commits (or a commit against the index/working tree) using
+      # `git diff --numstat` and returns a structured hash of per-file insertion
+      # and deletion line counts together with aggregate totals.
+      #
+      # @example Get numstat for the most recent commit
+      #   repo.diff_numstat
+      #   #=> { total: { insertions: 5, deletions: 2, lines: 7, files: 1 },
+      #   #     files: { "lib/foo.rb" => { insertions: 5, deletions: 2 } } }
+      #
+      # @example Compare two specific commits
+      #   repo.diff_numstat('abc1234', 'def5678')
+      #
+      # @example Limit the stats to a sub-path
+      #   repo.diff_numstat('HEAD~1', 'HEAD', path_limiter: 'lib/')
+      #
+      # @param obj1 [String] the first commit or object to compare; defaults to
+      #   `'HEAD'`
+      #
+      # @param obj2 [String, nil] the second commit or object to compare
+      #
+      #   When `nil`, the comparison is against the index or working tree.
+      #
+      # @param opts [Hash] options to filter the diff
+      #
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the stats to the given path(s)
+      #
+      # @return [Hash] per-file insertion and deletion counts plus aggregate totals
+      #
+      #   ```
+      #   {
+      #     total: { insertions: Integer, deletions: Integer, lines: Integer, files: Integer },
+      #     files: { "path/to/file" => { insertions: Integer, deletions: Integer } }
+      #   }
+      #   ```
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if `obj1` or `obj2` starts with `"-"`
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @see https://git-scm.com/docs/git-diff git-diff documentation
+      #
+      def diff_numstat(obj1 = 'HEAD', obj2 = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(DIFF_NUMSTAT_ALLOWED_OPTS, **opts)
+        Private.validate_ref_arguments!(obj1, obj2)
+        pathspecs = Private.normalize_pathspecs(opts[:path_limiter], 'path limiter')
+        result = Git::Commands::Diff.new(@execution_context).call(
+          *[obj1, obj2].compact,
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: pathspecs
+        )
+        Private.parse_numstat_output(result.stdout)
+      end
+
       # Option keys accepted by {#diff_path_status}
       #
       # @return [Array<Symbol>]
@@ -285,6 +353,77 @@ module Git
             path = status_and_paths.length > 2 ? status_and_paths[2] : status_and_paths[1]
             memo[unescape_quoted_path(path)] = status
           end
+        end
+
+        # Parses combined `--numstat --shortstat` output into an insertions/deletions hash
+        #
+        # Strips the trailing shortstat summary line and empty lines, parses the
+        # remaining numstat lines, and returns a structured hash with per-file
+        # stats and aggregated totals.
+        #
+        # @param output [String] raw stdout from `git diff --numstat --shortstat`
+        #
+        # @return [Hash] per-file insertion and deletion counts plus aggregate totals
+        #
+        #   ```
+        #   {
+        #     total: { insertions: Integer, deletions: Integer, lines: Integer, files: Integer },
+        #     files: { "path/to/file" => { insertions: Integer, deletions: Integer } }
+        #   }
+        #   ```
+        #
+        def parse_numstat_output(output)
+          file_stats = extract_numstat_lines(output).map { |line| parse_numstat_line(line) }
+          { total: build_numstat_totals(file_stats), files: build_numstat_files(file_stats) }
+        end
+
+        # Builds the `:total` sub-hash for {#parse_numstat_output}
+        #
+        # @param file_stats [Array<Hash>] per-file stats from {#parse_numstat_line}
+        #
+        # @return [Hash] aggregate totals
+        #
+        #   `{ insertions: Integer, deletions: Integer, lines: Integer, files: Integer }`
+        #
+        def build_numstat_totals(file_stats)
+          insertions = file_stats.sum { |s| s[:insertions] }
+          deletions  = file_stats.sum { |s| s[:deletions] }
+          { insertions: insertions, deletions: deletions,
+            lines: insertions + deletions, files: file_stats.size }
+        end
+
+        # Builds the `:files` sub-hash for {#parse_numstat_output}
+        #
+        # @param file_stats [Array<Hash>] per-file stats from {#parse_numstat_line}
+        #
+        # @return [Hash{String => Hash}] per-file insertion and deletion counts
+        #
+        def build_numstat_files(file_stats)
+          file_stats.to_h { |s| [s[:filename], s.slice(:insertions, :deletions)] }
+        end
+
+        # Filters raw numstat+shortstat output to only the numstat lines
+        #
+        # @param output [String] combined command output
+        #
+        # @return [Array<String>] only the numstat lines (no empties, no shortstat line)
+        #
+        def extract_numstat_lines(output)
+          output.split("\n").reject { |l| l.empty? || l.match?(/^\s*\d+\s+files?\s+changed/) }
+        end
+
+        # Parses a single `--numstat` line into a stats hash
+        #
+        # Numstat lines have the format `<insertions>\t<deletions>\t<path>`.
+        # Quoted paths (containing non-ASCII or special characters) are unescaped.
+        #
+        # @param line [String] a single numstat output line
+        #
+        # @return [Hash] `{ filename: String, insertions: Integer, deletions: Integer }`
+        #
+        def parse_numstat_line(line)
+          insertions_s, deletions_s, filename = line.split("\t", 3)
+          { filename: unescape_quoted_path(filename), insertions: insertions_s.to_i, deletions: deletions_s.to_i }
         end
 
         # Unescapes a git-quoted path (e.g. `"quoted_file_\\342\\230\\240"`)
