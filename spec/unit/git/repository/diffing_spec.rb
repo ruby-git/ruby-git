@@ -193,6 +193,192 @@ RSpec.describe Git::Repository::Diffing do
     end
   end
 
+  describe '#diff_numstat' do
+    # Multi-file numstat stdout fixture; includes an empty line between numstat
+    # entries to exercise the l.empty? branch inside extract_numstat_lines.
+    let(:numstat_stdout) do
+      "5\t2\tlib/foo.rb\n\n3\t1\tlib/bar.rb\n 2 files changed, 8 insertions(+), 3 deletions(-)\n"
+    end
+
+    let(:diff_numstat_result) { command_result(numstat_stdout) }
+
+    context 'when called with default arguments' do
+      it 'calls the command with HEAD and numstat format options' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat
+      end
+
+      it 'returns a hash with per-file stats and aggregated totals' do
+        allow(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        expect(described_instance.diff_numstat).to eq(
+          total: { insertions: 8, deletions: 3, lines: 11, files: 2 },
+          files: {
+            'lib/foo.rb' => { insertions: 5, deletions: 2 },
+            'lib/bar.rb' => { insertions: 3, deletions: 1 }
+          }
+        )
+      end
+    end
+
+    context 'when called with explicit obj1 and obj2' do
+      it 'passes both refs as positional arguments to the command' do
+        expect(diff_command).to receive(:call).with(
+          'abc1234', 'def5678',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('abc1234', 'def5678')
+      end
+    end
+
+    context 'when called with only obj1' do
+      it 'passes only obj1 as a positional argument to the command' do
+        expect(diff_command).to receive(:call).with(
+          'abc1234',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('abc1234')
+      end
+    end
+
+    context 'when path_limiter is a single String' do
+      it 'wraps the path_limiter in an Array and forwards it to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: ['lib/']
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('HEAD', nil, path_limiter: 'lib/')
+      end
+    end
+
+    context 'when path_limiter is an Array of paths' do
+      it 'forwards the Array as-is to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: ['lib/', 'spec/']
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('HEAD', nil, path_limiter: ['lib/', 'spec/'])
+      end
+    end
+
+    context 'when path_limiter is a Pathname' do
+      it 'converts the Pathname to a String and forwards it to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: ['lib/']
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('HEAD', nil, path_limiter: Pathname.new('lib/'))
+      end
+    end
+
+    context 'when path_limiter is nil' do
+      it 'sends path: nil to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('HEAD', nil, path_limiter: nil)
+      end
+    end
+
+    context 'when path_limiter is an empty String' do
+      it 'normalizes to nil and sends path: nil to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+        described_instance.diff_numstat('HEAD', nil, path_limiter: '')
+      end
+    end
+
+    context 'when an unknown option is provided' do
+      it 'raises an ArgumentError naming the unknown key' do
+        expect { described_instance.diff_numstat('HEAD', nil, bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'when obj1 starts with a dash' do
+      it 'raises an ArgumentError naming the invalid argument' do
+        expect { described_instance.diff_numstat('-bad-ref') }
+          .to raise_error(ArgumentError, /Invalid argument/)
+      end
+    end
+
+    context 'when obj2 starts with a dash' do
+      it 'raises an ArgumentError naming the invalid argument' do
+        expect { described_instance.diff_numstat('HEAD', '-bad-ref') }
+          .to raise_error(ArgumentError, /Invalid argument/)
+      end
+    end
+
+    context 'when the command output is empty (no changed files)' do
+      let(:diff_numstat_result) { command_result('') }
+
+      before do
+        allow(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+      end
+
+      it 'returns zero totals and an empty files hash' do
+        expect(described_instance.diff_numstat).to eq(
+          total: { insertions: 0, deletions: 0, lines: 0, files: 0 },
+          files: {}
+        )
+      end
+    end
+
+    context 'when the numstat output contains a git-quoted non-ASCII path' do
+      # Git quotes paths with non-ASCII characters, escaping each byte in octal.
+      # "\\303\\251" is the git octal encoding of "é" (U+00E9, UTF-8: 0xC3 0xA9).
+      let(:quoted_stdout) do
+        "5\t2\t\"\\303\\251tat.rb\"\n 1 file changed, 5 insertions(+), 2 deletions(-)\n"
+      end
+      let(:diff_numstat_result) { command_result(quoted_stdout) }
+
+      before do
+        allow(diff_command).to receive(:call).with(
+          'HEAD',
+          numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_numstat_result)
+      end
+
+      it 'unescapes the git-quoted path in the returned files hash' do
+        result = described_instance.diff_numstat
+        expect(result[:files]).to have_key('état.rb')
+      end
+    end
+  end
+
   describe '#diff_path_status' do
     let(:raw_output) do
       ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
