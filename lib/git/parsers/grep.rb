@@ -31,12 +31,25 @@ module Git
       #
       def parse(lines)
         lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
-          match = line.match(/\A(.*?):(\d+):(.*)/)
-          next unless match
+          filename, line_num, text = parse_line(line)
+          next unless filename && line_num && text
 
-          _full, filename, line_num, text = match.to_a
           hsh[filename] << [line_num.to_i, text]
         end
+      end
+
+      def parse_line(line)
+        return line.split("\0", 3) if line.include?("\0")
+
+        parse_colon_delimited_line(line)
+      end
+
+      def parse_colon_delimited_line(line)
+        match = line.match(/\A(.*?):(\d+):(.*)/)
+        return unless match
+
+        _full, filename, line_num, text = match.to_a
+        [filename, line_num, text]
       end
     end
   end

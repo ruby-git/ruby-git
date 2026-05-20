@@ -33,6 +33,18 @@ RSpec.describe Git::Parsers::Grep do
       end
     end
 
+    context 'with NUL-delimited output' do
+      subject(:result) do
+        described_class.parse(["HEAD:src/foo:42:bar.rb\x005\x00matched text:13:still text"])
+      end
+
+      it 'preserves filenames and text containing colon-number-colon sequences' do
+        expect(result).to eq(
+          'HEAD:src/foo:42:bar.rb' => [[5, 'matched text:13:still text']]
+        )
+      end
+    end
+
     context 'with matches in multiple files' do
       subject(:result) do
         described_class.parse([

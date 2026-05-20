@@ -871,14 +871,16 @@ RSpec.describe Git::Lib do
     end
 
     it 'delegates to Grep and returns parsed matches' do
-      output = "HEAD:lib/foo.rb:10:found it\nHEAD:lib/bar.rb:3:found it again\n"
+      output = "HEAD:lib/foo.rb\x0010\x00found it\nHEAD:lib/bar.rb\x003\x00found it again\n"
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'found', no_color: true, line_number: true)
+        .with('HEAD', pattern: 'found', no_color: true, line_number: true, null: true)
         .and_return(command_result(output, exitstatus: 0))
 
       result = lib.grep('found', object: 'HEAD')
 
-      expect(grep_command).to have_received(:call).with('HEAD', pattern: 'found', no_color: true, line_number: true)
+      expect(grep_command).to have_received(:call).with(
+        'HEAD', pattern: 'found', no_color: true, line_number: true, null: true
+      )
       expect(result).to eq(
         'HEAD:lib/foo.rb' => [[10, 'found it']],
         'HEAD:lib/bar.rb' => [[3, 'found it again']]
@@ -887,7 +889,7 @@ RSpec.describe Git::Lib do
 
     it 'returns {} when exit status is 1 and stderr is empty (no matches)' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'nomatch', no_color: true, line_number: true)
+        .with('HEAD', pattern: 'nomatch', no_color: true, line_number: true, null: true)
         .and_return(command_result('', exitstatus: 1))
 
       result = lib.grep('nomatch')
@@ -897,7 +899,7 @@ RSpec.describe Git::Lib do
 
     it 'raises Git::FailedError when exit status is 1 and stderr is non-empty (real error)' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'search', no_color: true, line_number: true)
+        .with('HEAD', pattern: 'search', no_color: true, line_number: true, null: true)
         .and_return(command_result('', stderr: 'fatal: bad object HEAD', exitstatus: 1))
 
       expect { lib.grep('search') }.to raise_error(Git::FailedError) do |error|
@@ -907,13 +909,13 @@ RSpec.describe Git::Lib do
 
     it 'forwards :path_limiter as :pathspec to the Grep command' do
       allow(grep_command).to receive(:call)
-        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true)
+        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true, null: true)
         .and_return(command_result('', exitstatus: 0))
 
       lib.grep('search', path_limiter: 'lib/**')
 
       expect(grep_command).to have_received(:call)
-        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true)
+        .with('HEAD', pattern: 'search', pathspec: 'lib/**', no_color: true, line_number: true, null: true)
     end
 
     it 'rejects unknown options' do

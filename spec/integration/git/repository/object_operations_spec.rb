@@ -632,6 +632,16 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         foo_matches = result['HEAD:src/foo.rb']
         expect(foo_matches).to include([1, '# TODO: fix this'])
       end
+
+      it 'preserves filenames and text containing colon-number-colon sequences' do
+        write_file('src/foo:42:bar.rb', "matched text:13:still text\n")
+        repo.add('.')
+        repo.commit('Add colon filename')
+
+        result = described_instance.grep('matched')
+
+        expect(result['HEAD:src/foo:42:bar.rb']).to eq([[1, 'matched text:13:still text']])
+      end
     end
 
     context 'with a path_limiter String that restricts results' do

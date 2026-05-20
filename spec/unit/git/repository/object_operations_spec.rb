@@ -1004,7 +1004,7 @@ RSpec.describe Git::Repository::ObjectOperations do
     context 'with a pattern and no options' do
       subject(:result) { described_instance.grep('TODO') }
 
-      let(:grep_output) { "HEAD:src/foo.rb:12:# TODO: fix this\n" }
+      let(:grep_output) { "HEAD:src/foo.rb\x0012\x00# TODO: fix this\n" }
       let(:grep_result) { command_result(grep_output) }
 
       it 'constructs Git::Commands::Grep with the execution context' do
@@ -1013,9 +1013,9 @@ RSpec.describe Git::Repository::ObjectOperations do
         result
       end
 
-      it 'calls Git::Commands::Grep#call with HEAD, the pattern, no_color, and line_number' do
+      it 'calls Git::Commands::Grep#call with HEAD, the pattern, no_color, line_number, and null' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'TODO', no_color: true, line_number: true)
+          .with('HEAD', pattern: 'TODO', no_color: true, line_number: true, null: true)
           .and_return(grep_result)
         result
       end
@@ -1041,7 +1041,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards pathspec as an Array to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'TODO', pathspec: ['src/'], no_color: true, line_number: true)
+          .with('HEAD', pattern: 'TODO', pathspec: ['src/'], no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1052,7 +1052,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards pathspec as the same Array to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'TODO', pathspec: ['src/', 'lib/'], no_color: true, line_number: true)
+          .with('HEAD', pattern: 'TODO', pathspec: ['src/', 'lib/'], no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1063,7 +1063,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'uses the given object instead of HEAD' do
         expect(grep_command).to receive(:call)
-          .with('abc1234', pattern: 'TODO', no_color: true, line_number: true)
+          .with('abc1234', pattern: 'TODO', no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1074,7 +1074,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards ignore_case to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'todo', ignore_case: true, no_color: true, line_number: true)
+          .with('HEAD', pattern: 'todo', ignore_case: true, no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1085,7 +1085,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards :i to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'todo', i: true, no_color: true, line_number: true)
+          .with('HEAD', pattern: 'todo', i: true, no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1096,7 +1096,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards invert_match to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'TODO', invert_match: true, no_color: true, line_number: true)
+          .with('HEAD', pattern: 'TODO', invert_match: true, no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
@@ -1107,7 +1107,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
       it 'forwards extended_regexp to the command' do
         expect(grep_command).to receive(:call)
-          .with('HEAD', pattern: 'foo|bar', extended_regexp: true, no_color: true, line_number: true)
+          .with('HEAD', pattern: 'foo|bar', extended_regexp: true, no_color: true, line_number: true, null: true)
           .and_return(command_result(''))
         result
       end
