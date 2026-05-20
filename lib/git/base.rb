@@ -1065,25 +1065,75 @@ module Git
     #
     # @return [String] the unified diff patch output
     #
-    # @raise [ArgumentError] if unsupported options are provided
+    # @note Unknown option keys are silently ignored for backward compatibility;
+    #   only `:path_limiter` is forwarded to the underlying command.
     #
     # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
     #
     # @see Git::Repository::Diffing#diff_full
     #
     def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
-      facade_repository.diff_full(obj1, obj2, opts)
+      facade_repository.diff_full(obj1, obj2, opts.slice(:path_limiter))
     end
 
-    # Returns a Git::Diff::Stats object for accessing diff statistics.
+    # Returns a lazy {Git::DiffStats} object for accessing diff statistics
     #
-    # @param objectish [String] The first commit or object to compare. Defaults to 'HEAD'.
-    # @param obj2 [String, nil] The second commit or object to compare.
-    # @param opts [Hash] Options to filter the diff.
-    # @option opts [String, Pathname, Array<String, Pathname>] :path_limiter Limit stats to specified path(s).
-    # @return [Git::DiffStats]
+    # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+    # index against the working tree and constructs a lazy {Git::DiffStats} that
+    # computes per-file insertion and deletion counts on demand when its accessor
+    # methods are called.
+    #
+    # **Comparing two commits**
+    #
+    # When both objectish and obj2 are provided, the comparison is between those two
+    # refs (commits, tags, branches, etc.).
+    #
+    # **Comparing a commit against the working tree**
+    #
+    # When only objectish is provided (and isn't nil), the comparison is between
+    # objectish and the working tree; the stats reflect all changes since objectish.
+    #
+    # **Comparing the index against the working tree**
+    #
+    # When objectish is explicitly `nil` then obj2 must be omitted or `nil`. In this
+    # case, the comparison is between the index and the working tree; the stats reflect
+    # unstaged changes.
+    #
+    # @example Get working tree stats since HEAD
+    #   repo.diff_stats.insertions #=> 3
+    #
+    # @example Compare two specific commits
+    #   repo.diff_stats('abc1234', 'def5678')
+    #
+    # @example Get unstaged stats (index vs. working tree)
+    #   repo.diff_stats(nil).insertions
+    #
+    # @example Limit stats to a sub-path
+    #   repo.diff_stats('HEAD~1', 'HEAD', path_limiter: 'lib/')
+    #
+    # @param objectish [String, nil] the first commit or object to compare; defaults to
+    #   `'HEAD'`; pass `nil` to compare the index against the working tree
+    #
+    # @param obj2 [String, nil] the second commit or object to compare
+    #
+    # @param opts [Hash] options to filter the diff
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+    #   limit the stats to the given path(s)
+    #
+    # @return [Git::DiffStats] a lazy stats object for the comparison
+    #
+    # @note Unknown option keys are silently ignored for backward compatibility;
+    #   only `:path_limiter` is forwarded to the underlying command.
+    #
+    # @raise [ArgumentError] if `objectish` or `obj2` starts with `"-"`
+    #
+    # @raise [ArgumentError] if `objectish` is `nil` but `obj2` is not
+    #
+    # @see Git::Repository::Diffing#diff_stats
+    #
     def diff_stats(objectish = 'HEAD', obj2 = nil, opts = {})
-      Git::DiffStats.new(self, objectish, obj2, opts[:path_limiter])
+      facade_repository.diff_stats(objectish, obj2, opts.slice(:path_limiter))
     end
 
     # Returns the file path status between two commits
@@ -1113,8 +1163,6 @@ module Git
     # @see Git::Repository::Diffing#diff_path_status
     #
     def diff_path_status(objectish = 'HEAD', obj2 = nil, opts = {})
-      # Slice to only the supported keys for backward compatibility with 4.x,
-      # which silently ignored any extra keys in opts.
       facade_repository.diff_path_status(objectish, obj2, opts.slice(:path_limiter, :path))
     end
 

@@ -3,6 +3,7 @@
 require 'pathname'
 require 'git/commands/diff'
 require 'git/diff_path_status'
+require 'git/diff_stats'
 require 'git/escaped_path'
 require 'git/repository/shared_private'
 
@@ -24,27 +25,44 @@ module Git
       DIFF_FULL_ALLOWED_OPTS = %i[path_limiter].freeze
       private_constant :DIFF_FULL_ALLOWED_OPTS
 
-      # Returns the full unified diff patch text between two commits
+      # Returns the full unified diff patch text between two trees
       #
-      # Compares two commits (or a commit against the index/working tree) and
-      # returns the raw unified diff patch output, equivalent to
-      # `git diff -p <obj1> [<obj2>]`.
+      # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+      # index against the working tree using `git diff -p`, and returns the raw
+      # unified diff patch output.
       #
-      # @example Get the patch for the most recent commit
+      # **Comparing two commits**
+      #
+      # When both obj1 and obj2 are provided, the comparison is between those two
+      # refs (commits, tags, branches, etc.).
+      #
+      # **Comparing a commit against the working tree**
+      #
+      # When only obj1 is provided (and isn't nil), the comparison is between obj1 and
+      # the working tree; the patch reflects all changes since obj1.
+      #
+      # **Comparing the index against the working tree**
+      #
+      # When obj1 is explicitly `nil` then obj2 must be omitted or `nil`. In this case,
+      # the comparison is between the index and the working tree; the patch reflects
+      # unstaged changes.
+      #
+      # @example Get the working tree patch since HEAD
       #   repo.diff_full #=> "diff --git a/lib/foo.rb b/lib/foo.rb\n..."
       #
       # @example Compare two specific commits
       #   repo.diff_full('abc1234', 'def5678')
       #
+      # @example Get unstaged changes (index vs. working tree)
+      #   repo.diff_full(nil)
+      #
       # @example Limit the diff to a sub-path
       #   repo.diff_full('HEAD~1', 'HEAD', path_limiter: 'lib/')
       #
-      # @param obj1 [String] the first commit or object to compare; defaults to
+      # @param obj1 [String, nil] the first commit or object to compare; defaults to
       #   `'HEAD'`
       #
       # @param obj2 [String, nil] the second commit or object to compare
-      #
-      #   When `nil`, the comparison is against the index or working tree.
       #
       # @param opts [Hash] options to filter the diff
       #
@@ -55,12 +73,16 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR either starts with `"-"`
+      #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
       def diff_full(obj1 = 'HEAD', obj2 = nil, opts = {})
         SharedPrivate.assert_valid_opts!(DIFF_FULL_ALLOWED_OPTS, **opts)
+        raise ArgumentError, 'Invalid arguments: obj1 is nil but obj2 is not' if obj1.nil? && !obj2.nil?
+
         pathspecs = Private.normalize_pathspecs(opts[:path_limiter], 'path limiter')
         result = Git::Commands::Diff.new(@execution_context).call(
           *[obj1, obj2].compact,
@@ -80,34 +102,53 @@ module Git
       DIFF_NUMSTAT_ALLOWED_OPTS = %i[path_limiter].freeze
       private_constant :DIFF_NUMSTAT_ALLOWED_OPTS
 
-      # Returns per-file insertion/deletion counts and totals between two commits
+      # Returns per-file insertion/deletion counts and totals between two trees
       #
-      # Compares two commits (or a commit against the index/working tree) using
-      # `git diff --numstat` and returns a structured hash of per-file insertion
-      # and deletion line counts together with aggregate totals.
+      # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+      # index against the working tree using `git diff --numstat`, and returns a
+      # structured hash of per-file insertion and deletion line counts together with
+      # aggregate totals.
       #
-      # @example Get numstat for the most recent commit
-      #   repo.diff_numstat
-      #   #=> { total: { insertions: 5, deletions: 2, lines: 7, files: 1 },
-      #   #     files: { "lib/foo.rb" => { insertions: 5, deletions: 2 } } }
+      # **Comparing two commits**
+      #
+      # When both obj1 and obj2 are provided, the comparison is between those two
+      # refs (commits, tags, branches, etc.).
+      #
+      # **Comparing a commit against the working tree**
+      #
+      # When only obj1 is provided (and isn't nil), the comparison is between obj1 and
+      # the working tree; the stats reflect all changes since obj1.
+      #
+      # **Comparing the index against the working tree**
+      #
+      # When obj1 is explicitly `nil` then obj2 must be omitted or `nil`. In this case,
+      # the comparison is between the index and the working tree; the stats reflect
+      # unstaged changes.
       #
       # @example Compare two specific commits
       #   repo.diff_numstat('abc1234', 'def5678')
       #
+      # @example Get working tree changes since HEAD
+      #   repo.diff_numstat #=> {
+      #     total: { insertions: 5, deletions: 2, lines: 7, files: 1 },
+      #     files: { "lib/foo.rb" => { insertions: 5, deletions: 2 } }
+      #   }
+      #
+      # @example Get unstaged changes (index vs. working tree)
+      #   repo.diff_numstat(nil) #=> { ... }
+      #
       # @example Limit the stats to a sub-path
       #   repo.diff_numstat('HEAD~1', 'HEAD', path_limiter: 'lib/')
       #
-      # @param obj1 [String] the first commit or object to compare; defaults to
+      # @param obj1 [String, nil] the first commit or object to compare; defaults to
       #   `'HEAD'`
       #
       # @param obj2 [String, nil] the second commit or object to compare
       #
-      #   When `nil`, the comparison is against the index or working tree.
-      #
       # @param opts [Hash] options to filter the diff
       #
-      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
-      #   limit the stats to the given path(s)
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter
+      #   (nil) limit the stats to the given path(s)
       #
       # @return [Hash] per-file insertion and deletion counts plus aggregate totals
       #
@@ -120,23 +161,99 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `obj1` or `obj2` starts with `"-"`
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR either starts with `"-"`
       #
-      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code >
+      # 1)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
       def diff_numstat(obj1 = 'HEAD', obj2 = nil, opts = {})
         SharedPrivate.assert_valid_opts!(DIFF_NUMSTAT_ALLOWED_OPTS, **opts)
-        Private.validate_ref_arguments!(obj1, obj2)
+        raise ArgumentError, 'Invalid arguments: obj1 is nil but obj2 is not' if obj1.nil? && !obj2.nil?
+
         pathspecs = Private.normalize_pathspecs(opts[:path_limiter], 'path limiter')
         result = Git::Commands::Diff.new(@execution_context).call(
           *[obj1, obj2].compact,
-          numstat: true, shortstat: true,
-          src_prefix: 'a/', dst_prefix: 'b/',
+          numstat: true, shortstat: true, src_prefix: 'a/', dst_prefix: 'b/',
           path: pathspecs
         )
         Private.parse_numstat_output(result.stdout)
+      end
+
+      # Option keys accepted by {#diff_stats}
+      #
+      # @return [Array<Symbol>]
+      #
+      # @api private
+      #
+      DIFF_STATS_ALLOWED_OPTS = %i[path_limiter].freeze
+      private_constant :DIFF_STATS_ALLOWED_OPTS
+
+      # Returns the stats between two trees as a {Git::DiffStats} object
+      #
+      # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+      # index against the working tree and constructs a lazy {Git::DiffStats} that
+      # computes per-file insertion and deletion counts on demand when its accessor
+      # methods are called.
+      #
+      # **Comparing two commits**
+      #
+      # When both obj1 and obj2 are provided, the comparison is between those two
+      # refs (commits, tags, branches, etc.).
+      #
+      # **Comparing a commit against the working tree**
+      #
+      # When only obj1 is provided (and isn't nil), the comparison is between obj1 and
+      # the working tree; the stats reflect all changes since obj1.
+      #
+      # **Comparing the index against the working tree**
+      #
+      # When obj1 is explicitly `nil` then obj2 must be omitted or `nil`. In this case,
+      # the comparison is between the index and the working tree; the stats reflect
+      # unstaged changes.
+      #
+      # @example Get working tree stats since HEAD
+      #   stats = repo.diff_stats
+      #   stats.insertions #=> 3
+      #   stats.deletions  #=> 1
+      #
+      # @example Compare two specific commits
+      #   repo.diff_stats('abc1234', 'def5678')
+      #
+      # @example Get unstaged stats (index vs. working tree)
+      #   repo.diff_stats(nil).insertions
+      #
+      # @example Limit stats to a sub-path
+      #   repo.diff_stats('HEAD~1', 'HEAD', path_limiter: 'lib/')
+      #
+      # @param obj1 [String, nil] the first commit or object to compare; defaults to
+      #   `'HEAD'`
+      #
+      # @param obj2 [String, nil] the second commit or object to compare
+      #
+      # @param opts [Hash] options to filter the diff
+      #
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the stats to the given path(s)
+      #
+      # @return [Git::DiffStats] a lazy stats object for the comparison
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not
+      #
+      # @raise [ArgumentError] if `obj1` or `obj2` starts with `"-"`
+      #
+      # @see #diff_numstat
+      #
+      # @see https://git-scm.com/docs/git-diff git-diff documentation
+      #
+      def diff_stats(obj1 = 'HEAD', obj2 = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(DIFF_STATS_ALLOWED_OPTS, **opts)
+        raise ArgumentError, 'Invalid arguments: obj1 is nil but obj2 is not' if obj1.nil? && !obj2.nil?
+
+        Git::DiffStats.new(self, obj1, obj2, opts[:path_limiter])
       end
 
       # Option keys accepted by {#diff_path_status}
@@ -148,29 +265,47 @@ module Git
       DIFF_PATH_STATUS_ALLOWED_OPTS = %i[path_limiter path].freeze
       private_constant :DIFF_PATH_STATUS_ALLOWED_OPTS
 
-      # Returns the file path status between two commits
+      # Returns the file path status between two trees
       #
-      # Compares two commits (or a commit against the index/working tree) and returns
-      # a {Git::DiffPathStatus} enumerating each changed file together with its status
-      # code (e.g. `"M"` for modified, `"A"` for added, `"D"` for deleted,
-      # `"R100"` for a rename with 100% similarity, etc.).
+      # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+      # index against the working tree and returns a {Git::DiffPathStatus} enumerating
+      # each changed file together with its status code (e.g. `"M"` for modified,
+      # `"A"` for added, `"D"` for deleted, `"R100"` for a rename with 100%
+      # similarity, etc.).
       #
-      # @example Get all changed files between HEAD and the previous commit
+      # **Comparing two commits**
+      #
+      # When both from and to are provided, the comparison is between those two
+      # refs (commits, tags, branches, etc.).
+      #
+      # **Comparing a commit against the working tree**
+      #
+      # When only from is provided (and isn't nil), the comparison is between from and
+      # the working tree; the status reflects all changes since from.
+      #
+      # **Comparing the index against the working tree**
+      #
+      # When from is explicitly `nil` then to must be omitted or `nil`. In this case,
+      # the comparison is between the index and the working tree; the status reflects
+      # unstaged changes.
+      #
+      # @example Get working tree path changes since HEAD
       #   repo.diff_path_status #=> #<Git::DiffPathStatus ...>
       #   repo.diff_path_status.to_h #=> { "README.md" => "M", "lib/foo.rb" => "A" }
       #
       # @example Compare two specific commits
       #   repo.diff_path_status('abc1234', 'def5678').to_h
       #
+      # @example Get unstaged path changes (index vs. working tree)
+      #   repo.diff_path_status(nil).to_h
+      #
       # @example Limit the comparison to a sub-path
       #   repo.diff_path_status('HEAD~1', 'HEAD', path_limiter: 'lib/')
       #
-      # @param from [String] the first commit or object to compare; defaults to
+      # @param from [String, nil] the first commit or object to compare; defaults to
       #   `'HEAD'`
       #
       # @param to [String, nil] the second commit or object to compare
-      #
-      #   When `nil`, the comparison is against the index or working tree.
       #
       # @param opts [Hash] options to filter the diff
       #
@@ -184,7 +319,7 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `from` or `to` starts with `"-"`
+      # @raise [ArgumentError] if `from` is `nil` but `to` is not OR either starts with `"-"`
       #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
@@ -192,10 +327,10 @@ module Git
       #
       def diff_path_status(from = 'HEAD', to = nil, opts = {})
         SharedPrivate.assert_valid_opts!(DIFF_PATH_STATUS_ALLOWED_OPTS, **opts)
+        raise ArgumentError, 'Invalid arguments: `from` is nil but `to` is not' if from.nil? && !to.nil?
 
         path_limiter = Private.resolve_path_limiter(opts)
         pathspecs = Private.normalize_pathspecs(path_limiter, 'path limiter')
-        Private.validate_ref_arguments!(from, to)
 
         result = Private.call_diff_command(@execution_context, from, to, pathspecs)
         Git::DiffPathStatus.new(Private.extract_name_status_from_raw(result.stdout))
@@ -236,20 +371,6 @@ module Git
               'Git::Repository#diff_path_status :path option is deprecated. Use :path_limiter instead.'
             )
             opts[:path]
-          end
-        end
-
-        # Raises ArgumentError if any ref starts with a dash
-        #
-        # @param refs [Array<String, nil>] refs to validate
-        #
-        # @return [void]
-        #
-        # @raise [ArgumentError] if any ref starts with `"-"`
-        #
-        def validate_ref_arguments!(*refs)
-          refs.compact.each do |arg|
-            raise ArgumentError, "Invalid argument: '#{arg}'" if arg.start_with?('-')
           end
         end
 

@@ -76,4 +76,24 @@ RSpec.describe Git::Base do
       end
     end
   end
+
+  describe '#diff_stats' do
+    subject(:result) { described_instance.diff_stats(objectish, obj2, opts) }
+
+    let(:described_instance) { described_class.new }
+    let(:objectish) { 'HEAD~1' }
+    let(:obj2) { 'HEAD' }
+    let(:opts) { { path_limiter: 'lib/' } }
+    let(:facade_repository) { instance_double(Git::Repository) }
+    let(:diff_stats_result) { instance_double(Git::DiffStats) }
+
+    before do
+      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
+    end
+
+    it 'delegates to facade_repository.diff_stats with all arguments' do
+      expect(facade_repository).to receive(:diff_stats).with(objectish, obj2, opts).and_return(diff_stats_result)
+      expect(result).to be(diff_stats_result)
+    end
+  end
 end

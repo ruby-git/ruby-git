@@ -11,6 +11,10 @@ require 'git/execution_context/repository'
 # pure single-command delegators without post-processing (diff_path_status /
 # diff_name_status) are covered by the command's own integration tests:
 #   tests/units/test_diff_path_status.rb
+#
+# #diff_stats is a lazy factory delegator (no facade-owned post-processing)
+# and is covered by:
+#   tests/units/test_diff_stats.rb
 
 RSpec.describe Git::Repository::Diffing, :integration do
   include_context 'in an empty repository'
