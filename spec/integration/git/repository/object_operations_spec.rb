@@ -704,4 +704,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
   end
+
+  # Integration tests for #gblob, #gcommit, #gtree, #tag, and #object are
+  # intentionally omitted. All five are one-line delegators to Git::Object.new
+  # or Git::Object::Tag.new — there is no facade-level orchestration or
+  # post-processing. The underlying git operations (cat-file, show-ref) are
+  # already exercised by the #cat_file_type, #cat_file_contents, and #tag_sha
+  # integration tests above. Unit tests in
+  # spec/unit/git/repository/object_operations_spec.rb verify the delegation
+  # contract and argument forwarding.
 end
