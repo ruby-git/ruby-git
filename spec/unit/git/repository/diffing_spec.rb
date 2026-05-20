@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'git/diff_stats'
 require 'git/repository'
 require 'git/repository/diffing'
 
@@ -10,6 +11,8 @@ require 'git/repository/diffing'
 #   lines before returning the patch text).
 #   tests/units/test_diff_path_status.rb covers diff_path_status / diff_name_status,
 #   which are pure single-command delegators with no post-processing.
+#   tests/units/test_diff_stats.rb covers #diff_stats, which is a lazy factory
+#   delegator (no facade-owned post-processing).
 
 RSpec.describe Git::Repository::Diffing do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
@@ -147,6 +150,13 @@ RSpec.describe Git::Repository::Diffing do
       it 'raises an ArgumentError naming the path limiter' do
         expect { described_instance.diff_full('HEAD', nil, path_limiter: 123) }
           .to raise_error(ArgumentError, /Invalid path limiter/)
+      end
+    end
+
+    context 'when obj1 is nil but obj2 is not' do
+      it 'raises an ArgumentError' do
+        expect { described_instance.diff_full(nil, 'def5678') }
+          .to raise_error(ArgumentError, /obj1 is nil but obj2 is not/)
       end
     end
 
@@ -321,17 +331,10 @@ RSpec.describe Git::Repository::Diffing do
       end
     end
 
-    context 'when obj1 starts with a dash' do
-      it 'raises an ArgumentError naming the invalid argument' do
-        expect { described_instance.diff_numstat('-bad-ref') }
-          .to raise_error(ArgumentError, /Invalid argument/)
-      end
-    end
-
-    context 'when obj2 starts with a dash' do
-      it 'raises an ArgumentError naming the invalid argument' do
-        expect { described_instance.diff_numstat('HEAD', '-bad-ref') }
-          .to raise_error(ArgumentError, /Invalid argument/)
+    context 'when obj1 is nil but obj2 is not' do
+      it 'raises an ArgumentError' do
+        expect { described_instance.diff_numstat(nil, 'def5678') }
+          .to raise_error(ArgumentError, /obj1 is nil but obj2 is not/)
       end
     end
 
@@ -523,17 +526,10 @@ RSpec.describe Git::Repository::Diffing do
       end
     end
 
-    context 'when from starts with a dash' do
-      it 'raises an ArgumentError naming the invalid argument' do
-        expect { described_instance.diff_path_status('-bad-ref') }
-          .to raise_error(ArgumentError, /Invalid argument/)
-      end
-    end
-
-    context 'when to starts with a dash' do
-      it 'raises an ArgumentError naming the invalid argument' do
-        expect { described_instance.diff_path_status('HEAD', '-bad-ref') }
-          .to raise_error(ArgumentError, /Invalid argument/)
+    context 'when from is nil but to is not' do
+      it 'raises an ArgumentError' do
+        expect { described_instance.diff_path_status(nil, 'def5678') }
+          .to raise_error(ArgumentError, /`from` is nil but `to` is not/)
       end
     end
 
@@ -601,8 +597,82 @@ RSpec.describe Git::Repository::Diffing do
   end
 
   describe '#diff_name_status' do
-    it 'is an alias for diff_path_status' do
-      expect(described_instance.method(:diff_name_status)).to eq(described_instance.method(:diff_path_status))
+    it 'returns the same result as diff_path_status when called with the same arguments' do
+      allow(diff_command).to receive(:call).and_return(command_result)
+      expect(described_instance.diff_name_status.to_h).to eq(
+        described_instance.diff_path_status.to_h
+      )
+    end
+  end
+
+  describe '#diff_stats' do
+    let(:diff_stats_instance) { instance_double(Git::DiffStats) }
+
+    context 'when called with default arguments' do
+      before do
+        allow(Git::DiffStats).to receive(:new).and_return(diff_stats_instance)
+      end
+
+      it 'constructs a Git::DiffStats with self, HEAD, nil, and no path limiter' do
+        expect(Git::DiffStats).to receive(:new)
+          .with(described_instance, 'HEAD', nil, nil)
+          .and_return(diff_stats_instance)
+        described_instance.diff_stats
+      end
+
+      it 'returns the Git::DiffStats instance' do
+        expect(described_instance.diff_stats).to be(diff_stats_instance)
+      end
+    end
+
+    context 'when called with explicit obj1 and obj2' do
+      it 'passes both refs to Git::DiffStats.new' do
+        expect(Git::DiffStats).to receive(:new)
+          .with(described_instance, 'abc1234', 'def5678', nil)
+          .and_return(diff_stats_instance)
+        described_instance.diff_stats('abc1234', 'def5678')
+      end
+    end
+
+    context 'when called with only obj1' do
+      it 'passes obj1 and nil as obj2 to Git::DiffStats.new' do
+        expect(Git::DiffStats).to receive(:new)
+          .with(described_instance, 'abc1234', nil, nil)
+          .and_return(diff_stats_instance)
+        described_instance.diff_stats('abc1234')
+      end
+    end
+
+    context 'when path_limiter is a String' do
+      it 'passes the path_limiter to Git::DiffStats.new' do
+        expect(Git::DiffStats).to receive(:new)
+          .with(described_instance, 'HEAD', nil, 'lib/')
+          .and_return(diff_stats_instance)
+        described_instance.diff_stats('HEAD', nil, path_limiter: 'lib/')
+      end
+    end
+
+    context 'when path_limiter is nil' do
+      it 'passes nil as path_limiter to Git::DiffStats.new' do
+        expect(Git::DiffStats).to receive(:new)
+          .with(described_instance, 'HEAD', nil, nil)
+          .and_return(diff_stats_instance)
+        described_instance.diff_stats('HEAD', nil, path_limiter: nil)
+      end
+    end
+
+    context 'when an unknown option is provided' do
+      it 'raises an ArgumentError naming the unknown key' do
+        expect { described_instance.diff_stats('HEAD', nil, bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'when obj1 is nil but obj2 is not' do
+      it 'raises an ArgumentError' do
+        expect { described_instance.diff_stats(nil, 'def5678') }
+          .to raise_error(ArgumentError, /obj1 is nil but obj2 is not/)
+      end
     end
   end
 end

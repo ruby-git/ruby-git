@@ -46,8 +46,8 @@ class TestDiffStats < Test::Unit::TestCase
   def test_diff_stats_with_empty_path_array
     status = Struct.new(:success?, :exitstatus) { def exitstatus = 0 }.new(true)
     result = Git::CommandLineResult.new(%w[git diff], status, '', '')
-    diff_cmd = Git::Commands::Diff.new(@git.lib)
-    Git::Commands::Diff.expects(:new).with(@git.lib).returns(diff_cmd)
+    diff_cmd = mock('diff_cmd')
+    Git::Commands::Diff.expects(:new).with(instance_of(Git::ExecutionContext::Repository)).returns(diff_cmd)
     diff_cmd.expects(:call).with('gitsearch1', 'v2.5',
                                  numstat: true, shortstat: true,
                                  src_prefix: 'a/', dst_prefix: 'b/',

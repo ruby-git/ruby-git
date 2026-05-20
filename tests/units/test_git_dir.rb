@@ -23,53 +23,63 @@ class TestGitDir < Test::Unit::TestCase
   # Test the case where the git-dir is not a subdirectory of work-tree
   #
   def test_git_dir_outside_work_tree
-    Dir.mktmpdir do |work_tree|
-      Dir.mktmpdir do |git_dir|
-        # Setup a bare repository
-        #
-        source_git_dir = File.expand_path(File.join('tests', 'files', 'working.git'))
-        FileUtils.cp_r(Dir["#{source_git_dir}/*"], git_dir, preserve: true)
-        git = Git.open(work_tree, repository: git_dir)
+    # Use the non-block form of Dir.mktmpdir + explicit rm_rf cleanup.
+    #
+    # The block form calls FileUtils.remove_entry (without force) on exit, which
+    # raises Errno::ENOTEMPTY if git's auto-gc is still writing objects to the
+    # git_dir in the background when cleanup runs. FileUtils.rm_rf (force: true)
+    # absorbs that race condition. See also: in_temp_dir in test_helper.rb.
+    #
+    work_tree = Dir.mktmpdir
+    git_dir = Dir.mktmpdir
+    begin
+      # Setup a bare repository
+      #
+      source_git_dir = File.expand_path(File.join('tests', 'files', 'working.git'))
+      FileUtils.cp_r(Dir["#{source_git_dir}/*"], git_dir, preserve: true)
+      git = Git.open(work_tree, repository: git_dir)
 
-        assert_equal(work_tree, git.dir.to_s)
-        assert_equal(git_dir, git.repo.to_s)
+      assert_equal(work_tree, git.dir.to_s)
+      assert_equal(git_dir, git.repo.to_s)
 
-        # Reconstitute the work tree from the bare repository
-        #
-        branch = 'master'
-        git.checkout(branch, force: true)
+      # Reconstitute the work tree from the bare repository
+      #
+      branch = 'master'
+      git.checkout(branch, force: true)
 
-        # Make sure the work tree contains the expected files
-        #
-        expected_files = %w[ex_dir example.txt].sort
-        actual_files = Dir[File.join(work_tree, '*')].map { |f| File.basename(f) }.sort
-        assert_equal(expected_files, actual_files)
+      # Make sure the work tree contains the expected files
+      #
+      expected_files = %w[ex_dir example.txt].sort
+      actual_files = Dir[File.join(work_tree, '*')].map { |f| File.basename(f) }.sort
+      assert_equal(expected_files, actual_files)
 
-        # None of the expected files should have a status that says it has been changed
-        #
-        expected_files.each do |file|
-          assert_equal(false, git.status.changed?(file))
-        end
-
-        # Change a file and make sure it's status says it has been changed
-        #
-        file = 'example.txt'
-        File.open(File.join(work_tree, file), 'a') { |f| f.write('A new line') }
-        assert_equal(true, git.status.changed?(file))
-
-        # Add and commit the file and then check that:
-        # * the file is not flagged as changed anymore
-        # * the commit was added to the log
-        #
-        max_log_size = 100
-        commits = git.log(max_log_size).execute
-        assert_equal(64, commits.size)
-        git.add(file)
-        git.commit('This is a new commit')
+      # None of the expected files should have a status that says it has been changed
+      #
+      expected_files.each do |file|
         assert_equal(false, git.status.changed?(file))
-        commits = git.log(max_log_size).execute
-        assert_equal(65, commits.size)
       end
+
+      # Change a file and make sure it's status says it has been changed
+      #
+      file = 'example.txt'
+      File.open(File.join(work_tree, file), 'a') { |f| f.write('A new line') }
+      assert_equal(true, git.status.changed?(file))
+
+      # Add and commit the file and then check that:
+      # * the file is not flagged as changed anymore
+      # * the commit was added to the log
+      #
+      max_log_size = 100
+      commits = git.log(max_log_size).execute
+      assert_equal(64, commits.size)
+      git.add(file)
+      git.commit('This is a new commit')
+      assert_equal(false, git.status.changed?(file))
+      commits = git.log(max_log_size).execute
+      assert_equal(65, commits.size)
+    ensure
+      FileUtils.rm_rf(work_tree)
+      FileUtils.rm_rf(git_dir)
     end
   end
 
