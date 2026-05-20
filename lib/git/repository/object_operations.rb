@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'git/commands/archive'
+require 'git/object'
 require 'git/commands/cat_file/raw'
 require 'git/commands/grep'
 require 'git/commands/ls_tree'
@@ -560,6 +561,122 @@ module Git
       rescue StandardError
         FileUtils.rm_f(tmp) if tmp
         raise
+      end
+
+      # Returns a blob object for the given object reference
+      #
+      # The returned object is lazy: no git command is invoked until a property
+      # (e.g. {Git::Object::AbstractObject#sha}, {Git::Object::AbstractObject#contents})
+      # is accessed on the result.
+      #
+      # @example Get a blob from a treeish path
+      #   repo.gblob('HEAD:README.md')
+      #   #=> #<Git::Object::Blob ...>
+      #
+      # @param objectish [String] the object name (SHA, treeish path, ref, etc.)
+      #
+      # @return [Git::Object::Blob] the blob object
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def gblob(objectish)
+        Git::Object.new(self, objectish, 'blob')
+      end
+
+      # Returns a commit object for the given object reference
+      #
+      # The returned object is lazy: no git command is invoked until a property
+      # (e.g. {Git::Object::AbstractObject#sha}, {Git::Object::Commit#message})
+      # is accessed on the result.
+      #
+      # @example Get a commit by symbolic ref
+      #   repo.gcommit('HEAD')
+      #   #=> #<Git::Object::Commit ...>
+      #
+      # @example Get a commit by abbreviated SHA
+      #   repo.gcommit('abc1234')
+      #   #=> #<Git::Object::Commit ...>
+      #
+      # @param objectish [String] the object name (SHA, branch, tag, refspec, etc.)
+      #
+      # @return [Git::Object::Commit] the commit object
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def gcommit(objectish)
+        Git::Object.new(self, objectish, 'commit')
+      end
+
+      # Returns a tree object for the given object reference
+      #
+      # The returned object is lazy: no git command is invoked until a property
+      # (e.g. {Git::Object::AbstractObject#sha}, {Git::Object::Tree#children})
+      # is accessed on the result.
+      #
+      # @example Get the root tree for the current HEAD
+      #   repo.gtree('HEAD^{tree}')
+      #   #=> #<Git::Object::Tree ...>
+      #
+      # @param objectish [String] the object name (SHA, treeish specifier, etc.)
+      #
+      # @return [Git::Object::Tree] the tree object
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def gtree(objectish)
+        Git::Object.new(self, objectish, 'tree')
+      end
+
+      # Returns a tag object for the given tag name
+      #
+      # Returns a {Git::Object::Tag} for `tag_name`. The returned object is
+      # either an annotated or a lightweight tag depending on the underlying
+      # ref type.
+      #
+      # @example Get a tag object
+      #   repo.tag('v1.0')
+      #   #=> #<Git::Object::Tag name="v1.0" ...>
+      #
+      # @param tag_name [String] the name of the tag
+      #
+      # @return [Git::Object::Tag] the tag object
+      #
+      # @raise [Git::UnexpectedResultError] if `tag_name` does not name an
+      #   existing tag
+      #
+      # @raise [Git::FailedError] if the underlying `git show-ref` invocation
+      #   exits with an unexpected status (i.e., outside the allowed 0..1 range)
+      #
+      def tag(tag_name)
+        Git::Object::Tag.new(self, tag_name)
+      end
+
+      # Returns the appropriate git object for the given object reference
+      #
+      # Runs `git cat-file -t` to determine the object type, then constructs
+      # and returns the corresponding `Git::Object::*` subclass instance.
+      #
+      # @example Get a commit object from HEAD
+      #   repo.object('HEAD')
+      #   #=> #<Git::Object::Commit ...>
+      #
+      # @example Get a blob from a treeish path
+      #   repo.object('HEAD:README.md')
+      #   #=> #<Git::Object::Blob ...>
+      #
+      # @param objectish [String] the object name (SHA, ref, treeish path, etc.)
+      #
+      # @return [Git::Object::Blob, Git::Object::Commit, Git::Object::Tree] the
+      #   git object for the given reference
+      #
+      # @raise [ArgumentError] if `objectish` starts with a hyphen
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
+      #
+      def object(objectish)
+        Git::Object.new(self, objectish)
       end
 
       # Private helpers
