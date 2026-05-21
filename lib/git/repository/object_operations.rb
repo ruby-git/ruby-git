@@ -463,7 +463,7 @@ module Git
         object = opts.delete(:object) || 'HEAD'
         opts[:pathspec] = Array(path_limiter).map(&:to_s) if path_limiter
         result = Git::Commands::Grep.new(@execution_context).call(
-          object, pattern:, **opts, no_color: true, line_number: true
+          object, pattern:, **opts, no_color: true, line_number: true, null: true
         )
         Private.parse_grep_result(result)
       end
@@ -700,7 +700,7 @@ module Git
           return {} if exitstatus == 1 && result.stderr.empty?
           raise Git::FailedError, result if exitstatus == 1
 
-          Git::Parsers::Grep.parse(result.stdout.split("\n"))
+          Git::Parsers::Grep.parse(result.stdout)
         end
 
         # Resolve the staging directory for a git archive temp file

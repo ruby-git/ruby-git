@@ -4,9 +4,8 @@ module Git
   module Parsers
     # Parser for `git grep` output
     #
-    # Provides a class method that transforms raw `git grep` output lines into
-    # a structured Hash consumed by the `Git::Repository::ObjectOperations`
-    # facade.
+    # Provides a class method that transforms raw `git grep --null` output into a
+    # structured Hash consumed by the `Git::Repository::ObjectOperations` facade.
     #
     # This parser is a pure text transformer with no exit-status logic. The
     # calling facade is responsible for interpreting the command's exit status
@@ -17,24 +16,24 @@ module Git
     module Grep
       module_function
 
-      # Parse `git grep --line-number --no-color` output lines into a match hash
+      # Parse `git grep --line-number --null --no-color` output into a match hash
       #
-      # Each line is expected in the format produced by
-      # `git grep --line-number --no-color`: `treeish:filename:linenum:text`.
+      # With `--null`, git separates the path and line number fields with NUL
+      # bytes: `treeish:filename\0linenum\0text\n`. This keeps filenames that
+      # contain `:<digits>:` from being confused with the line-number delimiter.
       #
-      # @param lines [Array<String>] output lines from `git grep`
+      # @param output [String] raw output from `git grep --null --line-number`
       #
       # @return [Hash<String, Array<Array(Integer, String)>>] hash mapping
       #   `"treeish:filename"` keys to arrays of `[line_number, text]` pairs
       #
       # @api private
       #
-      def parse(lines)
-        lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
-          match = line.match(/\A(.*?):(\d+):(.*)/)
-          next unless match
+      def parse(output)
+        output.each_line.with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
+          filename, line_num, text = line.chomp.split("\0", 3)
+          next unless text && line_num&.match?(/\A\d+\z/)
 
-          _full, filename, line_num, text = match.to_a
           hsh[filename] << [line_num.to_i, text]
         end
       end
