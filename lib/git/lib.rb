@@ -7,6 +7,7 @@ require 'git/command_line'
 require 'git/errors'
 require 'git/parsers/branch'
 require 'git/parsers/fsck'
+require 'git/parsers/grep'
 require 'git/parsers/stash'
 require 'git/parsers/tag'
 require 'git/url'
@@ -801,7 +802,9 @@ module Git
 
       opts = normalize_grep_opts(opts)
       object = opts.delete(:object) || 'HEAD'
-      result = Git::Commands::Grep.new(self).call(object, pattern:, **opts, no_color: true, line_number: true)
+      result = Git::Commands::Grep.new(self).call(
+        object, pattern:, **opts, no_color: true, line_number: true, null: true
+      )
       exitstatus = result.status.exitstatus
 
       # Exit status 1 with empty stderr means no lines matched (not an error)
@@ -810,7 +813,7 @@ module Git
       # Exit status 1 with non-empty stderr is a real error (e.g. bad object reference)
       raise Git::FailedError, result if exitstatus == 1
 
-      parse_grep_output(result.stdout.split("\n"))
+      parse_grep_output(result.stdout)
     end
 
     # Validate that the given arguments cannot be mistaken for a command-line option
@@ -2505,14 +2508,8 @@ module Git
       opts
     end
 
-    def parse_grep_output(lines)
-      lines.each_with_object(Hash.new { |h, k| h[k] = [] }) do |line, hsh|
-        match = line.match(/\A(.*?):(\d+):(.*)/)
-        next unless match
-
-        _full, filename, line_num, text = match.to_a
-        hsh[filename] << [line_num.to_i, text]
-      end
+    def parse_grep_output(output)
+      Git::Parsers::Grep.parse(output)
     end
 
     def parse_diff_stats_output(lines)

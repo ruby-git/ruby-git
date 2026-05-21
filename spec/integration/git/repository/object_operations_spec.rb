@@ -634,6 +634,24 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
 
+    context 'with a filename containing colon-number-colon text' do
+      before do
+        skip 'Colon characters are not supported in Windows filenames' if Gem.win_platform?
+
+        write_file('src/foo:42:bar.rb', "# TODO: colon filename\n")
+        repo.add('.')
+        repo.commit('Add colon-number filename')
+      end
+
+      it 'keeps the full filename in the grep result key' do
+        result = described_instance.grep('TODO', 'src/foo:42:bar.rb')
+
+        expect(result).to eq(
+          'HEAD:src/foo:42:bar.rb' => [[1, '# TODO: colon filename']]
+        )
+      end
+    end
+
     context 'with a path_limiter String that restricts results' do
       it 'returns only matches under the given path' do
         result = described_instance.grep('TODO', 'src/foo.rb')
