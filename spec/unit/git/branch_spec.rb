@@ -130,4 +130,56 @@ RSpec.describe Git::Branch do
       end
     end
   end
+
+  describe '#delete' do
+    context 'with a local branch' do
+      let(:branch_info) do
+        Git::BranchInfo.new(
+          refname: 'feature',
+          target_oid: 'abc123',
+          current: false,
+          worktree: false,
+          symref: nil,
+          upstream: nil
+        )
+      end
+
+      subject(:delete_branch) { described_class.new(base, branch_info).delete }
+
+      it 'deletes the local branch by short name' do
+        expect(lib).to receive(:branch_delete).with('feature').and_return('Deleted branch feature.')
+
+        expect(delete_branch).to eq('Deleted branch feature.')
+      end
+    end
+
+    context 'with a remote-tracking branch' do
+      let(:branch_info) do
+        Git::BranchInfo.new(
+          refname: 'remotes/origin/feature',
+          target_oid: 'abc123',
+          current: false,
+          worktree: false,
+          symref: nil,
+          upstream: nil
+        )
+      end
+
+      let(:remote_config) { { 'url' => 'https://github.com/test/repo.git' } }
+
+      subject(:delete_branch) { described_class.new(base, branch_info).delete }
+
+      before do
+        allow(lib).to receive(:config_remote).with('origin').and_return(remote_config)
+      end
+
+      it 'deletes the remote-tracking ref instead of a local branch with the same short name' do
+        expect(lib).to receive(:branch_delete)
+          .with('origin/feature', remotes: true)
+          .and_return('Deleted remote-tracking branch origin/feature.')
+
+        expect(delete_branch).to eq('Deleted remote-tracking branch origin/feature.')
+      end
+    end
+  end
 end

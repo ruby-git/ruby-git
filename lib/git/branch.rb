@@ -210,12 +210,8 @@ module Git
 
     # Deletes this branch
     #
-    # **Note:** this method only works correctly for local branches. Calling it on
-    # a remote-tracking branch (one where {#remote} is not `nil`) will attempt to
-    # delete a *local* branch with the same short name rather than the
-    # remote-tracking ref, which is almost certainly not what you want.
-    # See [ruby-git#1280](https://github.com/ruby-git/ruby-git/issues/1280) for
-    # the planned fix.
+    # Remote-tracking branches (one where {#remote} is not `nil`) delete the
+    # local remote-tracking ref; they do not push a deletion to the remote.
     #
     # @example Delete a local branch
     #   git.branch('old-feature').delete
@@ -225,7 +221,11 @@ module Git
     # @raise [Git::Error] if the branch cannot be deleted
     #
     def delete
-      @base.lib.branch_delete(@name)
+      if @remote
+        @base.lib.branch_delete("#{@remote.name}/#{@name}", remotes: true)
+      else
+        @base.lib.branch_delete(@name)
+      end
     end
 
     # Returns true if this is the currently checked-out branch
