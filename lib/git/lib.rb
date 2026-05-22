@@ -923,7 +923,7 @@ module Git
     #
     # @return [String] the unified diff patch output
     #
-    # @raise [Git::FailedError] if git returns exit code >= 2
+    # @raise [Git::FailedError] if git returns exit code > 2
     #
     # @see Git::Commands::Diff
     #
@@ -955,7 +955,7 @@ module Git
     # @return [Hash] diff statistics with the shape:
     #   `{ total: { insertions:, deletions:, lines:, files: }, files: { ... } }`
     #
-    # @raise [Git::FailedError] if git returns exit code >= 2
+    # @raise [Git::FailedError] if git returns exit code > 2
     #
     # @see Git::Commands::Diff
     #
@@ -992,7 +992,7 @@ module Git
     # @return [Hash] mapping of file paths to status letters
     #   (e.g. `{ "lib/foo.rb" => "M", "README.md" => "A" }`)
     #
-    # @raise [Git::FailedError] if git returns exit code >= 2
+    # @raise [Git::FailedError] if git returns exit code > 2
     #
     # @see Git::Commands::Diff
     #
@@ -1486,7 +1486,7 @@ module Git
     #
     # @return [Array<String>] paths of files with unresolved merge conflicts
     #
-    # @raise [Git::FailedError] if git returns exit code >= 2
+    # @raise [Git::FailedError] if git returns exit code > 2
     #
     # @see Git::Commands::Diff
     #

@@ -44,5 +44,45 @@ RSpec.describe Git::Commands::Diff, :integration do
         end.to raise_error(Git::FailedError, /nonexistent-ref/)
       end
     end
+
+    context 'with --check option' do
+      attr_reader :check_repo_dir, :check_command
+
+      before(:all) do
+        @check_repo_dir = Dir.mktmpdir
+        check_repo = Git.init(@check_repo_dir, initial_branch: 'main')
+        check_repo.config('user.email', 'test@example.com')
+        check_repo.config('user.name', 'Test User')
+        check_repo.config('commit.gpgsign', 'false')
+
+        # Initial commit with clean content
+        File.write(File.join(@check_repo_dir, 'file.txt'), "clean content\n")
+        check_repo.add('file.txt')
+        check_repo.commit('Initial commit')
+        check_repo.add_tag('check_clean')
+
+        # Commit that introduces trailing whitespace
+        File.write(File.join(@check_repo_dir, 'file.txt'), "trailing whitespace   \n")
+        check_repo.add('file.txt')
+        check_repo.commit('Add trailing whitespace')
+        check_repo.add_tag('check_dirty')
+
+        @check_command = described_class.new(check_repo.lib)
+      end
+
+      after(:all) do
+        FileUtils.rm_rf(@check_repo_dir) if @check_repo_dir
+      end
+
+      it 'returns exit code 0 when no whitespace issues are found' do
+        result = check_command.call('check_clean', 'check_clean', check: true)
+        expect(result.status.exitstatus).to eq(0)
+      end
+
+      it 'returns exit code 2 when whitespace issues are found' do
+        result = check_command.call('check_clean', 'check_dirty', check: true)
+        expect(result.status.exitstatus).to eq(2)
+      end
+    end
   end
 end

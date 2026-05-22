@@ -151,8 +151,9 @@ module Git
         value_option :path, as_operand: true, repeatable: true
       end
 
-      # git diff exit codes: 0 = no diff, 1 = diff found, 2+ = error
-      allow_exit_status 0..1
+      # Exit codes: 0 = success; with --exit-code: 1 = differences found;
+      # with --check: 2 = whitespace/conflict-marker errors
+      allow_exit_status 0..2
 
       # @!method call(*, **)
       #
@@ -170,7 +171,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range
-      #       (exit code > 1)
+      #       (exit code > 2)
       #
       #     @api public
       #
@@ -195,7 +196,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range
-      #       (exit code > 1)
+      #       (exit code > 2)
       #
       #     @api public
       #
@@ -217,7 +218,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range
-      #       (exit code > 1)
+      #       (exit code > 2)
       #
       #     @api public
       #
@@ -238,7 +239,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range
-      #       (exit code > 1)
+      #       (exit code > 2)
       #
       #     @api public
       #
@@ -647,7 +648,7 @@ module Git
       #     @raise [ArgumentError] if unsupported options are provided
       #
       #     @raise [Git::FailedError] if git exits outside the allowed
-      #       range (exit code > 1)
+      #       range (exit code > 2)
       #
       #     @api public
     end
