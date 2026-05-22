@@ -6,11 +6,17 @@ require 'git/repository/diffing'
 require 'git/execution_context/repository'
 
 # Integration tests for Git::Repository::Diffing facade methods that perform
-# facade-owned post-processing of real git output (extract_patch_text strips
-# numstat/shortstat lines before returning the patch text). Methods that are
-# pure single-command delegators without post-processing (diff_path_status /
-# diff_name_status) are covered by the command's own integration tests:
-#   tests/units/test_diff_path_status.rb
+# facade-owned post-processing of real git output:
+#   - #diff_full: extract_patch_text strips numstat/shortstat lines before
+#     returning the patch text
+#   - #diff_numstat: parse_numstat_output parses combined numstat/shortstat
+#     output into a structured hash
+#
+# Methods with facade-owned parsing covered by the legacy test suite
+# (Git::Base delegates to the facade, so coverage is end-to-end):
+#   tests/units/test_diff_path_status.rb covers #diff_path_status /
+#   #diff_name_status, which parse raw diff output via
+#   Private.extract_name_status_from_raw.
 #
 # #diff_stats is a lazy factory delegator (no facade-owned post-processing)
 # and is covered by:

@@ -2,6 +2,7 @@
 
 require 'pathname'
 require 'git/commands/diff'
+require 'git/diff'
 require 'git/diff_path_status'
 require 'git/diff_stats'
 require 'git/escaped_path'
@@ -9,7 +10,7 @@ require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Mixin that adds diff facade methods
+    # Facade methods for comparing commits and trees using `git diff`
     #
     # Included by {Git::Repository}.
     #
@@ -73,9 +74,9 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR either starts with `"-"`
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR if `obj1` or `obj2` starts with `"-"`
       #
-      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
@@ -147,8 +148,8 @@ module Git
       #
       # @param opts [Hash] options to filter the diff
       #
-      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter
-      #   (nil) limit the stats to the given path(s)
+      # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the stats to the given path(s)
       #
       # @return [Hash] per-file insertion and deletion counts plus aggregate totals
       #
@@ -161,10 +162,9 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR either starts with `"-"`
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR if `obj1` or `obj2` starts with `"-"`
       #
-      # @raise [Git::FailedError] if git exits outside the allowed range (exit code >
-      # 1)
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
@@ -241,9 +241,7 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not
-      #
-      # @raise [ArgumentError] if `obj1` or `obj2` starts with `"-"`
+      # @raise [ArgumentError] if `obj1` is `nil` but `obj2` is not OR if `obj1` or `obj2` starts with `"-"`
       #
       # @see #diff_numstat
       #
@@ -254,6 +252,41 @@ module Git
         raise ArgumentError, 'Invalid arguments: obj1 is nil but obj2 is not' if obj1.nil? && !obj2.nil?
 
         Git::DiffStats.new(self, obj1, obj2, opts[:path_limiter])
+      end
+
+      # Returns a lazy {Git::Diff} object for the comparison between two trees
+      #
+      # Compares (1) two commits, (2) a commit against the working tree, or (3) the
+      # index against the working tree. The returned {Git::Diff} is lazy — it does
+      # not run any git commands until an accessor method (e.g., {Git::Diff#patch},
+      # {Git::Diff#each}) is called.
+      #
+      # Use {Git::Diff#path} to limit the diff to a sub-path after construction.
+      #
+      # @example Get the diff since HEAD
+      #   diff = repo.diff
+      #   diff.patch  #=> "diff --git a/lib/foo.rb ..."
+      #
+      # @example Compare two specific commits
+      #   repo.diff('abc1234', 'def5678').patch
+      #
+      # @example Limit to a sub-path
+      #   repo.diff('HEAD~1', 'HEAD').path('lib/').patch
+      #
+      # @example Get unstaged changes (index vs. working tree)
+      #   repo.diff(nil).patch
+      #
+      # @param obj1 [String, nil] the first commit or object to compare; defaults to
+      #   `'HEAD'`
+      #
+      # @param obj2 [String, nil] the second commit or object to compare
+      #
+      # @return [Git::Diff] a lazy diff object for the comparison
+      #
+      # @see https://git-scm.com/docs/git-diff git-diff documentation
+      #
+      def diff(obj1 = 'HEAD', obj2 = nil)
+        Git::Diff.new(self, obj1, obj2)
       end
 
       # Option keys accepted by {#diff_path_status}
@@ -319,9 +352,9 @@ module Git
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] if `from` is `nil` but `to` is not OR either starts with `"-"`
+      # @raise [ArgumentError] if `from` is `nil` but `to` is not OR if `from` or `to` starts with `"-"`
       #
-      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
       #
       # @see https://git-scm.com/docs/git-diff git-diff documentation
       #
