@@ -978,7 +978,7 @@ module Git
 
     # @return [Git::Diff] a Git::Diff object
     def diff(objectish = 'HEAD', obj2 = nil)
-      Git::Diff.new(self, objectish, obj2)
+      facade_repository.diff(objectish, obj2)
     end
 
     # @return [Git::Object] a Git object

@@ -96,4 +96,36 @@ RSpec.describe Git::Base do
       expect(result).to be(diff_stats_result)
     end
   end
+
+  describe '#diff' do
+    subject(:result) { described_instance.diff(objectish, obj2) }
+
+    let(:described_instance) { described_class.new }
+    let(:objectish) { 'HEAD~1' }
+    let(:obj2) { 'HEAD' }
+    let(:facade_repository) { instance_double(Git::Repository) }
+    let(:diff_result) { instance_double(Git::Diff) }
+
+    before do
+      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
+    end
+
+    it 'delegates to facade_repository.diff with objectish and obj2' do
+      expect(facade_repository).to receive(:diff).with(objectish, obj2).and_return(diff_result)
+      expect(result).to be(diff_result)
+    end
+
+    context 'when called with default arguments' do
+      subject(:result) { described_instance.diff }
+
+      before do
+        allow(facade_repository).to receive(:diff).with('HEAD', nil).and_return(diff_result)
+      end
+
+      it 'delegates to facade_repository.diff with HEAD and nil' do
+        expect(facade_repository).to receive(:diff).with('HEAD', nil).and_return(diff_result)
+        result
+      end
+    end
+  end
 end
