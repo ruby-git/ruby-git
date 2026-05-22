@@ -61,7 +61,14 @@ class TestDiff < Test::Unit::TestCase
   end
 
   def test_diff_path_empty_array
-    @git.lib.expects(:diff_full).with('gitsearch1', 'v2.5', { path_limiter: nil }).returns('')
+    status = Struct.new(:success?, :exitstatus) { def exitstatus = 0 }.new(true)
+    result = Git::CommandLineResult.new(%w[git diff], status, '', '')
+    diff_cmd = mock('diff_cmd')
+    Git::Commands::Diff.expects(:new).with(instance_of(Git::ExecutionContext::Repository)).returns(diff_cmd)
+    diff_cmd.expects(:call).with('gitsearch1', 'v2.5',
+                                 patch: true, numstat: true, shortstat: true,
+                                 src_prefix: 'a/', dst_prefix: 'b/',
+                                 path: nil).returns(result)
 
     d = @git.diff('gitsearch1', 'v2.5').path
     d.patch
