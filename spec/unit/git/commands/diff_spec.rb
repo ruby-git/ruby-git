@@ -1070,9 +1070,19 @@ RSpec.describe Git::Commands::Diff do
         expect(result.status.exitstatus).to eq(1)
       end
 
-      it 'raises FailedError with exit code 2' do
+      it 'returns successfully with exit code 2' do
+        expect_command_capturing('diff', '--check')
+          .and_return(command_result("file.rb:3: trailing whitespace.\n", exitstatus: 2))
+
+        result = command.call(check: true)
+
+        expect(result).to be_a(Git::CommandLineResult)
+        expect(result.status.exitstatus).to eq(2)
+      end
+
+      it 'raises FailedError with exit code 3' do
         expect_command_capturing('diff')
-          .and_return(command_result('', stderr: 'fatal: bad revision', exitstatus: 2))
+          .and_return(command_result('', stderr: 'fatal: bad revision', exitstatus: 3))
 
         expect { command.call }
           .to raise_error(Git::FailedError, /bad revision/)
