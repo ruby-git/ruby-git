@@ -21,28 +21,27 @@ module Git
       # Runs `git ls-files --stage` under the given `location` and returns a
       # hash keyed by file path with per-file index metadata.
       #
-      # @overload ls_files(location = nil)
+      # @example List all indexed files in the working tree
+      #   repo.ls_files
+      #   #=> { "README.md" => { path: "README.md", mode_index: "100644",
+      #   #=>                    sha_index: "abc123...", stage: "0" }, ... }
       #
-      #   @example List all indexed files in the working tree
-      #     repo.ls_files
-      #     #=> { "README.md" => { path: "README.md", mode_index: "100644",
-      #     #=>                    sha_index: "abc123...", stage: "0" }, ... }
+      # @example List indexed files under a specific directory
+      #   repo.ls_files('lib/')
+      #   #=> { "lib/git.rb" => { path: "lib/git.rb", ... }, ... }
       #
-      #   @example List indexed files under a specific directory
-      #     repo.ls_files('lib/')
-      #     #=> { "lib/git.rb" => { path: "lib/git.rb", ... }, ... }
+      # @param location [String, nil] the path to restrict the listing to;
+      #   defaults to `'.'` (all tracked files) when `nil`
       #
-      #   @param location [String, nil] the directory or file path to restrict the
-      #     listing to; defaults to `'.'` (all files in the working tree)
+      # @return [Hash{String => Hash}] a hash of index entries keyed by file path
       #
-      #   @return [Hash{String => Hash}] a hash of files in the index where each
-      #     key is the file path and each value is a Hash containing:
-      #     * `:path` [String] the file path
-      #     * `:mode_index` [String] the file's index mode (e.g. `"100644"`)
-      #     * `:sha_index` [String] the file's index SHA
-      #     * `:stage` [String] the merge stage (`"0"` for normal entries)
+      #   Each value is a Hash with the following keys:
+      #   * `:path` [String] the file path
+      #   * `:mode_index` [String] the file's index mode (e.g. `"100644"`)
+      #   * `:sha_index` [String] the file's index SHA
+      #   * `:stage` [String] the merge stage (`"0"` for normal entries)
       #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def ls_files(location = nil)
         location ||= '.'
