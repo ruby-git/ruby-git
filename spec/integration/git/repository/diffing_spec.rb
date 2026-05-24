@@ -160,4 +160,62 @@ RSpec.describe Git::Repository::Diffing, :integration do
       end
     end
   end
+
+  describe '#diff_index' do
+    context 'when the index matches HEAD (nothing staged)' do
+      it 'returns an empty hash' do
+        result = described_instance.diff_index('HEAD')
+        expect(result).to eq({})
+      end
+    end
+
+    context 'when a tracked file has been modified and staged' do
+      before do
+        write_file('README.md', "# Project\n\nStaged change.\n")
+        repo.add('README.md')
+      end
+
+      it 'returns an entry with all expected keys and correct values' do
+        result = described_instance.diff_index('HEAD')
+        entry = result['README.md']
+        expect(entry).to include(
+          path: 'README.md',
+          type: 'M',
+          mode_index: '100644',
+          mode_repo: '100644'
+        )
+        expect(entry[:sha_repo]).to match(/\A[0-9a-f]+\z/)
+        expect(entry[:sha_index]).to match(/\A[0-9a-f]+\z/)
+      end
+    end
+
+    context 'when a tracked file has been modified but NOT staged' do
+      before do
+        write_file('README.md', "# Project\n\nUnstaged change.\n")
+        # intentionally no repo.add — file is dirty but not staged
+      end
+
+      it 'still returns an entry for the modified file' do
+        result = described_instance.diff_index('HEAD')
+        expect(result).to have_key('README.md')
+        expect(result['README.md']).to include(path: 'README.md', type: 'M')
+      end
+    end
+
+    context 'when a file is staged then the working tree is reverted to match HEAD' do
+      before do
+        # Stage a change so the index differs from the tree
+        write_file('README.md', "# Project\n\nStaged change.\n")
+        repo.add('README.md')
+        # Revert the working-tree file to the HEAD content without unstaging
+        write_file('README.md', "# Project\n\nUpdated content.\n")
+      end
+
+      it 'still reports the file as changed because the index differs from the tree' do
+        result = described_instance.diff_index('HEAD')
+        expect(result).to have_key('README.md')
+        expect(result['README.md']).to include(path: 'README.md', type: 'M')
+      end
+    end
+  end
 end

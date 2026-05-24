@@ -935,4 +935,82 @@ RSpec.describe Git::Repository::Diffing do
       end
     end
   end
+
+  describe '#diff_index' do
+    subject(:result) { described_instance.diff_index(treeish) }
+
+    let(:treeish) { 'HEAD' }
+    let(:status_command) { instance_double(Git::Commands::Status) }
+    let(:diff_index_command) { instance_double(Git::Commands::DiffIndex) }
+    let(:status_result) { command_result }
+    let(:diff_index_stdout) { '' }
+    let(:diff_index_result) { command_result(diff_index_stdout) }
+
+    before do
+      allow(Git::Commands::Status).to receive(:new).with(execution_context).and_return(status_command)
+      allow(status_command).to receive(:call).and_return(status_result)
+      allow(Git::Commands::DiffIndex).to receive(:new).with(execution_context).and_return(diff_index_command)
+      allow(diff_index_command).to receive(:call).with(treeish).and_return(diff_index_result)
+    end
+
+    it 'calls Git::Commands::Status#call before Git::Commands::DiffIndex#call' do
+      expect(status_command).to receive(:call).ordered
+      expect(diff_index_command).to receive(:call).with(treeish).ordered.and_return(diff_index_result)
+      subject
+    end
+
+    it 'calls Git::Commands::DiffIndex#call with the treeish argument' do
+      expect(diff_index_command).to receive(:call).with(treeish).and_return(diff_index_result)
+      subject
+    end
+
+    context 'when stdout is empty' do
+      it 'returns an empty hash' do
+        is_expected.to eq({})
+      end
+    end
+
+    context 'when stdout contains a single modified file' do
+      let(:diff_index_stdout) do
+        ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n"
+      end
+
+      it 'returns a hash keyed by the file path with all expected fields' do
+        is_expected.to eq(
+          'lib/foo.rb' => {
+            mode_index: '100644',
+            mode_repo: '100644',
+            path: 'lib/foo.rb',
+            sha_repo: 'abc1234',
+            sha_index: 'def5678',
+            type: 'M'
+          }
+        )
+      end
+    end
+
+    context 'when stdout contains multiple files' do
+      let(:diff_index_stdout) do
+        ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+          ":100644 100644 111aaaa 222bbbb A\tlib/bar.rb\n"
+      end
+
+      it 'returns an entry for each file' do
+        expect(result.keys).to contain_exactly('lib/foo.rb', 'lib/bar.rb')
+      end
+    end
+
+    context 'when stdout contains a git-quoted non-ASCII path' do
+      # Git octal-encodes non-ASCII bytes; "\\303\\251" is the octal encoding
+      # of "é" (U+00E9, UTF-8 bytes: 0xC3 0xA9).
+      let(:diff_index_stdout) do
+        ":100644 100644 abc1234 def5678 M\t\"\\303\\251tat.rb\"\n"
+      end
+
+      it 'unescapes the quoted path in the hash key and :path value' do
+        expect(result).to have_key('état.rb')
+        expect(result['état.rb'][:path]).to eq('état.rb')
+      end
+    end
+  end
 end
