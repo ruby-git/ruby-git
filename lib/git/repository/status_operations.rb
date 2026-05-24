@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'git/commands/ls_files'
+require 'git/commands/rev_parse'
 require 'git/escaped_path'
 require 'git/repository/shared_private'
 
@@ -16,6 +17,31 @@ module Git
     # @api public
     #
     module StatusOperations
+      # Returns `true` if the repository has no commits yet
+      #
+      # Checks whether `HEAD` can be resolved to a commit object. A brand-new
+      # repository (or one created with `git checkout --orphan`) where no commit
+      # has been made yet will have no commits.
+      #
+      # @example Check whether a repository is empty
+      #   repo.no_commits? #=> true   # freshly initialized, no commits yet
+      #   repo.no_commits? #=> false  # at least one commit exists
+      #
+      # @return [Boolean] `true` when the repository has no commits, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status other
+      #   than when the repository has no commits
+      #
+      def no_commits?
+        Git::Commands::RevParse.new(@execution_context).call('HEAD', verify: true)
+        false
+      rescue Git::FailedError => e
+        raise unless e.result.status.exitstatus == 128 &&
+                     e.result.stderr == 'fatal: Needed a single revision'
+
+        true
+      end
+
       # List all files tracked in the index
       #
       # Runs `git ls-files --stage` under the given `location` and returns a

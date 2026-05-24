@@ -8,16 +8,15 @@ RSpec.describe Git::Repository::StatusOperations do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
-  let(:ls_files_command) { instance_double(Git::Commands::LsFiles) }
-
-  before do
-    allow(Git::Commands::LsFiles).to receive(:new).with(execution_context).and_return(ls_files_command)
-  end
-
   describe '#ls_files' do
     subject(:result) { described_instance.ls_files(location) }
 
     let(:location) { nil }
+    let(:ls_files_command) { instance_double(Git::Commands::LsFiles) }
+
+    before do
+      allow(Git::Commands::LsFiles).to receive(:new).with(execution_context).and_return(ls_files_command)
+    end
 
     context 'when no location is given (nil)' do
       it "delegates to LsFiles#call with '.' as the default location" do
@@ -89,6 +88,59 @@ RSpec.describe Git::Repository::StatusOperations do
 
       it 'returns an entry for each file' do
         expect(result.keys).to contain_exactly('a.rb', 'b.sh')
+      end
+    end
+  end
+
+  describe '#no_commits?' do
+    subject(:result) { described_instance.no_commits? }
+
+    let(:rev_parse_command) { instance_double(Git::Commands::RevParse) }
+
+    before do
+      allow(Git::Commands::RevParse).to receive(:new).with(execution_context).and_return(rev_parse_command)
+    end
+
+    context 'when the repository has at least one commit' do
+      it 'delegates to RevParse#call with HEAD and verify: true' do
+        expect(rev_parse_command).to receive(:call).with('HEAD',
+                                                         verify: true).and_return(command_result('abc123def456'))
+        result
+      end
+
+      it 'returns false' do
+        allow(rev_parse_command).to receive(:call).with('HEAD', verify: true).and_return(command_result('abc123def456'))
+        expect(result).to be(false)
+      end
+    end
+
+    context 'when the repository has no commits (exit 128 with expected stderr)' do
+      let(:failed_result) do
+        command_result('', stderr: 'fatal: Needed a single revision', exitstatus: 128)
+      end
+
+      before do
+        allow(rev_parse_command).to receive(:call).with('HEAD', verify: true)
+                                                  .and_raise(Git::FailedError.new(failed_result))
+      end
+
+      it 'returns true' do
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when git rev-parse fails for an unrelated reason' do
+      let(:failed_result) do
+        command_result('', stderr: 'fatal: not a git repository', exitstatus: 128)
+      end
+
+      before do
+        allow(rev_parse_command).to receive(:call).with('HEAD', verify: true)
+                                                  .and_raise(Git::FailedError.new(failed_result))
+      end
+
+      it 're-raises the error' do
+        expect { described_instance.no_commits? }.to raise_error(Git::FailedError, /not a git repository/)
       end
     end
   end
