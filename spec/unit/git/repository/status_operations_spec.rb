@@ -144,4 +144,93 @@ RSpec.describe Git::Repository::StatusOperations do
       end
     end
   end
+
+  describe '#untracked_files' do
+    subject(:result) { described_instance.untracked_files }
+
+    let(:work_dir) { '/path/to/work_dir' }
+    let(:ls_files_command) { instance_double(Git::Commands::LsFiles) }
+
+    before do
+      allow(Git::Commands::LsFiles).to receive(:new).with(execution_context).and_return(ls_files_command)
+      allow(execution_context).to receive(:git_work_dir).and_return(work_dir)
+    end
+
+    it 'delegates to LsFiles#call with others: true, exclude_standard: true, and chdir from git_work_dir' do
+      expect(ls_files_command).to receive(:call).with(
+        others: true, exclude_standard: true, chdir: work_dir
+      ).and_return(command_result(''))
+      result
+    end
+
+    context 'when there are no untracked files (empty stdout)' do
+      it 'returns an empty array' do
+        allow(ls_files_command).to receive(:call).with(
+          others: true, exclude_standard: true, chdir: work_dir
+        ).and_return(command_result(''))
+        expect(result).to eq([])
+      end
+    end
+
+    context 'when there is one untracked file' do
+      it 'returns an array containing that filename' do
+        allow(ls_files_command).to receive(:call).with(
+          others: true, exclude_standard: true, chdir: work_dir
+        ).and_return(command_result("new_feature.rb\n"))
+        expect(result).to eq(['new_feature.rb'])
+      end
+    end
+
+    context 'when there are multiple untracked files' do
+      it 'returns an array of all filenames' do
+        allow(ls_files_command).to receive(:call).with(
+          others: true, exclude_standard: true, chdir: work_dir
+        ).and_return(command_result("a.rb\nb.rb\ntmp/debug.log\n"))
+        expect(result).to eq(['a.rb', 'b.rb', 'tmp/debug.log'])
+      end
+    end
+
+    context 'when stdout contains a git-quoted (non-ASCII) path' do
+      it 'returns the unescaped path' do
+        # U+00B5 µ encodes as UTF-8 bytes \302\265
+        allow(ls_files_command).to receive(:call).with(
+          others: true, exclude_standard: true, chdir: work_dir
+        ).and_return(command_result("\"\\302\\265.txt\"\n"))
+        expect(result).to eq(['µ.txt'])
+      end
+    end
+
+    context 'when git_work_dir is nil (bare repository or no working tree)' do
+      let(:work_dir) { nil }
+
+      it 'passes chdir: nil to the command' do
+        expect(ls_files_command).to receive(:call).with(
+          others: true, exclude_standard: true, chdir: nil
+        ).and_return(command_result(''))
+        result
+      end
+    end
+  end
+
+  # COVERAGE-ONLY: Exercises the `if parts.any?` false-branch guard in
+  # Private#split_status_line. This branch cannot be safely reached through the
+  # public #ls_files API: although `stdout.split("\n")` can produce empty-string
+  # elements (via consecutive newlines), git ls-files never emits such output, and
+  # if it did, ls_files would immediately crash with NoMethodError on `nil.split`
+  # before the guard has any effect. ObjectSpace is the only way to exercise this
+  # branch and maintain 100% branch coverage without changing production code.
+  describe 'Private.split_status_line' do
+    # Access the Private module via ObjectSpace to bypass the private_constant
+    # restriction. Private is a module_function module used internally by
+    # StatusOperations.
+    let(:private_module) do
+      ObjectSpace.each_object(Module).find { |m| m.name == 'Git::Repository::StatusOperations::Private' }
+    end
+
+    context 'when the line is empty (parts.any? is false)' do
+      it 'returns an empty array' do
+        expect(private_module.split_status_line('')).to eq([])
+      end
+    end
+  end
 end
