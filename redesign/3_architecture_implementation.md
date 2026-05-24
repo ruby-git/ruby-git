@@ -43,6 +43,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
 | `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
+| `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files` (delegation to facade deferred — `Git::Base#ls_files` unchanged pending iter 6B) |
 
 #### Facade module naming convention
 
