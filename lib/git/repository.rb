@@ -10,6 +10,7 @@ require 'git/repository/object_operations'
 require 'git/repository/remote_operations'
 require 'git/repository/staging'
 require 'git/repository/stashing'
+require 'git/repository/status_operations'
 
 module Git
   # The main public interface for interacting with a Git repository
@@ -46,6 +47,7 @@ module Git
     include Git::Repository::RemoteOperations
     include Git::Repository::Staging
     include Git::Repository::Stashing
+    include Git::Repository::StatusOperations
 
     # @return [Git::ExecutionContext::Repository] the execution context used to run
     #   git commands for this repository
