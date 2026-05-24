@@ -3,6 +3,7 @@
 require 'pathname'
 require 'git/commands/diff'
 require 'git/commands/diff_files'
+require 'git/commands/diff_index'
 require 'git/commands/status'
 require 'git/diff'
 require 'git/diff_path_status'
@@ -423,6 +424,66 @@ module Git
         Git::Commands::Status.new(@execution_context).call
         Private.parse_diff_files_output(
           Git::Commands::DiffFiles.new(@execution_context).call.stdout
+        )
+      end
+
+      # Compares the working tree against the given tree object
+      #
+      # Runs `git diff-index <treeish>` (without `--cached`) to list files that
+      # differ between the given tree object (e.g. a commit or `"HEAD"`) and the
+      # working tree. The index is refreshed via `git status` first so that cached
+      # stat information is up to date.
+      #
+      # This is equivalent to the 4.x `Git::Lib#diff_index` behavior, which also
+      # ran `git diff-index` without `--cached`.
+      #
+      # @note `git diff-index` without `--cached` uses the index as a stat cache:
+      #   any file whose index entry differs from the tree is reported as changed,
+      #   even when the on-disk working-tree content is byte-for-byte identical to
+      #   the tree. A staged change that has been reverted in the working tree will
+      #   therefore still appear in the result (because the index still differs from
+      #   the tree).
+      #
+      # @note The field names in the returned hash are **legacy names** inherited
+      #   from `Git::Lib#diff_index` and appear counterintuitive: `:mode_repo`
+      #   and `:sha_repo` hold **tree (treeish)** values, while `:mode_index` and
+      #   `:sha_index` hold **working tree** values.
+      #
+      # @example List all working-tree files that differ from HEAD
+      #   repo.diff_index('HEAD')
+      #   #=> {
+      #   #     "lib/foo.rb" => {
+      #   #       mode_index: "100644", mode_repo: "100644",
+      #   #       path: "lib/foo.rb", sha_repo: "abc1234",
+      #   #       sha_index: "0000000000000000000000000000000000000000",
+      #   #       type: "M"
+      #   #     }
+      #   #   }
+      #
+      # @param treeish [String] the tree object to compare against (e.g. `'HEAD'`,
+      #   a commit SHA, or a tag name)
+      #
+      # @return [Hash{String => Hash}] a hash keyed by file path
+      #
+      #   Each value is a hash with the following keys (note the legacy naming
+      #   where `:*_repo` holds tree data and `:*_index` holds working tree data):
+      #
+      #   * `:mode_index` [String] the working tree file mode (legacy name)
+      #   * `:mode_repo`  [String] the tree (treeish) file mode (legacy name)
+      #   * `:path`       [String] the file path
+      #   * `:sha_repo`   [String] the SHA of the object in the tree (treeish) (legacy name)
+      #   * `:sha_index`  [String] the SHA of the object in the working tree; all
+      #     zeros when git has not yet computed the working tree blob SHA (legacy name)
+      #   * `:type`       [String] the status code (e.g. `"M"`, `"A"`, `"D"`)
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @see https://git-scm.com/docs/git-diff-index git-diff-index documentation
+      #
+      def diff_index(treeish)
+        Git::Commands::Status.new(@execution_context).call
+        Private.parse_diff_files_output(
+          Git::Commands::DiffIndex.new(@execution_context).call(treeish).stdout
         )
       end
 
