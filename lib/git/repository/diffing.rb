@@ -2,6 +2,8 @@
 
 require 'pathname'
 require 'git/commands/diff'
+require 'git/commands/diff_files'
+require 'git/commands/status'
 require 'git/diff'
 require 'git/diff_path_status'
 require 'git/diff_stats'
@@ -378,6 +380,52 @@ module Git
       # @see #diff_path_status
       alias diff_name_status diff_path_status
 
+      # Compares the index and the working directory
+      #
+      # Runs `git diff-files` to list files that differ between the index
+      # (staging area) and the working directory. These are changes that have
+      # been made to tracked files but not yet staged.
+      #
+      # @note The field names in the returned hash are **legacy names** inherited
+      #   from `Git::Lib#diff_files` and appear counterintuitive: `:mode_repo`
+      #   and `:sha_repo` hold **index (staging area)** values, while
+      #   `:mode_index` and `:sha_index` hold **working tree** values.
+      #
+      # @example List all files with unstaged changes
+      #   repo.diff_files
+      #   #=> {
+      #   #     "lib/foo.rb" => {
+      #   #       mode_index: "100644", mode_repo: "100644",
+      #   #       path: "lib/foo.rb", sha_repo: "abc1234",
+      #   #       sha_index: "0000000000000000000000000000000000000000",
+      #   #       type: "M"
+      #   #     }
+      #   #   }
+      #
+      # @return [Hash{String => Hash}] a hash keyed by file path
+      #
+      #   Each value is a hash with the following keys (note the legacy naming
+      #   where `:*_repo` holds index data and `:*_index` holds working tree data):
+      #
+      #   * `:mode_index` [String] the working tree file mode (legacy name)
+      #   * `:mode_repo`  [String] the index (staging area) file mode (legacy name)
+      #   * `:path`       [String] the file path
+      #   * `:sha_repo`   [String] the SHA of the object in the index (staging area) (legacy name)
+      #   * `:sha_index`  [String] the SHA of the object in the working tree; all
+      #     zeros when git has not computed the working tree blob SHA (legacy name)
+      #   * `:type`       [String] the status code (e.g. `"M"`, `"A"`, `"D"`)
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @see https://git-scm.com/docs/git-diff-files git-diff-files documentation
+      #
+      def diff_files
+        Git::Commands::Status.new(@execution_context).call
+        Private.parse_diff_files_output(
+          Git::Commands::DiffFiles.new(@execution_context).call.stdout
+        )
+      end
+
       # Private helpers local to {Git::Repository::Diffing}
       #
       # @api private
@@ -484,6 +532,66 @@ module Git
           return if pathspecs.all? { |p| p.is_a?(String) || p.is_a?(Pathname) }
 
           raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
+        end
+
+        # Parses raw `git diff-files` output into a file-keyed hash
+        #
+        # Each output line has the format:
+        #   `:old_mode new_mode old_sha new_sha status\tpath`
+        #
+        # The leading colon on `old_mode` is stripped when building
+        # the `:mode_repo` value.
+        #
+        # @param stdout [String] raw stdout from {Git::Commands::DiffFiles#call}
+        #
+        # @return [Hash{String => Hash}] a hash keyed by file path where each
+        #   value has keys `:mode_index`, `:mode_repo`, `:path`, `:sha_repo`,
+        #   `:sha_index`, and `:type`
+        #
+        def parse_diff_files_output(stdout)
+          stdout.split("\n").each_with_object({}) do |line, memo|
+            next if line.empty?
+
+            tab_pos = line.index("\t")
+            next unless tab_pos
+
+            path, entry = parse_diff_files_line(line, tab_pos)
+            memo[path] = entry
+          end
+        end
+
+        # Parses a single raw `git diff-files` output line into a path/entry pair
+        #
+        # @param line [String] a single non-empty line containing a tab character
+        # @param tab_pos [Integer] the index of the first tab in the line
+        #
+        # @return [Array(String, Hash)] two-element array of `[path, entry_hash]`
+        #
+        def parse_diff_files_line(line, tab_pos)
+          path = unescape_quoted_path(line[(tab_pos + 1)..])
+          parts = line[0, tab_pos].split
+          [path, build_diff_files_entry(path, parts)]
+        end
+
+        # Builds a single file-info hash for {#parse_diff_files_output}
+        #
+        # @param path [String] the file path
+        # @param parts [Array<String>] the whitespace-split fields from the info
+        #   portion of the diff-files line: `[mode_src, mode_dest, sha_src,
+        #   sha_dest, type]`
+        #
+        # @return [Hash] entry hash with keys `:mode_index`, `:mode_repo`, `:path`,
+        #   `:sha_repo`, `:sha_index`, `:type`
+        #
+        def build_diff_files_entry(path, parts)
+          {
+            mode_index: parts[1],
+            mode_repo: parts[0].to_s[1, 7],
+            path: path,
+            sha_repo: parts[2],
+            sha_index: parts[3],
+            type: parts[4]
+          }
         end
 
         # Extracts name-status data from `--raw` diff output lines
