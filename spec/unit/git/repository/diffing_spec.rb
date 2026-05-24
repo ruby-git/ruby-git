@@ -382,7 +382,7 @@ RSpec.describe Git::Repository::Diffing do
 
       it 'unescapes the git-quoted path in the returned files hash' do
         allow(diff_command).to receive(:call).and_return(command_result(quoted_stdout))
-        expect(result[:files]).to have_key('état.rb')
+        expect(result[:files]).to eq('état.rb' => { insertions: 5, deletions: 2 })
       end
     end
 
@@ -832,6 +832,106 @@ RSpec.describe Git::Repository::Diffing do
           .with(described_instance, nil, nil)
           .and_return(diff_instance)
         subject
+      end
+    end
+  end
+
+  describe '#diff_files' do
+    subject(:result) { described_instance.diff_files }
+
+    let(:status_command) { instance_double(Git::Commands::Status) }
+    let(:diff_files_command) { instance_double(Git::Commands::DiffFiles) }
+    let(:status_result) { command_result }
+    let(:diff_files_stdout) { '' }
+    let(:diff_files_result) { command_result(diff_files_stdout) }
+
+    before do
+      allow(Git::Commands::Status).to receive(:new).with(execution_context).and_return(status_command)
+      allow(status_command).to receive(:call).and_return(status_result)
+      allow(Git::Commands::DiffFiles).to receive(:new).with(execution_context).and_return(diff_files_command)
+      allow(diff_files_command).to receive(:call).and_return(diff_files_result)
+    end
+
+    it 'calls Git::Commands::Status#call before Git::Commands::DiffFiles#call' do
+      expect(status_command).to receive(:call).ordered
+      expect(diff_files_command).to receive(:call).ordered.and_return(diff_files_result)
+      subject
+    end
+
+    it 'calls Git::Commands::DiffFiles#call with no arguments' do
+      expect(diff_files_command).to receive(:call).with(no_args).and_return(diff_files_result)
+      subject
+    end
+
+    context 'when stdout is empty' do
+      it 'returns an empty hash' do
+        is_expected.to eq({})
+      end
+    end
+
+    context 'when stdout contains a single modified file' do
+      let(:diff_files_stdout) do
+        ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n"
+      end
+
+      it 'returns a hash keyed by the file path with all expected fields' do
+        is_expected.to eq(
+          'lib/foo.rb' => {
+            mode_index: '100644',
+            mode_repo: '100644',
+            path: 'lib/foo.rb',
+            sha_repo: 'abc1234',
+            sha_index: 'def5678',
+            type: 'M'
+          }
+        )
+      end
+    end
+
+    context 'when stdout contains multiple files' do
+      let(:diff_files_stdout) do
+        ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+          ":100644 100644 111aaaa 222bbbb A\tlib/bar.rb\n"
+      end
+
+      it 'returns an entry for each file' do
+        expect(result.keys).to contain_exactly('lib/foo.rb', 'lib/bar.rb')
+      end
+    end
+
+    context 'when stdout contains empty lines' do
+      let(:diff_files_stdout) do
+        ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n" \
+          "\n" \
+          ":100644 100644 111aaaa 222bbbb A\tlib/bar.rb\n"
+      end
+
+      it 'skips empty lines and returns entries for non-empty lines only' do
+        expect(result.keys).to contain_exactly('lib/foo.rb', 'lib/bar.rb')
+      end
+    end
+
+    context 'when stdout contains a line without a tab character' do
+      let(:diff_files_stdout) do
+        "some-header-line-without-tab\n" \
+          ":100644 100644 abc1234 def5678 M\tlib/foo.rb\n"
+      end
+
+      it 'skips lines without a tab and returns only parseable lines' do
+        expect(result.keys).to contain_exactly('lib/foo.rb')
+      end
+    end
+
+    context 'when stdout contains a git-quoted non-ASCII path' do
+      # Git octal-encodes non-ASCII bytes; "\\303\\251" is the octal encoding
+      # of "é" (U+00E9, UTF-8 bytes: 0xC3 0xA9).
+      let(:diff_files_stdout) do
+        ":100644 100644 abc1234 def5678 M\t\"\\303\\251tat.rb\"\n"
+      end
+
+      it 'unescapes the quoted path in the hash key and :path value' do
+        expect(result).to have_key('état.rb')
+        expect(result['état.rb'][:path]).to eq('état.rb')
       end
     end
   end

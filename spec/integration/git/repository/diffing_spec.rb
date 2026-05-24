@@ -105,4 +105,59 @@ RSpec.describe Git::Repository::Diffing, :integration do
       end
     end
   end
+
+  describe '#diff_files' do
+    context 'when there are no unstaged changes' do
+      it 'returns an empty hash' do
+        result = described_instance.diff_files
+        expect(result).to eq({})
+      end
+    end
+
+    context 'when a tracked file has been modified but not staged' do
+      before do
+        write_file('README.md', "# Project\n\nModified but not staged.\n")
+      end
+
+      it 'returns an entry for the modified file with correct path, type, modes, and SHA markers' do
+        result = described_instance.diff_files
+        expect(result).to have_key('README.md')
+        entry = result['README.md']
+        expect(entry).to include(
+          path: 'README.md',
+          type: 'M',
+          mode_index: '100644',
+          mode_repo: '100644'
+        )
+        expect(entry[:sha_repo]).to match(/\A[0-9a-f]+\z/)
+        expect(entry[:sha_index]).to match(/\A0+\z/)
+      end
+    end
+
+    context 'when a tracked file is renamed in the working tree (unstaged)' do
+      # git diff-files only iterates over index entries — it has no visibility
+      # into untracked files. A working-tree rename therefore cannot produce a
+      # two-path "Rxx old_path\tnew_path" line; it shows the original path as
+      # deleted (D) and ignores the new untracked file entirely.
+      before do
+        FileUtils.mv(File.join(repo_dir, 'README.md'), File.join(repo_dir, 'RENAMED.md'))
+      end
+
+      it 'reports the original path as deleted, not as a rename entry' do
+        result = described_instance.diff_files
+        expect(result).to have_key('README.md')
+        expect(result['README.md']).to include(type: 'D')
+      end
+
+      it 'does not include the new path (it is untracked)' do
+        result = described_instance.diff_files
+        expect(result).not_to have_key('RENAMED.md')
+      end
+
+      it 'returns only one entry (no spurious two-path artefacts)' do
+        result = described_instance.diff_files
+        expect(result.size).to eq(1)
+      end
+    end
+  end
 end
