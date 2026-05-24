@@ -74,4 +74,47 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
       end
     end
   end
+
+  # #untracked_files performs facade-owned post-processing: it splits raw stdout
+  # by newlines and unescapes git-quoted paths. Integration tests verify this
+  # pipeline against a real git repository.
+  describe '#untracked_files' do
+    context 'when there are no untracked files' do
+      it 'returns an empty array' do
+        expect(described_instance.untracked_files).to eq([])
+      end
+    end
+
+    context 'when there is one untracked file' do
+      before do
+        write_file('new_feature.rb', 'content')
+      end
+
+      it 'returns an array containing that file' do
+        expect(described_instance.untracked_files).to eq(['new_feature.rb'])
+      end
+    end
+
+    context 'when there are multiple untracked files including in subdirectories' do
+      before do
+        write_file('a.rb', 'content')
+        write_file('lib/b.rb', 'content')
+      end
+
+      it 'returns all untracked file paths relative to the repository root' do
+        expect(described_instance.untracked_files).to contain_exactly('a.rb', 'lib/b.rb')
+      end
+    end
+
+    context 'when a file matches a .gitignore pattern' do
+      before do
+        write_file('ignored.log', 'log content')
+        write_file('.gitignore', "ignored.log\n")
+      end
+
+      it 'does not include the ignored file' do
+        expect(described_instance.untracked_files).not_to include('ignored.log')
+      end
+    end
+  end
 end

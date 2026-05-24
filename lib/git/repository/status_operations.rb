@@ -9,8 +9,9 @@ module Git
   class Repository
     # Facade methods for repository-status operations
     #
-    # Provides methods for querying the state of the index and working tree,
-    # including listing files tracked in the index.
+    # Provides methods for querying the state of the repository: checking
+    # whether any commits exist, listing untracked working-tree files, and
+    # listing files tracked in the index.
     #
     # Included by {Git::Repository}.
     #
@@ -40,6 +41,29 @@ module Git
                      e.result.stderr == 'fatal: Needed a single revision'
 
         true
+      end
+
+      # List all files in the working tree that are not tracked by git
+      #
+      # Runs `git ls-files --others --exclude-standard` from the working tree
+      # root and returns an array of repository-relative file paths. Files that
+      # match `.gitignore` or other standard exclusion rules are omitted.
+      #
+      # @example Get untracked files
+      #   repo.untracked_files #=> ["new_feature.rb", "tmp/debug.log"]
+      #
+      # @example No untracked files
+      #   repo.untracked_files #=> []
+      #
+      # @return [Array<String>] repository-relative paths of untracked,
+      #   non-ignored files; empty when there are none
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def untracked_files
+        Git::Commands::LsFiles.new(@execution_context).call(
+          others: true, exclude_standard: true, chdir: @execution_context.git_work_dir
+        ).stdout.split("\n").map { |f| Private.unescape_quoted_path(f) }
       end
 
       # List all files tracked in the index
