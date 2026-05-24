@@ -1166,6 +1166,22 @@ module Git
       facade_repository.diff_path_status(objectish, obj2, opts.slice(:path_limiter, :path))
     end
 
+    # Compares the index and the working directory
+    #
+    # @example List all files with unstaged changes
+    #   repo.diff_files #=> { "lib/foo.rb" => { mode_index: "100644", ... } }
+    #
+    # @return [Hash{String => Hash}] a hash keyed by file path; see
+    #   {Git::Repository::Diffing#diff_files} for the full key list
+    #
+    # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+    #
+    # @see Git::Repository::Diffing#diff_files
+    #
+    def diff_files
+      facade_repository.diff_files
+    end
+
     # Alias for {#diff_path_status}; provided for backward compatibility
     #
     # @return [Git::DiffPathStatus] the name-status report for the comparison
