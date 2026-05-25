@@ -224,20 +224,11 @@ module Git
 
     # g.config('user.name', 'Scott Chacon') # sets value
     # g.config('user.email', 'email@email.com')  # sets value
-    # g.config('user.email', 'email@email.com', file: 'path/to/custom/config)  # sets value in file
+    # g.config('user.email', 'email@email.com', file: 'path/to/custom/config')  # sets value in file
     # g.config('user.name')  # returns 'Scott Chacon'
     # g.config # returns whole config hash
     def config(name = nil, value = nil, options = {})
-      if name && value
-        # set value
-        lib.config_set(name, value, options)
-      elsif name
-        # return value
-        lib.config_get(name)
-      else
-        # return hash
-        lib.config_list
-      end
+      facade_repository.config(name, value, options)
     end
 
     # Returns a reference to the working directory
@@ -844,7 +835,7 @@ module Git
     end
 
     def ls_files(location = nil)
-      lib.ls_files(location)
+      facade_repository.ls_files(location)
     end
 
     def with_working(work_dir) # :yields: the working directory Pathname
