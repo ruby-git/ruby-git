@@ -1030,7 +1030,7 @@ module Git
 
     # @return [Git::Status] a status object
     def status
-      Git::Status.new(self)
+      facade_repository.status
     end
 
     # @return [Git::Object::Tag] a tag object
