@@ -43,8 +43,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
 | `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
-| `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`; delegations to facade deferred pending iter 6B) |
-| `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config` (delegation deferred — `Git::Base#config` still calls `lib.*`; will delegate in iter 6B) |
+| `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`), `untracked_files`, `status`; `Git::Base#ls_files` delegates to facade |
+| `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config`; `Git::Base#config` delegates to facade |
 
 #### Facade module naming convention
 
@@ -61,9 +61,9 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3 — Iteration 6: `Git::Status` (A+B)**
+**Phase 3 — Iteration 7: `Git::Branch` + `Git::Remote`**
 
-Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Proceed to iter 6.
+Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Proceed to iter 7.
 
 The full scope is still migrating all domain objects
 (`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
@@ -114,7 +114,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Log` | ✅ Complete | iter 4 |
 | `Git::Diff` | ✅ Complete | iter 5 |
 | `Git::DiffStats` | ✅ Complete | iter 5 |
-| `Git::Status` | ⏳ Not started | iter 6 |
+| `Git::Status` | ✅ Complete | iter 6 |
 | `Git::Branch` | ⏳ Not started | iter 7 |
 | `Git::Remote` | ⏳ Not started | iter 7 |
 | `Git::Branches` | ⏳ Not started | iter 8 |
