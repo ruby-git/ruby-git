@@ -90,13 +90,21 @@ module Git
 
         # Set a config value by key name
         #
-        # @param execution_context [Git::ExecutionContext] the execution context
+        # @overload config_set(execution_context, name, value, **options)
         #
-        # @param name [String] the dotted config key to write (e.g. `"user.name"`)
+        #   @param execution_context [Git::ExecutionContext] the execution context
         #
-        # @param value [String] the value to assign
+        #   @param name [String] the dotted config key to write (e.g. `"user.name"`)
         #
-        # @return [Git::CommandLineResult] the raw result of `git config <name> <value>`
+        #   @param value [String] the value to assign
+        #
+        #   @param options [Hash] keyword options forwarded to the command
+        #
+        #   @option options [String, nil] :file (nil) path to a custom config file
+        #     to write to instead of the repository's default `.git/config`
+        #
+        #   @return [Git::CommandLineResult] the raw result of
+        #     `git config <name> <value>`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #
