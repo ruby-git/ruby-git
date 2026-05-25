@@ -90,8 +90,9 @@ RSpec.describe Git::Repository::Configuring do
     end
 
     context 'when called with name and value' do
-      subject(:result) { described_instance.config('user.name', 'Alice') }
+      subject(:result) { described_instance.config('user.name', 'Alice', options) }
 
+      let(:options) { {} }
       let(:set_command) { instance_double(Git::Commands::ConfigOptionSyntax::Set) }
       let(:set_result) { command_result('') }
 
@@ -111,7 +112,7 @@ RSpec.describe Git::Repository::Configuring do
       end
 
       context 'with the file: option' do
-        subject(:result) { described_instance.config('user.name', 'Alice', file: '/path/to/config') }
+        let(:options) { { file: '/path/to/config' } }
 
         it 'forwards the file option to Git::Commands::ConfigOptionSyntax::Set#call' do
           expect(set_command)
@@ -121,7 +122,7 @@ RSpec.describe Git::Repository::Configuring do
       end
 
       context 'with an unknown option' do
-        subject(:result) { described_instance.config('user.name', 'Alice', bogus: true) }
+        let(:options) { { bogus: true } }
 
         it 'raises ArgumentError' do
           expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
