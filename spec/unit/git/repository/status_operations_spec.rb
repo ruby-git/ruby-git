@@ -212,25 +212,22 @@ RSpec.describe Git::Repository::StatusOperations do
     end
   end
 
-  # COVERAGE-ONLY: Exercises the `if parts.any?` false-branch guard in
-  # Private#split_status_line. This branch cannot be safely reached through the
-  # public #ls_files API: although `stdout.split("\n")` can produce empty-string
-  # elements (via consecutive newlines), git ls-files never emits such output, and
-  # if it did, ls_files would immediately crash with NoMethodError on `nil.split`
-  # before the guard has any effect. ObjectSpace is the only way to exercise this
-  # branch and maintain 100% branch coverage without changing production code.
-  describe 'Private.split_status_line' do
-    # Access the Private module via ObjectSpace to bypass the private_constant
-    # restriction. Private is a module_function module used internally by
-    # StatusOperations.
-    let(:private_module) do
-      ObjectSpace.each_object(Module).find { |m| m.name == 'Git::Repository::StatusOperations::Private' }
+  describe '#status' do
+    subject(:result) { described_instance.status }
+
+    let(:status) { instance_double(Git::Status) }
+
+    before do
+      allow(Git::Status).to receive(:new).with(described_instance).and_return(status)
     end
 
-    context 'when the line is empty (parts.any? is false)' do
-      it 'returns an empty array' do
-        expect(private_module.split_status_line('')).to eq([])
-      end
+    it 'constructs Git::Status with the repository instance as the base' do
+      expect(Git::Status).to receive(:new).with(described_instance).and_return(status)
+      result
+    end
+
+    it 'returns the Git::Status instance' do
+      expect(result).to eq(status)
     end
   end
 end

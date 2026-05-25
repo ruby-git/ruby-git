@@ -3,7 +3,7 @@
 require 'git/commands/ls_files'
 require 'git/commands/rev_parse'
 require 'git/escaped_path'
-require 'git/repository/shared_private'
+require 'git/status'
 
 module Git
   class Repository
@@ -66,6 +66,32 @@ module Git
         ).stdout.split("\n").map { |f| Private.unescape_quoted_path(f) }
       end
 
+      # Returns a {Git::Status} object describing the working tree and index state
+      #
+      # Constructs a {Git::Status} for this repository by collecting information from
+      # `git ls-files --stage`, `git ls-files --others`, `git diff-files`, and
+      # `git diff-index HEAD` (the last only when at least one commit exists). The
+      # result identifies which files have been modified, added, deleted, or are
+      # untracked.
+      #
+      # @example Check which files are modified
+      #   repo.status.changed #=> { "lib/foo.rb" => <Git::Status::StatusFile ...> }
+      #
+      # @example Check for untracked files
+      #   repo.status.untracked #=> { "new_file.rb" => <Git::Status::StatusFile ...> }
+      #
+      # @example Iterate over all status files
+      #   repo.status.each { |file| puts "#{file.path}: #{file.type}" }
+      #
+      # @return [Git::Status] the status of the repository
+      #
+      # @raise [Git::FailedError] if any underlying git command exits with a
+      #   non-zero exit status
+      #
+      def status
+        Git::Status.new(self)
+      end
+
       # List all files tracked in the index
       #
       # Runs `git ls-files --stage` under the given `location` and returns a
@@ -115,7 +141,8 @@ module Git
         #
         # The output format is `<mode> <sha> <stage>\t<file>`. Quoted file paths
         # (which git uses when the path contains non-ASCII or special characters)
-        # are unescaped before being returned.
+        # are unescaped before being returned. `line` is assumed to be non-empty
+        # because `git ls-files --stage` never emits blank lines.
         #
         # @param line [String] a single line of git ls-files output
         #
@@ -124,7 +151,7 @@ module Git
         #
         def split_status_line(line)
           parts = line.split("\t")
-          parts[-1] = unescape_quoted_path(parts[-1]) if parts.any?
+          parts[-1] = unescape_quoted_path(parts[-1])
           parts
         end
 

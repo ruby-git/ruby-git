@@ -12,37 +12,112 @@ module Git
   class Status
     include Enumerable
 
-    # @param base [Git::Base] The base git object
+    # Create a new Status for the given repository
+    #
+    # @param base [Git::Base, Git::Repository] the git object backing this status
+    #
     def initialize(base)
       @base = base
       # The factory returns a hash of file paths to StatusFile objects.
       @files = StatusFileFactory.new(base).construct_files
     end
 
-    # File status collections, memoized for performance.
+    # Return files modified in the index and/or working tree
+    #
+    # Includes both staged modifications (index vs HEAD) and unstaged modifications
+    # (working tree vs index).
+    #
+    # @return [Hash{String => Git::Status::StatusFile}] changed files keyed by path
+    #
     def changed   = @changed ||= select_files { |f| f.type == 'M' }
+
+    # Return files added to the index that are not yet in HEAD
+    #
+    # @return [Hash{String => Git::Status::StatusFile}] added files keyed by path
+    #
     def added     = @added ||= select_files { |f| f.type == 'A' }
+
+    # Return files deleted from the index
+    #
+    # @return [Hash{String => Git::Status::StatusFile}] deleted files keyed by path
+    #
     def deleted   = @deleted ||= select_files { |f| f.type == 'D' }
-    # This works with `true` or `nil`
+
+    # Return files present in the working tree but not tracked by git
+    #
+    # @return [Hash{String => Git::Status::StatusFile}] untracked files keyed by path
+    #
     def untracked = @untracked ||= select_files(&:untracked)
 
-    # Predicate methods to check the status of a specific file.
+    # Return `true` if `file` has been modified in the index or working tree
+    #
+    # @param file [String] the repository-relative path to check
+    #
+    # @return [Boolean] `true` if the file has been modified
+    #
     def changed?(file)   = file_in_collection?(:changed, file)
+
+    # Return `true` if `file` has been added to the index
+    #
+    # @param file [String] the repository-relative path to check
+    #
+    # @return [Boolean] `true` if the file has been added
+    #
     def added?(file)     = file_in_collection?(:added, file)
+
+    # Return `true` if `file` has been deleted from the index
+    #
+    # @param file [String] the repository-relative path to check
+    #
+    # @return [Boolean] `true` if the file has been deleted
+    #
     def deleted?(file)   = file_in_collection?(:deleted, file)
+
+    # Return `true` if `file` is not tracked by git
+    #
+    # @param file [String] the repository-relative path to check
+    #
+    # @return [Boolean] `true` if the file is untracked
+    #
     def untracked?(file) = file_in_collection?(:untracked, file)
 
-    # Access a status file by path, or iterate over all status files.
+    # Return the {Git::Status::StatusFile} for the given path
+    #
+    # @param file [String] the repository-relative path
+    #
+    # @return [Git::Status::StatusFile, nil] the status file, or `nil` if not found
+    #
     def [](file) = @files[file]
+
+    # Iterate over all status files
+    #
+    # @yield [file] each {Git::Status::StatusFile} in the repository
+    #
+    # @yieldparam file [Git::Status::StatusFile] a single file's status
+    #
+    # @return [Enumerator<Git::Status::StatusFile>] if no block is given
+    #
+    # @return [Array<Git::Status::StatusFile>] if a block is given
+    #
     def each(&) = @files.values.each(&)
 
-    # Returns a formatted string representation of the status.
+    # Return a formatted multi-line string representation of the status
+    #
+    # @return [String] one indented block per file showing its SHA, mode, type,
+    #   stage, and untracked flag
+    #
     def pretty
       map { |file| pretty_file(file) }.join << "\n"
     end
 
     private
 
+    # Format a single file's status as an indented multi-line string
+    #
+    # @param file [Git::Status::StatusFile] the file to format
+    #
+    # @return [String] the formatted status block for this file
+    #
     def pretty_file(file)
       <<~FILE
         #{file.path}
@@ -54,10 +129,26 @@ module Git
       FILE
     end
 
+    # Return a hash of files for which the block returns a truthy value
+    #
+    # @yield [file] each {Git::Status::StatusFile} in the repository
+    #
+    # @yieldparam file [Git::Status::StatusFile] a single file's status
+    #
+    # @return [Hash{String => Git::Status::StatusFile}] matching files keyed by path
+    #
     def select_files(&block)
       @files.select { |_path, file| block.call(file) }
     end
 
+    # Return `true` if `file_path` exists in the named status collection
+    #
+    # @param collection_name [Symbol] the collection to check (e.g. `:changed`)
+    #
+    # @param file_path [String] the repository-relative path to look up
+    #
+    # @return [Boolean] `true` if the path is present in the collection
+    #
     def file_in_collection?(collection_name, file_path)
       collection = public_send(collection_name)
       if ignore_case?
@@ -67,12 +158,25 @@ module Git
       end
     end
 
+    # Return a memoized set of downcased keys for the named collection
+    #
+    # @param collection_name [Symbol] the collection whose keys to downcase
+    #
+    # @return [Set<String>] the lowercased path keys
+    #
     def downcased_keys(collection_name)
       @_downcased_keys ||= {}
       @_downcased_keys[collection_name] ||=
         public_send(collection_name).keys.to_set(&:downcase)
     end
 
+    # Return `true` when git is configured to ignore filename case
+    #
+    # Reads `core.ignoreCase` from the repository config. Returns `false` if
+    # the config value is absent or if reading it raises {Git::FailedError}.
+    #
+    # @return [Boolean] `true` when `core.ignoreCase` is `"true"`
+    #
     def ignore_case?
       return @_ignore_case if defined?(@_ignore_case)
 
@@ -87,10 +191,58 @@ module Git
   class Status
     # Represents a single file's status in the git repository. Each instance
     # holds information about a file's state in the index and working tree.
+    #
+    # @api public
+    #
     class StatusFile
-      attr_reader :path, :type, :stage, :mode_index, :mode_repo,
-                  :sha_index, :sha_repo, :untracked
+      # The repository-relative file path
+      #
+      # @return [String] the path
+      attr_reader :path
 
+      # The change type for this file
+      #
+      # @return [String, nil] `"M"` for modified, `"A"` for added, `"D"` for deleted,
+      #   or `nil` when not applicable
+      attr_reader :type
+
+      # The merge stage for this file
+      #
+      # @return [String, nil] `"0"` for normal entries, or a non-zero value during
+      #   a merge conflict
+      attr_reader :stage
+
+      # The file mode recorded in the index
+      #
+      # @return [String, nil] the octal file mode (e.g. `"100644"`), or `nil`
+      attr_reader :mode_index
+
+      # The file mode recorded in HEAD
+      #
+      # @return [String, nil] the octal file mode (e.g. `"100644"`), or `nil`
+      attr_reader :mode_repo
+
+      # The SHA of the index version of this file
+      #
+      # @return [String, nil] the SHA-1 hex digest, or `nil` if unavailable
+      attr_reader :sha_index
+
+      # The SHA of the HEAD version of this file
+      #
+      # @return [String, nil] the SHA-1 hex digest, or `nil` if unavailable
+      attr_reader :sha_repo
+
+      # Whether this file is untracked
+      #
+      # @return [Boolean, nil] `true` when the file is not tracked by git
+      attr_reader :untracked
+
+      # Initialize a new StatusFile with the given git object and data hash
+      #
+      # @param base [Git::Base, Git::Repository] the git object
+      #
+      # @param hash [Hash] raw status data for this file
+      #
       def initialize(base, hash)
         @base       = base
         @path       = hash[:path]
@@ -103,7 +255,14 @@ module Git
         @untracked  = hash[:untracked]
       end
 
-      # Returns a Git::Object::Blob for either the index or repo version of the file.
+      # Return a blob object for the index or repo version of this file
+      #
+      # @param type [Symbol] `:index` (default) for the index version, or
+      #   `:repo` for the HEAD version
+      #
+      # @return [Git::Object::Blob, nil] the blob object, or `nil` if no SHA
+      #   is available for the requested version
+      #
       def blob(type = :index)
         sha = type == :repo ? sha_repo : (sha_index || sha_repo)
         @base.object(sha) if sha
@@ -116,15 +275,31 @@ module Git
   class Status
     # A factory class responsible for fetching git status data and building
     # a hash of StatusFile objects.
+    #
     # @api private
+    #
     class StatusFileFactory
+      # Create a new factory backed by the given git object
+      #
+      # When `base` is a {Git::Repository} (which exposes `#diff_index`
+      # directly), it is used as the data provider. When `base` is a
+      # {Git::Base} (the legacy path), `base.lib` is used instead.
+      #
+      # @param base [Git::Base, Git::Repository] the git object used as the
+      #   status data provider
+      #
       def initialize(base)
         @base = base
-        @lib = base.lib
+        # When base is Git::Repository (which exposes #diff_index directly),
+        # use it as the data provider. Otherwise use base.lib (legacy path).
+        @provider = base.respond_to?(:diff_index) ? base : base.lib
       end
 
-      # Gathers all status data and builds a hash of file paths to
-      # StatusFile objects.
+      # Gather all status data and build a hash of file paths to StatusFile objects
+      #
+      # @return [Hash{String => Git::Status::StatusFile}] file paths mapped to
+      #   their status objects
+      #
       def construct_files
         files_data = fetch_all_files_data
         files_data.transform_values do |data|
@@ -134,33 +309,56 @@ module Git
 
       private
 
-      # Fetches and merges status information from multiple git commands.
+      # Fetch and merge status information from multiple git commands
+      #
+      # @return [Hash{String => Hash}] raw per-file status data keyed by path
+      #
       def fetch_all_files_data
-        files = @lib.ls_files # Start with files tracked in the index.
+        files = @provider.ls_files # Start with files tracked in the index.
         merge_untracked_files(files)
         merge_modified_files(files)
         merge_head_diffs(files)
         files
       end
 
+      # Merge untracked working-tree files into `files`
+      #
+      # @param files [Hash] the in-progress files hash to update in place
+      #
+      # @return [void]
+      #
       def merge_untracked_files(files)
-        @lib.untracked_files.each do |file|
+        @provider.untracked_files.each do |file|
           files[file] = { path: file, untracked: true }
         end
       end
 
+      # Merge index-versus-working-tree diff data into `files`
+      #
+      # @param files [Hash] the in-progress files hash to update in place
+      #
+      # @return [void]
+      #
       def merge_modified_files(files)
         # Merge changes between the index and the working directory.
-        @lib.diff_files.each do |path, data|
+        @provider.diff_files.each do |path, data|
           (files[path] ||= {}).merge!(data)
         end
       end
 
+      # Merge HEAD-versus-index diff data into `files`, if commits exist
+      #
+      # @param files [Hash] the in-progress files hash to update in place
+      #
+      # @return [void]
+      #
       def merge_head_diffs(files)
-        return if @lib.empty?
+        # Git::Repository exposes #no_commits?; Git::Lib exposes #empty?.
+        is_empty = @provider.respond_to?(:no_commits?) ? @provider.no_commits? : @provider.empty?
+        return if is_empty
 
         # Merge changes between HEAD and the index.
-        @lib.diff_index('HEAD').each do |path, data|
+        @provider.diff_index('HEAD').each do |path, data|
           (files[path] ||= {}).merge!(data)
         end
       end

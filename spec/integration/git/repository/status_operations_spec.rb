@@ -75,9 +75,49 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
     end
   end
 
-  # #untracked_files performs facade-owned post-processing: it splits raw stdout
-  # by newlines and unescapes git-quoted paths. Integration tests verify this
-  # pipeline against a real git repository.
+  # #status performs multi-command orchestration: it runs git ls-files --stage,
+  # git ls-files --others --exclude-standard, git diff-files, and (when commits
+  # exist) git diff-index HEAD. The integration test verifies the end-to-end
+  # return value against a real git repository.
+  describe '#status' do
+    context 'when the repository has no commits yet' do
+      it 'returns a Git::Status instance' do
+        expect(described_instance.status).to be_a(Git::Status)
+      end
+    end
+
+    context 'when the repository has at least one commit' do
+      before do
+        write_file('README.md', "# Hello\n")
+        repo.add(all: true)
+        repo.commit('Initial commit')
+      end
+
+      it 'returns a Git::Status instance' do
+        expect(described_instance.status).to be_a(Git::Status)
+      end
+
+      context 'when an untracked file exists' do
+        before { write_file('untracked.rb', 'content') }
+
+        it 'includes the untracked file in status.untracked' do
+          expect(described_instance.status.untracked.keys).to include('untracked.rb')
+        end
+      end
+
+      context 'when a tracked file is modified in the index' do
+        before do
+          write_file('README.md', "# Changed\n")
+          repo.add('README.md')
+        end
+
+        it 'includes the file in status.changed' do
+          expect(described_instance.status.changed.keys).to include('README.md')
+        end
+      end
+    end
+  end
+
   describe '#untracked_files' do
     context 'when there are no untracked files' do
       it 'returns an empty array' do
