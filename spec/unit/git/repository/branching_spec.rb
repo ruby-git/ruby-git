@@ -676,4 +676,66 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branches_all
+  # ---------------------------------------------------------------------------
+
+  describe '#branches_all' do
+    subject(:result) { described_instance.branches_all }
+
+    let(:branch_list_command) { instance_double(Git::Commands::Branch::List) }
+    let(:branch_list_result) do
+      command_result("refs/heads/main|abc1234|*|||\nrefs/remotes/origin/main|abc1234||||\n")
+    end
+    let(:parsed_branches) do
+      [
+        instance_double(Git::BranchInfo, refname: 'main', current: true),
+        instance_double(Git::BranchInfo, refname: 'remotes/origin/main', current: false)
+      ]
+    end
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(branch_list_command)
+    end
+
+    context 'when the repository has branches' do
+      it 'calls Branch::List#call then Git::Parsers::Branch.parse_list in order and returns the parsed result' do
+        expect(branch_list_command).to(
+          receive(:call)
+            .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
+            .and_return(branch_list_result)
+            .ordered
+        )
+        expect(Git::Parsers::Branch).to(
+          receive(:parse_list)
+            .with(branch_list_result.stdout)
+            .and_return(parsed_branches)
+            .ordered
+        )
+        expect(result).to eq(parsed_branches)
+      end
+    end
+
+    context 'when the repository has no branches (empty stdout)' do
+      let(:branch_list_result) { command_result('') }
+
+      it 'calls Branch::List#call and Git::Parsers::Branch.parse_list with empty stdout and returns an empty array' do
+        expect(branch_list_command).to(
+          receive(:call)
+            .with(all: true, format: Git::Parsers::Branch::FORMAT_STRING)
+            .and_return(branch_list_result)
+            .ordered
+        )
+        expect(Git::Parsers::Branch).to(
+          receive(:parse_list)
+            .with('')
+            .and_return([])
+            .ordered
+        )
+        expect(result).to eq([])
+      end
+    end
+  end
 end
