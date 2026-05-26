@@ -342,4 +342,72 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branches_all
+  # ---------------------------------------------------------------------------
+  #
+  # branches_all delegates parsing to Git::Parsers::Branch.parse_list, which
+  # means the integration tests verify the end-to-end Ruby return value against
+  # real git output.
+
+  describe '#branches_all' do
+    context 'when only a local branch exists' do
+      it 'returns an Array of Git::BranchInfo' do
+        result = described_instance.branches_all
+        expect(result).to be_an(Array)
+        expect(result).to all(be_a(Git::BranchInfo))
+      end
+
+      it 'includes the current branch' do
+        current = described_instance.current_branch
+        refnames = described_instance.branches_all.map(&:refname)
+        expect(refnames).to include(current)
+      end
+
+      it 'marks exactly one branch as current' do
+        result = described_instance.branches_all
+        current_branches = result.select(&:current)
+        expect(current_branches.length).to eq(1)
+      end
+    end
+
+    context 'when a remote-tracking branch exists' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.add_remote('origin', bare_dir)
+        repo.push('origin', 'main')
+      end
+
+      it 'returns an Array of Git::BranchInfo that includes the remote-tracking branch' do
+        result = described_instance.branches_all
+        expect(result).to be_an(Array)
+        expect(result).to all(be_a(Git::BranchInfo))
+        expect(result.any?(&:remote?)).to be(true)
+      end
+
+      it 'includes both local and remote-tracking branches' do
+        refnames = described_instance.branches_all.map(&:refname)
+        expect(refnames).to include('main')
+        expect(refnames.any? { |r| r.start_with?('remotes/origin/') }).to be(true)
+      end
+    end
+
+    context 'when in detached HEAD state' do
+      before do
+        sha = repo.log(1).execute.first.sha
+        repo.lib.checkout(sha)
+      end
+
+      it 'returns an Array of Git::BranchInfo' do
+        result = described_instance.branches_all
+        expect(result).to be_an(Array)
+        expect(result).to all(be_a(Git::BranchInfo))
+      end
+    end
+  end
 end

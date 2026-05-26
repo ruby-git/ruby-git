@@ -8,6 +8,7 @@ require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
 require 'git/commands/checkout/files'
 require 'git/commands/checkout_index'
+require 'git/parsers/branch'
 require 'git/repository/shared_private'
 
 module Git
@@ -362,6 +363,35 @@ module Git
         Git::Commands::Branch::List.new(@execution_context)
                                    .call(*[pattern].compact, contains: commit, no_color: true)
                                    .stdout
+      end
+
+      # Returns all local and remote-tracking branches as structured objects
+      #
+      # @overload branches_all()
+      #
+      #   @example List all branches
+      #     repo.branches_all
+      #     # => [#<data Git::BranchInfo refname="main", current=true, ...>,
+      #     #     #<data Git::BranchInfo refname="remotes/origin/main", current=false, ...>]
+      #
+      #   @example Find the currently checked-out branch
+      #     repo.branches_all.find(&:current)
+      #
+      #   @example List only local branches
+      #     repo.branches_all.reject(&:remote?)
+      #
+      #   @return [Array<Git::BranchInfo>] parsed branch information for every
+      #     local and remote-tracking branch
+      #
+      #     Returns an empty array when the repository has no branches.
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def branches_all
+        result = Git::Commands::Branch::List.new(@execution_context).call(
+          all: true, format: Git::Parsers::Branch::FORMAT_STRING
+        )
+        Git::Parsers::Branch.parse_list(result.stdout)
       end
 
       # Private helpers local to {Git::Repository::Branching}
