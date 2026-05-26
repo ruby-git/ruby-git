@@ -452,11 +452,11 @@ module Git
       # @param name [String] the name of the remote (e.g. `"origin"`)
       #
       # @return [Hash{String => String}] configuration entries for the remote,
-      #   keyed without the `remote.<name>.` prefix; returns an empty hash when
-      #   no entries are found
+      #   keyed without the `remote.<name>.` prefix
       #
-      # @raise [Git::FailedError] when `git config --list` exits with a non-zero
-      #   status
+      #   Returns an empty hash when no entries are found.
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def config_remote(name)
         prefix = "remote.#{name}."
@@ -628,7 +628,9 @@ module Git
         #   execution context for the repository
         #
         # @return [Hash{String => String}] all visible config entries, keyed by
-        #   their full dotted key names (e.g. `"remote.origin.url"`)
+        #   their full dotted key names
+        #
+        #   For example, `"remote.origin.url"` is a valid key.
         #
         # @api private
         #

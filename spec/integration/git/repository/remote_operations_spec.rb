@@ -208,4 +208,28 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
         .to raise_error(Git::FailedError)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #config_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#config_remote' do
+    it 'returns a Hash' do
+      expect(described_instance.config_remote('origin')).to be_a(Hash)
+    end
+
+    it 'includes the url key' do
+      result = described_instance.config_remote('origin')
+      expect(result).to have_key('url')
+    end
+
+    it 'includes the fetch key' do
+      result = described_instance.config_remote('origin')
+      expect(result).to have_key('fetch')
+    end
+
+    it 'returns an empty hash for an unknown remote name' do
+      expect(described_instance.config_remote('nonexistent-remote')).to eq({})
+    end
+  end
 end
