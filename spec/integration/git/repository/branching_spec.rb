@@ -204,4 +204,63 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branch_delete
+  # ---------------------------------------------------------------------------
+  #
+  # branch_delete is a single-command delegator with one piece of facade-owned
+  # post-processing: it raises Git::Error (not Git::FailedError) when the
+  # command exits with status 1. The scenarios below verify the end-to-end Ruby
+  # behavior that the command's own integration tests cannot exercise in
+  # isolation.
+
+  describe '#branch_delete' do
+    before do
+      repo.branch('to-delete').create
+      repo.branch('branch-1').create
+      repo.branch('branch-2').create
+    end
+
+    context 'when deleting a single merged branch' do
+      it 'returns a String that names the deleted branch' do
+        result = described_instance.branch_delete('to-delete')
+        expect(result).to be_a(String)
+        expect(result).to include('to-delete')
+      end
+    end
+
+    context 'when deleting an unmerged branch (force: true is the default)' do
+      before do
+        current = described_instance.current_branch
+        repo.checkout('to-delete')
+        write_file('unmerged.txt', "unmerged work\n")
+        repo.add('unmerged.txt')
+        repo.commit('Unmerged commit')
+        repo.checkout(current)
+      end
+
+      it 'deletes the branch without error and returns a String' do
+        result = described_instance.branch_delete('to-delete')
+        expect(result).to be_a(String)
+        expect(result).to include('to-delete')
+      end
+    end
+
+    context 'when the branch does not exist' do
+      it 'raises Git::Error' do
+        expect { described_instance.branch_delete('nonexistent-branch') }
+          .to raise_error(Git::Error)
+      end
+    end
+
+    context 'when deleting multiple branches at once' do
+      it 'deletes all named branches and returns a String' do
+        result = described_instance.branch_delete('branch-1', 'branch-2')
+        expect(result).to be_a(String)
+        expect(result).to include('branch-1')
+        expect(result).to include('branch-2')
+      end
+    end
+  end
 end

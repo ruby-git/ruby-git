@@ -441,4 +441,90 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branch_delete
+  # ---------------------------------------------------------------------------
+
+  describe '#branch_delete' do
+    let(:delete_command) { instance_double(Git::Commands::Branch::Delete) }
+    let(:delete_result) { command_result("Deleted branch feature (was abc1234).\n") }
+
+    before do
+      allow(Git::Commands::Branch::Delete)
+        .to receive(:new).with(execution_context).and_return(delete_command)
+    end
+
+    context 'with a single branch name' do
+      subject(:result) { described_instance.branch_delete('feature') }
+
+      it 'delegates to Git::Commands::Branch::Delete#call with force: true by default' do
+        expect(delete_command)
+          .to receive(:call).with('feature', force: true).and_return(delete_result)
+        result
+      end
+
+      it 'returns the stripped stdout' do
+        allow(delete_command).to receive(:call).with('feature', force: true).and_return(delete_result)
+        expect(result).to eq('Deleted branch feature (was abc1234).')
+      end
+    end
+
+    context 'with multiple branch names' do
+      subject(:result) { described_instance.branch_delete('feature-1', 'feature-2') }
+
+      it 'passes all branch names to the command' do
+        expect(delete_command)
+          .to receive(:call).with('feature-1', 'feature-2', force: true).and_return(delete_result)
+        result
+      end
+    end
+
+    context 'with force: false' do
+      subject(:result) { described_instance.branch_delete('feature', force: false) }
+
+      it 'overrides the default force: true' do
+        expect(delete_command)
+          .to receive(:call).with('feature', force: false).and_return(delete_result)
+        result
+      end
+    end
+
+    context 'with remotes: true' do
+      subject(:result) { described_instance.branch_delete('origin/feature', remotes: true) }
+
+      it 'forwards remotes: true to the command alongside the default force: true' do
+        expect(delete_command)
+          .to receive(:call).with('origin/feature', force: true, remotes: true).and_return(delete_result)
+        result
+      end
+    end
+
+    context 'when the command exits non-zero' do
+      subject(:result) { described_instance.branch_delete('nonexistent') }
+
+      let(:failed_result) do
+        command_result('', stderr: "error: branch 'nonexistent' not found.", exitstatus: 1)
+      end
+
+      it 'raises Git::Error with the stripped stderr message' do
+        allow(delete_command)
+          .to receive(:call).with('nonexistent', force: true).and_return(failed_result)
+        expect { result }.to raise_error(Git::Error, "error: branch 'nonexistent' not found.")
+      end
+    end
+
+    context 'with an unknown option' do
+      subject(:result) { described_instance.branch_delete('feature', bogus: true) }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call the command' do
+        expect(delete_command).not_to receive(:call)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+  end
 end
