@@ -318,6 +318,52 @@ module Git
         result.stdout.strip
       end
 
+      # Returns the `git branch --list --contains` stdout for a given commit
+      #
+      # The output format is the human-readable `git branch` listing: each
+      # matching branch name appears on its own line, prefixed with two spaces,
+      # or `* ` if it is the currently checked-out branch. This is the same
+      # format returned by `Git::Lib#branch_contains` in the 4.x gem series.
+      #
+      # @overload branch_contains(commit, branch_name = '')
+      #
+      #   @example List all branches that contain a commit
+      #     repo.branch_contains('abc1234')
+      #     # => "  main\n"
+      #
+      #   @example The current branch is marked with an asterisk
+      #     repo.branch_contains('abc1234')
+      #     # => "* main\n  feature\n"
+      #
+      #   @example Limit the search to branches matching a shell wildcard pattern
+      #     repo.branch_contains('abc1234', 'feature/*')
+      #
+      #   @example Typical usage: check whether any branch contains the commit
+      #     repo.branch_contains('abc1234').empty?  # => false
+      #
+      #   @param commit [String] the commit SHA or ref to look up
+      #
+      #   @param branch_name [String, nil] a shell wildcard pattern to limit which
+      #     branches are searched
+      #
+      #     When empty or `nil`, all local branches are searched.
+      #
+      #   @return [String] the `git branch --list --contains` stdout
+      #
+      #     Each matching branch appears on its own line, prefixed with two
+      #     spaces, or `* ` for the currently checked-out branch. Returns an
+      #     empty string when no matching branch contains the commit.
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def branch_contains(commit, branch_name = '')
+        branch_name = branch_name.to_s
+        pattern = branch_name.empty? ? nil : branch_name
+        Git::Commands::Branch::List.new(@execution_context)
+                                   .call(*[pattern].compact, contains: commit, no_color: true)
+                                   .stdout
+      end
+
       # Private helpers local to {Git::Repository::Branching}
       #
       # @api private
