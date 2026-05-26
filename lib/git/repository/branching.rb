@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'git/commands/branch/delete'
 require 'git/commands/branch/list'
 require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
@@ -11,7 +12,7 @@ require 'git/repository/shared_private'
 module Git
   class Repository
     # Facade methods for branching operations: checking out, switching branches,
-    # and querying the current branch
+    # querying the current branch, and deleting branches
     #
     # Included by {Git::Repository}.
     #
@@ -20,13 +21,11 @@ module Git
     module Branching
       # Option keys accepted by {#checkout}
       #
-      # Derived from the 4.x `CHECKOUT_OPTION_MAP` in `Git::Lib`.
       CHECKOUT_ALLOWED_OPTS = %i[force f new_branch b start_point].freeze
       private_constant :CHECKOUT_ALLOWED_OPTS
 
       # Option keys accepted by {#checkout_index}
       #
-      # Derived from the 4.x `CHECKOUT_INDEX_OPTION_MAP` in `Git::Lib`.
       CHECKOUT_INDEX_ALLOWED_OPTS = %i[prefix force all path_limiter].freeze
       private_constant :CHECKOUT_INDEX_ALLOWED_OPTS
 
@@ -220,6 +219,61 @@ module Git
       #
       def branch?(branch)
         local_branch?(branch) || remote_branch?(branch)
+      end
+
+      # Option keys accepted by {#branch_delete}
+      #
+      BRANCH_DELETE_ALLOWED_OPTS = %i[force remotes].freeze
+      private_constant :BRANCH_DELETE_ALLOWED_OPTS
+
+      # Delete one or more local or remote-tracking branches
+      #
+      # @overload branch_delete(*branches, **options)
+      #
+      #   @example Delete a single branch
+      #     repo.branch_delete('feature') # => "Deleted branch feature (was abc1234)."
+      #
+      #   @example Delete multiple branches at once
+      #     repo.branch_delete('feature-1', 'feature-2')
+      #
+      #   @example Force-delete an unmerged branch
+      #     repo.branch_delete('unmerged-branch', force: true)
+      #
+      #   @example Delete a remote-tracking branch
+      #     repo.branch_delete('origin/feature', remotes: true)
+      #
+      #   @param branches [Array<String>] the name(s) of the branch(es) to delete
+      #
+      #   @param options [Hash] options for the delete command
+      #
+      #   @option options [Boolean, nil] :force (true) allow deleting the branch
+      #     irrespective of its merged status
+      #
+      #     Defaults to `true` to match the 4.x behavior.
+      #
+      #   @option options [Boolean, nil] :remotes (nil) delete remote-tracking
+      #     branches
+      #
+      #     Use together with a `remote/branch` name.
+      #
+      #   @return [String] the stdout output from the delete command, e.g.
+      #     `"Deleted branch feature (was abc1234)."`
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @raise [Git::Error] if git reports a deletion failure
+      #
+      def branch_delete(*branches, **options)
+        options = { force: true }.merge(options)
+        SharedPrivate.assert_valid_opts!(BRANCH_DELETE_ALLOWED_OPTS, **options)
+
+        result = Git::Commands::Branch::Delete.new(@execution_context).call(*branches, **options)
+
+        raise Git::Error, result.stderr.strip unless result.status.success?
+
+        result.stdout.strip
       end
 
       # Private helpers local to {Git::Repository::Branching}
