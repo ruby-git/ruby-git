@@ -36,7 +36,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ------ | ---- | ------------------------------ | --------------------- |
 | `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset` |
 | `Git::Repository::Committing` | `lib/git/repository/committing.rb` | ✅ | `commit`, `commit_all`, `write_tree`; `commit_tree` and `write_and_commit_tree` wrap the SHA result in `Git::Object::Commit.new(self, ...)` |
-| `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?` |
+| `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?`, `branch_delete` |
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
 | `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote` |
 | `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
