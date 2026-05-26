@@ -594,4 +594,86 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branch_contains
+  # ---------------------------------------------------------------------------
+
+  describe '#branch_contains' do
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+    let(:list_result) { command_result("  main\n") }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    context 'when branch_name is omitted (default)' do
+      subject(:result) { described_instance.branch_contains('abc1234') }
+
+      it 'delegates to Branch::List#call without a pattern positional arg' do
+        expect(list_command)
+          .to receive(:call)
+          .with(contains: 'abc1234', no_color: true)
+          .and_return(list_result)
+        result
+      end
+
+      it 'returns the stdout string' do
+        allow(list_command)
+          .to receive(:call)
+          .with(contains: 'abc1234', no_color: true)
+          .and_return(list_result)
+        expect(result).to eq("  main\n")
+      end
+    end
+
+    context 'when branch_name is a non-empty string' do
+      subject(:result) { described_instance.branch_contains('abc1234', 'feature/*') }
+
+      it 'delegates to Branch::List#call with the pattern as a positional arg' do
+        expect(list_command)
+          .to receive(:call)
+          .with('feature/*', contains: 'abc1234', no_color: true)
+          .and_return(list_result)
+        result
+      end
+    end
+
+    context 'when branch_name is an empty string' do
+      subject(:result) { described_instance.branch_contains('abc1234', '') }
+
+      it 'delegates without a pattern arg (same as omitting branch_name)' do
+        expect(list_command)
+          .to receive(:call)
+          .with(contains: 'abc1234', no_color: true)
+          .and_return(list_result)
+        result
+      end
+    end
+
+    context 'when branch_name is nil' do
+      subject(:result) { described_instance.branch_contains('abc1234', nil) }
+
+      it 'treats nil as empty string and delegates without a pattern arg' do
+        expect(list_command)
+          .to receive(:call)
+          .with(contains: 'abc1234', no_color: true)
+          .and_return(list_result)
+        result
+      end
+    end
+
+    context 'when no branches contain the commit (empty stdout)' do
+      subject(:result) { described_instance.branch_contains('deadbeef') }
+
+      it 'returns an empty string' do
+        allow(list_command)
+          .to receive(:call)
+          .with(contains: 'deadbeef', no_color: true)
+          .and_return(command_result(''))
+        expect(result).to eq('')
+      end
+    end
+  end
 end

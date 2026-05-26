@@ -307,4 +307,39 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branch_contains
+  # ---------------------------------------------------------------------------
+  #
+  # branch_contains is a single-command delegator; however, the facade owns
+  # the pattern-vs-no-pattern argument pre-processing (nil/empty branch_name
+  # omits the positional arg), which real git exercises end-to-end.
+
+  describe '#branch_contains' do
+    let(:sha) { repo.revparse('HEAD') }
+
+    context 'when the commit is on the current branch' do
+      it 'returns a non-empty String' do
+        result = described_instance.branch_contains(sha)
+        expect(result).to be_a(String)
+        expect(result).not_to be_empty
+      end
+    end
+
+    context 'when a non-matching branch pattern is supplied' do
+      it 'returns an empty string' do
+        result = described_instance.branch_contains(sha, 'nonexistent-pattern')
+        expect(result).to eq('')
+      end
+    end
+
+    context 'when branch_name is nil (treated as no pattern)' do
+      it 'returns a non-empty String (same branches as omitting branch_name)' do
+        result = described_instance.branch_contains(sha, nil)
+        expect(result).to be_a(String)
+        expect(result).not_to be_empty
+      end
+    end
+  end
 end
