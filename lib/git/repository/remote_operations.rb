@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'git/commands/config_option_syntax'
 require 'git/commands/fetch'
 require 'git/commands/pull'
 require 'git/commands/push'
@@ -435,6 +436,35 @@ module Git
         Git::Commands::Remote::Remove.new(@execution_context).call(name)
       end
 
+      # Return the git configuration entries for a named remote
+      #
+      # Reads `git config --list` and returns all entries whose keys begin with
+      # `remote.<name>.`, with the `remote.<name>.` prefix stripped. This
+      # typically yields at least `"url"` and `"fetch"` for a configured remote.
+      #
+      # @example Retrieve the config for the 'origin' remote
+      #   repo.config_remote('origin')
+      #   #=> {
+      #   #     'url'   => 'https://github.com/user/repo.git',
+      #   #     'fetch' => '+refs/heads/*:refs/remotes/origin/*'
+      #   #   }
+      #
+      # @param name [String] the name of the remote (e.g. `"origin"`)
+      #
+      # @return [Hash{String => String}] configuration entries for the remote,
+      #   keyed without the `remote.<name>.` prefix; returns an empty hash when
+      #   no entries are found
+      #
+      # @raise [Git::FailedError] when `git config --list` exits with a non-zero
+      #   status
+      #
+      def config_remote(name)
+        prefix = "remote.#{name}."
+        Private.config_list(@execution_context).each_with_object({}) do |(key, value), hsh|
+          hsh[key.delete_prefix(prefix)] = value if key.start_with?(prefix)
+        end
+      end
+
       # Helpers private to the `RemoteOperations` topic module
       #
       # @api private
@@ -587,6 +617,27 @@ module Git
           normalized = opts.dup
           normalized[:fetch] = normalized.delete(:with_fetch) if normalized.key?(:with_fetch)
           normalized
+        end
+
+        # Retrieve all config entries as a flat hash
+        #
+        # Runs `git config --list` and parses each `key=value` line into a hash.
+        # When no value is present for a key, the value defaults to an empty string.
+        #
+        # @param execution_context [Git::ExecutionContext::Repository] the
+        #   execution context for the repository
+        #
+        # @return [Hash{String => String}] all visible config entries, keyed by
+        #   their full dotted key names (e.g. `"remote.origin.url"`)
+        #
+        # @api private
+        #
+        def config_list(execution_context)
+          lines = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call.stdout.split("\n")
+          lines.each_with_object({}) do |line, hsh|
+            key, value = line.split('=', 2)
+            hsh[key] = value || ''
+          end
         end
       end
       private_constant :Private
