@@ -715,4 +715,73 @@ RSpec.describe Git::Repository::RemoteOperations do
       expect(result).to be(remove_result)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #config_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#config_remote' do
+    let(:list_command) { instance_double(Git::Commands::ConfigOptionSyntax::List) }
+    let(:list_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::ConfigOptionSyntax::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(list_result)
+    end
+
+    context 'when the remote has entries in git config' do
+      subject(:result) { described_instance.config_remote('origin') }
+
+      let(:config_stdout) do
+        "remote.origin.url=https://github.com/user/repo.git\n" \
+          "remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\n" \
+          "core.bare=false\n"
+      end
+      let(:list_result) { command_result(config_stdout) }
+
+      it 'returns a Hash' do
+        expect(result).to be_a(Hash)
+      end
+
+      it 'strips the remote.<name>. prefix and returns only matching entries' do
+        expect(result).to eq(
+          'url' => 'https://github.com/user/repo.git',
+          'fetch' => '+refs/heads/*:refs/remotes/origin/*'
+        )
+      end
+
+      it 'delegates to Git::Commands::ConfigOptionSyntax::List.new with the execution_context' do
+        expect(Git::Commands::ConfigOptionSyntax::List)
+          .to receive(:new).with(execution_context).and_return(list_command)
+        result
+      end
+    end
+
+    context 'when no entries exist for the named remote' do
+      let(:list_result) { command_result("core.bare=false\n") }
+
+      it 'returns an empty hash' do
+        expect(described_instance.config_remote('nonexistent')).to eq({})
+      end
+    end
+
+    context 'when a config value itself contains an equals sign' do
+      let(:list_result) { command_result("remote.origin.custom=key=value\n") }
+
+      it 'preserves the full value including the extra equals sign' do
+        result = described_instance.config_remote('origin')
+        expect(result['custom']).to eq('key=value')
+      end
+    end
+
+    context 'when a config line has no value (no equals sign)' do
+      let(:list_result) { command_result("remote.origin.novalue\n") }
+
+      it 'defaults the value to an empty string' do
+        result = described_instance.config_remote('origin')
+        expect(result['novalue']).to eq('')
+      end
+    end
+  end
 end
