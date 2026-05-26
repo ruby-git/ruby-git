@@ -443,6 +443,73 @@ RSpec.describe Git::Repository::Branching do
   end
 
   # ---------------------------------------------------------------------------
+  # #branch_new
+  # ---------------------------------------------------------------------------
+
+  describe '#branch_new' do
+    let(:create_command) { instance_double(Git::Commands::Branch::Create) }
+
+    before do
+      allow(Git::Commands::Branch::Create)
+        .to receive(:new).with(execution_context).and_return(create_command)
+    end
+
+    context 'without a start_point' do
+      subject(:result) { described_instance.branch_new('feature') }
+
+      it 'delegates to Git::Commands::Branch::Create#call with the branch name and nil start_point' do
+        expect(create_command).to receive(:call).with('feature', nil)
+        result
+      end
+
+      it 'returns nil' do
+        allow(create_command).to receive(:call).with('feature', nil)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'with a start_point' do
+      subject(:result) { described_instance.branch_new('feature', 'main') }
+
+      it 'delegates to Git::Commands::Branch::Create#call with the branch name and start_point' do
+        expect(create_command).to receive(:call).with('feature', 'main')
+        result
+      end
+
+      it 'returns nil' do
+        allow(create_command).to receive(:call).with('feature', 'main')
+        expect(result).to be_nil
+      end
+    end
+
+    context 'option whitelisting' do
+      subject(:result) { described_instance.branch_new('feature', nil, bogus: true) }
+
+      it 'raises ArgumentError for unsupported options' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call the command' do
+        expect(create_command).not_to receive(:call)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'when options are passed as the second argument (no start_point)' do
+      subject(:result) { described_instance.branch_new('feature', bogus: true) }
+
+      it 'raises ArgumentError for unsupported options' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call the command' do
+        expect(create_command).not_to receive(:call)
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #branch_delete
   # ---------------------------------------------------------------------------
 

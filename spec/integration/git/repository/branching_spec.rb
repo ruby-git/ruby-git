@@ -206,6 +206,50 @@ RSpec.describe Git::Repository::Branching, :integration do
   end
 
   # ---------------------------------------------------------------------------
+  # #branch_new
+  # ---------------------------------------------------------------------------
+
+  describe '#branch_new' do
+    context 'without a start_point' do
+      it 'creates the branch from the current HEAD' do
+        head_sha = repo.revparse('HEAD')
+        described_instance.branch_new('new-feature')
+        expect(described_instance.local_branch?('new-feature')).to be(true)
+        expect(repo.revparse('new-feature')).to eq(head_sha)
+      end
+
+      it 'returns nil' do
+        expect(described_instance.branch_new('new-feature')).to be_nil
+      end
+    end
+
+    context 'with a start_point' do
+      # let! eagerly captures the SHA before the inner before block adds a second commit
+      let!(:initial_sha) { repo.log(1).execute.first.sha }
+
+      before do
+        write_file('CHANGES.md', "changes\n")
+        repo.add('CHANGES.md')
+        repo.commit('Second commit')
+      end
+
+      it 'creates the branch at the given start_point' do
+        described_instance.branch_new('from-initial', initial_sha)
+        expect(described_instance.local_branch?('from-initial')).to be(true)
+        expect(repo.revparse('from-initial')).to eq(initial_sha)
+      end
+    end
+
+    context 'when the branch already exists' do
+      before { described_instance.branch_new('duplicate') }
+
+      it 'raises Git::FailedError' do
+        expect { described_instance.branch_new('duplicate') }.to raise_error(Git::FailedError, /duplicate/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #branch_delete
   # ---------------------------------------------------------------------------
   #

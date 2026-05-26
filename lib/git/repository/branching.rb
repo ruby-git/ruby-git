@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'git/commands/branch/create'
 require 'git/commands/branch/delete'
 require 'git/commands/branch/list'
 require 'git/commands/branch/show_current'
@@ -219,6 +220,47 @@ module Git
       #
       def branch?(branch)
         local_branch?(branch) || remote_branch?(branch)
+      end
+
+      # Option keys accepted by {#branch_new}
+      #
+      BRANCH_NEW_ALLOWED_OPTS = %i[].freeze
+      private_constant :BRANCH_NEW_ALLOWED_OPTS
+
+      # Create a new branch
+      #
+      # @overload branch_new(branch, start_point = nil, options = {})
+      #
+      #   @example Create a new branch from the current HEAD
+      #     repo.branch_new('feature')
+      #
+      #   @example Create a new branch from a specific commit or branch
+      #     repo.branch_new('feature', 'main')
+      #
+      #   @param branch [String] the name of the branch to create
+      #
+      #   @param start_point [String, nil] the commit, branch, or tag to start the
+      #     new branch from; defaults to the current HEAD when `nil`
+      #
+      #   @param options [Hash] reserved; must be empty — no options are currently
+      #     supported
+      #
+      #   @return [void]
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def branch_new(branch, start_point = nil, options = {})
+        if start_point.is_a?(Hash) && options.empty?
+          options = start_point
+          start_point = nil
+        end
+
+        SharedPrivate.assert_valid_opts!(BRANCH_NEW_ALLOWED_OPTS, **options)
+        Git::Commands::Branch::Create.new(@execution_context).call(branch, start_point, **options)
+
+        nil
       end
 
       # Option keys accepted by {#branch_delete}
