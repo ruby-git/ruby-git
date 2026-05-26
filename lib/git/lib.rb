@@ -792,7 +792,7 @@ module Git
     def branch_contains(commit, branch_name = '')
       branch_name = branch_name.to_s
       pattern = branch_name.empty? ? nil : branch_name
-      Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit, format: Git::Parsers::Branch::FORMAT_STRING).stdout
+      Git::Commands::Branch::List.new(self).call(*[pattern].compact, contains: commit, no_color: true).stdout
     end
 
     GREP_ALLOWED_OPTS = %i[ignore_case i invert_match v extended_regexp E object path_limiter].freeze
