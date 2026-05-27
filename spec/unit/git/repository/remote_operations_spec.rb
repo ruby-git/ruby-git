@@ -606,7 +606,7 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
 
       it 'returns Git::Remote' do
-        expect(Git::Remote).to receive(:new).with(base_object, 'upstream').and_return(remote_object)
+        expect(Git::Remote).to receive(:new).with(described_instance, 'upstream').and_return(remote_object)
         expect(result).to eq(remote_object)
       end
     end
@@ -688,6 +688,8 @@ RSpec.describe Git::Repository::RemoteOperations do
   # ---------------------------------------------------------------------------
 
   describe '#remove_remote' do
+    subject(:result) { described_instance.remove_remote('upstream') }
+
     let(:remove_command) { instance_double(Git::Commands::Remote::Remove) }
     let(:remove_result) { command_result('') }
 
@@ -695,8 +697,6 @@ RSpec.describe Git::Repository::RemoteOperations do
       allow(Git::Commands::Remote::Remove)
         .to receive(:new).with(execution_context).and_return(remove_command)
     end
-
-    subject(:result) { described_instance.remove_remote('upstream') }
 
     it 'delegates to Git::Commands::Remote::Remove.new with the execution_context' do
       expect(Git::Commands::Remote::Remove)
@@ -781,6 +781,48 @@ RSpec.describe Git::Repository::RemoteOperations do
       it 'defaults the value to an empty string' do
         result = described_instance.config_remote('origin')
         expect(result['novalue']).to eq('')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remote
+  # ---------------------------------------------------------------------------
+
+  describe '#remote' do
+    let(:config_list_command) { instance_double(Git::Commands::ConfigOptionSyntax::List) }
+    let(:config_stdout) do
+      "remote.origin.url=https://github.com/user/repo.git\n" \
+        "remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\n"
+    end
+
+    before do
+      allow(Git::Commands::ConfigOptionSyntax::List)
+        .to receive(:new).with(execution_context).and_return(config_list_command)
+      allow(config_list_command).to receive(:call).and_return(command_result(config_stdout))
+    end
+
+    context 'with an explicit remote name' do
+      subject(:result) { described_instance.remote('upstream') }
+
+      it 'returns a Git::Remote for the given name' do
+        expect(result).to be_a(Git::Remote)
+      end
+
+      it 'sets the name attribute to the given remote name' do
+        expect(result.name).to eq('upstream')
+      end
+    end
+
+    context 'when no name is given (defaults to origin)' do
+      subject(:result) { described_instance.remote }
+
+      it 'returns a Git::Remote named origin' do
+        expect(result.name).to eq('origin')
+      end
+
+      it 'populates the url from config' do
+        expect(result.url).to eq('https://github.com/user/repo.git')
       end
     end
   end

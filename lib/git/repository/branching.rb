@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'git/branch'
+require 'git/branch_info'
 require 'git/commands/branch/create'
 require 'git/commands/branch/delete'
 require 'git/commands/branch/list'
@@ -105,7 +107,7 @@ module Git
       #
       #   @option options [Boolean, nil] :f (nil) alias for `:force`
       #
-      #   @option options [String] :start_point the commit or branch to start the
+      #   @option options [String, nil] :start_point (nil) the commit or branch to start the
       #     new branch from; used together with `new_branch: true`
       #
       #   @return [String] git's stdout from the checkout
@@ -427,6 +429,32 @@ module Git
       def update_ref(branch, commit)
         ref = Private.build_update_ref(branch)
         Git::Commands::UpdateRef::Update.new(@execution_context).call(ref, commit)
+      end
+
+      # Returns a {Git::Branch} object for the given branch name
+      #
+      # @example Get a branch object for 'main'
+      #   repo.branch('main')  #=> #<Git::Branch 'main'>
+      #
+      # @example Get a branch object for the current branch
+      #   repo.branch  #=> #<Git::Branch 'main'>
+      #
+      # @param branch_name [String] the branch name (defaults to the current branch)
+      #
+      # @return [Git::Branch] the branch object
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def branch(branch_name = current_branch)
+        branch_info = Git::BranchInfo.new(
+          refname: branch_name,
+          target_oid: nil,
+          current: false,
+          worktree: false,
+          symref: nil,
+          upstream: nil
+        )
+        Git::Branch.new(self, branch_info)
       end
 
       # Private helpers local to {Git::Repository::Branching}
