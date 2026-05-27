@@ -479,6 +479,8 @@ module Git
       # @return [Git::Branches] a collection wrapping all local and
       #   remote-tracking branches in the repository
       #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
       def branches
         Git::Branches.new(self)
       end
