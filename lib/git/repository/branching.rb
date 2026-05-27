@@ -8,13 +8,14 @@ require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
 require 'git/commands/checkout/files'
 require 'git/commands/checkout_index'
+require 'git/commands/update_ref/update'
 require 'git/parsers/branch'
 require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Facade methods for branching operations: checking out, switching branches,
-    # querying the current branch, and deleting branches
+    # Facade methods for branching operations: creating, checking out, querying,
+    # deleting, and updating branches
     #
     # Included by {Git::Repository}.
     #
@@ -394,6 +395,40 @@ module Git
         Git::Parsers::Branch.parse_list(result.stdout)
       end
 
+      # Update a branch ref to point to a new commit
+      #
+      # Derives the full ref from the `branch` argument:
+      #
+      # - `remotes/<remote>/<name>` or `refs/remotes/<remote>/<name>` →
+      #   writes to `refs/remotes/<remote>/<name>` (remote-tracking branch)
+      # - Any other value → writes to `refs/heads/<branch>` (local branch)
+      #
+      # @overload update_ref(branch, commit)
+      #
+      #   @example Advance a local branch to the current HEAD
+      #     repo.update_ref('feature', repo.rev_parse('HEAD'))
+      #
+      #   @example Reset a local branch to an older commit
+      #     repo.update_ref('main', 'abc1234def5678')
+      #
+      #   @example Update a remote-tracking branch ref
+      #     repo.update_ref('remotes/origin/main', 'abc1234def5678')
+      #
+      #   @param branch [String] a short local branch name (e.g. `'main'`) or a
+      #     remote-tracking branch name with a `remotes/<remote>/` or
+      #     `refs/remotes/<remote>/` prefix (e.g. `'remotes/origin/main'`)
+      #
+      #   @param commit [String] the commit SHA to point the branch at
+      #
+      #   @return [Git::CommandLineResult] the result of calling `git update-ref`
+      #
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def update_ref(branch, commit)
+        ref = Private.build_update_ref(branch)
+        Git::Commands::UpdateRef::Update.new(@execution_context).call(ref, commit)
+      end
+
       # Private helpers local to {Git::Repository::Branching}
       #
       # @api private
@@ -471,6 +506,27 @@ module Git
           return if pathspecs.all? { |path| path.is_a?(String) || path.is_a?(Pathname) }
 
           raise ArgumentError, "Invalid #{arg_name}: must be a String, Pathname, or Array of Strings/Pathnames"
+        end
+
+        # Builds the full git ref string from a branch name argument
+        #
+        # Mirrors the routing logic of `Git::Branch#update_ref` for backward
+        # compatibility:
+        #
+        # - `remotes/<remote>/<name>` or `refs/remotes/<remote>/<name>` →
+        #   `refs/remotes/<remote>/<name>`
+        # - Any other value → `refs/heads/<branch>`
+        #
+        # @param branch [String] a short local branch name or a remote-tracking
+        #   branch name with a `remotes/` or `refs/remotes/` prefix
+        #
+        # @return [String] the full git ref string
+        #
+        # @api private
+        #
+        def build_update_ref(branch)
+          match = branch.match(%r{\A(?:refs/)?remotes/([^/]+)/(.+)\z})
+          match ? "refs/remotes/#{match[1]}/#{match[2]}" : "refs/heads/#{branch}"
         end
       end
       private_constant :Private

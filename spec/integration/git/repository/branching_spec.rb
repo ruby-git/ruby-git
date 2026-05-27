@@ -410,4 +410,28 @@ RSpec.describe Git::Repository::Branching, :integration do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #update_ref
+  # ---------------------------------------------------------------------------
+
+  describe '#update_ref' do
+    before do
+      repo.branch('feature').create
+      write_file('CHANGES.md', "changes\n")
+      repo.add('CHANGES.md')
+      repo.commit('Second commit')
+    end
+
+    it 'points the branch ref at the given commit SHA' do
+      new_sha = repo.revparse('HEAD')
+      described_instance.update_ref('feature', new_sha)
+      expect(repo.revparse('refs/heads/feature')).to eq(new_sha)
+    end
+
+    it 'returns a Git::CommandLineResult' do
+      result = described_instance.update_ref('feature', repo.revparse('HEAD'))
+      expect(result).to be_a(Git::CommandLineResult)
+    end
+  end
 end
