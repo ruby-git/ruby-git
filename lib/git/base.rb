@@ -831,7 +831,7 @@ module Git
     end
 
     def update_ref(branch, commit)
-      branch(branch).update_ref(commit)
+      facade_repository.update_ref(branch, commit)
     end
 
     def ls_files(location = nil)
