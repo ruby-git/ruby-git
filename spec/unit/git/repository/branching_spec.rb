@@ -738,4 +738,62 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #update_ref
+  # ---------------------------------------------------------------------------
+
+  describe '#update_ref' do
+    subject(:result) { described_instance.update_ref('feature', 'abc1234') }
+
+    let(:update_ref_command) { instance_double(Git::Commands::UpdateRef::Update) }
+    let(:update_ref_result) { command_result }
+
+    before do
+      allow(Git::Commands::UpdateRef::Update)
+        .to receive(:new).with(execution_context).and_return(update_ref_command)
+      allow(update_ref_command)
+        .to receive(:call).with('refs/heads/feature', 'abc1234').and_return(update_ref_result)
+    end
+
+    it 'constructs the full ref from the branch name and delegates to Git::Commands::UpdateRef::Update#call' do
+      expect(update_ref_command)
+        .to receive(:call).with('refs/heads/feature', 'abc1234').and_return(update_ref_result)
+      result
+    end
+
+    it 'returns the Git::CommandLineResult from the command' do
+      expect(result).to eq(update_ref_result)
+    end
+
+    context 'when branch is a remotes/<remote>/<name> remote-tracking branch name' do
+      subject(:result) { described_instance.update_ref('remotes/origin/main', 'abc1234') }
+
+      before do
+        allow(update_ref_command)
+          .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
+      end
+
+      it 'routes to refs/remotes/<remote>/<name> for backward compatibility' do
+        expect(update_ref_command)
+          .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
+        result
+      end
+    end
+
+    context 'when branch is a refs/remotes/<remote>/<name> remote-tracking branch name' do
+      subject(:result) { described_instance.update_ref('refs/remotes/origin/main', 'abc1234') }
+
+      before do
+        allow(update_ref_command)
+          .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
+      end
+
+      it 'routes to refs/remotes/<remote>/<name> for backward compatibility' do
+        expect(update_ref_command)
+          .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
+        result
+      end
+    end
+  end
 end
