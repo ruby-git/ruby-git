@@ -3,6 +3,7 @@
 require 'pathname'
 require 'git/branch'
 require 'git/branch_info'
+require 'git/branches'
 require 'git/commands/branch/create'
 require 'git/commands/branch/delete'
 require 'git/commands/branch/list'
@@ -455,6 +456,31 @@ module Git
           upstream: nil
         )
         Git::Branch.new(self, branch_info)
+      end
+
+      # Returns a {Git::Branches} collection of all branches in the repository
+      #
+      # @example List all branches
+      #   repo.branches
+      #   # => #<Git::Branches ...>
+      #
+      # @example Iterate over all branches
+      #   repo.branches.each { |b| puts b.name }
+      #
+      # @example Access local branches only
+      #   repo.branches.local
+      #
+      # @example Access remote-tracking branches only
+      #   repo.branches.remote
+      #
+      # @example Look up a branch by name
+      #   repo.branches['main']  # => #<Git::Branch 'main'>
+      #
+      # @return [Git::Branches] a collection wrapping all local and
+      #   remote-tracking branches in the repository
+      #
+      def branches
+        Git::Branches.new(self)
       end
 
       # Private helpers local to {Git::Repository::Branching}

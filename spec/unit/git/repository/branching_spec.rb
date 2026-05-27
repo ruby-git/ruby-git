@@ -840,4 +840,19 @@ RSpec.describe Git::Repository::Branching do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #branches
+  # ---------------------------------------------------------------------------
+
+  describe '#branches' do
+    subject(:result) { described_instance.branches }
+
+    let(:branches_collection) { instance_double(Git::Branches) }
+
+    it 'constructs Git::Branches with self and returns the collection' do
+      expect(Git::Branches).to receive(:new).with(described_instance).and_return(branches_collection)
+      expect(result).to eq(branches_collection)
+    end
+  end
 end
