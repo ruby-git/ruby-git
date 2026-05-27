@@ -164,11 +164,7 @@ RSpec.describe Git::Repository::Branching do
 
       it 'does not call the command' do
         expect(checkout_branch_command).not_to receive(:call)
-        begin
-          result
-        rescue ArgumentError
-          # expected
-        end
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
       end
     end
   end
@@ -793,6 +789,54 @@ RSpec.describe Git::Repository::Branching do
         expect(update_ref_command)
           .to receive(:call).with('refs/remotes/origin/main', 'abc1234').and_return(update_ref_result)
         result
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #branch
+  # ---------------------------------------------------------------------------
+
+  describe '#branch' do
+    let(:show_current_command) { instance_double(Git::Commands::Branch::ShowCurrent) }
+
+    before do
+      allow(Git::Commands::Branch::ShowCurrent)
+        .to receive(:new).with(execution_context).and_return(show_current_command)
+    end
+
+    context 'with an explicit branch name' do
+      subject(:result) { described_instance.branch('feature') }
+
+      it 'returns a Git::Branch for the given name' do
+        expect(result).to be_a(Git::Branch)
+      end
+
+      it 'sets the full refname to the given branch name' do
+        expect(result.full).to eq('feature')
+      end
+
+      it 'sets the short name to the given branch name' do
+        expect(result.name).to eq('feature')
+      end
+
+      it 'has no remote' do
+        expect(result.remote).to be_nil
+      end
+    end
+
+    context 'when no name is given (defaults to current_branch)' do
+      subject(:result) { described_instance.branch }
+
+      let(:show_current_result) { command_result("main\n") }
+
+      before do
+        allow(show_current_command).to receive(:call).and_return(show_current_result)
+      end
+
+      it 'returns a Git::Branch for the current branch name' do
+        expect(result).to be_a(Git::Branch)
+        expect(result.full).to eq('main')
       end
     end
   end

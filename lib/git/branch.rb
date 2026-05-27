@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'git/base'
 require_relative 'branch_info'
 
 module Git
@@ -28,7 +29,7 @@ module Git
     # by {Git::Remote#branch} use the `<remote>/<branch>` form (e.g.
     # `'origin/main'`) which does **not** populate {#remote}.
     #
-    # @example
+    # @example Local and remote-tracking branch full refnames
     #   git.branch('main').full                  #=> 'main'
     #   git.branch('remotes/origin/main').full   #=> 'remotes/origin/main'
     #
@@ -43,7 +44,7 @@ module Git
     # branches and for remote-tracking branches in `<remote>/<branch>` form
     # (such as those returned by {Git::Remote#branch}).
     #
-    # @example
+    # @example Local and remote-tracking branches
     #   git.branch('main').remote                  #=> nil
     #   git.branch('remotes/origin/main').remote   #=> #<Git::Remote 'origin'>
     #   git.remote('origin').branch('main').remote #=> nil  # uses 'origin/main' form
@@ -57,7 +58,7 @@ module Git
     # For both local and remote-tracking branches this is the bare branch
     # name (e.g. `'main'` rather than `'remotes/origin/main'`).
     #
-    # @example
+    # @example Local and remote-tracking branch short names
     #   git.branch('main').name                  #=> 'main'
     #   git.branch('remotes/origin/main').name   #=> 'main'
     #
@@ -67,15 +68,19 @@ module Git
 
     # Initialize a new Branch object
     #
-    # @api private
+    # @param base [Git::Base, Git::Repository] the git repository
     #
-    # @note Use {Git::Base#branch} or {Git::Base#branches} instead of constructing directly
-    #
-    # @param base [Git::Base] the git repository
+    #   Accepts either a {Git::Base} (legacy) or a {Git::Repository} (new form).
+    #   The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
+    #   in Phase 4.
     #
     # @param branch_info_or_name [Git::BranchInfo, String] branch info object or name string
     #
     #   Passing a BranchInfo is preferred; String support is for backward compatibility.
+    #
+    # @note Use {Git::Base#branch} or {Git::Base#branches} instead of constructing directly
+    #
+    # @api private
     #
     def initialize(base, branch_info_or_name)
       @base = base
@@ -95,7 +100,7 @@ module Git
     # @return [Git::Object] the commit at the tip of this branch
     #
     def gcommit
-      @gcommit ||= @base.gcommit(@full)
+      @gcommit ||= branch_repository.gcommit(@full)
       @gcommit
     end
 
@@ -109,7 +114,7 @@ module Git
     # @return [Git::Stashes] the stash list
     #
     def stashes
-      @stashes ||= Git::Stashes.new(@base)
+      @stashes ||= Git::Stashes.new(branch_repository)
     end
 
     # Checks out this branch, attempting to create it first if it does not already exist
@@ -133,7 +138,7 @@ module Git
     #
     def checkout
       check_if_create
-      @base.checkout(@full)
+      branch_repository.checkout(@full)
     end
 
     # Archives this branch and writes the result to a file
@@ -153,7 +158,7 @@ module Git
     # @raise [Git::FailedError] if `git archive` fails
     #
     def archive(file, opts = {})
-      @base.lib.archive(@full, file, opts)
+      branch_repository.archive(@full, file, opts)
     end
 
     # Checks out this branch for the duration of a block, then restores the original branch
@@ -184,14 +189,14 @@ module Git
     # @raise [Git::FailedError] if any of the underlying git operations (checkout, commit, reset) fail
     #
     def in_branch(message = 'in branch work')
-      old_current = @base.lib.branch_current
+      old_current = branch_repository.current_branch
       checkout
       if yield
-        @base.commit_all(message)
+        branch_repository.commit_all(message)
       else
-        @base.reset(nil, hard: true)
+        branch_repository.reset(nil, hard: true)
       end
-      @base.checkout(old_current)
+      branch_repository.checkout(old_current)
     end
 
     # Creates this branch if it does not already exist
@@ -222,9 +227,9 @@ module Git
     #
     def delete
       if @remote
-        @base.lib.branch_delete("#{@remote.name}/#{@name}", remotes: true)
+        branch_repository.branch_delete("#{@remote.name}/#{@name}", remotes: true)
       else
-        @base.lib.branch_delete(@name)
+        branch_repository.branch_delete(@name)
       end
     end
 
@@ -244,7 +249,7 @@ module Git
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
     def current # rubocop:disable Naming/PredicateMethod
-      @base.lib.branch_current == @name
+      branch_repository.current_branch == @name
     end
 
     # Returns true if this branch contains the given commit
@@ -264,7 +269,7 @@ module Git
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
     def contains?(commit)
-      !@base.lib.branch_contains(commit, name).empty?
+      !branch_repository.branch_contains(commit, name).empty?
     end
 
     # Merges a branch into this branch, or merges this branch into the current branch
@@ -301,13 +306,13 @@ module Git
     def merge(branch = nil, message = nil)
       if branch
         in_branch do
-          @base.merge(branch, message)
+          branch_repository.merge(branch, message)
           false
         end
         # merge a branch into this one
       else
         # merge this branch into the current one
-        @base.merge(@name)
+        branch_repository.merge(@name)
       end
     end
 
@@ -333,9 +338,9 @@ module Git
     #
     def update_ref(commit)
       if @remote
-        @base.lib.update_ref("refs/remotes/#{@remote.name}/#{@name}", commit)
+        branch_repository.update_ref("remotes/#{@remote.name}/#{@name}", commit)
       else
-        @base.lib.update_ref("refs/heads/#{@name}", commit)
+        branch_repository.update_ref(@name, commit)
       end
     end
 
@@ -454,9 +459,23 @@ module Git
     # @return [nil]
     #
     def check_if_create
-      @base.lib.branch_new(@name)
+      branch_repository.branch_new(@name)
     rescue StandardError
       nil
+    end
+
+    # Resolves the {Git::Repository} for this branch
+    #
+    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
+    # in Phase 4.
+    #
+    # @return [Git::Repository]
+    #
+    # @api private
+    #
+    def branch_repository
+      @base.is_a?(Git::Base) ? @base.facade_repository : @base
     end
   end
 end

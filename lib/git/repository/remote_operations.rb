@@ -5,12 +5,15 @@ require 'git/commands/fetch'
 require 'git/commands/pull'
 require 'git/commands/push'
 require 'git/commands/remote'
+require 'git/remote'
 
 require 'git/repository/shared_private'
 
 module Git
   class Repository
     # Mixin that adds remote operation facade methods to {Git::Repository}
+    #
+    # Included by {Git::Repository}.
     #
     # @api public
     #
@@ -350,8 +353,11 @@ module Git
       #
       #   @return [String] the stdout from the push command
       #
-      #   @raise [ArgumentError] when unsupported option keys are provided or if a branch
-      #     is supplied and remote is nil
+      #   @raise [ArgumentError] if a branch is given and remote is nil
+      #
+      # @raise [ArgumentError] when unsupported option keys are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def push(remote = nil, branch = nil, opts = nil)
         remote, branch, opts = Private.normalize_push_args(remote, branch, opts)
@@ -402,7 +408,7 @@ module Git
       # @option opts [String, nil] :track (nil) track only the given branch during
       #   fetch (`-t`)
       #
-      # @return [Git::Remote]
+      # @return [Git::Remote] the newly added remote
       #
       # @raise [ArgumentError] when unsupported option keys are provided
       #
@@ -414,7 +420,7 @@ module Git
         SharedPrivate.assert_valid_opts!(ADD_REMOTE_ALLOWED_OPTS, **opts)
         Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
 
-        Git::Remote.new(@execution_context.base_object, name)
+        Git::Remote.new(self, name)
       end
 
       # Removes a remote from this repository
@@ -429,8 +435,7 @@ module Git
       #
       # @return [Git::CommandLineResult] the result of calling `git remote remove`
       #
-      # @raise [Git::FailedError] when git exits with a non-zero status, for example
-      #   when `name` does not refer to an existing remote
+      # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remove_remote(name)
         Git::Commands::Remote::Remove.new(@execution_context).call(name)
@@ -463,6 +468,24 @@ module Git
         Private.config_list(@execution_context).each_with_object({}) do |(key, value), hsh|
           hsh[key.delete_prefix(prefix)] = value if key.start_with?(prefix)
         end
+      end
+
+      # Returns a {Git::Remote} object for the named remote
+      #
+      # @example Get the default 'origin' remote
+      #   repo.remote  #=> #<Git::Remote 'origin'>
+      #
+      # @example Get a named remote
+      #   repo.remote('upstream')  #=> #<Git::Remote 'upstream'>
+      #
+      # @param name [String] the remote name (defaults to `'origin'`)
+      #
+      # @return [Git::Remote] the remote object
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def remote(name = 'origin')
+        Git::Remote.new(self, name)
       end
 
       # Helpers private to the `RemoteOperations` topic module
@@ -558,7 +581,7 @@ module Git
         # in this first call. Tags are pushed in a separate call when
         # {push_tags_separately?} is true.
         #
-        # @param execution_context [Git::ExecutionContext::Repository]
+        # @param execution_context [Git::ExecutionContext::Repository] the repository execution context
         # @param remote [String, nil] remote name or URL
         # @param branch [String, nil] branch or refspec
         # @param opts [Hash] push options (`:tags` key will be stripped)
@@ -590,7 +613,7 @@ module Git
 
         # Issue the tags push (second push when `:tags` is requested without `:mirror`)
         #
-        # @param execution_context [Git::ExecutionContext::Repository]
+        # @param execution_context [Git::ExecutionContext::Repository] the repository execution context
         # @param remote [String, nil] remote name or URL
         # @param opts [Hash] push options (`:tags` key included to emit `--tags`)
         #

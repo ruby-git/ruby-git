@@ -1,47 +1,163 @@
 # frozen_string_literal: true
 
+require 'git/base'
+require 'git/branch'
+require 'git/branch_info'
+
 module Git
   # A remote in a Git repository
+  #
+  # Remote objects provide access to remote metadata and operations like fetch,
+  # merge, and remove. They should be obtained via {Git::Base#remote} or the
+  # `remote` factory method on a `Git::Repository` instance, not constructed
+  # directly.
+  #
+  # @example Getting a remote
+  #   git = Git.open('.')
+  #   remote = git.remote('origin')
+  #   remote.fetch
+  #
+  # @api public
+  #
   class Remote
-    attr_accessor :name, :url, :fetch_opts
+    # The name of this remote (e.g. `'origin'`)
+    #
+    # @return [String] the remote name
+    #
+    attr_accessor :name
 
+    # The URL of this remote
+    #
+    # @return [String, nil] the remote URL
+    #
+    attr_accessor :url
+
+    # The fetch refspec for this remote
+    #
+    # @return [String, nil] the fetch options string
+    #
+    attr_accessor :fetch_opts
+
+    # Initialize a new Remote object
+    #
+    # @param base [Git::Base, Git::Repository] the git repository
+    #
+    #   Accepts either a {Git::Base} (legacy) or a {Git::Repository} (new form).
+    #   The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
+    #   in Phase 4.
+    #
+    # @param name [String] the remote name (e.g. `'origin'`)
+    #
+    # @note Use {Git::Base#remote} or the `remote` factory method on a
+    #   `Git::Repository` instance instead of constructing directly
+    #
+    # @api private
+    #
     def initialize(base, name)
       @base = base
-      config = @base.lib.config_remote(name)
+      config = remote_repository.config_remote(name)
       @name = name
       @url = config['url']
       @fetch_opts = config['fetch']
     end
 
+    # Fetches from this remote
+    #
+    # @example Fetch from origin
+    #   git.remote('origin').fetch
+    #
+    # @param opts [Hash] fetch options (see {Git::Base#fetch})
+    #
+    # @return [String] git's stdout from the fetch
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def fetch(opts = {})
-      @base.fetch(@name, opts)
+      remote_repository.fetch(@name, opts)
     end
 
-    # merge this remote locally
-    def merge(branch = @base.current_branch)
+    # Merges this remote into the given (or current) local branch
+    #
+    # @example Merge origin/main into the current branch
+    #   git.remote('origin').merge('main')
+    #
+    # @param branch [String] the local branch to merge into (defaults to current branch)
+    #
+    # @return [String] git's stdout from the merge
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    def merge(branch = nil)
+      branch ||= remote_repository.current_branch
       remote_tracking_branch = "#{@name}/#{branch}"
-      @base.merge(remote_tracking_branch)
+      remote_repository.merge(remote_tracking_branch)
     end
 
-    def branch(branch = @base.current_branch)
+    # Returns a {Git::Branch} object for the given branch on this remote
+    #
+    # @example Get the remote-tracking branch object
+    #   git.remote('origin').branch('main')  #=> #<Git::Branch 'origin/main'>
+    #
+    # @param branch [String] the branch name on this remote (defaults to current branch)
+    #
+    # @return [Git::Branch] a branch object representing `<remote>/<branch>`
+    #
+    def branch(branch = nil)
+      branch ||= remote_repository.current_branch
       remote_tracking_branch = "#{@name}/#{branch}"
-      branch_info = Git::BranchInfo.new(
-        refname: remote_tracking_branch,
+      branch_info = build_branch_info(remote_tracking_branch)
+      Git::Branch.new(@base, branch_info)
+    end
+
+    # Removes this remote from the repository
+    #
+    # @example Remove the upstream remote
+    #   git.remote('upstream').remove
+    #
+    # @return [Git::CommandLineResult] the result of `git remote remove`
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    def remove
+      remote_repository.remove_remote(@name)
+    end
+
+    # Returns the name of this remote as a string
+    #
+    # @example Get the remote name as a string
+    #   git.remote('origin').to_s  #=> 'origin'
+    #
+    # @return [String] the remote name
+    #
+    def to_s
+      @name
+    end
+
+    private
+
+    # Resolves the {Git::Repository} for this remote
+    #
+    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
+    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
+    # in Phase 4.
+    #
+    # @return [Git::Repository]
+    #
+    # @api private
+    #
+    def remote_repository
+      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+    end
+
+    def build_branch_info(refname)
+      Git::BranchInfo.new(
+        refname: refname,
         target_oid: nil,
         current: false,
         worktree: false,
         symref: nil,
         upstream: nil
       )
-      Git::Branch.new(@base, branch_info)
-    end
-
-    def remove
-      @base.lib.remote_remove(@name)
-    end
-
-    def to_s
-      @name
     end
   end
 end

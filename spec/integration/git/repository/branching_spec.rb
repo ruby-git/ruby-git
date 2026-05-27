@@ -294,7 +294,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'when the branch does not exist' do
       it 'raises Git::Error' do
         expect { described_instance.branch_delete('nonexistent-branch') }
-          .to raise_error(Git::Error)
+          .to raise_error(Git::Error, /nonexistent-branch/)
       end
     end
 
@@ -432,6 +432,24 @@ RSpec.describe Git::Repository::Branching, :integration do
     it 'returns a Git::CommandLineResult' do
       result = described_instance.update_ref('feature', repo.revparse('HEAD'))
       expect(result).to be_a(Git::CommandLineResult)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #branch (factory)
+  # ---------------------------------------------------------------------------
+
+  describe '#branch' do
+    it 'returns a Git::Branch for the given name' do
+      result = described_instance.branch('main')
+      expect(result).to be_a(Git::Branch)
+      expect(result.full).to eq('main')
+    end
+
+    it 'defaults to the current branch when no name is given' do
+      result = described_instance.branch
+      expect(result).to be_a(Git::Branch)
+      expect(result.full).to eq(described_instance.current_branch)
     end
   end
 end
