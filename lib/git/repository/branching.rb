@@ -37,18 +37,16 @@ module Git
 
       # Returns the name of the current branch
       #
-      # @overload current_branch()
+      # @example Get the current branch name
+      #   repo.current_branch  # => "main"
       #
-      #   @example Get the current branch name
-      #     repo.current_branch  # => "main"
+      # @example In detached HEAD state
+      #   repo.current_branch  # => "HEAD"
       #
-      #   @example In detached HEAD state
-      #     repo.current_branch  # => "HEAD"
+      # @return [String] the current branch name, or `'HEAD'` when in detached
+      #   HEAD state
       #
-      #   @return [String] the current branch name, or `'HEAD'` when in detached
-      #     HEAD state
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def current_branch
         result = Git::Commands::Branch::ShowCurrent.new(@execution_context).call
@@ -58,19 +56,17 @@ module Git
 
       # Restore working tree files from a tree-ish
       #
-      # @overload checkout_file(version, file)
+      # @example Restore README.md to its HEAD state
+      #   repo.checkout_file('HEAD', 'README.md')
       #
-      #   @example Restore README.md to its HEAD state
-      #     repo.checkout_file('HEAD', 'README.md')
+      # @param version [String] the tree-ish (branch, tag, commit SHA, etc.) to
+      #   restore the file from
       #
-      #   @param version [String] the tree-ish (branch, tag, commit SHA, etc.) to
-      #     restore the file from
+      # @param file [String] the path to the file to restore
       #
-      #   @param file [String] the path to the file to restore
+      # @return [String] git's stdout from the checkout
       #
-      #   @return [String] git's stdout from the checkout
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def checkout_file(version, file)
         Git::Commands::Checkout::Files.new(@execution_context).call(version, pathspec: [file]).stdout
@@ -78,44 +74,44 @@ module Git
 
       # Switch branches or restore working tree files
       #
-      # @overload checkout(branch = nil, options = {})
+      # @example Check out an existing branch
+      #   repo.checkout('main')
       #
-      #   @example Check out an existing branch
-      #     repo.checkout('main')
+      # @example Create and check out a new branch from main
+      #   repo.checkout('new-feature', new_branch: true, start_point: 'main')
       #
-      #   @example Create and check out a new branch from main
-      #     repo.checkout('new-feature', new_branch: true, start_point: 'main')
+      # @example Create a new branch with a name different from the start point
+      #   repo.checkout('main', new_branch: 'new-feature')
       #
-      #   @example Create a new branch with a name different from the start point
-      #     repo.checkout('main', new_branch: 'new-feature')
+      # @example Force checkout discarding local changes
+      #   repo.checkout('main', force: true)
       #
-      #   @example Force checkout discarding local changes
-      #     repo.checkout('main', force: true)
+      # @param branch [String, nil] the branch to check out; defaults to nil
+      #   (i.e. restore HEAD state)
       #
-      #   @param branch [String, nil] the branch to check out; defaults to nil
-      #     (i.e. restore HEAD state)
+      # @param options [Hash] options for the checkout command
       #
-      #   @param options [Hash] options for the checkout command
+      # @option options [Boolean, nil] :force (nil) discard local changes when
+      #   switching branches
       #
-      #   @option options [Boolean, nil] :force (nil) discard local changes when
-      #     switching branches
+      # @option options [Boolean, String, nil] :new_branch (nil) when `true`,
+      #   creates a new branch named `branch` from `:start_point`
       #
-      #   @option options [Boolean, String, nil] :new_branch (nil) when `true`,
-      #     creates a new branch named `branch` from `:start_point`; when a
-      #     `String`, creates a new branch with that name from `branch`
+      #   When a `String`, creates a new branch with that name, using `branch`
+      #   as the start point.
       #
-      #   @option options [Boolean, String, nil] :b (nil) alias for `:new_branch`
+      # @option options [Boolean, String, nil] :b (nil) alias for `:new_branch`
       #
-      #   @option options [Boolean, nil] :f (nil) alias for `:force`
+      # @option options [Boolean, nil] :f (nil) alias for `:force`
       #
-      #   @option options [String, nil] :start_point (nil) the commit or branch to start the
-      #     new branch from; used together with `new_branch: true`
+      # @option options [String, nil] :start_point (nil) the commit or branch to
+      #   start the new branch from; used together with `new_branch: true`
       #
-      #   @return [String] git's stdout from the checkout
+      # @return [String] git's stdout from the checkout
       #
-      #   @raise [ArgumentError] when unsupported options are provided
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def checkout(branch = nil, options = {})
         if branch.is_a?(Hash) && options.empty?
@@ -131,34 +127,32 @@ module Git
 
       # Populate the working tree from the index
       #
-      # @overload checkout_index(options = {})
+      # @example Check out all files from the index
+      #   repo.checkout_index(all: true)
       #
-      #   @example Check out all files from the index
-      #     repo.checkout_index(all: true)
+      # @example Force check out a specific file
+      #   repo.checkout_index(force: true, path_limiter: 'README.md')
       #
-      #   @example Force check out a specific file
-      #     repo.checkout_index(force: true, path_limiter: 'README.md')
+      # @example Check out files to a staging prefix
+      #   repo.checkout_index(prefix: 'tmp/stage/', all: true)
       #
-      #   @example Check out files to a staging prefix
-      #     repo.checkout_index(prefix: 'tmp/stage/', all: true)
+      # @param options [Hash] options for the checkout-index command
       #
-      #   @param options [Hash] options for the checkout-index command
+      # @option options [Boolean, nil] :all (nil) check out all files in the index
       #
-      #   @option options [Boolean, nil] :all (nil) check out all files in the index
+      # @option options [Boolean, nil] :force (nil) overwrite existing files
       #
-      #   @option options [Boolean, nil] :force (nil) overwrite existing files
+      # @option options [String, nil] :prefix (nil) write files under this path prefix
+      #   rather than the working directory root
       #
-      #   @option options [String] :prefix write files under this path prefix
-      #     rather than the working directory root
+      # @option options [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+      #   limit the check out to the given path(s)
       #
-      #   @option options [String, Pathname, Array<String, Pathname>] :path_limiter
-      #     limit the check out to the given path(s)
+      # @return [String] git's stdout from the checkout-index command
       #
-      #   @return [String] git's stdout from the checkout-index command
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      #   @raise [ArgumentError] when unsupported options are provided
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def checkout_index(options = {})
         SharedPrivate.assert_valid_opts!(CHECKOUT_INDEX_ALLOWED_OPTS, **options)
@@ -170,16 +164,14 @@ module Git
 
       # Returns `true` if the named branch exists as a local branch
       #
-      # @overload local_branch?(branch)
+      # @example Check whether main exists locally
+      #   repo.local_branch?('main')  # => true
       #
-      #   @example Check whether main exists locally
-      #     repo.local_branch?('main')  # => true
+      # @param branch [String] the local branch name to look up
       #
-      #   @param branch [String] the local branch name to look up
+      # @return [Boolean] `true` if the branch exists locally, `false` otherwise
       #
-      #   @return [Boolean] `true` if the branch exists locally, `false` otherwise
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def local_branch?(branch)
         result = Git::Commands::Branch::List.new(@execution_context).call(branch, format: '%(refname:short)')
@@ -191,17 +183,15 @@ module Git
       # The `branch` argument must be the **short branch name** (e.g. `'master'`),
       # not the combined `remote/branch` form (e.g. `'origin/master'`).
       #
-      # @overload remote_branch?(branch)
+      # @example Check whether master exists on any remote
+      #   repo.remote_branch?('master')  # => true
       #
-      #   @example Check whether master exists on any remote
-      #     repo.remote_branch?('master')  # => true
+      # @param branch [String] the short branch name to look up across all remotes
       #
-      #   @param branch [String] the short branch name to look up across all remotes
+      # @return [Boolean] `true` if a remote-tracking branch with that short name
+      #   exists, `false` otherwise
       #
-      #   @return [Boolean] `true` if a remote-tracking branch with that short name
-      #     exists, `false` otherwise
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def remote_branch?(branch)
         result = Git::Commands::Branch::List.new(@execution_context)
@@ -211,17 +201,15 @@ module Git
 
       # Returns `true` if the named branch exists locally or as a remote-tracking branch
       #
-      # @overload branch?(branch)
+      # @example Check whether main exists anywhere
+      #   repo.branch?('main')  # => true
       #
-      #   @example Check whether main exists anywhere
-      #     repo.branch?('main')  # => true
+      # @param branch [String] the branch name to look up
       #
-      #   @param branch [String] the branch name to look up
+      # @return [Boolean] `true` if the branch exists locally or remotely,
+      #   `false` otherwise
       #
-      #   @return [Boolean] `true` if the branch exists locally or remotely,
-      #     `false` otherwise
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def branch?(branch)
         local_branch?(branch) || remote_branch?(branch)
@@ -234,27 +222,25 @@ module Git
 
       # Create a new branch
       #
-      # @overload branch_new(branch, start_point = nil, options = {})
+      # @example Create a new branch from the current HEAD
+      #   repo.branch_new('feature')
       #
-      #   @example Create a new branch from the current HEAD
-      #     repo.branch_new('feature')
+      # @example Create a new branch from a specific commit or branch
+      #   repo.branch_new('feature', 'main')
       #
-      #   @example Create a new branch from a specific commit or branch
-      #     repo.branch_new('feature', 'main')
+      # @param branch [String] the name of the branch to create
       #
-      #   @param branch [String] the name of the branch to create
+      # @param start_point [String, nil] the commit, branch, or tag to start the
+      #   new branch from; defaults to the current HEAD when `nil`
       #
-      #   @param start_point [String, nil] the commit, branch, or tag to start the
-      #     new branch from; defaults to the current HEAD when `nil`
+      # @param options [Hash] reserved; must be empty — no options are currently
+      #   supported
       #
-      #   @param options [Hash] reserved; must be empty — no options are currently
-      #     supported
+      # @return [void]
       #
-      #   @return [void]
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      # @raise [ArgumentError] when unsupported options are provided
-      #
-      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def branch_new(branch, start_point = nil, options = {})
         if start_point.is_a?(Hash) && options.empty?
@@ -275,36 +261,34 @@ module Git
 
       # Delete one or more local or remote-tracking branches
       #
-      # @overload branch_delete(*branches, **options)
+      # @example Delete a single branch
+      #   repo.branch_delete('feature') # => "Deleted branch feature (was abc1234)."
       #
-      #   @example Delete a single branch
-      #     repo.branch_delete('feature') # => "Deleted branch feature (was abc1234)."
+      # @example Delete multiple branches at once
+      #   repo.branch_delete('feature-1', 'feature-2')
       #
-      #   @example Delete multiple branches at once
-      #     repo.branch_delete('feature-1', 'feature-2')
+      # @example Force-delete an unmerged branch
+      #   repo.branch_delete('unmerged-branch', force: true)
       #
-      #   @example Force-delete an unmerged branch
-      #     repo.branch_delete('unmerged-branch', force: true)
+      # @example Delete a remote-tracking branch
+      #   repo.branch_delete('origin/feature', remotes: true)
       #
-      #   @example Delete a remote-tracking branch
-      #     repo.branch_delete('origin/feature', remotes: true)
+      # @param branches [Array<String>] the name(s) of the branch(es) to delete
       #
-      #   @param branches [Array<String>] the name(s) of the branch(es) to delete
+      # @param options [Hash] options for the delete command
       #
-      #   @param options [Hash] options for the delete command
+      # @option options [Boolean, nil] :force (true) allow deleting the branch
+      #   irrespective of its merged status
       #
-      #   @option options [Boolean, nil] :force (true) allow deleting the branch
-      #     irrespective of its merged status
+      #   Defaults to `true` to match the 4.x behavior.
       #
-      #     Defaults to `true` to match the 4.x behavior.
+      # @option options [Boolean, nil] :remotes (nil) delete remote-tracking
+      #   branches
       #
-      #   @option options [Boolean, nil] :remotes (nil) delete remote-tracking
-      #     branches
+      #   Use together with a `remote/branch` name.
       #
-      #     Use together with a `remote/branch` name.
-      #
-      #   @return [String] the stdout output from the delete command, e.g.
-      #     `"Deleted branch feature (was abc1234)."`
+      # @return [String] the stdout output from the delete command, e.g.
+      #   `"Deleted branch feature (was abc1234)."`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
@@ -330,34 +314,32 @@ module Git
       # or `* ` if it is the currently checked-out branch. This is the same
       # format returned by `Git::Lib#branch_contains` in the 4.x gem series.
       #
-      # @overload branch_contains(commit, branch_name = '')
+      # @example List all branches that contain a commit
+      #   repo.branch_contains('abc1234')
+      #   # => "  main\n"
       #
-      #   @example List all branches that contain a commit
-      #     repo.branch_contains('abc1234')
-      #     # => "  main\n"
+      # @example The current branch is marked with an asterisk
+      #   repo.branch_contains('abc1234')
+      #   # => "* main\n  feature\n"
       #
-      #   @example The current branch is marked with an asterisk
-      #     repo.branch_contains('abc1234')
-      #     # => "* main\n  feature\n"
+      # @example Limit the search to branches matching a shell wildcard pattern
+      #   repo.branch_contains('abc1234', 'feature/*')
       #
-      #   @example Limit the search to branches matching a shell wildcard pattern
-      #     repo.branch_contains('abc1234', 'feature/*')
+      # @example Typical usage: check whether any branch contains the commit
+      #   repo.branch_contains('abc1234').empty?  # => false
       #
-      #   @example Typical usage: check whether any branch contains the commit
-      #     repo.branch_contains('abc1234').empty?  # => false
+      # @param commit [String] the commit SHA or ref to look up
       #
-      #   @param commit [String] the commit SHA or ref to look up
+      # @param branch_name [String, nil] a shell wildcard pattern to limit which
+      #   branches are searched
       #
-      #   @param branch_name [String, nil] a shell wildcard pattern to limit which
-      #     branches are searched
+      #   When empty or `nil`, all local branches are searched.
       #
-      #     When empty or `nil`, all local branches are searched.
+      # @return [String] the `git branch --list --contains` stdout
       #
-      #   @return [String] the `git branch --list --contains` stdout
-      #
-      #     Each matching branch appears on its own line, prefixed with two
-      #     spaces, or `* ` for the currently checked-out branch. Returns an
-      #     empty string when no matching branch contains the commit.
+      #   Each matching branch appears on its own line, prefixed with two
+      #   spaces, or `* ` for the currently checked-out branch. Returns an
+      #   empty string when no matching branch contains the commit.
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
@@ -371,23 +353,21 @@ module Git
 
       # Returns all local and remote-tracking branches as structured objects
       #
-      # @overload branches_all()
+      # @example List all branches
+      #   repo.branches_all
+      #   # => [#<data Git::BranchInfo refname="main", current=true, ...>,
+      #   #     #<data Git::BranchInfo refname="remotes/origin/main", current=false, ...>]
       #
-      #   @example List all branches
-      #     repo.branches_all
-      #     # => [#<data Git::BranchInfo refname="main", current=true, ...>,
-      #     #     #<data Git::BranchInfo refname="remotes/origin/main", current=false, ...>]
+      # @example Find the currently checked-out branch
+      #   repo.branches_all.find(&:current)
       #
-      #   @example Find the currently checked-out branch
-      #     repo.branches_all.find(&:current)
+      # @example List only local branches
+      #   repo.branches_all.reject(&:remote?)
       #
-      #   @example List only local branches
-      #     repo.branches_all.reject(&:remote?)
+      # @return [Array<Git::BranchInfo>] parsed branch information for every
+      #   local and remote-tracking branch
       #
-      #   @return [Array<Git::BranchInfo>] parsed branch information for every
-      #     local and remote-tracking branch
-      #
-      #     Returns an empty array when the repository has no branches.
+      #   Returns an empty array when the repository has no branches.
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
@@ -406,26 +386,27 @@ module Git
       #   writes to `refs/remotes/<remote>/<name>` (remote-tracking branch)
       # - Any other value → writes to `refs/heads/<branch>` (local branch)
       #
-      # @overload update_ref(branch, commit)
+      # @example Advance a local branch to the current HEAD
+      #   repo.update_ref('feature', repo.rev_parse('HEAD'))
       #
-      #   @example Advance a local branch to the current HEAD
-      #     repo.update_ref('feature', repo.rev_parse('HEAD'))
+      # @example Reset a local branch to an older commit
+      #   repo.update_ref('main', 'abc1234def5678')
       #
-      #   @example Reset a local branch to an older commit
-      #     repo.update_ref('main', 'abc1234def5678')
+      # @example Update a remote-tracking branch ref
+      #   repo.update_ref('remotes/origin/main', 'abc1234def5678')
       #
-      #   @example Update a remote-tracking branch ref
-      #     repo.update_ref('remotes/origin/main', 'abc1234def5678')
+      # @param branch [String] a local or remote-tracking branch name
       #
-      #   @param branch [String] a short local branch name (e.g. `'main'`) or a
-      #     remote-tracking branch name with a `remotes/<remote>/` or
-      #     `refs/remotes/<remote>/` prefix (e.g. `'remotes/origin/main'`)
+      #   Short local names (e.g. `'main'`) resolve to `refs/heads/<branch>`.
+      #   Remote-tracking names with a `remotes/<remote>/` or
+      #   `refs/remotes/<remote>/` prefix (e.g. `'remotes/origin/main'`)
+      #   resolve to `refs/remotes/<remote>/<name>`.
       #
-      #   @param commit [String] the commit SHA to point the branch at
+      # @param commit [String] the commit SHA to point the branch at
       #
-      #   @return [Git::CommandLineResult] the result of calling `git update-ref`
+      # @return [Git::CommandLineResult] the result of calling `git update-ref`
       #
-      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def update_ref(branch, commit)
         ref = Private.build_update_ref(branch)

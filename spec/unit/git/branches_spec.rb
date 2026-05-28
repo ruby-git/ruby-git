@@ -84,7 +84,7 @@ RSpec.describe Git::Branches do
 
   let(:branch_infos) { [local_info, remote_info] }
   let(:repo_base) { instance_double(Git::Repository) }
-  let(:collection) { described_class.new(repo_base) }
+  let(:described_instance) { described_class.new(repo_base) }
 
   before do
     allow(repo_base).to receive(:is_a?).with(Git::Base).and_return(false)
@@ -98,7 +98,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#local' do
-    subject(:result) { collection.local }
+    subject(:result) { described_instance.local }
 
     it 'returns only non-remote branches' do
       expect(result).to eq([local_branch])
@@ -110,7 +110,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#remote' do
-    subject(:result) { collection.remote }
+    subject(:result) { described_instance.remote }
 
     it 'returns only remote-tracking branches' do
       expect(result).to eq([remote_branch])
@@ -122,7 +122,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#size' do
-    subject(:result) { collection.size }
+    subject(:result) { described_instance.size }
 
     it 'returns the total number of branches' do
       expect(result).to eq(2)
@@ -142,7 +142,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#each' do
-    subject(:result) { collection.each }
+    subject(:result) { described_instance.each }
 
     it 'yields every branch in the collection' do
       expect(result.to_a).to contain_exactly(local_branch, remote_branch)
@@ -158,7 +158,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#[]' do
-    subject(:result) { collection[branch_name] }
+    subject(:result) { described_instance[branch_name] }
 
     let(:branch_name) { 'main' }
 
@@ -184,13 +184,13 @@ RSpec.describe Git::Branches do
       end
 
       it 'does not change the collection size' do
-        expect { result }.not_to change(collection, :size)
+        expect { result }.not_to change(described_instance, :size)
       end
 
       it 'does not duplicate branches in enumeration' do
         result
 
-        expect(collection.map(&:full)).to contain_exactly('main', 'remotes/origin/main')
+        expect(described_instance.map(&:full)).to contain_exactly('main', 'remotes/origin/main')
       end
     end
 
@@ -216,7 +216,7 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#to_s' do
-    subject(:result) { collection.to_s }
+    subject(:result) { described_instance.to_s }
 
     it 'marks the current branch with "* "' do
       expect(result).to include('* main')
