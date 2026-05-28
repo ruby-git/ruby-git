@@ -24,6 +24,8 @@ module Git
     #
     # @return [void]
     #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def initialize(base)
       @branches = {}
       @lookup = {}
@@ -85,13 +87,13 @@ module Git
     #   @example Print every branch name
     #     repo.branches.each { |b| puts b.name }
     #
+    #   @return [Array<Git::Branch>] the full list of branches
+    #
     #   @yield [branch] passes each branch to the block
     #
     #   @yieldparam branch [Git::Branch] a branch in the repository
     #
     #   @yieldreturn [void]
-    #
-    #   @return [Array<Git::Branch>] the full list of branches
     #
     def each(&)
       @branches.values.each(&)

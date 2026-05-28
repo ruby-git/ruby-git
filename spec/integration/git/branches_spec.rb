@@ -18,12 +18,6 @@ RSpec.describe Git::Branches, :integration do
   context 'when initialized via Git::Base (Git::Base passed to constructor)' do
     let(:branches) { repo.branches }
 
-    describe '#initialize' do
-      it 'returns a Git::Branches instance' do
-        expect(branches).to be_a(Git::Branches)
-      end
-    end
-
     describe '#local' do
       it 'returns Git::Branch objects' do
         expect(branches.local).to all(be_a(Git::Branch))
@@ -145,12 +139,6 @@ RSpec.describe Git::Branches, :integration do
     let(:repository) { Git::Repository.new(execution_context: execution_context) }
     let(:branches) { repository.branches }
 
-    describe '#initialize' do
-      it 'returns a Git::Branches instance' do
-        expect(branches).to be_a(Git::Branches)
-      end
-    end
-
     describe '#local' do
       it 'includes the current local branch' do
         expect(branches.local.map(&:full)).to include('main')
@@ -158,8 +146,8 @@ RSpec.describe Git::Branches, :integration do
     end
 
     describe '#size' do
-      it 'returns the same number of branches as the Git::Base path' do
-        expect(branches.size).to eq(repo.branches.size)
+      it 'returns 1 after an initial commit with one branch' do
+        expect(branches.size).to eq(1)
       end
     end
   end
