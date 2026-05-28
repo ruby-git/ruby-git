@@ -132,13 +132,15 @@ module Git
       out
     end
 
+    private
+
     # Resolves the {Git::Repository} for this collection of branches
     #
     # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
     # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
     # in Phase 4.
     #
-    # @return [Git::Repository]
+    # @return [Git::Repository] the repository used to enumerate branches
     #
     # @api private
     #
@@ -147,11 +149,11 @@ module Git
     end
 
     # Indexes all supported lookup keys for a branch without mutating
-    # the canonical @branches collection used by enumeration.
+    # the canonical `@branches` collection used by enumeration
     #
-    # @param branch [Git::Branch]
+    # @param branch [Git::Branch] the branch to index
     #
-    # @param refname [String]
+    # @param refname [String] the full refname key to use for primary lookup
     #
     # @return [void]
     #
