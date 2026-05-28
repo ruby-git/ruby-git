@@ -61,9 +61,9 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3 — Iteration 8: `Git::Branches`**
+**Phase 3 — Iteration 9: `Git::Worktree` + `Git::Worktrees`**
 
-Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Iter 7 (`Git::Branch` + `Git::Remote` A+B) is ✅ complete (`agents/migrate-git-branch-remote-polymorphism`). Proceed to iter 8.
+Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Iter 7 (`Git::Branch` + `Git::Remote` A+B) is ✅ complete (`agents/migrate-git-branch-remote-polymorphism`). Iter 8 (`Git::Branches` A+B) is ✅ complete ([PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359)). Proceed to iter 9.
 
 The full scope is still migrating all domain objects
 (`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
@@ -117,7 +117,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Status` | ✅ Complete | iter 6 |
 | `Git::Branch` | ✅ Complete | iter 7 |
 | `Git::Remote` | ✅ Complete | iter 7 |
-| `Git::Branches` | ⏳ Not started | iter 8 |
+| `Git::Branches` | ✅ Complete | iter 8 |
 | `Git::Worktree` | ⏳ Not started | iter 9 |
 | `Git::Worktrees` | ⏳ Not started | iter 9 |
 
