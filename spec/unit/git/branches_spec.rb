@@ -53,10 +53,6 @@ RSpec.describe Git::Branches do
         expect(Git::Branch).to receive(:new).with(base, remote_info).and_return(remote_branch)
         described_class.new(base)
       end
-
-      it 'returns an instance of Git::Branches' do
-        expect(described_class.new(base)).to be_a(described_class)
-      end
     end
 
     context 'when passed a Git::Base' do
@@ -79,10 +75,6 @@ RSpec.describe Git::Branches do
         expect(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
         described_class.new(base)
       end
-
-      it 'returns an instance of Git::Branches' do
-        expect(described_class.new(base)).to be_a(described_class)
-      end
     end
   end
 
@@ -90,12 +82,13 @@ RSpec.describe Git::Branches do
   # Collection helpers: a Git::Branches with two known branches
   # ---------------------------------------------------------------------------
 
+  let(:branch_infos) { [local_info, remote_info] }
   let(:repo_base) { instance_double(Git::Repository) }
   let(:collection) { described_class.new(repo_base) }
 
   before do
     allow(repo_base).to receive(:is_a?).with(Git::Base).and_return(false)
-    allow(repo_base).to receive(:branches_all).and_return([local_info, remote_info])
+    allow(repo_base).to receive(:branches_all).and_return(branch_infos)
     allow(Git::Branch).to receive(:new).with(repo_base, local_info).and_return(local_branch)
     allow(Git::Branch).to receive(:new).with(repo_base, remote_info).and_return(remote_branch)
   end
@@ -110,10 +103,6 @@ RSpec.describe Git::Branches do
     it 'returns only non-remote branches' do
       expect(result).to eq([local_branch])
     end
-
-    it 'excludes remote-tracking branches' do
-      expect(result).not_to include(remote_branch)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -126,10 +115,6 @@ RSpec.describe Git::Branches do
     it 'returns only remote-tracking branches' do
       expect(result).to eq([remote_branch])
     end
-
-    it 'excludes local branches' do
-      expect(result).not_to include(local_branch)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -137,21 +122,17 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#size' do
+    subject(:result) { collection.size }
+
     it 'returns the total number of branches' do
-      expect(collection.size).to eq(2)
+      expect(result).to eq(2)
     end
 
     context 'when the branch list is empty' do
-      let(:empty_base) { instance_double(Git::Repository) }
-      let(:empty_collection) { described_class.new(empty_base) }
-
-      before do
-        allow(empty_base).to receive(:is_a?).with(Git::Base).and_return(false)
-        allow(empty_base).to receive(:branches_all).and_return([])
-      end
+      let(:branch_infos) { [] }
 
       it 'returns 0' do
-        expect(empty_collection.size).to eq(0)
+        expect(result).to eq(0)
       end
     end
   end
@@ -161,13 +142,14 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#each' do
+    subject(:result) { collection.each }
+
     it 'yields every branch in the collection' do
-      yielded = collection.map { |b| b }
-      expect(yielded).to contain_exactly(local_branch, remote_branch)
+      expect(result.to_a).to contain_exactly(local_branch, remote_branch)
     end
 
     it 'returns an Enumerator when called without a block' do
-      expect(collection.each).to be_an(Enumerator)
+      expect(result).to be_an(Enumerator)
     end
   end
 
@@ -176,43 +158,55 @@ RSpec.describe Git::Branches do
   # ---------------------------------------------------------------------------
 
   describe '#[]' do
+    subject(:result) { collection[branch_name] }
+
+    let(:branch_name) { 'main' }
+
     context 'with the exact refname of a local branch' do
       it 'returns the matching branch' do
-        expect(collection['main']).to eq(local_branch)
+        expect(result).to eq(local_branch)
       end
     end
 
     context 'with the full refname of a remote-tracking branch' do
+      let(:branch_name) { 'remotes/origin/main' }
+
       it 'returns the matching remote branch' do
-        expect(collection['remotes/origin/main']).to eq(remote_branch)
+        expect(result).to eq(remote_branch)
       end
     end
 
     context 'with the short form of a remote-tracking branch (omitting "remotes/")' do
+      let(:branch_name) { 'origin/main' }
+
       it 'returns the remote branch' do
-        expect(collection['origin/main']).to eq(remote_branch)
+        expect(result).to eq(remote_branch)
       end
 
       it 'does not change the collection size' do
-        expect { collection['origin/main'] }.not_to change(collection, :size)
+        expect { result }.not_to change(collection, :size)
       end
 
       it 'does not duplicate branches in enumeration' do
-        collection['origin/main']
+        result
 
         expect(collection.map(&:full)).to contain_exactly('main', 'remotes/origin/main')
       end
     end
 
     context 'with an unknown branch name' do
+      let(:branch_name) { 'nonexistent' }
+
       it 'returns nil' do
-        expect(collection['nonexistent']).to be_nil
+        expect(result).to be_nil
       end
     end
 
     context 'with a non-String argument' do
+      let(:branch_name) { :main }
+
       it 'coerces to string via to_s and returns the matching branch' do
-        expect(collection[:main]).to eq(local_branch)
+        expect(result).to eq(local_branch)
       end
     end
   end
@@ -223,11 +217,6 @@ RSpec.describe Git::Branches do
 
   describe '#to_s' do
     subject(:result) { collection.to_s }
-
-    it 'includes each branch name' do
-      expect(result).to include('main')
-      expect(result).to include('remotes/origin/main')
-    end
 
     it 'marks the current branch with "* "' do
       expect(result).to include('* main')
