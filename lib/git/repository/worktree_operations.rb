@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'git/commands/worktree'
+require 'git/worktree'
+require 'git/worktrees'
 
 module Git
   class Repository
@@ -107,6 +109,51 @@ module Git
       #
       def worktree_prune
         Git::Commands::Worktree::Prune.new(@execution_context).call.stdout
+      end
+
+      # Return a {Git::Worktree} object for the given directory and optional commitish
+      #
+      # This is a factory method — it constructs the domain object but does not
+      # immediately execute any git commands.
+      #
+      # @example Get a worktree object for a new path
+      #   wt = repo.worktree('/tmp/feature')
+      #
+      # @example Get a worktree object for a specific branch or commit
+      #   wt = repo.worktree('/tmp/hotfix', 'main')
+      #
+      # @param dir [String] filesystem path for the worktree
+      #
+      # @param commitish [String, nil] branch, tag, or commit to associate with
+      #   the worktree; `nil` means no commitish is specified
+      #
+      # @return [Git::Worktree] a worktree domain object for the given path
+      #
+      def worktree(dir, commitish = nil)
+        Git::Worktree.new(self, dir, commitish)
+      end
+
+      # Return a {Git::Worktrees} collection of all worktrees (main and linked)
+      #
+      # The collection is populated eagerly when this method is called (git runs
+      # at construction time). It is enumerable and supports indexed access by
+      # worktree path.
+      #
+      # @example Iterate over all worktrees
+      #   repo.worktrees.each { |wt| puts wt.dir }
+      #
+      # @example Count worktrees
+      #   repo.worktrees.size
+      #
+      # @example Access a specific worktree by path
+      #   repo.worktrees['/tmp/feature']
+      #
+      # @return [Git::Worktrees] an enumerable collection of all worktrees
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def worktrees
+        Git::Worktrees.new(self)
       end
     end
   end
