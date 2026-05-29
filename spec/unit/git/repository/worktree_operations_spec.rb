@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'fileutils'
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/worktree_operations'
@@ -136,11 +135,11 @@ RSpec.describe Git::Repository::WorktreeOperations do
 
     before do
       allow(Git::Commands::Worktree::Add).to receive(:new).with(execution_context).and_return(add_command)
+      allow(add_command).to receive(:call).and_return(add_result)
     end
 
     it 'constructs Git::Commands::Worktree::Add with the execution context' do
       expect(Git::Commands::Worktree::Add).to receive(:new).with(execution_context).and_return(add_command)
-      allow(add_command).to receive(:call).and_return(add_result)
       described_instance.worktree_add('/tmp/feature')
     end
 
@@ -151,7 +150,6 @@ RSpec.describe Git::Repository::WorktreeOperations do
       end
 
       it 'returns the stdout string' do
-        allow(add_command).to receive(:call).with('/tmp/feature').and_return(add_result)
         expect(described_instance.worktree_add('/tmp/feature')).to eq("Preparing worktree (new branch 'feature')\n")
       end
     end
@@ -163,9 +161,8 @@ RSpec.describe Git::Repository::WorktreeOperations do
       end
 
       it 'returns the stdout string' do
-        allow(add_command).to receive(:call).with('/tmp/feature', 'main').and_return(add_result)
-        result = described_instance.worktree_add('/tmp/feature', 'main')
-        expect(result).to eq("Preparing worktree (new branch 'feature')\n")
+        expect(described_instance.worktree_add('/tmp/feature',
+                                               'main')).to eq("Preparing worktree (new branch 'feature')\n")
       end
     end
   end
@@ -176,11 +173,11 @@ RSpec.describe Git::Repository::WorktreeOperations do
 
     before do
       allow(Git::Commands::Worktree::Remove).to receive(:new).with(execution_context).and_return(remove_command)
+      allow(remove_command).to receive(:call).with('/tmp/feature').and_return(remove_result)
     end
 
     it 'constructs Git::Commands::Worktree::Remove with the execution context' do
       expect(Git::Commands::Worktree::Remove).to receive(:new).with(execution_context).and_return(remove_command)
-      allow(remove_command).to receive(:call).with('/tmp/feature').and_return(remove_result)
       described_instance.worktree_remove('/tmp/feature')
     end
 
@@ -190,7 +187,6 @@ RSpec.describe Git::Repository::WorktreeOperations do
     end
 
     it 'returns the stdout string' do
-      allow(remove_command).to receive(:call).with('/tmp/feature').and_return(remove_result)
       expect(described_instance.worktree_remove('/tmp/feature')).to eq('')
     end
   end
@@ -201,11 +197,11 @@ RSpec.describe Git::Repository::WorktreeOperations do
 
     before do
       allow(Git::Commands::Worktree::Prune).to receive(:new).with(execution_context).and_return(prune_command)
+      allow(prune_command).to receive(:call).and_return(prune_result)
     end
 
     it 'constructs Git::Commands::Worktree::Prune with the execution context' do
       expect(Git::Commands::Worktree::Prune).to receive(:new).with(execution_context).and_return(prune_command)
-      allow(prune_command).to receive(:call).with(no_args).and_return(prune_result)
       described_instance.worktree_prune
     end
 
@@ -215,8 +211,41 @@ RSpec.describe Git::Repository::WorktreeOperations do
     end
 
     it 'returns the stdout string' do
-      allow(prune_command).to receive(:call).and_return(prune_result)
       expect(described_instance.worktree_prune).to eq('')
+    end
+  end
+
+  describe '#worktree' do
+    let(:worktree_double) { instance_double(Git::Worktree) }
+
+    context 'when called without a commitish' do
+      subject(:result) { described_instance.worktree('/tmp/feature') }
+
+      it 'constructs Git::Worktree with self, the directory, and nil commitish, and returns it' do
+        expect(Git::Worktree).to receive(:new).with(described_instance, '/tmp/feature', nil).and_return(worktree_double)
+        expect(result).to eq(worktree_double)
+      end
+    end
+
+    context 'when called with a commitish' do
+      subject(:result) { described_instance.worktree('/tmp/feature', 'main') }
+
+      it 'constructs Git::Worktree with self, the directory, and the commitish, and returns it' do
+        expect(Git::Worktree).to receive(:new).with(described_instance, '/tmp/feature',
+                                                    'main').and_return(worktree_double)
+        expect(result).to eq(worktree_double)
+      end
+    end
+  end
+
+  describe '#worktrees' do
+    subject(:result) { described_instance.worktrees }
+
+    let(:worktrees_collection) { instance_double(Git::Worktrees) }
+
+    it 'constructs Git::Worktrees with self and returns the collection' do
+      expect(Git::Worktrees).to receive(:new).with(described_instance).and_return(worktrees_collection)
+      expect(result).to eq(worktrees_collection)
     end
   end
 end
