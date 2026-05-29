@@ -118,7 +118,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Branch` | ✅ Complete | iter 7 |
 | `Git::Remote` | ✅ Complete | iter 7 |
 | `Git::Branches` | ✅ Complete | iter 8 |
-| `Git::Worktree` | ⏳ Not started | iter 9 |
+| `Git::Worktree` | ✅ Complete | iter 9 |
 | `Git::Worktrees` | ⏳ Not started | iter 9 |
 
 > **Note**: Several internal/private nested classes also hold `@base` and must be migrated alongside their parent domain object in the same iteration:
