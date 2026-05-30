@@ -45,6 +45,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
 | `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`), `untracked_files`, `status`; `Git::Base#ls_files` delegates to facade |
 | `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config`; `Git::Base#config` delegates to facade |
+| `Git::Repository::WorktreeOperations` | `lib/git/repository/worktree_operations.rb` | ✅ | `worktrees_all`, `worktree_add`, `worktree_remove`, `worktree_prune`, `worktree`, `worktrees` |
 
 #### Facade module naming convention
 
@@ -61,9 +62,9 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-**Phase 3 — Iteration 9: `Git::Worktree` + `Git::Worktrees`**
+**Phase 3 — Verify Facade Coverage (all 9 domain-object iterations complete)**
 
-Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Iter 7 (`Git::Branch` + `Git::Remote` A+B) is ✅ complete (`agents/migrate-git-branch-remote-polymorphism`). Iter 8 (`Git::Branches` A+B) is ✅ complete ([PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359)). Proceed to iter 9.
+All 9 domain-object iterations are ✅ complete. Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Iter 7 (`Git::Branch` + `Git::Remote` A+B) is ✅ complete (`agents/migrate-git-branch-remote-polymorphism`). Iter 8 (`Git::Branches` A+B) is ✅ complete ([PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359)). Iter 9 (`Git::Worktree` + `Git::Worktrees` A+B) is ✅ complete (`agents/pr5-facade-module-improvements`).
 
 The full scope is still migrating all domain objects
 (`Git::Stash`, `Git::Stashes`, `Git::DiffPathStatus`, `Git::Object::*`,
@@ -87,7 +88,7 @@ Each iteration follows an interleaved A→B pattern (some iterations only need a
    polymorphism and replace `@base.lib.*` calls with facade calls (**Phase B** work).
 3. Open one PR per iteration.
 
-After all 9 domain-object iterations, **verify facade coverage**: every public `Git::Base` method must have a corresponding `Git::Repository` facade before the cleanup PR can run. Methods such as `clean`, `rm`, `tags`/`add_tag`, `fsck`, `show`, `remotes`, and remote URL/branch helpers are not covered by the 9 domain-object iterations and will need dedicated facade PRs first. Once coverage is complete, open a final **cleanup PR** (`feat/cleanup-base-object-bridge`): C0 — update `Git::Base` domain-object factory methods (`branch`, `branches`, `gcommit`/`gblob`/`gtree`, `log`, `diff`, `object`, `remote`, `status`, `tag`, etc.) to delegate to `facade_repository` rather than constructing domain objects directly with `self`; C1 — update top-level entry-point methods (`Git.open`, `Git.clone`, `Git.init`, `Git.bare`) to construct and return `Git::Repository` instead of `Git::Base`; C2 — remove `base_object` bridge from `Git::ExecutionContext::Repository`; C3 — remove `is_a?(Git::Base)` polymorphism guards.
+The next step is to **verify facade coverage**: audit every public `Git::Base` method to ensure it has a corresponding `Git::Repository` facade (or is intentionally excluded). Methods such as `clean`, `rm`, `tags`/`add_tag`, `fsck`, `show`, `remotes`, and remote URL/branch helpers are not yet covered and will need dedicated facade PRs. Once coverage is complete, open a final **cleanup PR** (`feat/cleanup-base-object-bridge`): C0 — update `Git::Base` domain-object factory methods (`branch`, `branches`, `gcommit`/`gblob`/`gtree`, `log`, `diff`, `object`, `remote`, `status`, `tag`, etc.) to delegate to `facade_repository` rather than constructing domain objects directly with `self`; C1 — update top-level entry-point methods (`Git.open`, `Git.clone`, `Git.init`, `Git.bare`) to construct and return `Git::Repository` instead of `Git::Base`; C2 — remove `base_object` bridge from `Git::ExecutionContext::Repository`; C3 — remove `is_a?(Git::Base)` polymorphism guards.
 
 #### Delivery iterations
 
@@ -119,7 +120,7 @@ After all 9 domain-object iterations, **verify facade coverage**: every public `
 | `Git::Remote` | ✅ Complete | iter 7 |
 | `Git::Branches` | ✅ Complete | iter 8 |
 | `Git::Worktree` | ✅ Complete | iter 9 |
-| `Git::Worktrees` | ⏳ Not started | iter 9 |
+| `Git::Worktrees` | ✅ Complete | iter 9 |
 
 > **Note**: Several internal/private nested classes also hold `@base` and must be migrated alongside their parent domain object in the same iteration:
 >
@@ -152,7 +153,7 @@ logic. The gem will be fully functional after this phase.*
 1. **Create New Directory Structure**
 
    - `lib/git/commands/` ✅
-   - `lib/git/repository/` ✅ — populated with 9 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
+   - `lib/git/repository/` ✅ — populated with 12 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
 
 2. **Eliminate Custom Path Classes**
 
@@ -174,7 +175,7 @@ logic. The gem will be fully functional after this phase.*
      - `Git::ExecutionContext::Global` subclass in `lib/git/execution_context/global.rb` ✅
 
    - `Git::Repository` in `lib/git/repository.rb` ✅
-     - Now includes 9 facade modules (see [Facade Modules Completed](#facade-modules-completed))
+     - Now includes 12 facade modules (see [Facade Modules Completed](#facade-modules-completed))
 
    - `Git::Commands::Arguments` DSL in `lib/git/commands/arguments.rb` ✅
      - Provides declarative argument definition for command classes
@@ -1067,7 +1068,7 @@ breaking the final ties to the old implementation.*
 
 2. **Implement the Facade** ⏳
 
-   `Git::Repository` now includes 5 facade modules (see
+   `Git::Repository` now includes 12 facade modules (see
    [Facade Modules Completed](#facade-modules-completed)). `Git::Base` wraps the
    corresponding methods via `facade_repository`. The domain-object migration
    iterations (iters 1–9) add further facade methods, but full `Git::Base`

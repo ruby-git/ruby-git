@@ -10,9 +10,9 @@ module Git
       # @example List all worktrees in porcelain format
       #   Git::Commands::Worktree::List.new(execution_context).call(porcelain: true)
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
       #
-      # @see Git::Commands::Worktree
+      # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
       # @see https://git-scm.com/docs/git-worktree git-worktree documentation
       #
@@ -36,22 +36,27 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, nil] :porcelain (nil) produce machine-readable output
+        #     @option options [Boolean, nil] :porcelain (nil) produce machine-readable
+        #       output
         #
-        #     @option options [Boolean, nil] :z (nil) NUL-terminate lines (use with `:porcelain`)
+        #     @option options [Boolean, nil] :z (nil) terminate output lines with NUL
+        #       bytes (use with `:porcelain`)
         #
-        #     @option options [Boolean, nil] :verbose (nil) output additional information about worktrees
+        #     @option options [Boolean, nil] :verbose (nil) output additional information
+        #       about worktrees
         #
         #       Alias: :v
         #
-        #     @option options [String] :expire (nil) annotate missing worktrees as prunable if older than
-        #       this time expression
+        #     @option options [String] :expire (nil) annotate missing worktrees as
+        #       prunable if older than this time expression
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree list`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end

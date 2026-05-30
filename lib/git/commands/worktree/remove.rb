@@ -13,7 +13,7 @@ module Git
       # @example Force-remove an unclean worktree
       #   Git::Commands::Worktree::Remove.new(execution_context).call('/tmp/feature', force: true)
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
@@ -36,15 +36,16 @@ module Git
         #
         #     Remove a linked worktree
         #
-        #     @param worktree [String] path or unique suffix identifying the worktree to remove
+        #     @param worktree [String] path or unique suffix identifying the
+        #       worktree to remove
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, Integer, nil] :force (nil) remove even if the worktree has
-        #       uncommitted changes
+        #     @option options [Boolean, Integer, nil] :force (nil) remove even if the
+        #       worktree has uncommitted changes
         #
-        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit `--force --force`,
-        #       which also removes locked worktrees.
+        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
+        #       `--force --force`, which also removes locked worktrees.
         #
         #       Alias: :f
         #
@@ -53,6 +54,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
