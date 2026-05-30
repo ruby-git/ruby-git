@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'securerandom'
 require 'spec_helper'
+require 'securerandom'
 require 'git/repository'
 require 'git/repository/worktree_operations'
 require 'git/execution_context/repository'
@@ -9,6 +9,10 @@ require 'git/execution_context/repository'
 # worktree_add, worktree_remove, and worktree_prune are one-line delegators with no
 # facade-owned post-processing. Their end-to-end coverage comes from the command
 # integration tests (spec/integration/git/commands/worktree/).
+#
+# worktree and worktrees are factory methods that construct domain objects
+# (Git::Worktree and Git::Worktrees) without running git commands directly; they
+# have no integration tests and are fully covered by the unit tests.
 #
 # worktrees_all parses porcelain output inline inside the facade. This integration
 # test verifies that the parsing logic works correctly against actual git output.

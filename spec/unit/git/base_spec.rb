@@ -3,6 +3,15 @@
 require 'spec_helper'
 
 RSpec.describe Git::Base do
+  shared_context 'with a stubbed facade_repository' do
+    let(:described_instance) { described_class.new }
+    let(:facade_repository) { instance_double(Git::Repository) }
+
+    before do
+      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
+    end
+  end
+
   describe '#binary_path' do
     context 'when not specified' do
       subject(:base) { described_class.new }
@@ -28,16 +37,12 @@ RSpec.describe Git::Base do
   end
 
   describe '#full_log_commits' do
+    include_context 'with a stubbed facade_repository'
+
     subject(:result) { described_instance.full_log_commits(opts) }
 
-    let(:described_instance) { described_class.new }
     let(:opts) { { count: 3 } }
-    let(:facade_repository) { instance_double(Git::Repository) }
     let(:log_data) { [{ 'sha' => 'abc123' }] }
-
-    before do
-      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
-    end
 
     it 'delegates to facade_repository with opts and returns the facade result' do
       expect(facade_repository).to receive(:full_log_commits).with(opts).and_return(log_data)
@@ -46,15 +51,14 @@ RSpec.describe Git::Base do
   end
 
   describe '#log' do
+    include_context 'with a stubbed facade_repository'
+
     subject(:result) { described_instance.log(count) }
 
-    let(:described_instance) { described_class.new }
     let(:count) { 5 }
-    let(:facade_repository) { instance_double(Git::Repository) }
     let(:log_instance) { instance_double(Git::Log) }
 
     before do
-      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
       allow(facade_repository).to receive(:log).with(count).and_return(log_instance)
     end
 
@@ -78,18 +82,14 @@ RSpec.describe Git::Base do
   end
 
   describe '#diff_stats' do
+    include_context 'with a stubbed facade_repository'
+
     subject(:result) { described_instance.diff_stats(objectish, obj2, opts) }
 
-    let(:described_instance) { described_class.new }
     let(:objectish) { 'HEAD~1' }
     let(:obj2) { 'HEAD' }
     let(:opts) { { path_limiter: 'lib/' } }
-    let(:facade_repository) { instance_double(Git::Repository) }
     let(:diff_stats_result) { instance_double(Git::DiffStats) }
-
-    before do
-      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
-    end
 
     it 'delegates to facade_repository.diff_stats with all arguments' do
       expect(facade_repository).to receive(:diff_stats).with(objectish, obj2, opts).and_return(diff_stats_result)
@@ -98,17 +98,13 @@ RSpec.describe Git::Base do
   end
 
   describe '#diff' do
+    include_context 'with a stubbed facade_repository'
+
     subject(:result) { described_instance.diff(objectish, obj2) }
 
-    let(:described_instance) { described_class.new }
     let(:objectish) { 'HEAD~1' }
     let(:obj2) { 'HEAD' }
-    let(:facade_repository) { instance_double(Git::Repository) }
     let(:diff_result) { instance_double(Git::Diff) }
-
-    before do
-      allow(described_instance).to receive(:facade_repository).and_return(facade_repository)
-    end
 
     it 'delegates to facade_repository.diff with objectish and obj2' do
       expect(facade_repository).to receive(:diff).with(objectish, obj2).and_return(diff_result)
@@ -126,6 +122,43 @@ RSpec.describe Git::Base do
         expect(facade_repository).to receive(:diff).with('HEAD', nil).and_return(diff_result)
         result
       end
+    end
+  end
+
+  describe '#worktree' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.worktree(dir, commitish) }
+
+    let(:dir) { '/tmp/feature' }
+    let(:commitish) { 'main' }
+    let(:worktree_double) { instance_double(Git::Worktree) }
+
+    it 'delegates to facade_repository.worktree with dir and commitish' do
+      expect(facade_repository).to receive(:worktree).with(dir, commitish).and_return(worktree_double)
+      expect(result).to be(worktree_double)
+    end
+
+    context 'when called without a commitish' do
+      let(:commitish) { nil }
+
+      it 'delegates to facade_repository.worktree with nil as the commitish' do
+        expect(facade_repository).to receive(:worktree).with(dir, nil).and_return(worktree_double)
+        expect(result).to be(worktree_double)
+      end
+    end
+  end
+
+  describe '#worktrees' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.worktrees }
+
+    let(:worktrees_collection) { instance_double(Git::Worktrees) }
+
+    it 'delegates to facade_repository.worktrees' do
+      expect(facade_repository).to receive(:worktrees).and_return(worktrees_collection)
+      expect(result).to be(worktrees_collection)
     end
   end
 end
