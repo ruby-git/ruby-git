@@ -16,7 +16,7 @@ module Git
       # @example Repair specific moved worktrees
       #   Git::Commands::Worktree::Repair.new(execution_context).call('/tmp/moved1', '/tmp/moved2')
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
@@ -48,13 +48,16 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [Boolean, nil] :relative_paths (nil) link worktrees using relative paths,
-        #       overriding the `worktree.useRelativePaths` config option (`--relative-paths`)
+        #     @option options [Boolean, nil] :relative_paths (nil) link worktrees using
+        #       relative paths (`--relative-paths`)
         #
-        #     @option options [Boolean, nil] :no_relative_paths (nil) use absolute paths for worktree links,
-        #       overriding the `worktree.useRelativePaths` config option (`--no-relative-paths`)
+        #       Overrides the `worktree.useRelativePaths` config option.
         #
-        #       Also causes repair to update linking files if there is an absolute/relative
+        #     @option options [Boolean, nil] :no_relative_paths (nil) use absolute paths
+        #       for worktree links (`--no-relative-paths`)
+        #
+        #       Overrides the `worktree.useRelativePaths` config option. Also causes
+        #       repair to update linking files if there is an absolute/relative
         #       mismatch, even if the links are already correct.
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree repair`
@@ -62,6 +65,10 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @raise [Git::VersionError] if git version is below 2.29.0
+        #
+        #     @api public
       end
     end
   end

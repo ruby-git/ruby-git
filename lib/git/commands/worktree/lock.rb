@@ -13,7 +13,7 @@ module Git
       # @example Lock with a reason message
       #   Git::Commands::Worktree::Lock.new(execution_context).call('/tmp/feature', reason: 'on NFS share')
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.53.0
+      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
@@ -36,17 +36,21 @@ module Git
         #
         #     Lock a worktree to prevent it from being pruned
         #
-        #     @param worktree [String] path or unique suffix identifying the worktree to lock
+        #     @param worktree [String] path or unique suffix identifying the
+        #       worktree to lock
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :reason (nil) human-readable explanation stored alongside the lock
+        #     @option options [String] :reason (nil) human-readable explanation stored
+        #       alongside the lock
         #
         #     @return [Git::CommandLineResult] the result of calling `git worktree lock`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
