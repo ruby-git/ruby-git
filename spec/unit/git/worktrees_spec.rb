@@ -173,21 +173,20 @@ RSpec.describe Git::Worktrees do
   # ---------------------------------------------------------------------------
 
   describe '#prune' do
-    context 'when base is a Git::Repository (new form)' do
-      it 'calls worktree_prune on base directly' do
-        expect(repo_base).to receive(:worktree_prune).and_return('')
-        described_instance.prune
-      end
+    subject(:result) { described_instance.prune }
 
-      it 'returns the result from worktree_prune' do
-        allow(repo_base).to receive(:worktree_prune).and_return('pruned output')
-        expect(described_instance.prune).to eq('pruned output')
-      end
+    it 'calls worktree_prune on base directly' do
+      expect(repo_base).to receive(:worktree_prune).and_return('')
+      described_instance.prune
+    end
+
+    it 'returns the result from worktree_prune' do
+      allow(repo_base).to receive(:worktree_prune).and_return('pruned output')
+      expect(result).to eq('pruned output')
     end
 
     context 'when base is a Git::Base (legacy form)' do
-      subject(:collection) { described_class.new(base) }
-
+      let(:described_instance) { described_class.new(base) }
       let(:facade_repo) { instance_double(Git::Repository) }
       let(:base)        { instance_double(Git::Base) }
 
@@ -200,7 +199,7 @@ RSpec.describe Git::Worktrees do
 
       it 'resolves facade_repository and calls worktree_prune on it' do
         expect(facade_repo).to receive(:worktree_prune).and_return('')
-        collection.prune
+        result
       end
     end
   end

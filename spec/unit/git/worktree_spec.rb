@@ -20,19 +20,21 @@ RSpec.describe Git::Worktree do
   # ---------------------------------------------------------------------------
 
   describe '#initialize' do
-    context 'when gcommit is nil' do
-      subject(:instance) { described_class.new(base, dir) }
+    subject(:instance) { described_class.new(base, dir, gcommit) }
 
+    let(:gcommit) { nil }
+
+    context 'when gcommit is nil' do
       it 'sets both full and dir to the path' do
         expect(instance).to have_attributes(full: dir, dir: dir)
       end
     end
 
     context 'when gcommit is non-nil' do
-      subject(:instance) { described_class.new(base, dir, 'abc123') }
+      let(:gcommit) { 'abc123' }
 
       it 'sets full to "dir gcommit" and dir to the path' do
-        expect(instance).to have_attributes(full: "#{dir} abc123", dir: dir)
+        expect(instance).to have_attributes(full: "#{dir} #{gcommit}", dir: dir)
       end
     end
   end
@@ -42,9 +44,13 @@ RSpec.describe Git::Worktree do
   # ---------------------------------------------------------------------------
 
   describe '#gcommit' do
+    subject(:result) { wt.gcommit }
+
+    let(:gcommit) { nil }
+    let(:wt) { described_class.new(base, dir, gcommit) }
+
     context 'when no gcommit was given at construction (nil)' do
       let(:commit_object) { instance_double(Git::Object::Commit) }
-      let(:wt) { described_class.new(base, dir) }
 
       before do
         allow(base).to receive(:gcommit).with(dir).and_return(commit_object)
@@ -56,7 +62,7 @@ RSpec.describe Git::Worktree do
       end
 
       it 'returns the result from base.gcommit' do
-        expect(wt.gcommit).to eq(commit_object)
+        expect(result).to eq(commit_object)
       end
 
       it 'memoizes the result so base.gcommit is not called on subsequent calls' do
@@ -67,10 +73,10 @@ RSpec.describe Git::Worktree do
     end
 
     context 'when a gcommit was given at construction' do
-      let(:wt) { described_class.new(base, dir, 'abc123') }
+      let(:gcommit) { 'abc123' }
 
       it 'returns the pre-set gcommit' do
-        expect(wt.gcommit).to eq('abc123')
+        expect(result).to eq(gcommit)
       end
 
       it 'does not call base.gcommit' do
@@ -83,7 +89,6 @@ RSpec.describe Git::Worktree do
       let(:facade_repo) { instance_double(Git::Repository) }
       let(:base) { instance_double(Git::Base) }
       let(:commit_object) { instance_double(Git::Object::Commit) }
-      let(:wt) { described_class.new(base, dir) }
 
       before do
         allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
@@ -97,7 +102,7 @@ RSpec.describe Git::Worktree do
       end
 
       it 'returns the result from facade_repository.gcommit' do
-        expect(wt.gcommit).to eq(commit_object)
+        expect(result).to eq(commit_object)
       end
     end
   end
@@ -107,10 +112,11 @@ RSpec.describe Git::Worktree do
   # ---------------------------------------------------------------------------
 
   describe '#add' do
+    let(:gcommit) { nil }
+    let(:wt) { described_class.new(base, dir, gcommit) }
+
     context 'when base is a Git::Repository (new form)' do
       context 'when gcommit is nil' do
-        let(:wt) { described_class.new(base, dir) }
-
         it 'calls worktree_add on base directly with dir and nil' do
           expect(base).to receive(:worktree_add).with(dir, nil).and_return('output')
           wt.add
@@ -118,10 +124,10 @@ RSpec.describe Git::Worktree do
       end
 
       context 'when gcommit is set' do
-        let(:wt) { described_class.new(base, dir, 'main') }
+        let(:gcommit) { 'main' }
 
         it 'calls worktree_add on base directly with dir and the gcommit' do
-          expect(base).to receive(:worktree_add).with(dir, 'main').and_return('output')
+          expect(base).to receive(:worktree_add).with(dir, gcommit).and_return('output')
           wt.add
         end
       end
@@ -137,8 +143,6 @@ RSpec.describe Git::Worktree do
       end
 
       context 'when gcommit is nil' do
-        let(:wt) { described_class.new(base, dir) }
-
         it 'resolves facade_repository and calls worktree_add on it with dir and nil' do
           expect(facade_repo).to receive(:worktree_add).with(dir, nil).and_return('output')
           wt.add
@@ -146,10 +150,10 @@ RSpec.describe Git::Worktree do
       end
 
       context 'when gcommit is set' do
-        let(:wt) { described_class.new(base, dir, 'main') }
+        let(:gcommit) { 'main' }
 
         it 'resolves facade_repository and calls worktree_add on it with dir and gcommit' do
-          expect(facade_repo).to receive(:worktree_add).with(dir, 'main').and_return('output')
+          expect(facade_repo).to receive(:worktree_add).with(dir, gcommit).and_return('output')
           wt.add
         end
       end
@@ -161,9 +165,9 @@ RSpec.describe Git::Worktree do
   # ---------------------------------------------------------------------------
 
   describe '#remove' do
-    context 'when base is a Git::Repository (new form)' do
-      let(:wt) { described_class.new(base, dir) }
+    let(:wt) { described_class.new(base, dir) }
 
+    context 'when base is a Git::Repository (new form)' do
       it 'calls worktree_remove on base directly with dir' do
         expect(base).to receive(:worktree_remove).with(dir).and_return('')
         wt.remove
@@ -173,7 +177,6 @@ RSpec.describe Git::Worktree do
     context 'when base is a Git::Base (legacy form)' do
       let(:facade_repo) { instance_double(Git::Repository) }
       let(:base) { instance_double(Git::Base) }
-      let(:wt) { described_class.new(base, dir) }
 
       before do
         allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
@@ -205,7 +208,7 @@ RSpec.describe Git::Worktree do
       let(:gcommit) { 'abc123' }
 
       it 'returns an array containing the full descriptor with gcommit appended' do
-        expect(result).to eq(["#{dir} abc123"])
+        expect(result).to eq(["#{dir} #{gcommit}"])
       end
     end
   end
@@ -228,7 +231,7 @@ RSpec.describe Git::Worktree do
       let(:gcommit) { 'abc123' }
 
       it 'returns "dir gcommit" as the full descriptor' do
-        expect(result).to eq("#{dir} abc123")
+        expect(result).to eq("#{dir} #{gcommit}")
       end
     end
   end

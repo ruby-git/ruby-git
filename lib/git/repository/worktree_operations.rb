@@ -16,8 +16,7 @@ module Git
       # Returns all worktrees as an array of directory and SHA pairs
       #
       # Lists all worktrees attached to the repository, including the main
-      # worktree and all linked worktrees. The output is parsed from
-      # `git worktree list --porcelain`.
+      # worktree and all linked worktrees.
       #
       # @example List all worktrees
       #   repo.worktrees_all

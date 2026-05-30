@@ -951,15 +951,32 @@ module Git
       Git::Branches.new(self)
     end
 
-    # returns a Git::Worktree object for dir, commitish
+    # Returns a {Git::Worktree} object for the given path and optional commitish
+    #
+    # @example Create a worktree object for an existing path
+    #   worktree = repo.worktree('/path/to/worktree')
+    #
+    # @param dir [String] filesystem path of the worktree
+    #
+    # @param commitish [String, nil] branch, tag, or commit to check out
+    #
+    # @return [Git::Worktree] worktree object for the given path
+    #
     def worktree(dir, commitish = nil)
-      Git::Worktree.new(self, dir, commitish)
+      facade_repository.worktree(dir, commitish)
     end
 
-    # returns a Git::worktrees object of all the Git::Worktrees
-    # objects for this repo
+    # Returns a {Git::Worktrees} collection of all worktrees in the repository
+    #
+    # @example List paths for all worktrees
+    #   repo.worktrees.each { |wt| puts wt.dir }
+    #
+    # @return [Git::Worktrees] all linked and main worktrees
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
     def worktrees
-      Git::Worktrees.new(self)
+      facade_repository.worktrees
     end
 
     # @return [Git::Object::Commit] a commit object
