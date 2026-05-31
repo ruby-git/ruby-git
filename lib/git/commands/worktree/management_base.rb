@@ -40,6 +40,8 @@ module Git
         # @return [Hash] the environment variable overrides, always
         #   `{ 'GIT_INDEX_FILE' => nil }`
         #
+        # @api private
+        #
         def env
           { 'GIT_INDEX_FILE' => nil }
         end
