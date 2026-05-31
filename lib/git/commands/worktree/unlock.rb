@@ -10,7 +10,8 @@ module Git
       # @example Unlock a worktree
       #   Git::Commands::Worktree::Unlock.new(execution_context).call('/tmp/feature')
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
+      # @note `arguments` block audited against
+      #   https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #

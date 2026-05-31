@@ -10,7 +10,8 @@ module Git
       # @example List all worktrees in porcelain format
       #   Git::Commands::Worktree::List.new(execution_context).call(porcelain: true)
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
+      # @note `arguments` block audited against
+      #   https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #

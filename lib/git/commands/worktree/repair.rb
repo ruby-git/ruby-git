@@ -16,7 +16,8 @@ module Git
       # @example Repair specific moved worktrees
       #   Git::Commands::Worktree::Repair.new(execution_context).call('/tmp/moved1', '/tmp/moved2')
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-worktree/2.54.0
+      # @note `arguments` block audited against
+      #   https://git-scm.com/docs/git-worktree/2.54.0
       #
       # @see Git::Commands::Worktree Git::Commands::Worktree for the full sub-command list
       #
