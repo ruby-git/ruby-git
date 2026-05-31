@@ -175,13 +175,16 @@ RSpec.describe Git::Worktrees do
   describe '#prune' do
     subject(:result) { described_instance.prune }
 
+    before do
+      allow(repo_base).to receive(:worktree_prune).and_return('pruned output')
+    end
+
     it 'calls worktree_prune on base directly' do
-      expect(repo_base).to receive(:worktree_prune).and_return('')
+      expect(repo_base).to receive(:worktree_prune).and_return('pruned output')
       described_instance.prune
     end
 
     it 'returns the result from worktree_prune' do
-      allow(repo_base).to receive(:worktree_prune).and_return('pruned output')
       expect(result).to eq('pruned output')
     end
 
