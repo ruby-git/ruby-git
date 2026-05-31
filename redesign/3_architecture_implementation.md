@@ -75,7 +75,19 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 #### Phase 3 Public Interface Completion
 
-All 9 domain-object iterations are ✅ complete. Iter 1 (`Git::Stash` B2 + `Git::Stashes` B3) is ✅ complete ([PR #1306](https://github.com/ruby-git/ruby-git/pull/1306)). Iter 2 (`Git::DiffPathStatus` B1) is ✅ complete. Iter 3 (`Git::Object::*`) is ✅ complete. Iter 4 (`Git::Log` A+B) is ✅ complete ([PR #1327](https://github.com/ruby-git/ruby-git/pull/1327)). Iter 5 (`Git::Diff` + `Git::DiffStats` A+B) is ✅ complete (`feat/migrate-diff-to-repository`). Iter 6 (`Git::Status` A+B) is ✅ complete (`feat/migrate-status-to-repository` + `feat/iter6b-delegate-ls-files-config`). Iter 7 (`Git::Branch` + `Git::Remote` A+B) is ✅ complete (`agents/migrate-git-branch-remote-polymorphism`). Iter 8 (`Git::Branches` A+B) is ✅ complete ([PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359)). Iter 9 (`Git::Worktree` + `Git::Worktrees` A+B) is ✅ complete (`agents/pr5-facade-module-improvements`).
+All 9 domain-object migrations are ✅ complete:
+
+| Domain objects | PRs |
+| -------------- | --- |
+| `Git::Stash` + `Git::Stashes` | [PR #1306](https://github.com/ruby-git/ruby-git/pull/1306) |
+| `Git::DiffPathStatus` | — |
+| `Git::Object::*` | — |
+| `Git::Log` | [PR #1327](https://github.com/ruby-git/ruby-git/pull/1327) |
+| `Git::Diff` + `Git::DiffStats` | — |
+| `Git::Status` | — |
+| `Git::Branch` + `Git::Remote` | — |
+| `Git::Branches` | [PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359) |
+| `Git::Worktree` + `Git::Worktrees` | — |
 
 The remaining work splits into six workstreams. Workstreams A1–A4 add missing
 `Git::Repository` facade methods; B wires `Git::Base` factory methods to call
@@ -86,18 +98,29 @@ the last `Git` module utility calls that still route through `Git::Lib`.
 The required `Git::Commands::*` classes already exist (`Clone`, `LsRemote`,
 `ConfigOptionSyntax::*`, `Rm`, `Clean`, `Show`, `Fsck`, etc.). The remaining work is
 facade/adapter wiring, parser reuse, and public-API parity decisions — not new
-command-layer scaffolding.
+command-layer scaffolding. The full scope is defined in Workstreams A–F below.
 
-The full scope is tracked in **[issue #1299](https://github.com/ruby-git/ruby-git/issues/1299)**.
+**Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
+reasoning behind each edge):
 
-**Sequencing**: A1–A4, C1a, C1b, and F can start independently. B depends on A3
-(`tags`/`add_tag`/`delete_tag` factories). E depends on C1a because helper methods
-need `Git::Repository` path state. C1d depends on A, B, and E because it audits the
-full public instance surface before the return-type flip. C1c is the explicit v5
-boundary PR and depends on A, B, C1a, C1b, C1d, and E. D1 depends on C1c. D2 is
-deferred to Phase 4 because `Git::Base#facade_repository` still uses
-`ExecutionContext::Repository.from_base` until `Git::Base` is removed or retired. F
-does not block C1c, but it must complete before Phase 4 can delete `Git::Lib`.
+```mermaid
+graph LR
+    A1 --> C1d
+    A2 --> C1d
+    A3 --> B --> C1d
+    A3 --> C1d
+    A4 --> C1d
+    C1a-1 --> C1a-2
+    C1a-1 --> E --> C1d
+    C1a-1 --> C1c
+    C1a-2 --> C1c
+    C1b --> C1c
+    C1d --> C1c
+    C1c --> D1 --> Phase4["Phase 4"]
+    D2 --> Phase4
+    F1 --> Phase4
+    F2 --> Phase4
+```
 
 ---
 
@@ -107,7 +130,7 @@ does not block C1c, but it must complete before Phase 4 can delete `Git::Lib`.
 `Git::Repository` counterpart yet. Each PR below adds the missing facade methods and
 updates `Git::Base` to delegate.
 
-**A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ⬜
+**PR A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -117,7 +140,7 @@ updates `Git::Base` to delegate.
 
 Files touched: `lib/git/repository/staging.rb`, `spec/unit/git/repository/staging_spec.rb`, `lib/git/base.rb`
 
-**A2 — Extend `Git::Repository::RemoteOperations`: `remotes`, `set_remote_url`, `remote_set_branches`** ⬜
+**PR A2 — Extend `Git::Repository::RemoteOperations`: `remotes`, `set_remote_url`, `remote_set_branches`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -127,7 +150,7 @@ Files touched: `lib/git/repository/staging.rb`, `spec/unit/git/repository/stagin
 
 Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/repository/remote_operations_spec.rb`, `lib/git/base.rb`
 
-**A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ⬜
+**PR A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -137,7 +160,7 @@ Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/reposit
 
 Files touched: `lib/git/repository/object_operations.rb`, `spec/unit/git/repository/object_operations_spec.rb`, `lib/git/base.rb`
 
-**A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ⬜
+**PR A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ⬜
 
 These are read-only repository inspection operations that don't fit an existing topic module.
 
@@ -162,6 +185,8 @@ wiring with no new facade code needed. Ship as one PR (`feat/c0-delegate-base-fa
 
 ⚠️ Depends on A3 (`tags`/`add_tag`/`delete_tag`) before `tag` can be redirected.
 
+**PR B — Redirect `Git::Base` domain-object factories to `facade_repository`** ⬜
+
 | `Git::Base` method | Current | Replace with |
 | --- | --- | --- |
 | `branch(branch_name)` [L936] | `Git::Branch.new(self, ...)` | `facade_repository.branch(branch_name)` |
@@ -178,12 +203,12 @@ wiring with no new facade code needed. Ship as one PR (`feat/c0-delegate-base-fa
 #### Workstream C — C1: Prepare and flip top-level entry points to return `Git::Repository`
 
 ⚠️ C1c, the actual return-type flip, depends on all of Workstreams A, B, and E plus
-C1a/C1b/C1d being complete.
+C1a-1/C1a-2/C1b/C1d being complete.
 
-This workstream has four sub-tasks. C1a and C1b can land early; C1d must run after
+This workstream has five sub-tasks. C1a-1, C1a-2, and C1b can land early; C1d must run after
 facade/helper coverage; C1c is the final step.
 
-**C1a — Add factory class methods to `Git::Repository`** (two PRs)
+**C1a — Add factory class methods to `Git::Repository`** (group: PR C1a-1 and PR C1a-2)
 
 The construction logic currently in `Git::Base.open`, `.bare`, `.clone`, and
 `Git.init` must move to equivalent factory class methods on `Git::Repository` so
@@ -197,7 +222,7 @@ This workstream is intentionally split into two PRs because the path/accessor
 state work is independent of the clone/init work, and combining them would make a
 very large PR.
 
-**C1a-1 — Path state, accessors, and `.open`/`.bare` factories**
+**PR C1a-1 — Path state, accessors, and `.open`/`.bare` factories**
 
 | `Git::Base` class method | Target |
 | --- | --- |
@@ -211,7 +236,7 @@ must also expose the path/accessor surface currently provided by `Git::Base`: `d
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`
 
-**C1a-2 — `.clone` and `.init` factories**
+**PR C1a-2 — `.clone` and `.init` factories**
 
 | `Git::Base` / `Git` method | Target |
 | --- | --- |
@@ -228,7 +253,7 @@ Workstream F.
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`, `lib/git.rb`
 
-**C1b — Move global config singleton ownership off `Git::Base`**
+**PR C1b — Move global config singleton ownership off `Git::Base`**
 
 `Git.configure` and `Git.config` both delegate to `Base.config`, which returns the
 `Git::Base`-owned `Git::Config` singleton. When `Git::Base` is deleted, these break.
@@ -246,7 +271,7 @@ Files touched: `lib/git/config.rb`, `lib/git.rb`, `lib/git/base.rb`,
 `lib/git/execution_context.rb`, `lib/git/execution_context/global.rb`,
 `lib/git/execution_context/repository.rb`
 
-**C1d — Public API parity/deprecation audit before the flip.**
+**PR C1d — Public API parity/deprecation audit before the flip.**
 
 Before `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` return
 `Git::Repository`, every public `Git::Base` method that should survive in v5.0 must
@@ -265,7 +290,7 @@ Required audit buckets:
 This audit is the gate that prevents the entry-point flip from silently dropping
 public methods just because `Git::Base` still exists in the tree.
 
-**C1c — Update `lib/git.rb` entry points to return `Git::Repository`**
+**PR C1c — Update `lib/git.rb` entry points to return `Git::Repository`**
 
 With C1a, C1b, C1d, A, B, and E in place, update `Git.open`, `Git.clone`,
 `Git.init`, and `Git.bare` in `lib/git.rb` to call `Git::Repository.*` and return
@@ -279,7 +304,7 @@ With C1a, C1b, C1d, A, B, and E in place, update `Git.open`, `Git.clone`,
 of 4.x release candidates unless an explicit breaking-change decision has already
 been recorded.
 
-##### D1 — Remove domain-object compatibility fallbacks
+##### PR D1 — Remove domain-object compatibility fallbacks
 
 ⚠️ Depends on C1c. This can be a releasable v5 cleanup PR after `Git.open` returns
 `Git::Repository`, because normal construction paths no longer pass `Git::Base` into
@@ -318,7 +343,7 @@ After D1, domain objects should assume their provider is `Git::Repository` (or a
 compatible object that implements the repository facade methods directly), not an
 object with a `.lib` escape hatch.
 
-##### D2 — Remove the `base_object` bridge
+##### PR D2 — Remove the `base_object` bridge
 
 ⚠️ Do **not** ship D2 as a standalone PR while `Git::Base` remains functional.
 `Git::Base#facade_repository` currently depends on
@@ -343,6 +368,8 @@ helpers would drop existing public `Git::Base` behavior.
 `Git::Base` exposes several block-based helper methods that have no counterpart on
 `Git::Repository`. They must either be migrated before `Git::Base` can be deleted,
 or explicitly deprecated with removal in v6.0. The recommended path is migration.
+
+**PR E — Migrate block-based helper/path-context methods to `Git::Repository`** ⬜
 
 | `Git::Base` method | Proposed destination | Notes |
 | --- | --- | --- |
@@ -371,16 +398,26 @@ Three `Git`-module-level methods bypass `Git::Repository` entirely and call
 non-`Git::Lib` adapter path using `Git::ExecutionContext::Global` plus existing
 parsing logic.
 
+**PR F1 — Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib`** ⬜
+
 | `Git` module method | Current path | Required work |
 | --- | --- | --- |
 | `Git.default_branch(repo, options)` | `Base.repository_default_branch` → `Git::Lib.new.repository_default_branch` | Use `Git::Commands::LsRemote` with `symref: true` and migrate the default-branch parser out of `Git::Lib` |
-| `Git.global_config(name, value)` | `Git::Lib.new.global_config_{get,set,list}` | Use `Git::Commands::ConfigOptionSyntax::{Get,List,Set}` with `global: true` |
 | `Git.ls_remote(location, options)` | `Git::Lib.new.ls_remote` | Migrate to `Git::Commands::LsRemote` (shared with `default_branch`) |
 
 Also migrate `Git::Base.repository_default_branch` to use `Git::Commands::LsRemote`
 directly (sharing the `LsRemote` parser with `Git.ls_remote`). This is the call
 chain behind `Git.default_branch` and can be migrated in the same F1 PR since both
 use the same command class.
+
+Files touched: `lib/git.rb`, `lib/git/base.rb`, and parser/helper code extracted
+from `Git::Lib` as needed
+
+**PR F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`** ⬜
+
+| `Git` module method | Current path | Required work |
+| --- | --- | --- |
+| `Git.global_config(name, value)` | `Git::Lib.new.global_config_{get,set,list}` | Use `Git::Commands::ConfigOptionSyntax::{Get,List,Set}` with `global: true` |
 
 Also audit the `Git` module instance methods `#config` and `#global_config` for
 callers that `include Git`; `#global_config` should continue delegating to the class
@@ -394,13 +431,13 @@ from `Git::Lib` as needed
 
 #### Phase 3 dependency order
 
-1. **Parallel starters**: A1–A4, C1a, C1b, and F can begin independently.
+1. **Parallel starters**: A1–A4, C1a, C1b, F1, and F2 can begin independently.
 2. **B after A3**: B can start once A3 supplies facade tag factories.
 3. **E after C1a**: helper/path-context methods need `Git::Repository` path state.
 4. **C1d after A+B+E**: API parity can only be audited after facade and helper coverage exists.
 5. **C1c is the v5 boundary PR**: the `Git.open`/`.clone`/`.init`/`.bare` return-type flip waits for A, B, C1a, C1b, C1d, and E, and is explicitly not a 4.x-compatible change.
 6. **D1 after C1c**: domain-object fallback removal waits until normal construction no longer passes `Git::Base` into domain objects.
-7. **Phase 4 after D1+F**: deleting `Git::Base`/`Git::Lib` waits for domain-object fallback removal and `Git` module utilities to stop using `Git::Lib`; D2 lands with that deletion, not before it.
+7. **Phase 4 after D1+F1+F2**: deleting `Git::Base`/`Git::Lib` waits for domain-object fallback removal and `Git` module utilities to stop using `Git::Lib`; D2 lands with that deletion, not before it.
 
 ---
 
@@ -411,23 +448,25 @@ Default rule: every PR before C1c must be small, independently releasable on the
 warnings, and top-level factory behavior. Any intentional break must be explicitly
 classified as a v5-only PR with upgrade-note coverage before it lands.
 
-| PR slice | Scope | Release lane | Backward-compatibility rule |
-| --- | --- | --- | --- |
-| A1 | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
-| A2 | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
-| A3 | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
-| A4 | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
-| B | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
-| C1a-1 | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1c. |
-| C1a-2 | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
-| C1b | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
-| E | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
-| F1 | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
-| F2 | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
-| C1d | Public API parity/deprecation audit | 4.x-compatible / docs-only | No runtime behavior changes; every potential break is classified before C1c. |
-| C1c | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
-| D1 | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
-| D2 / Phase 4 | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
+**GitHub PR column:** ⬜ = not yet opened; replace with a PR link (e.g. `[#1234](…)`) when opened, then append ✅ when merged.
+
+| PR slice | GitHub PR | Scope | Release lane | Backward-compatibility rule |
+| --- | --- | --- | --- | --- |
+| A1 | ⬜ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
+| A2 | ⬜ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
+| A3 | ⬜ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
+| A4 | ⬜ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
+| B | ⬜ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
+| C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1c. |
+| C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
+| C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
+| E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
+| F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
+| F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
+| C1d | ⬜ | Public API parity/deprecation audit | 4.x-compatible / docs-only | No runtime behavior changes; every potential break is classified before C1c. |
+| C1c | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
+| D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
+| D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
 
 ---
 
@@ -493,7 +532,6 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 - Staging spec (pattern reference): `spec/unit/git/repository/staging_spec.rb`
 - RemoteOperations (more complex example): `lib/git/repository/remote_operations.rb`
 - Command classes: `lib/git/commands/` (especially `clone.rb`, `ls_remote.rb`, and `config_option_syntax/*`)
-- Full scope: [issue #1299](https://github.com/ruby-git/ruby-git/issues/1299)
 
 ## Phase 1: Foundation and Scaffolding
 
