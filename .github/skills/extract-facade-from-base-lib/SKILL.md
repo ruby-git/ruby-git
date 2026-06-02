@@ -27,6 +27,7 @@ preserve backward compatibility within the migration window.
   - [Pattern A — `Git::Base` wrapper + `Git::Lib` implementation](#pattern-a--gitbase-wrapper--gitlib-implementation)
   - [Pattern B — `Git::Lib`-only (public-by-exposure)](#pattern-b--gitlib-only-public-by-exposure)
   - [Pattern C — `Git::Base`-only (no `Git::Lib` method)](#pattern-c--gitbase-only-no-gitlib-method)
+- [Signature compatibility policy](#signature-compatibility-policy)
 - [Determining the option allowlist](#determining-the-option-allowlist)
 - [Workflow](#workflow)
   - [Branch setup](#branch-setup)
@@ -168,6 +169,25 @@ end
 
 **Public contract source:** `Git::Base#foo` signature and implementation.
 
+## Signature compatibility policy
+
+Use this policy in both extraction mode and review mode:
+
+| Classification | When it applies | Signature requirement |
+| --- | --- | --- |
+| `legacy-contract` | Method existed in `Git::Base` and/or `Git::Lib` as public API | Copy the 4.x signature verbatim, including rare `**opts` forms where they already exist |
+| `5.x-native` | Truly new facade API with no legacy public predecessor | Use `opts = {}` style (kwargs migration is deferred to v6.x for consistency) |
+
+Rules:
+
+1. Default classification is `legacy-contract` when a legacy predecessor exists.
+2. `5.x-native` requires explicit justification in the plan/review notes.
+3. For `legacy-contract` methods, preserve the exact 4.x signature (including
+  rare `**opts` signatures). For `5.x-native` methods, use `opts = {}` style
+  for consistency.
+4. For `legacy-contract` methods, tests must prove the expected call shape,
+   not only command delegation.
+
 ## Determining the option allowlist
 
 When the facade method uses `assert_valid_opts!`, the allowlist (`*_ALLOWED_OPTS`) must
@@ -207,6 +227,8 @@ git checkout -b <feature-branch-name>
 2. Determine which [Source pattern](#source-patterns) applies (A, B, or C).
 3. Note:
    - the public signature (positional args, options hash, keyword args)
+   - the signature classification (`legacy-contract` or `5.x-native`) and
+     justification
    - the **exact return value** of the legacy method — read the source code to
      see whether it ends in `.stdout`, `.stdout.chomp`, a parser call, a domain
      object, `nil`, etc. **Do not assume** from the YARD `@return` tag, which
@@ -244,6 +266,9 @@ Also state:
 
 - The exact **public contract** to preserve (signature + return type + raised
   errors).
+- The signature classification and why (`legacy-contract` or `5.x-native`).
+- For `legacy-contract` methods, confirm the exact 4.x call shape is preserved
+  verbatim (including rare `**opts` signatures).
 - Whether a new topic module is required (justify per
   [facade-implementation REFERENCE.md](../facade-implementation/REFERENCE.md#decision-rules-for-adding-a-new-module)).
   When extracting one method at a time, scan `Git::Base` / `Git::Lib` for
@@ -276,15 +301,17 @@ preserves backward compatibility.
 2. If coverage is insufficient, add **minimal new tests** that exercise the
    current public contract. Use existing legacy test conventions for `Test::Unit`
    tests in `tests/units/`. Do **not** change existing tests.
+3. Add or update facade tests that prove signature behavior:
+   - for `legacy-contract` methods, test the expected legacy call shape(s) (positional hash and/or keyword-arg / `**opts`)
 
-3. Run the new tests and rubocop:
+4. Run the new tests and RuboCop:
 
    ```bash
    bundle exec bin/test <test-file-basename>
    bundle exec rubocop tests/units/<test-file>
    ```
 
-4. Commit:
+5. Commit:
 
    ```bash
    git commit -m "refactor(test): add legacy tests for <method_name>"
@@ -320,6 +347,13 @@ The new facade method **must preserve the source method's public contract
 exactly** — same signature, same return type, same raised errors. Use the
 exact return type the source method documented (String, Array, Hash, domain
 object, `CommandLineResult`).
+
+Apply the [Signature compatibility policy](#signature-compatibility-policy):
+
+- `legacy-contract`: preserve the 4.x call shape verbatim and add call-shape
+  tests.
+- `5.x-native`: use `opts = {}` style; classification must be explicit in
+  migration notes.
 
 For Pattern A and B migrations, copy any pre-processing logic
 (option whitelisting, deprecation rewrites, key normalization) from `Git::Lib`
@@ -475,9 +509,11 @@ of Git::Base#<method_name>.
 
 - [ ] **Pattern identified.** Confirm which source pattern (A, B, or C) applies
   by reading `Git::Base` and `Git::Lib`.
-- [ ] **Signature preserved.** The facade method's signature (positional args,
-  optional args, keyword splat) matches the 4.x `Git::Base#<method>` signature
-  exactly.
+- [ ] **Classification recorded.** The method is explicitly classified as
+  `legacy-contract` or `5.x-native`, with rationale.
+- [ ] **Signature policy respected.** For `legacy-contract` methods, facade
+  signature behavior preserves the legacy call shape contract; for
+  `5.x-native`, `opts = {}` style is confirmed (no `**kwargs` in v5).
 - [ ] **Return type correct.** The facade returns the same type as the legacy
   implementation (e.g. `String` from `.stdout`, not `CommandLineResult`). Read
   the source — do not rely on YARD tags alone.
@@ -523,6 +559,8 @@ of Git::Base#<method_name>.
 - [ ] **Unit specs present.** `spec/unit/git/repository/<topic>_spec.rb`
   covers: default call, explicit path(s), each documented option, unknown
   option raises `ArgumentError`, return value is `.stdout`.
+- [ ] **Call-shape tests present.** For `legacy-contract` methods, tests assert
+  the expected legacy call shape(s) as used in 4.x (positional hash and/or keyword-arg / `**opts` where applicable).
 - [ ] **Integration specs present (or explicitly skipped).** Write
   `spec/integration/git/repository/<topic>_spec.rb` **only** when the facade
   adds behavior not exercised by any single command's integration tests —
