@@ -17,10 +17,10 @@ risk and allows for a gradual, controlled migration to the new architecture.
     - [Workstream E — Migrate or deprecate instance helper methods](#workstream-e--migrate-or-deprecate-instance-helper-methods)
     - [Workstream F — `Git` module utility methods still using `Git::Lib` directly](#workstream-f--git-module-utility-methods-still-using-gitlib-directly)
     - [Phase 3 dependency order](#phase-3-dependency-order)
-    - [Phase 3 PR slicing and release compatibility](#phase-3-pr-slicing-and-release-compatibility)
+    - [Phase 3 steps and release compatibility](#phase-3-steps-and-release-compatibility)
     - [Phase 3 completion criteria](#phase-3-completion-criteria)
     - [Facade coverage checklist](#facade-coverage-checklist)
-    - [Quality gates (per PR)](#quality-gates-per-pr)
+    - [Quality gates (per step)](#quality-gates-per-step)
     - [Reference Files](#reference-files)
 - [Phase 1: Foundation and Scaffolding](#phase-1-foundation-and-scaffolding)
 - [Phase 2: The Strangler Fig Pattern - Migrating Commands](#phase-2-the-strangler-fig-pattern---migrating-commands)
@@ -89,11 +89,14 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Branches` | [PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359) |
 | `Git::Worktree` + `Git::Worktrees` | — |
 
-The remaining work splits into six workstreams. Workstreams A1–A4 add missing
-`Git::Repository` facade methods; B wires `Git::Base` factory methods to call
-the facade; C moves construction/global state and flips the top-level entry points;
-D removes compatibility bridges; E migrates helper/path-context methods; F removes
-the last `Git` module utility calls that still route through `Git::Lib`.
+The remaining work splits into six workstreams:
+
+- Workstream A adds missing `Git::Repository` facade methods
+- B wires `Git::Base` factory methods to call the facade
+- C moves construction/global state and flips the top-level entry points
+- D removes compatibility bridges
+- E migrates helper/path-context methods
+- F removes the last `Git` module utility calls that still route through `Git::Lib`
 
 The required `Git::Commands::*` classes already exist (`Clone`, `LsRemote`,
 `ConfigOptionSyntax::*`, `Rm`, `Clean`, `Show`, `Fsck`, etc.). The remaining work is
@@ -105,18 +108,19 @@ reasoning behind each edge):
 
 ```mermaid
 graph LR
-    A1 --> C1d
-    A2 --> C1d
-    A3 --> B --> C1d
-    A3 --> C1d
-    A4 --> C1d
+    A1 --> C1c-2
+    A2 --> C1c-2
+    A3 --> B --> C1c-2
+    A3 --> C1c-2
+    A4 --> C1c-2
     C1a-1 --> C1a-2
-    C1a-1 --> E --> C1d
-    C1a-1 --> C1c
-    C1a-2 --> C1c
-    C1b --> C1c
-    C1d --> C1c
-    C1c --> D1 --> Phase4["Phase 4"]
+    C1a-1 --> E --> C1c-2
+    C1a-1 --> C1c-2
+    C1a-2 --> C1c-2
+    C1b --> C1c-2
+    C1c-1 --> C1c-2
+    C1c-2 --> C1d
+    C1d --> D1 --> Phase4["Phase 4"]
     D2 --> Phase4
     F1 --> Phase4
     F2 --> Phase4
@@ -127,10 +131,10 @@ graph LR
 #### Workstream A — Fill facade coverage gaps
 
 `Git::Base` still calls `lib.*` directly for 11 high-priority methods that have no
-`Git::Repository` counterpart yet. Each PR below adds the missing facade methods and
+`Git::Repository` counterpart yet. Each step below adds the missing facade methods and
 updates `Git::Base` to delegate.
 
-**PR A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ⬜
+**Step A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -140,7 +144,7 @@ updates `Git::Base` to delegate.
 
 Files touched: `lib/git/repository/staging.rb`, `spec/unit/git/repository/staging_spec.rb`, `lib/git/base.rb`
 
-**PR A2 — Extend `Git::Repository::RemoteOperations`: `remotes`, `set_remote_url`, `remote_set_branches`** ⬜
+**Step A2 — Extend `Git::Repository::RemoteOperations`: `remotes`, `set_remote_url`, `remote_set_branches`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -150,7 +154,7 @@ Files touched: `lib/git/repository/staging.rb`, `spec/unit/git/repository/stagin
 
 Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/repository/remote_operations_spec.rb`, `lib/git/base.rb`
 
-**PR A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ⬜
+**Step A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ⬜
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -160,7 +164,7 @@ Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/reposit
 
 Files touched: `lib/git/repository/object_operations.rb`, `spec/unit/git/repository/object_operations_spec.rb`, `lib/git/base.rb`
 
-**PR A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ⬜
+**Step A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ⬜
 
 These are read-only repository inspection operations that don't fit an existing topic module.
 
@@ -172,7 +176,7 @@ These are read-only repository inspection operations that don't fit an existing 
 Files touched: `lib/git/repository/inspecting.rb` (new), `lib/git/repository.rb` (add `include Git::Repository::Inspecting`), `spec/unit/git/repository/inspecting_spec.rb` (new), `lib/git/base.rb`
 
 **Not covered by A1–A4:** lower-level public methods such as `describe`, `repack`,
-`gc`, `apply`, `apply_mail`, `read_tree`, and `cat_file` are handled by the C1d
+`gc`, `apply`, `apply_mail`, `read_tree`, and `cat_file` are handled by the C1c-2
 public-API parity audit before `Git.open` starts returning `Git::Repository`.
 
 ---
@@ -185,7 +189,7 @@ wiring with no new facade code needed. Ship as one PR (`feat/c0-delegate-base-fa
 
 ⚠️ Depends on A3 (`tags`/`add_tag`/`delete_tag`) before `tag` can be redirected.
 
-**PR B — Redirect `Git::Base` domain-object factories to `facade_repository`** ⬜
+**Step B — Redirect `Git::Base` domain-object factories to `facade_repository`** ⬜
 
 | `Git::Base` method | Current | Replace with |
 | --- | --- | --- |
@@ -202,13 +206,13 @@ wiring with no new facade code needed. Ship as one PR (`feat/c0-delegate-base-fa
 
 #### Workstream C — C1: Prepare and flip top-level entry points to return `Git::Repository`
 
-⚠️ C1c, the actual return-type flip, depends on all of Workstreams A, B, and E plus
-C1a-1/C1a-2/C1b/C1d being complete.
+⚠️ C1d, the actual return-type flip, depends on all of Workstreams A, B, and E plus
+C1a-1/C1a-2/C1b/C1c being complete.
 
-This workstream has five sub-tasks. C1a-1, C1a-2, and C1b can land early; C1d must run after
-facade/helper coverage; C1c is the final step.
+This workstream has six sub-tasks. C1a-1, C1a-2, and C1b can land early; C1c-1 and C1c-2 must run after
+facade/helper coverage; C1d is the final step.
 
-**C1a — Add factory class methods to `Git::Repository`** (group: PR C1a-1 and PR C1a-2)
+**C1a — Add factory class methods to `Git::Repository`** (group: Step C1a-1 and Step C1a-2)
 
 The construction logic currently in `Git::Base.open`, `.bare`, `.clone`, and
 `Git.init` must move to equivalent factory class methods on `Git::Repository` so
@@ -222,7 +226,7 @@ This workstream is intentionally split into two PRs because the path/accessor
 state work is independent of the clone/init work, and combining them would make a
 very large PR.
 
-**PR C1a-1 — Path state, accessors, and `.open`/`.bare` factories**
+**Step C1a-1 — Path state, accessors, and `.open`/`.bare` factories**
 
 | `Git::Base` class method | Target |
 | --- | --- |
@@ -236,7 +240,7 @@ must also expose the path/accessor surface currently provided by `Git::Base`: `d
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`
 
-**PR C1a-2 — `.clone` and `.init` factories**
+**Step C1a-2 — `.clone` and `.init` factories**
 
 | `Git::Base` / `Git` method | Target |
 | --- | --- |
@@ -253,7 +257,7 @@ Workstream F.
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`, `lib/git.rb`
 
-**PR C1b — Move global config singleton ownership off `Git::Base`**
+**Step C1b — Move global config singleton ownership off `Git::Base`**
 
 `Git.configure` and `Git.config` both delegate to `Base.config`, which returns the
 `Git::Base`-owned `Git::Config` singleton. When `Git::Base` is deleted, these break.
@@ -271,28 +275,58 @@ Files touched: `lib/git/config.rb`, `lib/git.rb`, `lib/git/base.rb`,
 `lib/git/execution_context.rb`, `lib/git/execution_context/global.rb`,
 `lib/git/execution_context/repository.rb`
 
-**PR C1d — Public API parity/deprecation audit before the flip.**
+**C1c — Public API parity/deprecation audit before the flip** (group: Step C1c-1 and Step C1c-2)
 
 Before `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` return
 `Git::Repository`, every public `Git::Base` method that should survive in v5.0 must
 exist on `Git::Repository`; every method that should not survive must be explicitly
-documented as a v5 breaking change or already deprecated for removal.
+documented as a v5 breaking change or already deprecated for removal. This audit is
+the gate that prevents the entry-point flip from silently dropping public methods
+just because `Git::Base` still exists in the tree.
+
+**Step C1c-1 — Signature-compatibility guidance and process** ⬜
+
+Update extraction and review skills to document the signature-compatibility
+classification policy (legacy-contract vs 5.x-native), parity-check requirements,
+and test-creation expectations so that all future extraction work follows consistent
+rules before the remediation sweep begins.
+
+| Artifact | Change |
+| --- | --- |
+| `extract-facade-from-base-lib/SKILL.md` | Add `## Signature compatibility policy` section with legacy-contract vs 5.x-native classification table and four rules (legacy-contract preserves exact 4.x signatures, including rare `**opts`; 5.x-native uses `opts = {}` for consistency) |
+| `facade-implementation/SKILL.md` | Add policy classification check to review workflow (step 4) |
+| `facade-test-conventions/SKILL.md` | Add `context 'signature compatibility'` grouping convention and review checks |
+
+Files touched: `.github/skills/extract-facade-from-base-lib/SKILL.md`,
+`.github/skills/facade-implementation/SKILL.md`,
+`.github/skills/facade-test-conventions/SKILL.md`
+
+Tracked as [Issue #1369](https://github.com/ruby-git/ruby-git/issues/1369).
+
+**Step C1c-2 — End-of-Phase-3 public-API parity audit and remediation sweep** ⬜
+
+Compare every public `Git::Base` method against `Git::Repository`; fix mismatches
+or explicitly record each as a documented v5 breaking change. No unclassified
+compatibility gap may remain before C1d.
 
 Required audit buckets:
 
-| Surface | Required decision before C1c |
+| Surface | Required decision before C1d |
 | --- | --- |
 | Path/accessors | `dir`, `repo`, `index`, `repo_size` must exist on `Git::Repository` (C1a-1 owns this) |
 | Compatibility aliases/wrappers | `remove`, `revparse`, `diff_name_status`, `reset_hard`, `is_local_branch?`, `is_remote_branch?`, `is_branch?`, `checkout` must be migrated or intentionally removed with upgrade notes (`checkout` is called by `Git.export` on the `Git.clone` result) |
 | Low-level public methods | `describe`, `repack`, `gc`, `apply`, `apply_mail`, `read_tree`, `cat_file` must be migrated to topic modules or intentionally removed with upgrade notes |
 | Factory/domain-object returns | Confirm B plus A2/A3 cover `branch`, `branches`, `remote`, `remotes`, `tag`, `tags`, object factories, and tag create/delete return shapes |
+| Keyword-arg facades | For `legacy-contract` methods, preserve the exact 4.x call shape (including rare `**opts` signatures); for `5.x-native` methods, use `opts = {}` style for consistency |
 
-This audit is the gate that prevents the entry-point flip from silently dropping
-public methods just because `Git::Base` still exists in the tree.
+Files touched: `lib/git/repository/*.rb` (topic modules for migrated methods),
+`lib/git/base.rb`, upgrade notes / CHANGELOG for documented removals
 
-**PR C1c — Update `lib/git.rb` entry points to return `Git::Repository`**
+Tracked as [Issue #1370](https://github.com/ruby-git/ruby-git/issues/1370).
 
-With C1a, C1b, C1d, A, B, and E in place, update `Git.open`, `Git.clone`,
+**Step C1d — Update `lib/git.rb` entry points to return `Git::Repository`**
+
+With C1a, C1b, C1c, A, B, and E in place, update `Git.open`, `Git.clone`,
 `Git.init`, and `Git.bare` in `lib/git.rb` to call `Git::Repository.*` and return
 `Git::Repository` directly, bypassing `Git::Base` entirely.
 
@@ -304,9 +338,9 @@ With C1a, C1b, C1d, A, B, and E in place, update `Git.open`, `Git.clone`,
 of 4.x release candidates unless an explicit breaking-change decision has already
 been recorded.
 
-##### PR D1 — Remove domain-object compatibility fallbacks
+##### Step D1 — Remove domain-object compatibility fallbacks
 
-⚠️ Depends on C1c. This can be a releasable v5 cleanup PR after `Git.open` returns
+⚠️ Depends on C1d. This can be a releasable v5 cleanup PR after `Git.open` returns
 `Git::Repository`, because normal construction paths no longer pass `Git::Base` into
 domain objects. It is breaking for callers that directly construct domain objects
 with a `Git::Base` provider, so that removal must be documented in the upgrade notes.
@@ -343,7 +377,7 @@ After D1, domain objects should assume their provider is `Git::Repository` (or a
 compatible object that implements the repository facade methods directly), not an
 object with a `.lib` escape hatch.
 
-##### PR D2 — Remove the `base_object` bridge
+##### Step D2 — Remove the `base_object` bridge
 
 ⚠️ Do **not** ship D2 as a standalone PR while `Git::Base` remains functional.
 `Git::Base#facade_repository` currently depends on
@@ -362,14 +396,14 @@ removes `Git::Base` as a usable public entry point):
 #### Workstream E — Migrate or deprecate instance helper methods
 
 ⚠️ Depends on C1a (factory/path state must exist so the helpers have a home). E must
-complete before C1c, because `Git.open` returning `Git::Repository` without these
+complete before C1d, because `Git.open` returning `Git::Repository` without these
 helpers would drop existing public `Git::Base` behavior.
 
 `Git::Base` exposes several block-based helper methods that have no counterpart on
 `Git::Repository`. They must either be migrated before `Git::Base` can be deleted,
 or explicitly deprecated with removal in v6.0. The recommended path is migration.
 
-**PR E — Migrate block-based helper/path-context methods to `Git::Repository`** ⬜
+**Step E — Migrate block-based helper/path-context methods to `Git::Repository`** ⬜
 
 | `Git::Base` method | Proposed destination | Notes |
 | --- | --- | --- |
@@ -398,7 +432,7 @@ Three `Git`-module-level methods bypass `Git::Repository` entirely and call
 non-`Git::Lib` adapter path using `Git::ExecutionContext::Global` plus existing
 parsing logic.
 
-**PR F1 — Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib`** ⬜
+**Step F1 — Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib`** ⬜
 
 | `Git` module method | Current path | Required work |
 | --- | --- | --- |
@@ -413,7 +447,7 @@ use the same command class.
 Files touched: `lib/git.rb`, `lib/git/base.rb`, and parser/helper code extracted
 from `Git::Lib` as needed
 
-**PR F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`** ⬜
+**Step F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`** ⬜
 
 | `Git` module method | Current path | Required work |
 | --- | --- | --- |
@@ -434,37 +468,38 @@ from `Git::Lib` as needed
 1. **Parallel starters**: A1–A4, C1a, C1b, F1, and F2 can begin independently.
 2. **B after A3**: B can start once A3 supplies facade tag factories.
 3. **E after C1a**: helper/path-context methods need `Git::Repository` path state.
-4. **C1d after A+B+E**: API parity can only be audited after facade and helper coverage exists.
-5. **C1c is the v5 boundary PR**: the `Git.open`/`.clone`/`.init`/`.bare` return-type flip waits for A, B, C1a, C1b, C1d, and E, and is explicitly not a 4.x-compatible change.
-6. **D1 after C1c**: domain-object fallback removal waits until normal construction no longer passes `Git::Base` into domain objects.
+4. **C1c-2 after A+B+E+C1c-1**: API parity remediation can only be actioned after facade and helper coverage exists and the guidance/policy (C1c-1) is in place.
+5. **C1d is the v5 boundary step**: the `Git.open`/`.clone`/`.init`/`.bare` return-type flip waits for A, B, C1a, C1b, C1c-1, C1c-2, and E, and is explicitly not a 4.x-compatible change.
+6. **D1 after C1d**: domain-object fallback removal waits until normal construction no longer passes `Git::Base` into domain objects.
 7. **Phase 4 after D1+F1+F2**: deleting `Git::Base`/`Git::Lib` waits for domain-object fallback removal and `Git` module utilities to stop using `Git::Lib`; D2 lands with that deletion, not before it.
 
 ---
 
-#### Phase 3 PR slicing and release compatibility
+#### Phase 3 steps and release compatibility
 
-Default rule: every PR before C1c must be small, independently releasable on the
+Default rule: every step before C1d that produces code must be small, independently releasable on the
 4.x-compatible line, and must preserve public signatures, return values, deprecation
 warnings, and top-level factory behavior. Any intentional break must be explicitly
 classified as a v5-only PR with upgrade-note coverage before it lands.
 
 **GitHub PR column:** ⬜ = not yet opened; replace with a PR link (e.g. `[#1234](…)`) when opened, then append ✅ when merged.
 
-| PR slice | GitHub PR | Scope | Release lane | Backward-compatibility rule |
+| Step | GitHub PR | Scope | Release lane | Backward-compatibility rule |
 | --- | --- | --- | --- | --- |
 | A1 | ⬜ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
 | A2 | ⬜ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
 | A3 | ⬜ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
 | A4 | ⬜ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
 | B | ⬜ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
-| C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1c. |
+| C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
-| C1d | ⬜ | Public API parity/deprecation audit | 4.x-compatible / docs-only | No runtime behavior changes; every potential break is classified before C1c. |
-| C1c | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
+| C1c-1 | ⬜ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
+| C1c-2 | ⬜ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
+| C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
 | D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
 | D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
 
@@ -485,8 +520,9 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1a-1: `Git::Repository.open`/`.bare` + path state | `Git::Repository.open` and `.bare` exist; `resolve_paths` and `root_of_worktree` helpers are on `Git::Repository`; repository instances expose `dir`, `repo`, `index`, and `repo_size`; focused specs cover working and bare construction. |
 | C1a-2: `Git::Repository.clone`/`.init` | `Git::Repository.clone` and `.init` exist and preserve legacy path resolution, `git_ssh:`, `binary_path:`, `log:`, `index:`, and `repository:` behavior; clone/init use `Git::ExecutionContext::Global`, not `Git::Lib`; `Git.init` in `lib/git.rb` no longer passes `Git::Lib.new` into `Commands::Init`; focused specs cover clone and init construction. |
 | C1b: global config ownership | `Git.config`, `Git.configure`, `Git.git_version`, `Git.binary_version`, and `Git::ExecutionContext` resolve global config without referencing `Git::Base.config`; both the method body of `git_version` and the default-parameter expression of `binary_version` are updated; `Git::Base.config` remains only as a compatibility delegator while `Git::Base` exists; specs prove runtime changes to global `binary_path` and `git_ssh` are still honored. |
-| C1d: public API parity/deprecation audit | A generated or reviewed public-method inventory compares `Git::Base` and `Git::Repository`; every surviving public method has a repository implementation and focused coverage; every intentional removal has an upgrade-note/deprecation decision; the entry-point flip has no unclassified public API loss. |
-| C1c: entry-point flip | `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` return `Git::Repository`; common existing workflows still pass through those entry points; YARD return docs are updated; no top-level factory method calls `Git::Base.*`; full suite passes. |
+| C1c-1: signature-compatibility guidance | Skill updates merged (Issue #1369): `extract-facade-from-base-lib`, `facade-implementation`, and `facade-test-conventions` skills document the legacy-contract vs 5.x-native classification policy, parity-check requirements, and test-creation expectations; legacy-contract methods preserve exact 4.x call shapes while 5.x-native methods use `opts = {}`; keyword-arg remediation list for C1c-2 is established. |
+| C1c-2: public-API parity audit and remediation | End-of-Phase-3 sweep complete (Issue #1370): a public-method inventory compares `Git::Base` and `Git::Repository`; every surviving public method has a repository implementation and focused coverage; every intentional removal has an upgrade-note/deprecation decision; no unclassified compatibility gap remains. |
+| C1d: entry-point flip | `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` return `Git::Repository`; common existing workflows still pass through those entry points; YARD return docs are updated; no top-level factory method calls `Git::Base.*`; full suite passes. |
 | D1: domain-object fallback removal | No `is_a?(Git::Base)` guards remain; no `@base.lib` fallback remains in domain objects; direct `Git::Base` provider support is documented as a v5-only removal; full suite passes. |
 | D2 / Phase 4: `base_object` bridge removal | `Git::ExecutionContext::Repository` no longer accepts or exposes `base_object`; `from_base` is removed or converted to a non-`Git::Base` path; this lands only with the PR that deletes or retires `Git::Base`, so no releasable state contains a broken `Git::Base#facade_repository`. |
 | E: instance helper methods | `Git::Repository` implements or explicitly deprecates `chdir`, `with_index`, `with_temp_index`, `with_working`, `with_temp_working`, `set_index`, and `set_working`; context rebuilding after index/worktree changes is covered by specs; helpers yield the same values and restore state after block exit/errors. |
@@ -496,7 +532,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 
 #### Facade coverage checklist
 
-| Facade PR | Status |
+| Step | Status |
 | --- | --- |
 | A1: `Staging` — `rm`, `clean`, `ignored_files` | ⬜ |
 | A2: `RemoteOperations` — `remotes`, `set_remote_url`, `remote_set_branches` | ⬜ |
@@ -506,21 +542,22 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ⬜ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ⬜ |
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
-| C1d: Public API parity/deprecation audit before entry-point flip | ⬜ |
-| C1c: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
+| C1c-1: Guidance/process updates for signature compatibility (#1369) | ⬜ |
+| C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ⬜ |
+| C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ⬜ (v5 cleanup) |
 | D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
 | E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ⬜ |
 | F: `Git` module utilities (`default_branch`, `global_config`, `ls_remote`) off `Git::Lib` | ⬜ (Phase 4 prereq) |
 
-#### Quality gates (per PR)
+#### Quality gates (per step)
 
 1. Run the focused spec for the touched module: `bundle exec rspec spec/unit/git/repository/<topic>_spec.rb`
-2. Run the full suite: `bundle exec rake` — covers Test::Unit, RSpec, rubocop, yard, and build
-3. For every 4.x-compatible PR before C1c: confirm no public `Git`, `Git::Base`, or `Git::Lib` method signature/return contract changes unless the PR explicitly documents a compatible deprecation path
+2. Run the full suite: `bundle exec rake default:parallel` — CI-equivalent aggregate task covering Test::Unit, RSpec, RuboCop, YARD, and build
+3. For every 4.x-compatible step before C1d: confirm no public `Git`, `Git::Base`, or `Git::Lib` method signature/return contract changes unless the step explicitly documents a compatible deprecation path
 4. After C1b: confirm `Git.configure`, `Git.config`, `Git.git_version`, and `Git::ExecutionContext` no longer depend on `Git::Base.config`
-5. After C1d: compare `Git::Base` public methods against `Git::Repository` and record every intentional removal in upgrade notes
-6. After C1c: confirm `Git.open(...)` returns a `Git::Repository` instance and common legacy call sites still work or fail with documented breaking-change coverage
+5. After C1c-2: compare `Git::Base` public methods against `Git::Repository` and record every intentional removal in upgrade notes
+6. After C1d: confirm `Git.open(...)` returns a `Git::Repository` instance and common legacy call sites still work or fail with documented breaking-change coverage
 7. After D1: confirm no guards or legacy lib fallbacks remain: `grep -r 'is_a?(Git::Base)\|@base\.lib' lib/`
 8. After D2: confirm no `base_object` or `from_base` bridge remains and `Git::Base` is deleted or retired in the same releasable PR
 9. After F: confirm no `Git::Lib.new` calls remain in `lib/git.rb`: `grep -n 'Lib.new' lib/git.rb`

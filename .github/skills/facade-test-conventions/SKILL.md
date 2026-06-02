@@ -97,7 +97,7 @@ tests override stdout in isolation — e.g.
 `let(:add_result) { instance_double(Git::CommandLineResult, stdout: 'fixture output') }`
 in a nested `context` — without affecting other tests in the file.
 
-Three rules:
+Setup invariants:
 
 - The subject is an instance of `Git::Repository`, **not** the module itself.
   Modules are mixed into the class; tests must exercise the class to reflect
@@ -132,6 +132,9 @@ Three rules:
 - **Deprecation handling** — when the facade rewrites or warns on deprecated
   keys, test that the deprecation warning is emitted and the new key is
   forwarded.
+- **Signature compatibility call shapes** — when a facade method preserves a
+  legacy public contract, include tests for each call shape the 4.x public API
+  used (positional hash and/or keyword-arg / `**opts` where applicable).
 
 #### Expectations for command invocation
 
@@ -215,6 +218,8 @@ when present:
   key-rewrite tests
 - `context 'input validation'` — `ArgumentError` raised by the facade itself
   (not by the command)
+- `context 'signature compatibility'` — for legacy-contract methods, exercises
+  required call shapes (legacy positional hash and/or keyword-arg / `**opts` forms)
 
 The exit code section that command specs use does **not** apply to facade specs
 — exit-status handling is the command's concern; the facade's tests assume the
@@ -317,6 +322,16 @@ covered by command integration tests.
   required attributes, presence of expected entries).
 - Multi-command orchestration produces the documented end-to-end value, not
   intermediate command results.
+- For signature-compatibility behavior that is user-visible at runtime,
+  integration coverage may assert that legacy call shapes are accepted.
+
+#### Review checks for signature policy
+
+When reviewing existing facade tests, add these checks:
+
+1. If the method is `legacy-contract`, unit tests cover required call shapes.
+2. Test expectations validate public contract behavior, not only command
+   delegation internals.
 
 #### What integration tests do not assert
 

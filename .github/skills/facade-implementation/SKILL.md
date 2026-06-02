@@ -209,6 +209,11 @@ This skill supports three modes. Determine which mode applies before starting:
      method that uses it (not grouped at the top of the module)
    - handles defaults and deprecations explicitly, not by relying on command
      internals
+   - is explicitly classified as `legacy-contract` (legacy predecessor exists)
+     or `5.x-native` (new facade API), and signature shape matches that
+     classification
+   - has tests that verify call-shape compatibility when classification is
+     `legacy-contract` (positional hash and/or keyword-arg / `**opts` forms where required)
 
 5. **Run quality gates** — discover the prerequisite tasks for `default:parallel`
    and run them sequentially, fixing failures before advancing:
@@ -242,6 +247,8 @@ For **review** mode, produce:
 | Argument pre-processing complete | Pass/Fail | ... |
 | Option whitelisting (where required) | Pass/Fail | ... |
 | `*_ALLOWED_OPTS` placed immediately before its method | Pass/Fail | ... |
+| Signature classification documented | Pass/Fail | ... |
+| Signature shape matches classification | Pass/Fail | ... |
 | Return value matches documented contract | Pass/Fail | ... |
 | Parser/result-class wiring correct | Pass/Fail | ... |
 | YARD docs complete | Pass/Fail | ... |
