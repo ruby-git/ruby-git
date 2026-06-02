@@ -34,12 +34,13 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 ## Progress Tracker
 
-| Phase | Status | Description |
-| ----- | ------ | ----------- |
-| Phase 1 | ✅ Complete | Foundation and scaffolding |
-| Phase 2 | ✅ Complete | Migrating commands (all checklist items done) |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) |
-| Phase 4 | 🔲 Not Started | Final cleanup and release |
+| Phase | Status | Description | Estimated Effort | Percent Complete |
+| ----- | ------ | ----------- | :--------------: | :--------------: |
+| Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
+| Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 40% |
+| Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
+| **TOTAL** | -- | -- | **100%** | **63%** |
 
 ### Facade Modules Completed
 
