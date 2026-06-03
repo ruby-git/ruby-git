@@ -38,9 +38,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- | :--------------: | :--------------: |
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 40% |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 45% |
 | Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **63%** |
+| **TOTAL** | -- | -- | **100%** | **65%** |
 
 ### Facade Modules Completed
 
@@ -53,6 +53,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote`, `config_remote`, `remotes`, `set_remote_url`, `remote_set_branches` |
 | `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
 | `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
+| `Git::Repository::Inspecting` | `lib/git/repository/inspecting.rb` | ✅ | `show`, `fsck` |
 | `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive`, `tags`, `add_tag`, `delete_tag` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
 | `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`), `untracked_files`, `status`; `Git::Base#ls_files` delegates to facade |
@@ -165,7 +166,7 @@ Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/reposit
 
 Files touched: `lib/git/repository/object_operations.rb`, `spec/unit/git/repository/object_operations_spec.rb`, `lib/git/base.rb`
 
-**Step A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ⬜
+**Step A4 — New `Git::Repository::Inspecting` module: `show`, `fsck`** ✅
 
 These are read-only repository inspection operations that don't fit an existing topic module.
 
@@ -488,9 +489,9 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | Step | GitHub PR | Scope | Release lane | Backward-compatibility rule |
 | --- | --- | --- | --- | --- |
 | A1 | ✅ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
-| A2 | ⬜ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
+| A2 | ✅ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
 | A3 | ✅ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
-| A4 | ⬜ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
+| A4 | ✅ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
 | B | ⬜ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
 | C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
@@ -536,9 +537,9 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | Step | Status |
 | --- | --- |
 | A1: `Staging` — `rm`, `clean`, `ignored_files` | ✅ |
-| A2: `RemoteOperations` — `remotes`, `set_remote_url`, `remote_set_branches` | ⬜ |
-| A3: `ObjectOperations` — `tags`, `add_tag`, `delete_tag` | ⬜ |
-| A4: new `Inspecting` — `show`, `fsck` | ⬜ |
+| A2: `RemoteOperations` — `remotes`, `set_remote_url`, `remote_set_branches` | ✅ |
+| A3: `ObjectOperations` — `tags`, `add_tag`, `delete_tag` | ✅ |
+| A4: new `Inspecting` — `show`, `fsck` | ✅ |
 | B (C0): `Git::Base` factory delegation wiring | ⬜ |
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ⬜ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ⬜ |
