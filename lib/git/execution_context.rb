@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'logger'
+require 'git/command_line'
 
 module Git
   # Base class for execution contexts that run git commands
