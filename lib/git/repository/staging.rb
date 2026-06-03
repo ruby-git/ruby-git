@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
 require 'git/commands/add'
+require 'git/commands/clean'
+require 'git/commands/ls_files'
 require 'git/commands/reset'
+require 'git/commands/rm'
+require 'git/escaped_path'
 require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Facade methods for staging-area operations: adding and resetting files
+    # Facade methods for staging-area operations: adding, resetting, removing, and
+    # cleaning files
     #
     # Included by {Git::Repository}.
     #
@@ -84,6 +89,302 @@ module Git
         SharedPrivate.assert_valid_opts!(RESET_ALLOWED_OPTS, **)
         Git::Commands::Reset.new(@execution_context).call(commitish, **).stdout
       end
+
+      # Option keys accepted by {#rm}
+      RM_ALLOWED_OPTS = %i[
+        force f dry_run n r cached ignore_unmatch sparse quiet q
+        pathspec_from_file pathspec_file_nul
+      ].freeze
+      private_constant :RM_ALLOWED_OPTS
+
+      # Remove file(s) from the working tree and the index
+      #
+      # @example Remove a single file
+      #   repo.rm('obsolete.txt', force: true)
+      #
+      # @example Remove a directory recursively
+      #   repo.rm('build', r: true)
+      #
+      # @example Remove from the index only, keeping the working tree copy
+      #   repo.rm('keep_me.txt', cached: true)
+      #
+      # @param path [String, Array<String>] a file or files to remove (relative to
+      #   the worktree root); defaults to `'.'` (all files)
+      #
+      # @param opts [Hash] options for the rm command
+      #
+      # @option opts [Boolean, nil] :force (nil) override the up-to-date check and
+      #   remove files with local modifications (alias: `:f`)
+      #
+      # @option opts [Boolean, nil] :f (nil) alias for `:force`
+      #
+      # @option opts [Boolean, nil] :dry_run (nil) do not actually remove any files;
+      #   only show what would be removed (alias: `:n`)
+      #
+      # @option opts [Boolean, nil] :n (nil) alias for `:dry_run`
+      #
+      # @option opts [Boolean, nil] :r (nil) allow recursive removal when a leading
+      #   directory name is given
+      #
+      # @option opts [Boolean, nil] :cached (nil) only remove from the index, keeping
+      #   the working tree files
+      #
+      # @option opts [Boolean, nil] :ignore_unmatch (nil) exit with a zero status even
+      #   if no files matched
+      #
+      # @option opts [Boolean, nil] :sparse (nil) allow updating index entries outside
+      #   of the sparse-checkout cone
+      #
+      # @option opts [Boolean, nil] :quiet (nil) suppress the one-line-per-file output
+      #   (alias: `:q`)
+      #
+      # @option opts [Boolean, nil] :q (nil) alias for `:quiet`
+      #
+      # @option opts [String] :pathspec_from_file (nil) read pathspec from the given
+      #   file, one pathspec element per line; pass `-` to read from standard input
+      #
+      # @option opts [Boolean, nil] :pathspec_file_nul (nil) when used with
+      #   `:pathspec_from_file`, separate pathspec elements with NUL instead of newlines
+      #
+      # @return [String] git's stdout from the rm
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def rm(path = '.', opts = {})
+        SharedPrivate.assert_valid_opts!(RM_ALLOWED_OPTS, **opts)
+        Git::Commands::Rm.new(@execution_context).call(*Array(path), **opts).stdout
+      end
+
+      # Option keys accepted by {#clean}
+      #
+      # The deprecated `:ff` and `:force_force` keys are handled by
+      # {Git::Repository::Staging::Private.migrate_clean_legacy_options} before this
+      # whitelist is enforced, so they are intentionally absent here.
+      CLEAN_ALLOWED_OPTS = %i[d force f dry_run n quiet q exclude e x X pathspec].freeze
+      private_constant :CLEAN_ALLOWED_OPTS
+
+      # Remove untracked files from the working tree
+      #
+      # @example Remove untracked files
+      #   repo.clean(force: true)
+      #
+      # @example Remove untracked files and directories
+      #   repo.clean(force: true, d: true)
+      #
+      # @example Remove untracked and ignored files
+      #   repo.clean(force: true, x: true)
+      #
+      # @param opts [Hash] options for the clean command
+      #
+      # @option opts [Boolean, nil] :d (nil) recurse into untracked directories
+      #
+      # @option opts [Boolean, Integer, nil] :force (nil) force the removal of
+      #   untracked files; pass `2` to also remove untracked nested git repositories
+      #   (alias: `:f`)
+      #
+      # @option opts [Boolean, Integer, nil] :f (nil) alias for `:force`
+      #
+      # @option opts [Boolean, nil] :dry_run (nil) do not actually remove anything,
+      #   just show what would be done (alias: `:n`)
+      #
+      # @option opts [Boolean, nil] :n (nil) alias for `:dry_run`
+      #
+      # @option opts [Boolean, nil] :quiet (nil) be quiet, only report errors
+      #   (alias: `:q`)
+      #
+      # @option opts [Boolean, nil] :q (nil) alias for `:quiet`
+      #
+      # @option opts [String, Array<String>] :exclude (nil) use the given exclude
+      #   pattern in addition to the standard ignore rules (alias: `:e`)
+      #
+      # @option opts [String, Array<String>] :e (nil) alias for `:exclude`
+      #
+      # @option opts [Boolean, nil] :x (nil) don't use the standard ignore rules
+      #
+      # @option opts [Boolean, nil] :X (nil) remove only files ignored by git
+      #
+      # @option opts [String, Array<String>] :pathspec (nil) limit cleaning to files
+      #   matching the given pathspec(s)
+      #
+      # @return [String] git's stdout from the clean
+      #
+      # @raise [ArgumentError] when unsupported options are provided, or when a
+      #   deprecated `:ff`/`:force_force` value is not `true`, `false`, or `nil`
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def clean(opts = {})
+        opts = Private.migrate_clean_legacy_options(opts)
+        SharedPrivate.assert_valid_opts!(CLEAN_ALLOWED_OPTS, **opts)
+        Git::Commands::Clean.new(@execution_context).call(**opts).stdout
+      end
+
+      # List the files in the working tree that are ignored by git
+      #
+      # Runs `git ls-files --others --ignored --exclude-standard` and returns the
+      # ignored files as repository-relative paths.
+      #
+      # @example List ignored files
+      #   repo.ignored_files #=> ["coverage/index.html", "tmp/cache.db"]
+      #
+      # @example No ignored files
+      #   repo.ignored_files #=> []
+      #
+      # @return [Array<String>] repository-relative paths of ignored files; empty
+      #   when there are none
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def ignored_files
+        Git::Commands::LsFiles.new(@execution_context).call(
+          others: true, ignored: true, exclude_standard: true
+        ).stdout.split("\n").map { |f| Private.unescape_quoted_path(f) }
+      end
+
+      # Private helpers local to {Git::Repository::Staging}
+      #
+      # @api private
+      #
+      module Private
+        module_function
+
+        # Translate deprecated `git clean` option keys into their modern form
+        #
+        # Maps the legacy `:ff` and `:force_force` boolean options onto the
+        # `:force` option, emitting a deprecation warning for each.
+        #
+        # @param opts [Hash] the caller-provided clean options
+        #
+        # @return [Hash] a new options hash with deprecated keys translated
+        #
+        # @raise [ArgumentError] when a deprecated value is not `true`, `false`, or `nil`
+        #
+        def migrate_clean_legacy_options(opts)
+          opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
+          deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
+        end
+
+        # Translate a single deprecated clean option key onto `:force`
+        #
+        # @param opts [Hash] the clean options
+        #
+        # @param key [Symbol] the deprecated option key (`:ff` or `:force_force`)
+        #
+        # @param message [String] the deprecation message to emit
+        #
+        # @return [Hash] a new options hash with the deprecated key removed
+        #
+        # @raise [ArgumentError] when the deprecated value is not `true`, `false`,
+        #   or `nil`
+        #
+        def deprecate_clean_option(opts, key, message)
+          return opts unless opts.key?(key)
+
+          opts = opts.dup
+          deprecated_value = opts.delete(key)
+          validate_deprecated_clean_option_value!(key, deprecated_value)
+
+          Git::Deprecation.warn(message)
+          return opts unless deprecated_value
+
+          opts[:force] = merge_clean_force_option(opts[:force], force_specified: force_option_specified?(opts))
+          opts
+        end
+
+        # Whether the caller explicitly set a non-nil `:force` value
+        #
+        # @param opts [Hash] the clean options
+        #
+        # @return [Boolean] true if `:force` was set to a non-nil value, false
+        #   otherwise
+        #
+        def force_option_specified?(opts)
+          opts.key?(:force) && !opts[:force].nil?
+        end
+
+        # Validate the value passed to a deprecated clean option
+        #
+        # @param key [Symbol] the deprecated option key
+        #
+        # @param value [Object] the value provided for the deprecated key
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] when `value` is not `true`, `false`, or `nil`
+        #
+        def validate_deprecated_clean_option_value!(key, value)
+          return if value.nil? || value == true || value == false
+
+          raise ArgumentError, "#{key} option only accepts true, false, or nil"
+        end
+
+        # Merge a deprecated force request into the existing `:force` value
+        #
+        # @param existing_force [Boolean, Integer, nil] the caller's `:force` value
+        #
+        # @param force_specified [Boolean] whether the caller explicitly set `:force`
+        #
+        # @return [Integer] the resolved `:force` value
+        #
+        def merge_clean_force_option(existing_force, force_specified: false)
+          return 2 unless force_specified
+
+          normalized_force = normalize_clean_force_option(existing_force)
+
+          case normalized_force
+          when Integer then merge_integer_clean_force_option(normalized_force)
+          when false then 2
+          else normalized_force
+          end
+        end
+
+        # Merge an integer `:force` value with the deprecated force request
+        #
+        # @param normalized_force [Integer] the caller's normalized `:force` value
+        #
+        # @return [Integer] the resolved `:force` value
+        #
+        def merge_integer_clean_force_option(normalized_force)
+          return normalized_force if normalized_force < 1
+
+          [normalized_force, 2].max
+        end
+
+        # Normalize a `:force` value, coercing `true` to the integer `1`
+        #
+        # @param value [Boolean, Integer, nil] the `:force` value
+        #
+        # @return [Integer, Boolean, nil] the normalized value
+        #
+        def normalize_clean_force_option(value)
+          case value
+          when true then 1
+          else value
+          end
+        end
+
+        # Unescape a git-quoted path
+        #
+        # Git wraps paths containing non-ASCII or special characters in
+        # double-quotes and octal-escapes each byte. This method strips the
+        # surrounding quotes and delegates unescaping to {Git::EscapedPath}.
+        #
+        # @param path [String] the path as it appears in git output
+        #
+        # @return [String] the unescaped path
+        #
+        def unescape_quoted_path(path)
+          if path.start_with?('"') && path.end_with?('"')
+            Git::EscapedPath.new(path[1..-2]).unescape
+          else
+            path
+          end
+        end
+      end
+
+      private_constant :Private
     end
   end
 end

@@ -420,15 +420,15 @@ module Git
     end
 
     # List the files in the worktree that are ignored by git
-    # @return [Array<String>] the list of ignored files relative to teh root of the worktree
+    # @return [Array<String>] the list of ignored files relative to the root of the worktree
     #
     def ignored_files
-      lib.ignored_files
+      facade_repository.ignored_files
     end
 
     # removes file(s) from the git repository
     def rm(path = '.', opts = {})
-      lib.rm(path, opts)
+      facade_repository.rm(path, opts)
     end
 
     alias remove rm
@@ -459,7 +459,7 @@ module Git
     #  :ff
     #
     def clean(opts = {})
-      lib.clean(opts)
+      facade_repository.clean(opts)
     end
 
     #  returns the most recent tag that is reachable from a commit

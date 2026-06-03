@@ -46,7 +46,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 | Module | File | Included in `Git::Repository` | `Git::Base` delegates |
 | ------ | ---- | ------------------------------ | --------------------- |
-| `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset` |
+| `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset`, `rm`, `clean`, `ignored_files` |
 | `Git::Repository::Committing` | `lib/git/repository/committing.rb` | ✅ | `commit`, `commit_all`, `write_tree`; `commit_tree` and `write_and_commit_tree` wrap the SHA result in `Git::Object::Commit.new(self, ...)` |
 | `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?`, `branch_delete`, `branch_new`, `branch_contains`, `branches_all`, `update_ref` |
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
@@ -135,7 +135,7 @@ graph LR
 `Git::Repository` counterpart yet. Each step below adds the missing facade methods and
 updates `Git::Base` to delegate.
 
-**Step A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ⬜
+**Step A1 — Extend `Git::Repository::Staging`: `rm`, `clean`, `ignored_files`** ✅
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -487,7 +487,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 
 | Step | GitHub PR | Scope | Release lane | Backward-compatibility rule |
 | --- | --- | --- | --- | --- |
-| A1 | ⬜ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
+| A1 | ✅ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
 | A2 | ⬜ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
 | A3 | ⬜ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
 | A4 | ⬜ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
@@ -535,7 +535,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 
 | Step | Status |
 | --- | --- |
-| A1: `Staging` — `rm`, `clean`, `ignored_files` | ⬜ |
+| A1: `Staging` — `rm`, `clean`, `ignored_files` | ✅ |
 | A2: `RemoteOperations` — `remotes`, `set_remote_url`, `remote_set_branches` | ⬜ |
 | A3: `ObjectOperations` — `tags`, `add_tag`, `delete_tag` | ⬜ |
 | A4: new `Inspecting` — `show`, `fsck` | ⬜ |
