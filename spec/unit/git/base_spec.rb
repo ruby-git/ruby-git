@@ -161,4 +161,134 @@ RSpec.describe Git::Base do
       expect(result).to be(worktrees_collection)
     end
   end
+
+  describe '#branch' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.branch(branch_name) }
+
+    let(:branch_name) { 'feature' }
+    let(:branch_double) { instance_double(Git::Branch) }
+
+    it 'delegates to facade_repository.branch and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:branch).with(branch_name).and_return(branch_double)
+      expect(result).to be(branch_double)
+    end
+
+    context 'when called without a branch name' do
+      subject(:result) { described_instance.branch }
+
+      it 'delegates to facade_repository.branch with the current branch as the default' do
+        allow(described_instance).to receive(:current_branch).and_return('main')
+        expect(facade_repository).to receive(:branch).with('main').and_return(branch_double)
+        expect(result).to be(branch_double)
+      end
+    end
+  end
+
+  describe '#branches' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.branches }
+
+    let(:branches_collection) { instance_double(Git::Branches) }
+
+    it 'delegates to facade_repository.branches and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:branches).and_return(branches_collection)
+      expect(result).to be(branches_collection)
+    end
+  end
+
+  describe '#gblob' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.gblob(objectish) }
+
+    let(:objectish) { 'HEAD:README.md' }
+    let(:object_double) { instance_double(Git::Object::Blob) }
+
+    it 'delegates to facade_repository.gblob and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:gblob).with(objectish).and_return(object_double)
+      expect(result).to be(object_double)
+    end
+  end
+
+  describe '#gcommit' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.gcommit(objectish) }
+
+    let(:objectish) { 'HEAD' }
+    let(:object_double) { instance_double(Git::Object::Commit) }
+
+    it 'delegates to facade_repository.gcommit and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:gcommit).with(objectish).and_return(object_double)
+      expect(result).to be(object_double)
+    end
+  end
+
+  describe '#gtree' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.gtree(objectish) }
+
+    let(:objectish) { 'HEAD^{tree}' }
+    let(:object_double) { instance_double(Git::Object::Tree) }
+
+    it 'delegates to facade_repository.gtree and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:gtree).with(objectish).and_return(object_double)
+      expect(result).to be(object_double)
+    end
+  end
+
+  describe '#object' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.object(objectish) }
+
+    let(:objectish) { 'HEAD' }
+    let(:object_double) { instance_double(Git::Object::AbstractObject) }
+
+    it 'delegates to facade_repository.object and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:object).with(objectish).and_return(object_double)
+      expect(result).to be(object_double)
+    end
+  end
+
+  describe '#remote' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.remote(remote_name) }
+
+    let(:remote_name) { 'upstream' }
+    let(:remote_double) { instance_double(Git::Remote) }
+
+    it 'delegates to facade_repository.remote and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:remote).with(remote_name).and_return(remote_double)
+      expect(result).to be(remote_double)
+    end
+
+    context 'when called without a remote name' do
+      subject(:result) { described_instance.remote }
+
+      it "delegates to facade_repository.remote with 'origin' as the default" do
+        expect(facade_repository).to receive(:remote).with('origin').and_return(remote_double)
+        expect(result).to be(remote_double)
+      end
+    end
+  end
+
+  describe '#tag' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.tag(tag_name) }
+
+    let(:tag_name) { 'v1.0.0' }
+    let(:tag_double) { instance_double(Git::Object::Tag) }
+
+    it 'delegates to facade_repository.tag and returns the facade result unchanged' do
+      expect(facade_repository).to receive(:tag).with(tag_name).and_return(tag_double)
+      expect(result).to be(tag_double)
+    end
+  end
 end

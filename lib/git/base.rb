@@ -929,21 +929,13 @@ module Git
 
     # @return [Git::Branch] an object for branch_name
     def branch(branch_name = current_branch)
-      branch_info = Git::BranchInfo.new(
-        refname: branch_name,
-        target_oid: nil,
-        current: false,
-        worktree: false,
-        symref: nil,
-        upstream: nil
-      )
-      Git::Branch.new(self, branch_info)
+      facade_repository.branch(branch_name)
     end
 
     # @return [Git::Branches] a collection of all the branches in the repository.
     #   Each branch is represented as a {Git::Branch}.
     def branches
-      Git::Branches.new(self)
+      facade_repository.branches
     end
 
     # Returns a {Git::Worktree} object for the given path and optional commitish
@@ -986,17 +978,17 @@ module Git
 
     # @return [Git::Object] a Git object
     def gblob(objectish)
-      Git::Object.new(self, objectish, 'blob')
+      facade_repository.gblob(objectish)
     end
 
     # @return [Git::Object] a Git object
     def gcommit(objectish)
-      Git::Object.new(self, objectish, 'commit')
+      facade_repository.gcommit(objectish)
     end
 
     # @return [Git::Object] a Git object
     def gtree(objectish)
-      Git::Object.new(self, objectish, 'tree')
+      facade_repository.gtree(objectish)
     end
 
     # @return [Git::Log] a log with the specified number of commits
@@ -1023,12 +1015,12 @@ module Git
     #
     # @return [Git::Object] an instance of the appropriate type of Git::Object
     def object(objectish)
-      Git::Object.new(self, objectish)
+      facade_repository.object(objectish)
     end
 
     # @return [Git::Remote] a remote of the specified name
     def remote(remote_name = 'origin')
-      Git::Remote.new(self, remote_name)
+      facade_repository.remote(remote_name)
     end
 
     # @return [Git::Status] a status object
@@ -1038,7 +1030,7 @@ module Git
 
     # @return [Git::Object::Tag] a tag object
     def tag(tag_name)
-      Git::Object::Tag.new(self, tag_name)
+      facade_repository.tag(tag_name)
     end
 
     # Find as good common ancestors as possible for a merge
