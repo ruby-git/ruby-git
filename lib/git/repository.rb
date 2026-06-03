@@ -5,6 +5,7 @@ require 'git/repository/branching'
 require 'git/repository/committing'
 require 'git/repository/configuring'
 require 'git/repository/diffing'
+require 'git/repository/inspecting'
 require 'git/repository/logging'
 require 'git/repository/merging'
 require 'git/repository/object_operations'
@@ -44,6 +45,7 @@ module Git
     include Git::Repository::Committing
     include Git::Repository::Configuring
     include Git::Repository::Diffing
+    include Git::Repository::Inspecting
     include Git::Repository::Logging
     include Git::Repository::Merging
     include Git::Repository::ObjectOperations

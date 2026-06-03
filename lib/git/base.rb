@@ -761,7 +761,7 @@ module Git
     #
     # rubocop:disable Style/ArgumentsForwarding
     def fsck(*objects, **opts)
-      lib.fsck(*objects, **opts)
+      facade_repository.fsck(*objects, **opts)
     end
     # rubocop:enable Style/ArgumentsForwarding
 
@@ -781,7 +781,7 @@ module Git
     # @param [String|NilClass] path the path of the file to be shown
     # @return [String] the object information
     def show(objectish = nil, path = nil)
-      lib.show(objectish, path)
+      facade_repository.show(objectish, path)
     end
 
     ## LOWER LEVEL INDEX OPERATIONS ##
