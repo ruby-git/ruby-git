@@ -191,7 +191,7 @@ wiring with no new facade code needed. Ship as one PR (`feat/c0-delegate-base-fa
 
 ⚠️ Depends on A3 (`tags`/`add_tag`/`delete_tag`) before `tag` can be redirected.
 
-**Step B — Redirect `Git::Base` domain-object factories to `facade_repository`** ⬜
+**Step B — Redirect `Git::Base` domain-object factories to `facade_repository`** ✅
 
 | `Git::Base` method | Current | Replace with |
 | --- | --- | --- |
@@ -492,7 +492,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | A2 | ✅ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
 | A3 | ✅ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
 | A4 | ✅ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
-| B | ⬜ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
+| B | ✅ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
 | C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
@@ -540,7 +540,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | A2: `RemoteOperations` — `remotes`, `set_remote_url`, `remote_set_branches` | ✅ |
 | A3: `ObjectOperations` — `tags`, `add_tag`, `delete_tag` | ✅ |
 | A4: new `Inspecting` — `show`, `fsck` | ✅ |
-| B (C0): `Git::Base` factory delegation wiring | ⬜ |
+| B (C0): `Git::Base` factory delegation wiring | ✅ |
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ⬜ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ⬜ |
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
