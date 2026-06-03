@@ -813,16 +813,178 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect(result.name).to eq('upstream')
       end
     end
+  end
 
-    context 'when no name is given (defaults to origin)' do
-      subject(:result) { described_instance.remote }
+  # ---------------------------------------------------------------------------
+  # #set_remote_url
+  # ---------------------------------------------------------------------------
 
-      it 'returns a Git::Remote named origin' do
-        expect(result.name).to eq('origin')
+  describe '#set_remote_url' do
+    let(:set_url_command) { instance_double(Git::Commands::Remote::SetUrl) }
+    let(:set_url_result) { command_result('') }
+    let(:remote_object) { instance_double(Git::Remote) }
+
+    before do
+      allow(Git::Commands::Remote::SetUrl)
+        .to receive(:new).with(execution_context).and_return(set_url_command)
+      allow(set_url_command).to receive(:call).and_return(set_url_result)
+      allow(Git::Remote).to receive(:new).and_return(remote_object)
+    end
+
+    context 'with a string url' do
+      subject(:result) { described_instance.set_remote_url('origin', 'https://example.com/repo.git') }
+
+      it 'delegates to Git::Commands::Remote::SetUrl.new with the execution_context' do
+        expect(Git::Commands::Remote::SetUrl)
+          .to receive(:new).with(execution_context).and_return(set_url_command)
+        result
       end
 
-      it 'populates the url from config' do
-        expect(result.url).to eq('https://github.com/user/repo.git')
+      it 'calls SetUrl#call with the name and url' do
+        expect(set_url_command)
+          .to receive(:call).with('origin', 'https://example.com/repo.git').and_return(set_url_result)
+        result
+      end
+
+      it 'returns the Git::Remote for the updated name' do
+        expect(Git::Remote).to receive(:new).with(described_instance, 'origin').and_return(remote_object)
+        expect(result).to eq(remote_object)
+      end
+    end
+
+    context 'with url as a Git::Base' do
+      let(:url_base) do
+        Object.new.tap do |obj|
+          def obj.repo
+            Pathname.new('/tmp/source.git')
+          end
+
+          def obj.is_a?(klass)
+            klass == Git::Base || super
+          end
+        end
+      end
+
+      subject(:result) { described_instance.set_remote_url('origin', url_base) }
+
+      it 'normalizes the url to repo.to_s before calling the command' do
+        expect(set_url_command)
+          .to receive(:call).with('origin', '/tmp/source.git').and_return(set_url_result)
+        result
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remote_set_branches
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_set_branches' do
+    let(:set_branches_command) { instance_double(Git::Commands::Remote::SetBranches) }
+    let(:set_branches_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Remote::SetBranches)
+        .to receive(:new).with(execution_context).and_return(set_branches_command)
+      allow(set_branches_command).to receive(:call).and_return(set_branches_result)
+    end
+
+    context 'with a single branch' do
+      subject(:result) { described_instance.remote_set_branches('origin', 'main') }
+
+      it 'delegates to Git::Commands::Remote::SetBranches.new with the execution_context' do
+        expect(Git::Commands::Remote::SetBranches)
+          .to receive(:new).with(execution_context).and_return(set_branches_command)
+        result
+      end
+
+      it 'calls SetBranches#call with the name, branch, and add: false' do
+        expect(set_branches_command)
+          .to receive(:call).with('origin', 'main', add: false).and_return(set_branches_result)
+        result
+      end
+
+      it 'returns nil' do
+        expect(result).to be_nil
+      end
+    end
+
+    context 'with multiple branches' do
+      subject(:result) { described_instance.remote_set_branches('origin', 'main', 'develop') }
+
+      it 'forwards each branch to the command' do
+        expect(set_branches_command)
+          .to receive(:call).with('origin', 'main', 'develop', add: false).and_return(set_branches_result)
+        result
+      end
+    end
+
+    context 'with a nested array of branches' do
+      subject(:result) { described_instance.remote_set_branches('origin', %w[main develop]) }
+
+      it 'flattens the branches before calling the command' do
+        expect(set_branches_command)
+          .to receive(:call).with('origin', 'main', 'develop', add: false).and_return(set_branches_result)
+        result
+      end
+    end
+
+    context 'with add: true' do
+      subject(:result) { described_instance.remote_set_branches('origin', 'release/*', add: true) }
+
+      it 'forwards add: true to the command' do
+        expect(set_branches_command)
+          .to receive(:call).with('origin', 'release/*', add: true).and_return(set_branches_result)
+        result
+      end
+    end
+
+    context 'with no branches' do
+      it 'raises ArgumentError before calling the command' do
+        expect(set_branches_command).not_to receive(:call)
+        expect { described_instance.remote_set_branches('origin') }
+          .to raise_error(ArgumentError, /branches are required/)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remotes
+  # ---------------------------------------------------------------------------
+
+  describe '#remotes' do
+    let(:list_command) { instance_double(Git::Commands::Remote::List) }
+
+    before do
+      allow(Git::Commands::Remote::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(command_result("origin\nupstream\n"))
+      allow(Git::Remote).to receive(:new) { |_base, name| instance_double(Git::Remote, name: name) }
+    end
+
+    it 'delegates to Git::Commands::Remote::List.new with the execution_context' do
+      expect(Git::Commands::Remote::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      described_instance.remotes
+    end
+
+    it 'returns a Git::Remote for each configured remote' do
+      expect(described_instance.remotes.map(&:name)).to eq(%w[origin upstream])
+    end
+
+    it 'builds each Git::Remote with the repository and remote name' do
+      expect(Git::Remote).to receive(:new).with(described_instance, 'origin')
+      expect(Git::Remote).to receive(:new).with(described_instance, 'upstream')
+      described_instance.remotes
+    end
+
+    context 'when no remotes are configured' do
+      before do
+        allow(list_command).to receive(:call).and_return(command_result(''))
+      end
+
+      it 'returns an empty array' do
+        expect(described_instance.remotes).to eq([])
       end
     end
   end

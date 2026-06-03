@@ -441,6 +441,72 @@ module Git
         Git::Commands::Remote::Remove.new(@execution_context).call(name)
       end
 
+      # Sets the URL for an existing remote
+      #
+      # Replaces the fetch URL configured for the remote named `name`.
+      #
+      # @example Set the URL for a remote
+      #   repo.set_remote_url('origin', 'https://github.com/user/repo.git')
+      #
+      # @example Set the URL from a local repository reference
+      #   source = Git.open('/path/to/source')
+      #   repo.set_remote_url('origin', source)
+      #
+      # @param name [String] the name of the remote to update
+      #
+      # @param url [String, Git::Base] the new URL for the remote
+      #
+      #   A {Git::Base} instance is accepted for local references and converted
+      #   to `url.repo.to_s`.
+      #
+      # @return [Git::Remote] the updated remote
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def set_remote_url(name, url)
+        url = url.repo.to_s if url.is_a?(Git::Base)
+        Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
+
+        Git::Remote.new(self, name)
+      end
+
+      # Configures which branches are fetched for a remote
+      #
+      # Uses `git remote set-branches` to set or append fetch refspecs. When the
+      # `add:` option is `false`, the `--add` flag is not passed to the git
+      # command and the tracked branch list is replaced.
+      #
+      # @example Replace fetched branches with a single glob pattern
+      #   repo.remote_set_branches('origin', 'feature/*')
+      #
+      # @example Append a glob pattern to existing fetched branches
+      #   repo.remote_set_branches('origin', 'release/*', add: true)
+      #
+      # @example Configure multiple explicit branches
+      #   repo.remote_set_branches('origin', 'main', 'development', 'hotfix')
+      #
+      # @param name [String] the remote name (for example, `"origin"`)
+      #
+      # @param branches [Array<String>] branch names or globs (for example, `'*'`)
+      #
+      # @param add [Boolean] when `true`, append to existing refspecs instead of
+      #   replacing them
+      #
+      # @return [nil]
+      #
+      # @raise [ArgumentError] when no branches are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def remote_set_branches(name, *branches, add: false)
+        branch_list = branches.flatten
+        raise ArgumentError, 'branches are required' if branch_list.empty?
+
+        Git::Commands::Remote::SetBranches.new(@execution_context).call(name, *branch_list, add: add)
+
+        nil
+      end
+
       # Return the git configuration entries for a named remote
       #
       # Reads `git config --list` and returns all entries whose keys begin with
@@ -486,6 +552,22 @@ module Git
       #
       def remote(name = 'origin')
         Git::Remote.new(self, name)
+      end
+
+      # Returns all configured remotes as {Git::Remote} objects
+      #
+      # @example List all remotes
+      #   repo.remotes  #=> [#<Git::Remote 'origin'>, #<Git::Remote 'upstream'>]
+      #
+      # @return [Array<Git::Remote>] one {Git::Remote} for each configured remote
+      #
+      #   Returns an empty array when no remotes are configured.
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def remotes
+        result = Git::Commands::Remote::List.new(@execution_context).call
+        result.stdout.split("\n").map { |name| Git::Remote.new(self, name) }
       end
 
       # Helpers private to the `RemoteOperations` topic module

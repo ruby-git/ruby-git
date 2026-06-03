@@ -247,4 +247,88 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       expect(result.url).to eq(bare_dir)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #remotes
+  # ---------------------------------------------------------------------------
+
+  describe '#remotes' do
+    it 'returns an Array of Git::Remote objects' do
+      result = described_instance.remotes
+      expect(result).to all(be_a(Git::Remote))
+    end
+
+    it 'includes each configured remote by name' do
+      described_instance.add_remote('upstream', bare_dir)
+      expect(described_instance.remotes.map(&:name)).to contain_exactly('origin', 'upstream')
+    end
+
+    context 'when the repository has no remotes' do
+      before { described_instance.remove_remote('origin') }
+
+      it 'returns an empty array' do
+        expect(described_instance.remotes).to eq([])
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #set_remote_url
+  # ---------------------------------------------------------------------------
+
+  describe '#set_remote_url' do
+    let(:other_dir) { Dir.mktmpdir('other_repo') }
+
+    after { FileUtils.rm_rf(other_dir) }
+
+    before { Git.init(other_dir, bare: true) }
+
+    it 'updates the fetch URL for the named remote' do
+      described_instance.set_remote_url('origin', other_dir)
+      expect(described_instance.config_remote('origin')['url']).to eq(other_dir)
+    end
+
+    it 'returns a Git::Remote for the updated remote' do
+      result = described_instance.set_remote_url('origin', other_dir)
+      expect(result).to be_a(Git::Remote)
+      expect(result.name).to eq('origin')
+    end
+
+    it 'raises Git::FailedError when the remote does not exist' do
+      expect { described_instance.set_remote_url('nonexistent', other_dir) }
+        .to raise_error(Git::FailedError)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #remote_set_branches
+  # ---------------------------------------------------------------------------
+
+  describe '#remote_set_branches' do
+    it 'returns nil' do
+      expect(described_instance.remote_set_branches('origin', 'main')).to be_nil
+    end
+
+    it 'replaces the tracked branches for the remote' do
+      described_instance.remote_set_branches('origin', 'main')
+      expect(described_instance.config_remote('origin')['fetch']).to include('main')
+    end
+
+    it 'appends tracked branches when add: true' do
+      described_instance.remote_set_branches('origin', 'main')
+      described_instance.remote_set_branches('origin', 'develop', add: true)
+      fetch_values = execution_context.command_capturing('config', '--get-all', 'remote.origin.fetch').stdout
+      expect(fetch_values).to include('main').and include('develop')
+    end
+
+    it 'raises ArgumentError when no branches are given' do
+      expect { described_instance.remote_set_branches('origin') }
+        .to raise_error(ArgumentError, /branches are required/)
+    end
+
+    it 'raises Git::FailedError when the remote does not exist' do
+      expect { described_instance.remote_set_branches('nonexistent', 'main') }
+        .to raise_error(Git::FailedError)
+    end
+  end
 end
