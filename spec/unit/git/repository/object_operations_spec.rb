@@ -1210,4 +1210,265 @@ RSpec.describe Git::Repository::ObjectOperations do
       expect(result).to be(commit_object)
     end
   end
+
+  describe '#tags' do
+    subject(:result) { described_instance.tags }
+
+    let(:list_command) { instance_double(Git::Commands::Tag::List) }
+    let(:command_result) { instance_double(Git::CommandLineResult, stdout: 'raw-stdout') }
+    let(:tag_first) { instance_double(Git::Object::Tag) }
+    let(:tag_second) { instance_double(Git::Object::Tag) }
+
+    before do
+      allow(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(command_result)
+      allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return(
+        [instance_double(Git::TagInfo, name: 'v1.0.0'), instance_double(Git::TagInfo, name: 'v2.0.0')]
+      )
+      allow(described_instance).to receive(:tag).with('v1.0.0').and_return(tag_first)
+      allow(described_instance).to receive(:tag).with('v2.0.0').and_return(tag_second)
+    end
+
+    it 'constructs Git::Commands::Tag::List with the execution context' do
+      expect(Git::Commands::Tag::List).to receive(:new).with(execution_context).and_return(list_command)
+      result
+    end
+
+    it 'requests the parser format string from the list command' do
+      expect(list_command).to receive(:call).with(format: Git::Parsers::Tag::FORMAT_STRING).and_return(command_result)
+      result
+    end
+
+    it 'parses the command stdout with Git::Parsers::Tag' do
+      expect(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return([])
+      result
+    end
+
+    it 'returns one Git::Object::Tag per parsed tag name' do
+      expect(result).to eq([tag_first, tag_second])
+    end
+
+    context 'when there are no tags' do
+      before do
+        allow(Git::Parsers::Tag).to receive(:parse_list).with('raw-stdout').and_return([])
+      end
+
+      it 'returns an empty array' do
+        expect(result).to eq([])
+      end
+    end
+  end
+
+  describe '#add_tag' do
+    let(:create_command) { instance_double(Git::Commands::Tag::Create) }
+    let(:command_result) { instance_double(Git::CommandLineResult) }
+    let(:tag_object) { instance_double(Git::Object::Tag) }
+
+    before do
+      allow(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
+      allow(create_command).to receive(:call).and_return(command_result)
+      allow(described_instance).to receive(:tag).with('v1.0.0').and_return(tag_object)
+    end
+
+    it 'constructs Git::Commands::Tag::Create with the execution context' do
+      expect(Git::Commands::Tag::Create).to receive(:new).with(execution_context).and_return(create_command)
+      described_instance.add_tag('v1.0.0')
+    end
+
+    it 'returns the Git::Object::Tag for the created tag' do
+      expect(described_instance.add_tag('v1.0.0')).to be(tag_object)
+    end
+
+    context 'with no target and no options' do
+      it 'calls the create command with a nil commit and no options' do
+        expect(create_command).to receive(:call).with('v1.0.0', nil).and_return(command_result)
+        described_instance.add_tag('v1.0.0')
+      end
+    end
+
+    context 'with a target commit' do
+      it 'forwards the target as the commit operand' do
+        expect(create_command).to receive(:call).with('v1.0.0', 'abc123').and_return(command_result)
+        described_instance.add_tag('v1.0.0', 'abc123')
+      end
+    end
+
+    context 'with an options hash only' do
+      it 'forwards the options and a nil commit' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', nil, annotate: true, message: 'hi').and_return(command_result)
+        described_instance.add_tag('v1.0.0', annotate: true, message: 'hi')
+      end
+    end
+
+    context 'with both a target and an options hash' do
+      it 'forwards the target and options' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', 'abc123', force: true).and_return(command_result)
+        described_instance.add_tag('v1.0.0', 'abc123', force: true)
+      end
+    end
+
+    context 'with a positional options hash (legacy call shape)' do
+      it 'accepts the trailing hash as options' do
+        expect(create_command).to receive(:call)
+          .with('v1.0.0', nil, force: true).and_return(command_result)
+        described_instance.add_tag('v1.0.0', { force: true })
+      end
+    end
+
+    context 'when an unknown option is provided' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.add_tag('v1.0.0', bogus: true) }
+          .to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+    end
+
+    context 'when an annotated tag is requested without a message' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.add_tag('v1.0.0', annotate: true) }
+          .to raise_error(ArgumentError, 'Cannot create an annotated or signed tag without a message.')
+      end
+    end
+
+    context 'when a signed tag is requested without a message' do
+      it 'raises ArgumentError without calling git' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        expect { described_instance.add_tag('v1.0.0', s: true) }
+          .to raise_error(ArgumentError, 'Cannot create an annotated or signed tag without a message.')
+      end
+    end
+
+    context 'when an annotated tag is requested with a message' do
+      it 'creates the tag and returns it' do
+        expect(described_instance.add_tag('v1.0.0', annotate: true, message: 'release')).to be(tag_object)
+      end
+    end
+
+    context 'when an annotated tag is requested with a :file option' do
+      it 'does not raise and creates the tag' do
+        expect(described_instance.add_tag('v1.0.0', annotate: true, file: 'msg.txt')).to be(tag_object)
+      end
+    end
+
+    context 'when an annotated tag is requested with the :F alias' do
+      it 'does not raise and creates the tag' do
+        expect(described_instance.add_tag('v1.0.0', annotate: true, F: 'msg.txt')).to be(tag_object)
+      end
+    end
+
+    context 'when a signed tag is requested with a :file option' do
+      it 'does not raise and creates the tag' do
+        expect(described_instance.add_tag('v1.0.0', sign: true, file: 'msg.txt')).to be(tag_object)
+      end
+    end
+
+    context 'when a signed tag is requested with the :F alias' do
+      it 'does not raise and creates the tag' do
+        expect(described_instance.add_tag('v1.0.0', sign: true, F: 'msg.txt')).to be(tag_object)
+      end
+    end
+
+    context 'when the deprecated :d option is given' do
+      let(:delete_stdout) { "Deleted tag 'v1.0.0' (was abc123)\n" }
+
+      before do
+        allow(described_instance).to receive(:delete_tag).with('v1.0.0').and_return(delete_stdout)
+        allow(Git::Deprecation).to receive(:warn)
+      end
+
+      it 'issues a deprecation warning' do
+        expect(Git::Deprecation).to receive(:warn).with(/deprecated/)
+        described_instance.add_tag('v1.0.0', d: true)
+      end
+
+      it 'delegates to delete_tag and returns its stdout' do
+        expect(described_instance).to receive(:delete_tag).with('v1.0.0').and_return(delete_stdout)
+        expect(described_instance.add_tag('v1.0.0', d: true)).to eq(delete_stdout)
+      end
+
+      it 'does not call Git::Commands::Tag::Create' do
+        expect(Git::Commands::Tag::Create).not_to receive(:new)
+        described_instance.add_tag('v1.0.0', d: true)
+      end
+
+      it 'also accepts the :delete alias' do
+        expect(described_instance).to receive(:delete_tag).with('v1.0.0').and_return(delete_stdout)
+        described_instance.add_tag('v1.0.0', delete: true)
+      end
+
+      it 'raises ArgumentError when a target is also given' do
+        expect { described_instance.add_tag('v1.0.0', 'abc123', d: true) }
+          .to raise_error(ArgumentError, /target/)
+      end
+
+      it 'raises ArgumentError when other options are also given' do
+        expect { described_instance.add_tag('v1.0.0', d: true, force: true) }
+          .to raise_error(ArgumentError, /force/)
+      end
+    end
+
+    context 'when :d is given as false' do
+      it 'treats it as omitted and creates the tag normally' do
+        expect(described_instance.add_tag('v1.0.0', d: false)).to be(tag_object)
+      end
+    end
+
+    context 'when :delete is given as false' do
+      it 'treats it as omitted and creates the tag normally' do
+        expect(described_instance.add_tag('v1.0.0', delete: false)).to be(tag_object)
+      end
+    end
+
+    context 'when :d is given as nil' do
+      it 'treats it as omitted and creates the tag normally' do
+        expect(described_instance.add_tag('v1.0.0', d: nil)).to be(tag_object)
+      end
+    end
+  end
+
+  describe '#delete_tag' do
+    subject(:result) { described_instance.delete_tag('v1.0.0') }
+
+    let(:delete_command) { instance_double(Git::Commands::Tag::Delete) }
+    let(:status) { instance_double(Process::Status, exitstatus: 0) }
+    let(:command_result) do
+      instance_double(
+        Git::CommandLineResult,
+        stdout: "Deleted tag 'v1.0.0' (was abc123)\n", stderr: '', status: status,
+        git_cmd: %w[git tag --delete v1.0.0]
+      )
+    end
+
+    before do
+      allow(Git::Commands::Tag::Delete).to receive(:new).with(execution_context).and_return(delete_command)
+      allow(delete_command).to receive(:call).with('v1.0.0').and_return(command_result)
+    end
+
+    it 'constructs Git::Commands::Tag::Delete with the execution context' do
+      expect(Git::Commands::Tag::Delete).to receive(:new).with(execution_context).and_return(delete_command)
+      result
+    end
+
+    it 'calls the delete command with the tag name' do
+      expect(delete_command).to receive(:call).with('v1.0.0').and_return(command_result)
+      result
+    end
+
+    it 'returns the command stdout' do
+      expect(result).to eq("Deleted tag 'v1.0.0' (was abc123)\n")
+    end
+
+    context 'when the tag does not exist (exit status 1)' do
+      let(:status) { instance_double(Process::Status, exitstatus: 1) }
+
+      it 'raises Git::FailedError carrying the failed command result' do
+        expect { result }.to raise_error(Git::FailedError, /--delete/) do |error|
+          expect(error.result).to be(command_result)
+        end
+      end
+    end
+  end
 end
