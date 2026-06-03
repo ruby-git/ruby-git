@@ -492,7 +492,7 @@ module Git
       # @param add [Boolean] when `true`, append to existing refspecs instead of
       #   replacing them
       #
-      # @return [nil]
+      # @return [void]
       #
       # @raise [ArgumentError] when no branches are provided
       #
