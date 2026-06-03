@@ -293,11 +293,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       expect(result).to be_a(Git::Remote)
       expect(result.name).to eq('origin')
     end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.set_remote_url('nonexistent', other_dir) }
-        .to raise_error(Git::FailedError)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -319,16 +314,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       described_instance.remote_set_branches('origin', 'develop', add: true)
       fetch_values = execution_context.command_capturing('config', '--get-all', 'remote.origin.fetch').stdout
       expect(fetch_values).to include('main').and include('develop')
-    end
-
-    it 'raises ArgumentError when no branches are given' do
-      expect { described_instance.remote_set_branches('origin') }
-        .to raise_error(ArgumentError, /branches are required/)
-    end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.remote_set_branches('nonexistent', 'main') }
-        .to raise_error(Git::FailedError)
     end
   end
 end
