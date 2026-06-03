@@ -592,7 +592,7 @@ module Git
 
     # returns an array of Git:Remote objects
     def remotes
-      lib.remotes.map { |r| Git::Remote.new(self, r) }
+      facade_repository.remotes
     end
 
     # sets the url for a remote
@@ -601,9 +601,7 @@ module Git
     #  @git.set_remote_url('scotts_git', 'git://repo.or.cz/rubygit.git')
     #
     def set_remote_url(name, url)
-      url = url.repo.to_s if url.is_a?(Git::Base)
-      lib.remote_set_url(name, url)
-      Git::Remote.new(self, name)
+      facade_repository.set_remote_url(name, url)
     end
 
     # Configures which branches are fetched for a remote
@@ -635,12 +633,7 @@ module Git
     # the underlying git command fails
     #
     def remote_set_branches(name, *branches, add: false)
-      branch_list = branches.flatten
-      raise ArgumentError, 'branches are required' if branch_list.empty?
-
-      lib.remote_set_branches(name, branch_list, add: add)
-
-      nil
+      facade_repository.remote_set_branches(name, *branches, add: add)
     end
 
     # removes a remote from this repository
