@@ -2,8 +2,7 @@
 
 require 'logger'
 require 'pathname'
-
-require 'git/commands/rev_parse'
+require 'git/repository/path_resolver'
 
 module Git
   # The main public interface for interacting with Git commands
@@ -17,7 +16,7 @@ module Git
   class Base
     # (see Git.bare)
     def self.bare(git_dir, options = {})
-      paths = resolve_paths(repository: git_dir, bare: true)
+      paths = Git::Repository::PathResolver.resolve_paths(repository: git_dir, bare: true)
       new(options.merge(paths))
     end
 
@@ -27,7 +26,7 @@ module Git
       lib_options[:git_ssh] = options[:git_ssh] if options.key?(:git_ssh)
       clone_result = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
       bare = options[:bare] || options[:mirror]
-      paths = resolve_paths(
+      paths = Git::Repository::PathResolver.resolve_paths(
         working_directory: clone_result[:working_directory],
         repository: clone_result[:repository],
         bare: bare
@@ -59,21 +58,20 @@ module Git
       Git.git_version(binary_path).to_a
     end
 
+    # Find the root of the working tree that contains `working_dir`
+    #
+    # Delegates to {Git::Repository::PathResolver.root_of_worktree}, using the
+    # global config for `binary_path` and `git_ssh`.
+    #
+    # @param working_dir [String] a path inside the working tree
+    #
+    # @return [String] the absolute path to the root of the working tree
+    #
+    # @raise [ArgumentError] if `working_dir` does not exist or is not inside a
+    #   git working tree
+    #
     def self.root_of_worktree(working_dir)
-      raise ArgumentError, "'#{working_dir}' does not exist" unless Dir.exist?(working_dir)
-
-      execute_rev_parse_toplevel(working_dir)
-    end
-
-    private_class_method def self.execute_rev_parse_toplevel(working_dir)
-      execution_context = Git::Lib.new(nil)
-      Git::Commands::RevParse.new(execution_context).call(
-        show_toplevel: true, chdir: File.expand_path(working_dir)
-      ).stdout
-    rescue Errno::ENOENT
-      raise ArgumentError, 'Failed to find the root of the worktree: git binary not found'
-    rescue Git::FailedError
-      raise ArgumentError, "'#{working_dir}' is not in a git working tree"
+      Git::Repository::PathResolver.root_of_worktree(working_dir)
     end
 
     # (see Git.open)
@@ -82,7 +80,7 @@ module Git
 
       working_dir = root_of_worktree(working_dir) unless options[:repository]
 
-      paths = resolve_paths(
+      paths = Git::Repository::PathResolver.resolve_paths(
         working_directory: working_dir,
         repository: options[:repository],
         index: options[:index]
@@ -1201,96 +1199,6 @@ module Git
       @working_directory = Pathname.new(options[:working_directory]) if options[:working_directory]
       @repository = Pathname.new(options[:repository]) if options[:repository]
       @index = Pathname.new(options[:index]) if options[:index]
-    end
-
-    # Resolve and normalize paths for a Git repository
-    #
-    # Returns a new hash containing the resolved absolute paths for:
-    #   * :working_directory - the working tree root (nil for bare repos)
-    #   * :repository - the .git directory
-    #   * :index - the index file
-    #
-    # This method does not mutate any inputs.
-    #
-    # @param working_directory [String, nil] the working directory path
-    # @param repository [String, nil] the repository (.git) directory path
-    # @param index [String, nil] the index file path
-    # @param bare [Boolean] whether this is a bare repository
-    #
-    # @return [Hash] a hash with :working_directory, :repository, and :index keys
-    #
-    private_class_method def self.resolve_paths(working_directory: nil, repository: nil, index: nil, bare: false)
-      working_dir = resolve_working_directory(working_directory, bare: bare)
-      # For bare repos, use working_directory as the default repository location
-      repo_path = resolve_repository(repository, working_dir, bare: bare, bare_default: working_directory)
-      index_path = resolve_index(index, repo_path)
-
-      {
-        working_directory: working_dir,
-        repository: repo_path,
-        index: index_path
-      }
-    end
-
-    # Resolve the working directory path
-    #
-    # @param path [String, nil] the working directory path or nil
-    # @param bare [Boolean] whether this is a bare repository
-    # @return [String, nil] the absolute path or nil for bare repos
-    #
-    private_class_method def self.resolve_working_directory(path, bare:)
-      return nil if bare
-
-      File.expand_path(path || Dir.pwd)
-    end
-
-    # Resolve the repository (.git) directory path
-    #
-    # Handles the gitdir pointer file case for submodules and worktrees.
-    #
-    # @param path [String, nil] the repository path or nil
-    # @param working_dir [String, nil] the working directory for relative path resolution
-    # @param bare [Boolean] whether this is a bare repository
-    # @param bare_default [String, nil] for bare repos, use this as default if path is nil
-    # @return [String] the absolute path to the repository
-    #
-    private_class_method def self.resolve_repository(path, working_dir, bare:, bare_default: nil)
-      initial_path = if bare
-                       File.expand_path(path || bare_default || Dir.pwd)
-                     else
-                       File.expand_path(path || '.git', working_dir)
-                     end
-
-      resolve_gitdir_pointer(initial_path, working_dir)
-    end
-
-    # Resolve gitdir pointer files used by submodules and worktrees
-    #
-    # If the path points to a file containing "gitdir: <path>", returns the
-    # resolved path. Otherwise returns the original path.
-    #
-    # @param path [String] the path to check
-    # @param working_dir [String, nil] base directory for relative path resolution
-    # @return [String] the resolved absolute path
-    #
-    private_class_method def self.resolve_gitdir_pointer(path, working_dir)
-      return path unless File.file?(path)
-
-      gitdir_content = File.read(path).strip
-      return path unless gitdir_content.start_with?('gitdir: ')
-
-      gitdir_path = gitdir_content.sub(/\Agitdir: /, '')
-      File.expand_path(gitdir_path, working_dir)
-    end
-
-    # Resolve the index file path
-    #
-    # @param path [String, nil] the index path or nil
-    # @param repository [String] the repository directory for relative path resolution
-    # @return [String] the absolute path to the index file
-    #
-    private_class_method def self.resolve_index(path, repository)
-      File.expand_path(path || 'index', repository)
     end
   end
 end
