@@ -53,7 +53,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote`, `config_remote`, `remotes`, `set_remote_url`, `remote_set_branches` |
 | `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
 | `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
-| `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive` |
+| `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive`, `tags`, `add_tag`, `delete_tag` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
 | `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`), `untracked_files`, `status`; `Git::Base#ls_files` delegates to facade |
 | `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config`; `Git::Base#config` delegates to facade |
@@ -155,7 +155,7 @@ Files touched: `lib/git/repository/staging.rb`, `spec/unit/git/repository/stagin
 
 Files touched: `lib/git/repository/remote_operations.rb`, `spec/unit/git/repository/remote_operations_spec.rb`, `lib/git/base.rb`
 
-**Step A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ⬜
+**Step A3 — Extend `Git::Repository::ObjectOperations`: `tags`, `add_tag`, `delete_tag`** ✅
 
 | `Git::Base` method | Facade to add |
 | --- | --- |
@@ -489,7 +489,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | --- | --- | --- | --- | --- |
 | A1 | ✅ | Add `rm`, `clean`, `ignored_files` facade coverage | 4.x-compatible | `Git::Base` public methods keep the same signatures, return values, and deprecation behavior. |
 | A2 | ⬜ | Add `remotes`, `set_remote_url`, `remote_set_branches` facade coverage | 4.x-compatible | `Git::Base` remote methods keep the same return objects and validation behavior. |
-| A3 | ⬜ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
+| A3 | ✅ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
 | A4 | ⬜ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
 | B | ⬜ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
 | C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
