@@ -9,9 +9,13 @@ require 'git/commands/ls_tree'
 require 'git/commands/name_rev'
 require 'git/commands/rev_parse'
 require 'git/commands/show_ref/list'
+require 'git/commands/tag/create'
+require 'git/commands/tag/delete'
+require 'git/commands/tag/list'
 require 'git/parsers/cat_file'
 require 'git/parsers/grep'
 require 'git/parsers/ls_tree'
+require 'git/parsers/tag'
 require 'git/repository/shared_private'
 require 'git/escaped_path'
 require 'tempfile'
@@ -25,7 +29,7 @@ module Git
     #
     # @api public
     #
-    module ObjectOperations
+    module ObjectOperations # rubocop:disable Metrics/ModuleLength
       # Returns the raw content of a git object, or streams it into a tempfile
       #
       # Without a block, the full content is buffered in memory and returned as a
@@ -679,12 +683,231 @@ module Git
         Git::Object.new(self, objectish)
       end
 
+      # Returns all tags in the repository as tag objects
+      #
+      # Runs `git tag --list` with a machine-readable format, parses the output,
+      # and returns a {Git::Object::Tag} for each tag name.
+      #
+      # @example List the names of all tags
+      #   repo.tags.map(&:name) #=> ["v1.0.0", "v2.0.0"]
+      #
+      # @example No tags exist
+      #   repo.tags #=> []
+      #
+      # @return [Array<Git::Object::Tag>] one tag object per tag in the
+      #   repository; empty when there are none
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def tags
+        result = Git::Commands::Tag::List.new(@execution_context).call(format: Git::Parsers::Tag::FORMAT_STRING)
+        Git::Parsers::Tag.parse_list(result.stdout).map { |info| tag(info.name) }
+      end
+
+      # Option keys accepted by {#add_tag}
+      ADD_TAG_ALLOWED_OPTS = %i[
+        annotate a sign s no_sign local_user u force f message m file F
+        edit e no_edit trailer cleanup create_reflog
+      ].freeze
+      private_constant :ADD_TAG_ALLOWED_OPTS
+
+      # Create a new tag
+      #
+      # @overload add_tag(name, options = {})
+      #
+      #   @example Create a lightweight tag on HEAD
+      #     repo.add_tag('v1.0.0')
+      #
+      #   @example Create an annotated tag on HEAD
+      #     repo.add_tag('v1.0.0', annotate: true, message: 'Release 1.0.0')
+      #
+      #   @example Replace an existing tag on HEAD
+      #     repo.add_tag('v1.0.0', force: true)
+      #
+      #   @param name [String] the name of the tag to create
+      #
+      #   @param options [Hash] options for creating the tag
+      #
+      #   @option options [Boolean, nil] :annotate (nil) make an unsigned,
+      #     annotated tag object; requires `:message` or `:file` (alias: `:a`)
+      #
+      #   @option options [Boolean, nil] :a (nil) alias for `:annotate`
+      #
+      #   @option options [Boolean, nil] :sign (nil) make a GPG-signed tag;
+      #     requires `:message` or `:file` (alias: `:s`)
+      #
+      #   @option options [Boolean, nil] :s (nil) alias for `:sign`
+      #
+      #   @option options [Boolean, nil] :no_sign (nil) override `tag.gpgSign`
+      #     config to disable signing
+      #
+      #   @option options [String] :local_user (nil) make a signed tag using the
+      #     given key (alias: `:u`)
+      #
+      #   @option options [String] :u (nil) alias for `:local_user`
+      #
+      #   @option options [Boolean, nil] :force (nil) replace an existing tag with
+      #     the given name instead of failing (alias: `:f`)
+      #
+      #   @option options [Boolean, nil] :f (nil) alias for `:force`
+      #
+      #   @option options [String] :message (nil) use the given message as the tag
+      #     message (alias: `:m`)
+      #
+      #   @option options [String] :m (nil) alias for `:message`
+      #
+      #   @option options [String] :file (nil) take the tag message from the given
+      #     file; use `-` to read from standard input (alias: `:F`)
+      #
+      #   @option options [String] :F (nil) alias for `:file`
+      #
+      #   @option options [Boolean, nil] :edit (nil) open an editor to further edit
+      #     the tag message (alias: `:e`)
+      #
+      #   @option options [Boolean, nil] :e (nil) alias for `:edit`
+      #
+      #   @option options [Boolean, nil] :no_edit (nil) suppress the editor
+      #
+      #   @option options [Hash, Array<Array>] :trailer (nil) add trailers to the
+      #     tag message
+      #
+      #   @option options [String] :cleanup (nil) set how the tag message is
+      #     cleaned up; one of `verbatim`, `whitespace`, or `strip`
+      #
+      #   @option options [Boolean, nil] :create_reflog (nil) create a reflog for
+      #     the tag
+      #
+      #   @return [Git::Object::Tag] the newly created tag
+      #
+      # @overload add_tag(name, target, options = {})
+      #
+      #   @example Create a lightweight tag on a specific commit
+      #     repo.add_tag('v1.0.0', 'abc123')
+      #
+      #   @example Create an annotated tag on a specific commit
+      #     repo.add_tag('v1.0.0', 'abc123', annotate: true, message: 'Release 1.0.0')
+      #
+      #   @param name [String] the name of the tag to create
+      #
+      #   @param target [String] the object to tag (commit SHA, branch name, etc.)
+      #
+      #   @param options [Hash] options for creating the tag (same keys as the
+      #     first overload)
+      #
+      #   @return [Git::Object::Tag] the newly created tag
+      #
+      # @overload add_tag(name, delete: true)
+      #
+      #   @deprecated Use {#delete_tag} instead.
+      #
+      #   @example Delete a tag (deprecated)
+      #     repo.add_tag('v1.0.0', d: true)
+      #
+      #   @param name [String] the name of the tag to delete
+      #
+      #   @option options [Boolean, nil] :d (nil) delete the named tag
+      #     (alias: `:delete`); deprecated — use {#delete_tag} instead
+      #
+      #   @option options [Boolean, nil] :delete (nil) delete the named tag
+      #     (alias: `:d`); deprecated — use {#delete_tag} instead
+      #
+      #   @return [String] git's stdout from the delete
+      #
+      #   @raise [ArgumentError] if a target is also provided
+      #
+      #   @raise [ArgumentError] if options other than `:d`/`:delete` are also
+      #     provided
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if an annotated or signed tag is requested without
+      #   a message
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def add_tag(name, *options)
+        opts = options.last.is_a?(Hash) ? options.pop : {}
+        target = options.first
+
+        return Private.add_tag_delete_deprecated(self, name, target, opts) if opts[:d] || opts[:delete]
+
+        opts = opts.except(:d, :delete)
+        SharedPrivate.assert_valid_opts!(ADD_TAG_ALLOWED_OPTS, **opts)
+        Private.validate_tag_options!(opts)
+        Git::Commands::Tag::Create.new(@execution_context).call(name, target, **opts)
+        tag(name)
+      end
+
+      # Delete a tag
+      #
+      # @example Delete a tag
+      #   repo.delete_tag('v1.0.0')
+      #
+      # @param name [String] the name of the tag to delete
+      #
+      # @return [String] git's stdout from the delete
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def delete_tag(name)
+        result = Git::Commands::Tag::Delete.new(@execution_context).call(name)
+        raise Git::FailedError, result if result.status.exitstatus.positive?
+
+        result.stdout
+      end
+
       # Private helpers
       #
       # @api private
       #
       module Private
         module_function
+
+        # Validate that a message is present when an annotated or signed tag is
+        # requested
+        #
+        # @param opts [Hash] the tag-creation options
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] when an annotated or signed tag is requested
+        #   without a `:message`/`:m`/`:file`/`:F` value
+        #
+        def validate_tag_options!(opts)
+          needs_message = %i[a annotate s sign u local_user].any? { |k| opts[k] }
+          has_message = opts[:m] || opts[:message] || opts[:F] || opts[:file]
+
+          return unless needs_message && !has_message
+
+          raise ArgumentError, 'Cannot create an annotated or signed tag without a message.'
+        end
+
+        # Handle the deprecated :d/:delete option on add_tag
+        #
+        # Issues a deprecation warning and delegates to delete_tag. Raises
+        # ArgumentError if a target or incompatible options are also supplied.
+        #
+        # @param facade [ObjectOperations] the calling facade instance
+        # @param name [String] tag name
+        # @param target [String, nil] target argument (must be nil)
+        # @param opts [Hash] options hash (must contain only :d/:delete)
+        #
+        # @return [String] stdout from delete_tag
+        #
+        # @api private
+        #
+        def add_tag_delete_deprecated(facade, name, target, opts)
+          Git::Deprecation.warn(
+            'Passing :d or :delete to add_tag is deprecated and will be ' \
+            'removed in a future version. Use delete_tag instead.'
+          )
+          raise ArgumentError, 'Cannot pass a target when using the :d/:delete option.' if target
+
+          extra = opts.keys - %i[d delete]
+          raise ArgumentError, "Cannot combine :d/:delete with other options: #{extra.join(', ')}" unless extra.empty?
+
+          facade.delete_tag(name)
+        end
 
         def show_ref_tag_sha(execution_context, tag_name)
           ref = "refs/tags/#{tag_name}"

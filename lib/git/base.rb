@@ -643,9 +643,9 @@ module Git
       facade_repository.remove_remote(name)
     end
 
-    # returns an array of all Git::Tag objects for this repository
+    # returns an array of all Git::Object::Tag objects for this repository
     def tags
-      lib.tags.map { |r| tag(r) }
+      facade_repository.tags
     end
 
     # Create a new git tag
@@ -660,20 +660,22 @@ module Git
     #   See [git-tag](https://git-scm.com/docs/git-tag) for more details.
     # @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
     # @option options [Boolean, nil] :a (nil) an alias for the `:annotate` option
-    # @option options [Boolean, nil] :d (nil) delete existing tag with the given names
+    # @option options [Boolean, nil] :d (nil) delete existing tag with the given name —
+    #   deprecated; use {#delete_tag} instead (alias: `:delete`)
+    # @option options [Boolean, nil] :delete (nil) delete existing tag with the given name —
+    #   deprecated; use {#delete_tag} instead (alias: `:d`)
     # @option options [Boolean, nil] :f (nil) replace an existing tag with the given name (instead of failing)
     # @option options [String] :message Use the given tag message
     # @option options [String] :m An alias for the `:message` option
     # @option options [Boolean, nil] :s (nil) make a GPG-signed tag
     #
     def add_tag(name, *options)
-      lib.tag(name, *options)
-      tag(name)
+      facade_repository.add_tag(name, *options)
     end
 
     # deletes a tag
     def delete_tag(name)
-      lib.tag(name, { d: true })
+      facade_repository.delete_tag(name)
     end
 
     # Creates an archive of the given tree-ish and writes it to a file
