@@ -57,6 +57,15 @@ RSpec.describe Git do
 
         Git.init('my-repo', repository: 'repo.git', separate_git_dir: 'other.git')
       end
+
+      it 'treats repository: nil like not provided when separate_git_dir is given' do
+        expect(Git).to receive(:open).with(
+          'my-repo',
+          { repository: 'repo.git' }
+        ).and_return(git_base)
+
+        Git.init('my-repo', repository: nil, separate_git_dir: 'repo.git')
+      end
     end
 
     context 'with bare: true (bare repository)' do
@@ -108,6 +117,20 @@ RSpec.describe Git do
         expect(Git).to receive(:open).with('.', {}).and_return(git_base)
 
         Git.init
+      end
+    end
+
+    context 'when git_ssh: nil is explicitly provided' do
+      it 'preserves nil git_ssh in the options forwarded to Git.open' do
+        expect(Git).to receive(:open).with('my-repo', { git_ssh: nil }).and_return(git_base)
+
+        Git.init('my-repo', git_ssh: nil)
+      end
+
+      it 'preserves nil git_ssh in the options forwarded to Git.bare' do
+        expect(Git).to receive(:bare).with('my-repo.git', { git_ssh: nil }).and_return(git_base)
+
+        Git.init('my-repo.git', bare: true, git_ssh: nil)
       end
     end
   end

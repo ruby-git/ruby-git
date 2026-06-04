@@ -228,7 +228,7 @@ This workstream is intentionally split into two PRs because the path/accessor
 state work is independent of the clone/init work, and combining them would make a
 very large PR.
 
-**Step C1a-1 — Path state, accessors, and `.open`/`.bare` factories**
+**Step C1a-1 — Path state, accessors, and `.open`/`.bare` factories** ✅
 
 | `Git::Base` class method | Target |
 | --- | --- |
@@ -242,7 +242,7 @@ must also expose the path/accessor surface currently provided by `Git::Base`: `d
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`
 
-**Step C1a-2 — `.clone` and `.init` factories**
+**Step C1a-2 — `.clone` and `.init` factories** ✅
 
 | `Git::Base` / `Git` method | Target |
 | --- | --- |
@@ -494,7 +494,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | A4 | ✅ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
 | B | ✅ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
 | C1a-1 | ✅ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
-| C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
+| C1a-2 | ✅ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
@@ -542,7 +542,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | A4: new `Inspecting` — `show`, `fsck` | ✅ |
 | B (C0): `Git::Base` factory delegation wiring | ✅ |
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ✅ |
-| C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ⬜ |
+| C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ✅ |
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
 | C1c-1: Guidance/process updates for signature compatibility (#1369) | ⬜ |
 | C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ⬜ |

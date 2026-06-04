@@ -367,6 +367,10 @@ module Git
   #   - If nil, disables SSH for this instance.
   #   - If a non-empty string, uses that value for this instance.
   #
+  # @option options [String, :use_global_config] :binary_path path to the git
+  #   binary; defaults to `Git::Base.config.binary_path` when not specified.
+  #   Raises `ArgumentError` if set to `nil`.
+  #
   # @option options [Logger] :log A logger to use for Git operations.  Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
@@ -388,14 +392,20 @@ module Git
   #
   # @see https://git-scm.com/docs/git-init git init
   #
-  def self.init(directory = '.', options = {})
+  def self.init(directory = '.', options = {}) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     require_relative 'git/commands/init'
 
     options = options.dup
-    options[:repository] ||= options.delete(:separate_git_dir)
+    options[:repository] = options.delete(:separate_git_dir) \
+      if options.key?(:separate_git_dir) && options[:repository].nil?
     init_opts = options.slice(:bare, :initial_branch)
     init_opts[:separate_git_dir] = options[:repository] if options.key?(:repository)
-    Git::Commands::Init.new(Git::Lib.new(nil, options[:log])).call(directory, **init_opts)
+    context = Git::ExecutionContext::Global.new(
+      binary_path: options.fetch(:binary_path, :use_global_config),
+      git_ssh: options.fetch(:git_ssh, :use_global_config),
+      logger: options[:log]
+    )
+    Git::Commands::Init.new(context).call(directory, **init_opts)
 
     open_initialized_repository(directory, options)
   end
@@ -409,9 +419,9 @@ module Git
   #
   private_class_method def self.open_initialized_repository(directory, options)
     if options[:bare]
-      Git.bare(options[:repository] || directory, options.slice(:log, :git_ssh).compact)
+      Git.bare(options[:repository] || directory, options.slice(:log, :git_ssh, :binary_path))
     else
-      Git.open(directory, options.slice(:log, :git_ssh, :index, :repository).compact)
+      Git.open(directory, options.slice(:log, :git_ssh, :binary_path, :index, :repository))
     end
   end
 
