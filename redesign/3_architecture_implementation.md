@@ -38,9 +38,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- | :--------------: | :--------------: |
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 45% |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 50% |
 | Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **65%** |
+| **TOTAL** | -- | -- | **100%** | **68%** |
 
 ### Facade Modules Completed
 
@@ -493,7 +493,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | A3 | ✅ | Add `tags`, `add_tag`, `delete_tag` facade coverage | 4.x-compatible | Tag list/create/delete return contracts match 4.x behavior. |
 | A4 | ✅ | Add `Inspecting#show` and `#fsck` | 4.x-compatible | `Git::Base#show` and `#fsck` remain behavior-compatible and delegate internally. |
 | B | ✅ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
-| C1a-1 | ⬜ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
+| C1a-1 | ✅ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ⬜ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
@@ -541,7 +541,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | A3: `ObjectOperations` — `tags`, `add_tag`, `delete_tag` | ✅ |
 | A4: new `Inspecting` — `show`, `fsck` | ✅ |
 | B (C0): `Git::Base` factory delegation wiring | ✅ |
-| C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ⬜ |
+| C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ✅ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ⬜ |
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
 | C1c-1: Guidance/process updates for signature compatibility (#1369) | ⬜ |
