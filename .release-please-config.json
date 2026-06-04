@@ -9,9 +9,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "draft": false,
-      "prerelease": true,
-      "versioning-strategy": "prerelease",
-      "prerelease-type": "beta",
+      "prerelease": false,
       "include-component-in-tag": false,
       "pull-request-title-pattern": "chore: release v${version}",
       "changelog-sections": [
