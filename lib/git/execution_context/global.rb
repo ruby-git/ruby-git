@@ -33,14 +33,16 @@ module Git
       #
       # @param binary_path [String, :use_global_config] path to the git binary
       #
-      #   Give `:use_global_config` (the default) to use `Git::Base.config.binary_path`.
+      #   Give `:use_global_config` (the default) to use
+      #   `Git::Config.instance.binary_path`.
       #
       #   Passing `nil` raises `ArgumentError` — there is no "unset the
       #   binary" semantic.
       #
       # @param git_ssh [String, nil, :use_global_config] the SSH wrapper path
       #
-      #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default) to use `Git::Base.config.git_ssh`.
+      #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default)
+      #   to use `Git::Config.instance.git_ssh`.
       #
       # @param logger [Logger, nil] the logger to use in the CommandLine layer
       #

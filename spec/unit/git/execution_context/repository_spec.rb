@@ -16,22 +16,21 @@ RSpec.describe Git::ExecutionContext::Repository do
   end
 
   describe '#initialize' do
-    it 'accepts git_dir as a keyword argument' do
-      expect { described_class.new(git_dir: git_dir) }.not_to raise_error
-    end
-
-    it 'accepts all repository path options' do
-      expect do
-        described_class.new(
-          git_dir: git_dir,
-          git_work_dir: git_work_dir,
-          git_index_file: git_index_file,
-          base_object: nil,
-          git_ssh: '/usr/bin/ssh',
-          binary_path: '/usr/local/bin/git',
-          logger: nil
-        )
-      end.not_to raise_error
+    it 'stores all provided keyword arguments as attributes' do
+      instance = described_class.new(
+        git_dir: git_dir,
+        git_work_dir: git_work_dir,
+        git_index_file: git_index_file,
+        git_ssh: '/usr/bin/ssh',
+        binary_path: '/usr/local/bin/git'
+      )
+      expect(instance).to have_attributes(
+        git_dir: git_dir,
+        git_work_dir: git_work_dir,
+        git_index_file: git_index_file,
+        git_ssh: '/usr/bin/ssh',
+        binary_path: '/usr/local/bin/git'
+      )
     end
   end
 
@@ -39,8 +38,8 @@ RSpec.describe Git::ExecutionContext::Repository do
     context 'with :use_global_config (default)' do
       let(:context) { described_class.new(git_dir: git_dir) }
 
-      it 'delegates to Git::Base.config.binary_path' do
-        allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+      it 'delegates to Git::Config.instance.binary_path' do
+        allow(Git::Config.instance).to receive(:binary_path).and_return('/global/git')
         expect(context.binary_path).to eq('/global/git')
       end
     end
@@ -76,86 +75,6 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
   end
 
-  describe 'env_overrides (via #send)' do
-    let(:context) do
-      described_class.new(
-        git_dir: git_dir,
-        git_work_dir: git_work_dir,
-        git_index_file: git_index_file
-      )
-    end
-
-    before do
-      allow(Git::Base).to receive_message_chain(:config, :git_ssh).and_return(nil)
-    end
-
-    it 'sets GIT_DIR to git_dir' do
-      expect(context.send(:env_overrides)['GIT_DIR']).to eq(git_dir)
-    end
-
-    it 'sets GIT_WORK_TREE to git_work_dir' do
-      expect(context.send(:env_overrides)['GIT_WORK_TREE']).to eq(git_work_dir)
-    end
-
-    it 'sets GIT_INDEX_FILE to git_index_file' do
-      expect(context.send(:env_overrides)['GIT_INDEX_FILE']).to eq(git_index_file)
-    end
-
-    it 'sets GIT_EDITOR to "true" (no-op editor)' do
-      expect(context.send(:env_overrides)['GIT_EDITOR']).to eq('true')
-    end
-
-    it 'sets LC_ALL to "en_US.UTF-8"' do
-      expect(context.send(:env_overrides)['LC_ALL']).to eq('en_US.UTF-8')
-    end
-
-    it 'merges caller-supplied additional overrides' do
-      env = context.send(:env_overrides, 'GIT_TRACE' => '1')
-      expect(env['GIT_TRACE']).to eq('1')
-    end
-
-    it 'allows unsetting an env var by passing nil' do
-      env = context.send(:env_overrides, 'GIT_INDEX_FILE' => nil)
-      expect(env['GIT_INDEX_FILE']).to be_nil
-    end
-  end
-
-  describe 'global_opts (via #send)' do
-    context 'with git_dir and git_work_dir set' do
-      let(:context) do
-        described_class.new(git_dir: git_dir, git_work_dir: git_work_dir)
-      end
-
-      it 'includes --git-dir=<path>' do
-        expect(context.send(:global_opts)).to include("--git-dir=#{git_dir}")
-      end
-
-      it 'includes --work-tree=<path>' do
-        expect(context.send(:global_opts)).to include("--work-tree=#{git_work_dir}")
-      end
-
-      it 'includes the static global opts' do
-        expect(context.send(:global_opts)).to include('-c', 'core.quotePath=true')
-      end
-    end
-
-    context 'without git_work_dir' do
-      let(:context) { described_class.new(git_dir: git_dir) }
-
-      it 'does not include --work-tree' do
-        expect(context.send(:global_opts).grep(/\A--work-tree/)).to be_empty
-      end
-    end
-
-    context 'without git_dir' do
-      let(:context) { described_class.new(git_dir: nil) }
-
-      it 'does not include --git-dir' do
-        expect(context.send(:global_opts).grep(/\A--git-dir/)).to be_empty
-      end
-    end
-  end
-
   describe 'git_ssh resolution' do
     context 'with a literal git_ssh path' do
       let(:context) { described_class.new(git_dir: git_dir, git_ssh: '/usr/bin/ssh') }
@@ -168,8 +87,8 @@ RSpec.describe Git::ExecutionContext::Repository do
     context 'with :use_global_config (default)' do
       let(:context) { described_class.new(git_dir: git_dir) }
 
-      it 'delegates to Git::Base.config.git_ssh' do
-        allow(Git::Base).to receive_message_chain(:config, :git_ssh).and_return('/configured/ssh')
+      it 'delegates to Git::Config.instance.git_ssh' do
+        allow(Git::Config.instance).to receive(:git_ssh).and_return('/configured/ssh')
         expect(context.git_ssh).to eq('/configured/ssh')
       end
     end
@@ -184,13 +103,13 @@ RSpec.describe Git::ExecutionContext::Repository do
   end
 
   describe '.from_base' do
-    let(:repo_double) { double('repo', to_s: git_dir) }
-    let(:index_double) { double('index', to_s: git_index_file) }
-    let(:dir_double) { double('dir', to_s: git_work_dir) }
+    let(:repo_double) { instance_double(Pathname, to_s: git_dir) }
+    let(:index_double) { instance_double(Pathname, to_s: git_index_file) }
+    let(:dir_double) { instance_double(Pathname, to_s: git_work_dir) }
     let(:base) do
-      double('Git::Base',
-             repo: repo_double, index: index_double, dir: dir_double,
-             git_ssh: nil, binary_path: :use_global_config)
+      instance_double(Git::Base,
+                      repo: repo_double, index: index_double, dir: dir_double,
+                      git_ssh: nil, binary_path: :use_global_config)
     end
 
     subject(:context) { described_class.from_base(base) }
@@ -217,9 +136,9 @@ RSpec.describe Git::ExecutionContext::Repository do
 
     context 'when base.binary_path is an explicit path' do
       let(:base) do
-        double('Git::Base',
-               repo: repo_double, index: index_double, dir: dir_double,
-               git_ssh: nil, binary_path: '/custom/git')
+        instance_double(Git::Base,
+                        repo: repo_double, index: index_double, dir: dir_double,
+                        git_ssh: nil, binary_path: '/custom/git')
       end
 
       it 'forwards binary_path to the context' do
@@ -228,8 +147,8 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
 
     context 'when base.binary_path is :use_global_config (default)' do
-      it 'delegates binary_path resolution to Git::Base.config' do
-        allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+      it 'delegates binary_path resolution to Git::Config.instance' do
+        allow(Git::Config.instance).to receive(:binary_path).and_return('/global/git')
         expect(context.binary_path).to eq('/global/git')
       end
     end
@@ -279,7 +198,7 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
 
     it 'defaults git_ssh to :use_global_config when :git_ssh is absent' do
-      allow(Git::Base).to receive_message_chain(:config, :git_ssh).and_return('/global/ssh')
+      allow(Git::Config.instance).to receive(:git_ssh).and_return('/global/ssh')
       expect(context.git_ssh).to eq('/global/ssh')
     end
 
@@ -289,7 +208,7 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
 
     it 'defaults binary_path to :use_global_config when :binary_path is absent' do
-      allow(Git::Base).to receive_message_chain(:config, :binary_path).and_return('/global/git')
+      allow(Git::Config.instance).to receive(:binary_path).and_return('/global/git')
       expect(context.binary_path).to eq('/global/git')
     end
 
@@ -306,7 +225,7 @@ RSpec.describe Git::ExecutionContext::Repository do
 
     before do
       allow(context).to receive(:command_line_capturing).and_return(command_line_double)
-      allow(Git::Base).to receive_message_chain(:config, :timeout).and_return(nil)
+      allow(Git::Config.instance).to receive(:timeout).and_return(nil)
     end
 
     it 'delegates to command_line_capturing.run' do
@@ -324,7 +243,7 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
 
     it 'applies the global timeout when no timeout is specified' do
-      allow(Git::Base).to receive_message_chain(:config, :timeout).and_return(30)
+      allow(Git::Config.instance).to receive(:timeout).and_return(30)
       expect(command_line_double).to receive(:run)
         .with('status', hash_including(timeout: 30))
         .and_return(result)
@@ -334,6 +253,50 @@ RSpec.describe Git::ExecutionContext::Repository do
     it 'raises ArgumentError for unknown options' do
       expect { context.command_capturing('version', unknown_opt: true) }
         .to raise_error(ArgumentError, /Unknown options: unknown_opt/)
+    end
+
+    context 'when building the CommandLine instance (env and global opts)' do
+      before do
+        allow(context).to receive(:command_line_capturing).and_call_original
+        allow(Git::CommandLine::Capturing).to receive(:new).and_return(command_line_double)
+        allow(command_line_double).to receive(:run).and_return(result)
+      end
+
+      it 'passes GIT_DIR and GIT_WORK_TREE in the env hash' do
+        context.command_capturing('version')
+        expect(Git::CommandLine::Capturing).to have_received(:new).with(
+          hash_including('GIT_DIR' => git_dir, 'GIT_WORK_TREE' => git_work_dir),
+          anything, anything, anything
+        )
+      end
+
+      it 'passes GIT_EDITOR=true and LC_ALL=en_US.UTF-8 in the env hash' do
+        context.command_capturing('version')
+        expect(Git::CommandLine::Capturing).to have_received(:new).with(
+          hash_including('GIT_EDITOR' => 'true', 'LC_ALL' => 'en_US.UTF-8'),
+          anything, anything, anything
+        )
+      end
+
+      it 'includes --git-dir and --work-tree in global opts' do
+        context.command_capturing('version')
+        expect(Git::CommandLine::Capturing).to have_received(:new).with(
+          anything,
+          anything,
+          include("--git-dir=#{git_dir}", "--work-tree=#{git_work_dir}"),
+          anything
+        )
+      end
+
+      it 'includes the static global opts' do
+        context.command_capturing('version')
+        expect(Git::CommandLine::Capturing).to have_received(:new).with(
+          anything,
+          anything,
+          include('-c', 'core.quotePath=true'),
+          anything
+        )
+      end
     end
   end
 
@@ -345,7 +308,7 @@ RSpec.describe Git::ExecutionContext::Repository do
 
     before do
       allow(context).to receive(:command_line_streaming).and_return(command_line_double)
-      allow(Git::Base).to receive_message_chain(:config, :timeout).and_return(nil)
+      allow(Git::Config.instance).to receive(:timeout).and_return(nil)
     end
 
     it 'delegates to command_line_streaming.run' do

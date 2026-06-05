@@ -88,20 +88,22 @@ module Git
     #
     # @param binary_path [String, :use_global_config] path to the git binary
     #
-    #   Give `:use_global_config` (the default) to use `Git::Base.config.binary_path`.
+    #   Give `:use_global_config` (the default) to use `Git::Config.instance.binary_path`.
     #
     #   Passing `nil` raises `ArgumentError` — there is no "unset the
     #   binary" semantic.
     #
     # @param git_ssh [String, nil, :use_global_config] the SSH wrapper path
     #
-    #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default) to use `Git::Base.config.git_ssh`.
+    #   Give `nil` to unset `GIT_SSH`, or `:use_global_config` (default)
+    #   to use `Git::Config.instance.git_ssh`.
     #
     # @param logger [Logger, nil] the logger to use in the CommandLine layer
     #
     #   Give `nil` to use a null logger (`Logger.new(nil)`).
     #
-    # @raise [NotImplementedError] if called directly on {Git::ExecutionContext} rather than a subclass
+    # @raise [NotImplementedError] if called directly on {Git::ExecutionContext}
+    #   rather than a subclass
     #
     # @raise [ArgumentError] if `binary_path` is `nil`
     #
@@ -156,11 +158,12 @@ module Git
 
     # Returns the resolved git binary path for this context
     #
-    # `:use_global_config` is resolved to `Git::Base.config.binary_path` each time a
-    # command method is called, so runtime changes to `Git::Base.config.binary_path`
+    # `:use_global_config` is resolved to `Git::Config.instance.binary_path` each time a
+    # command method is called, so runtime changes to
+    # `Git.configure { |c| c.binary_path = ... }`
     # are reflected per command invocation.
     #
-    # @example With the default sentinel (resolves from Git::Base.config at call-time)
+    # @example With the default sentinel (resolves from Git::Config.instance at call-time)
     #   context = Git::ExecutionContext::Global.new
     #   context.binary_path  #=> "git"
     #
@@ -171,19 +174,20 @@ module Git
     # @return [String] the resolved git binary path
     #
     def binary_path
-      return Git::Base.config.binary_path if @binary_path == :use_global_config
+      return Git::Config.instance.binary_path if @binary_path == :use_global_config
 
       @binary_path
     end
 
     # Returns the resolved `GIT_SSH` wrapper path for this context
     #
-    # `:use_global_config` is resolved to `Git::Base.config.git_ssh` each time a
-    # command method is called, so runtime changes to `Git::Base.config.git_ssh`
+    # `:use_global_config` is resolved to `Git::Config.instance.git_ssh` each time a
+    # command method is called, so runtime changes to
+    # `Git.configure { |c| c.git_ssh = ... }`
     # are reflected per command invocation. `nil` means the variable will be
     # explicitly unset.
     #
-    # @example With the default sentinel (resolves from Git::Base.config at call-time)
+    # @example With the default sentinel (resolves from Git::Config.instance at call-time)
     #   context = Git::ExecutionContext::Global.new
     #   context.git_ssh  #=> nil
     #
@@ -194,7 +198,7 @@ module Git
     # @return [String, nil] the resolved `GIT_SSH` wrapper path, or `nil` to unset
     #
     def git_ssh
-      return Git::Base.config.git_ssh if @git_ssh == :use_global_config
+      return Git::Config.instance.git_ssh if @git_ssh == :use_global_config
 
       @git_ssh
     end
@@ -453,9 +457,9 @@ module Git
     # Creates a {Git::CommandLine::Capturing} instance for the current invocation.
     #
     # A new instance is created per call so that {#binary_path} — resolved from
-    # `Git::Base.config` when set to `:use_global_config` — and {#env_overrides}
+    # `Git::Config.instance` when set to `:use_global_config` — and {#env_overrides}
     # — including {#git_ssh} resolution for `:use_global_config` — reflect the
-    # state of `Git::Base.config` at the time of each command invocation.
+    # state of {Git::Config.instance} at the time of each command invocation.
     #
     # @return [Git::CommandLine::Capturing] the capturing command line instance
     #
@@ -466,9 +470,9 @@ module Git
     # Creates a {Git::CommandLine::Streaming} instance for the current invocation.
     #
     # A new instance is created per call so that {#binary_path} — resolved from
-    # `Git::Base.config` when set to `:use_global_config` — and {#env_overrides}
+    # `Git::Config.instance` when set to `:use_global_config` — and {#env_overrides}
     # — including {#git_ssh} resolution for `:use_global_config` — reflect the
-    # state of `Git::Base.config` at the time of each command invocation.
+    # state of {Git::Config.instance} at the time of each command invocation.
     #
     # @return [Git::CommandLine::Streaming] the streaming command line instance
     #

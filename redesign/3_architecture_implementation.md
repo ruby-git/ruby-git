@@ -259,7 +259,7 @@ Workstream F.
 
 Files touched: `lib/git/repository.rb`, `lib/git/base.rb`, `lib/git.rb`
 
-**Step C1b — Move global config singleton ownership off `Git::Base`**
+**Step C1b — Move global config singleton ownership off `Git::Base`** ✅
 
 `Git.configure` and `Git.config` both delegate to `Base.config`, which returns the
 `Git::Base`-owned `Git::Config` singleton. When `Git::Base` is deleted, these break.
