@@ -10,6 +10,7 @@ methods on `Git::Repository::*` modules.
 
 ## Contents
 
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Reference](#reference)
@@ -29,6 +30,19 @@ methods on `Git::Repository::*` modules.
 - [Output](#output)
   - [When writing new facade tests](#when-writing-new-facade-tests)
   - [When reviewing existing facade tests](#when-reviewing-existing-facade-tests)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the spec file(s)
+to write or review. Include the corresponding facade module for context. Examples:
+
+```text
+Using the Facade Test Conventions skill, scaffold tests for Git::Repository::Staging.
+```
+
+```text
+Facade Test Conventions review: spec/unit/git/repository/committing_spec.rb.
+```
 
 ## Related skills
 
