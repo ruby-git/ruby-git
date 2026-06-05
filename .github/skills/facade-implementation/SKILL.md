@@ -17,6 +17,7 @@ for the five facade responsibilities this layer is designed around.
 
 ## Contents
 
+- [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
   - [Existing facade source](#existing-facade-source)
@@ -26,6 +27,19 @@ for the five facade responsibilities this layer is designed around.
 - [Reference](#reference)
 - [Workflow](#workflow)
 - [Output](#output)
+
+## How to use this skill
+
+Attach this file to your Copilot Chat context, then invoke with the facade method
+to scaffold, update, or review. Examples:
+
+```text
+Using the Facade Implementation skill, scaffold Git::Repository::Staging#add.
+```
+
+```text
+Facade Implementation review: Git::Repository::Committing#commit.
+```
 
 ## Related skills
 

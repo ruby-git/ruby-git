@@ -18,7 +18,6 @@ preserve backward compatibility within the migration window.
 
 ## Contents
 
-- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
@@ -28,6 +27,7 @@ preserve backward compatibility within the migration window.
   - [Pattern B — `Git::Lib`-only (public-by-exposure)](#pattern-b--gitlib-only-public-by-exposure)
   - [Pattern C — `Git::Base`-only (no `Git::Lib` method)](#pattern-c--gitbase-only-no-gitlib-method)
 - [Signature compatibility policy](#signature-compatibility-policy)
+- [Keyword-arg remediation list](#keyword-arg-remediation-list)
 - [Determining the option allowlist](#determining-the-option-allowlist)
 - [Workflow](#workflow)
   - [Branch setup](#branch-setup)
@@ -180,13 +180,29 @@ Use this policy in both extraction mode and review mode:
 
 Rules:
 
-1. Default classification is `legacy-contract` when a legacy predecessor exists.
-2. `5.x-native` requires explicit justification in the plan/review notes.
-3. For `legacy-contract` methods, preserve the exact 4.x signature (including
-  rare `**opts` signatures). For `5.x-native` methods, use `opts = {}` style
-  for consistency.
-4. For `legacy-contract` methods, tests must prove the expected call shape,
-   not only command delegation.
+1. `legacy-contract` methods preserve the exact 4.x call shape verbatim,
+   including rare `**opts` signatures; never alter the parameter list when a
+   legacy predecessor exists.
+2. `5.x-native` methods use `opts = {}` style for consistency; a broader kwargs
+   migration is deferred to v6.x so it can be applied uniformly across the
+   entire public API.
+3. Every extracted method must be explicitly classified as `legacy-contract` or
+   `5.x-native` before the PR is opened.
+4. The classification must appear in the PR description and in the extracted
+   method's YARD `@note`. Example:
+
+   ```ruby
+   # @note Signature compatibility: legacy-contract — preserves the exact Git::Base#foo 4.x call shape.
+   ```
+
+## Keyword-arg remediation list
+
+See [KEYWORD_ARG_REMEDIATION.md](KEYWORD_ARG_REMEDIATION.md) for the initial list
+of facade methods that use `**opts`/`**` keyword-splat where the legacy predecessor
+used `opts = {}`. Each method in this list must be resolved before
+`Git.open`/`.clone`/`.init`/`.bare` are changed to return `Git::Repository`:
+either fix the signature to match the `legacy-contract` classification, or
+record an explicit `5.x-native` justification.
 
 ## Determining the option allowlist
 

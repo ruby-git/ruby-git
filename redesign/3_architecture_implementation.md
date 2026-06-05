@@ -286,7 +286,7 @@ documented as a v5 breaking change or already deprecated for removal. This audit
 the gate that prevents the entry-point flip from silently dropping public methods
 just because `Git::Base` still exists in the tree.
 
-**Step C1c-1 — Signature-compatibility guidance and process** ⬜
+**Step C1c-1 — Signature-compatibility guidance and process** ✅
 
 Update extraction and review skills to document the signature-compatibility
 classification policy (legacy-contract vs 5.x-native), parity-check requirements,
@@ -499,7 +499,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
-| C1c-1 | ⬜ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
+| C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
 | C1c-2 | ⬜ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
 | C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
 | D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
@@ -544,7 +544,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ✅ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ✅ |
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
-| C1c-1: Guidance/process updates for signature compatibility (#1369) | ⬜ |
+| C1c-1: Guidance/process updates for signature compatibility (#1369) | ✅ |
 | C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ⬜ |
 | C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ⬜ (v5 cleanup) |
