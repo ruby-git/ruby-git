@@ -87,12 +87,33 @@ module Git
     end
   end
 
+  # Configures the gem by yielding {Git::Config.instance} to the block
+  #
+  # @example Set the global git binary path
+  #   Git.configure { |c| c.binary_path = '/usr/local/bin/git' }
+  #
+  # @yield [config] yields the singleton config object
+  #
+  # @yieldparam config [Git::Config] the singleton config object
+  #
+  # @yieldreturn [void]
+  #
+  # @return [void]
+  #
   def self.configure
-    yield Base.config
+    yield Git::Config.instance
+    nil
   end
 
+  # Returns the process-wide {Git::Config} singleton
+  #
+  # @example Read the configured binary path
+  #   Git.config.binary_path  #=> "git"
+  #
+  # @return [Git::Config] the singleton config object
+  #
   def self.config
-    Base.config
+    Git::Config.instance
   end
 
   def global_config(name = nil, value = nil)
@@ -368,7 +389,7 @@ module Git
   #   - If a non-empty string, uses that value for this instance.
   #
   # @option options [String, :use_global_config] :binary_path path to the git
-  #   binary; defaults to `Git::Base.config.binary_path` when not specified.
+  #   binary; defaults to `Git::Config.instance.binary_path` when not specified.
   #   Raises `ArgumentError` if set to `nil`.
   #
   # @option options [Logger] :log A logger to use for Git operations.  Git
@@ -396,8 +417,9 @@ module Git
     require_relative 'git/commands/init'
 
     options = options.dup
-    options[:repository] = options.delete(:separate_git_dir) \
-      if options.key?(:separate_git_dir) && options[:repository].nil?
+    if options.key?(:separate_git_dir) && options[:repository].nil?
+      options[:repository] = options.delete(:separate_git_dir)
+    end
     init_opts = options.slice(:bare, :initial_branch)
     init_opts[:separate_git_dir] = options[:repository] if options.key?(:repository)
     context = Git::ExecutionContext::Global.new(
@@ -493,8 +515,14 @@ module Git
 
   # Return the version of a git binary as a {Git::Version}
   #
+  # @example Default binary
+  #   Git.git_version #=> #<Git::Version 2.42.0>
+  #
+  # @example Explicit binary path
+  #   Git.git_version('/opt/homebrew/bin/git') #=> #<Git::Version 2.42.0>
+  #
   # @param binary_path [String, nil] path to the git binary; defaults to
-  #   `Git::Base.config.binary_path`
+  #   `Git::Config.instance.binary_path`
   #
   # @return [Git::Version] the parsed git version
   #
@@ -504,14 +532,8 @@ module Git
   #
   # @raise [Git::Error] if the binary is not found or fails to launch
   #
-  # @example Default binary
-  #   Git.git_version #=> #<Git::Version 2.42.0>
-  #
-  # @example Explicit binary path
-  #   Git.git_version('/opt/homebrew/bin/git') #=> #<Git::Version 2.42.0>
-  #
   def self.git_version(binary_path = nil)
-    path = binary_path || Git::Base.config.binary_path
+    path = binary_path || Git::Config.instance.binary_path
     Git::Lib.cached_git_version(path) { run_git_version(path) }
   end
 
@@ -524,16 +546,23 @@ module Git
 
   # Return the version of the git binary
   #
-  # @example
-  #  Git.binary_version # => [2, 46, 0]
+  # @example Basic usage
+  #   Git.binary_version  # => [2, 46, 0]
+  #
+  # @param binary_path [String, nil] path to the git binary; defaults to
+  #   `Git::Config.instance.binary_path`
   #
   # @return [Array<Integer>] the version of the git binary
   #
-  # @deprecated Use {Git.git_version} instead, which returns a {Git::Version} (not an Array).
-  #   For the legacy array shape, call: `Git.git_version.to_a`.
-  #   The optional binary_path argument is preserved: `Git.git_version(binary_path)`.
+  # @deprecated Use {Git.git_version} instead, which returns a
+  #   {Git::Version} (not an Array)
   #
-  def self.binary_version(binary_path = Git::Base.config.binary_path)
+  #   For the legacy array shape, call: `Git.git_version.to_a`.
+  #   The optional binary_path argument is preserved:
+  #   `Git.git_version(binary_path)`.
+  #
+  def self.binary_version(binary_path = nil)
+    binary_path ||= Git::Config.instance.binary_path
     Git::Deprecation.warn(
       'Git.binary_version is deprecated and will be removed in 6.0. ' \
       'Use Git.git_version instead, which returns a Git::Version ' \

@@ -39,11 +39,19 @@ module Git
       Git::Lib.new(nil, options[:log]).repository_default_branch(repository)
     end
 
-    # Returns (and initialize if needed) a Git::Config instance
+    # Returns the process-wide {Git::Config} singleton
     #
-    # @return [Git::Config] the current config instance.
+    # Delegates to {Git::Config.instance} so that all call sites that relied on
+    # `Git::Base.config` continue to work while {Git::Base} remains in the tree.
+    # No config state is owned here.
+    #
+    # @example Read the configured binary path
+    #   Git::Base.config.binary_path  #=> "git"
+    #
+    # @return [Git::Config] the global config singleton
+    #
     def self.config
-      @config ||= Config.new
+      Git::Config.instance
     end
 
     # @deprecated Use {Git.git_version} instead, which returns a {Git::Version} (not an Array).
@@ -116,24 +124,24 @@ module Git
     # @option options [String, nil] :git_ssh Path to a custom SSH executable or script
     #
     #   Controls how SSH is configured for this {Git::Base} instance:
-    #   - If this option is not provided, the global Git::Base.config.git_ssh setting is used.
+    #   - If this option is not provided, the global `Git::Config.instance.git_ssh` setting is used.
     #   - If this option is explicitly set to nil, SSH is disabled for this instance.
     #   - If this option is a non-empty String, that value is used as the SSH command for
-    #     this instance, overriding the global Git::Base.config.git_ssh setting.
+    #     this instance, overriding the global `Git::Config.instance.git_ssh` setting.
     #
     # @option options [String, :use_global_config] :binary_path Path to the git binary
     #
     #   Controls which git binary is used for commands routed through
     #   {Git::ExecutionContext} (i.e., commands already migrated to
     #   +Git::Commands::*+ classes). Commands still delegating through +Git::Lib+
-    #   continue to use the global `Git::Base.config.binary_path` setting.
+    #   continue to use the global `Git::Config.instance.binary_path` setting.
     #
     #   This limitation will be resolved when the architectural migration to
     #   +Git::Repository+ is complete.
     #
-    #   - If this option is not provided, the global Git::Base.config.binary_path setting is used.
+    #   - If this option is not provided, the global `Git::Config.instance.binary_path` setting is used.
     #   - If this option is a String, that value is used as the git binary path for
-    #     migrated commands, overriding the global Git::Base.config.binary_path setting.
+    #     migrated commands, overriding the global `Git::Config.instance.binary_path` setting.
     #   - Passing `nil` raises ArgumentError — there is no "unset the binary" semantic.
     #
     # @return [Git::Base] an object that can execute git commands on a working copy or

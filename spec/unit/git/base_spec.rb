@@ -12,6 +12,12 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '.config' do
+    it 'returns Git::Config.instance (delegator for backward compatibility)' do
+      expect(described_class.config).to be(Git::Config.instance)
+    end
+  end
+
   describe '#binary_path' do
     context 'when not specified' do
       subject(:base) { described_class.new }

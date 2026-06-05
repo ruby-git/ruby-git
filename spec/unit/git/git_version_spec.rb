@@ -4,7 +4,7 @@ require 'spec_helper'
 
 RSpec.describe Git do
   describe '.git_version' do
-    let(:binary_path) { Git::Base.config.binary_path }
+    let(:binary_path) { Git::Config.instance.binary_path }
     let(:context) { instance_double(Git::ExecutionContext::Global) }
     let(:version_cmd) { instance_double(Git::Commands::Version) }
 
@@ -77,7 +77,7 @@ RSpec.describe Git do
       end
 
       it 'raises Git::Error with Errno::ENOENT as cause' do
-        expect { described_class.git_version }.to raise_error(Git::Error) do |error|
+        expect { described_class.git_version }.to raise_error(Git::Error, /No such file or directory/) do |error|
           expect(error.cause).to be_a(Errno::ENOENT)
         end
       end
@@ -95,7 +95,7 @@ RSpec.describe Git do
       end
 
       it 'raises Git::Error with Errno::EACCES as cause' do
-        expect { described_class.git_version }.to raise_error(Git::Error) do |error|
+        expect { described_class.git_version }.to raise_error(Git::Error, /Permission denied/) do |error|
           expect(error.cause).to be_a(Errno::EACCES)
         end
       end
@@ -108,8 +108,8 @@ RSpec.describe Git do
         )
       end
 
-      it 'raises Git::FailedError' do
-        expect { described_class.git_version }.to raise_error(Git::FailedError)
+      it 'raises Git::FailedError with the stderr in the message' do
+        expect { described_class.git_version }.to raise_error(Git::FailedError, /command not found/)
       end
     end
 
@@ -118,8 +118,8 @@ RSpec.describe Git do
         allow(version_cmd).to receive(:call).and_return(command_result('not a version string'))
       end
 
-      it 'raises Git::UnexpectedResultError' do
-        expect { described_class.git_version }.to raise_error(Git::UnexpectedResultError)
+      it 'raises Git::UnexpectedResultError with an invalid version message' do
+        expect { described_class.git_version }.to raise_error(Git::UnexpectedResultError, /Invalid version/)
       end
     end
   end
@@ -149,6 +149,18 @@ RSpec.describe Git do
 
     it 'still returns an Array of integers' do
       expect(described_class.binary_version).to eq([2, 42, 0])
+    end
+
+    context 'when called with an explicit binary_path' do
+      it 'passes the explicit binary_path to git_version' do
+        described_class.binary_version('/explicit/git')
+
+        expect(Git).to have_received(:git_version).with('/explicit/git')
+      end
+
+      it 'still returns an Array of integers' do
+        expect(described_class.binary_version('/explicit/git')).to eq([2, 42, 0])
+      end
     end
   end
 end
