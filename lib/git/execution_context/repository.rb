@@ -144,6 +144,31 @@ module Git
 
       # @return [Git::Base, nil] originating base object
       attr_reader :base_object
+
+      # Returns a new instance with the same configuration, applying `overrides`
+      #
+      # Uses raw stored values for `binary_path`, `git_ssh`, and `logger` so
+      # that `:use_global_config` sentinels are preserved across rebuilds and
+      # future changes to `Git.configure` continue to take effect.
+      #
+      # @param overrides [Hash] keyword arguments to override in the new instance
+      #
+      # @return [Git::ExecutionContext::Repository] the new context
+      #
+      # @api private
+      #
+      def dup_with(**overrides)
+        self.class.new(
+          git_dir: @git_dir,
+          git_work_dir: @git_work_dir,
+          git_index_file: @git_index_file,
+          base_object: @base_object,
+          binary_path: @binary_path,
+          git_ssh: @git_ssh,
+          logger: @logger,
+          **overrides
+        )
+      end
     end
   end
 end

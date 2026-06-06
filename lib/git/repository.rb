@@ -5,6 +5,7 @@ require 'pathname'
 
 require 'git/execution_context/repository'
 require 'git/repository/branching'
+require 'git/repository/context_helpers'
 require 'git/repository/committing'
 require 'git/repository/configuring'
 require 'git/repository/diffing'
@@ -48,6 +49,7 @@ module Git
     extend Git::Repository::Factories
 
     include Git::Repository::Branching
+    include Git::Repository::ContextHelpers
     include Git::Repository::Committing
     include Git::Repository::Configuring
     include Git::Repository::Diffing
