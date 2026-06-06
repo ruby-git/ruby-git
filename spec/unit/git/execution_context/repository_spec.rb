@@ -34,6 +34,71 @@ RSpec.describe Git::ExecutionContext::Repository do
     end
   end
 
+  describe '#dup_with' do
+    let(:logger) { Logger.new(nil) }
+    let(:base_object) { instance_double(Git::Base) }
+
+    let(:original) do
+      described_class.new(
+        git_dir: git_dir,
+        git_work_dir: git_work_dir,
+        git_index_file: git_index_file,
+        base_object: base_object,
+        binary_path: :use_global_config,
+        git_ssh: :use_global_config,
+        logger: logger
+      )
+    end
+
+    it 'returns a new instance of the same class' do
+      expect(original.dup_with).to be_a(described_class)
+    end
+
+    it 'returns a different object' do
+      expect(original.dup_with).not_to be(original)
+    end
+
+    it 'copies all path attributes' do
+      duped = original.dup_with
+      expect(duped).to have_attributes(
+        git_dir: git_dir,
+        git_work_dir: git_work_dir,
+        git_index_file: git_index_file
+      )
+    end
+
+    it 'preserves base_object' do
+      expect(original.dup_with.base_object).to be(base_object)
+    end
+
+    it 'preserves the logger instance' do
+      expect(original.dup_with.logger).to be(logger)
+    end
+
+    it 'preserves the :use_global_config sentinel for binary_path' do
+      duped = original.dup_with
+      allow(Git::Config.instance).to receive(:binary_path).and_return('/new/git')
+      expect(duped.binary_path).to eq('/new/git')
+    end
+
+    it 'preserves the :use_global_config sentinel for git_ssh' do
+      duped = original.dup_with
+      allow(Git::Config.instance).to receive(:git_ssh).and_return('/new/wrapper')
+      expect(duped.git_ssh).to eq('/new/wrapper')
+    end
+
+    it 'applies provided overrides' do
+      duped = original.dup_with(git_index_file: '/new/index')
+      expect(duped.git_index_file).to eq('/new/index')
+      expect(duped.git_dir).to eq(git_dir)
+    end
+
+    it 'does not mutate the original' do
+      original.dup_with(git_index_file: '/new/index')
+      expect(original.git_index_file).to eq(git_index_file)
+    end
+  end
+
   describe 'binary_path resolution' do
     context 'with :use_global_config (default)' do
       let(:context) { described_class.new(git_dir: git_dir) }

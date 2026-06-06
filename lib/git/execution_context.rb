@@ -203,6 +203,18 @@ module Git
       @git_ssh
     end
 
+    # Returns the logger used by this context
+    #
+    # @example
+    #   context = Git::ExecutionContext::Repository.new(git_dir: '/repo/.git', logger: my_logger)
+    #   context.logger  #=> my_logger
+    #
+    # @return [Logger] the logger instance; never `nil`
+    #
+    # @api private
+    #
+    attr_reader :logger
+
     # Runs a git command and returns the result
     #
     # By default, raises {Git::FailedError} if the command exits with a non-zero

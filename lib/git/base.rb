@@ -213,19 +213,13 @@ module Git
       facade_repository.add_remote(name, url, opts)
     end
 
-    # changes current working directory for a block
-    # to the git working directory
+    # Changes the current working directory to the git working directory for the
+    # duration of the block
     #
-    # example
-    #  @git.chdir do
-    #    # write files
-    #    @git.add
-    #    @git.commit('message')
-    #  end
-    def chdir # :yields: the working directory Pathname
-      Dir.chdir(dir.to_s) do
-        yield dir
-      end
+    # @see Git::Repository::ContextHelpers#chdir
+    #
+    def chdir(&) # :yields: the working directory Pathname
+      facade_repository.chdir(&)
     end
 
     # g.config('user.name', 'Scott Chacon') # sets value
@@ -276,39 +270,25 @@ module Git
                .sum { |file| File.stat(file).size.to_i }
     end
 
-    private
-
-    def deprecate_check_argument(check, must_exist)
-      unless check.nil?
-        Git::Deprecation.warn(
-          'The "check" argument is deprecated and will be removed in a future version. ' \
-          'Use "must_exist:" instead.'
-        )
-      end
-      # default is true
-      must_exist.nil? && check.nil? ? true : must_exist | check
-    end
-
-    def validate_path(path, must_exist)
-      Pathname.new(File.expand_path(path.to_s)).tap do |expanded_path|
-        raise ArgumentError, "path does not exist: #{expanded_path}" if must_exist && !expanded_path.exist?
-      end
-    end
-
-    public
-
+    # Sets the git index to `index_file` and updates the cached index reference
+    #
+    # @see Git::Repository::ContextHelpers#set_index
+    #
     def set_index(index_file, check = nil, must_exist: nil)
-      must_exist = deprecate_check_argument(check, must_exist)
+      facade_repository.set_index(index_file, check, must_exist: must_exist)
       @lib = nil
-      @facade_repository = nil
-      @index = validate_path(index_file, must_exist)
+      @index = facade_repository.index
     end
 
+    # Sets the git working directory to `work_dir` and updates the cached
+    # working directory reference
+    #
+    # @see Git::Repository::ContextHelpers#set_working
+    #
     def set_working(work_dir, check = nil, must_exist: nil)
-      must_exist = deprecate_check_argument(check, must_exist)
+      facade_repository.set_working(work_dir, check, must_exist: must_exist)
       @lib = nil
-      @facade_repository = nil
-      @working_directory = validate_path(work_dir, must_exist)
+      @working_directory = facade_repository.dir
     end
 
     # returns +true+ if the branch exists locally
@@ -792,27 +772,38 @@ module Git
 
     ## LOWER LEVEL INDEX OPERATIONS ##
 
-    def with_index(new_index) # :yields: new_index
+    # Temporarily switches the git index to `new_index` for the duration of a
+    # block
+    #
+    # @see Git::Repository::ContextHelpers#with_index
+    #
+    def with_index(new_index) # :yields: the active index Pathname
       old_index = @index
-      set_index(new_index, false)
-      return_value = yield @index
-      set_index(old_index)
-      return_value
+      facade_repository.with_index(new_index) do |_|
+        @index = facade_repository.index
+        @lib = nil
+        yield @index
+      end
+    ensure
+      @index = old_index
+      @lib = nil
     end
 
-    def with_temp_index(&)
-      # Workaround for JRUBY, since they handle the TempFile path different.
-      # MUST be improved to be safer and OS independent.
-      if RUBY_PLATFORM == 'java'
-        temp_path = "/tmp/temp-index-#{(0...15).map { ('a'..'z').to_a[rand(26)] }.join}"
-      else
-        tempfile = Tempfile.new('temp-index')
-        temp_path = tempfile.path
-        tempfile.close
-        tempfile.unlink
+    # Temporarily switches the git index to a new temporary file for the
+    # duration of a block
+    #
+    # @see Git::Repository::ContextHelpers#with_temp_index
+    #
+    def with_temp_index # :yields: the temporary index Pathname
+      old_index = @index
+      facade_repository.with_temp_index do |_|
+        @index = facade_repository.index
+        @lib = nil
+        yield @index
       end
-
-      with_index(temp_path, &)
+    ensure
+      @index = old_index
+      @lib = nil
     end
 
     def checkout_index(opts = {})
@@ -839,24 +830,38 @@ module Git
       facade_repository.ls_files(location)
     end
 
-    def with_working(work_dir) # :yields: the working directory Pathname
-      return_value = false
+    # Temporarily switches the git working directory to `work_dir` for the
+    # duration of a block
+    #
+    # @see Git::Repository::ContextHelpers#with_working
+    #
+    def with_working(work_dir) # :yields: the active working directory Pathname
       old_working = @working_directory
-      set_working(work_dir)
-      Dir.chdir work_dir do
-        return_value = yield @working_directory
+      facade_repository.with_working(work_dir) do |_|
+        @working_directory = facade_repository.dir
+        @lib = nil
+        yield @working_directory
       end
-      set_working(old_working)
-      return_value
+    ensure
+      @working_directory = old_working
+      @lib = nil
     end
 
-    def with_temp_working(&)
-      tempfile = Tempfile.new('temp-workdir')
-      temp_dir = tempfile.path
-      tempfile.close
-      tempfile.unlink
-      Dir.mkdir(temp_dir, 0o700)
-      with_working(temp_dir, &)
+    # Temporarily switches the git working directory to a new temporary
+    # directory for the duration of a block
+    #
+    # @see Git::Repository::ContextHelpers#with_temp_working
+    #
+    def with_temp_working # :yields: the temporary working directory Pathname
+      old_working = @working_directory
+      facade_repository.with_temp_working do |_|
+        @working_directory = facade_repository.dir
+        @lib = nil
+        yield @working_directory
+      end
+    ensure
+      @working_directory = old_working
+      @lib = nil
     end
 
     # runs git rev-parse to convert the objectish to a full sha

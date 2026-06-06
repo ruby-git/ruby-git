@@ -284,6 +284,89 @@ RSpec.describe Git::Base do
     end
   end
 
+  # ---------------------------------------------------------------------------
+  # Backward-compatibility yield values for block-based context helpers
+  # Git::Base must yield the legacy Pathname values, not `self`.
+  # ---------------------------------------------------------------------------
+
+  describe '#with_index' do
+    include_context 'with a stubbed facade_repository'
+
+    let(:index_pathname) { Pathname.new('/repo/.git/custom-index') }
+
+    before do
+      allow(facade_repository).to receive(:with_index).and_yield(facade_repository)
+      allow(facade_repository).to receive(:index).and_return(index_pathname)
+    end
+
+    it 'yields the active index Pathname for backward compatibility' do
+      yielded = nil
+      described_instance.with_index('/repo/.git/custom-index') { |v| yielded = v }
+      expect(yielded).to eq(index_pathname)
+    end
+
+    it 'returns the block return value' do
+      result = described_instance.with_index('/repo/.git/custom-index') { 42 }
+      expect(result).to eq(42)
+    end
+  end
+
+  describe '#with_temp_index' do
+    include_context 'with a stubbed facade_repository'
+
+    let(:temp_index_pathname) { Pathname.new('/tmp/temp-index-abcdef') }
+
+    before do
+      allow(facade_repository).to receive(:with_temp_index).and_yield(facade_repository)
+      allow(facade_repository).to receive(:index).and_return(temp_index_pathname)
+    end
+
+    it 'yields the temporary index Pathname for backward compatibility' do
+      yielded = nil
+      described_instance.with_temp_index { |v| yielded = v }
+      expect(yielded).to eq(temp_index_pathname)
+    end
+  end
+
+  describe '#with_working' do
+    include_context 'with a stubbed facade_repository'
+
+    let(:work_dir_pathname) { Pathname.new('/tmp/work-dir') }
+
+    before do
+      allow(facade_repository).to receive(:with_working).and_yield(facade_repository)
+      allow(facade_repository).to receive(:dir).and_return(work_dir_pathname)
+    end
+
+    it 'yields the active working directory Pathname for backward compatibility' do
+      yielded = nil
+      described_instance.with_working('/tmp/work-dir') { |v| yielded = v }
+      expect(yielded).to eq(work_dir_pathname)
+    end
+
+    it 'returns the block return value' do
+      result = described_instance.with_working('/tmp/work-dir') { 'done' }
+      expect(result).to eq('done')
+    end
+  end
+
+  describe '#with_temp_working' do
+    include_context 'with a stubbed facade_repository'
+
+    let(:temp_dir_pathname) { Pathname.new('/tmp/temp-workdir-xyz') }
+
+    before do
+      allow(facade_repository).to receive(:with_temp_working).and_yield(facade_repository)
+      allow(facade_repository).to receive(:dir).and_return(temp_dir_pathname)
+    end
+
+    it 'yields the temporary working directory Pathname for backward compatibility' do
+      yielded = nil
+      described_instance.with_temp_working { |v| yielded = v }
+      expect(yielded).to eq(temp_dir_pathname)
+    end
+  end
+
   describe '#tag' do
     include_context 'with a stubbed facade_repository'
 

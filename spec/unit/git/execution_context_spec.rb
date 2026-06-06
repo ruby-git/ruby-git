@@ -72,6 +72,22 @@ RSpec.describe Git::ExecutionContext do
     end
   end
 
+  describe '#logger' do
+    context 'when no logger is provided' do
+      it 'returns a Logger instance (null logger)' do
+        expect(Git::ExecutionContext::Global.new.logger).to be_a(Logger)
+      end
+    end
+
+    context 'when a logger is provided' do
+      let(:custom_logger) { Logger.new(nil) }
+
+      it 'returns the provided logger' do
+        expect(Git::ExecutionContext::Global.new(logger: custom_logger).logger).to be(custom_logger)
+      end
+    end
+  end
+
   describe '#command_capturing' do
     let(:context) { Git::ExecutionContext::Global.new }
     let(:command_line_double) { instance_double(Git::CommandLine::Capturing) }

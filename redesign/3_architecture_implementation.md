@@ -405,7 +405,7 @@ helpers would drop existing public `Git::Base` behavior.
 `Git::Repository`. They must either be migrated before `Git::Base` can be deleted,
 or explicitly deprecated with removal in v6.0. The recommended path is migration.
 
-**Step E — Migrate block-based helper/path-context methods to `Git::Repository`** ⬜
+**Step E — Migrate block-based helper/path-context methods to `Git::Repository`** ✅
 
 | `Git::Base` method | Proposed destination | Notes |
 | --- | --- | --- |
@@ -496,7 +496,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | C1a-1 | ✅ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ✅ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
-| E | ⬜ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
+| E | ✅ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
@@ -549,7 +549,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ⬜ (v5 cleanup) |
 | D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
-| E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ⬜ |
+| E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ✅ |
 | F: `Git` module utilities (`default_branch`, `global_config`, `ls_remote`) off `Git::Lib` | ⬜ (Phase 4 prereq) |
 
 #### Quality gates (per step)
