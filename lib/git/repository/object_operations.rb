@@ -89,6 +89,11 @@ module Git
         end
       end
 
+      # Alias for {#cat_file_contents}; retained for backward compatibility
+      #
+      # @see #cat_file_contents
+      alias cat_file cat_file_contents
+
       # Returns the size of a git object in bytes
       #
       # @example Get the size of a commit object

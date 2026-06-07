@@ -925,9 +925,7 @@ module Git
       facade_repository.ls_tree(objectish, opts)
     end
 
-    def cat_file(objectish)
-      lib.cat_file(objectish)
-    end
+    # cat_file is aliased to cat_file_contents in the Bucket 6 delegators section below
 
     # The name of the branch HEAD refers to or 'HEAD' if detached
     #
@@ -1199,6 +1197,142 @@ module Git
     #
     # @see #diff_path_status
     alias diff_name_status diff_path_status
+
+    # @!group Bucket 6 delegators — Git::Repository::Branching
+
+    # @return [Array<Git::BranchInfo>] all local and remote-tracking branches
+    def branches_all
+      facade_repository.branches_all
+    end
+
+    # @return [String] `git branch --contains` output for the given commit
+    def branch_contains(commit, branch_name = '')
+      facade_repository.branch_contains(commit, branch_name)
+    end
+
+    # Creates a new local branch
+    # @return [nil]
+    def branch_new(branch, start_point = nil, options = {})
+      facade_repository.branch_new(branch, start_point, options)
+    end
+
+    # Deletes one or more local branches
+    # @return [String] stdout from the delete command
+    def branch_delete(*branches, **)
+      facade_repository.branch_delete(*branches, **)
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::ObjectOperations
+
+    # @return [String] raw content of the git object, or streams to a tempfile when a block is given
+    def cat_file_contents(object, &)
+      facade_repository.cat_file_contents(object, &)
+    end
+
+    # Alias for {#cat_file_contents}; `cat_file` is the established 4.x public name
+    alias cat_file cat_file_contents
+
+    # @return [Integer] size of the git object in bytes
+    def cat_file_size(object)
+      facade_repository.cat_file_size(object)
+    end
+
+    # @return [String] type of the git object (e.g. "blob", "commit", "tree", "tag")
+    def cat_file_type(object)
+      facade_repository.cat_file_type(object)
+    end
+
+    # @return [Hash] parsed commit metadata for the given object
+    def cat_file_commit(object)
+      facade_repository.cat_file_commit(object)
+    end
+
+    # @return [Hash] parsed tag metadata for the given object
+    def cat_file_tag(object)
+      facade_repository.cat_file_tag(object)
+    end
+
+    # @return [String] SHA of the tag object for the given tag name
+    def tag_sha(tag_name)
+      facade_repository.tag_sha(tag_name)
+    end
+
+    # @return [Array<String>] all file entries in the tree
+    def full_tree(sha)
+      facade_repository.full_tree(sha)
+    end
+
+    # @return [String] human-readable name for the given commit-ish
+    def name_rev(commit_ish)
+      facade_repository.name_rev(commit_ish)
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::RemoteOperations
+
+    # @return [Hash] remote configuration hash for the given remote name
+    def config_remote(name)
+      facade_repository.config_remote(name)
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::Diffing
+
+    # @return [Hash{String => Hash}] parsed diff-index output keyed by file path
+    def diff_index(treeish)
+      facade_repository.diff_index(treeish)
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::Stashing
+
+    # @return [Array] all stash entries as [index, message] pairs
+    def stashes_all
+      facade_repository.stashes_all
+    end
+
+    # @return [Boolean] true if changes were stashed, false if there was nothing to stash
+    def stash_save(message)
+      facade_repository.stash_save(message)
+    end
+
+    # @return [String] output from `git stash apply`
+    def stash_apply(id = nil)
+      facade_repository.stash_apply(id)
+    end
+
+    # @return [String] output from `git stash clear`
+    def stash_clear
+      facade_repository.stash_clear
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::StatusOperations
+
+    # @return [Array<String>] list of untracked file paths
+    def untracked_files
+      facade_repository.untracked_files
+    end
+
+    # @!group Bucket 6 delegators — Git::Repository::WorktreeOperations
+
+    # @return [Array] all worktrees as [path, sha] pairs
+    def worktrees_all
+      facade_repository.worktrees_all
+    end
+
+    # @return [String] output from `git worktree add`
+    def worktree_add(dir, commitish = nil)
+      facade_repository.worktree_add(dir, commitish)
+    end
+
+    # @return [String] output from `git worktree remove`
+    def worktree_remove(dir)
+      facade_repository.worktree_remove(dir)
+    end
+
+    # @return [String] output from `git worktree prune`
+    def worktree_prune
+      facade_repository.worktree_prune
+    end
+
+    # @!endgroup
 
     private
 
