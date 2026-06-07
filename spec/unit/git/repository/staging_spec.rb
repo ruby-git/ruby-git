@@ -228,6 +228,12 @@ RSpec.describe Git::Repository::Staging do
     end
   end
 
+  describe '#remove' do
+    it 'is an alias for #rm' do
+      expect(described_instance.method(:remove)).to eq(described_instance.method(:rm))
+    end
+  end
+
   describe '#clean' do
     subject(:result) { described_instance.clean }
 

@@ -157,6 +157,8 @@ module Git
         Git::Commands::Rm.new(@execution_context).call(*Array(path), **opts).stdout
       end
 
+      alias remove rm
+
       # Option keys accepted by {#clean}
       #
       # The deprecated `:ff` and `:force_force` keys are handled by
