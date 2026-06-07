@@ -24,7 +24,7 @@ module Git
     #
     # @api public
     #
-    module Branching
+    module Branching # rubocop:disable Metrics/ModuleLength
       # Option keys accepted by {#checkout}
       #
       CHECKOUT_ALLOWED_OPTS = %i[force f new_branch b start_point].freeze
@@ -213,6 +213,65 @@ module Git
       #
       def branch?(branch)
         local_branch?(branch) || remote_branch?(branch)
+      end
+
+      # @deprecated Use {#local_branch?} instead.
+      #
+      # @example
+      #   repo.is_local_branch?('main')  # => true
+      #
+      # @param branch [String] the local branch name to look up
+      #
+      # @return [Boolean] `true` if the branch exists locally, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+        Git::Deprecation.warn(
+          'Git::Repository#is_local_branch? is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#local_branch? instead.'
+        )
+        local_branch?(branch)
+      end
+
+      # @deprecated Use {#remote_branch?} instead.
+      #
+      # @example
+      #   repo.is_remote_branch?('master')  # => true
+      #
+      # @param branch [String] the short branch name to look up across all remotes
+      #
+      # @return [Boolean] `true` if a remote-tracking branch with that short name
+      #   exists, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+        Git::Deprecation.warn(
+          'Git::Repository#is_remote_branch? is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#remote_branch? instead.'
+        )
+        remote_branch?(branch)
+      end
+
+      # @deprecated Use {#branch?} instead.
+      #
+      # @example
+      #   repo.is_branch?('main')  # => true
+      #
+      # @param branch [String] the branch name to look up
+      #
+      # @return [Boolean] `true` if the branch exists locally or remotely,
+      #   `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
+        Git::Deprecation.warn(
+          'Git::Repository#is_branch? is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#branch? instead.'
+        )
+        branch?(branch)
       end
 
       # Option keys accepted by {#branch_new}

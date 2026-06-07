@@ -855,4 +855,154 @@ RSpec.describe Git::Repository::Branching do
       expect(result).to eq(branches_collection)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #is_local_branch? (deprecated)
+  # ---------------------------------------------------------------------------
+
+  describe '#is_local_branch?' do
+    subject(:result) { described_instance.is_local_branch?('main') }
+
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command)
+        .to receive(:call).with('main', format: '%(refname:short)').and_return(command_result("main\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning mentioning is_local_branch? and local_branch?' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#is_local_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Repository#local_branch? instead.'
+      )
+      result
+    end
+
+    it 'returns true when the branch exists locally' do
+      expect(result).to be(true)
+    end
+
+    context 'when the branch does not exist locally' do
+      subject(:result) { described_instance.is_local_branch?('no-such-branch') }
+
+      before do
+        allow(list_command)
+          .to receive(:call).with('no-such-branch', format: '%(refname:short)').and_return(command_result(''))
+      end
+
+      it 'returns false' do
+        expect(result).to be(false)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #is_remote_branch? (deprecated)
+  # ---------------------------------------------------------------------------
+
+  describe '#is_remote_branch?' do
+    subject(:result) { described_instance.is_remote_branch?('master') }
+
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command)
+        .to receive(:call).with('*/master', remotes: true, format: '%(refname:lstrip=3)')
+        .and_return(command_result("master\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning mentioning is_remote_branch? and remote_branch?' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#is_remote_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Repository#remote_branch? instead.'
+      )
+      result
+    end
+
+    it 'returns true when the remote tracking branch exists' do
+      expect(result).to be(true)
+    end
+
+    context 'when the branch does not exist remotely' do
+      subject(:result) { described_instance.is_remote_branch?('no-such-branch') }
+
+      before do
+        allow(list_command)
+          .to receive(:call).with('*/no-such-branch', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result(''))
+      end
+
+      it 'returns false' do
+        expect(result).to be(false)
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #is_branch? (deprecated)
+  # ---------------------------------------------------------------------------
+
+  describe '#is_branch?' do
+    subject(:result) { described_instance.is_branch?('main') }
+
+    let(:list_command) { instance_double(Git::Commands::Branch::List) }
+
+    before do
+      allow(Git::Commands::Branch::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command)
+        .to receive(:call).with('main', format: '%(refname:short)').and_return(command_result("main\n"))
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning mentioning is_branch? and branch?' do
+      expect(Git::Deprecation).to receive(:warn).with(
+        'Git::Repository#is_branch? is deprecated and will be removed in a future version. ' \
+        'Use Git::Repository#branch? instead.'
+      )
+      result
+    end
+
+    it 'returns true when the branch exists locally' do
+      expect(result).to be(true)
+    end
+
+    context 'when the branch exists only remotely' do
+      subject(:result) { described_instance.is_branch?('develop') }
+
+      before do
+        allow(list_command)
+          .to receive(:call).with('develop', format: '%(refname:short)').and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/develop', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result("develop\n"))
+      end
+
+      it 'returns true' do
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when the branch does not exist locally or remotely' do
+      subject(:result) { described_instance.is_branch?('nonexistent') }
+
+      before do
+        allow(list_command)
+          .to receive(:call).with('nonexistent', format: '%(refname:short)').and_return(command_result(''))
+        allow(list_command)
+          .to receive(:call).with('*/nonexistent', remotes: true, format: '%(refname:lstrip=3)')
+          .and_return(command_result(''))
+      end
+
+      it 'returns false' do
+        expect(result).to be(false)
+      end
+    end
+  end
 end
