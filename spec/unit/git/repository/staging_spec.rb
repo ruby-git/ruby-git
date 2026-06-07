@@ -421,6 +421,47 @@ RSpec.describe Git::Repository::Staging do
     end
   end
 
+  describe '#reset_hard' do
+    subject(:result) { described_instance.reset_hard }
+
+    let(:reset_command) { instance_double(Git::Commands::Reset) }
+    let(:reset_result) { command_result('reset output') }
+
+    before do
+      allow(Git::Commands::Reset).to receive(:new).with(execution_context).and_return(reset_command)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning' do
+      allow(reset_command).to receive(:call).and_return(reset_result)
+      expect(Git::Deprecation).to receive(:warn).with(/reset_hard is deprecated/)
+      result
+    end
+
+    it 'delegates to reset with hard: true' do
+      expect(reset_command).to receive(:call).with(nil, hard: true).and_return(reset_result)
+      result
+    end
+
+    context 'with a commitish' do
+      subject(:result) { described_instance.reset_hard('HEAD~1') }
+
+      it 'passes the commitish to reset' do
+        expect(reset_command).to receive(:call).with('HEAD~1', hard: true).and_return(reset_result)
+        result
+      end
+    end
+
+    context 'when hard: false is passed in opts' do
+      subject(:result) { described_instance.reset_hard(nil, hard: false) }
+
+      it 'enforces hard: true regardless of opts' do
+        expect(reset_command).to receive(:call).with(nil, hard: true).and_return(reset_result)
+        result
+      end
+    end
+  end
+
   describe '#ignored_files' do
     subject(:result) { described_instance.ignored_files }
 
