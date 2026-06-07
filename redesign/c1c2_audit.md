@@ -349,29 +349,29 @@ These orphans exist on `Git::Lib` and have already been migrated to a
 
 | `Git::Lib` method | `Git::Repository` home | Status |
 |-------------------|------------------------|--------|
-| `branches_all` | `Git::Repository::Branching` | ⬜ promote — add `Git::Base` delegator |
-| `branch_contains(commit, branch_name = '')` | `Git::Repository::Branching` | ⬜ promote — add `Git::Base` delegator |
-| `branch_delete(*branches, **options)` | `Git::Repository::Branching` | ⬜ promote — add `Git::Base` delegator (see §6 classification note) |
-| `branch_new(branch, start_point = nil, options = {})` | `Git::Repository::Branching` | ⬜ promote — add `Git::Base` delegator |
-| `cat_file_commit(object)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `cat_file_contents(object)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `cat_file_size(object)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `cat_file_tag(object)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `cat_file_type(object)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `config_remote(name)` | `Git::Repository::RemoteOperations` | ⬜ promote — add `Git::Base` delegator |
-| `diff_index(treeish)` | `Git::Repository::Diffing` | ⬜ promote — add `Git::Base` delegator |
-| `full_tree(sha)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `name_rev(commit_ish)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `stash_apply(id = nil)` | `Git::Repository::Stashing` | ⬜ promote — add `Git::Base` delegator |
-| `stash_clear` | `Git::Repository::Stashing` | ⬜ promote — add `Git::Base` delegator |
-| `stash_save(message)` | `Git::Repository::Stashing` | ⬜ promote — add `Git::Base` delegator |
-| `stashes_all` | `Git::Repository::Stashing` | ⬜ promote — add `Git::Base` delegator |
-| `tag_sha(tag_name)` | `Git::Repository::ObjectOperations` | ⬜ promote — add `Git::Base` delegator |
-| `untracked_files` | `Git::Repository::StatusOperations` | ⬜ promote — add `Git::Base` delegator |
-| `worktree_add(dir, commitish = nil)` | `Git::Repository::WorktreeOperations` | ⬜ promote — add `Git::Base` delegator |
-| `worktree_prune` | `Git::Repository::WorktreeOperations` | ⬜ promote — add `Git::Base` delegator |
-| `worktree_remove(dir)` | `Git::Repository::WorktreeOperations` | ⬜ promote — add `Git::Base` delegator |
-| `worktrees_all` | `Git::Repository::WorktreeOperations` | ⬜ promote — add `Git::Base` delegator |
+| `branches_all` | `Git::Repository::Branching` | ✅ `Git::Base` delegator added (PR 2d) |
+| `branch_contains(commit, branch_name = '')` | `Git::Repository::Branching` | ✅ `Git::Base` delegator added (PR 2d) |
+| `branch_delete(*branches, **options)` | `Git::Repository::Branching` | ✅ `Git::Base` delegator added (PR 2d) |
+| `branch_new(branch, start_point = nil, options = {})` | `Git::Repository::Branching` | ✅ `Git::Base` delegator added (PR 2d) |
+| `cat_file_commit(object)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `cat_file_contents(object)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added; `alias cat_file cat_file_contents` added (PR 2d) |
+| `cat_file_size(object)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `cat_file_tag(object)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `cat_file_type(object)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `config_remote(name)` | `Git::Repository::RemoteOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `diff_index(treeish)` | `Git::Repository::Diffing` | ✅ `Git::Base` delegator added (PR 2d) |
+| `full_tree(sha)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `name_rev(commit_ish)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `stash_apply(id = nil)` | `Git::Repository::Stashing` | ✅ `Git::Base` delegator added (PR 2d) |
+| `stash_clear` | `Git::Repository::Stashing` | ✅ `Git::Base` delegator added (PR 2d) |
+| `stash_save(message)` | `Git::Repository::Stashing` | ✅ `Git::Base` delegator added (PR 2d) |
+| `stashes_all` | `Git::Repository::Stashing` | ✅ `Git::Base` delegator added (PR 2d) |
+| `tag_sha(tag_name)` | `Git::Repository::ObjectOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `untracked_files` | `Git::Repository::StatusOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `worktree_add(dir, commitish = nil)` | `Git::Repository::WorktreeOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `worktree_prune` | `Git::Repository::WorktreeOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `worktree_remove(dir)` | `Git::Repository::WorktreeOperations` | ✅ `Git::Base` delegator added (PR 2d) |
+| `worktrees_all` | `Git::Repository::WorktreeOperations` | ✅ `Git::Base` delegator added (PR 2d) |
 
 Also note name-mismatch cases where `Git::Lib` uses a different name than `Git::Repository`:
 
@@ -438,7 +438,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 
 | Status | Count |
 |--------|-------|
-| ⬜ promote (repo already has it, trivial base.rb wiring) | 23 |
+| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d) | 23 |
 | ⬜ promote (new facade work required) | 7 |
 | ❌ remove (internal plumbing) | 12 |
 | 🔍 human decision | 16 |
