@@ -90,6 +90,35 @@ module Git
         Git::Commands::Reset.new(@execution_context).call(commitish, **).stdout
       end
 
+      # Reset the current HEAD to a specified state with `--hard`
+      #
+      # @deprecated Use {#reset} with `hard: true` instead.
+      #
+      #   @example Hard reset to HEAD
+      #     repo.reset_hard
+      #
+      #   @example Hard reset to a specific commit
+      #     repo.reset_hard('HEAD~1')
+      #
+      # @param commitish [String, nil] the commit or tree-ish to reset to;
+      #   defaults to HEAD when `nil`
+      #
+      # @param opts [Hash] options passed through to {#reset}
+      #
+      # @return [String] git's stdout from the reset
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def reset_hard(commitish = nil, opts = {})
+        Git::Deprecation.warn(
+          'Git::Repository::Staging#reset_hard is deprecated and will be removed in a future version. ' \
+          'Use #reset(commitish, hard: true) instead.'
+        )
+        reset(commitish, **opts, hard: true)
+      end
+
       # Option keys accepted by {#rm}
       RM_ALLOWED_OPTS = %i[
         force f dry_run n r cached ignore_unmatch sparse quiet q

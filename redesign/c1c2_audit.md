@@ -29,12 +29,12 @@ surfaced.
 | Bucket | ✅ | ⬜ | ❌ | ⚠️ | 🔍 | Total |
 |--------|----|----|----|----|-----|-------|
 | 1 — Path/accessors | 4 | 0 | 0 | 0 | 0 | 4 |
-| 2 — Compatibility aliases & wrappers | 3 | 4 | 0 | 1 | 0 | 8 |
+| 2 — Compatibility aliases & wrappers | 4 | 3 | 0 | 1 | 0 | 8 |
 | 3 — Low-level public methods | 0 | 6 | 0 | 0 | 1 | 7 |
 | 4 — Factory & domain-object returns | 12 | 0 | 0 | 0 | 0 | 12 |
 | 5 — Keyword-arg signature review | 3 | 0 | 0 | 5 | 1 | 9 |
 | 6 — `Git::Lib` orphaned public methods | — | — | — | — | — | **⚠️ see §7** |
-| **Grand total (Buckets 1–5)** | **22** | **10** | **0** | **6** | **2** | **40** |
+| **Grand total (Buckets 1–5)** | **23** | **9** | **0** | **6** | **2** | **40** |
 
 > ⚠️ **Bucket 6 contains more than 40 genuine orphaned public methods**
 > (see §7 for the full count breakdown). Per the audit instructions, this
@@ -59,7 +59,7 @@ Sorted by bucket, then alphabetically within bucket.
 | `is_local_branch?` | 2 | ⬜ | Deprecated in 4.x; migrate deprecated stub to `Git::Repository::Branching` pointing to `local_branch?` |
 | `is_remote_branch?` | 2 | ⬜ | Deprecated in 4.x; migrate deprecated stub to `Git::Repository::Branching` pointing to `remote_branch?` |
 | `remove` | 2 | ✅ | `alias remove rm` added to `Git::Repository::Staging` |
-| `reset_hard` | 2 | ⬜ | Deprecated wrapper; migrate to `Git::Repository::Staging` with `@deprecated` tag pointing to `reset(commitish, hard: true)` |
+| `reset_hard` | 2 | ✅ | `Git::Repository::Staging#reset_hard` — deprecated wrapper delegating to `reset(commitish, hard: true)` |
 | `revparse` | 2 | ✅ | `alias revparse rev_parse` added to `Git::Repository::ObjectOperations` |
 | `apply` | 3 | ⬜ | New facade in `Git::Repository::Staging` (or new `Patching` module); `Git::Commands::Apply` ✅ |
 | `apply_mail` | 3 | ⬜ | Same module as `apply`; `Git::Commands::Am` ✅ |
