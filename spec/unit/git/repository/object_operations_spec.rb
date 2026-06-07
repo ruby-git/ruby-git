@@ -395,6 +395,12 @@ RSpec.describe Git::Repository::ObjectOperations do
     end
   end
 
+  describe '#revparse' do
+    it 'is an alias for #rev_parse' do
+      expect(described_instance.method(:revparse)).to eq(described_instance.method(:rev_parse))
+    end
+  end
+
   describe '#tag_sha' do
     let(:show_ref_list_command) { instance_double(Git::Commands::ShowRef::List) }
     let(:git_dir) { '/fake/.git' }

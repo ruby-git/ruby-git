@@ -252,6 +252,8 @@ module Git
         Git::Commands::RevParse.new(@execution_context).call(objectish, '--', revs_only: true).stdout
       end
 
+      alias revparse rev_parse
+
       # Returns the SHA of a named tag
       #
       # Returns an empty string when the tag does not exist.
