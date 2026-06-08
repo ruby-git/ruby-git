@@ -94,6 +94,13 @@ module Git
       # @see #cat_file_contents
       alias cat_file cat_file_contents
 
+      # Alias for {#cat_file_contents}
+      #
+      # @deprecated Use {#cat_file_contents} instead
+      #
+      # @see #cat_file_contents
+      alias object_contents cat_file_contents
+
       # Returns the size of a git object in bytes
       #
       # @example Get the size of a commit object
@@ -117,6 +124,13 @@ module Git
 
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, s: true).stdout.chomp.to_i
       end
+
+      # Alias for {#cat_file_size}
+      #
+      # @deprecated Use {#cat_file_size} instead
+      #
+      # @see #cat_file_size
+      alias object_size cat_file_size
 
       # Returns the type of a git object
       #
@@ -142,6 +156,13 @@ module Git
 
         Git::Commands::CatFile::Raw.new(@execution_context).call(object, t: true).stdout.chomp
       end
+
+      # Alias for {#cat_file_type}
+      #
+      # @deprecated Use {#cat_file_type} instead
+      #
+      # @see #cat_file_type
+      alias object_type cat_file_type
 
       # Returns parsed commit data for the given git object
       #
@@ -178,6 +199,13 @@ module Git
         result = Git::Commands::CatFile::Raw.new(@execution_context).call('commit', object)
         Git::Parsers::CatFile.parse_commit(result.stdout.split("\n"), object)
       end
+
+      # Alias for {#cat_file_commit}
+      #
+      # @deprecated Use {#cat_file_commit} instead
+      #
+      # @see #cat_file_commit
+      alias commit_data cat_file_commit
 
       # Returns parsed tag data for the given annotated tag object
       #
@@ -227,6 +255,13 @@ module Git
         tdata = Git::Commands::CatFile::Raw.new(@execution_context).call('tag', object).stdout.split("\n")
         Git::Parsers::CatFile.parse_tag(tdata, object)
       end
+
+      # Alias for {#cat_file_tag}
+      #
+      # @deprecated Use {#cat_file_tag} instead
+      #
+      # @see #cat_file_tag
+      alias tag_data cat_file_tag
 
       # Resolve a revision specifier to its full object ID
       #
@@ -359,6 +394,13 @@ module Git
 
         Git::Commands::NameRev.new(@execution_context).call(commit_ish).stdout.split[1]
       end
+
+      # Alias for {#name_rev}
+      #
+      # @deprecated Use {#name_rev} instead
+      #
+      # @see #name_rev
+      alias namerev name_rev
 
       # Option keys accepted by {#ls_tree}
       LS_TREE_ALLOWED_OPTS = %i[recursive path].freeze
