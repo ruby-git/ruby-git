@@ -382,12 +382,12 @@ Also note name-mismatch cases where `Git::Lib` uses a different name than `Git::
 | `remote_add(name, url, opts)` | `Git::Repository::RemoteOperations#add_remote` | 🔍 name mismatch; `add_remote` is already on `Git::Base` — `remote_add` is the lib name; mark as internal |
 | `remote_remove(name)` | `Git::Repository::RemoteOperations#remove_remote` | 🔍 name mismatch; `remove_remote` is already on `Git::Base` |
 | `remote_set_url(name, url, opts)` | `Git::Repository::RemoteOperations#set_remote_url` | 🔍 name mismatch; `set_remote_url` is already on `Git::Base` |
-| `namerev` (alias for `name_rev`) | `Git::Repository::ObjectOperations#name_rev` | ⬜ add `alias namerev name_rev` to `ObjectOperations` |
-| `object_contents` (alias for `cat_file_contents`) | `Git::Repository::ObjectOperations#cat_file_contents` | ⬜ add alias to `ObjectOperations` |
-| `object_type` (alias for `cat_file_type`) | `Git::Repository::ObjectOperations#cat_file_type` | ⬜ add alias to `ObjectOperations` |
-| `object_size` (alias for `cat_file_size`) | `Git::Repository::ObjectOperations#cat_file_size` | ⬜ add alias to `ObjectOperations` |
-| `commit_data` (alias for `cat_file_commit`) | `Git::Repository::ObjectOperations#cat_file_commit` | ⬜ add alias to `ObjectOperations` |
-| `tag_data` (alias for `cat_file_tag`) | `Git::Repository::ObjectOperations#cat_file_tag` | ⬜ add alias to `ObjectOperations` |
+| `namerev` (alias for `name_rev`) | `Git::Repository::ObjectOperations#name_rev` | ✅ `alias namerev name_rev` added (PR 2e) |
+| `object_contents` (alias for `cat_file_contents`) | `Git::Repository::ObjectOperations#cat_file_contents` | ✅ `alias object_contents cat_file_contents` added (PR 2e) |
+| `object_type` (alias for `cat_file_type`) | `Git::Repository::ObjectOperations#cat_file_type` | ✅ `alias object_type cat_file_type` added (PR 2e) |
+| `object_size` (alias for `cat_file_size`) | `Git::Repository::ObjectOperations#cat_file_size` | ✅ `alias object_size cat_file_size` added (PR 2e) |
+| `commit_data` (alias for `cat_file_commit`) | `Git::Repository::ObjectOperations#cat_file_commit` | ✅ `alias commit_data cat_file_commit` added (PR 2e) |
+| `tag_data` (alias for `cat_file_tag`) | `Git::Repository::ObjectOperations#cat_file_tag` | ✅ `alias tag_data cat_file_tag` added (PR 2e) |
 | `revparse` (alias for `rev_parse`) | (covered in Bucket 2) | ✅ covered |
 
 ### 7.3 Methods NOT Yet in `Git::Repository` (new facade work required)
