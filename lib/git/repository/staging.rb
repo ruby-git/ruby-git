@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require 'git/commands/add'
+require 'git/commands/am/apply'
+require 'git/commands/apply'
 require 'git/commands/clean'
 require 'git/commands/ls_files'
+require 'git/commands/read_tree'
 require 'git/commands/reset'
 require 'git/commands/rm'
 require 'git/escaped_path'
@@ -119,6 +122,88 @@ module Git
         reset(commitish, **opts, hard: true)
       end
 
+      # Apply a patch file to the working tree
+      #
+      # Reads the unified diff in `file` and applies it to the working tree via
+      # `git apply`. If `file` does not exist, the method returns `nil` without
+      # calling git — preserving the 4.x `Git::Base#apply` no-op contract.
+      #
+      # @example Apply a patch to the working tree
+      #   repo.apply('fix.patch')
+      #
+      # @param file [String] path to the patch file to apply
+      #
+      # @return [String] git's stdout (usually empty on success)
+      #
+      # @return [nil] when `file` does not exist
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def apply(file)
+        return unless File.exist?(file)
+
+        Git::Commands::Apply.new(@execution_context).call(file, chdir: @execution_context.git_work_dir).stdout
+      end
+
+      # Apply a series of patches from a mailbox file to the current branch
+      #
+      # Reads the mbox-format file in `file` and applies the patches via
+      # `git am`. If `file` does not exist, the method returns `nil` without
+      # calling git — preserving the 4.x `Git::Base#apply_mail` no-op contract.
+      #
+      # @example Apply patches from a mailbox
+      #   repo.apply_mail('patches.mbox')
+      #
+      # @param file [String] path to the mbox patch file to apply
+      #
+      # @return [String] git's stdout (usually empty on success)
+      #
+      # @return [nil] when `file` does not exist
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def apply_mail(file)
+        return unless File.exist?(file)
+
+        Git::Commands::Am::Apply.new(@execution_context).call(file, chdir: @execution_context.git_work_dir).stdout
+      end
+
+      # Option keys accepted by {#read_tree}
+      READ_TREE_ALLOWED_OPTS = %i[prefix].freeze
+      private_constant :READ_TREE_ALLOWED_OPTS
+
+      # Read tree information into the index
+      #
+      # Reads the named tree object into the index. This is a low-level plumbing
+      # operation used to stage the contents of a tree without updating the
+      # working tree. Typically called before {#checkout_index} or as part of
+      # custom merge flows.
+      #
+      # @example Read HEAD into the index
+      #   repo.read_tree('HEAD')
+      #
+      # @example Read a tree under a prefix directory
+      #   repo.read_tree('HEAD', { prefix: 'subdir/' })
+      #
+      # @param treeish [String] the tree-ish to read into the index
+      #
+      # @param opts [Hash] options for the read-tree command
+      #
+      # @option opts [String] :prefix (nil) keep the current index contents and
+      #   read the named tree-ish under the directory at the given prefix
+      #   (`--prefix=<prefix>`)
+      #
+      # @return [String] git's stdout (usually empty on success)
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def read_tree(treeish, opts = {})
+        SharedPrivate.assert_valid_opts!(READ_TREE_ALLOWED_OPTS, **opts)
+        Git::Commands::ReadTree.new(@execution_context).call(treeish, **opts).stdout
+      end
+
       # Option keys accepted by {#rm}
       RM_ALLOWED_OPTS = %i[
         force f dry_run n r cached ignore_unmatch sparse quiet q
@@ -129,13 +214,13 @@ module Git
       # Remove file(s) from the working tree and the index
       #
       # @example Remove a single file
-      #   repo.rm('obsolete.txt', force: true)
+      #   repo.rm('obsolete.txt', { force: true })
       #
       # @example Remove a directory recursively
-      #   repo.rm('build', r: true)
+      #   repo.rm('build', { r: true })
       #
       # @example Remove from the index only, keeping the working tree copy
-      #   repo.rm('keep_me.txt', cached: true)
+      #   repo.rm('keep_me.txt', { cached: true })
       #
       # @param path [String, Array<String>] a file or files to remove (relative to
       #   the worktree root); defaults to `'.'` (all files)
@@ -199,13 +284,13 @@ module Git
       # Remove untracked files from the working tree
       #
       # @example Remove untracked files
-      #   repo.clean(force: true)
+      #   repo.clean({ force: true })
       #
       # @example Remove untracked files and directories
-      #   repo.clean(force: true, d: true)
+      #   repo.clean({ force: true, d: true })
       #
       # @example Remove untracked and ignored files
-      #   repo.clean(force: true, x: true)
+      #   repo.clean({ force: true, x: true })
       #
       # @param opts [Hash] options for the clean command
       #

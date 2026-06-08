@@ -462,6 +462,169 @@ RSpec.describe Git::Repository::Staging do
     end
   end
 
+  describe '#apply' do
+    subject(:result) { described_instance.apply(patch_file) }
+
+    let(:apply_command) { instance_double(Git::Commands::Apply) }
+    let(:apply_result) { command_result('') }
+    let(:patch_file) { '/tmp/fix.patch' }
+    let(:work_dir) { '/path/to/work/tree' }
+
+    before do
+      allow(Git::Commands::Apply).to receive(:new).with(execution_context).and_return(apply_command)
+      allow(execution_context).to receive(:git_work_dir).and_return(work_dir)
+    end
+
+    context 'when the file exists' do
+      before do
+        allow(File).to receive(:exist?).with(patch_file).and_return(true)
+      end
+
+      it 'delegates to Git::Commands::Apply#call with the file and chdir' do
+        expect(apply_command).to receive(:call).with(patch_file, chdir: work_dir).and_return(apply_result)
+        result
+      end
+
+      it 'returns the command stdout' do
+        allow(apply_command).to receive(:call).with(patch_file, chdir: work_dir).and_return(command_result('applied'))
+        expect(result).to eq('applied')
+      end
+    end
+
+    context 'when the file does not exist' do
+      before do
+        allow(File).to receive(:exist?).with(patch_file).and_return(false)
+      end
+
+      it 'returns nil without calling git' do
+        expect(apply_command).not_to receive(:call)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'signature compatibility' do
+      before do
+        allow(File).to receive(:exist?).with(patch_file).and_return(true)
+        allow(apply_command).to receive(:call).with(patch_file, chdir: work_dir).and_return(apply_result)
+      end
+
+      it 'accepts a positional file argument' do
+        expect(described_instance.apply(patch_file)).to eq('')
+      end
+    end
+  end
+
+  describe '#apply_mail' do
+    subject(:result) { described_instance.apply_mail(mbox_file) }
+
+    let(:am_apply_command) { instance_double(Git::Commands::Am::Apply) }
+    let(:am_apply_result) { command_result('') }
+    let(:mbox_file) { '/tmp/patches.mbox' }
+    let(:work_dir) { '/path/to/work/tree' }
+
+    before do
+      allow(Git::Commands::Am::Apply).to receive(:new).with(execution_context).and_return(am_apply_command)
+      allow(execution_context).to receive(:git_work_dir).and_return(work_dir)
+    end
+
+    context 'when the file exists' do
+      before do
+        allow(File).to receive(:exist?).with(mbox_file).and_return(true)
+      end
+
+      it 'delegates to Git::Commands::Am::Apply#call with the file and chdir' do
+        expect(am_apply_command).to receive(:call).with(mbox_file, chdir: work_dir).and_return(am_apply_result)
+        result
+      end
+
+      it 'returns the command stdout' do
+        allow(am_apply_command).to receive(:call)
+          .with(mbox_file, chdir: work_dir).and_return(command_result('applied mail'))
+        expect(result).to eq('applied mail')
+      end
+    end
+
+    context 'when the file does not exist' do
+      before do
+        allow(File).to receive(:exist?).with(mbox_file).and_return(false)
+      end
+
+      it 'returns nil without calling git' do
+        expect(am_apply_command).not_to receive(:call)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'signature compatibility' do
+      before do
+        allow(File).to receive(:exist?).with(mbox_file).and_return(true)
+        allow(am_apply_command).to receive(:call).with(mbox_file, chdir: work_dir).and_return(am_apply_result)
+      end
+
+      it 'accepts a positional file argument' do
+        expect(described_instance.apply_mail(mbox_file)).to eq('')
+      end
+    end
+  end
+
+  describe '#read_tree' do
+    subject(:result) { described_instance.read_tree('HEAD') }
+
+    let(:read_tree_command) { instance_double(Git::Commands::ReadTree) }
+    let(:read_tree_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::ReadTree).to receive(:new).with(execution_context).and_return(read_tree_command)
+    end
+
+    context 'with a treeish and no options' do
+      it 'delegates to Git::Commands::ReadTree#call with the treeish' do
+        expect(read_tree_command).to receive(:call).with('HEAD').and_return(read_tree_result)
+        result
+      end
+
+      it 'returns the command stdout' do
+        allow(read_tree_command).to receive(:call).with('HEAD').and_return(command_result('output'))
+        expect(result).to eq('output')
+      end
+    end
+
+    context 'with the prefix option' do
+      subject(:result) { described_instance.read_tree('HEAD', { prefix: 'sub/' }) }
+
+      it 'forwards the prefix option to Git::Commands::ReadTree#call' do
+        expect(read_tree_command).to receive(:call).with('HEAD', prefix: 'sub/').and_return(read_tree_result)
+        result
+      end
+    end
+
+    context 'with an unknown option' do
+      subject(:result) { described_instance.read_tree('HEAD', { bogus: true }) }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call Git::Commands::ReadTree' do
+        expect(read_tree_command).not_to receive(:call)
+        begin
+          result
+        rescue ArgumentError
+          # expected
+        end
+      end
+    end
+
+    context 'signature compatibility' do
+      subject(:result) { described_instance.read_tree('HEAD', { prefix: 'sub/' }) }
+
+      it 'accepts the legacy positional options hash' do
+        expect(read_tree_command).to receive(:call).with('HEAD', prefix: 'sub/').and_return(read_tree_result)
+        result
+      end
+    end
+  end
+
   describe '#ignored_files' do
     subject(:result) { described_instance.ignored_files }
 
