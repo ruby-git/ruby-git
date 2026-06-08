@@ -755,13 +755,11 @@ module Git
     # rubocop:enable Style/ArgumentsForwarding
 
     def apply(file)
-      return unless File.exist?(file)
-
-      lib.apply(file)
+      facade_repository.apply(file)
     end
 
     def apply_mail(file)
-      lib.apply_mail(file) if File.exist?(file)
+      facade_repository.apply_mail(file)
     end
 
     # Shows objects
@@ -814,7 +812,7 @@ module Git
     end
 
     def read_tree(treeish, opts = {})
-      lib.read_tree(treeish, opts)
+      facade_repository.read_tree(treeish, opts)
     end
 
     def write_tree
