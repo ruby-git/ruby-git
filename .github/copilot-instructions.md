@@ -17,6 +17,12 @@ and compatibility requirements see the
 ## Terminology & Writing Style
 
 - Use American English always. Avoid British English spellings and idioms.
+- **Version strings** — use the most precise form appropriate to the context:
+  - `vN.x` (e.g. `v5.x`, `v4.x`) — the whole major series; use for compatibility
+    statements and upgrade guide scope ("v4.x code works on v5.x").
+  - `vN.0.0` (e.g. `v5.0.0`, `v6.0.0`) — a specific first release; use when
+    precision matters ("removed in v5.0.0", "the foundation delivered in v5.0.0").
+  - `vN.0` — avoid; ambiguous between "minor version 0" and "shorthand for vN.0.0".
 - **RuboCop** — correct capitalization when referring to the tool by name in prose,
   documentation, or comments.
 - **`rubocop`** — correct form when referring to the command-line executable or gem
