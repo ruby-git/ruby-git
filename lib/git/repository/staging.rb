@@ -66,31 +66,29 @@ module Git
 
       # Reset the current HEAD to a specified state
       #
-      # @overload reset(commitish = nil, **options)
+      # @example Reset the index and working tree to HEAD
+      #   repo.reset
       #
-      #   @example Reset the index and working tree to HEAD
-      #     repo.reset
+      # @example Hard reset to a specific commit
+      #   repo.reset('HEAD~1', hard: true)
       #
-      #   @example Hard reset to a specific commit
-      #     repo.reset('HEAD~1', hard: true)
+      # @param commitish [String, nil] the commit or tree-ish to reset to;
+      #   defaults to HEAD when `nil`
       #
-      #   @param commitish [String, nil] the commit or tree-ish to reset to;
-      #     defaults to HEAD when `nil`
+      # @param opts [Hash] options for the reset command
       #
-      #   @param options [Hash] options for the reset command
+      # @option opts [Boolean, nil] :hard (nil) reset the index and working
+      #   tree; discards all tracked changes
       #
-      #   @option options [Boolean, nil] :hard (nil) reset the index and working
-      #     tree; discards all tracked changes
+      # @return [String] git's stdout from the reset
       #
-      #   @return [String] git's stdout from the reset
+      # @raise [ArgumentError] when unsupported options are provided
       #
-      #   @raise [ArgumentError] when unsupported options are provided
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
-      #   @raise [Git::FailedError] when git exits with a non-zero exit status
-      #
-      def reset(commitish = nil, **)
-        SharedPrivate.assert_valid_opts!(RESET_ALLOWED_OPTS, **)
-        Git::Commands::Reset.new(@execution_context).call(commitish, **).stdout
+      def reset(commitish = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(RESET_ALLOWED_OPTS, **opts)
+        Git::Commands::Reset.new(@execution_context).call(commitish, **opts).stdout
       end
 
       # Reset the current HEAD to a specified state with `--hard`

@@ -57,8 +57,8 @@ RSpec.describe Git::Repository::Committing do
       end
     end
 
-    context 'with no message argument' do
-      subject(:result) { described_instance.commit(amend: true) }
+    context 'with nil message and amend option' do
+      subject(:result) { described_instance.commit(nil, amend: true) }
 
       it 'does not include :message in the call' do
         expect(commit_command).to receive(:call).with(no_edit: true, amend: true).and_return(commit_result)
@@ -189,6 +189,23 @@ RSpec.describe Git::Repository::Committing do
         end
       end
     end
+
+    context 'with a plain Hash variable (legacy-contract calling convention)' do
+      it 'does not raise ArgumentError when opts is a bare Hash variable' do
+        opts = { all: true }
+        allow(commit_command).to receive(:call).and_return(commit_result)
+        expect { described_instance.commit('msg', opts) }.not_to raise_error
+      end
+
+      it 'does not mutate the caller-provided Hash when :add_all is present' do
+        opts = { add_all: true }
+        original = opts.dup
+        allow(Git::Deprecation).to receive(:warn)
+        allow(commit_command).to receive(:call).and_return(commit_result)
+        described_instance.commit('msg', opts)
+        expect(opts).to eq(original)
+      end
+    end
   end
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -224,6 +241,14 @@ RSpec.describe Git::Repository::Committing do
         expect(commit_command).to receive(:call).with(no_edit: true, message: 'msg', all: true,
                                                       no_verify: true).and_return(commit_result)
         result
+      end
+    end
+
+    context 'with a plain Hash variable (legacy-contract calling convention)' do
+      it 'does not raise ArgumentError when opts is a bare Hash variable' do
+        opts = { no_verify: true }
+        allow(commit_command).to receive(:call).and_return(commit_result)
+        expect { described_instance.commit_all('msg', opts) }.not_to raise_error
       end
     end
   end
@@ -339,6 +364,22 @@ RSpec.describe Git::Repository::Committing do
         expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
       end
     end
+
+    context 'with a plain Hash variable (legacy-contract calling convention)' do
+      it 'does not raise ArgumentError when opts is a bare Hash variable' do
+        opts = { message: 'snapshot' }
+        allow(commit_tree_command).to receive(:call).and_return(commit_tree_result)
+        expect { described_instance.commit_tree('tree-sha', opts) }.not_to raise_error
+      end
+
+      it 'does not mutate the caller-provided Hash' do
+        opts = { message: 'snapshot', parent: 'HEAD' }
+        original = opts.dup
+        allow(commit_tree_command).to receive(:call).and_return(commit_tree_result)
+        described_instance.commit_tree('tree-sha', opts)
+        expect(opts).to eq(original)
+      end
+    end
   end
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -410,6 +451,15 @@ RSpec.describe Git::Repository::Committing do
         expect(commit_tree_command).to receive(:call).with(tree_sha,
                                                            m: 'my commit').and_return(command_result(commit_sha))
         result
+      end
+    end
+
+    context 'with a plain Hash variable (legacy-contract calling convention)' do
+      it 'does not raise ArgumentError when opts is a bare Hash variable' do
+        opts = { message: 'snapshot' }
+        allow(write_tree_command).to receive(:call).and_return(command_result(tree_sha))
+        allow(commit_tree_command).to receive(:call).and_return(command_result(commit_sha))
+        expect { described_instance.write_and_commit_tree(opts) }.not_to raise_error
       end
     end
   end

@@ -424,7 +424,7 @@ module Git
 
     # resets the working directory to the provided commitish
     def reset(commitish = nil, opts = {})
-      facade_repository.reset(commitish, **opts)
+      facade_repository.reset(commitish, opts)
     end
 
     # resets the working directory to the commitish with '--hard'
@@ -489,19 +489,19 @@ module Git
     #   :author
     #
     def commit(message, opts = {})
-      facade_repository.commit(message, **opts)
+      facade_repository.commit(message, opts)
     end
 
     # commits all pending changes in the index file to the git repository,
     # but automatically adds all modified files without having to explicitly
     # calling @git.add() on them.
     def commit_all(message, opts = {})
-      facade_repository.commit_all(message, **opts)
+      facade_repository.commit_all(message, opts)
     end
 
     # checks out a branch as the new git working directory
-    def checkout(*, **)
-      facade_repository.checkout(*, **)
+    def checkout(branch = nil, opts = {})
+      facade_repository.checkout(branch, opts)
     end
 
     # checks out an old version of a file
@@ -820,7 +820,7 @@ module Git
     end
 
     def write_and_commit_tree(opts = {})
-      Git::Object::Commit.new(self, facade_repository.write_and_commit_tree(**opts))
+      Git::Object::Commit.new(self, facade_repository.write_and_commit_tree(opts))
     end
 
     def update_ref(branch, commit)
@@ -978,7 +978,7 @@ module Git
 
     # @return [Git::Object::Commit] a commit object
     def commit_tree(tree = nil, opts = {})
-      Git::Object::Commit.new(self, facade_repository.commit_tree(tree, **opts))
+      Git::Object::Commit.new(self, facade_repository.commit_tree(tree, opts))
     end
 
     # @return [Git::Diff] a Git::Diff object

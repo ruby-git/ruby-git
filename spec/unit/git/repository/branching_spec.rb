@@ -155,6 +155,31 @@ RSpec.describe Git::Repository::Branching do
       end
     end
 
+    context 'with options passed as a bare Hash variable' do
+      let(:opts) { { force: true } }
+
+      subject(:result) { described_instance.checkout('main', opts) }
+
+      it 'does not raise ArgumentError' do
+        allow(checkout_branch_command)
+          .to receive(:call).with('main', force: true).and_return(checkout_branch_result)
+        expect { result }.not_to raise_error
+      end
+
+      it 'forwards the options to the command' do
+        expect(checkout_branch_command)
+          .to receive(:call).with('main', force: true).and_return(checkout_branch_result)
+        result
+      end
+    end
+
+    context 'with too many positional arguments' do
+      it 'raises ArgumentError' do
+        expect { described_instance.checkout('main', {}, :extra) }
+          .to raise_error(ArgumentError)
+      end
+    end
+
     context 'with an unknown option' do
       subject(:result) { described_instance.checkout('main', bogus: true) }
 
