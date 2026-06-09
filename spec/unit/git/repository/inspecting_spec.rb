@@ -147,4 +147,118 @@ RSpec.describe Git::Repository::Inspecting do
       end
     end
   end
+
+  describe '#describe' do
+    subject(:result) { described_instance.describe(committish, opts) }
+
+    let(:committish) { nil }
+    let(:opts) { {} }
+    let(:describe_command) { instance_double(Git::Commands::Describe) }
+    let(:describe_result) { command_result("v1.0.0\n") }
+
+    before do
+      allow(Git::Commands::Describe).to receive(:new).with(execution_context).and_return(describe_command)
+    end
+
+    context 'with no arguments' do
+      it 'delegates to Git::Commands::Describe#call with no arguments' do
+        expect(describe_command).to receive(:call).with(no_args).and_return(describe_result)
+        result
+      end
+
+      it 'returns the command stdout' do
+        allow(describe_command).to receive(:call).with(no_args).and_return(describe_result)
+        expect(result).to eq("v1.0.0\n")
+      end
+    end
+
+    context 'with a committish' do
+      let(:committish) { 'abc123' }
+
+      it 'forwards the committish to Git::Commands::Describe#call' do
+        expect(describe_command).to receive(:call).with('abc123').and_return(describe_result)
+        result
+      end
+    end
+
+    context 'with options' do
+      let(:opts) { { tags: true, long: true } }
+
+      it 'forwards options to Git::Commands::Describe#call' do
+        expect(describe_command).to receive(:call).with(tags: true, long: true).and_return(describe_result)
+        result
+      end
+    end
+
+    context 'with both a committish and options' do
+      let(:committish) { 'HEAD' }
+      let(:opts) { { tags: true } }
+
+      it 'forwards both to Git::Commands::Describe#call' do
+        expect(describe_command).to receive(:call).with('HEAD', tags: true).and_return(describe_result)
+        result
+      end
+    end
+
+    context 'when committish looks like a flag (starts with -)' do
+      let(:committish) { '--all' }
+
+      it 'raises ArgumentError' do
+        expect { result }.to raise_error(ArgumentError, /Invalid commit-ish object/)
+      end
+
+      it 'does not call Git::Commands::Describe' do
+        expect(describe_command).not_to receive(:call)
+        begin
+          result
+        rescue ArgumentError
+          # expected
+        end
+      end
+    end
+
+    context 'with an unknown option' do
+      let(:opts) { { bogus: true } }
+
+      it 'raises ArgumentError before calling the command' do
+        expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+      end
+
+      it 'does not call Git::Commands::Describe' do
+        expect(describe_command).not_to receive(:call)
+        begin
+          result
+        rescue ArgumentError
+          # expected
+        end
+      end
+    end
+
+    context 'with the legacy :"exact-match" option key' do
+      let(:opts) { { 'exact-match': true } }
+
+      it 'translates :"exact-match" to :exact_match before calling the command' do
+        expect(describe_command).to receive(:call).with(exact_match: true).and_return(describe_result)
+        result
+      end
+    end
+
+    context 'when :"exact-match" is combined with other opts' do
+      let(:opts) { { 'exact-match': true, tags: true } }
+
+      it 'translates :"exact-match" to :exact_match and preserves other opts' do
+        expect(describe_command).to receive(:call).with(exact_match: true, tags: true).and_return(describe_result)
+        result
+      end
+    end
+
+    context 'when both :exact_match and :"exact-match" are passed' do
+      let(:opts) { { exact_match: true, 'exact-match': true } }
+
+      it 'always removes the legacy :"exact-match" key so it is not forwarded to the command' do
+        expect(describe_command).to receive(:call).with(exact_match: true).and_return(describe_result)
+        result
+      end
+    end
+  end
 end

@@ -467,7 +467,7 @@ module Git
     #  :match
     #
     def describe(committish = nil, opts = {})
-      lib.describe(committish, opts)
+      facade_repository.describe(committish, opts)
     end
 
     # reverts the working directory to the provided commitish.
@@ -696,11 +696,11 @@ module Git
 
     # repacks the repository
     def repack
-      lib.repack
+      facade_repository.repack
     end
 
     def gc
-      lib.gc
+      facade_repository.gc
     end
 
     # Verifies the connectivity and validity of objects in the database

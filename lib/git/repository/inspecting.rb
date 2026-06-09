@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'git/commands/describe'
 require 'git/commands/fsck'
 require 'git/commands/show'
 require 'git/parsers/fsck'
@@ -16,6 +17,97 @@ module Git
     # @api public
     #
     module Inspecting
+      # Give a human-readable name to a commit based on the most recent reachable tag
+      #
+      # Runs `git describe` to find the nearest tag reachable from `committish` and
+      # formats a version string. When the tag points directly at the commit, only the
+      # tag name is shown. Otherwise, the tag name is suffixed with the number of
+      # additional commits and the abbreviated commit SHA (e.g. `v1.0.0-3-gabcdef1`).
+      #
+      # @example Describe HEAD
+      #   repo.describe #=> "v1.0.0"
+      #
+      # @example Describe a specific commit
+      #   repo.describe('abc123') #=> "v1.0.0-3-gabcdef1"
+      #
+      # @example Describe using any tag (not just annotated tags)
+      #   repo.describe(nil, tags: true) #=> "v1.0.0-lightweight"
+      #
+      # @example Require an exact tag match
+      #   repo.describe(nil, exact_match: true)
+      #
+      # @example Use the legacy hyphenated key (still accepted)
+      #   repo.describe(nil, :'exact-match' => true)
+      #
+      # @param committish [String, nil] the commit-ish to describe; defaults to HEAD
+      #   when `nil`
+      #
+      # @param opts [Hash] options forwarded to `git describe`
+      #
+      # @option opts [Boolean, nil] :all (nil) use any ref in `refs/`, not just tags
+      #
+      # @option opts [Boolean, nil] :tags (nil) use lightweight tags as well as
+      #   annotated ones
+      #
+      # @option opts [Boolean, nil] :contains (nil) describe the tag that contains the
+      #   commit, rather than the nearest reachable one
+      #
+      # @option opts [Boolean, String, nil] :abbrev (nil) number of hex digits for the
+      #   abbreviated object name; `true` uses git's default length
+      #
+      # @option opts [Boolean, String, nil] :dirty (nil) append a dirty-state mark to
+      #   the description; `true` appends `-dirty`, a String appends that string
+      #
+      # @option opts [Boolean, String, nil] :broken (nil) like `:dirty` but treats
+      #   broken repository links as dirty
+      #
+      # @option opts [Integer, String, nil] :candidates (nil) number of candidate tags
+      #   to consider; increasing above 10 may yield a more accurate result
+      #
+      # @option opts [Boolean, nil] :exact_match (nil) only succeed when the commit is
+      #   pointed to by a tag directly (no suffix)
+      #
+      #   The legacy hyphenated key `:"exact-match"` is also accepted and is
+      #   automatically translated to `:exact_match`.
+      #
+      # @option opts [Boolean, nil] :debug (nil) verbosely display the search strategy
+      #
+      # @option opts [Boolean, nil] :long (nil) always output the long format even when
+      #   the commit matches a tag exactly
+      #
+      # @option opts [String, Array<String>, nil] :match (nil) only consider tags
+      #   matching the given `glob(7)` pattern; pass an array for multiple patterns
+      #
+      # @option opts [String, Array<String>, nil] :exclude (nil) do not consider tags
+      #   matching the given `glob(7)` pattern; pass an array for multiple patterns
+      #
+      # @option opts [Boolean, nil] :always (nil) show the abbreviated commit SHA as
+      #   fallback when the commit cannot be described
+      #
+      # @option opts [Boolean, nil] :first_parent (nil) follow only the first parent of
+      #   merge commits when searching for the nearest tag
+      #
+      # @return [String] the human-readable description of the commit, with trailing
+      #   newlines preserved
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      # @raise [ArgumentError] when `committish` looks like a command-line flag (starts
+      #   with `-`), or when `opts` contains any key not in the documented option list
+      #
+      def describe(committish = nil, opts = {})
+        raise ArgumentError, "Invalid commit-ish object: '#{committish}'" if committish&.start_with?('-')
+
+        opts = opts.dup
+        if opts.key?(:'exact-match')
+          opts[:exact_match] ||= opts[:'exact-match']
+          opts.delete(:'exact-match')
+        end
+        SharedPrivate.assert_valid_opts!(DESCRIBE_ALLOWED_OPTS, **opts)
+        commit_ishes = Array(committish).compact
+        Git::Commands::Describe.new(@execution_context).call(*commit_ishes, **opts).stdout
+      end
+
       # Show a single git object (a commit, tag, tree, or blob)
       #
       # @example Show the HEAD commit
@@ -48,6 +140,13 @@ module Git
         object = path ? "#{objectish || 'HEAD'}:#{path}" : objectish
         Git::Commands::Show.new(@execution_context).call(*[object].compact).stdout
       end
+
+      # Option keys accepted by {#describe}
+      DESCRIBE_ALLOWED_OPTS = %i[
+        all tags contains abbrev dirty broken candidates
+        exact_match debug long match exclude always first_parent
+      ].freeze
+      private_constant :DESCRIBE_ALLOWED_OPTS
 
       # Option keys accepted by {#fsck}
       #
