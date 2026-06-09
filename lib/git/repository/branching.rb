@@ -89,22 +89,22 @@ module Git
       # @param branch [String, nil] the branch to check out; defaults to nil
       #   (i.e. restore HEAD state)
       #
-      # @param options [Hash] options for the checkout command
+      # @param opts [Hash] options for the checkout command
       #
-      # @option options [Boolean, nil] :force (nil) discard local changes when
+      # @option opts [Boolean, nil] :force (nil) discard local changes when
       #   switching branches
       #
-      # @option options [Boolean, String, nil] :new_branch (nil) when `true`,
+      # @option opts [Boolean, String, nil] :new_branch (nil) when `true`,
       #   creates a new branch named `branch` from `:start_point`
       #
       #   When a `String`, creates a new branch with that name, using `branch`
       #   as the start point.
       #
-      # @option options [Boolean, String, nil] :b (nil) alias for `:new_branch`
+      # @option opts [Boolean, String, nil] :b (nil) alias for `:new_branch`
       #
-      # @option options [Boolean, nil] :f (nil) alias for `:force`
+      # @option opts [Boolean, nil] :f (nil) alias for `:force`
       #
-      # @option options [String, nil] :start_point (nil) the commit or branch to
+      # @option opts [String, nil] :start_point (nil) the commit or branch to
       #   start the new branch from; used together with `new_branch: true`
       #
       # @return [String] git's stdout from the checkout
@@ -113,15 +113,15 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def checkout(branch = nil, options = {})
-        if branch.is_a?(Hash) && options.empty?
-          options = branch
+      def checkout(branch = nil, opts = {})
+        if branch.is_a?(Hash) && opts.empty?
+          opts = branch
           branch = nil
         end
 
-        SharedPrivate.assert_valid_opts!(CHECKOUT_ALLOWED_OPTS, **options)
+        SharedPrivate.assert_valid_opts!(CHECKOUT_ALLOWED_OPTS, **opts)
 
-        target, translated_opts = Private.translate_checkout_opts(branch, options)
+        target, translated_opts = Private.translate_checkout_opts(branch, opts)
         Git::Commands::Checkout::Branch.new(@execution_context).call(target, **translated_opts).stdout
       end
 
@@ -215,9 +215,9 @@ module Git
         local_branch?(branch) || remote_branch?(branch)
       end
 
-      # @deprecated Use {#local_branch?} instead.
+      # Checks whether the named branch exists locally
       #
-      # @example
+      # @example Check whether main exists locally
       #   repo.is_local_branch?('main')  # => true
       #
       # @param branch [String] the local branch name to look up
@@ -225,6 +225,8 @@ module Git
       # @return [Boolean] `true` if the branch exists locally, `false` otherwise
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated use {#local_branch?} instead
       #
       def is_local_branch?(branch) # rubocop:disable Naming/PredicatePrefix
         Git::Deprecation.warn(
@@ -234,9 +236,9 @@ module Git
         local_branch?(branch)
       end
 
-      # @deprecated Use {#remote_branch?} instead.
+      # Checks whether the named branch exists as a remote-tracking branch
       #
-      # @example
+      # @example Check whether master exists on any remote
       #   repo.is_remote_branch?('master')  # => true
       #
       # @param branch [String] the short branch name to look up across all remotes
@@ -246,6 +248,8 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
+      # @deprecated use {#remote_branch?} instead
+      #
       def is_remote_branch?(branch) # rubocop:disable Naming/PredicatePrefix
         Git::Deprecation.warn(
           'Git::Repository#is_remote_branch? is deprecated and will be removed in a future version. ' \
@@ -254,9 +258,9 @@ module Git
         remote_branch?(branch)
       end
 
-      # @deprecated Use {#branch?} instead.
+      # Checks whether the named branch exists locally or as a remote-tracking branch
       #
-      # @example
+      # @example Check whether main exists anywhere
       #   repo.is_branch?('main')  # => true
       #
       # @param branch [String] the branch name to look up
@@ -265,6 +269,8 @@ module Git
       #   `false` otherwise
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated use {#branch?} instead
       #
       def is_branch?(branch) # rubocop:disable Naming/PredicatePrefix
         Git::Deprecation.warn(

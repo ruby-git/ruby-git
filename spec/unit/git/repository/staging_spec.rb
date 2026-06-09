@@ -141,6 +141,14 @@ RSpec.describe Git::Repository::Staging do
         expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
       end
     end
+
+    context 'with a plain Hash variable (legacy-contract calling convention)' do
+      it 'does not raise ArgumentError when opts is a bare Hash variable' do
+        opts = { hard: true }
+        allow(reset_command).to receive(:call).and_return(reset_result)
+        expect { described_instance.reset('HEAD~1', opts) }.not_to raise_error
+      end
+    end
   end
 
   describe '#rm' do
