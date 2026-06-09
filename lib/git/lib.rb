@@ -459,6 +459,7 @@ module Git
 
     alias commit_data cat_file_commit
 
+    # @api private
     def process_commit_data(data, sha)
       # process_commit_headers consumes the header lines from the `data` array,
       # leaving only the message lines behind.
@@ -490,6 +491,7 @@ module Git
     #
     # @raise [NoMethodError] if `data` contains non-string entries
     #
+    # @api private
     def each_cat_file_header(data)
       while (match = CAT_FILE_HEADER_LINE.match(data.shift))
         key = match[:key]
@@ -548,11 +550,13 @@ module Git
 
     alias tag_data cat_file_tag
 
+    # @api private
     def cat_file_object_meta(object)
       stdout = Git::Commands::CatFile::Batch.new(self).call(object, batch_check: true).stdout
       parse_cat_file_meta(stdout, object)
     end
 
+    # @api private
     def parse_cat_file_meta(output, object)
       line = output.to_s.lines.first.to_s.chomp
 
@@ -824,6 +828,7 @@ module Git
     # @raise [ArgumentError] if any of the parameters are a string starting with a hyphen
     # @return [void]
     #
+    # @api private
     def assert_args_are_not_options(arg_name, *args)
       invalid_args = args.select { |arg| arg&.start_with?('-') }
       return unless invalid_args.any?
@@ -842,6 +847,7 @@ module Git
     # @return [Array<String>, nil] normalized array of path strings, or nil if empty/nil input
     # @raise [ArgumentError] if any path is not a String or Pathname
     #
+    # @api private
     def normalize_pathspecs(pathspecs, arg_name)
       return nil unless pathspecs
 
@@ -860,6 +866,7 @@ module Git
     # @param arg_name [String] name of the argument for error messages
     # @raise [ArgumentError] if any path is not a String or Pathname
     #
+    # @api private
     def validate_pathspec_types(pathspecs, arg_name)
       return if pathspecs.all? { |path| path.is_a?(String) || path.is_a?(Pathname) }
 
@@ -884,6 +891,7 @@ module Git
     #
     # @return [String, Pathname, Array<String, Pathname>, nil] the resolved path limiter
     #
+    # @api private
     def handle_deprecated_path_option(opts)
       if opts.key?(:path_limiter)
         opts[:path_limiter]
@@ -903,6 +911,7 @@ module Git
     #
     # @raise [ArgumentError] if unknown keys are present
     #
+    # @api private
     def assert_valid_opts(opts, allowed)
       unknown = opts.keys - allowed
       raise ArgumentError, "Unknown options: #{unknown.join(', ')}" if unknown.any?
@@ -1118,6 +1127,7 @@ module Git
       parse_config_list Git::Commands::ConfigOptionSyntax::List.new(self).call(global: true).stdout.split("\n")
     end
 
+    # @api private
     def parse_config_list(lines)
       hsh = {}
       lines.each do |line|
@@ -2111,6 +2121,7 @@ module Git
     #   contain the result of the command including the exit status, stdout, and
     #   stderr.
     #
+    # @api private
     def command_capturing(*, **options_hash)
       options_hash = COMMAND_CAPTURING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
@@ -2185,6 +2196,7 @@ module Git
     #
     # @see #command_line_streaming
     #
+    # @api private
     def command_streaming(*, **options_hash)
       options_hash = COMMAND_STREAMING_ARG_DEFAULTS.merge(options_hash)
       options_hash[:timeout] ||= Git.config.timeout
