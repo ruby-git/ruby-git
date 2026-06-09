@@ -12,6 +12,7 @@ require 'git/repository/diffing'
 require 'git/repository/factories'
 require 'git/repository/inspecting'
 require 'git/repository/logging'
+require 'git/repository/maintenance'
 require 'git/repository/merging'
 require 'git/repository/object_operations'
 require 'git/repository/remote_operations'
@@ -55,6 +56,7 @@ module Git
     include Git::Repository::Diffing
     include Git::Repository::Inspecting
     include Git::Repository::Logging
+    include Git::Repository::Maintenance
     include Git::Repository::Merging
     include Git::Repository::ObjectOperations
     include Git::Repository::RemoteOperations

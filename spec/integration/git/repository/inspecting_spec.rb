@@ -7,13 +7,19 @@ require 'git/execution_context/repository'
 
 # Integration tests for Git::Repository::Inspecting.
 #
-# Both facade methods are exercised end-to-end here because each performs
+# #show and #fsck are exercised end-to-end here because each performs
 # facade-owned processing that benefits from a real git invocation:
 #   * #show joins objectish and path into an `objectish:path` expression before
 #     calling git, so a real blob read proves the pre-processing produces a
 #     valid object specifier.
 #   * #fsck parses real `git fsck` stdout into a Git::FsckResult, so a real
 #     invocation proves the parsing handles actual output.
+#
+# #describe is a single-command delegator whose facade-owned transforms
+# (:"exact-match" key translation, option allowlist) are pure-Ruby and fully
+# covered by unit tests. The command's own integration spec
+# (spec/integration/git/commands/describe_spec.rb) covers the end-to-end git
+# interaction, so no facade-level integration tests are required here.
 
 RSpec.describe Git::Repository::Inspecting, :integration do
   include_context 'in an empty repository'
