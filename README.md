@@ -656,10 +656,24 @@ The architectural redesign is approximately **65% complete** and we have publish
 [`git 5.0.0.beta.1`](https://rubygems.org/gems/git/versions/5.0.0.beta.1) as our
 first pre-release.
 
+**To try the beta**, add the pre-release version to your `Gemfile`:
+
+```ruby
+gem 'git', '~> 5.0.0.beta'
+```
+
+Or install it directly:
+
+```sh
+gem install git --pre
+```
+
 The intent is full backward compatibility with 4.x, but given the size and scope of
 the redesign, some incompatibilities may exist. Please give the latest beta a try and
 [open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
 unexpected — your feedback helps us ship a solid 5.0.0.
+
+See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
 
 ### 2026-01-07: AI Policy Introduced
 
