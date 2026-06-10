@@ -389,6 +389,7 @@ Also note name-mismatch cases where `Git::Lib` uses a different name than `Git::
 | `commit_data` (alias for `cat_file_commit`) | `Git::Repository::ObjectOperations#cat_file_commit` | ✅ `alias commit_data cat_file_commit` added (PR 2e) |
 | `tag_data` (alias for `cat_file_tag`) | `Git::Repository::ObjectOperations#cat_file_tag` | ✅ `alias tag_data cat_file_tag` added (PR 2e) |
 | `revparse` (alias for `rev_parse`) | (covered in Bucket 2) | ✅ covered |
+| `branch_current` | Returns current branch name or 'HEAD' — equivalent to `Git::Repository::Branching#current_branch` (name mismatch). A `Git::Base` delegator was added and then reverted: `branch_current` was never a public v4 `Git::Base` method (only an internal `Git::Lib` method), so no backward-compatibility obligation exists. `Git::Lib` callers should migrate to `Git::Base#current_branch` (`g.current_branch`), which is already documented in UPGRADING.md. | ❌ no delegator needed — callers migrate to `g.current_branch` |
 
 ### 7.3 Methods NOT Yet in `Git::Repository` (new facade work required)
 
@@ -396,7 +397,6 @@ These require a new facade method before a base.rb delegator can be added.
 
 | `Git::Lib` method | Assessment | Recommended status |
 |-------------------|------------|--------------------|
-| `branch_current` | Returns current branch name or 'HEAD' — equivalent to `Git::Repository::Branching#current_branch`. No new facade needed; just add delegator to `Git::Base` pointing to `current_branch`. | ⬜ promote (trivial) |
 | `change_head_branch(branch_name)` | Low-level `git symbolic-ref HEAD refs/heads/<name>`; used internally for branch renaming and orphan checkout. Plausible external use by tooling. | 🔍 human decision — promote to `Git::Repository::Branching` or mark as internal? |
 | `config_get(name)` | Returns a single config value. Used by tooling. Part of the existing `config()` facade which reads/writes. | 🔍 human decision — expose as `config_get` or fold into `config(name)`? |
 | `config_list` | Returns full config hash. Used by tooling. | 🔍 human decision — expose separately or fold into `config()`? |
@@ -439,8 +439,9 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 | Status | Count |
 |--------|-------|
 | ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d) | 23 |
-| ⬜ promote (new facade work required) | 7 |
+| ⬜ promote (new facade work required) | 6 |
 | ❌ remove (internal plumbing) | 12 |
+| ❌ no delegator needed (name-mismatch; `Git::Repository` equivalent exists) | 1 |
 | 🔍 human decision | 16 |
 | **Total orphaned methods** | **58** |
 

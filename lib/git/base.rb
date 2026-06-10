@@ -1220,12 +1220,6 @@ module Git
       facade_repository.branch_delete(*branches, **)
     end
 
-    # @return [String] the current branch name, or `'HEAD'` when in detached
-    #   HEAD state
-    def branch_current
-      facade_repository.current_branch
-    end
-
     # @!group Bucket 6 delegators — Git::Repository::ObjectOperations
 
     # @return [String] raw content of the git object, or streams to a tempfile when a block is given
