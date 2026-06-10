@@ -367,6 +367,15 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#branch_current' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.current_branch' do
+      expect(facade_repository).to receive(:current_branch).and_return('main')
+      expect(described_instance.branch_current).to eq('main')
+    end
+  end
+
   describe '#tag' do
     include_context 'with a stubbed facade_repository'
 
