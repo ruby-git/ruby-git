@@ -389,7 +389,7 @@ Also note name-mismatch cases where `Git::Lib` uses a different name than `Git::
 | `commit_data` (alias for `cat_file_commit`) | `Git::Repository::ObjectOperations#cat_file_commit` | ✅ `alias commit_data cat_file_commit` added (PR 2e) |
 | `tag_data` (alias for `cat_file_tag`) | `Git::Repository::ObjectOperations#cat_file_tag` | ✅ `alias tag_data cat_file_tag` added (PR 2e) |
 | `revparse` (alias for `rev_parse`) | (covered in Bucket 2) | ✅ covered |
-| `branch_current` | Returns current branch name or 'HEAD' — equivalent to `Git::Repository::Branching#current_branch` (name mismatch). A `Git::Base` delegator was added and then reverted: `branch_current` was never a public v4 `Git::Base` method (only an internal `Git::Lib` method), so no backward-compatibility obligation exists. `Git::Lib` callers should migrate to `Git::Base#current_branch` (`g.current_branch`), which is already documented in UPGRADING.md. | ❌ no delegator needed — callers migrate to `g.current_branch` |
+| `branch_current` | `Git::Repository::Branching#current_branch` | ✅ `alias branch_current current_branch` added to `Git::Base` (name mismatch: `Git::Lib` defines `branch_current`; `Git::Repository` exposes `current_branch`) |
 
 ### 7.3 Methods NOT Yet in `Git::Repository` (new facade work required)
 
@@ -438,15 +438,14 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 
 | Status | Count |
 |--------|-------|
-| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d) | 23 |
-| ⬜ promote (new facade work required) | 6 |
+| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 24 |
+| ⬜ promote (new facade work required) | 4 |
 | ❌ remove (internal plumbing) | 12 |
-| ❌ no delegator needed (name-mismatch; `Git::Repository` equivalent exists) | 1 |
 | 🔍 human decision | 16 |
-| **Total orphaned methods** | **58** |
+| **Total orphaned methods** | **56** |
 
-> **Recommendation:** The 23 "trivial wiring" promotions can be handled in PR 5a
-> as a batch. The 7 "new facade" promotions and 16 human-decision items should be
+> **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a
+> as a batch. The 4 "new facade" promotions and 16 human-decision items should be
 > addressed in a companion document (`redesign/c1c2_bucket6_lib_orphans.md`)
 > before PR 5b begins.
 
@@ -465,7 +464,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 - Add deprecated stubs `is_branch?`, `is_local_branch?`, `is_remote_branch?`
   to `Git::Repository::Branching`; add missing YARD `@deprecated` tags to all
   three in both `Git::Base` and the new stubs.
-- Batch-add `Git::Base` delegators for the 23 Bucket 6 "trivial wiring" orphans
+- Batch-add `Git::Base` delegators for the 24 Bucket 6 "trivial wiring" orphans
   from §7.2 that already have a `Git::Repository` home.
 - Add legacy aliases to `Git::Repository::ObjectOperations` for `namerev`,
   `object_contents`, `object_type`, `object_size`, `commit_data`, `tag_data`.

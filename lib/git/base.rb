@@ -936,6 +936,7 @@ module Git
     def current_branch
       facade_repository.current_branch
     end
+    alias branch_current current_branch
 
     # @return [Git::Branch] an object for branch_name
     def branch(branch_name = current_branch)
