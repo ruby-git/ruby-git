@@ -367,6 +367,12 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#branch_current' do
+    it 'is an alias for #current_branch' do
+      expect(described_class.instance_method(:branch_current)).to eq(described_class.instance_method(:current_branch))
+    end
+  end
+
   describe '#tag' do
     include_context 'with a stubbed facade_repository'
 
