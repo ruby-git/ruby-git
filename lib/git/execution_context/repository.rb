@@ -79,8 +79,8 @@ module Git
           git_dir: base_hash[:repository],
           git_index_file: base_hash[:index],
           git_work_dir: base_hash[:working_directory],
-          git_ssh: base_hash.key?(:git_ssh) ? base_hash[:git_ssh] : :use_global_config,
-          binary_path: base_hash.key?(:binary_path) ? base_hash[:binary_path] : :use_global_config,
+          git_ssh: base_hash.fetch(:git_ssh, :use_global_config),
+          binary_path: base_hash.fetch(:binary_path, :use_global_config),
           logger: logger
         )
       end

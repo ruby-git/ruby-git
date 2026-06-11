@@ -411,6 +411,28 @@ module Git
         }
       end
 
+      # Build the `:binary_path` and `:git_ssh` execution-context defaults
+      #
+      # Reads the values from the caller-supplied options, falling back to the
+      # `:use_global_config` sentinel for any the caller did not provide so the
+      # value is resolved from `Git::Config.instance` at call time.
+      #
+      # @param options [Hash] the caller-supplied options hash
+      #
+      # @return [Hash] context defaults with two keys: `:binary_path`
+      #   (`String` or `:use_global_config` — `nil` is not valid and raises
+      #   `ArgumentError` in {Git::ExecutionContext#initialize}) and `:git_ssh`
+      #   (`String`, `nil`, or `:use_global_config`)
+      #
+      # @api private
+      #
+      def context_defaults(options)
+        {
+          binary_path: options.fetch(:binary_path, :use_global_config),
+          git_ssh: options.fetch(:git_ssh, :use_global_config)
+        }
+      end
+
       # Resolve the worktree root to use as the working directory for {.open}
       #
       # @param working_dir [String] a path inside the working tree
@@ -424,11 +446,7 @@ module Git
       # @api private
       #
       def resolve_open_working_dir(working_dir, options)
-        PathResolver.root_of_worktree(
-          working_dir,
-          binary_path: options.fetch(:binary_path, :use_global_config),
-          git_ssh: options.fetch(:git_ssh, :use_global_config)
-        )
+        PathResolver.root_of_worktree(working_dir, **context_defaults(options))
       end
 
       # Build a repository from caller options and resolved paths
@@ -536,15 +554,10 @@ module Git
       # @api private
       #
       def run_init_command(directory, options)
-        git_ssh = options.fetch(:git_ssh, :use_global_config)
-        binary_path = options.fetch(:binary_path, :use_global_config)
-
         init_opts = options.slice(:bare, :initial_branch)
         init_opts[:separate_git_dir] = options[:repository] if options.key?(:repository)
 
-        context = Git::ExecutionContext::Global.new(
-          binary_path: binary_path, git_ssh: git_ssh, logger: options[:log]
-        )
+        context = Git::ExecutionContext::Global.new(**context_defaults(options), logger: options[:log])
         Git::Commands::Init.new(context).call(directory, **init_opts)
       end
 
