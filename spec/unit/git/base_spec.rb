@@ -413,4 +413,14 @@ RSpec.describe Git::Base do
       end
     end
   end
+
+  describe '#ls_remote' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.ls_remote' do
+      result_hash = { 'head' => { ref: 'HEAD', sha: 'abc123' } }
+      expect(facade_repository).to receive(:ls_remote).with(nil, {}).and_return(result_hash)
+      expect(described_instance.ls_remote).to eq(result_hash)
+    end
+  end
 end

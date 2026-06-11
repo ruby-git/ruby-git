@@ -2,6 +2,7 @@
 
 require 'git/commands/config_option_syntax'
 require 'git/commands/fetch'
+require 'git/commands/ls_remote'
 require 'git/commands/pull'
 require 'git/commands/push'
 require 'git/commands/remote'
@@ -570,12 +571,132 @@ module Git
         result.stdout.split("\n").map { |name| Git::Remote.new(self, name) }
       end
 
+      # Option keys accepted by {#ls_remote}
+      #
+      # @return [Array<Symbol>]
+      #
+      # @api private
+      #
+      LS_REMOTE_ALLOWED_OPTS = %i[
+        branches b heads h tags t refs upload_pack quiet q exit_code get_url sort symref server_option o timeout
+      ].freeze
+      private_constant :LS_REMOTE_ALLOWED_OPTS
+
+      # List references available in a remote repository
+      #
+      # Queries a remote for its available refs and returns a structured Hash
+      # mapping ref types to name/sha pairs. The remote is contacted but no local
+      # objects are created or updated.
+      #
+      # @example List all refs from the local repository
+      #   repo.ls_remote
+      #   # => {"head"=>{ref: "HEAD", sha: "abc123"},
+      #   #     "branches"=>{"main"=>{ref: "refs", sha: "abc123"}}}
+      #
+      # @note The `:ref` value in each pair is only the **first path segment** of the
+      #   full git ref (e.g. `"refs"` for `refs/heads/main`), not the complete ref
+      #   path. This matches the behavior of 4.x. See
+      #   [issue 1416](https://github.com/ruby-git/ruby-git/issues/1416) for the
+      #   planned fix.
+      #
+      # @example List all refs from a named remote
+      #   repo.ls_remote('origin')
+      #   # => {"head"=>..., "branches"=>..., "tags"=>...}
+      #
+      # @example List only tags from a named remote
+      #   repo.ls_remote('origin', tags: true)
+      #   # => {"tags"=>{"v1.0"=>{ref: "refs", sha: "def456"}}}
+      #
+      # @param location [String, nil] the remote name or URL to query; defaults to
+      #   `'.'` (the local repository) when nil
+      #
+      # @param opts [Hash] options for the ls-remote command
+      #
+      # @option opts [Boolean, nil] :branches (nil) limit output to refs under
+      #   `refs/heads/`; alias: `:b`
+      #
+      # @option opts [Boolean, nil] :heads (nil) limit output to refs under
+      #   `refs/heads/`; kept for backward compatibility; alias: `:h`
+      #
+      # @option opts [Boolean, nil] :tags (nil) limit output to refs under
+      #   `refs/tags/`; alias: `:t`
+      #
+      # @option opts [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
+      #   like `HEAD` from the output
+      #
+      # @option opts [Boolean, nil] :symref (nil) show the underlying ref pointed to
+      #   by symbolic refs
+      #
+      # @option opts [Numeric] :timeout (nil) execution timeout in seconds
+      #
+      # @return [Hash{String => Hash}] a Hash keyed by ref type (e.g. `"head"`,
+      #   `"branches"`, `"tags"`; other git namespace segments may appear for
+      #   non-standard refs); for named refs the value is a Hash keyed by ref name
+      #   mapping to `{ ref: String, sha: String }`; for the `"head"` entry the value
+      #   is `{ ref: String, sha: String }` directly
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+      #
+      def ls_remote(location = nil, opts = {})
+        SharedPrivate.assert_valid_opts!(LS_REMOTE_ALLOWED_OPTS, **opts)
+        repository = location || '.'
+        output_lines = Git::Commands::LsRemote.new(@execution_context).call(repository, **opts).stdout.split("\n")
+        Private.parse_ls_remote_output(output_lines)
+      end
+
       # Helpers private to the `RemoteOperations` topic module
       #
       # @api private
       #
       module Private
         module_function
+
+        # Parse `git ls-remote` stdout lines into a structured Hash
+        #
+        # @param lines [Array<String>] the individual stdout lines
+        #
+        # @return [Hash{String => Hash}] ref types to name/value maps
+        #
+        # @api private
+        #
+        def parse_ls_remote_output(lines)
+          lines.each_with_object(Hash.new { |h, k| h[k] = {} }) do |line, hsh|
+            type, name, value = parse_ls_remote_line(line)
+            if name
+              hsh[type][name] = value
+            else
+              hsh[type].update(value)
+            end
+          end
+        end
+
+        # Parse a single `git ls-remote` output line
+        #
+        # Each line is tab-separated: `<sha>\t<ref>`. The ref is split on `/` to
+        # determine the type and name: `HEAD` has no slashes (type `"head"`),
+        # `refs/heads/<name>` maps to type `"branches"`, and `refs/tags/<name>`
+        # maps to type `"tags"`.
+        #
+        # @param line [String] a single line from ls-remote stdout
+        #
+        # @return [Array(String, String|nil, Hash)] `[type, name, value]` where
+        #   `value` is `{ ref: String, sha: String }`
+        #
+        # @api private
+        #
+        def parse_ls_remote_line(line)
+          sha, info = line.split("\t", 2)
+          ref, type, name = info.split('/', 3)
+
+          type ||= 'head'
+          type = 'branches' if type == 'heads'
+
+          value = { ref: ref, sha: sha }
+
+          [type, name, value]
+        end
 
         # Resolve the (remote, opts) pair for {#fetch}, supporting the hash-only form
         #

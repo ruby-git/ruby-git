@@ -988,4 +988,128 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #ls_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#ls_remote' do
+    let(:ls_remote_command) { instance_double(Git::Commands::LsRemote) }
+    let(:ls_remote_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::LsRemote)
+        .to receive(:new).with(execution_context).and_return(ls_remote_command)
+    end
+
+    # --- Default invocation (nil location → '.') ----------------------------
+
+    context 'with no arguments (nil location)' do
+      subject(:result) { described_instance.ls_remote }
+
+      before do
+        allow(ls_remote_command).to receive(:call).and_return(ls_remote_result)
+      end
+
+      it 'delegates to Git::Commands::LsRemote.new with the execution_context' do
+        expect(Git::Commands::LsRemote).to receive(:new).with(execution_context).and_return(ls_remote_command)
+        result
+      end
+
+      it "passes '.' as the repository when location is nil" do
+        expect(ls_remote_command).to receive(:call).with('.').and_return(ls_remote_result)
+        result
+      end
+
+      it 'returns a Hash' do
+        expect(result).to be_a(Hash)
+      end
+    end
+
+    # --- Explicit location ---------------------------------------------------
+
+    context 'with an explicit location string' do
+      subject(:result) { described_instance.ls_remote('origin') }
+
+      it 'passes the location as the repository argument' do
+        expect(ls_remote_command)
+          .to receive(:call).with('origin').and_return(ls_remote_result)
+        result
+      end
+    end
+
+    # --- Opts forwarded ------------------------------------------------------
+
+    context 'with tags: true option' do
+      subject(:result) { described_instance.ls_remote('origin', tags: true) }
+
+      before do
+        allow(ls_remote_command).to receive(:call).and_return(ls_remote_result)
+      end
+
+      it 'forwards opts as keyword arguments to the command' do
+        expect(ls_remote_command)
+          .to receive(:call).with('origin', tags: true).and_return(ls_remote_result)
+        result
+      end
+    end
+
+    context 'with heads: true option' do
+      subject(:result) { described_instance.ls_remote('origin', heads: true) }
+
+      it 'forwards :heads to the command' do
+        expect(ls_remote_command)
+          .to receive(:call).with('origin', heads: true).and_return(ls_remote_result)
+        result
+      end
+    end
+
+    # --- Return value (parsed hash structure) --------------------------------
+
+    context 'with representative two-line output' do
+      let(:stdout) do
+        "abc123\tHEAD\n" \
+          "abc123\trefs/heads/main\n"
+      end
+
+      before do
+        allow(ls_remote_command).to receive(:call).and_return(command_result(stdout))
+      end
+
+      subject(:result) { described_instance.ls_remote }
+
+      it 'returns a Hash with a "head" key' do
+        expect(result).to have_key('head')
+      end
+
+      it 'returns a Hash with a "branches" key' do
+        expect(result).to have_key('branches')
+      end
+
+      it 'parses the HEAD entry with ref and sha merged into the type hash' do
+        head = result['head']
+        expect(head).to eq({ ref: 'HEAD', sha: 'abc123' })
+      end
+
+      it 'parses the branch entry keyed by branch name' do
+        branches = result['branches']
+        expect(branches).to have_key('main')
+        expect(branches['main'][:sha]).to eq('abc123')
+      end
+    end
+
+    # --- Signature compatibility (legacy-contract) ---------------------------
+
+    context 'signature compatibility' do
+      it 'accepts the positional hash call shape (legacy-contract)' do
+        allow(ls_remote_command).to receive(:call).and_return(ls_remote_result)
+        expect { described_instance.ls_remote('origin', tags: true) }.not_to raise_error
+      end
+
+      it 'accepts no arguments' do
+        allow(ls_remote_command).to receive(:call).and_return(ls_remote_result)
+        expect { described_instance.ls_remote }.not_to raise_error
+      end
+    end
+  end
 end
