@@ -371,6 +371,23 @@ module Git
     # @api private
     attr_reader :binary_path
 
+    # Returns the version of the git binary in use
+    #
+    # @example
+    #   g.git_version #=> #<Git::Version:... @version="2.42.0">
+    #
+    # @return [Git::Version] the parsed version of the git binary
+    #
+    # @see Git.git_version
+    #
+    def git_version
+      if binary_path == :use_global_config
+        Git.git_version
+      else
+        Git.git_version(binary_path)
+      end
+    end
+
     # Run a grep for 'string' on the HEAD of the git repository
     #
     # @example Limit grep's scope by calling grep() from a specific object:
