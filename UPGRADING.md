@@ -78,6 +78,7 @@ notes for the final migration target.
 | `g.lib.unmerged` | `g.unmerged` |
 | `g.lib.change_head_branch(name)` | `g.change_head_branch(name)` |
 | `g.lib.branch_current` | `g.current_branch` |
+| `g.lib.ls_remote(location, opts)` | `g.ls_remote(location, opts)` |
 
 #### Methods with no replacement
 

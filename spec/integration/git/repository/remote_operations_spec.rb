@@ -316,4 +316,33 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       expect(fetch_values).to include('main').and include('develop')
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #ls_remote
+  # ---------------------------------------------------------------------------
+
+  describe '#ls_remote' do
+    it 'returns a Hash' do
+      result = described_instance.ls_remote('origin')
+      expect(result).to be_a(Hash)
+    end
+
+    it 'contains a "branches" key with at least one entry for the pushed branch' do
+      result = described_instance.ls_remote('origin')
+      expect(result).to have_key('branches')
+      expect(result['branches']).not_to be_empty
+    end
+
+    it 'contains a "head" key' do
+      result = described_instance.ls_remote('origin')
+      expect(result).to have_key('head')
+    end
+
+    context 'with tags: true' do
+      it 'returns a Hash without raising' do
+        result = described_instance.ls_remote('origin', tags: true)
+        expect(result).to be_a(Hash)
+      end
+    end
+  end
 end

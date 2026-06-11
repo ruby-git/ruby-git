@@ -606,6 +606,23 @@ module Git
       facade_repository.remotes
     end
 
+    # List references available in a remote repository
+    #
+    # @param location [String, nil] the remote name or URL to query; defaults to
+    #   `'.'` (the local repository) when nil
+    #
+    # @param opts [Hash] options forwarded to {Git::Repository::RemoteOperations#ls_remote}
+    #
+    # @return [Hash{String => Hash}] see {Git::Repository::RemoteOperations#ls_remote}
+    #
+    # @raise [ArgumentError] if unsupported options are provided
+    #
+    # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+    #
+    def ls_remote(location = nil, opts = {})
+      facade_repository.ls_remote(location, opts)
+    end
+
     # sets the url for a remote
     # url can be a git url or a Git::Base object if it's a local reference
     #

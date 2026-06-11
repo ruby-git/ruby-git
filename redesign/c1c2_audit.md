@@ -406,7 +406,7 @@ These require a new facade method before a base.rb delegator can be added.
 | `global_config_set(name, value)` | Sets a global config value. | 🔍 human decision |
 | `git_version` | Returns `Git::Version` for the current binary. Useful for tooling that conditionally enables features. Not a repository concern; `Git.git_version` is the canonical API. | ✅ delegator added to `Git::Base` — delegates to `Git.git_version` |
 | `list_files(ref_dir)` | Lists files under `.git/refs/{ref_dir}`. Internal ref-filesystem access. No plausible clean public use. | ❌ remove — internal plumbing; direct callers should migrate to `Git::Repository` ref-inspection methods |
-| `ls_remote(location = nil, opts = {})` | Lists remote refs. Clearly useful externally. | ⬜ promote — new facade in `Git::Repository::RemoteOperations`; `Git::Commands::LsRemote` ✅ exists; moderate effort |
+| `ls_remote(location = nil, opts = {})` | Lists remote refs. Clearly useful externally. | ✅ promoted — facade in `Git::Repository::RemoteOperations` + `Git::Base` delegator added (PR 5f) |
 | `mv(source, destination, options = {})` | Wraps `git mv`. Externally useful. | ⬜ promote — new facade in `Git::Repository::Staging`; `Git::Commands::Mv` ✅ exists; trivial effort |
 | `parse_config(file)` | Parses a config file from path. | 🔍 human decision — expose or fold into `config()` with `:file` option? |
 | `stash_list` | Returns a formatted string `"stash@{0}: ...\n..."` — distinct from `stashes_all` which returns structured data. | 🔍 human decision — promote for backward compat, or deprecate in favor of `stashes_all`? |
@@ -439,7 +439,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 | Status | Count |
 |--------|-------|
 | ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 24 |
-| ⬜ promote (new facade work required) | 3 |
+| ⬜ promote (new facade work required) | 2 |
 | ❌ remove (internal plumbing) | 12 |
 | 🔍 human decision | 16 |
 | **Total orphaned methods** | **56** |
