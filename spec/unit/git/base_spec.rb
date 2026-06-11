@@ -386,4 +386,13 @@ RSpec.describe Git::Base do
       expect(result).to be(tag_double)
     end
   end
+
+  describe '#mv' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.mv' do
+      expect(facade_repository).to receive(:mv).with('old.rb', 'new.rb', {}).and_return('')
+      expect(described_instance.mv('old.rb', 'new.rb')).to eq('')
+    end
+  end
 end

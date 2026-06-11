@@ -242,6 +242,94 @@ RSpec.describe Git::Repository::Staging do
     end
   end
 
+  describe '#mv' do
+    subject(:result) { described_instance.mv(source, destination, options) }
+
+    let(:source) { 'old.rb' }
+    let(:destination) { 'new.rb' }
+    let(:options) { {} }
+    let(:mv_command) { instance_double(Git::Commands::Mv) }
+    let(:mv_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::Mv).to receive(:new).with(execution_context).and_return(mv_command)
+    end
+
+    context 'with a single source file' do
+      it 'delegates to Git::Commands::Mv#call with source as a single-element argument' do
+        expect(mv_command).to receive(:call).with('old.rb', 'new.rb', verbose: true).and_return(mv_result)
+        result
+      end
+
+      it 'returns the command stdout' do
+        allow(mv_command).to receive(:call).with('old.rb', 'new.rb', verbose: true).and_return(mv_result)
+        expect(result).to eq('')
+      end
+    end
+
+    context 'with multiple source files' do
+      let(:source) { ['old1.rb', 'old2.rb'] }
+      let(:destination) { 'destination/' }
+
+      it 'splatted sources are forwarded as separate arguments' do
+        expect(mv_command).to receive(:call)
+          .with('old1.rb', 'old2.rb', 'destination/', verbose: true)
+          .and_return(mv_result)
+        result
+      end
+    end
+
+    context 'with the force option' do
+      let(:options) { { force: true } }
+
+      it 'forwards force: true to Git::Commands::Mv#call' do
+        expect(mv_command).to receive(:call)
+          .with('old.rb', 'new.rb', verbose: true, force: true)
+          .and_return(mv_result)
+        result
+      end
+    end
+
+    context 'with the dry_run option' do
+      let(:options) { { dry_run: true } }
+
+      it 'forwards dry_run: true to Git::Commands::Mv#call' do
+        expect(mv_command).to receive(:call)
+          .with('old.rb', 'new.rb', verbose: true, dry_run: true)
+          .and_return(mv_result)
+        result
+      end
+    end
+
+    context 'option whitelisting' do
+      context 'with an unknown option' do
+        let(:options) { { bogus: true } }
+
+        it 'raises ArgumentError' do
+          expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+        end
+
+        it 'does not instantiate Git::Commands::Mv' do
+          expect(Git::Commands::Mv).not_to receive(:new)
+          begin
+            result
+          rescue ArgumentError
+            # expected
+          end
+        end
+      end
+    end
+
+    context 'signature compatibility' do
+      it 'accepts a legacy positional options hash and forwards options to the command' do
+        expect(mv_command).to receive(:call)
+          .with('old.rb', 'new.rb', verbose: true, force: true)
+          .and_return(mv_result)
+        expect(described_instance.mv('old.rb', 'new.rb', { force: true })).to eq('')
+      end
+    end
+  end
+
   describe '#clean' do
     subject(:result) { described_instance.clean }
 
