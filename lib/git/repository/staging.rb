@@ -5,6 +5,7 @@ require 'git/commands/am/apply'
 require 'git/commands/apply'
 require 'git/commands/clean'
 require 'git/commands/ls_files'
+require 'git/commands/mv'
 require 'git/commands/read_tree'
 require 'git/commands/reset'
 require 'git/commands/rm'
@@ -13,8 +14,8 @@ require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Facade methods for staging-area operations: adding, resetting, removing, and
-    # cleaning files
+    # Facade methods for staging-area operations: adding, resetting, moving,
+    # removing, and cleaning files
     #
     # Included by {Git::Repository}.
     #
@@ -270,6 +271,55 @@ module Git
       end
 
       alias remove rm
+
+      # Option keys accepted by {#mv}
+      MV_ALLOWED_OPTS = %i[force f dry_run n k].freeze
+      private_constant :MV_ALLOWED_OPTS
+
+      # Move or rename a file, directory, or symlink in the working tree
+      #
+      # Updates the index after successful completion, but the change must still
+      # be committed.
+      #
+      # @example Move a single file
+      #   repo.mv('old.rb', 'new.rb')
+      #
+      # @example Move multiple files to a directory
+      #   repo.mv(['file1.rb', 'file2.rb'], 'destination_dir/')
+      #
+      # @example Force overwrite if destination exists
+      #   repo.mv('source.rb', 'dest.rb', force: true)
+      #
+      # @param source [String, Array<String>] one or more source file(s),
+      #   directory(ies), or symlink(s) to move (relative to the worktree root)
+      #
+      # @param destination [String] the destination file or directory
+      #
+      # @param options [Hash] options for the mv command
+      #
+      # @option options [Boolean, nil] :force (nil) force renaming or moving even
+      #   if the destination exists (alias: `:f`)
+      #
+      # @option options [Boolean, nil] :f (nil) alias for `:force`
+      #
+      # @option options [Boolean, nil] :dry_run (nil) do not actually move any
+      #   files; only show what would happen (alias: `:n`)
+      #
+      # @option options [Boolean, nil] :n (nil) alias for `:dry_run`
+      #
+      # @option options [Boolean, nil] :k (nil) skip move or rename actions which
+      #   would lead to an error
+      #
+      # @return [String] git's stdout from the mv command
+      #
+      # @raise [ArgumentError] when unsupported options are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      def mv(source, destination, options = {})
+        SharedPrivate.assert_valid_opts!(MV_ALLOWED_OPTS, **options)
+        Git::Commands::Mv.new(@execution_context).call(*Array(source), destination, verbose: true, **options).stdout
+      end
 
       # Option keys accepted by {#clean}
       #

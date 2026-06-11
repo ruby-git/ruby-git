@@ -19,6 +19,13 @@ require 'git/execution_context/repository'
 #   spec/integration/git/commands/reset_spec.rb
 #   spec/integration/git/commands/rm_spec.rb
 #   spec/integration/git/commands/clean_spec.rb
+#
+# #mv is also a single-command delegator and is covered by:
+#   spec/integration/git/commands/mv_spec.rb
+# Unlike the methods above, #mv adds two input pre-processing behaviors beyond
+# option whitelisting: Array source normalization (*Array(source)) and injecting
+# verbose: true. These are pure-Ruby transforms with no git involvement; the unit
+# specs cover them fully and real git adds no additional signal.
 
 RSpec.describe Git::Repository::Staging, :integration do
   include_context 'in an empty repository'

@@ -440,6 +440,11 @@ module Git
       lib.reset(commitish, opts)
     end
 
+    # @return [String] git's stdout from the mv command
+    def mv(source, destination, options = {})
+      facade_repository.mv(source, destination, options)
+    end
+
     # cleans the working directory
     #
     # options:
