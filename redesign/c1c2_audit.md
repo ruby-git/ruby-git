@@ -404,7 +404,7 @@ These require a new facade method before a base.rb delegator can be added.
 | `global_config_get(name)` | Gets a global config value. | 🔍 human decision |
 | `global_config_list` | Returns the full global config hash. | 🔍 human decision |
 | `global_config_set(name, value)` | Sets a global config value. | 🔍 human decision |
-| `git_version` | Returns `Git::Version` for the current binary. Useful for tooling that conditionally enables features. | ⬜ promote — add to a suitable module (e.g., `Git::Repository::Inspecting` or a new `VersionHelpers` module); moderate effort |
+| `git_version` | Returns `Git::Version` for the current binary. Useful for tooling that conditionally enables features. Not a repository concern; `Git.git_version` is the canonical API. | ✅ delegator added to `Git::Base` — delegates to `Git.git_version` |
 | `list_files(ref_dir)` | Lists files under `.git/refs/{ref_dir}`. Internal ref-filesystem access. No plausible clean public use. | ❌ remove — internal plumbing; direct callers should migrate to `Git::Repository` ref-inspection methods |
 | `ls_remote(location = nil, opts = {})` | Lists remote refs. Clearly useful externally. | ⬜ promote — new facade in `Git::Repository::RemoteOperations`; `Git::Commands::LsRemote` ✅ exists; moderate effort |
 | `mv(source, destination, options = {})` | Wraps `git mv`. Externally useful. | ⬜ promote — new facade in `Git::Repository::Staging`; `Git::Commands::Mv` ✅ exists; trivial effort |
@@ -439,7 +439,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 | Status | Count |
 |--------|-------|
 | ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 24 |
-| ⬜ promote (new facade work required) | 4 |
+| ⬜ promote (new facade work required) | 3 |
 | ❌ remove (internal plumbing) | 12 |
 | 🔍 human decision | 16 |
 | **Total orphaned methods** | **56** |
@@ -481,7 +481,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 - Create a new `Git::Repository::Maintenance` module for `repack` and `gc`.
 - Add `Git::Base` delegators for all six methods.
 - Resolve `cat_file` per the human decision in §6.
-- Add facade methods for `mv`, `ls_remote`, `git_version`, `current_branch_state`
+- Add facade methods for `mv`, `ls_remote`, `current_branch_state`
   from Bucket 6 §7.3 (new facade work needed).
 
 **Dependency:** PR 3 is independent of PR 2 but should be merged after PR 2

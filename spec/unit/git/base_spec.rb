@@ -395,4 +395,22 @@ RSpec.describe Git::Base do
       expect(described_instance.mv('old.rb', 'new.rb')).to eq('')
     end
   end
+
+  describe '#git_version' do
+    context 'when binary_path is :use_global_config (default)' do
+      it 'calls Git.git_version with no arguments' do
+        version = instance_double(Git::Version)
+        expect(Git).to receive(:git_version).with(no_args).and_return(version)
+        expect(described_class.new.git_version).to be(version)
+      end
+    end
+
+    context 'when binary_path is an explicit path' do
+      it 'forwards binary_path to Git.git_version' do
+        version = instance_double(Git::Version)
+        expect(Git).to receive(:git_version).with('/usr/local/bin/git').and_return(version)
+        expect(described_class.new(binary_path: '/usr/local/bin/git').git_version).to be(version)
+      end
+    end
+  end
 end

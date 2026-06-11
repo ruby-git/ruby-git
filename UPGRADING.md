@@ -69,6 +69,7 @@ notes for the final migration target.
 | `g.lib.config_get(name)` | `g.config(name)` |
 | `g.lib.config_list` | `g.config` |
 | `g.lib.config_set(name, value)` | `g.config(name, value)` |
+| `g.lib.git_version` | `g.git_version` |
 | `g.lib.global_config_get(name)` | `g.global_config(name)` |
 | `g.lib.global_config_list` | `g.global_config` |
 | `g.lib.global_config_set(name, value)` | `g.global_config(name, value)` |
