@@ -13,6 +13,7 @@ require 'git/commands/checkout/files'
 require 'git/commands/checkout_index'
 require 'git/commands/rev_parse'
 require 'git/commands/update_ref/update'
+require 'git/commands/symbolic_ref/update'
 require 'git/parsers/branch'
 require 'git/repository/shared_private'
 
@@ -414,6 +415,39 @@ module Git
         raise Git::Error, result.stderr.strip unless result.status.success?
 
         result.stdout.strip
+      end
+
+      # Writes the HEAD symbolic ref to point at the given branch
+      #
+      # Sets `HEAD` to `refs/heads/<branch_name>` via `git symbolic-ref`. This is
+      # equivalent to running `git symbolic-ref HEAD refs/heads/<branch_name>` on
+      # the command line and is the mechanism git uses internally for branch
+      # renaming and orphan-branch checkout.
+      #
+      # @example Change HEAD to point to an existing branch
+      #   repo.change_head_branch('main')
+      #
+      # @example Initialize a repository with a custom default branch name (unborn-branch pattern)
+      #   repo = Git.init('/path/to/repo')
+      #   repo.change_head_branch('my-branch')
+      #   # HEAD now points at refs/heads/my-branch before any commits exist
+      #
+      # @note Pointing HEAD at a branch that does not yet exist places the
+      #   repository in unborn-branch state. This is intentional for repository
+      #   initialization workflows — for example, setting a custom default branch
+      #   name before any commits land — but is unexpected if done by mistake.
+      #   The repository will appear to have no commits until the first commit is
+      #   made on the new branch.
+      #
+      # @param branch_name [String] the branch name to point HEAD at
+      #
+      # @return [void]
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def change_head_branch(branch_name)
+        Git::Commands::SymbolicRef::Update.new(@execution_context).call('HEAD', "refs/heads/#{branch_name}")
+        nil
       end
 
       # Returns the `git branch --list --contains` stdout for a given commit

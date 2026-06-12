@@ -123,6 +123,8 @@ clear documentation explaining unborn-branch semantics.
 
 **Decision:** Accepted. Promote `change_head_branch(branch_name)` to `Git::Repository::Branching` with a `Git::Base` delegator. No guard. Document unborn-branch semantics in YARD.
 
+**Status:** ✅ Implemented — facade in `Git::Repository::Branching` + `Git::Base` delegator added (PR 5h-1).
+
 ---
 
 ### 3.2 `config_get(name)`, `config_list`, and `config_set(name, value, options = {})`
