@@ -22,6 +22,10 @@ module Git
       CONFIG_SET_ALLOWED_OPTS = %i[file].freeze
       private_constant :CONFIG_SET_ALLOWED_OPTS
 
+      # Option keys accepted by {#config} when reading a single value or listing
+      CONFIG_READ_ALLOWED_OPTS = %i[file].freeze
+      private_constant :CONFIG_READ_ALLOWED_OPTS
+
       # Read or write a git configuration entry
       #
       # Dispatches to one of three modes depending on the arguments supplied:
@@ -31,23 +35,44 @@ module Git
       # * **Set** — `config(name, value)` writes a value and returns the raw
       #   command result.
       #
-      # @overload config
+      # @overload config(options = {})
       #
       #   @example List all config entries
       #     repo.config #=> { "user.name" => "Alice", "core.bare" => "false" }
       #
+      #   @example List all entries from a custom config file
+      #     repo.config(file: '/path/to/.gitconfig')
+      #     #=> { "user.name" => "Alice", "core.bare" => "false" }
+      #
+      #   @param options [Hash] options for the list operation
+      #
+      #   @option options [String, nil] :file (nil) path to a custom config file
+      #     to read from instead of the default resolution chain
+      #
       #   @return [Hash{String => String}] all visible config entries, keyed by
       #     their full dotted key names (e.g. `"user.name"`)
       #
-      # @overload config(name)
+      #   @raise [ArgumentError] if unsupported options are provided
+      #
+      # @overload config(name, options = {})
       #
       #   @example Read the committer name from config
       #     repo.config('user.name') #=> "Alice"
       #
+      #   @example Read a value from a custom config file
+      #     repo.config('user.name', file: '/path/to/.gitconfig') #=> "Alice"
+      #
       #   @param name [String] the dotted config key to look up (e.g.
       #     `"user.name"`)
       #
+      #   @param options [Hash] options for the get operation
+      #
+      #   @option options [String, nil] :file (nil) path to a custom config file
+      #     to read from instead of the default resolution chain
+      #
       #   @return [String] the value of the config entry
+      #
+      #   @raise [ArgumentError] if unsupported options are provided
       #
       # @overload config(name, value, options = {})
       #
@@ -62,8 +87,10 @@ module Git
       #
       #   @param value [#to_s] the value to assign; must not be `nil` (a `nil`
       #     value is treated as "no value" and routes to the get overload).
-      #     Any non-nil object is converted to a String via `#to_s` before
-      #     being passed to git
+      #     Must not be a `Hash` (a Hash is treated as the `options` argument;
+      #     call `value.to_s` explicitly before passing if a stringified Hash
+      #     is genuinely needed). Any other non-nil object is converted to a
+      #     String via `#to_s` before being passed to git
       #
       #   @param options [Hash] options for the set operation
       #
@@ -78,12 +105,14 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def config(name = nil, value = nil, options = {})
+        name, value, options = Private.normalize_config_args(name, value, options)
+
         if !name.nil? && !value.nil?
           Private.config_set(@execution_context, name, value, **options)
         elsif name
-          Private.config_get(@execution_context, name)
+          Private.config_get(@execution_context, name, **options)
         else
-          Private.config_list(@execution_context)
+          Private.config_list(@execution_context, **options)
         end
       end
 
@@ -250,12 +279,68 @@ module Git
         config(name, value, opts)
       end
 
+      # Read all entries from an arbitrary git-format config file
+      #
+      # @example Read all entries from a custom config file
+      #   repo.parse_config('/path/to/.gitconfig')
+      #   #=> { "user.name" => "Alice", "core.bare" => "false" }
+      #
+      # @param file [String] path to the git-format config file to read
+      #
+      # @return [Hash{String => String}] all config entries in the file, keyed by
+      #   their full dotted key names (e.g. `"user.name"`)
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#config} with the `:file` option instead
+      #
+      def parse_config(file)
+        Git::Deprecation.warn(
+          'Git::Repository#parse_config is deprecated and will be removed in a future version. ' \
+          'Use config(file: <path>) instead.'
+        )
+        config(file: file)
+      end
+
       # Private helpers local to {Git::Repository::Configuring}
       #
       # @api private
       #
       module Private
         module_function
+
+        # Normalize `config()` positional arguments
+        #
+        # In Ruby 3.x, calling `config(file: '/path')` passes the hash as the
+        # first positional argument. This helper re-maps those patterns so that
+        # `name`, `value`, and `options` are always in their canonical positions.
+        #
+        # Raises `ArgumentError` for call shapes that are ambiguous or clearly
+        # wrong, such as passing extra positional arguments after an options Hash.
+        #
+        # @param name [String, Hash, nil] the raw first argument to {#config}
+        #
+        # @param value [Object, Hash, nil] the raw second argument to {#config}
+        #
+        # @param options [Hash] the raw third argument to {#config}
+        #
+        # @return [Array(String|nil, Object|nil, Hash)] normalized [name, value, options]
+        #
+        # @raise [ArgumentError] if extra positional arguments follow an options Hash
+        #
+        def normalize_config_args(name, value, options)
+          if name.is_a?(Hash)
+            raise ArgumentError, 'unexpected positional arguments after options hash' if !value.nil? || !options.empty?
+
+            [nil, nil, name]
+          elsif value.is_a?(Hash)
+            raise ArgumentError, 'unexpected third argument when second argument is options hash' unless options.empty?
+
+            [name, nil, value]
+          else
+            [name, value, options]
+          end
+        end
 
         # Set a config value by key name
         #
@@ -290,12 +375,20 @@ module Git
         #
         # @param name [String] the dotted config key to look up (e.g. `"user.name"`)
         #
+        # @param options [Hash] keyword options
+        #
+        # @option options [String, nil] :file (nil) path to a custom config file to read from
+        #
         # @return [String] the value of the config entry
+        #
+        # @raise [ArgumentError] if unsupported options are provided
         #
         # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        def config_get(execution_context, name)
-          result = Git::Commands::ConfigOptionSyntax::Get.new(execution_context).call(name)
+        def config_get(execution_context, name, **options)
+          SharedPrivate.assert_valid_opts!(CONFIG_READ_ALLOWED_OPTS, **options)
+          opts = options[:file] ? { file: options[:file] } : {}
+          result = Git::Commands::ConfigOptionSyntax::Get.new(execution_context).call(name, **opts)
           raise Git::FailedError, result if result.status.exitstatus != 0
 
           result.stdout
@@ -305,13 +398,21 @@ module Git
         #
         # @param execution_context [Git::ExecutionContext] the execution context
         #
+        # @param options [Hash] keyword options
+        #
+        # @option options [String, nil] :file (nil) path to a custom config file to read from
+        #
         # @return [Hash{String => String}] all config entries, keyed by their full
         #   dotted key names (e.g. `"user.name"`)
         #
+        # @raise [ArgumentError] if unsupported options are provided
+        #
         # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        def config_list(execution_context)
-          lines = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call.stdout.split("\n")
+        def config_list(execution_context, **options)
+          SharedPrivate.assert_valid_opts!(CONFIG_READ_ALLOWED_OPTS, **options)
+          opts = options[:file] ? { file: options[:file] } : {}
+          lines = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call(**opts).stdout.split("\n")
           lines.each_with_object({}) do |line, hsh|
             key, value = line.split('=', 2)
             hsh[key] = value || ''

@@ -56,6 +56,14 @@ RSpec.describe Git::Repository::Configuring do
           expect(result).to eq({})
         end
       end
+
+      context 'with an unknown option' do
+        subject(:result) { described_instance.config(bogus: true) }
+
+        it 'raises ArgumentError' do
+          expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
+        end
+      end
     end
 
     context 'when called with a name only' do
@@ -85,6 +93,14 @@ RSpec.describe Git::Repository::Configuring do
         it 'raises Git::FailedError' do
           allow(get_command).to receive(:call).with('user.name').and_return(get_result)
           expect { result }.to raise_error(Git::FailedError, /git/)
+        end
+      end
+
+      context 'with an unknown option' do
+        subject(:result) { described_instance.config('user.name', bogus: true) }
+
+        it 'raises ArgumentError' do
+          expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
         end
       end
     end
@@ -140,6 +156,68 @@ RSpec.describe Git::Repository::Configuring do
         it 'routes to the set path, not the get path' do
           expect(set_command).to receive(:call).with('core.bare', false).and_return(set_result)
           result
+        end
+      end
+    end
+
+    context 'when called with no arguments and file: option' do
+      subject(:result) { described_instance.config(file: '/path/to/config') }
+
+      let(:list_command) { instance_double(Git::Commands::ConfigOptionSyntax::List) }
+      let(:list_result) { command_result("user.name=Alice\ncore.bare=false") }
+
+      before do
+        allow(Git::Commands::ConfigOptionSyntax::List)
+          .to receive(:new).with(execution_context).and_return(list_command)
+      end
+
+      it 'delegates to Git::Commands::ConfigOptionSyntax::List#call with file: option' do
+        expect(list_command).to receive(:call).with(file: '/path/to/config').and_return(list_result)
+        result
+      end
+
+      it 'returns a Hash of config entries from the file' do
+        allow(list_command).to receive(:call).with(file: '/path/to/config').and_return(list_result)
+        expect(result).to eq({ 'user.name' => 'Alice', 'core.bare' => 'false' })
+      end
+    end
+
+    context 'when called with a name only and file: option' do
+      subject(:result) { described_instance.config('user.name', file: '/path/to/config') }
+
+      let(:get_command) { instance_double(Git::Commands::ConfigOptionSyntax::Get) }
+      let(:get_result) { command_result('Alice') }
+
+      before do
+        allow(Git::Commands::ConfigOptionSyntax::Get)
+          .to receive(:new).with(execution_context).and_return(get_command)
+      end
+
+      it 'delegates to Git::Commands::ConfigOptionSyntax::Get#call with name and file: option' do
+        expect(get_command).to receive(:call).with('user.name', file: '/path/to/config').and_return(get_result)
+        result
+      end
+
+      it 'returns the config value as a String' do
+        allow(get_command).to receive(:call).with('user.name', file: '/path/to/config').and_return(get_result)
+        expect(result).to eq('Alice')
+      end
+    end
+
+    context 'when called with ambiguous positional arguments' do
+      context 'when options Hash is first argument and extra positional args are present' do
+        subject(:result) { described_instance.config({ file: '/path' }, 'extra') }
+
+        it 'raises ArgumentError' do
+          expect { result }.to raise_error(ArgumentError, /unexpected/)
+        end
+      end
+
+      context 'when second argument is a Hash and third argument is non-empty' do
+        subject(:result) { described_instance.config('user.name', { file: '/path' }, { bogus: true }) }
+
+        it 'raises ArgumentError' do
+          expect { result }.to raise_error(ArgumentError, /unexpected/)
         end
       end
     end
@@ -407,6 +485,27 @@ RSpec.describe Git::Repository::Configuring do
         expect(set_command).to receive(:call).with('core.bare', false).and_return(set_result)
         result
       end
+    end
+  end
+
+  describe '#parse_config' do
+    subject(:result) { described_instance.parse_config('/path/to/config') }
+
+    let(:expected_hash) { { 'user.name' => 'Alice' } }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(described_instance).to receive(:config).with(file: '/path/to/config').and_return(expected_hash)
+    end
+
+    it 'emits a deprecation warning matching /parse_config is deprecated/' do
+      expect(Git::Deprecation).to receive(:warn).with(/parse_config is deprecated/)
+      result
+    end
+
+    it 'calls config with file: argument forwarded and returns its return value' do
+      expect(described_instance).to receive(:config).with(file: '/path/to/config').and_return(expected_hash)
+      expect(result).to eq(expected_hash)
     end
   end
 end

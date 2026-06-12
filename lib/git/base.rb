@@ -259,6 +259,15 @@ module Git
       facade_repository.config_set(name, value, opts)
     end
 
+    # @deprecated Use {#config} with the `:file` option instead.
+    def parse_config(file)
+      Git::Deprecation.warn(
+        'Git::Base#parse_config is deprecated and will be removed in a future version. ' \
+        'Use config(file: <path>) instead.'
+      )
+      config(file: file)
+    end
+
     # Returns a reference to the working directory
     #
     # @example
