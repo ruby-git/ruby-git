@@ -606,6 +606,15 @@ module Git
       facade_repository.each_conflict(&)
     end
 
+    # @deprecated Use {#each_conflict} instead.
+    def conflicts(&)
+      Git::Deprecation.warn(
+        'Git::Base#conflicts is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#each_conflict instead.'
+      )
+      each_conflict(&)
+    end
+
     def unmerged
       facade_repository.unmerged
     end

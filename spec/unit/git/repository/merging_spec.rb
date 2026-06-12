@@ -535,6 +535,35 @@ RSpec.describe Git::Repository::Merging do
   end
 
   # ---------------------------------------------------------------------------
+  # #conflicts (deprecated)
+  # ---------------------------------------------------------------------------
+
+  describe '#conflicts' do
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning matching /conflicts is deprecated/' do
+      allow(described_instance).to receive(:each_conflict).and_return([])
+      expect(Git::Deprecation).to receive(:warn).with(/conflicts is deprecated/)
+      described_instance.conflicts
+    end
+
+    it 'delegates to each_conflict, forwarding the block, and returns its return value' do
+      expected_result = ['file.rb']
+      the_block = proc {}
+      captured_block = nil
+      expect(described_instance).to receive(:each_conflict) do |&b|
+        captured_block = b
+        expected_result
+      end
+      result = described_instance.conflicts(&the_block)
+      expect(captured_block).to be(the_block)
+      expect(result).to eq(expected_result)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #revert
   # ---------------------------------------------------------------------------
 
