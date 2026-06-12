@@ -145,6 +145,30 @@ RSpec.describe Git::Repository::StatusOperations do
     end
   end
 
+  describe '#empty?' do
+    subject(:result) { described_instance.empty? }
+
+    before do
+      allow(described_instance).to receive(:no_commits?).and_return(true)
+      allow(Git::Deprecation).to receive(:warn)
+    end
+
+    it 'emits a deprecation warning matching /empty\? is deprecated/' do
+      expect(Git::Deprecation).to receive(:warn).with(/empty\? is deprecated/)
+      result
+    end
+
+    it 'delegates to no_commits?' do
+      expect(described_instance).to receive(:no_commits?).and_return(true)
+      result
+    end
+
+    it 'returns the return value of no_commits?' do
+      allow(described_instance).to receive(:no_commits?).and_return(false)
+      expect(result).to be(false)
+    end
+  end
+
   describe '#untracked_files' do
     subject(:result) { described_instance.untracked_files }
 

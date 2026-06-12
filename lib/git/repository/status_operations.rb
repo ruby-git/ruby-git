@@ -43,6 +43,27 @@ module Git
         true
       end
 
+      # Returns `true` if the repository has no commits yet
+      #
+      # @example Check whether a repository is empty
+      #   repo.empty? #=> true   # freshly initialized, no commits yet
+      #   repo.empty? #=> false  # at least one commit exists
+      #
+      # @return [Boolean] `true` when the repository has no commits, `false` otherwise
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status other
+      #   than when the repository has no commits
+      #
+      # @deprecated Use {#no_commits?} instead
+      #
+      def empty?
+        Git::Deprecation.warn(
+          'Git::Repository#empty? is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#no_commits? instead.'
+        )
+        no_commits?
+      end
+
       # List all files in the working tree that are not tracked by git
       #
       # Runs `git ls-files --others --exclude-standard` from the working tree
