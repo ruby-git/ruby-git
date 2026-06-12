@@ -231,6 +231,22 @@ module Git
       facade_repository.config(name, value, options)
     end
 
+    def global_config(name = nil, value = nil)
+      facade_repository.global_config(name, value)
+    end
+
+    def global_config_get(name)
+      facade_repository.global_config_get(name)
+    end
+
+    def global_config_list
+      facade_repository.global_config_list
+    end
+
+    def global_config_set(name, value)
+      facade_repository.global_config_set(name, value)
+    end
+
     # Returns a reference to the working directory
     #
     # @example

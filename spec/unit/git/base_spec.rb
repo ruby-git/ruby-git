@@ -460,4 +460,42 @@ RSpec.describe Git::Base do
       expect(described_instance.stash_list).to eq('stash@{0}: WIP')
     end
   end
+
+  describe '#global_config' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.global_config with name and value' do
+      expect(facade_repository).to receive(:global_config).with('user.name', 'Alice').and_return(nil)
+      described_instance.global_config('user.name', 'Alice')
+    end
+  end
+
+  describe '#global_config_get' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.global_config_get with name' do
+      expect(facade_repository).to receive(:global_config_get).with('user.name').and_return('Alice')
+      expect(described_instance.global_config_get('user.name')).to eq('Alice')
+    end
+  end
+
+  describe '#global_config_list' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.global_config_list' do
+      result = { 'user.name' => 'Alice' }
+      expect(facade_repository).to receive(:global_config_list).and_return(result)
+      expect(described_instance.global_config_list).to eq(result)
+    end
+  end
+
+  describe '#global_config_set' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.global_config_set with name and value' do
+      set_result = instance_double(Git::CommandLineResult)
+      expect(facade_repository).to receive(:global_config_set).with('user.name', 'Alice').and_return(set_result)
+      expect(described_instance.global_config_set('user.name', 'Alice')).to be(set_result)
+    end
+  end
 end

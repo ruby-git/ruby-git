@@ -7,8 +7,11 @@ module Git
   class Repository
     # Facade methods for reading and writing git configuration
     #
-    # Provides the {#config} method, which dispatches to read a single entry,
-    # list all entries, or write a value depending on the arguments supplied.
+    # Provides the {#config} and {#global_config} methods, which dispatch to read a
+    # single entry, list all entries, or write a value depending on the arguments
+    # supplied. {#config} uses git's default config scope (reads from the full
+    # resolution chain; set operations write to the repository's `.git/config`);
+    # {#global_config} targets the git global config scope (`git config --global`).
     #
     # Included by {Git::Repository}.
     #
@@ -81,6 +84,89 @@ module Git
         end
       end
 
+      # Read or write a global git configuration entry
+      #
+      # Dispatches to one of three modes depending on the arguments supplied,
+      # targeting the git global config scope (`git config --global`):
+      #
+      # * **List** — `global_config()` returns all global config entries as a `Hash`.
+      # * **Get** — `global_config(name)` returns the value for a single key as a `String`.
+      # * **Set** — `global_config(name, value)` writes a value and returns the raw
+      #   command result.
+      #
+      # @overload global_config
+      #
+      #   @example List all global config entries
+      #     repo.global_config #=> { "user.name" => "Alice", "core.autocrlf" => "false" }
+      #
+      #   @return [Hash{String => String}] all global config entries, keyed by their
+      #     full dotted key names (e.g. `"user.name"`)
+      #
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @overload global_config(name)
+      #
+      #   @example Read the global committer name
+      #     repo.global_config('user.name') #=> "Alice"
+      #
+      #   @param name [String] the dotted config key to look up (e.g. `"user.name"`)
+      #
+      #   @return [String] the value of the global config entry
+      #
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @overload global_config(name, value)
+      #
+      #   @example Set the global committer name
+      #     repo.global_config('user.name', 'Alice')
+      #
+      #   @param name [String] the dotted config key to write (e.g. `"user.name"`)
+      #
+      #   @param value [#to_s] the value to assign; any object is accepted and
+      #     converted to a String via `#to_s` before being passed to git
+      #
+      #   @return [Git::CommandLineResult] the raw result of
+      #     `git config --global <name> <value>`
+      #
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def global_config(name = nil, value = nil)
+        if !name.nil? && !value.nil?
+          Private.global_config_set(@execution_context, name, value)
+        elsif !name.nil?
+          Private.global_config_get(@execution_context, name)
+        else
+          Private.global_config_list(@execution_context)
+        end
+      end
+
+      # @deprecated Use {#global_config} instead.
+      def global_config_get(name)
+        Git::Deprecation.warn(
+          'Git::Repository#global_config_get is deprecated and will be removed in a future version. ' \
+          'Use global_config(name) instead.'
+        )
+        global_config(name)
+      end
+
+      # @deprecated Use {#global_config} instead.
+      def global_config_list
+        Git::Deprecation.warn(
+          'Git::Repository#global_config_list is deprecated and will be removed in a future version. ' \
+          'Use global_config instead.'
+        )
+        global_config
+      end
+
+      # @deprecated Use {#global_config} instead.
+      def global_config_set(name, value)
+        Git::Deprecation.warn(
+          'Git::Repository#global_config_set is deprecated and will be removed in a future version. ' \
+          'Use global_config(name, value) instead.'
+        )
+        global_config(name, value)
+      end
+
       # Private helpers local to {Git::Repository::Configuring}
       #
       # @api private
@@ -147,6 +233,58 @@ module Git
             key, value = line.split('=', 2)
             hsh[key] = value || ''
           end
+        end
+
+        # Retrieve a global config value by key name
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #
+        # @param name [String] the dotted config key to look up (e.g. `"user.name"`)
+        #
+        # @return [String] the value of the global config entry
+        #
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        def global_config_get(execution_context, name)
+          result = Git::Commands::ConfigOptionSyntax::Get.new(execution_context).call(name, global: true)
+          raise Git::FailedError, result if result.status.exitstatus != 0
+
+          result.stdout
+        end
+
+        # Retrieve all global config entries as a hash
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #
+        # @return [Hash{String => String}] all global config entries, keyed by their full
+        #   dotted key names (e.g. `"user.name"`)
+        #
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        def global_config_list(execution_context)
+          lines = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call(global: true).stdout.split("\n")
+          lines.each_with_object({}) do |line, hsh|
+            key, value = line.split('=', 2)
+            hsh[key] = value || ''
+          end
+        end
+
+        # Set a global config value by key name
+        #
+        # @param execution_context [Git::ExecutionContext] the execution context
+        #
+        # @param name [String] the dotted config key to write (e.g. `"user.name"`)
+        #
+        # @param value [#to_s] the value to assign; any object is accepted and
+        #   converted to a String via `#to_s` before being passed to git
+        #
+        # @return [Git::CommandLineResult] the raw result of
+        #   `git config --global <name> <value>`
+        #
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        def global_config_set(execution_context, name, value)
+          Git::Commands::ConfigOptionSyntax::Set.new(execution_context).call(name, value, global: true)
         end
       end
 

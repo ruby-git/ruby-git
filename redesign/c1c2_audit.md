@@ -401,9 +401,9 @@ These require a new facade method before a base.rb delegator can be added.
 | `config_get(name)` | Returns a single config value. Used by tooling. Part of the existing `config()` facade which reads/writes. | 🔍 human decision — expose as `config_get` or fold into `config(name)`? |
 | `config_list` | Returns full config hash. Used by tooling. | 🔍 human decision — expose separately or fold into `config()`? |
 | `config_set(name, value, options)` | Sets a config value. | 🔍 human decision — expose separately or fold into `config(name, value)`? |
-| `global_config_get(name)` | Gets a global config value. | 🔍 human decision |
-| `global_config_list` | Returns the full global config hash. | 🔍 human decision |
-| `global_config_set(name, value)` | Sets a global config value. | 🔍 human decision |
+| `global_config_get(name)` | Gets a global config value. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
+| `global_config_list` | Returns the full global config hash. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
+| `global_config_set(name, value)` | Sets a global config value. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
 | `git_version` | Returns `Git::Version` for the current binary. Useful for tooling that conditionally enables features. Not a repository concern; `Git.git_version` is the canonical API. | ✅ delegator added to `Git::Base` — delegates to `Git.git_version` |
 | `list_files(ref_dir)` | Lists files under `.git/refs/{ref_dir}`. Internal ref-filesystem access. No plausible clean public use. | ❌ remove — internal plumbing; direct callers should migrate to `Git::Repository` ref-inspection methods |
 | `ls_remote(location = nil, opts = {})` | Lists remote refs. Clearly useful externally. | ✅ promoted — facade in `Git::Repository::RemoteOperations` + `Git::Base` delegator added (PR 5f) |
@@ -438,14 +438,14 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 
 | Status | Count |
 |--------|-------|
-| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 26 |
+| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 29 |
 | ⬜ promote (new facade work required) | 1 |
 | ❌ remove (internal plumbing) | 12 |
-| 🔍 human decision | 14 |
+| 🔍 human decision | 11 |
 | **Total orphaned methods** | **56** |
 
 > **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a
-> as a batch. The 4 "new facade" promotions and 16 human-decision items should be
+> as a batch. The 1 "new facade" promotion and 11 human-decision items should be
 > addressed in a companion document (`redesign/c1c2_bucket6_lib_orphans.md`)
 > before PR 5b begins.
 

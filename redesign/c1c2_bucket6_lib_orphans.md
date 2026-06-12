@@ -326,6 +326,8 @@ These can be removed in v6 after a full deprecation cycle.
 
 **Decision:** Accepted. Add `global_config(name = nil, value = nil)` to `Git::Repository::Configuring` with three-way dispatch (list/get/set). Add deprecated forwarding methods `global_config_get`, `global_config_list`, `global_config_set` with `Git::Deprecation.warn` calls. Add `Git::Base` delegators for all four. Remove deprecated aliases in v6.
 
+**Implemented in PR 5h-3.** `global_config` facade added to `Git::Repository::Configuring` with three-way dispatch; private helpers `global_config_get/list/set` in the `Private` module; deprecated forwarding methods on the public API; `Git::Base` delegators for all four methods.
+
 ---
 
 ### 3.4 `parse_config(file)`
