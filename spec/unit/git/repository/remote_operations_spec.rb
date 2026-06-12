@@ -1111,5 +1111,23 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect { described_instance.ls_remote }.not_to raise_error
       end
     end
+
+    # --- Option safety (parser-incompatible options rejected) ----------------
+
+    context 'with :get_url option' do
+      it 'raises ArgumentError before calling the command' do
+        expect(ls_remote_command).not_to receive(:call)
+        expect { described_instance.ls_remote('origin', get_url: true) }
+          .to raise_error(ArgumentError, /get_url/)
+      end
+    end
+
+    context 'with :symref option' do
+      it 'raises ArgumentError before calling the command' do
+        expect(ls_remote_command).not_to receive(:call)
+        expect { described_instance.ls_remote('origin', symref: true) }
+          .to raise_error(ArgumentError, /symref/)
+      end
+    end
   end
 end
