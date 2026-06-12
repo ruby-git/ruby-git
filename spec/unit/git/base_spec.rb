@@ -205,6 +205,16 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#current_branch_state' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.current_branch_state' do
+      head_state = instance_double(Git::Repository::Branching::HeadState)
+      expect(facade_repository).to receive(:current_branch_state).and_return(head_state)
+      expect(described_instance.current_branch_state).to be(head_state)
+    end
+  end
+
   describe '#gblob' do
     include_context 'with a stubbed facade_repository'
 

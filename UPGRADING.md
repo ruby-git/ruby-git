@@ -79,6 +79,15 @@ notes for the final migration target.
 | `g.lib.change_head_branch(name)` | `g.change_head_branch(name)` |
 | `g.lib.branch_current` | `g.current_branch` |
 | `g.lib.ls_remote(location, opts)` | `g.ls_remote(location, opts)` |
+| `g.lib.current_branch_state` | `g.current_branch_state` |
+
+> **Note — `current_branch_state` return type change:** `g.lib.current_branch_state`
+> returned a `Git::Lib::HeadState` (a mutable `Struct`). `g.current_branch_state`
+> returns a `Git::Repository::Branching::HeadState` (an immutable `Data` object).
+> Both expose `.state` (`:active`, `:unborn`, or `:detached`) and `.name`. If your
+> code relies on the struct being mutable or uses positional construction
+> (`Git::Lib::HeadState.new(:active, 'main')`), update to keyword construction:
+> `Git::Repository::Branching::HeadState.new(state: :active, name: 'main')`.
 
 #### Methods with no replacement
 

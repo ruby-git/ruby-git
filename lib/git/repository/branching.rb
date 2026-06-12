@@ -11,6 +11,7 @@ require 'git/commands/branch/show_current'
 require 'git/commands/checkout/branch'
 require 'git/commands/checkout/files'
 require 'git/commands/checkout_index'
+require 'git/commands/rev_parse'
 require 'git/commands/update_ref/update'
 require 'git/parsers/branch'
 require 'git/repository/shared_private'
@@ -25,6 +26,16 @@ module Git
     # @api public
     #
     module Branching # rubocop:disable Metrics/ModuleLength
+      # Represents the state of HEAD in a repository
+      #
+      # @!attribute [r] state
+      #   @return [Symbol] one of `:active`, `:unborn`, or `:detached`
+      #
+      # @!attribute [r] name
+      #   @return [String] the branch name, or `'HEAD'` when detached
+      #
+      HeadState = Data.define(:state, :name)
+
       # Option keys accepted by {#checkout}
       #
       CHECKOUT_ALLOWED_OPTS = %i[force f new_branch b start_point].freeze
@@ -52,6 +63,39 @@ module Git
         result = Git::Commands::Branch::ShowCurrent.new(@execution_context).call
         name = result.stdout.strip
         name.empty? ? 'HEAD' : name
+      end
+
+      # Returns the current HEAD state as a structured value object
+      #
+      # HEAD can be in one of three states:
+      #
+      # - **`:active`** — HEAD points to a branch ref that has at least one commit.
+      # - **`:unborn`** — HEAD points to a branch ref that has been created but has
+      #   no commits yet (e.g. immediately after `git init` before any commit).
+      # - **`:detached`** — HEAD points directly to a commit SHA rather than a branch.
+      #
+      # @example Active branch
+      #   repo.current_branch_state
+      #   # => #<data Git::Repository::Branching::HeadState state=:active, name="main">
+      #
+      # @example Unborn branch (no commits yet)
+      #   repo.current_branch_state
+      #   # => #<data Git::Repository::Branching::HeadState state=:unborn, name="main">
+      #
+      # @example Detached HEAD
+      #   repo.current_branch_state
+      #   # => #<data Git::Repository::Branching::HeadState state=:detached, name="HEAD">
+      #
+      # @return [Git::Repository::Branching::HeadState] the current HEAD state
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def current_branch_state
+        branch_name = Git::Commands::Branch::ShowCurrent.new(@execution_context).call.stdout.strip
+        return HeadState.new(state: :detached, name: 'HEAD') if branch_name.empty?
+
+        state = Private.get_branch_state(@execution_context, branch_name)
+        HeadState.new(state: state, name: branch_name)
       end
 
       # Restore working tree files from a tree-ish
@@ -536,6 +580,34 @@ module Git
       # @api private
       module Private
         module_function
+
+        # Determines whether the given branch ref points to an existing commit
+        #
+        # Returns `:active` when the branch ref resolves successfully. Returns
+        # `:unborn` when the branch ref exists but has no commits yet (exit
+        # status 1 with empty stderr from `git rev-parse --verify --quiet`).
+        # Re-raises for any other failure.
+        #
+        # @param execution_context [Git::ExecutionContext::Repository] the
+        #   execution context for git commands
+        #
+        # @param branch_name [String] the branch name to verify
+        #
+        # @return [:active, :unborn] the branch ref state
+        #
+        # @raise [Git::FailedError] if git exits with a failure unrelated to an
+        #   unborn branch
+        #
+        # @api private
+        #
+        def get_branch_state(execution_context, branch_name)
+          Git::Commands::RevParse.new(execution_context).call(branch_name, verify: true, quiet: true)
+          :active
+        rescue Git::FailedError => e
+          raise unless e.result.status.exitstatus == 1 && e.result.stderr.empty?
+
+          :unborn
+        end
 
         # Translates legacy checkout options to the new command interface
         #
