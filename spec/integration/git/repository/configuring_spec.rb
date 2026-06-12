@@ -45,4 +45,41 @@ RSpec.describe Git::Repository::Configuring, :integration do
       end
     end
   end
+
+  describe '#global_config' do
+    around do |example|
+      with_isolated_global_config { example.run }
+    end
+
+    context 'when called with no arguments' do
+      before do
+        described_instance.global_config('user.name', 'GlobalUser')
+        described_instance.global_config('user.email', 'global@example.com')
+      end
+
+      it 'returns a Hash containing the written global config entries' do
+        result = described_instance.global_config
+        expect(result).to be_a(Hash)
+        expect(result).to include('user.name' => 'GlobalUser', 'user.email' => 'global@example.com')
+      end
+    end
+
+    context 'when called with a name' do
+      before { described_instance.global_config('user.name', 'GlobalUser') }
+
+      it 'returns the String value for the named key from global config' do
+        expect(described_instance.global_config('user.name')).to eq('GlobalUser')
+      end
+    end
+
+    def with_isolated_global_config
+      global_config = File.join(repo_dir, 'global.config')
+      FileUtils.touch(global_config)
+      saved = ENV.fetch('GIT_CONFIG_GLOBAL', nil)
+      ENV['GIT_CONFIG_GLOBAL'] = global_config
+      yield
+    ensure
+      saved.nil? ? ENV.delete('GIT_CONFIG_GLOBAL') : ENV['GIT_CONFIG_GLOBAL'] = saved
+    end
+  end
 end
