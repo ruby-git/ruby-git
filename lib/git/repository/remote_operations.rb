@@ -18,7 +18,7 @@ module Git
     #
     # @api public
     #
-    module RemoteOperations
+    module RemoteOperations # rubocop:disable Metrics/ModuleLength
       # Key normalizations for {#fetch} options
       #
       # Maps dash-style option keys (which the 4.x `Git::Lib#fetch` accepted)
@@ -371,7 +371,7 @@ module Git
         Private.push_tags(@execution_context, remote, opts).stdout
       end
 
-      # Option keys accepted by {#add_remote}
+      # Option keys accepted by {#remote_add}
       #
       # Derived from the 4.x `REMOTE_ADD_OPTION_MAP` in `Git::Lib`.
       ADD_REMOTE_ALLOWED_OPTS = %i[fetch track].freeze
@@ -383,13 +383,48 @@ module Git
       # configures which branches are tracked.
       #
       # @example Add a remote
-      #   repo.add_remote('upstream', 'https://github.com/user/repo.git')
+      #   repo.remote_add('upstream', 'https://github.com/user/repo.git')
       #
       # @example Add a remote and fetch immediately
-      #   repo.add_remote('upstream', 'https://github.com/user/repo.git', fetch: true)
+      #   repo.remote_add('upstream', 'https://github.com/user/repo.git', fetch: true)
       #
       # @example Add a remote tracking a specific branch
-      #   repo.add_remote('upstream', 'https://github.com/user/repo.git', track: 'main')
+      #   repo.remote_add('upstream', 'https://github.com/user/repo.git', track: 'main')
+      #
+      # @param name [String] the name for the new remote
+      #
+      # @param url [String, Git::Base] the URL of the remote repository
+      #
+      #   A {Git::Base} instance is accepted for local references and converted
+      #   to `url.repo.to_s`.
+      #
+      # @param opts [Hash] options for adding the remote
+      #
+      # @option opts [Boolean, nil] :fetch (nil) fetch from the remote immediately
+      #   after adding it (`-f`)
+      #
+      #   The deprecated alias `:with_fetch` is accepted and normalized
+      #   automatically.
+      #
+      # @option opts [String, nil] :track (nil) track only the given branch during
+      #   fetch (`-t`)
+      #
+      # @return [Git::Remote] the newly added remote
+      #
+      # @raise [ArgumentError] when unsupported option keys are provided
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def remote_add(name, url, opts = {})
+        url = url.repo.to_s if url.is_a?(Git::Base)
+        opts = Private.normalize_add_remote_keys(opts)
+        SharedPrivate.assert_valid_opts!(ADD_REMOTE_ALLOWED_OPTS, **opts)
+        Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
+
+        Git::Remote.new(self, name)
+      end
+
+      # @deprecated Use {#remote_add} instead.
       #
       # @param name [String] the name for the new remote
       #
@@ -416,12 +451,11 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def add_remote(name, url, opts = {})
-        url = url.repo.to_s if url.is_a?(Git::Base)
-        opts = Private.normalize_add_remote_keys(opts)
-        SharedPrivate.assert_valid_opts!(ADD_REMOTE_ALLOWED_OPTS, **opts)
-        Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
-
-        Git::Remote.new(self, name)
+        Git::Deprecation.warn(
+          'Git::Repository#add_remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_add instead.'
+        )
+        remote_add(name, url, opts)
       end
 
       # Removes a remote from this repository
@@ -430,7 +464,19 @@ module Git
       # tracking references, and remote-tracking branches.
       #
       # @example Remove a remote named 'upstream'
-      #   repo.remove_remote('upstream')
+      #   repo.remote_remove('upstream')
+      #
+      # @param name [String] the name of the remote to remove
+      #
+      # @return [Git::CommandLineResult] the result of calling `git remote remove`
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def remote_remove(name)
+        Git::Commands::Remote::Remove.new(@execution_context).call(name)
+      end
+
+      # @deprecated Use {#remote_remove} instead.
       #
       # @param name [String] the name of the remote to remove
       #
@@ -439,7 +485,11 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remove_remote(name)
-        Git::Commands::Remote::Remove.new(@execution_context).call(name)
+        Git::Deprecation.warn(
+          'Git::Repository#remove_remote is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_remove instead.'
+        )
+        remote_remove(name)
       end
 
       # Sets the URL for an existing remote
@@ -447,11 +497,31 @@ module Git
       # Replaces the fetch URL configured for the remote named `name`.
       #
       # @example Set the URL for a remote
-      #   repo.set_remote_url('origin', 'https://github.com/user/repo.git')
+      #   repo.remote_set_url('origin', 'https://github.com/user/repo.git')
       #
       # @example Set the URL from a local repository reference
       #   source = Git.open('/path/to/source')
-      #   repo.set_remote_url('origin', source)
+      #   repo.remote_set_url('origin', source)
+      #
+      # @param name [String] the name of the remote to update
+      #
+      # @param url [String, Git::Base] the new URL for the remote
+      #
+      #   A {Git::Base} instance is accepted for local references and converted
+      #   to `url.repo.to_s`.
+      #
+      # @return [Git::Remote] the updated remote
+      #
+      # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      def remote_set_url(name, url)
+        url = url.repo.to_s if url.is_a?(Git::Base)
+        Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
+
+        Git::Remote.new(self, name)
+      end
+
+      # @deprecated Use {#remote_set_url} instead.
       #
       # @param name [String] the name of the remote to update
       #
@@ -465,10 +535,11 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def set_remote_url(name, url)
-        url = url.repo.to_s if url.is_a?(Git::Base)
-        Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
-
-        Git::Remote.new(self, name)
+        Git::Deprecation.warn(
+          'Git::Repository#set_remote_url is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#remote_set_url instead.'
+        )
+        remote_set_url(name, url)
       end
 
       # Configures which branches are fetched for a remote
@@ -825,7 +896,7 @@ module Git
           Git::Commands::Push.new(execution_context).call(*[remote].compact, **opts)
         end
 
-        # Normalize deprecated {#add_remote} option keys to their canonical equivalents
+        # Normalize deprecated option keys for {#remote_add} to their canonical equivalents
         #
         # Renames the deprecated `:with_fetch` key to `:fetch`, removing it from
         # the copy. When both keys are present, `:with_fetch` takes precedence.

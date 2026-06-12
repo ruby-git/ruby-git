@@ -753,7 +753,7 @@ module Git
         Git::Parsers::Tag.parse_list(result.stdout).map { |info| tag(info.name) }
       end
 
-      # Option keys accepted by {#add_tag}
+      # Option keys accepted by {#tag_add}
       ADD_TAG_ALLOWED_OPTS = %i[
         annotate a sign s no_sign local_user u force f message m file F
         edit e no_edit trailer cleanup create_reflog
@@ -762,16 +762,16 @@ module Git
 
       # Create a new tag
       #
-      # @overload add_tag(name, options = {})
+      # @overload tag_add(name, options = {})
       #
       #   @example Create a lightweight tag on HEAD
-      #     repo.add_tag('v1.0.0')
+      #     repo.tag_add('v1.0.0')
       #
       #   @example Create an annotated tag on HEAD
-      #     repo.add_tag('v1.0.0', annotate: true, message: 'Release 1.0.0')
+      #     repo.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
       #
       #   @example Replace an existing tag on HEAD
-      #     repo.add_tag('v1.0.0', force: true)
+      #     repo.tag_add('v1.0.0', force: true)
       #
       #   @param name [String] the name of the tag to create
       #
@@ -828,13 +828,13 @@ module Git
       #
       #   @return [Git::Object::Tag] the newly created tag
       #
-      # @overload add_tag(name, target, options = {})
+      # @overload tag_add(name, target, options = {})
       #
       #   @example Create a lightweight tag on a specific commit
-      #     repo.add_tag('v1.0.0', 'abc123')
+      #     repo.tag_add('v1.0.0', 'abc123')
       #
       #   @example Create an annotated tag on a specific commit
-      #     repo.add_tag('v1.0.0', 'abc123', annotate: true, message: 'Release 1.0.0')
+      #     repo.tag_add('v1.0.0', 'abc123', annotate: true, message: 'Release 1.0.0')
       #
       #   @param name [String] the name of the tag to create
       #
@@ -845,20 +845,22 @@ module Git
       #
       #   @return [Git::Object::Tag] the newly created tag
       #
-      # @overload add_tag(name, delete: true)
+      # @overload tag_add(name, options = { d: true })
       #
-      #   @deprecated Use {#delete_tag} instead.
+      #   @deprecated Use {#tag_delete} instead.
       #
       #   @example Delete a tag (deprecated)
-      #     repo.add_tag('v1.0.0', d: true)
+      #     repo.tag_add('v1.0.0', d: true)
       #
       #   @param name [String] the name of the tag to delete
       #
+      #   @param options [Hash] deletion options (only `:d` / `:delete` accepted)
+      #
       #   @option options [Boolean, nil] :d (nil) delete the named tag
-      #     (alias: `:delete`); deprecated — use {#delete_tag} instead
+      #     (alias: `:delete`); deprecated — use {#tag_delete} instead
       #
       #   @option options [Boolean, nil] :delete (nil) delete the named tag
-      #     (alias: `:d`); deprecated — use {#delete_tag} instead
+      #     (alias: `:d`); deprecated — use {#tag_delete} instead
       #
       #   @return [String] git's stdout from the delete
       #
@@ -874,11 +876,11 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def add_tag(name, *options)
+      def tag_add(name, *options)
         opts = options.last.is_a?(Hash) ? options.pop : {}
         target = options.first
 
-        return Private.add_tag_delete_deprecated(self, name, target, opts) if opts[:d] || opts[:delete]
+        return Private.tag_add_delete_deprecated(self, name, target, opts) if opts[:d] || opts[:delete]
 
         opts = opts.except(:d, :delete)
         SharedPrivate.assert_valid_opts!(ADD_TAG_ALLOWED_OPTS, **opts)
@@ -887,10 +889,60 @@ module Git
         tag(name)
       end
 
+      # @deprecated Use {#tag_add} instead.
+      #
+      # @overload add_tag(name, options = {})
+      #
+      #   @param name [String] the name of the tag to create
+      #
+      #   @param options [Hash] options for creating the tag
+      #
+      #   @return [Git::Object::Tag] the newly created tag
+      #
+      # @overload add_tag(name, target, options = {})
+      #
+      #   @param name [String] the name of the tag to create
+      #
+      #   @param target [String] the object to tag (commit SHA, branch name, etc.)
+      #
+      #   @param options [Hash] options for creating the tag
+      #
+      #   @return [Git::Object::Tag] the newly created tag
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [ArgumentError] if an annotated or signed tag is requested without
+      #   a message
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def add_tag(name, *options)
+        Git::Deprecation.warn(
+          'Git::Repository#add_tag is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#tag_add instead.'
+        )
+        tag_add(name, *options)
+      end
+
       # Delete a tag
       #
       # @example Delete a tag
-      #   repo.delete_tag('v1.0.0')
+      #   repo.tag_delete('v1.0.0')
+      #
+      # @param name [String] the name of the tag to delete
+      #
+      # @return [String] git's stdout from the delete
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      def tag_delete(name)
+        result = Git::Commands::Tag::Delete.new(@execution_context).call(name)
+        raise Git::FailedError, result if result.status.exitstatus.positive?
+
+        result.stdout
+      end
+
+      # @deprecated Use {#tag_delete} instead.
       #
       # @param name [String] the name of the tag to delete
       #
@@ -899,10 +951,11 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def delete_tag(name)
-        result = Git::Commands::Tag::Delete.new(@execution_context).call(name)
-        raise Git::FailedError, result if result.status.exitstatus.positive?
-
-        result.stdout
+        Git::Deprecation.warn(
+          'Git::Repository#delete_tag is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#tag_delete instead.'
+        )
+        tag_delete(name)
       end
 
       # Private helpers
@@ -931,9 +984,9 @@ module Git
           raise ArgumentError, 'Cannot create an annotated or signed tag without a message.'
         end
 
-        # Handle the deprecated :d/:delete option on add_tag
+        # Handle the deprecated :d/:delete option on tag_add
         #
-        # Issues a deprecation warning and delegates to delete_tag. Raises
+        # Issues a deprecation warning and delegates to tag_delete. Raises
         # ArgumentError if a target or incompatible options are also supplied.
         #
         # @param facade [ObjectOperations] the calling facade instance
@@ -941,21 +994,21 @@ module Git
         # @param target [String, nil] target argument (must be nil)
         # @param opts [Hash] options hash (must contain only :d/:delete)
         #
-        # @return [String] stdout from delete_tag
+        # @return [String] stdout from tag_delete
         #
         # @api private
         #
-        def add_tag_delete_deprecated(facade, name, target, opts)
+        def tag_add_delete_deprecated(facade, name, target, opts)
           Git::Deprecation.warn(
-            'Passing :d or :delete to add_tag is deprecated and will be ' \
-            'removed in a future version. Use delete_tag instead.'
+            'Passing :d or :delete to tag_add is deprecated and will be removed in v6.0.0. ' \
+            'Use tag_delete instead.'
           )
           raise ArgumentError, 'Cannot pass a target when using the :d/:delete option.' if target
 
           extra = opts.keys - %i[d delete]
           raise ArgumentError, "Cannot combine :d/:delete with other options: #{extra.join(', ')}" unless extra.empty?
 
-          facade.delete_tag(name)
+          facade.tag_delete(name)
         end
 
         def show_ref_tag_sha(execution_context, tag_name)

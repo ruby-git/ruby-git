@@ -22,7 +22,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     repo.commit('Initial commit')
 
     Git.init(bare_dir, bare: true)
-    repo.add_remote('origin', bare_dir)
+    repo.remote_add('origin', bare_dir)
     repo.push('origin', 'main')
   end
 
@@ -92,7 +92,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
     context 'with tags: true' do
       before do
-        repo.add_tag('v1.0')
+        repo.tag_add('v1.0')
       end
 
       it 'pushes refs and tags and returns a String' do
@@ -129,10 +129,10 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #add_remote — basic invocations
+  # #remote_add — basic invocations
   # ---------------------------------------------------------------------------
 
-  describe '#add_remote' do
+  describe '#remote_add' do
     let(:remote_dir) { Dir.mktmpdir('remote_repo') }
 
     after do
@@ -144,59 +144,59 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     end
 
     it 'returns Git::Remote' do
-      result = described_instance.add_remote('secondary', remote_dir)
+      result = described_instance.remote_add('secondary', remote_dir)
       expect(result).to be_a(Git::Remote)
       expect(result.name).to eq('secondary')
     end
 
     it 'registers the remote so it appears in the repository config' do
-      described_instance.add_remote('secondary', remote_dir)
+      described_instance.remote_add('secondary', remote_dir)
       expect(repo.remotes.map(&:name)).to include('secondary')
     end
 
     context 'with fetch: true' do
       it 'does not raise an error' do
-        expect { described_instance.add_remote('secondary', remote_dir, fetch: true) }.not_to raise_error
+        expect { described_instance.remote_add('secondary', remote_dir, fetch: true) }.not_to raise_error
       end
     end
 
     context 'with track: "main"' do
       it 'does not raise an error' do
-        expect { described_instance.add_remote('secondary', remote_dir, track: 'main') }.not_to raise_error
+        expect { described_instance.remote_add('secondary', remote_dir, track: 'main') }.not_to raise_error
       end
     end
 
     context 'with the deprecated :with_fetch alias' do
       it 'does not raise an error' do
-        expect { described_instance.add_remote('secondary', remote_dir, with_fetch: true) }.not_to raise_error
+        expect { described_instance.remote_add('secondary', remote_dir, with_fetch: true) }.not_to raise_error
       end
     end
 
     context 'with an unknown option key' do
       it 'raises ArgumentError before calling git' do
-        expect { described_instance.add_remote('secondary', remote_dir, unknown_key: true) }
+        expect { described_instance.remote_add('secondary', remote_dir, unknown_key: true) }
           .to raise_error(ArgumentError, /unknown_key/)
       end
     end
   end
 
   # ---------------------------------------------------------------------------
-  # #remove_remote
+  # #remote_remove
   # ---------------------------------------------------------------------------
 
-  describe '#remove_remote' do
+  describe '#remote_remove' do
     it 'removes the named remote' do
-      described_instance.remove_remote('origin')
+      described_instance.remote_remove('origin')
       expect(repo.remotes.map(&:name)).not_to include('origin')
     end
 
     it 'returns a Git::CommandLineResult' do
-      result = described_instance.remove_remote('origin')
+      result = described_instance.remote_remove('origin')
       expect(result).to be_a(Git::CommandLineResult)
     end
 
     it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.remove_remote('nonexistent') }
+      expect { described_instance.remote_remove('nonexistent') }
         .to raise_error(Git::FailedError, /nonexistent/)
     end
   end
@@ -259,12 +259,12 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     end
 
     it 'includes each configured remote by name' do
-      described_instance.add_remote('upstream', bare_dir)
+      described_instance.remote_add('upstream', bare_dir)
       expect(described_instance.remotes.map(&:name)).to contain_exactly('origin', 'upstream')
     end
 
     context 'when the repository has no remotes' do
-      before { described_instance.remove_remote('origin') }
+      before { described_instance.remote_remove('origin') }
 
       it 'returns an empty array' do
         expect(described_instance.remotes).to eq([])
@@ -273,10 +273,10 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #set_remote_url
+  # #remote_set_url
   # ---------------------------------------------------------------------------
 
-  describe '#set_remote_url' do
+  describe '#remote_set_url' do
     let(:other_dir) { Dir.mktmpdir('other_repo') }
 
     after { FileUtils.rm_rf(other_dir) }
@@ -284,12 +284,12 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     before { Git.init(other_dir, bare: true) }
 
     it 'updates the fetch URL for the named remote' do
-      described_instance.set_remote_url('origin', other_dir)
+      described_instance.remote_set_url('origin', other_dir)
       expect(described_instance.config_remote('origin')['url']).to eq(other_dir)
     end
 
     it 'returns a Git::Remote for the updated remote' do
-      result = described_instance.set_remote_url('origin', other_dir)
+      result = described_instance.remote_set_url('origin', other_dir)
       expect(result).to be_a(Git::Remote)
       expect(result.name).to eq('origin')
     end
