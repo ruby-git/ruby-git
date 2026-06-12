@@ -361,6 +361,46 @@ RSpec.describe Git::Repository::Merging do
   end
 
   # ---------------------------------------------------------------------------
+  # #unmerged
+  # ---------------------------------------------------------------------------
+
+  describe '#unmerged' do
+    let(:diff_command) { instance_double(Git::Commands::Diff) }
+
+    before do
+      allow(Git::Commands::Diff).to receive(:new).with(execution_context).and_return(diff_command)
+    end
+
+    context 'when there are no conflicts' do
+      before do
+        allow(diff_command).to receive(:call).with(cached: true).and_return(command_result(''))
+      end
+
+      it 'returns an empty Array' do
+        expect(described_instance.unmerged).to eq([])
+      end
+    end
+
+    context 'when there are conflicts' do
+      let(:diff_stdout) { "* Unmerged path file.rb\n* Unmerged path other.rb\n" }
+
+      before do
+        allow(diff_command).to receive(:call).with(cached: true).and_return(command_result(diff_stdout))
+      end
+
+      it 'returns an Array of the conflicting file paths' do
+        expect(described_instance.unmerged).to eq(%w[file.rb other.rb])
+      end
+    end
+
+    it 'delegates to Git::Commands::Diff.new with the execution_context' do
+      allow(diff_command).to receive(:call).with(cached: true).and_return(command_result(''))
+      expect(Git::Commands::Diff).to receive(:new).with(execution_context).and_return(diff_command)
+      described_instance.unmerged
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #each_conflict
   # ---------------------------------------------------------------------------
 

@@ -442,4 +442,13 @@ RSpec.describe Git::Base do
       expect(described_instance.ls_remote).to eq(result_hash)
     end
   end
+
+  describe '#unmerged' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.unmerged' do
+      expect(facade_repository).to receive(:unmerged).and_return(['file.rb'])
+      expect(described_instance.unmerged).to eq(['file.rb'])
+    end
+  end
 end

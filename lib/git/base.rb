@@ -578,6 +578,10 @@ module Git
       facade_repository.each_conflict(&)
     end
 
+    def unmerged
+      facade_repository.unmerged
+    end
+
     # Pulls the given branch from the given remote into the current branch
     #
     # @param remote [String] the remote repository to pull from

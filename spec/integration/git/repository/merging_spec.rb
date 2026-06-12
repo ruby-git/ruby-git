@@ -293,6 +293,52 @@ RSpec.describe Git::Repository::Merging, :integration do
   end
 
   # ---------------------------------------------------------------------------
+  # #unmerged
+  # ---------------------------------------------------------------------------
+
+  describe '#unmerged' do
+    context 'when there are no conflicts' do
+      it 'returns an empty Array' do
+        expect(described_instance.unmerged).to eq([])
+      end
+    end
+
+    context 'when there is a conflict' do
+      before do
+        repo.lib.branch_new('branch_ours')
+        repo.lib.checkout('branch_ours')
+        write_file('example.txt', "1\n2\n3\n")
+        repo.add('example.txt')
+        repo.commit('ours: add example.txt')
+
+        repo.lib.checkout('main')
+        repo.lib.branch_new('branch_theirs')
+        repo.lib.checkout('branch_theirs')
+        write_file('example.txt', "1\n4\n3\n")
+        repo.add('example.txt')
+        repo.commit('theirs: add example.txt')
+
+        repo.lib.checkout('main')
+        repo.merge('branch_ours')
+
+        begin
+          repo.merge('branch_theirs')
+        rescue Git::FailedError
+          # expected conflict
+        end
+      end
+
+      it 'returns an Array' do
+        expect(described_instance.unmerged).to be_an(Array)
+      end
+
+      it 'returns the conflicting file path(s)' do
+        expect(described_instance.unmerged).to include('example.txt')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #each_conflict
   # ---------------------------------------------------------------------------
 
