@@ -409,7 +409,7 @@ These require a new facade method before a base.rb delegator can be added.
 | `ls_remote(location = nil, opts = {})` | Lists remote refs. Clearly useful externally. | ✅ promoted — facade in `Git::Repository::RemoteOperations` + `Git::Base` delegator added (PR 5f) |
 | `mv(source, destination, options = {})` | Wraps `git mv`. Externally useful. | ⬜ promote — new facade in `Git::Repository::Staging`; `Git::Commands::Mv` ✅ exists; trivial effort |
 | `parse_config(file)` | Parses a config file from path. | 🔍 human decision — expose or fold into `config()` with `:file` option? |
-| `stash_list` | Returns a formatted string `"stash@{0}: ...\n..."` — distinct from `stashes_all` which returns structured data. | 🔍 human decision — promote for backward compat, or deprecate in favor of `stashes_all`? |
+| `stash_list` | Returns a formatted string `"stash@{0}: ...\n..."` — distinct from `stashes_all` which returns structured data. | ✅ promoted as deprecated method — `Git::Repository::Stashing#stash_list` + `Git::Base` delegator added (PR 5h-5); remove in v6 |
 | `unmerged` | Returns paths with unresolved merge conflicts. Already partially covered by `each_conflict` (yields paths to temporary files for staged content). Pure path list is useful. | ✅ promoted — public method in `Git::Repository::Merging` + `Git::Base` delegator added (PR 5h-6) |
 | `current_branch_state` | Returns a `HeadState` value object with `:state` (`:active`/`:unborn`/`:detached`) and `:name`. Richer than `current_branch`. Legacy `Git::Lib` implementation used a mutable `Struct`; promoted facade uses an immutable `Data` object. | ✅ promoted — `HeadState` Data object defined in `Git::Repository::Branching`; facade in `Git::Repository::Branching` + `Git::Base` delegator added (PR 5g) |
 
@@ -438,10 +438,10 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 
 | Status | Count |
 |--------|-------|
-| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 25 |
+| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 26 |
 | ⬜ promote (new facade work required) | 1 |
 | ❌ remove (internal plumbing) | 12 |
-| 🔍 human decision | 15 |
+| 🔍 human decision | 14 |
 | **Total orphaned methods** | **56** |
 
 > **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a
