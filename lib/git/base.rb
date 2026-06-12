@@ -1402,6 +1402,23 @@ module Git
 
     # @!group Bucket 6 delegators — Git::Repository::StatusOperations
 
+    # @return [Boolean] `true` when the repository has no commits, `false` otherwise
+    def no_commits?
+      facade_repository.no_commits?
+    end
+
+    # @deprecated Use {#no_commits?} instead.
+    #
+    # @return [Boolean] `true` when the repository has no commits, `false` otherwise
+    #
+    def empty?
+      Git::Deprecation.warn(
+        'Git::Base#empty? is deprecated and will be removed in a future version. ' \
+        'Use Git::Base#no_commits? instead.'
+      )
+      no_commits?
+    end
+
     # @return [Array<String>] list of untracked file paths
     def untracked_files
       facade_repository.untracked_files
