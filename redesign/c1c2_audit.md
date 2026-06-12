@@ -398,9 +398,9 @@ These require a new facade method before a base.rb delegator can be added.
 | `Git::Lib` method | Assessment | Recommended status |
 |-------------------|------------|--------------------|
 | `change_head_branch(branch_name)` | Low-level `git symbolic-ref HEAD refs/heads/<name>`; used internally for branch renaming and orphan checkout. Plausible external use by tooling. | ✅ promoted — facade in `Git::Repository::Branching` + `Git::Base` delegator added (PR 5h-1) |
-| `config_get(name)` | Returns a single config value. Used by tooling. Part of the existing `config()` facade which reads/writes. | 🔍 human decision — expose as `config_get` or fold into `config(name)`? |
-| `config_list` | Returns full config hash. Used by tooling. | 🔍 human decision — expose separately or fold into `config()`? |
-| `config_set(name, value, options)` | Sets a config value. | 🔍 human decision — expose separately or fold into `config(name, value)`? |
+| `config_get(name)` | Returns a single config value. Used by tooling. Part of the existing `config()` facade which reads/writes. | ✅ promoted as deprecated methods — forwarding wrappers in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-2); remove in v6.0.0 |
+| `config_list` | Returns full config hash. Used by tooling. | ✅ promoted as deprecated methods — forwarding wrappers in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-2); remove in v6.0.0 |
+| `config_set(name, value, options)` | Sets a config value. | ✅ promoted as deprecated methods — forwarding wrappers in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-2); remove in v6.0.0 |
 | `global_config_get(name)` | Gets a global config value. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
 | `global_config_list` | Returns the full global config hash. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
 | `global_config_set(name, value)` | Sets a global config value. | ✅ promoted — `global_config` facade + deprecated aliases in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-3) |
@@ -441,7 +441,7 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 | ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 29 |
 | ⬜ promote (new facade work required) | 1 |
 | ❌ remove (internal plumbing) | 12 |
-| 🔍 human decision | 11 |
+| 🔍 human decision | 8 |
 | **Total orphaned methods** | **56** |
 
 > **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a

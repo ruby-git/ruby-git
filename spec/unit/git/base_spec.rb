@@ -470,6 +470,35 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#config_get' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.config_get' do
+      expect(facade_repository).to receive(:config_get).with('user.name').and_return('Alice')
+      expect(described_instance.config_get('user.name')).to eq('Alice')
+    end
+  end
+
+  describe '#config_list' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.config_list' do
+      result = { 'user.name' => 'Alice' }
+      expect(facade_repository).to receive(:config_list).and_return(result)
+      expect(described_instance.config_list).to eq(result)
+    end
+  end
+
+  describe '#config_set' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.config_set' do
+      set_result = instance_double(Git::CommandLineResult)
+      expect(facade_repository).to receive(:config_set).with('user.name', 'Alice', {}).and_return(set_result)
+      expect(described_instance.config_set('user.name', 'Alice')).to be(set_result)
+    end
+  end
+
   describe '#global_config_get' do
     include_context 'with a stubbed facade_repository'
 
