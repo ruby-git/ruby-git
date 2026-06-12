@@ -526,6 +526,29 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#parse_config' do
+    subject(:result) { described_instance.parse_config('/path/to/config') }
+
+    include_context 'with a stubbed facade_repository'
+
+    let(:expected_hash) { { 'user.name' => 'Alice' } }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(described_instance).to receive(:config).with(file: '/path/to/config').and_return(expected_hash)
+    end
+
+    it 'emits a deprecation warning matching /parse_config is deprecated/' do
+      expect(Git::Deprecation).to receive(:warn).with(/parse_config is deprecated/)
+      result
+    end
+
+    it 'calls config with file: argument forwarded and returns its return value' do
+      expect(described_instance).to receive(:config).with(file: '/path/to/config').and_return(expected_hash)
+      expect(result).to eq(expected_hash)
+    end
+  end
+
   describe '#global_config_get' do
     include_context 'with a stubbed facade_repository'
 
