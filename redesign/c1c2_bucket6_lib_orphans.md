@@ -447,6 +447,8 @@ Remove the method in v6 after a full deprecation cycle.
 
 **Decision:** Accepted. Add `stash_list` to `Git::Repository::Stashing` as a deprecated method with `Git::Deprecation.warn` pointing to `stashes_all`. Add `Git::Base` delegator. Remove in v6.
 
+**Status: ✅ Implemented** — `Git::Repository::Stashing#stash_list` + `Git::Base#stash_list` delegator added (PR 5h-5).
+
 ---
 
 ### 3.6 `unmerged`

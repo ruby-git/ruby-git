@@ -1350,6 +1350,13 @@ module Git
       facade_repository.stashes_all
     end
 
+    # @deprecated Use {#stashes_all} instead.
+    #
+    # @return [String] stash entries formatted as `"stash@{n}: <full message>"`, one per line
+    def stash_list
+      facade_repository.stash_list
+    end
+
     # @return [Boolean] true if changes were stashed, false if there was nothing to stash
     def stash_save(message)
       facade_repository.stash_save(message)

@@ -40,6 +40,33 @@ module Git
         end
       end
 
+      # Returns stash entries as a formatted string matching `git stash list` output
+      #
+      # @deprecated Use {#stashes_all} instead.
+      #
+      # @example List stashes as a formatted string
+      #   repo.stash_list #=> "stash@{0}: On main: WIP\nstash@{1}: On feature: Fix bug"
+      #
+      # @return [String] newline-joined `"stash@{n}: <full message>"` entries, or an
+      #   empty string when there are no stashes; the format matches `git stash list`
+      #   output
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see #stashes_all
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      def stash_list
+        Git::Deprecation.warn(
+          'Git::Repository#stash_list is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#stashes_all instead.'
+        )
+        result = Git::Commands::Stash::List.new(@execution_context).call
+        stashes = Git::Parsers::Stash.parse_list(result.stdout)
+        stashes.map { |info| "#{info.name}: #{info.message}" }.join("\n")
+      end
+
       # Save the current working directory and index state to a new stash
       #
       # @param message [String] the stash message

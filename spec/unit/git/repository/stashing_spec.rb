@@ -180,6 +180,61 @@ RSpec.describe Git::Repository::Stashing do
     end
   end
 
+  describe '#stash_list' do
+    let(:list_command) { instance_double(Git::Commands::Stash::List) }
+
+    before do
+      allow(Git::Commands::Stash::List).to receive(:new).with(execution_context).and_return(list_command)
+    end
+
+    it 'emits a deprecation warning via Git::Deprecation.warn' do
+      allow(list_command).to receive(:call).with(no_args).and_return(command_result(''))
+      allow(Git::Parsers::Stash).to receive(:parse_list).with('').and_return([])
+      expect(Git::Deprecation).to receive(:warn).with(a_string_including('stash_list'))
+      described_instance.stash_list
+    end
+
+    context 'when there are stash entries' do
+      let(:list_result) { command_result('fixture') }
+      let(:stash_info_first) { instance_double(Git::StashInfo, name: 'stash@{0}', message: 'On main: WIP') }
+      let(:stash_info_second) { instance_double(Git::StashInfo, name: 'stash@{1}', message: 'On main: Fix bug') }
+      let(:stash_infos) { [stash_info_first, stash_info_second] }
+
+      before do
+        allow(Git::Deprecation).to receive(:warn)
+        allow(list_command).to receive(:call).with(no_args).and_return(list_result)
+        allow(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(stash_infos)
+      end
+
+      it 'calls Git::Commands::Stash::List with the execution context' do
+        expect(Git::Commands::Stash::List).to receive(:new).with(execution_context).and_return(list_command)
+        allow(list_command).to receive(:call).and_return(list_result)
+        described_instance.stash_list
+      end
+
+      it 'passes the command stdout to Git::Parsers::Stash.parse_list' do
+        expect(Git::Parsers::Stash).to receive(:parse_list).with('fixture').and_return(stash_infos)
+        described_instance.stash_list
+      end
+
+      it 'returns a newline-joined "stash@{n}: <full message>" string' do
+        expect(described_instance.stash_list).to eq("stash@{0}: On main: WIP\nstash@{1}: On main: Fix bug")
+      end
+    end
+
+    context 'when there are no stash entries' do
+      before do
+        allow(Git::Deprecation).to receive(:warn)
+        allow(list_command).to receive(:call).with(no_args).and_return(command_result(''))
+        allow(Git::Parsers::Stash).to receive(:parse_list).with('').and_return([])
+      end
+
+      it 'returns an empty string' do
+        expect(described_instance.stash_list).to eq('')
+      end
+    end
+  end
+
   describe '#stash_clear' do
     let(:clear_command) { instance_double(Git::Commands::Stash::Clear) }
     let(:clear_result) { command_result('') }
