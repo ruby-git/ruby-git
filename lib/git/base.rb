@@ -977,6 +977,17 @@ module Git
     end
     alias branch_current current_branch
 
+    # Returns the current HEAD state as a structured value object
+    #
+    # @return [Git::Repository::Branching::HeadState] the current HEAD state;
+    #   see {Git::Repository::Branching#current_branch_state} for details
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
+    #
+    def current_branch_state
+      facade_repository.current_branch_state
+    end
+
     # @return [Git::Branch] an object for branch_name
     def branch(branch_name = current_branch)
       facade_repository.branch(branch_name)

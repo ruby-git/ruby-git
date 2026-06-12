@@ -14,6 +14,29 @@ RSpec.describe Git::Repository::Branching do
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # ---------------------------------------------------------------------------
+  # HeadState
+  # ---------------------------------------------------------------------------
+
+  describe 'HeadState' do
+    subject(:head_state_class) { Git::Repository::Branching::HeadState }
+
+    it 'is a Data class' do
+      expect(head_state_class).to be < Data
+    end
+
+    it 'constructs with keyword arguments' do
+      instance = head_state_class.new(state: :active, name: 'main')
+      expect(instance.state).to eq(:active)
+      expect(instance.name).to eq('main')
+    end
+
+    it 'is immutable (does not respond to state=)' do
+      instance = head_state_class.new(state: :active, name: 'main')
+      expect(instance).not_to respond_to(:state=)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #current_branch
   # ---------------------------------------------------------------------------
 
@@ -47,6 +70,88 @@ RSpec.describe Git::Repository::Branching do
       it "returns 'HEAD'" do
         allow(show_current_command).to receive(:call).and_return(show_current_result)
         expect(result).to eq('HEAD')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # #current_branch_state
+  # ---------------------------------------------------------------------------
+
+  describe '#current_branch_state' do
+    subject(:result) { described_instance.current_branch_state }
+
+    let(:show_current_command) { instance_double(Git::Commands::Branch::ShowCurrent) }
+    let(:rev_parse_command) { instance_double(Git::Commands::RevParse) }
+
+    before do
+      allow(Git::Commands::Branch::ShowCurrent)
+        .to receive(:new).with(execution_context).and_return(show_current_command)
+      allow(Git::Commands::RevParse)
+        .to receive(:new).with(execution_context).and_return(rev_parse_command)
+    end
+
+    context 'when on an active branch (RevParse succeeds)' do
+      before do
+        allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
+        allow(rev_parse_command)
+          .to receive(:call).with('main', verify: true, quiet: true)
+          .and_return(command_result('abc123'))
+      end
+
+      it 'returns HeadState with state :active and the branch name' do
+        expect(result).to eq(
+          Git::Repository::Branching::HeadState.new(state: :active, name: 'main')
+        )
+      end
+    end
+
+    context 'when on an unborn branch (RevParse exits 1 with empty stderr)' do
+      let(:unborn_result) { command_result('', stderr: '', exitstatus: 1) }
+
+      before do
+        allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
+        allow(rev_parse_command)
+          .to receive(:call).with('main', verify: true, quiet: true)
+          .and_raise(Git::FailedError.new(unborn_result))
+      end
+
+      it 'returns HeadState with state :unborn and the branch name' do
+        expect(result).to eq(
+          Git::Repository::Branching::HeadState.new(state: :unborn, name: 'main')
+        )
+      end
+    end
+
+    context 'in detached HEAD state (ShowCurrent returns empty stdout)' do
+      before do
+        allow(show_current_command).to receive(:call).and_return(command_result(''))
+      end
+
+      it 'returns HeadState with state :detached and name HEAD' do
+        expect(result).to eq(
+          Git::Repository::Branching::HeadState.new(state: :detached, name: 'HEAD')
+        )
+      end
+
+      it 'does not call RevParse' do
+        expect(rev_parse_command).not_to receive(:call)
+        result
+      end
+    end
+
+    context 'when RevParse exits 1 with non-empty stderr' do
+      let(:error_result) { command_result('', stderr: 'fatal: not a git repository', exitstatus: 1) }
+
+      before do
+        allow(show_current_command).to receive(:call).and_return(command_result("main\n"))
+        allow(rev_parse_command)
+          .to receive(:call).with('main', verify: true, quiet: true)
+          .and_raise(Git::FailedError.new(error_result))
+      end
+
+      it 're-raises the FailedError' do
+        expect { result }.to raise_error(Git::FailedError)
       end
     end
   end

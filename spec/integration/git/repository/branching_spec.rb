@@ -452,4 +452,61 @@ RSpec.describe Git::Repository::Branching, :integration do
       expect(result.full).to eq(described_instance.current_branch)
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # #current_branch_state
+  # ---------------------------------------------------------------------------
+  #
+  # current_branch_state calls both ShowCurrent and RevParse, so integration
+  # tests confirm the multi-command orchestration produces the correct HeadState
+  # value across all three possible HEAD states.
+
+  describe '#current_branch_state' do
+    context 'when HEAD is on an active branch (has commits)' do
+      it 'returns HeadState with state :active' do
+        result = described_instance.current_branch_state
+        expect(result).to be_a(Git::Repository::Branching::HeadState)
+        expect(result.state).to eq(:active)
+      end
+
+      it 'returns the current branch name as the name attribute' do
+        result = described_instance.current_branch_state
+        expect(result.name).to eq(described_instance.current_branch)
+      end
+    end
+
+    context 'in detached HEAD state (checked out at a commit SHA directly)' do
+      before do
+        sha = repo.log(1).execute.first.sha
+        repo.lib.checkout(sha)
+      end
+
+      it 'returns HeadState with state :detached and name HEAD' do
+        result = described_instance.current_branch_state
+        expect(result.state).to eq(:detached)
+        expect(result.name).to eq('HEAD')
+      end
+    end
+
+    context 'on an unborn branch (repository initialized with no commits)' do
+      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
+      let(:unborn_repo) { Git.init(unborn_repo_dir) }
+      let(:unborn_execution_context) { Git::ExecutionContext::Repository.from_base(unborn_repo) }
+      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_execution_context) }
+
+      after { FileUtils.rm_rf(unborn_repo_dir) }
+
+      it 'returns HeadState with state :unborn' do
+        result = unborn_instance.current_branch_state
+        expect(result.state).to eq(:unborn)
+      end
+
+      it 'returns the initial branch name (not HEAD)' do
+        result = unborn_instance.current_branch_state
+        expect(result.name).not_to eq('HEAD')
+        expect(result.name).to be_a(String)
+        expect(result.name).not_to be_empty
+      end
+    end
+  end
 end
