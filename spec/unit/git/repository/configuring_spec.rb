@@ -133,6 +133,15 @@ RSpec.describe Git::Repository::Configuring do
           expect { result }.to raise_error(ArgumentError, /Unknown options: bogus/)
         end
       end
+
+      context 'when value is false (valid falsy config value)' do
+        subject(:result) { described_instance.config('core.bare', false) }
+
+        it 'routes to the set path, not the get path' do
+          expect(set_command).to receive(:call).with('core.bare', false).and_return(set_result)
+          result
+        end
+      end
     end
   end
 
@@ -315,6 +324,89 @@ RSpec.describe Git::Repository::Configuring do
 
     it 'delegates to global_config(name, value) and returns the result' do
       expect(result).to eq(set_result)
+    end
+  end
+
+  describe '#config_get' do
+    subject(:result) { described_instance.config_get('user.name') }
+
+    let(:get_command) { instance_double(Git::Commands::ConfigOptionSyntax::Get) }
+    let(:get_result) { command_result('Alice') }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(Git::Commands::ConfigOptionSyntax::Get)
+        .to receive(:new).with(execution_context).and_return(get_command)
+      allow(get_command).to receive(:call).with('user.name').and_return(get_result)
+    end
+
+    it 'emits a deprecation warning mentioning Git::Repository#config_get' do
+      expect(Git::Deprecation).to receive(:warn).with(/Git::Repository#config_get/)
+      result
+    end
+
+    it 'delegates to config(name) and returns the value' do
+      expect(result).to eq('Alice')
+    end
+  end
+
+  describe '#config_list' do
+    subject(:result) { described_instance.config_list }
+
+    let(:list_command) { instance_double(Git::Commands::ConfigOptionSyntax::List) }
+    let(:list_result) { command_result('user.name=Alice') }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(Git::Commands::ConfigOptionSyntax::List)
+        .to receive(:new).with(execution_context).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(list_result)
+    end
+
+    it 'emits a deprecation warning mentioning Git::Repository#config_list' do
+      expect(Git::Deprecation).to receive(:warn).with(/Git::Repository#config_list/)
+      result
+    end
+
+    it 'delegates to config and returns a Hash' do
+      expect(result).to eq({ 'user.name' => 'Alice' })
+    end
+  end
+
+  describe '#config_set' do
+    subject(:result) { described_instance.config_set('user.name', 'Bob') }
+
+    let(:set_command) { instance_double(Git::Commands::ConfigOptionSyntax::Set) }
+    let(:set_result) { command_result('') }
+
+    before do
+      allow(Git::Deprecation).to receive(:warn)
+      allow(Git::Commands::ConfigOptionSyntax::Set)
+        .to receive(:new).with(execution_context).and_return(set_command)
+      allow(set_command).to receive(:call).with('user.name', 'Bob').and_return(set_result)
+    end
+
+    it 'emits a deprecation warning mentioning Git::Repository#config_set and the public config signature' do
+      expect(Git::Deprecation).to receive(:warn)
+        .with(a_string_matching(/Git::Repository#config_set/).and(a_string_including('config(name, value, options)')))
+      result
+    end
+
+    it 'delegates to config(name, value) and returns the result' do
+      expect(result).to eq(set_result)
+    end
+
+    context 'when value is false (valid falsy config value)' do
+      subject(:result) { described_instance.config_set('core.bare', false) }
+
+      before do
+        allow(set_command).to receive(:call).with('core.bare', false).and_return(set_result)
+      end
+
+      it 'routes to the set path, not the get path' do
+        expect(set_command).to receive(:call).with('core.bare', false).and_return(set_result)
+        result
+      end
     end
   end
 end

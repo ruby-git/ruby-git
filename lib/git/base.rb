@@ -247,6 +247,18 @@ module Git
       facade_repository.global_config_set(name, value)
     end
 
+    def config_get(name)
+      facade_repository.config_get(name)
+    end
+
+    def config_list
+      facade_repository.config_list
+    end
+
+    def config_set(name, value, opts = {})
+      facade_repository.config_set(name, value, opts)
+    end
+
     # Returns a reference to the working directory
     #
     # @example

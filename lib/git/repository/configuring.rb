@@ -60,7 +60,10 @@ module Git
       #   @param name [String] the dotted config key to write (e.g.
       #     `"user.name"`)
       #
-      #   @param value [String] the value to assign
+      #   @param value [#to_s] the value to assign; must not be `nil` (a `nil`
+      #     value is treated as "no value" and routes to the get overload).
+      #     Any non-nil object is converted to a String via `#to_s` before
+      #     being passed to git
       #
       #   @param options [Hash] options for the set operation
       #
@@ -75,7 +78,7 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def config(name = nil, value = nil, options = {})
-        if name && value
+        if !name.nil? && !value.nil?
           Private.config_set(@execution_context, name, value, **options)
         elsif name
           Private.config_get(@execution_context, name)
@@ -165,6 +168,86 @@ module Git
           'Use global_config(name, value) instead.'
         )
         global_config(name, value)
+      end
+
+      # Return a single git configuration entry
+      #
+      # @deprecated Use {#config} with a name argument instead.
+      #
+      # @example Get the committer name from config
+      #   repo.config_get('user.name') #=> "Alice"
+      #
+      # @param name [String] the dotted config key to look up (e.g. `"user.name"`)
+      #
+      # @return [String] the value of the config entry
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see #config
+      #
+      def config_get(name)
+        Git::Deprecation.warn(
+          'Git::Repository#config_get is deprecated and will be removed in a future version. ' \
+          'Use config(name) instead.'
+        )
+        config(name)
+      end
+
+      # Return all git configuration entries as a Hash
+      #
+      # @deprecated Use {#config} with no arguments instead.
+      #
+      # @example List all config entries
+      #   repo.config_list #=> { "user.name" => "Alice", "core.bare" => "false" }
+      #
+      # @return [Hash{String => String}] all visible config entries, keyed by their
+      #   full dotted key names (e.g. `"user.name"`)
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see #config
+      #
+      def config_list
+        Git::Deprecation.warn(
+          'Git::Repository#config_list is deprecated and will be removed in a future version. ' \
+          'Use config instead.'
+        )
+        config
+      end
+
+      # Write a git configuration entry
+      #
+      # @deprecated Use {#config} with name and value arguments instead.
+      #
+      # @example Set the committer name in local config
+      #   repo.config_set('user.name', 'Alice')
+      #
+      # @param name [String] the dotted config key to write (e.g. `"user.name"`)
+      #
+      # @param value [#to_s] the value to assign; must not be `nil` (a `nil`
+      #   value is treated as "no value" and routes to the get overload).
+      #   Any non-nil object is converted to a String via `#to_s` before
+      #   being passed to git
+      #
+      # @param opts [Hash] options for the set operation
+      #
+      # @option opts [String, nil] :file (nil) path to a custom config file to
+      #   write to instead of the repository's default `.git/config`
+      #
+      # @return [Git::CommandLineResult] the raw result of `git config <name> <value>`
+      #
+      # @raise [ArgumentError] if unsupported options are provided
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @see #config
+      #
+      def config_set(name, value, opts = {})
+        Git::Deprecation.warn(
+          'Git::Repository#config_set is deprecated and will be removed in a future version. ' \
+          'Use config(name, value, options) instead.'
+        )
+        config(name, value, opts)
       end
 
       # Private helpers local to {Git::Repository::Configuring}

@@ -230,6 +230,8 @@ method-name change is required until v6. Remove all three aliases in v6.
 
 **Decision:** Accepted. Add deprecated forwarding methods `config_get`, `config_list`, and `config_set` to `Git::Repository::Configuring` with `Git::Deprecation.warn` calls pointing to `config()`. Add `Git::Base` delegators. Remove in v6.
 
+**Status:** ✅ Implemented — deprecated forwarding wrappers in `Git::Repository::Configuring` + `Git::Base` delegators added (PR 5h-2).
+
 ---
 
 ### 3.3 `global_config_get(name)`, `global_config_list`, and `global_config_set(name, value)`
