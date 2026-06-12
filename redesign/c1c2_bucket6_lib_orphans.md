@@ -490,6 +490,8 @@ Use `unmerged` as the promoted name to preserve backward compatibility.
 
 **Decision:** Accepted. Promote `unmerged` as a public method on `Git::Repository::Merging` by surfacing `Private.unmerged_paths`. Add `Git::Base` delegator.
 
+**Status:** ✅ Implemented — `Git::Repository::Merging#unmerged` added; `Git::Base#unmerged` delegator added.
+
 ## 4. Pre-resolved questions
 
 The following questions were raised during initial drafting and are now
