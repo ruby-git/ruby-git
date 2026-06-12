@@ -187,7 +187,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
   describe '#cat_file_tag' do
     before do
-      repo.add_tag('v1.0', annotate: true, message: 'Release v1.0')
+      repo.tag_add('v1.0', annotate: true, message: 'Release v1.0')
     end
 
     context 'with a valid annotated tag' do
@@ -238,7 +238,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with an annotated tag whose message is empty' do
       before do
-        repo.add_tag('v2.0', annotate: true, message: '')
+        repo.tag_add('v2.0', annotate: true, message: '')
       end
 
       it 'returns a Hash without raising NoMethodError' do
@@ -290,7 +290,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#tag_sha' do
     context 'when the tag exists' do
       before do
-        repo.add_tag('v1.0')
+        repo.tag_add('v1.0')
       end
 
       it 'returns the SHA of the tagged commit as a String' do
@@ -741,8 +741,8 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'when the repository has tags' do
       before do
-        described_instance.add_tag('v1.0.0')
-        described_instance.add_tag('v2.0.0', annotate: true, message: 'Release 2.0.0')
+        described_instance.tag_add('v1.0.0')
+        described_instance.tag_add('v2.0.0', annotate: true, message: 'Release 2.0.0')
       end
 
       it 'returns a Git::Object::Tag for every tag' do
@@ -755,10 +755,10 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
-  describe '#add_tag' do
+  describe '#tag_add' do
     context 'with no target and no options' do
       it 'creates a lightweight tag on HEAD' do
-        tag = described_instance.add_tag('v1.0.0')
+        tag = described_instance.tag_add('v1.0.0')
         expect(tag).to be_a(Git::Object::Tag)
         expect(tag.name).to eq('v1.0.0')
         expect(tag.annotated?).to be(false)
@@ -768,14 +768,14 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     context 'with a target commit' do
       it 'creates the tag pointing at the given commit' do
         head_sha = described_instance.rev_parse('HEAD')
-        tag = described_instance.add_tag('v1.0.0', head_sha)
+        tag = described_instance.tag_add('v1.0.0', head_sha)
         expect(tag.objectish).to eq(head_sha)
       end
     end
 
     context 'with annotate and a message' do
       it 'creates an annotated tag carrying the message' do
-        tag = described_instance.add_tag('v1.0.0', annotate: true, message: 'Release 1.0.0')
+        tag = described_instance.tag_add('v1.0.0', annotate: true, message: 'Release 1.0.0')
         expect(tag.annotated?).to be(true)
         expect(tag.message).to eq('Release 1.0.0')
       end
@@ -786,33 +786,33 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     # :force) are pure-Ruby or command concerns with no added end-to-end signal;
     # they are covered by the unit spec and command integration specs.
     context 'when the tag already exists' do
-      before { described_instance.add_tag('v1.0.0') }
+      before { described_instance.tag_add('v1.0.0') }
 
       it 'replaces the existing tag when force is given' do
-        replaced = described_instance.add_tag('v1.0.0', force: true, annotate: true, message: 'replaced')
+        replaced = described_instance.tag_add('v1.0.0', force: true, annotate: true, message: 'replaced')
         expect(replaced.annotated?).to be(true)
         expect(replaced.message).to eq('replaced')
       end
     end
   end
 
-  describe '#delete_tag' do
+  describe '#tag_delete' do
     context 'when the tag exists' do
-      before { described_instance.add_tag('v1.0.0') }
+      before { described_instance.tag_add('v1.0.0') }
 
       it 'removes the tag' do
-        described_instance.delete_tag('v1.0.0')
+        described_instance.tag_delete('v1.0.0')
         expect(described_instance.tags.map(&:name)).not_to include('v1.0.0')
       end
 
       it 'returns git stdout confirming the deletion' do
-        expect(described_instance.delete_tag('v1.0.0')).to match(/Deleted tag 'v1.0.0'/)
+        expect(described_instance.tag_delete('v1.0.0')).to match(/Deleted tag 'v1.0.0'/)
       end
     end
 
     context 'when the tag does not exist' do
       it 'raises Git::FailedError naming the failed delete command' do
-        expect { described_instance.delete_tag('does-not-exist') }
+        expect { described_instance.tag_delete('does-not-exist') }
           .to raise_error(Git::FailedError, /does-not-exist/)
       end
     end

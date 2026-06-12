@@ -202,15 +202,24 @@ module Git
     # adds a new remote to this repository
     # url can be a git url or a Git::Base object if it's a local reference
     #
-    #  @git.add_remote('scotts_git', 'git://repo.or.cz/rubygit.git')
+    #  @git.remote_add('scotts_git', 'git://repo.or.cz/rubygit.git')
     #  @git.fetch('scotts_git')
     #  @git.merge('scotts_git/master')
     #
     # Options:
     #   :fetch => true
     #   :track => <branch_name>
+    def remote_add(name, url, opts = {})
+      facade_repository.remote_add(name, url, opts)
+    end
+
+    # @deprecated Use {#remote_add} instead.
     def add_remote(name, url, opts = {})
-      facade_repository.add_remote(name, url, opts)
+      Git::Deprecation.warn(
+        'Git::Base#add_remote is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Base#remote_add instead.'
+      )
+      remote_add(name, url, opts)
     end
 
     # Changes the current working directory to the git working directory for the
@@ -676,10 +685,19 @@ module Git
     # sets the url for a remote
     # url can be a git url or a Git::Base object if it's a local reference
     #
-    #  @git.set_remote_url('scotts_git', 'git://repo.or.cz/rubygit.git')
+    #  @git.remote_set_url('scotts_git', 'git://repo.or.cz/rubygit.git')
     #
+    def remote_set_url(name, url)
+      facade_repository.remote_set_url(name, url)
+    end
+
+    # @deprecated Use {#remote_set_url} instead.
     def set_remote_url(name, url)
-      facade_repository.set_remote_url(name, url)
+      Git::Deprecation.warn(
+        'Git::Base#set_remote_url is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Base#remote_set_url instead.'
+      )
+      remote_set_url(name, url)
     end
 
     # Configures which branches are fetched for a remote
@@ -716,9 +734,18 @@ module Git
 
     # removes a remote from this repository
     #
-    # @git.remove_remote('scott_git')
+    # @git.remote_remove('scott_git')
+    def remote_remove(name)
+      facade_repository.remote_remove(name)
+    end
+
+    # @deprecated Use {#remote_remove} instead.
     def remove_remote(name)
-      facade_repository.remove_remote(name)
+      Git::Deprecation.warn(
+        'Git::Base#remove_remote is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Base#remote_remove instead.'
+      )
+      remote_remove(name)
     end
 
     # returns an array of all Git::Object::Tag objects for this repository
@@ -729,9 +756,9 @@ module Git
     # Create a new git tag
     #
     # @example
-    #   repo.add_tag('tag_name', object_reference)
-    #   repo.add_tag('tag_name', object_reference, {:options => 'here'})
-    #   repo.add_tag('tag_name', {:options => 'here'})
+    #   repo.tag_add('tag_name', object_reference)
+    #   repo.tag_add('tag_name', object_reference, {:options => 'here'})
+    #   repo.tag_add('tag_name', {:options => 'here'})
     #
     # @param [String] name The name of the tag to add
     # @param [Hash] options Options to pass to `git tag`.
@@ -739,21 +766,39 @@ module Git
     # @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
     # @option options [Boolean, nil] :a (nil) an alias for the `:annotate` option
     # @option options [Boolean, nil] :d (nil) delete existing tag with the given name —
-    #   deprecated; use {#delete_tag} instead (alias: `:delete`)
+    #   deprecated; use {#tag_delete} instead (alias: `:delete`)
     # @option options [Boolean, nil] :delete (nil) delete existing tag with the given name —
-    #   deprecated; use {#delete_tag} instead (alias: `:d`)
+    #   deprecated; use {#tag_delete} instead (alias: `:d`)
     # @option options [Boolean, nil] :f (nil) replace an existing tag with the given name (instead of failing)
     # @option options [String] :message Use the given tag message
     # @option options [String] :m An alias for the `:message` option
     # @option options [Boolean, nil] :s (nil) make a GPG-signed tag
     #
+    def tag_add(name, *options)
+      facade_repository.tag_add(name, *options)
+    end
+
+    # @deprecated Use {#tag_add} instead.
     def add_tag(name, *options)
-      facade_repository.add_tag(name, *options)
+      Git::Deprecation.warn(
+        'Git::Base#add_tag is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Base#tag_add instead.'
+      )
+      tag_add(name, *options)
     end
 
     # deletes a tag
+    def tag_delete(name)
+      facade_repository.tag_delete(name)
+    end
+
+    # @deprecated Use {#tag_delete} instead.
     def delete_tag(name)
-      facade_repository.delete_tag(name)
+      Git::Deprecation.warn(
+        'Git::Base#delete_tag is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Base#tag_delete instead.'
+      )
+      tag_delete(name)
     end
 
     # Creates an archive of the given tree-ish and writes it to a file

@@ -130,5 +130,10 @@ are removed in v6.0.0.
 | `g.global_config_set(name, value)` | `g.global_config(name, value)` |
 | `g.parse_config(file)` | `g.config(file: file)` |
 | `g.stash_list` | `g.stashes_all` |
+| `g.add_remote(name, url, opts)` | `g.remote_add(name, url, opts)` |
+| `g.remove_remote(name)` | `g.remote_remove(name)` |
+| `g.set_remote_url(name, url)` | `g.remote_set_url(name, url)` |
+| `g.add_tag(name, ...)` | `g.tag_add(name, ...)` |
+| `g.delete_tag(name)` | `g.tag_delete(name)` |
 
 ---
