@@ -722,6 +722,52 @@ RSpec.describe Git::Repository::Branching do
   end
 
   # ---------------------------------------------------------------------------
+  # #change_head_branch
+  # ---------------------------------------------------------------------------
+
+  describe '#change_head_branch' do
+    let(:update_command) { instance_double(Git::Commands::SymbolicRef::Update) }
+    let(:update_result) { command_result('') }
+
+    before do
+      allow(Git::Commands::SymbolicRef::Update)
+        .to receive(:new).with(execution_context).and_return(update_command)
+    end
+
+    context 'with a typical slash-separated branch name' do
+      subject(:result) { described_instance.change_head_branch('feature/my-branch') }
+
+      it 'constructs Git::Commands::SymbolicRef::Update with the execution context' do
+        expect(Git::Commands::SymbolicRef::Update)
+          .to receive(:new).with(execution_context).and_return(update_command)
+        allow(update_command).to receive(:call).and_return(update_result)
+        result
+      end
+
+      it "delegates to #call with 'HEAD' and 'refs/heads/feature/my-branch'" do
+        expect(update_command)
+          .to receive(:call).with('HEAD', 'refs/heads/feature/my-branch').and_return(update_result)
+        result
+      end
+
+      it 'returns nil' do
+        allow(update_command).to receive(:call).and_return(update_result)
+        expect(result).to be_nil
+      end
+    end
+
+    context 'with a simple branch name' do
+      subject(:result) { described_instance.change_head_branch('main') }
+
+      it "delegates to #call with 'HEAD' and 'refs/heads/main'" do
+        expect(update_command)
+          .to receive(:call).with('HEAD', 'refs/heads/main').and_return(update_result)
+        result
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #branch_contains
   # ---------------------------------------------------------------------------
 

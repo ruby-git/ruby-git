@@ -1271,6 +1271,15 @@ module Git
       facade_repository.branch_delete(*branches, **)
     end
 
+    # Writes the HEAD symbolic ref to point at the given branch
+    #
+    # @param branch_name [String] the branch name to point HEAD at
+    #
+    # @return [void]
+    def change_head_branch(branch_name)
+      facade_repository.change_head_branch(branch_name)
+    end
+
     # @!group Bucket 6 delegators — Git::Repository::ObjectOperations
 
     # @return [String] raw content of the git object, or streams to a tempfile when a block is given

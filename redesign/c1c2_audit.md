@@ -397,7 +397,7 @@ These require a new facade method before a base.rb delegator can be added.
 
 | `Git::Lib` method | Assessment | Recommended status |
 |-------------------|------------|--------------------|
-| `change_head_branch(branch_name)` | Low-level `git symbolic-ref HEAD refs/heads/<name>`; used internally for branch renaming and orphan checkout. Plausible external use by tooling. | 🔍 human decision — promote to `Git::Repository::Branching` or mark as internal? |
+| `change_head_branch(branch_name)` | Low-level `git symbolic-ref HEAD refs/heads/<name>`; used internally for branch renaming and orphan checkout. Plausible external use by tooling. | ✅ promoted — facade in `Git::Repository::Branching` + `Git::Base` delegator added (PR 5h-1) |
 | `config_get(name)` | Returns a single config value. Used by tooling. Part of the existing `config()` facade which reads/writes. | 🔍 human decision — expose as `config_get` or fold into `config(name)`? |
 | `config_list` | Returns full config hash. Used by tooling. | 🔍 human decision — expose separately or fold into `config()`? |
 | `config_set(name, value, options)` | Sets a config value. | 🔍 human decision — expose separately or fold into `config(name, value)`? |
@@ -438,10 +438,10 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 
 | Status | Count |
 |--------|-------|
-| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 24 |
+| ✅ promote (repo already had it, `Git::Base` delegator added — PR 2d; or alias added) | 25 |
 | ⬜ promote (new facade work required) | 1 |
 | ❌ remove (internal plumbing) | 12 |
-| 🔍 human decision | 16 |
+| 🔍 human decision | 15 |
 | **Total orphaned methods** | **56** |
 
 > **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a

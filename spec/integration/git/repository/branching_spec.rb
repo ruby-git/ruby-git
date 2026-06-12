@@ -309,6 +309,38 @@ RSpec.describe Git::Repository::Branching, :integration do
   end
 
   # ---------------------------------------------------------------------------
+  # #change_head_branch
+  # ---------------------------------------------------------------------------
+  #
+  # change_head_branch is a single-command delegator. Integration tests verify
+  # both the unborn-branch initialization workflow (no prior commits) and the
+  # post-commit case (HEAD symbolic ref rewired to a new refs/heads/ entry).
+
+  describe '#change_head_branch' do
+    context 'with an unborn repository (no commits)' do
+      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
+      let(:unborn_repo) { Git.init(unborn_repo_dir) }
+      let(:unborn_execution_context) { Git::ExecutionContext::Repository.from_base(unborn_repo) }
+      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_execution_context) }
+
+      after { FileUtils.rm_rf(unborn_repo_dir) }
+
+      it 'changes HEAD to point at the given branch name' do
+        unborn_instance.change_head_branch('my-branch')
+        expect(unborn_instance.current_branch).to eq('my-branch')
+      end
+    end
+
+    context 'with a repository that already has commits' do
+      it 'rewrites the HEAD symbolic ref to refs/heads/<branch_name>' do
+        described_instance.change_head_branch('other')
+        head_content = File.read(File.join(repo_dir, '.git', 'HEAD')).strip
+        expect(head_content).to eq('ref: refs/heads/other')
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # #branch_contains
   # ---------------------------------------------------------------------------
   #

@@ -215,6 +215,15 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#change_head_branch' do
+    include_context 'with a stubbed facade_repository'
+
+    it 'delegates to facade_repository.change_head_branch' do
+      expect(facade_repository).to receive(:change_head_branch).with('new-branch')
+      described_instance.change_head_branch('new-branch')
+    end
+  end
+
   describe '#gblob' do
     include_context 'with a stubbed facade_repository'
 
