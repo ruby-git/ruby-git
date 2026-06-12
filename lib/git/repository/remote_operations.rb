@@ -578,7 +578,7 @@ module Git
       # @api private
       #
       LS_REMOTE_ALLOWED_OPTS = %i[
-        branches b heads h tags t refs upload_pack quiet q exit_code get_url sort symref server_option o timeout
+        branches b heads h tags t refs upload_pack quiet q exit_code sort server_option o timeout
       ].freeze
       private_constant :LS_REMOTE_ALLOWED_OPTS
 
@@ -623,9 +623,6 @@ module Git
       #
       # @option opts [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
       #   like `HEAD` from the output
-      #
-      # @option opts [Boolean, nil] :symref (nil) show the underlying ref pointed to
-      #   by symbolic refs
       #
       # @option opts [Numeric] :timeout (nil) execution timeout in seconds
       #
