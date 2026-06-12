@@ -208,6 +208,49 @@ module Git
         end
       end
 
+      # Iterate over files with merge conflicts, yielding conflict details for each
+      #
+      # For each unmerged file, the staged content for both sides of the conflict
+      # (stage 2 "ours" and stage 3 "theirs") is written to temporary files whose
+      # paths are yielded alongside the file path. The temporary files are deleted
+      # automatically when the block returns.
+      #
+      # @example Inspect conflicting files
+      #   repo.conflicts do |file, your_version, their_version|
+      #     puts "Conflict in #{file}"
+      #     puts File.read(your_version)
+      #     puts File.read(their_version)
+      #   end
+      #
+      # @return [Array<String>] the list of unmerged file paths
+      #
+      # @raise [Git::FailedError] when `git diff --cached` exits outside the
+      #   allowed range (exit code > 2)
+      #
+      # @yield [file, your_version, their_version] passes conflict details for
+      #   each unmerged file
+      #
+      # @yieldparam file [String] path to the conflicting file, relative to the
+      #   working tree
+      #
+      # @yieldparam your_version [String] path to a temporary file containing the
+      #   stage-2 (ours) content for the conflicting file
+      #
+      # @yieldparam their_version [String] path to a temporary file containing the
+      #   stage-3 (theirs) content for the conflicting file
+      #
+      # @yieldreturn [void]
+      #
+      # @deprecated Use {#each_conflict} instead
+      #
+      def conflicts(&)
+        Git::Deprecation.warn(
+          'Git::Repository#conflicts is deprecated and will be removed in a future version. ' \
+          'Use Git::Repository#each_conflict instead.'
+        )
+        each_conflict(&)
+      end
+
       # Option keys accepted by {#revert}
       #
       # Derived from the 4.x option map for `Git::Lib#revert`.
