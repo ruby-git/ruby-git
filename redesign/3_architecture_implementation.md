@@ -75,7 +75,38 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Phase 3 Public Interface Completion
+#### Step C1d — Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository`
+
+All prerequisite workstreams are ✅ complete. The next task is **Step C1d**: update
+`lib/git.rb` so that `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` call
+`Git::Repository.*` and return `Git::Repository` directly, bypassing `Git::Base`.
+
+**All C1d prerequisites met:**
+
+| Prerequisite | Status |
+| ------------ | ------ |
+| A1–A4: facade coverage gaps filled | ✅ |
+| B: `Git::Base` domain-object factories redirected to `facade_repository` | ✅ |
+| C1a-1: `Git::Repository.open`/`.bare` + path state | ✅ |
+| C1a-2: `Git::Repository.clone`/`.init` | ✅ |
+| C1b: global config singleton moved off `Git::Base` | ✅ [#1385](https://github.com/ruby-git/ruby-git/pull/1385) |
+| C1c-1: signature-compatibility guidance | ✅ |
+| C1c-2: public-API parity audit and remediation sweep | ✅ |
+| E: block-based helper/path-context methods migrated | ✅ |
+
+**What C1d requires** (see [Step C1d](#step-c1d--update-libgitrb-entry-points-to-return-gitrepository) below for full spec):
+
+1. Change `Git.open`/`.bare`/`.clone` bodies from `Base.*` calls to `Git::Repository.*` calls.
+2. Simplify `Git.init` to delegate to `Git::Repository.init`; remove `open_initialized_repository`.
+3. Update all four `@return [Git::Base]` YARD tags to `@return [Git::Repository]`.
+4. Flip the return-type regression specs in `spec/integration/git/repository_spec.rb`
+   from `be_a(Git::Base)` to `be_a(Git::Repository)`.
+
+**Commit type:** `feat!` with a `BREAKING CHANGE:` footer (explicit v5 boundary step).
+
+---
+
+#### Phase 3 Overview
 
 All 9 domain-object migrations are ✅ complete:
 
@@ -91,19 +122,10 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Branches` | [PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359) |
 | `Git::Worktree` + `Git::Worktrees` | — |
 
-The remaining work splits into six workstreams:
-
-- Workstream A adds missing `Git::Repository` facade methods
-- B wires `Git::Base` factory methods to call the facade
-- C moves construction/global state and flips the top-level entry points
-- D removes compatibility bridges
-- E migrates helper/path-context methods
-- F removes the last `Git` module utility calls that still route through `Git::Lib`
-
-The required `Git::Commands::*` classes already exist (`Clone`, `LsRemote`,
-`ConfigOptionSyntax::*`, `Rm`, `Clean`, `Show`, `Fsck`, etc.). The remaining work is
-facade/adapter wiring, parser reuse, and public-API parity decisions — not new
-command-layer scaffolding. The full scope is defined in Workstreams A–F below.
+The work was organized into six workstreams (A–F). All workstreams that are
+prerequisites for C1d are now ✅ complete. F1 and F2 (moving `Git` module utility
+methods off `Git::Lib`) are still pending but are not prerequisites for C1d — they
+feed Phase 4 independently.
 
 **Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
 reasoning behind each edge):
@@ -326,7 +348,7 @@ Files touched: `lib/git/repository/*.rb` (topic modules for migrated methods),
 
 Tracked as [Issue #1370](https://github.com/ruby-git/ruby-git/issues/1370).
 
-**Step C1d — Update `lib/git.rb` entry points to return `Git::Repository`**
+##### Step C1d — Update `lib/git.rb` entry points to return `Git::Repository`
 
 With C1a, C1b, C1c, A, B, and E in place, update `Git.open`, `Git.clone`,
 `Git.init`, and `Git.bare` in `lib/git.rb` to call `Git::Repository.*` and return
@@ -495,12 +517,12 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | B | ✅ | Redirect `Git::Base` domain-object factories | 4.x-compatible | Method signatures and return types stay the same; only the internal provider changes to `Git::Repository`. Split into object/tag factories and branch/remote factories if the PR grows. |
 | C1a-1 | ✅ | Add `Git::Repository.open`/`.bare`, path state, and `dir`/`repo`/`index`/`repo_size` | 4.x-compatible additive | `Git.open`/`.bare` still return `Git::Base`; new repository factories are additive until C1d. |
 | C1a-2 | ✅ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
-| C1b | ⬜ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
+| C1b | [#1385](https://github.com/ruby-git/ruby-git/pull/1385) ✅ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ✅ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
-| C1c-2 | ⬜ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
+| C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
 | C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
 | D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
 | D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
@@ -543,9 +565,9 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | B (C0): `Git::Base` factory delegation wiring | ✅ |
 | C1a-1: `Git::Repository.open`/`.bare`, path state (`dir`, `repo`, `index`, `repo_size`) | ✅ |
 | C1a-2: `Git::Repository.clone`/`.init` (no `Git::Lib` dependency) | ✅ |
-| C1b: Global config ownership (`Base.config` → `Git::Config`) | ⬜ |
+| C1b: Global config ownership (`Base.config` → `Git::Config`) | ✅ |
 | C1c-1: Guidance/process updates for signature compatibility (#1369) | ✅ |
-| C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ⬜ |
+| C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ✅ |
 | C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ⬜ (v5 cleanup) |
 | D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
