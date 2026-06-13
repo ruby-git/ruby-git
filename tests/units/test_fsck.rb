@@ -312,7 +312,7 @@ class TestFsck < Test::Unit::TestCase
         git.commit('Initial commit')
 
         # Create an annotated tag
-        git.add_tag('v1.0.0', message: 'Version 1.0.0')
+        git.tag_add('v1.0.0', message: 'Version 1.0.0')
 
         result = git.fsck(tags: true)
 

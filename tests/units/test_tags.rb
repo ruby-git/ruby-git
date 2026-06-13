@@ -17,42 +17,42 @@ class TestTags < Test::Unit::TestCase
       end
       assert_equal error.message, "Tag 'first' does not exist."
 
-      r1.add_tag('first')
+      r1.tag_add('first')
       r1.chdir do
         new_file('new_file', 'new content')
       end
       r1.add
       r1.commit('my commit')
-      r1.add_tag('second')
+      r1.tag_add('second')
 
       assert(r1.tags.any? { |t| t.name == 'first' })
 
-      r2.add_tag('third')
+      r2.tag_add('third')
 
       assert(r2.tags.any? { |t| t.name == 'third' })
       assert(r2.tags.none? { |t| t.name == 'second' })
 
       error = assert_raises ArgumentError do
-        r2.add_tag('fourth', { a: true })
+        r2.tag_add('fourth', { a: true })
       end
 
       assert(!error.message.to_s.empty?, 'Expected error message to be present')
 
-      r2.add_tag('fourth', { a: true, m: 'test message' })
+      r2.tag_add('fourth', { a: true, m: 'test message' })
 
       assert(r2.tags.any? { |t| t.name == 'fourth' })
 
-      r2.add_tag('fifth', r2.tags.detect { |t| t.name == 'third' }.objectish)
+      r2.tag_add('fifth', r2.tags.detect { |t| t.name == 'third' }.objectish)
 
       assert(r2.tags.detect { |t| t.name == 'third' }.objectish == r2.tags.detect { |t| t.name == 'fifth' }.objectish)
 
       assert_raise Git::FailedError do
-        r2.add_tag('third')
+        r2.tag_add('third')
       end
 
-      r2.add_tag('third', { f: true })
+      r2.tag_add('third', { f: true })
 
-      r2.delete_tag('third')
+      r2.tag_delete('third')
 
       error = assert_raise Git::UnexpectedResultError do
         r2.tag('third')
@@ -76,7 +76,7 @@ class TestTags < Test::Unit::TestCase
 
   def test_tag_message_not_prefixed_with_space
     in_bare_repo_clone do |repo|
-      repo.add_tag('donkey', annotate: true, message: 'hello')
+      repo.tag_add('donkey', annotate: true, message: 'hello')
       tag = repo.tag('donkey')
       assert_equal(tag.message, 'hello')
     end
