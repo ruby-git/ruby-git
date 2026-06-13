@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Remote::GetUrl, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'returns the remote url' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin')
 

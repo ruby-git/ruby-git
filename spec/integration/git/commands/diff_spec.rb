@@ -59,13 +59,13 @@ RSpec.describe Git::Commands::Diff, :integration do
         File.write(File.join(@check_repo_dir, 'file.txt'), "clean content\n")
         check_repo.add('file.txt')
         check_repo.commit('Initial commit')
-        check_repo.add_tag('check_clean')
+        check_repo.tag_add('check_clean')
 
         # Commit that introduces trailing whitespace
         File.write(File.join(@check_repo_dir, 'file.txt'), "trailing whitespace   \n")
         check_repo.add('file.txt')
         check_repo.commit('Add trailing whitespace')
-        check_repo.add_tag('check_dirty')
+        check_repo.tag_add('check_dirty')
 
         @check_command = described_class.new(check_repo.lib)
       end

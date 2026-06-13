@@ -18,7 +18,7 @@ RSpec.describe Git::Branch, :integration do
     repo.commit('Initial commit')
 
     Git.init(bare_dir, bare: true)
-    repo.add_remote('origin', bare_dir)
+    repo.remote_add('origin', bare_dir)
     repo.branch('feature').create
     repo.push('origin', 'feature')
   end

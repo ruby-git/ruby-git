@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Remote::Rename, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'renames a configured remote' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', 'upstream')
 

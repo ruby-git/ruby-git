@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'sets the remote HEAD to an explicit branch' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
         repo.fetch('origin')
 
         result = command.call('origin', initial_branch)
@@ -35,7 +35,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
       end
 
       it 'auto-detects the remote HEAD with :auto' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
         repo.fetch('origin')
 
         result = command.call('origin', auto: true)
@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
       end
 
       it 'deletes the remote HEAD when :delete is given' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
         repo.fetch('origin')
         command.call('origin', initial_branch)
 

@@ -19,7 +19,7 @@ RSpec.describe Git::Base, :integration do
 
   describe '#config_remote' do
     before do
-      repo.add_remote('origin', 'https://github.com/example/repo.git')
+      repo.remote_add('origin', 'https://github.com/example/repo.git')
     end
 
     it 'returns a Hash with remote configuration' do

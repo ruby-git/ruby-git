@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::NameRev, :integration do
       end
 
       it 'resolves using only tags when :tags is given' do
-        repo.add_tag('v1.0')
+        repo.tag_add('v1.0')
 
         result = command.call('HEAD', tags: true)
 

@@ -12,7 +12,7 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
     write_file('file.txt', "content\n")
     repo.add('.')
     repo.commit('Initial commit')
-    repo.add_tag('v1.0')
+    repo.tag_add('v1.0')
   end
 
   describe '#call' do
@@ -61,7 +61,7 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
       end
 
       it 'returns exit status 0 with the :dereference option' do
-        repo.add_tag('v1.0-annotated', annotate: true, message: 'annotation')
+        repo.tag_add('v1.0-annotated', annotate: true, message: 'annotation')
 
         result = command.call(dereference: true)
 

@@ -374,8 +374,8 @@ module Git
       # Option keys accepted by {#remote_add}
       #
       # Derived from the 4.x `REMOTE_ADD_OPTION_MAP` in `Git::Lib`.
-      ADD_REMOTE_ALLOWED_OPTS = %i[fetch track].freeze
-      private_constant :ADD_REMOTE_ALLOWED_OPTS
+      REMOTE_ADD_ALLOWED_OPTS = %i[fetch track].freeze
+      private_constant :REMOTE_ADD_ALLOWED_OPTS
 
       # Register a new remote in the local repository
       #
@@ -418,7 +418,7 @@ module Git
       def remote_add(name, url, opts = {})
         url = url.repo.to_s if url.is_a?(Git::Base)
         opts = Private.normalize_add_remote_keys(opts)
-        SharedPrivate.assert_valid_opts!(ADD_REMOTE_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(REMOTE_ADD_ALLOWED_OPTS, **opts)
         Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
 
         Git::Remote.new(self, name)

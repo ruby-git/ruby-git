@@ -425,15 +425,13 @@ end
 
 ```ruby
 # lib/git/base.rb
-def add_remote(name, url, opts = {})
-  repository.add_remote(name, url, opts)
+def remote_add(name, url, opts = {})
+  facade_repository.remote_add(name, url, opts)
 end
 ```
 
-(The exact accessor — `repository`, `@repository`, `self.repository` — depends
-on how `Git::Base` and `Git::Lib` hold their reference to the new
-`Git::Repository` instance during the migration window. Match the existing
-pattern used by other migrated methods.)
+(Use `facade_repository` to access the `Git::Repository` facade instance — this
+is the accessor used by all migrated methods in `Git::Base`.)
 
 After delegation is in place, verify:
 

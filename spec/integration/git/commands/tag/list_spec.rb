@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::Tag::List, :integration do
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.add_tag('v1.0.0')
+        repo.tag_add('v1.0.0')
 
         result = command.call
 

@@ -50,7 +50,7 @@ RSpec.describe Git::Branches, :integration do
 
         before do
           Git.init(bare_dir, bare: true)
-          repo.add_remote('origin', bare_dir)
+          repo.remote_add('origin', bare_dir)
           repo.push('origin', 'main')
         end
 
@@ -96,7 +96,7 @@ RSpec.describe Git::Branches, :integration do
 
         before do
           Git.init(bare_dir, bare: true)
-          repo.add_remote('origin', bare_dir)
+          repo.remote_add('origin', bare_dir)
           repo.push('origin', 'main')
         end
 

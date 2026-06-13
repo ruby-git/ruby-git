@@ -22,13 +22,13 @@ module DiffTestRepositorySetup
     write_file('README.md', "# Project\n\nThis is a test project.\n")
     repo.add('README.md')
     repo.commit('Initial commit')
-    repo.add_tag('initial')
+    repo.tag_add('initial')
 
     # Modify file
     write_file('README.md', "# Project\n\nThis is a test project.\n\n## Installation\n\nRun `bundle install`.\n")
     repo.add('README.md')
     repo.commit('Add installation section')
-    repo.add_tag('after_modify')
+    repo.tag_add('after_modify')
   end
 
   def setup_file_operations
@@ -37,19 +37,19 @@ module DiffTestRepositorySetup
     write_file('docs.md', "# Documentation\n\nThis is a test project.\n\n## Installation\n\nRun `bundle install`.\n")
     repo.add(all: true)
     repo.commit('Rename README to docs')
-    repo.add_tag('after_rename')
+    repo.tag_add('after_rename')
 
     # Delete file
     FileUtils.rm(File.join(repo_dir, 'docs.md'))
     repo.add(all: true)
     repo.commit('Remove docs file')
-    repo.add_tag('after_delete')
+    repo.tag_add('after_delete')
 
     # Add new file
     write_file('lib/main.rb', "# frozen_string_literal: true\n\nmodule Main\n  VERSION = '1.0.0'\nend\n")
     repo.add('lib/main.rb')
     repo.commit('Add main library')
-    repo.add_tag('after_add')
+    repo.tag_add('after_add')
   end
 
   def setup_special_cases
@@ -57,7 +57,7 @@ module DiffTestRepositorySetup
     write_file('image.png', "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01")
     repo.add('image.png')
     repo.commit('Add binary image')
-    repo.add_tag('after_binary')
+    repo.tag_add('after_binary')
 
     # Change file mode (make executable) - skip on Windows where chmod isn't supported
     write_file('bin/run', "#!/usr/bin/env ruby\nputs 'Hello'\n")
@@ -68,26 +68,26 @@ module DiffTestRepositorySetup
       repo.add('bin/run')
       repo.commit('Make run script executable')
     end
-    repo.add_tag('after_mode_change')
+    repo.tag_add('after_mode_change')
 
     # Add file with spaces in path
     write_file('path with spaces/file name.txt', "Content in spaced path\n")
     repo.add(all: true)
     repo.commit('Add file with spaces')
-    repo.add_tag('after_spaces')
+    repo.tag_add('after_spaces')
 
     # Add file with UTF-8 characters (skull ☠ = U+2620)
     write_file('file☠skull.rb', "# frozen_string_literal: true\n\nmodule Skull\nend\n")
     repo.add(all: true)
     repo.commit('Add file with UTF-8 name')
-    repo.add_tag('after_utf8')
+    repo.tag_add('after_utf8')
 
     # Rename UTF-8 file
     FileUtils.mv(File.join(repo_dir, 'file☠skull.rb'), File.join(repo_dir, 'renamed☠skull.rb'))
     write_file('renamed☠skull.rb', "# frozen_string_literal: true\n\nmodule RenamedSkull\nend\n")
     repo.add(all: true)
     repo.commit('Rename UTF-8 file')
-    repo.add_tag('after_utf8_rename')
+    repo.tag_add('after_utf8_rename')
 
     # Add file with tab in name (git escapes as \t)
     setup_tab_filename
@@ -98,8 +98,8 @@ module DiffTestRepositorySetup
     write_file('CHANGELOG.md', "# Changelog\n\n## 1.1.0\n\n- Added helper\n")
     repo.add(all: true)
     repo.commit('Bump version and add helper')
-    repo.add_tag('after_multi')
-    repo.add_tag('main_tip')
+    repo.tag_add('after_multi')
+    repo.tag_add('main_tip')
   end
 
   def setup_tab_filename
@@ -111,7 +111,7 @@ module DiffTestRepositorySetup
       repo.add(all: true)
       repo.commit('Add file with tab in name')
     end
-    repo.add_tag('after_tab_filename')
+    repo.tag_add('after_tab_filename')
   end
 
   def setup_submodule
@@ -125,7 +125,7 @@ module DiffTestRepositorySetup
     sub_repo.commit('Initial submodule commit')
 
     # Add submodule to main repo
-    repo.add_tag('before_submodule')
+    repo.tag_add('before_submodule')
     submodule_path = File.join(repo_dir, 'vendor/submodule')
     Dir.chdir(repo_dir) do
       # Allow file:// protocol for local submodule (needed for newer git versions)
@@ -134,7 +134,7 @@ module DiffTestRepositorySetup
       system('git', 'submodule', 'add', submodule_source, 'vendor/submodule', out: File::NULL, err: File::NULL)
       system('git', 'commit', '-m', 'Add submodule', out: File::NULL, err: File::NULL)
     end
-    repo.add_tag('after_submodule')
+    repo.tag_add('after_submodule')
 
     # Update submodule to new commit (only if submodule was successfully added)
     if Dir.exist?(submodule_path)
@@ -149,7 +149,7 @@ module DiffTestRepositorySetup
         system('git', 'commit', '-m', 'Update submodule pointer', out: File::NULL, err: File::NULL)
       end
     end
-    repo.add_tag('after_submodule_update')
+    repo.tag_add('after_submodule_update')
   end
 
   def setup_feature_branch
@@ -160,7 +160,7 @@ module DiffTestRepositorySetup
     write_file('lib/feature.rb', "# frozen_string_literal: true\n\nmodule Feature\nend\n")
     repo.add('lib/feature.rb')
     repo.commit('Add feature module')
-    repo.add_tag('feature_tip')
+    repo.tag_add('feature_tip')
 
     # Return to main
     repo.checkout('main')
