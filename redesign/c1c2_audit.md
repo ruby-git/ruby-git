@@ -321,9 +321,9 @@ violation. `add` does not appear in the fixes below.
 
 **Recommended default if no human input:** Option A or B — both are acceptable since the lib.rb signature already uses keyword args. Option A is cleaner because it gives `5.x-native` status.
 
-**Decision:** In 4.x, `Git::Lib#branch_delete(branch)` accepted a single branch with no options. The v5 signature added `*branches` (multi-branch support) and `**options` (to control `--force`). Classify as `legacy-contract`. Change the `**options` keyword splat to a positional `opts = {}` hash for Ruby 3 safety and consistency with the C1c-1 policy. The `*branches` variadic argument is a legitimate v5 improvement and should be kept. Final signature: `branch_delete(*branches, opts = {})`.
+**Decision:** In 4.x, `Git::Lib#branch_delete(branch)` accepted a single branch with no options at all, so no 4.x caller ever passed a bare `Hash` variable as the last argument. The C1c-1 `legacy-contract` rule guards against exactly that failure mode (Ruby 3 `ArgumentError` when a bare `Hash` is passed to a `**kwargs`-accepting method); that failure mode cannot occur here. Classify as `legacy-contract` — **current signature already satisfies the contract**. The `*branches` variadic extension is a safe additive improvement; `**options` is correct because no 4.x caller passed options. No signature change required.
 
-> ⚠️ **Signature fix still outstanding** — `Git::Repository::Branching#branch_delete` still uses `**options` (keyword splat) instead of the decided `opts = {}` (positional hash). The `Git::Base` delegator was added (PR 2d) but the facade signature was not corrected in PR 4's signature sweep.
+> ✅ **Resolved** — classified as `legacy-contract`; current `*branches, **options` signature is backward-compatible with all 4.x callers; no code change required.
 
 ---
 
