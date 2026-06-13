@@ -578,14 +578,14 @@ RSpec.describe Git::Repository::RemoteOperations do
   # ---------------------------------------------------------------------------
 
   describe '#remote_add' do
-    let(:add_remote_command) { instance_double(Git::Commands::Remote::Add) }
-    let(:add_remote_result) { command_result('') }
+    let(:remote_add_command) { instance_double(Git::Commands::Remote::Add) }
+    let(:remote_add_result) { command_result('') }
     let(:remote_object) { instance_double(Git::Remote) }
 
     before do
       allow(Git::Commands::Remote::Add)
-        .to receive(:new).with(execution_context).and_return(add_remote_command)
-      allow(add_remote_command).to receive(:call).and_return(add_remote_result)
+        .to receive(:new).with(execution_context).and_return(remote_add_command)
+      allow(remote_add_command).to receive(:call).and_return(remote_add_result)
       allow(Git::Remote).to receive(:new).and_return(remote_object)
     end
 
@@ -595,13 +595,13 @@ RSpec.describe Git::Repository::RemoteOperations do
       subject(:result) { described_instance.remote_add('upstream', 'https://example.com/repo.git') }
 
       it 'delegates to Git::Commands::Remote::Add.new with the execution_context' do
-        expect(Git::Commands::Remote::Add).to receive(:new).with(execution_context).and_return(add_remote_command)
+        expect(Git::Commands::Remote::Add).to receive(:new).with(execution_context).and_return(remote_add_command)
         result
       end
 
       it 'calls Add#call with name and url' do
-        expect(add_remote_command)
-          .to receive(:call).with('upstream', 'https://example.com/repo.git').and_return(add_remote_result)
+        expect(remote_add_command)
+          .to receive(:call).with('upstream', 'https://example.com/repo.git').and_return(remote_add_result)
         result
       end
 
@@ -627,8 +627,8 @@ RSpec.describe Git::Repository::RemoteOperations do
       subject(:result) { described_instance.remote_add('upstream', url_base) }
 
       it 'normalizes url to repo.to_s before calling the command' do
-        expect(add_remote_command)
-          .to receive(:call).with('upstream', '/tmp/source.git').and_return(add_remote_result)
+        expect(remote_add_command)
+          .to receive(:call).with('upstream', '/tmp/source.git').and_return(remote_add_result)
         result
       end
     end
@@ -639,9 +639,9 @@ RSpec.describe Git::Repository::RemoteOperations do
       subject(:result) { described_instance.remote_add('upstream', 'https://example.com/repo.git', fetch: true) }
 
       it 'forwards :fetch to the command' do
-        expect(add_remote_command)
+        expect(remote_add_command)
           .to receive(:call).with('upstream', 'https://example.com/repo.git', fetch: true)
-          .and_return(add_remote_result)
+          .and_return(remote_add_result)
         result
       end
     end
@@ -652,9 +652,9 @@ RSpec.describe Git::Repository::RemoteOperations do
       subject(:result) { described_instance.remote_add('upstream', 'https://example.com/repo.git', track: 'main') }
 
       it 'forwards :track to the command' do
-        expect(add_remote_command)
+        expect(remote_add_command)
           .to receive(:call).with('upstream', 'https://example.com/repo.git', track: 'main')
-          .and_return(add_remote_result)
+          .and_return(remote_add_result)
         result
       end
     end
@@ -665,9 +665,9 @@ RSpec.describe Git::Repository::RemoteOperations do
       subject(:result) { described_instance.remote_add('upstream', 'https://example.com/repo.git', with_fetch: true) }
 
       it 'normalizes :with_fetch to :fetch before calling the command' do
-        expect(add_remote_command)
+        expect(remote_add_command)
           .to receive(:call).with('upstream', 'https://example.com/repo.git', fetch: true)
-          .and_return(add_remote_result)
+          .and_return(remote_add_result)
         result
       end
     end
@@ -676,7 +676,7 @@ RSpec.describe Git::Repository::RemoteOperations do
 
     context 'with an unknown option key' do
       it 'raises ArgumentError before calling the command' do
-        expect(add_remote_command).not_to receive(:call)
+        expect(remote_add_command).not_to receive(:call)
         expect { described_instance.remote_add('upstream', 'https://example.com/repo.git', unknown_opt: true) }
           .to raise_error(ArgumentError, /unknown_opt/)
       end

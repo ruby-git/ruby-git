@@ -152,7 +152,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         repo.commit('Initial commit')
 
         Git.init(bare_dir, bare: true)
-        repo.add_remote('origin', bare_dir)
+        repo.remote_add('origin', bare_dir)
         repo.push('origin', 'main')
         repo.lib.command_capturing('branch', '-u', 'origin/main', 'main')
       end
@@ -175,7 +175,7 @@ RSpec.describe Git::Parsers::Branch, :integration do
         write_file('file.txt')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.add_tag('v1.0.0')
+        repo.tag_add('v1.0.0')
         write_file('file2.txt')
         repo.add('file2.txt')
         repo.commit('Second commit')

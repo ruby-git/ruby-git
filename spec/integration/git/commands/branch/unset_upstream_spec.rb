@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream, :integration do
       repo.commit('Initial commit')
 
       Git.init(bare_dir, bare: true)
-      repo.add_remote('origin', bare_dir)
+      repo.remote_add('origin', bare_dir)
       repo.push('origin', 'main')
       execution_context.command_capturing('branch', '--set-upstream-to=origin/main', 'main')
     end

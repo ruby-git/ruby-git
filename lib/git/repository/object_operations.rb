@@ -754,11 +754,11 @@ module Git
       end
 
       # Option keys accepted by {#tag_add}
-      ADD_TAG_ALLOWED_OPTS = %i[
+      TAG_ADD_ALLOWED_OPTS = %i[
         annotate a sign s no_sign local_user u force f message m file F
         edit e no_edit trailer cleanup create_reflog
       ].freeze
-      private_constant :ADD_TAG_ALLOWED_OPTS
+      private_constant :TAG_ADD_ALLOWED_OPTS
 
       # Create a new tag
       #
@@ -883,7 +883,7 @@ module Git
         return Private.tag_add_delete_deprecated(self, name, target, opts) if opts[:d] || opts[:delete]
 
         opts = opts.except(:d, :delete)
-        SharedPrivate.assert_valid_opts!(ADD_TAG_ALLOWED_OPTS, **opts)
+        SharedPrivate.assert_valid_opts!(TAG_ADD_ALLOWED_OPTS, **opts)
         Private.validate_tag_options!(opts)
         Git::Commands::Tag::Create.new(@execution_context).call(name, target, **opts)
         tag(name)

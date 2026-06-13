@@ -3,7 +3,7 @@
 require 'test_helper'
 
 class TestRemotes < Test::Unit::TestCase
-  def test_add_remote
+  def test_remote_add
     in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
@@ -20,14 +20,14 @@ class TestRemotes < Test::Unit::TestCase
 
       local.remote_add('testremote3', remote, track: 'master')
 
-      assert( # We don't actually create a new branch ('test_track') on the remote and track that one instead.
+      assert( # track: 'master' does not create a local tracking branch; 'master' already exists from the clone
         local.branches.map(&:full).include?('master')
       )
       assert(local.remotes.map(&:name).include?('testremote3'))
     end
   end
 
-  def test_remove_remote_remove
+  def test_remote_remove
     in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
@@ -44,7 +44,7 @@ class TestRemotes < Test::Unit::TestCase
     end
   end
 
-  def test_set_remote_url
+  def test_remote_set_url
     in_temp_dir do |_path|
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote1 = Git.clone(BARE_REPO_PATH, 'remote1')

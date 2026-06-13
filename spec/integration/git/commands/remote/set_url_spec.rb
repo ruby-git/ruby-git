@@ -31,7 +31,7 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'replaces the configured remote url' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', replacement_repo.dir.to_s)
 
@@ -40,7 +40,7 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
       end
 
       it 'returns a CommandLineResult with :push option' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', replacement_repo.dir.to_s, push: true)
 

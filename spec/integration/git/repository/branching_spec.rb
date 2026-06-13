@@ -128,7 +128,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
       before do
         Git.init(bare_dir, bare: true)
-        repo.add_remote('origin', bare_dir)
+        repo.remote_add('origin', bare_dir)
         repo.push('origin', 'main')
       end
 
@@ -162,7 +162,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
       before do
         Git.init(bare_dir, bare: true)
-        repo.add_remote('origin', bare_dir)
+        repo.remote_add('origin', bare_dir)
         repo.push('origin', 'main')
         # Push a second branch to the remote, then delete it locally so it only
         # exists as a remote-tracking branch
@@ -183,7 +183,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
       before do
         Git.init(bare_dir, bare: true)
-        repo.add_remote('origin', bare_dir)
+        repo.remote_add('origin', bare_dir)
         repo.push('origin', 'main')
       end
 
@@ -411,7 +411,7 @@ RSpec.describe Git::Repository::Branching, :integration do
 
       before do
         Git.init(bare_dir, bare: true)
-        repo.add_remote('origin', bare_dir)
+        repo.remote_add('origin', bare_dir)
         repo.push('origin', 'main')
       end
 

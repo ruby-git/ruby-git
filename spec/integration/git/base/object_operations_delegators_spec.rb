@@ -56,7 +56,7 @@ RSpec.describe Git::Base, :integration do
   end
 
   describe '#cat_file_tag' do
-    before { repo.add_tag('v1.0.0', annotate: true, message: 'release') }
+    before { repo.tag_add('v1.0.0', annotate: true, message: 'release') }
 
     it 'returns a hash with tag metadata' do
       result = repo.cat_file_tag('v1.0.0')
@@ -66,7 +66,7 @@ RSpec.describe Git::Base, :integration do
   end
 
   describe '#tag_sha' do
-    before { repo.add_tag('v1.0.0') }
+    before { repo.tag_add('v1.0.0') }
 
     it 'returns a non-empty SHA string' do
       expect(repo.tag_sha('v1.0.0').chomp).to match(/\A[0-9a-f]{40}\z/)

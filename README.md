@@ -416,8 +416,8 @@ repo.merge([branch1, branch2])
 
 repo.merge_base('branch1', 'branch2')
 
-r = repo.add_remote(name, uri)  # Git::Remote
-r = repo.add_remote(name, Git::Base)  # Git::Remote
+r = repo.remote_add(name, uri)  # Git::Remote
+r = repo.remote_add(name, other_repo)  # Git::Remote (other_repo is a Git::Base instance)
 
 repo.remotes  # array of Git::Remotes
 repo.remote(name).fetch
@@ -437,12 +437,12 @@ repo.fetch('origin', {:'update-head-ok' => true})
 repo.pull
 repo.pull(Git::Repo, Git::Branch) # fetch and a merge
 
-repo.add_tag('tag_name') # returns Git::Tag
-repo.add_tag('tag_name', 'object_reference')
-repo.add_tag('tag_name', 'object_reference', {:options => 'here'})
-repo.add_tag('tag_name', {:options => 'here'})
+repo.tag_add('tag_name') # returns Git::Object::Tag
+repo.tag_add('tag_name', 'object_reference')
+repo.tag_add('tag_name', 'object_reference', {:options => 'here'})
+repo.tag_add('tag_name', {:options => 'here'})
 
-repo.delete_tag('tag_name')
+repo.tag_delete('tag_name')
 
 repo.repack
 

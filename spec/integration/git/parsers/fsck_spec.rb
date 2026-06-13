@@ -108,7 +108,7 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.add_tag('v1.0.0', annotate: true, message: 'Version 1.0.0')
+        repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
       end
 
       it 'reports tagged objects' do
@@ -177,7 +177,7 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-        repo.add_tag('v1.0.0', annotate: true, message: 'Version 1.0.0')
+        repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
       end
 
       it 'matches TAGGED_PATTERN for tagged lines' do

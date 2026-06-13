@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Push, :integration do
       repo.commit('Initial commit')
 
       Git.init(bare_dir, bare: true)
-      repo.add_remote('origin', bare_dir)
+      repo.remote_add('origin', bare_dir)
     end
 
     context 'when the command succeeds' do

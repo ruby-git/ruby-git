@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Remote::Update, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'fetches updates for the named remote' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin')
 

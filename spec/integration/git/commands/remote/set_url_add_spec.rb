@@ -31,7 +31,7 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'adds an additional fetch url' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', extra_repo.dir.to_s)
 
@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd, :integration do
       end
 
       it 'adds a push url when :push is given' do
-        repo.add_remote('origin', remote_repo.dir.to_s)
+        repo.remote_add('origin', remote_repo.dir.to_s)
 
         result = command.call('origin', extra_repo.dir.to_s, push: true)
 
