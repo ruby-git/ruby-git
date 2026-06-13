@@ -88,13 +88,13 @@ RSpec.describe Git::Remote do
 
     let(:remove_result) { command_result('') }
 
-    it 'delegates to remote_repository.remove_remote with the remote name' do
-      expect(base).to receive(:remove_remote).with('origin').and_return(remove_result)
+    it 'delegates to remote_repository.remote_remove with the remote name' do
+      expect(base).to receive(:remote_remove).with('origin').and_return(remove_result)
       result
     end
 
-    it 'returns the result of remove_remote' do
-      allow(base).to receive(:remove_remote).with('origin').and_return(remove_result)
+    it 'returns the result of remote_remove' do
+      allow(base).to receive(:remote_remove).with('origin').and_return(remove_result)
       expect(result).to be(remove_result)
     end
   end

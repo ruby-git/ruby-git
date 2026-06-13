@@ -16,7 +16,7 @@ class ObjectNewTest < Test::Unit::TestCase
       File.write('file.txt', 'This is a test file.')
       @repo.add('file.txt')
       @repo.commit('Initial commit')
-      @repo.add_tag('v1.0', message: 'Version 1.0', annotate: true)
+      @repo.tag_add('v1.0', message: 'Version 1.0', annotate: true)
     end
 
     @commit = @repo.gcommit('HEAD')

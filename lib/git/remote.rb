@@ -119,7 +119,7 @@ module Git
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #
     def remove
-      remote_repository.remove_remote(@name)
+      remote_repository.remote_remove(@name)
     end
 
     # Returns the name of this remote as a string

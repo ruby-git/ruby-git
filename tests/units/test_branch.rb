@@ -186,7 +186,7 @@ class TestBranch < Test::Unit::TestCase
       File.write('file1.txt', 'hello world')
       git.add('file1.txt')
       git.commit('Initial commit')
-      git.add_tag('v1.0.0')
+      git.tag_add('v1.0.0')
       File.write('file2.txt', 'hello world')
       git.add('file2.txt')
       git.commit('Second commit')

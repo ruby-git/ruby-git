@@ -8,19 +8,19 @@ class TestRemotes < Test::Unit::TestCase
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
 
-      local.add_remote('testremote', remote)
+      local.remote_add('testremote', remote)
 
       assert(!local.branches.map(&:full).include?('testremote/master'))
       assert(local.remotes.map(&:name).include?('testremote'))
 
-      local.add_remote('testremote2', remote, fetch: true)
+      local.remote_add('testremote2', remote, fetch: true)
 
       assert(local.branches.map(&:full).include?('remotes/testremote2/master'))
       assert(local.remotes.map(&:name).include?('testremote2'))
 
-      local.add_remote('testremote3', remote, track: 'master')
+      local.remote_add('testremote3', remote, track: 'master')
 
-      assert( # We actually a new branch ('test_track') on the remote and track that one intead.
+      assert( # We don't actually create a new branch ('test_track') on the remote and track that one instead.
         local.branches.map(&:full).include?('master')
       )
       assert(local.remotes.map(&:name).include?('testremote3'))
@@ -32,12 +32,12 @@ class TestRemotes < Test::Unit::TestCase
       local = Git.clone(BARE_REPO_PATH, 'local')
       remote = Git.clone(BARE_REPO_PATH, 'remote')
 
-      local.add_remote('testremote', remote)
-      local.remove_remote('testremote')
+      local.remote_add('testremote', remote)
+      local.remote_remove('testremote')
 
       assert(!local.remotes.map(&:name).include?('testremote'))
 
-      local.add_remote('testremote', remote)
+      local.remote_add('testremote', remote)
       local.remote('testremote').remove
 
       assert(!local.remotes.map(&:name).include?('testremote'))
@@ -50,8 +50,8 @@ class TestRemotes < Test::Unit::TestCase
       remote1 = Git.clone(BARE_REPO_PATH, 'remote1')
       remote2 = Git.clone(BARE_REPO_PATH, 'remote2')
 
-      local.add_remote('testremote', remote1)
-      local.set_remote_url('testremote', remote2)
+      local.remote_add('testremote', remote1)
+      local.remote_set_url('testremote', remote2)
 
       assert(local.remotes.map(&:name).include?('testremote'))
       assert(local.remote('testremote').url != remote1.repo.to_s)
@@ -164,7 +164,7 @@ class TestRemotes < Test::Unit::TestCase
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote')
 
-      r = loc.add_remote('testrem', rem)
+      r = loc.remote_add('testrem', rem)
 
       Dir.chdir('remote') do
         new_file('test-file1', 'blahblahblah1')
@@ -199,7 +199,7 @@ class TestRemotes < Test::Unit::TestCase
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote')
 
-      r = loc.add_remote('testrem', rem)
+      r = loc.remote_add('testrem', rem)
 
       Dir.chdir('remote') do
         rem.branch('testbranch').in_branch('tb commit') do
@@ -208,7 +208,7 @@ class TestRemotes < Test::Unit::TestCase
           true
         end
         rem.branch('testbranch').in_branch do
-          rem.add_tag('test-tag-in-deleted-branch')
+          rem.tag_add('test-tag-in-deleted-branch')
           false
         end
         rem.branch('testbranch').delete
@@ -270,7 +270,7 @@ class TestRemotes < Test::Unit::TestCase
     in_temp_dir do |_path|
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote', config: 'receive.denyCurrentBranch=ignore')
-      loc.add_remote('testrem', rem)
+      loc.remote_add('testrem', rem)
 
       first_commit_sha = second_commit_sha = nil
 
@@ -305,13 +305,13 @@ class TestRemotes < Test::Unit::TestCase
       loc = Git.clone(BARE_REPO_PATH, 'local')
       rem = Git.clone(BARE_REPO_PATH, 'remote', config: 'receive.denyCurrentBranch=ignore')
 
-      loc.add_remote('testrem', rem)
+      loc.remote_add('testrem', rem)
 
       loc.chdir do
         new_file('test-file1', 'blahblahblah1')
         loc.add
         loc.commit('master commit')
-        loc.add_tag('test-tag')
+        loc.tag_add('test-tag')
 
         loc.branch('testbranch').in_branch('tb commit') do
           new_file('test-file3', 'blahblahblah3')
