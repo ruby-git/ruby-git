@@ -470,10 +470,10 @@ upgrade notes as "unsupported; remove any `g.lib.X` calls."
 | 🔍 human decision | 0 |
 | **Total orphaned methods** | **48** |
 
-> **Recommendation:** The 24 "trivial wiring" promotions can be handled in PR 5a
-> as a batch. The 1 "new facade" promotion and 11 human-decision items should be
-> addressed in a companion document (`redesign/c1c2_bucket6_lib_orphans.md`)
-> before PR 5b begins.
+> ✅ **All promotions complete.** All 36 promotable methods (§7.2 trivial wiring
+> + name-mismatch cases, §7.3 new-facade methods) have been merged (PR
+> 2d/2e/3/5f/5g/5h series). The 12 internal plumbing methods are annotated
+> `@api private` (§7.4). No further action required for Bucket 6.
 
 ---
 

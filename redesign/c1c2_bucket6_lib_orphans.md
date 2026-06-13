@@ -620,6 +620,7 @@ Complete items 1–4 below, then open PR 5h to implement the decisions.
       before PR 5h merges. *(No items landed in this bucket — all decisions
       were "promote" or "deprecated forwarding alias". `UPGRADING.md` created
       with all entries pre-populated.)*
-- [ ] Once all decisions are recorded, open PR 5h targeting `main` to
+- [x] Once all decisions are recorded, open PR 5h targeting `main` to
       implement the promotions, add the deprecated aliases with runtime
       warnings, add the upgrade notes to `UPGRADING.md`, and close this document's action items.
+      *(All PR 5h-1 through 5h-6 implementations merged; `UPGRADING.md` populated.)*
