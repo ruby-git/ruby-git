@@ -305,7 +305,7 @@ Files touched: `.github/skills/extract-facade-from-base-lib/SKILL.md`,
 
 Tracked as [Issue #1369](https://github.com/ruby-git/ruby-git/issues/1369).
 
-**Step C1c-2 — End-of-Phase-3 public-API parity audit and remediation sweep** ⬜
+**Step C1c-2 — End-of-Phase-3 public-API parity audit and remediation sweep** ✅
 
 Compare every public `Git::Base` method against `Git::Repository`; fix mismatches
 or explicitly record each as a documented v5 breaking change. No unclassified
