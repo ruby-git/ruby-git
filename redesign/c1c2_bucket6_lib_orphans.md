@@ -389,6 +389,8 @@ migrate to `repo.config(file: path)` at their own pace. Remove in v6.
 
 **Decision:** Accepted. Extend `Git::Repository::Configuring#config()` to accept `:file` on the get and list overloads. Add deprecated `parse_config(file)` forwarding method with `Git::Deprecation.warn` call pointing to `config(file: <path>)`. Add `Git::Base` delegator. Remove deprecated alias in v6.
 
+**Implemented in PR 5h-4.** `config()` extended to accept `:file` on the get and list overloads; deprecated `parse_config(file)` forwarding wrapper added to `Git::Repository::Configuring` with `Git::Deprecation.warn`; `Git::Base#parse_config` delegator added.
+
 ---
 
 ### 3.5 `stash_list`
