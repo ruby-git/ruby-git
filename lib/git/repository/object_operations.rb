@@ -845,7 +845,7 @@ module Git
       #
       #   @return [Git::Object::Tag] the newly created tag
       #
-      # @overload tag_add(name, options = { d: true })
+      # @overload tag_add(name, delete_options)
       #
       #   @deprecated Use {#tag_delete} instead.
       #
@@ -854,13 +854,9 @@ module Git
       #
       #   @param name [String] the name of the tag to delete
       #
-      #   @param options [Hash] deletion options (only `:d` / `:delete` accepted)
-      #
-      #   @option options [Boolean, nil] :d (nil) delete the named tag
-      #     (alias: `:delete`); deprecated — use {#tag_delete} instead
-      #
-      #   @option options [Boolean, nil] :delete (nil) delete the named tag
-      #     (alias: `:d`); deprecated — use {#tag_delete} instead
+      #   @param delete_options [{ d: true }, { delete: true }] deletion options;
+      #     only `:d` or `:delete` (set to `true`) is accepted — no other keys
+      #     and no `target` argument may be combined with this form
       #
       #   @return [String] git's stdout from the delete
       #
@@ -876,16 +872,16 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def tag_add(name, *options)
-        opts = options.last.is_a?(Hash) ? options.pop : {}
-        target = options.first
+      def tag_add(name, *args)
+        options = args.last.is_a?(Hash) ? args.pop : {}
+        target = args.first
 
-        return Private.tag_add_delete_deprecated(self, name, target, opts) if opts[:d] || opts[:delete]
+        return Private.tag_add_delete_deprecated(self, name, target, options) if options[:d] || options[:delete]
 
-        opts = opts.except(:d, :delete)
-        SharedPrivate.assert_valid_opts!(TAG_ADD_ALLOWED_OPTS, **opts)
-        Private.validate_tag_options!(opts)
-        Git::Commands::Tag::Create.new(@execution_context).call(name, target, **opts)
+        options = options.except(:d, :delete)
+        SharedPrivate.assert_valid_opts!(TAG_ADD_ALLOWED_OPTS, **options)
+        Private.validate_tag_options!(options)
+        Git::Commands::Tag::Create.new(@execution_context).call(name, target, **options)
         tag(name)
       end
 
