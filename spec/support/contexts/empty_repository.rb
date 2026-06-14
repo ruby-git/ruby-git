@@ -314,7 +314,7 @@ RSpec.shared_context 'in an empty repository' do
   let(:repo_dir) { Dir.mktmpdir }
   let(:initial_branch) { 'main' }
   let(:repo) { Git.init(repo_dir, initial_branch:) }
-  let(:execution_context) { repo.lib }
+  let(:execution_context) { repo.execution_context }
 
   before do
     repo.config('user.email', 'test@example.com')

@@ -67,7 +67,7 @@ RSpec.describe Git::Commands::Diff, :integration do
         check_repo.commit('Add trailing whitespace')
         check_repo.tag_add('check_dirty')
 
-        @check_command = described_class.new(check_repo.lib)
+        @check_command = described_class.new(check_repo.execution_context)
       end
 
       after(:all) do

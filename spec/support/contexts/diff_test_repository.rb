@@ -228,7 +228,7 @@ RSpec.shared_context 'in a diff test repository' do
 
     setup_diff_test_history
 
-    @execution_context = @repo.lib
+    @execution_context = @repo.execution_context
   end
 
   after(:all) do
