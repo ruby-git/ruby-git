@@ -21,11 +21,18 @@ class TestGitClone < Test::Unit::TestCase
         setup_repo
         Git.config.timeout = 0.00001
 
-        error = assert_raise Git::TimeoutError do
+        # On Ruby 4.0+, process_executer's Process.kill can raise Errno::ESRCH when
+        # the spawned process exits in the narrow window between Timeout::Error firing
+        # and the kill signal being delivered. Both errors confirm the timeout fired.
+        error = assert_raise(Git::TimeoutError, Git::ProcessIOError) do
           Git.clone('repository.git', 'temp2', timeout: nil)
         end
-
-        assert_equal(true, error.result.status.timed_out?)
+        if error.is_a?(Git::TimeoutError)
+          assert_equal(true, error.result.status.timed_out?)
+        else
+          assert_instance_of(Errno::ESRCH, error.cause,
+                             'ProcessIOError from a timeout should be caused by Errno::ESRCH')
+        end
       end
     ensure
       Git.config.timeout = saved_timeout
@@ -59,11 +66,18 @@ class TestGitClone < Test::Unit::TestCase
         setup_repo
 
         timeout_value = 0.00001
-        error = assert_raise Git::TimeoutError do
+        # On Ruby 4.0+, process_executer's Process.kill can raise Errno::ESRCH when
+        # the spawned process exits in the narrow window between Timeout::Error firing
+        # and the kill signal being delivered. Both errors confirm the timeout fired.
+        error = assert_raise(Git::TimeoutError, Git::ProcessIOError) do
           Git.clone('repository.git', 'temp2', timeout: timeout_value)
         end
-
-        assert_equal(true, error.result.status.timed_out?)
+        if error.is_a?(Git::TimeoutError)
+          assert_equal(true, error.result.status.timed_out?)
+        else
+          assert_instance_of(Errno::ESRCH, error.cause,
+                             'ProcessIOError from a timeout should be caused by Errno::ESRCH')
+        end
       end
     end
   end

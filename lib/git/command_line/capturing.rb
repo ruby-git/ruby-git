@@ -149,7 +149,9 @@ module Git
       # @raise [Git::FailedError] if the command returned a non-zero exit status
       #
       # @raise [Git::ProcessIOError] if an exception was raised while collecting
-      #   subprocess output
+      #   subprocess output, or (Ruby 4.0+) if a timeout-handling race causes
+      #   `Errno::ESRCH` when the spawned process exits between the timeout
+      #   firing and the kill signal being delivered
       #
       # @raise [Git::TimeoutError] if the command times out
       #

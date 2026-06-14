@@ -156,6 +156,11 @@ module Git
       #
       # @raise [Git::ProcessIOError] in place of ProcessExecuter::ProcessIOError
       #
+      # @raise [Git::ProcessIOError] when a timeout race causes Errno::ESRCH. On Ruby 4.0+,
+      #   `Process.kill` raises `Errno::ESRCH` when the spawned process exits between the
+      #   timeout firing and the kill signal being delivered. This is a race in
+      #   process_executer's timeout handling and is semantically equivalent to a timeout.
+      #
       # @return [Object] the return value of the block
       #
       # @api private
@@ -168,6 +173,11 @@ module Git
         raise Git::Error, e.message, cause: e.cause
       rescue ProcessExecuter::ProcessIOError => e
         raise Git::ProcessIOError, e.message, cause: e.cause
+      rescue Errno::ESRCH => e
+        # Ruby 4.0+: Process.kill raises Errno::ESRCH when the spawned process exits
+        # in the narrow window between the timeout firing and the kill signal being sent.
+        # This is a known race in process_executer's timeout handling.
+        raise Git::ProcessIOError, "Git process no longer exists (timeout race): #{e.message}", cause: e
       end
 
       # Build the git command line from the available sources to send to `Process.spawn`
