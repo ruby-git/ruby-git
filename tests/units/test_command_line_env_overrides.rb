@@ -98,9 +98,9 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       git = Git.init('test_project')
 
       env = git.execution_context.send(:env_overrides,
-                         'GIT_TRACE' => '1',           # Add new variable
-                         'GIT_INDEX_FILE' => nil,      # Exclude existing variable
-                         'LC_ALL' => 'C')              # Override existing variable
+                                       'GIT_TRACE' => '1',           # Add new variable
+                                       'GIT_INDEX_FILE' => nil,      # Exclude existing variable
+                                       'LC_ALL' => 'C')              # Override existing variable
 
       # Added variable should be present
       assert_equal '1', env['GIT_TRACE']
