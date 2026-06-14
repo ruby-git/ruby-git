@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Worktree::Repair, :integration do
         Dir.mktmpdir do |tmpdir|
           non_repo = Git.init(tmpdir, initial_branch: 'main')
           FileUtils.rm_rf(File.join(tmpdir, '.git'))
-          non_git_command = described_class.new(non_repo.lib)
+          non_git_command = described_class.new(non_repo.execution_context)
           expect { non_git_command.call }
             .to raise_error(Git::FailedError, /not a git repository/)
         end
