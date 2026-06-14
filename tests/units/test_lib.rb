@@ -492,4 +492,10 @@ class TestLib < Test::Unit::TestCase
     stats = @lib.diff_stats('HEAD~1', 'HEAD', path_limiter: ['', ''])
     assert(stats[:files].key?('another.txt'))
   end
+
+  def test_tag_sha_returns_empty_string_for_non_existent_tag
+    # tag_sha for non-existent tag should return '' (special handling for exit code 1)
+    result = Git::Base.open(@wdir).lib.tag_sha('nonexistent-tag')
+    assert_equal '', result
+  end
 end
