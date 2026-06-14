@@ -129,7 +129,7 @@ module Test
       # @return [Git::Version] parsed version object that will be returned by git_version
       def stub_lib_git_version(lib, version: DEFAULT_TEST_GIT_VERSION)
         git_version = Git::Version.parse(version)
-        lib.define_singleton_method(:git_version) { git_version }
+        lib.define_singleton_method(:git_version) { |timeout: nil| git_version } # rubocop:disable Lint/UnusedBlockArgument
         git_version
       end
 
@@ -191,11 +191,11 @@ module Test
 
           git.lib.define_singleton_method(method, &mock_command)
 
-          # Also stub the facade repository's execution context for methods
-          # that have been migrated from Git::Lib to Git::Repository facade modules.
-          facade_ec = git.send(:facade_repository).execution_context
+          # Also stub the execution context for methods that have been migrated
+          # from Git::Lib to Git::Repository facade modules.
+          facade_ec = git.execution_context
           facade_ec.define_singleton_method(method, &mock_command)
-          facade_ec.define_singleton_method(:git_version) { git.lib.git_version }
+          facade_ec.define_singleton_method(:git_version) { |timeout: nil| git.lib.git_version } # rubocop:disable Lint/UnusedBlockArgument
 
           Dir.chdir 'test_project' do
             yield(git) if block_given?

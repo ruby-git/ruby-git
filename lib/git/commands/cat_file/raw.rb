@@ -62,6 +62,9 @@ module Git
           # When provided, {#call} dispatches to the streaming execution path.
           execution_option :out
 
+          # Abort the command after this many seconds.
+          execution_option :timeout
+
           end_of_options
 
           # Expected object type — one of `commit`, `tree`, `blob`, or `tag`.
@@ -191,9 +194,12 @@ module Git
         #
         #   @raise [Git::FailedError] if the object does not exist or is not of the
         #     given type
+        #
+        #   @option options [Numeric, nil] :timeout (nil) abort the command after this many seconds
+        #
         def call(*, **)
           bound = args_definition.bind(*, **)
-          validate_version!
+          validate_version!(bound.execution_options)
           result = execute_command(bound)
 
           # `-e` treats exit 1 as a meaningful result (object not found), but any other

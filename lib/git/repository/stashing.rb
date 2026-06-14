@@ -19,6 +19,13 @@ module Git
       # message is the stash description with the leading branch prefix (e.g.
       # `"On main:"` or `"WIP on main:"`) stripped.
       #
+      # @note The sequential index returned here is **not** the same as git's
+      #   `stash@{N}` reference used by {#stash_apply}. In git, `stash@{0}` is the
+      #   **most recent** stash, while index `0` here is the **oldest**. To apply a
+      #   specific stash from this list, convert the entry's position to a git
+      #   reference: `'stash@{%d}' % (total - 1 - index)`, or pass the string
+      #   reference directly to {#stash_apply}.
+      #
       # @example List all stashes (oldest first)
       #   repo.stashes_all #=> [[0, "Fix bug"], [1, "Add feature"]]
       #
@@ -34,8 +41,7 @@ module Git
         result = Git::Commands::Stash::List.new(@execution_context).call
         stashes = Git::Parsers::Stash.parse_list(result.stdout)
         stashes.reverse.each_with_index.map do |info, i|
-          match_data = info.message.match(/^[^:]+:(.*)$/)
-          message = match_data ? match_data[1].strip : info.message
+          message = info.message.sub(/^(?:WIP on|On)\s+[^:]+:\s*/, '')
           [i, message]
         end
       end
@@ -99,7 +105,10 @@ module Git
       #   repo.stash_apply('stash@{1}') #=> "HEAD is now at abc1234 Initial commit"
       #
       # @param id [String, Integer, nil] the stash identifier (e.g., `'stash@{0}'`,
-      #   `0`) or `nil` to apply the most recent stash entry
+      #   `0`) or `nil` to apply the most recent stash entry. When an Integer is
+      #   given it is passed directly to git as `stash@{N}`, where `0` is the
+      #   **most recent** stash — the opposite order from {#stashes_all}'s
+      #   sequential indices, where `0` is the **oldest** stash.
       #
       # @return [String] the output from the git stash apply command
       #

@@ -409,24 +409,23 @@ module Git
 
     # Returns the installed git version
     #
-    # The result is memoized per instance.
+    # The result is memoized per instance. Accepts an optional timeout used
+    # only when the version has not yet been fetched for this context.
     #
-    # @example Get the installed git version
-    #   context = Git::ExecutionContext::Global.new
-    #   context.git_version  #=> #<Git::Version 2.42.0>
+    # @param timeout [Numeric, nil] seconds to wait for `git version`; `nil`
+    #   falls back to the global {Git::Config} timeout; `0` disables the timeout
+    #   entirely (the command runs until it completes or the process is killed)
     #
     # @return [Git::Version] the installed git version
     #
     # @raise [Git::UnexpectedResultError] if the version string cannot be parsed
     #
-    def git_version
+    def git_version(timeout: nil)
       @git_version ||= begin
-        output = Git::Commands::Version.new(self).call.stdout
-        Git::Version.parse(output)
+        call_opts = timeout.nil? ? {} : { timeout: timeout }
+        Git::Version.parse(Git::Commands::Version.new(self).call(**call_opts).stdout)
       end
     end
-
-    private
 
     # Returns a Hash of environment variable overrides for this context
     #
@@ -440,6 +439,8 @@ module Git
     #
     # @return [Hash<String, String|nil>] the merged environment variable overrides
     #
+    # @api private
+    #
     def env_overrides(**additional_overrides)
       {
         'GIT_DIR' => git_dir,
@@ -450,6 +451,8 @@ module Git
         'LC_ALL' => 'en_US.UTF-8'
       }.merge(additional_overrides)
     end
+
+    private
 
     # Returns the Array of git global option strings for this context
     #

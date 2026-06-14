@@ -68,7 +68,7 @@ class TestPush < Test::Unit::TestCase
   test 'push with tags: true does a second tags push and returns its stdout' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      execution_context = git.send(:facade_repository).execution_context
+      execution_context = git.execution_context
       push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
@@ -86,7 +86,7 @@ class TestPush < Test::Unit::TestCase
   test 'push with mirror: true and tags: true silently drops tags push' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      execution_context = git.send(:facade_repository).execution_context
+      execution_context = git.execution_context
       push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)
@@ -102,7 +102,7 @@ class TestPush < Test::Unit::TestCase
   test 'push with all: true and tags: true allows the mutually exclusive combination' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
-      execution_context = git.send(:facade_repository).execution_context
+      execution_context = git.execution_context
       push_cmd = Git::Commands::Push.new(execution_context)
 
       status = Struct.new(:success?, :exitstatus, :signaled?).new(true, 0, false)

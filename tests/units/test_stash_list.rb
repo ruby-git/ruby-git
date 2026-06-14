@@ -3,19 +3,20 @@
 require 'test_helper'
 
 class TestStashList < Test::Unit::TestCase
-  test 'stash_list returns standard format for a single stash on a branch' do
+  test 'stashes_all returns a single-element array for one stash' do
     in_bare_repo_clone do |g|
       new_file('test-file1', 'content1')
       g.add
       g.branch.stashes.save('my stash message')
 
-      result = g.lib.stash_list
+      result = g.stashes_all
 
-      assert_match(/\Astash@\{0\}: On master: my stash message\z/, result)
+      assert_equal(1, result.size)
+      assert_equal([0, 'my stash message'], result[0])
     end
   end
 
-  test 'stash_list returns standard format for multiple stashes' do
+  test 'stashes_all returns a multi-element array for multiple stashes' do
     in_bare_repo_clone do |g|
       new_file('test-file1', 'content1')
       g.add
@@ -25,24 +26,23 @@ class TestStashList < Test::Unit::TestCase
       g.add
       g.branch.stashes.save('second stash')
 
-      result = g.lib.stash_list
-      lines = result.split("\n")
+      result = g.stashes_all
 
-      assert_equal(2, lines.size)
-      assert_match(/\Astash@\{0\}: On master: second stash\z/, lines[0])
-      assert_match(/\Astash@\{1\}: On master: first stash\z/, lines[1])
+      assert_equal(2, result.size)
+      assert_equal([0, 'first stash'], result[0])
+      assert_equal([1, 'second stash'], result[1])
     end
   end
 
-  test 'stash_list returns empty string when no stashes exist' do
+  test 'stashes_all returns empty array when no stashes exist' do
     in_bare_repo_clone do |g|
-      result = g.lib.stash_list
+      result = g.stashes_all
 
-      assert_equal('', result)
+      assert_equal([], result)
     end
   end
 
-  test 'stash_list returns standard format for stash from detached HEAD' do
+  test 'stashes_all returns [index, message] pair for stash from detached HEAD' do
     in_bare_repo_clone do |g|
       # Create a commit so we have something to detach to
       new_file('test-file1', 'content1')
@@ -58,26 +58,28 @@ class TestStashList < Test::Unit::TestCase
       g.add
       g.branch.stashes.save('detached stash')
 
-      result = g.lib.stash_list
+      result = g.stashes_all
 
-      # When stashing from detached HEAD, git uses "WIP on (no branch):" format
-      assert_match(/\Astash@\{0\}: (?:WIP on|On) \(no branch\): detached stash\z/, result)
+      assert_equal(1, result.size)
+      assert_equal(0, result[0][0])
+      assert_equal('detached stash', result[0][1])
     end
   end
 
-  test 'stash_list returns standard format for stash with colon in message' do
+  test 'stashes_all handles a stash message containing a colon' do
     in_bare_repo_clone do |g|
       new_file('test-file1', 'content1')
       g.add
       g.branch.stashes.save('fix: important bug')
 
-      result = g.lib.stash_list
+      result = g.stashes_all
 
-      assert_match(/\Astash@\{0\}: On master: fix: important bug\z/, result)
+      assert_equal(1, result.size)
+      assert_equal([0, 'fix: important bug'], result[0])
     end
   end
 
-  test 'stash_list returns standard format for stash with custom message via git stash store' do
+  test 'stashes_all handles a stash created with a custom message via git stash store' do
     in_temp_dir do
       `git init`
       `echo "hello world" > file1.txt`
@@ -89,10 +91,29 @@ class TestStashList < Test::Unit::TestCase
 
       git = Git.open('.')
 
-      result = git.lib.stash_list
+      result = git.stashes_all
 
-      # Custom stash store messages have no branch prefix
-      assert_match(/\Astash@\{0\}: custom message\z/, result)
+      assert_equal(1, result.size)
+      assert_equal([0, 'custom message'], result[0])
+    end
+  end
+
+  test 'stashes_all handles a stash store message that itself contains a colon' do
+    in_temp_dir do
+      `git init`
+      `echo "hello world" > file1.txt`
+      `git add file1.txt`
+      `git commit -m "First commit"`
+      `echo "update" > file1.txt`
+      commit = `git stash create "stash message"`.chomp
+      `git stash store -m "fix: important bug" #{commit}`
+
+      git = Git.open('.')
+
+      result = git.stashes_all
+
+      assert_equal(1, result.size)
+      assert_equal([0, 'fix: important bug'], result[0])
     end
   end
 end

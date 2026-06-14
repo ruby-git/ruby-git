@@ -138,11 +138,11 @@ class SetIndexTest < Test::Unit::TestCase
       parents: [main_commit.sha],
       message: 'Commit created programmatically via custom index'
     )
-    assert(new_commit.commit?, 'A new commit object should be created.')
+    assert_match(/\A[0-9a-f]{40}\z/, new_commit, 'A new commit SHA should be returned.')
 
     # 8. Create a new branch pointing to our new commit.
     repo.branch('feature-branch').update_ref(new_commit)
-    assert(repo.branch('feature-branch').gcommit.sha == new_commit.sha, 'feature-branch should point to the new commit.')
+    assert(repo.branch('feature-branch').gcommit.sha == new_commit, 'feature-branch should point to the new commit.')
 
     # --- Verification ---
     # Verify the history of the new branch
@@ -150,7 +150,7 @@ class SetIndexTest < Test::Unit::TestCase
     main_commit_sha = repo.rev_parse('main') # Get SHA directly for reliable comparison
 
     assert_equal(2, feature_log.size, 'Feature branch should have two commits.')
-    assert_equal(new_commit.sha, feature_log.first.sha, 'HEAD of feature-branch should be our new commit.')
+    assert_equal(new_commit, feature_log.first.sha, 'HEAD of feature-branch should be our new commit.')
     assert_equal(main_commit_sha, feature_log.last.sha, 'Parent of new commit should be the initial commit.')
 
     # Verify that the main branch is unchanged
@@ -159,7 +159,7 @@ class SetIndexTest < Test::Unit::TestCase
     assert_equal(main_commit_sha, main_log.first.sha, 'Main branch should still point to the initial commit.')
 
     # Verify the contents of the new commit's tree
-    new_commit_tree = new_commit.gtree
+    new_commit_tree = repo.gcommit(new_commit).gtree
     assert(new_commit_tree.blobs.key?('file1.txt'), 'Original file should exist in the new tree.')
     assert(new_commit_tree.blobs.key?('new_file.txt'), 'New file should exist in the new tree.')
     assert_equal(new_content, new_commit_tree.blobs['new_file.txt'].contents, 'Content of new file should match.')

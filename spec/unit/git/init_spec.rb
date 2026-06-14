@@ -4,134 +4,37 @@ require 'spec_helper'
 
 RSpec.describe Git do
   describe '.init' do
-    let(:logger) { instance_double(Logger) }
-    let(:git_base) { instance_double(Git::Base) }
+    let(:git_repository) { instance_double(Git::Repository) }
 
     before do
-      # Mock Git::Commands::Init to avoid actual git execution
-      command = instance_double(Git::Commands::Init)
-      allow(Git::Commands::Init).to receive(:new).and_return(command)
-      allow(command).to receive(:call)
+      allow(Git::Repository).to receive(:init).and_return(git_repository)
     end
 
-    context 'with bare: false (non-bare repository)' do
-      it 'forwards correct options to Git.open' do
-        expect(Git).to receive(:open).with(
-          'my-repo',
-          { log: logger, git_ssh: 'custom-ssh', index: 'my-index', repository: 'repo.git' }
-        ).and_return(git_base)
+    it 'delegates to Git::Repository.init' do
+      expect(Git::Repository).to receive(:init).with('my-repo', {}).and_return(git_repository)
 
-        Git.init(
-          'my-repo',
-          bare: false,
-          log: logger,
-          git_ssh: 'custom-ssh',
-          index: 'my-index',
-          repository: 'repo.git'
-        )
-      end
-
-      it 'does not forward :bare or :initial_branch to Git.open' do
-        expect(Git).to receive(:open).with(
-          'my-repo',
-          { log: logger }
-        ).and_return(git_base)
-
-        Git.init('my-repo', bare: false, initial_branch: 'main', log: logger)
-      end
-
-      it 'consolidates :separate_git_dir to :repository' do
-        expect(Git).to receive(:open).with(
-          'my-repo',
-          { repository: 'repo.git' }
-        ).and_return(git_base)
-
-        Git.init('my-repo', separate_git_dir: 'repo.git')
-      end
-
-      it 'prefers :repository over :separate_git_dir when both provided' do
-        expect(Git).to receive(:open).with(
-          'my-repo',
-          { repository: 'repo.git' }
-        ).and_return(git_base)
-
-        Git.init('my-repo', repository: 'repo.git', separate_git_dir: 'other.git')
-      end
-
-      it 'treats repository: nil like not provided when separate_git_dir is given' do
-        expect(Git).to receive(:open).with(
-          'my-repo',
-          { repository: 'repo.git' }
-        ).and_return(git_base)
-
-        Git.init('my-repo', repository: nil, separate_git_dir: 'repo.git')
-      end
+      Git.init('my-repo')
     end
 
-    context 'with bare: true (bare repository)' do
-      it 'forwards correct options to Git.bare (excluding :index and :repository)' do
-        expect(Git).to receive(:bare).with(
-          'my-repo.git',
-          { log: logger, git_ssh: 'custom-ssh' }
-        ).and_return(git_base)
+    it 'passes all options through to Git::Repository.init' do
+      expect(Git::Repository).to receive(:init).with(
+        'my-repo',
+        { bare: true, initial_branch: 'main', git_ssh: 'custom-ssh' }
+      ).and_return(git_repository)
 
-        Git.init(
-          'my-repo.git',
-          bare: true,
-          log: logger,
-          git_ssh: 'custom-ssh',
-          index: 'my-index'
-        )
-      end
-
-      it 'uses :repository path as the bare repository location' do
-        expect(Git).to receive(:bare).with(
-          'repo.git',
-          { log: logger }
-        ).and_return(git_base)
-
-        Git.init('work', bare: true, repository: 'repo.git', log: logger)
-      end
-
-      it 'uses directory when :repository not provided' do
-        expect(Git).to receive(:bare).with(
-          'my-repo.git',
-          {}
-        ).and_return(git_base)
-
-        Git.init('my-repo.git', bare: true)
-      end
-
-      it 'does not forward :initial_branch to Git.bare' do
-        expect(Git).to receive(:bare).with(
-          'my-repo.git',
-          {}
-        ).and_return(git_base)
-
-        Git.init('my-repo.git', bare: true, initial_branch: 'main')
-      end
+      Git.init('my-repo', bare: true, initial_branch: 'main', git_ssh: 'custom-ssh')
     end
 
-    context 'with minimal options' do
-      it 'calls Git.open with directory and empty options when bare not specified' do
-        expect(Git).to receive(:open).with('.', {}).and_return(git_base)
+    it 'uses "." as the default directory' do
+      expect(Git::Repository).to receive(:init).with('.', {}).and_return(git_repository)
 
-        Git.init
-      end
+      Git.init
     end
 
-    context 'when git_ssh: nil is explicitly provided' do
-      it 'preserves nil git_ssh in the options forwarded to Git.open' do
-        expect(Git).to receive(:open).with('my-repo', { git_ssh: nil }).and_return(git_base)
+    it 'returns the Git::Repository returned by Git::Repository.init' do
+      result = Git.init('my-repo')
 
-        Git.init('my-repo', git_ssh: nil)
-      end
-
-      it 'preserves nil git_ssh in the options forwarded to Git.bare' do
-        expect(Git).to receive(:bare).with('my-repo.git', { git_ssh: nil }).and_return(git_base)
-
-        Git.init('my-repo.git', bare: true, git_ssh: nil)
-      end
+      expect(result).to be(git_repository)
     end
   end
 end

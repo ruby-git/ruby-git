@@ -70,18 +70,18 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  # Git::Lib#current_branch_state
+  # Git::Repository::Branching#current_branch_state
 
-  test 'Git::Lib#current_branch_state -- empty repository' do
+  test 'Git::Repository::Branching#current_branch_state -- empty repository' do
     in_temp_dir do
       `git init --initial-branch=my_initial_branch`
       git = Git.open('.')
-      expected_state = Git::Lib::HeadState.new(:unborn, 'my_initial_branch')
-      assert_equal(expected_state, git.lib.current_branch_state)
+      expected_state = Git::Repository::Branching::HeadState.new(state: :unborn, name: 'my_initial_branch')
+      assert_equal(expected_state, git.current_branch_state)
     end
   end
 
-  test 'Git::Lib#current_branch_state -- new orphan branch' do
+  test 'Git::Repository::Branching#current_branch_state -- new orphan branch' do
     in_temp_dir do
       `git init --initial-branch=main`
       `echo "hello world" > file1.txt`
@@ -89,24 +89,24 @@ class TestBranch < Test::Unit::TestCase
       `git commit -m "First commit"`
       `git checkout --orphan orphan_branch 2> #{File::NULL}`
       git = Git.open('.')
-      expected_state = Git::Lib::HeadState.new(:unborn, 'orphan_branch')
-      assert_equal(expected_state, git.lib.current_branch_state)
+      expected_state = Git::Repository::Branching::HeadState.new(state: :unborn, name: 'orphan_branch')
+      assert_equal(expected_state, git.current_branch_state)
     end
   end
 
-  test 'Git::Lib#current_branch_state -- active branch' do
+  test 'Git::Repository::Branching#current_branch_state -- active branch' do
     in_temp_dir do
       `git init --initial-branch=my_branch`
       `echo "hello world" > file1.txt`
       `git add file1.txt`
       `git commit -m "First commit"`
       git = Git.open('.')
-      expected_state = Git::Lib::HeadState.new(:active, 'my_branch')
-      assert_equal(expected_state, git.lib.current_branch_state)
+      expected_state = Git::Repository::Branching::HeadState.new(state: :active, name: 'my_branch')
+      assert_equal(expected_state, git.current_branch_state)
     end
   end
 
-  test 'Git::Lib#current_branch_state -- detached HEAD' do
+  test 'Git::Repository::Branching#current_branch_state -- detached HEAD' do
     in_temp_dir do
       `git init --initial-branch=main`
       `echo "hello world" > file1.txt`
@@ -117,8 +117,8 @@ class TestBranch < Test::Unit::TestCase
       `git commit -m "Second commit"`
       `git checkout HEAD~1 2> #{File::NULL}`
       git = Git.open('.')
-      expected_state = Git::Lib::HeadState.new(:detached, 'HEAD')
-      assert_equal(expected_state, git.lib.current_branch_state)
+      expected_state = Git::Repository::Branching::HeadState.new(state: :detached, name: 'HEAD')
+      assert_equal(expected_state, git.current_branch_state)
     end
   end
 
@@ -131,7 +131,7 @@ class TestBranch < Test::Unit::TestCase
       `git add file1.txt`
       `git commit -m "First commit"`
       git = Git.open('.')
-      assert_equal('main', git.lib.branch_current)
+      assert_equal('main', git.current_branch)
     end
   end
 
@@ -139,7 +139,7 @@ class TestBranch < Test::Unit::TestCase
     in_temp_dir do
       `git init --initial-branch=new_branch`
       git = Git.open('.')
-      assert_equal('new_branch', git.lib.branch_current)
+      assert_equal('new_branch', git.current_branch)
     end
   end
 
@@ -154,7 +154,7 @@ class TestBranch < Test::Unit::TestCase
       `git commit -m "Second commit"`
       `git checkout HEAD~1 2> #{File::NULL}`
       git = Git.open('.')
-      assert_equal('HEAD', git.lib.branch_current)
+      assert_equal('HEAD', git.current_branch)
     end
   end
 

@@ -26,7 +26,6 @@ require 'git/branch_info'
 require 'git/branches'
 require 'git/command_line_result'
 require 'git/command_line'
-require 'git/commands/init'
 require 'git/config'
 require 'git/diff'
 require 'git/diff_file_numstat_info'
@@ -151,11 +150,11 @@ module Git
   #   are logged at the `:info` level.  Additional logging is done at the `:debug`
   #   level.
   #
-  # @return [Git::Base] an object that can execute git commands in the context
+  # @return [Git::Repository] an object that can execute git commands in the context
   #   of the bare repository.
   #
   def self.bare(git_dir, options = {})
-    Base.bare(git_dir, options)
+    Git::Repository.bare(git_dir, options)
   end
 
   # Clone a repository into an empty or newly created directory
@@ -269,11 +268,11 @@ module Git
   #     git_ssh: 'ssh -i /path/to/private_key'
   #   )
   #
-  # @return [Git::Base] an object that can execute git commands in the context
+  # @return [Git::Repository] an object that can execute git commands in the context
   #   of the cloned local working copy or cloned repository.
   #
   def self.clone(repository_url, directory = nil, options = {})
-    Base.clone(repository_url, directory, options)
+    Git::Repository.clone(repository_url, directory, options)
   end
 
   # Returns the name of the default branch of the given repository
@@ -396,7 +395,7 @@ module Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
   #
-  # @return [Git::Base] an object that can execute git commands in the context
+  # @return [Git::Repository] an object that can execute git commands in the context
   #   of the newly initialized repository
   #
   # @example Initialize a repository in the current directory
@@ -413,38 +412,8 @@ module Git
   #
   # @see https://git-scm.com/docs/git-init git init
   #
-  def self.init(directory = '.', options = {}) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    require_relative 'git/commands/init'
-
-    options = options.dup
-    if options.key?(:separate_git_dir) && options[:repository].nil?
-      options[:repository] = options.delete(:separate_git_dir)
-    end
-    init_opts = options.slice(:bare, :initial_branch)
-    init_opts[:separate_git_dir] = options[:repository] if options.key?(:repository)
-    context = Git::ExecutionContext::Global.new(
-      binary_path: options.fetch(:binary_path, :use_global_config),
-      git_ssh: options.fetch(:git_ssh, :use_global_config),
-      logger: options[:log]
-    )
-    Git::Commands::Init.new(context).call(directory, **init_opts)
-
-    open_initialized_repository(directory, options)
-  end
-
-  # Open the repository after initialization
-  #
-  # @param directory [String] the directory containing the repository
-  # @param options [Hash] the options hash
-  # @return [Git::Base] the opened repository
-  # @api private
-  #
-  private_class_method def self.open_initialized_repository(directory, options)
-    if options[:bare]
-      Git.bare(options[:repository] || directory, options.slice(:log, :git_ssh, :binary_path))
-    else
-      Git.open(directory, options.slice(:log, :git_ssh, :binary_path, :index, :repository))
-    end
+  def self.init(directory = '.', options = {})
+    Git::Repository.init(directory, options)
   end
 
   # returns a Hash containing information about the references
@@ -506,11 +475,11 @@ module Git
   #   commands are logged at the `:info` level.  Additional logging is done
   #   at the `:debug` level.
   #
-  # @return [Git::Base] an object that can execute git commands in the context
+  # @return [Git::Repository] an object that can execute git commands in the context
   #   of the opened working copy
   #
   def self.open(working_dir, options = {})
-    Base.open(working_dir, options)
+    Git::Repository.open(working_dir, options)
   end
 
   # Return the version of a git binary as a {Git::Version}

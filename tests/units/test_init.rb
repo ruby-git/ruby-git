@@ -143,7 +143,7 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone_without_log
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co')
-      actual_logger = g.instance_variable_get(:@logger)
+      actual_logger = g.execution_context.logger
       assert_equal(Logger, actual_logger.class)
     end
   end
@@ -157,13 +157,12 @@ class TestInit < Test::Unit::TestCase
 
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'bare-co', { log: expected_logger })
-      actual_logger = g.instance_variable_get(:@logger)
+      actual_logger = g.execution_context.logger
       assert_equal(expected_logger.object_id, actual_logger.object_id)
 
-      # Ensure that both the clone and Git::Base creation are logged to the logger
+      # Ensure that the clone is logged to the logger
       #
       assert_includes(log_io.string, "Cloning into 'bare-co'...")
-      assert_includes(log_io.string, 'Starting Git')
     end
   end
 

@@ -210,7 +210,7 @@ module Git
       # @raise [Git::VersionError] if the installed git version doesn't meet requirements
       def call(*, **)
         bound = args_definition.bind(*, **)
-        validate_version!
+        validate_version!(bound.execution_options)
         result = execute_command(bound)
         validate_exit_status!(result)
         result
@@ -312,10 +312,10 @@ module Git
       #
       # Floor check always runs first and fails fast.
       #
-      def validate_version!
+      def validate_version!(exec_opts = {})
         return if self.class.skip_version_validation?
 
-        actual_version = @execution_context.git_version
+        actual_version = @execution_context.git_version(timeout: exec_opts[:timeout])
 
         # Floor check: fail-fast if git is too old for the gem itself
         validate_floor_version!(actual_version)

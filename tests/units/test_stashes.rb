@@ -26,7 +26,7 @@ class TestStashes < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#stashes_all' do
+  test 'stashes_all' do
     in_bare_repo_clone do |g|
       assert_equal(0, g.branch.stashes.size)
       new_file('test-file1', 'blahblahblah1')
@@ -52,7 +52,7 @@ class TestStashes < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#stashes_all - stash message has colon' do
+  test 'stashes_all - stash message has colon' do
     in_bare_repo_clone do |g|
       assert_equal(0, g.branch.stashes.size)
       new_file('test-file1', 'blahblahblah1')
@@ -78,7 +78,7 @@ class TestStashes < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#stashes_all -- git stash message with no branch and no colon' do
+  test 'stashes_all -- git stash message with no branch and no colon' do
     in_temp_dir do
       `git init`
       `echo "hello world" > file1.txt`
@@ -104,7 +104,7 @@ class TestStashes < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#stashes_all -- git stash message with no branch and explicit colon' do
+  test 'stashes_all -- git stash message with no branch and explicit colon' do
     in_temp_dir do
       `git init`
       `echo "hello world" > file1.txt`
@@ -112,7 +112,9 @@ class TestStashes < Test::Unit::TestCase
       `git commit -m "First commit"`
       `echo "update" > file1.txt`
       commit = `git stash create "stash message"`.chomp
-      # Create a stash with this message: 'custom message'
+      # Create a stash with a custom message that contains a colon but is NOT a
+      # standard git stash prefix ("WIP on <branch>:" or "On <branch>:"). The
+      # prefix-stripping logic must not strip non-standard prefixes.
       `git stash store -m "testing: custom message" #{commit}`
 
       # puts `cat .git/logs/refs/stash`
@@ -123,7 +125,7 @@ class TestStashes < Test::Unit::TestCase
       stashes = assert_nothing_raised { git.lib.stashes_all }
 
       expected_stashes = [
-        [0, 'custom message']
+        [0, 'testing: custom message']
       ]
 
       assert_equal(expected_stashes, stashes)

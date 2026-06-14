@@ -118,7 +118,7 @@ module Git
         #   @raise [Git::FailedError] if git exits with a non-zero exit status
         def call(*, **)
           bound = args_definition.bind(*, **)
-          validate_version!
+          validate_version!(bound.execution_options)
           with_stdin(build_stdin(bound)) do |reader|
             result = @execution_context.command_capturing(
               *bound, in: reader, **bound.execution_options, raise_on_failure: false
