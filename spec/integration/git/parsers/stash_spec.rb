@@ -14,7 +14,7 @@ RSpec.describe Git::Parsers::Stash, :integration do
   # Helper to run git stash list with the parser's format and return raw output
   def git_stash_output
     format_arg = "--format=#{described_class::STASH_FORMAT}"
-    repo.lib.command_capturing('stash', 'list', format_arg).stdout
+    repo.execution_context.command_capturing('stash', 'list', format_arg).stdout
   end
 
   before do
@@ -34,7 +34,7 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with a single stash' do
       before do
         write_file('file.txt', 'modified content')
-        repo.lib.stash_save('WIP on feature')
+        repo.stash_save('WIP on feature')
       end
 
       it 'returns an array with one StashInfo' do
@@ -98,13 +98,13 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with multiple stashes' do
       before do
         write_file('file.txt', 'first change')
-        repo.lib.stash_save('First stash')
+        repo.stash_save('First stash')
 
         write_file('file.txt', 'second change')
-        repo.lib.stash_save('Second stash')
+        repo.stash_save('Second stash')
 
         write_file('file.txt', 'third change')
-        repo.lib.stash_save('Third stash')
+        repo.stash_save('Third stash')
       end
 
       it 'returns stashes in order (newest first)' do
@@ -148,9 +148,9 @@ RSpec.describe Git::Parsers::Stash, :integration do
     context 'with custom message format (no branch prefix)' do
       before do
         write_file('file.txt', 'modified')
-        result = repo.lib.command_capturing('stash', 'create', 'Custom message')
+        result = repo.execution_context.command_capturing('stash', 'create', 'Custom message')
         sha = result.is_a?(String) ? result.strip : result.stdout.strip
-        repo.lib.command_capturing('stash', 'store', '--message=custom: my message', sha)
+        repo.execution_context.command_capturing('stash', 'store', '--message=custom: my message', sha)
       end
 
       it 'parses custom message correctly' do
@@ -169,7 +169,7 @@ RSpec.describe Git::Parsers::Stash, :integration do
 
     before do
       write_file('file.txt', 'modified content')
-      repo.lib.stash_save('Test stash message')
+      repo.stash_save('Test stash message')
     end
 
     it 'uses unit separator (0x1F) as field separator' do
