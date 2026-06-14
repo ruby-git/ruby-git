@@ -42,7 +42,7 @@ class TestStashes < Test::Unit::TestCase
       # puts `cat .git/logs/refs/stash`
       # 0000000000000000000000000000000000000000 b9b008cd179b0e8c4b8cda35bac43f7011a0836a James Couball <jcouball@yahoo.com> 1729463252 -0700   On master: testing-stash-all
 
-      stashes = assert_nothing_raised { g.lib.stashes_all }
+      stashes = assert_nothing_raised { g.stashes_all }
 
       expected_stashes = [
         [0, 'testing-stash-all']
@@ -68,7 +68,7 @@ class TestStashes < Test::Unit::TestCase
       # puts `cat .git/logs/refs/stash`
       # 0000000000000000000000000000000000000000 b9b008cd179b0e8c4b8cda35bac43f7011a0836a James Couball <jcouball@yahoo.com> 1729463252 -0700   On master: saving: testing-stash-all
 
-      stashes = assert_nothing_raised { g.lib.stashes_all }
+      stashes = assert_nothing_raised { g.stashes_all }
 
       expected_stashes = [
         [0, 'saving: testing-stash-all']
@@ -94,7 +94,7 @@ class TestStashes < Test::Unit::TestCase
 
       git = Git.open('.')
 
-      stashes = assert_nothing_raised { git.lib.stashes_all }
+      stashes = assert_nothing_raised { git.stashes_all }
 
       expected_stashes = [
         [0, 'custom message']
@@ -122,7 +122,7 @@ class TestStashes < Test::Unit::TestCase
 
       git = Git.open('.')
 
-      stashes = assert_nothing_raised { git.lib.stashes_all }
+      stashes = assert_nothing_raised { git.stashes_all }
 
       expected_stashes = [
         [0, 'testing: custom message']

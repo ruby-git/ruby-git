@@ -6,7 +6,7 @@ class TestEachConflict < Test::Unit::TestCase
   def test_unmerged_returns_empty_when_no_conflicts
     in_temp_repo('working') do
       g = Git.open('.')
-      assert_equal([], g.lib.unmerged)
+      assert_equal([], g.unmerged)
     end
   end
 
@@ -36,7 +36,7 @@ class TestEachConflict < Test::Unit::TestCase
         assert_match(/CONFLICT/, e.result.stdout)
       end
 
-      assert_equal(['example.txt'], g.lib.unmerged)
+      assert_equal(['example.txt'], g.unmerged)
 
       # Check the conflict
       g.each_conflict do |file, your, their|
@@ -73,7 +73,7 @@ class TestEachConflict < Test::Unit::TestCase
         # expected conflict
       end
 
-      assert_equal(['file1.txt', 'file2.txt'], g.lib.unmerged.sort)
+      assert_equal(['file1.txt', 'file2.txt'], g.unmerged.sort)
     end
   end
 end
