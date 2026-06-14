@@ -20,7 +20,7 @@ RSpec.describe Git::Repository::Logging, :integration do
     end
 
     context 'when the repository has commits' do
-      let(:first_sha) { repo.lib.rev_parse('HEAD~1').strip }
+      let(:first_sha) { repo.rev_parse('HEAD~1').strip }
 
       before do
         write_file('README.md', "line one\n")

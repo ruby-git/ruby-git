@@ -83,7 +83,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with a tree object' do
       it 'returns the size of the tree object as an Integer' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.cat_file_size(tree_sha)
         expect(result).to be_a(Integer)
         expect(result).to be_positive
@@ -114,7 +114,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with a tree reference' do
       it 'returns "tree"' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         expect(described_instance.cat_file_type(tree_sha)).to eq('tree')
       end
     end
@@ -171,7 +171,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'when called with a commit SHA' do
       it 'sets sha to the given SHA string' do
-        sha = repo.lib.rev_parse('HEAD')
+        sha = repo.rev_parse('HEAD')
         result = described_instance.cat_file_commit(sha)
         expect(result['sha']).to eq(sha)
       end
@@ -266,7 +266,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with an abbreviated SHA' do
       it 'expands the abbreviated SHA to the full 40-character SHA' do
-        full_sha = repo.lib.rev_parse('HEAD')
+        full_sha = repo.rev_parse('HEAD')
         abbreviated = full_sha[0, 7]
         expect(described_instance.rev_parse(abbreviated)).to eq(full_sha)
       end
@@ -299,7 +299,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
 
       it 'returns the same SHA as rev_parse for the tag' do
-        expected = repo.lib.rev_parse('v1.0')
+        expected = repo.rev_parse('v1.0')
         result = described_instance.tag_sha('v1.0')
         expect(result.chomp).to eq(expected.chomp)
       end
@@ -315,20 +315,20 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#full_tree' do
     context 'with the tree SHA for a commit containing one file' do
       it 'returns an Array<String>' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.full_tree(tree_sha)
         expect(result).to be_a(Array)
         expect(result).to all(be_a(String))
       end
 
       it 'returns one entry per file in the tree' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.full_tree(tree_sha)
         expect(result.size).to eq(1)
       end
 
       it 'returns entries in the git ls-tree format <mode> <type> <object>\\t<file>' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.full_tree(tree_sha)
         expect(result.first).to match(/\A\d{6} \w+ [0-9a-f]{40}\t\S+\z/)
       end
@@ -353,13 +353,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#tree_depth' do
     context 'with the tree SHA for a commit containing one file' do
       it 'returns the recursive entry count as an Integer' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.tree_depth(tree_sha)
         expect(result).to be_a(Integer)
       end
 
       it 'returns one for the initial repository tree' do
-        tree_sha = repo.lib.rev_parse('HEAD^{tree}')
+        tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.tree_depth(tree_sha)
         expect(result).to eq(1)
       end
@@ -383,13 +383,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#name_rev' do
     context 'with a commit SHA that has a symbolic name' do
       it 'returns a String' do
-        sha = repo.lib.rev_parse('HEAD')
+        sha = repo.rev_parse('HEAD')
         result = described_instance.name_rev(sha)
         expect(result).to be_a(String)
       end
 
       it 'returns the symbolic name without a trailing newline' do
-        sha = repo.lib.rev_parse('HEAD')
+        sha = repo.rev_parse('HEAD')
         result = described_instance.name_rev(sha)
         expect(result).not_to end_with("\n")
       end
@@ -695,7 +695,7 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
     context 'with :object option pointing to a specific commit' do
       it 'searches in that commit instead of HEAD' do
-        sha = repo.lib.rev_parse('HEAD')
+        sha = repo.rev_parse('HEAD')
         result = described_instance.grep('TODO', nil, object: sha)
         expect(result).not_to be_empty
       end

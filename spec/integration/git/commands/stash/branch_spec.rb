@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::Stash::Branch, :integration do
 
       # Create changes and stash them
       write_file('file.txt', 'modified content')
-      repo.lib.stash_save('WIP changes')
+      repo.stash_save('WIP changes')
     end
 
     describe 'when the command succeeds' do

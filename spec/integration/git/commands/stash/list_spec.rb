@@ -31,7 +31,7 @@ RSpec.describe Git::Commands::Stash::List, :integration do
       context 'with stashes' do
         before do
           write_file('file.txt', 'modified content')
-          repo.lib.stash_save('WIP on feature')
+          repo.stash_save('WIP on feature')
         end
 
         it 'returns CommandLineResult with output' do

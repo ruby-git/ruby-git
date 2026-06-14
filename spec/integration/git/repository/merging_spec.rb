@@ -24,12 +24,12 @@ RSpec.describe Git::Repository::Merging, :integration do
   describe '#merge single branch' do
     before do
       # Create and populate a feature branch
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('feature.txt', "feature content\n")
       repo.add('feature.txt')
       repo.commit('Add feature file')
-      repo.lib.checkout('main')
+      repo.checkout('main')
     end
 
     it 'returns a String' do
@@ -56,12 +56,12 @@ RSpec.describe Git::Repository::Merging, :integration do
 
   describe '#merge with a Git::Branch object' do
     before do
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('from_branch_obj.txt', "branch object content\n")
       repo.add('from_branch_obj.txt')
       repo.commit('Add from_branch_obj.txt')
-      repo.lib.checkout('main')
+      repo.checkout('main')
     end
 
     it 'coerces the Git::Branch to a String and merges successfully' do
@@ -77,19 +77,19 @@ RSpec.describe Git::Repository::Merging, :integration do
 
   describe '#merge octopus (Array of branches)' do
     before do
-      repo.lib.branch_new('branch-a')
-      repo.lib.checkout('branch-a')
+      repo.branch_new('branch-a')
+      repo.checkout('branch-a')
       write_file('file_a.txt', "content from branch-a\n")
       repo.add('file_a.txt')
       repo.commit('Add file_a.txt')
-      repo.lib.checkout('main')
+      repo.checkout('main')
 
-      repo.lib.branch_new('branch-b')
-      repo.lib.checkout('branch-b')
+      repo.branch_new('branch-b')
+      repo.checkout('branch-b')
       write_file('file_b.txt', "content from branch-b\n")
       repo.add('file_b.txt')
       repo.commit('Add file_b.txt')
-      repo.lib.checkout('main')
+      repo.checkout('main')
     end
 
     it 'merges all branches and all files appear in the working tree' do
@@ -110,12 +110,12 @@ RSpec.describe Git::Repository::Merging, :integration do
 
   describe '#merge with no_ff: true and a message' do
     before do
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('noff.txt', "no-ff content\n")
       repo.add('noff.txt')
       repo.commit('Add noff.txt')
-      repo.lib.checkout('main')
+      repo.checkout('main')
     end
 
     it 'creates a merge commit whose message is the given string' do
@@ -136,12 +136,12 @@ RSpec.describe Git::Repository::Merging, :integration do
 
   describe '#merge fast-forward with a message' do
     before do
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('ff.txt', "ff content\n")
       repo.add('ff.txt')
       repo.commit('first commit message')
-      repo.lib.checkout('main')
+      repo.checkout('main')
     end
 
     it 'performs the merge successfully (returns a String)' do
@@ -172,12 +172,12 @@ RSpec.describe Git::Repository::Merging, :integration do
   describe '#merge with no_commit: true' do
     before do
       # Branch feature off the initial commit
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('staged.txt', "staged content\n")
       repo.add('staged.txt')
       repo.commit('Add staged.txt')
-      repo.lib.checkout('main')
+      repo.checkout('main')
 
       # Create a commit on main so that main and feature have diverged;
       # this prevents a fast-forward and makes --no-commit effective.
@@ -211,12 +211,12 @@ RSpec.describe Git::Repository::Merging, :integration do
       @common_ancestor_sha = repo.log(1).execute.first.sha
 
       # Add a commit on feature that is NOT on main
-      repo.lib.branch_new('feature')
-      repo.lib.checkout('feature')
+      repo.branch_new('feature')
+      repo.checkout('feature')
       write_file('feature.txt', "feature\n")
       repo.add('feature.txt')
       repo.commit('Feature commit')
-      repo.lib.checkout('main')
+      repo.checkout('main')
 
       # Add a commit on main that is NOT on feature (forces a real divergence)
       write_file('main_extra.txt', "main extra\n")
@@ -257,17 +257,17 @@ RSpec.describe Git::Repository::Merging, :integration do
       # merge_base(M1, M2) returns both B and C.
 
       # B: commit on new_branch_1 (branches off main/A)
-      repo.lib.branch_new('new_branch_1')
-      repo.lib.checkout('new_branch_1')
+      repo.branch_new('new_branch_1')
+      repo.checkout('new_branch_1')
       write_file('b1_1.txt', "b1 first\n")
       repo.add('b1_1.txt')
       repo.commit('B: first commit on branch 1')
       @first_commit_sha = repo.log(1).execute.first.sha
 
       # C: commit on new_branch_2 (branches off main/A independently)
-      repo.lib.checkout('main')
-      repo.lib.branch_new('new_branch_2')
-      repo.lib.checkout('new_branch_2')
+      repo.checkout('main')
+      repo.branch_new('new_branch_2')
+      repo.checkout('new_branch_2')
       write_file('b2_1.txt', "b2 first\n")
       repo.add('b2_1.txt')
       repo.commit('C: first commit on branch 2')
@@ -277,7 +277,7 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.merge(@first_commit_sha.to_s)
 
       # M1: nb1 merges C → merge commit with parents B and C
-      repo.lib.checkout('new_branch_1')
+      repo.checkout('new_branch_1')
       repo.merge(@second_commit_sha.to_s)
     end
 
@@ -305,20 +305,20 @@ RSpec.describe Git::Repository::Merging, :integration do
 
     context 'when there is a conflict' do
       before do
-        repo.lib.branch_new('branch_ours')
-        repo.lib.checkout('branch_ours')
+        repo.branch_new('branch_ours')
+        repo.checkout('branch_ours')
         write_file('example.txt', "1\n2\n3\n")
         repo.add('example.txt')
         repo.commit('ours: add example.txt')
 
-        repo.lib.checkout('main')
-        repo.lib.branch_new('branch_theirs')
-        repo.lib.checkout('branch_theirs')
+        repo.checkout('main')
+        repo.branch_new('branch_theirs')
+        repo.checkout('branch_theirs')
         write_file('example.txt', "1\n4\n3\n")
         repo.add('example.txt')
         repo.commit('theirs: add example.txt')
 
-        repo.lib.checkout('main')
+        repo.checkout('main')
         repo.merge('branch_ours')
 
         begin
@@ -355,20 +355,20 @@ RSpec.describe Git::Repository::Merging, :integration do
 
     context 'when there is a conflict' do
       before do
-        repo.lib.branch_new('branch_ours')
-        repo.lib.checkout('branch_ours')
+        repo.branch_new('branch_ours')
+        repo.checkout('branch_ours')
         write_file('example.txt', "1\n2\n3\n")
         repo.add('example.txt')
         repo.commit('ours: add example.txt')
 
-        repo.lib.checkout('main')
-        repo.lib.branch_new('branch_theirs')
-        repo.lib.checkout('branch_theirs')
+        repo.checkout('main')
+        repo.branch_new('branch_theirs')
+        repo.checkout('branch_theirs')
         write_file('example.txt', "1\n4\n3\n")
         repo.add('example.txt')
         repo.commit('theirs: add example.txt')
 
-        repo.lib.checkout('main')
+        repo.checkout('main')
         repo.merge('branch_ours')
 
         begin
