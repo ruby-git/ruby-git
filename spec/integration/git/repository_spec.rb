@@ -7,8 +7,8 @@ require 'git/repository'
 # accessors (#dir, #repo, #index, #repo_size) they configure.
 #
 # These exercise real path resolution against real repositories on disk. The
-# regression examples confirm that Step C1a-1 remains additive: the top-level
-# Git.open and Git.bare entry points still return Git::Base, not Git::Repository.
+# top-level Git.open, Git.bare, Git.init, and Git.clone entry points all return
+# Git::Repository as of Step C1d.
 
 RSpec.describe Git::Repository, :integration do
   describe '.open' do
@@ -268,19 +268,33 @@ RSpec.describe Git::Repository, :integration do
     end
   end
 
-  describe 'top-level entry-point regression' do
+  describe 'top-level entry points return Git::Repository' do
     include_context 'in an empty repository'
 
-    it 'Git.open still returns a Git::Base' do
-      expect(Git.open(repo_dir)).to be_a(Git::Base)
+    it 'Git.open returns a Git::Repository' do
+      expect(Git.open(repo_dir)).to be_a(Git::Repository)
     end
 
-    it 'Git.bare still returns a Git::Base' do
+    it 'Git.bare returns a Git::Repository' do
       bare_dir = Dir.mktmpdir
       Git.init(bare_dir, bare: true)
-      expect(Git.bare(bare_dir)).to be_a(Git::Base)
+      expect(Git.bare(bare_dir)).to be_a(Git::Repository)
     ensure
       FileUtils.rm_rf(bare_dir)
+    end
+
+    it 'Git.init returns a Git::Repository' do
+      init_dir = Dir.mktmpdir
+      expect(Git.init(init_dir)).to be_a(Git::Repository)
+    ensure
+      FileUtils.rm_rf(init_dir)
+    end
+
+    it 'Git.clone returns a Git::Repository' do
+      clone_dir = Dir.mktmpdir
+      expect(Git.clone(repo_dir, 'clone', chdir: clone_dir)).to be_a(Git::Repository)
+    ensure
+      FileUtils.rm_rf(clone_dir)
     end
   end
 end

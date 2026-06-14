@@ -12,12 +12,13 @@ require 'fileutils'
 class TestLib < Test::Unit::TestCase
   def setup
     clone_working_repo
-    @lib = Git.open(@wdir).lib
+    @lib = Git::Base.open(@wdir).lib
   end
 
   def test_fetch_unshallow
     in_temp_dir do |dir|
-      git = Git.clone("file://#{@wdir}", 'shallow', chdir: dir, depth: 1).lib
+      cloned = Git.clone("file://#{@wdir}", 'shallow', chdir: dir, depth: 1)
+      git = Git::Base.open(cloned.dir.to_s).lib
       assert_equal(1, git.full_log_commits.length)
       git.fetch("file://#{@wdir}", unshallow: true)
       assert_equal(72, git.full_log_commits.length)
@@ -123,7 +124,8 @@ class TestLib < Test::Unit::TestCase
 
   def test_full_log_commits_on_empty_repo
     Dir.mktmpdir do |dir|
-      lib = Git.init(dir).lib
+      Git.init(dir)
+      lib = Git::Base.open(dir).lib
       assert_equal([], lib.full_log_commits)
     end
   end
@@ -400,7 +402,7 @@ class TestLib < Test::Unit::TestCase
       `git commit -m "my commit message"`
 
       git = Git.open('.')
-      assert_false(git.lib.empty?)
+      assert_false(git.no_commits?)
     end
   end
 
@@ -409,7 +411,7 @@ class TestLib < Test::Unit::TestCase
       `git init`
 
       git = Git.open('.')
-      assert_true(git.lib.empty?)
+      assert_true(git.no_commits?)
     end
   end
 
@@ -420,8 +422,7 @@ class TestLib < Test::Unit::TestCase
       # Creeate an annotated tag:
       `git tag -a annotated_tag -m "Creating an annotated tag"`
 
-      git = Git.open('.')
-      cat_file_tag = git.lib.cat_file_tag('annotated_tag')
+      cat_file_tag = Git::Base.open('.').lib.cat_file_tag('annotated_tag')
 
       assert_equal(expected_cat_file_tag_keys, cat_file_tag.keys.sort)
       assert_equal('annotated_tag', cat_file_tag['name'])

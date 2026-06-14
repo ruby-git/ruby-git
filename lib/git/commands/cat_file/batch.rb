@@ -103,6 +103,9 @@ module Git
           # When provided, {#call} dispatches to the streaming execution path.
           execution_option :out
 
+          # Abort the command after this many seconds.
+          execution_option :timeout
+
           # Object names (or batch-command lines) are written to stdin, not argv.
           # Using skip_cli: true because these values are fed via stdin — git never
           # sees them as CLI arguments so Ruby must enforce the cross-argument
@@ -302,6 +305,8 @@ module Git
         #   @option options [#write, nil] :out (nil) stream stdout to this IO object
         #     instead of buffering in memory; when given, `result.stdout` will be `''`
         #
+        #   @option options [Numeric, nil] :timeout (nil) abort the command after this many seconds
+        #
         #   @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
         #     Stdout contains one metadata line per object (or `''` when `out:` is given)
@@ -311,7 +316,7 @@ module Git
         #   @raise [Git::FailedError] if git exits non-zero
         def call(*objects, **)
           bound = args_definition.bind(*objects, **)
-          validate_version!
+          validate_version!(bound.execution_options)
           # `-Z` puts git into NUL I/O mode: input objects must be NUL-terminated.
           # Without `-Z`, the standard newline delimiter is used.
           delimiter = bound.Z? ? "\0" : "\n"

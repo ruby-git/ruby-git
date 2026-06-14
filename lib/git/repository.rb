@@ -117,6 +117,59 @@ module Git
       index_file && Pathname.new(index_file)
     end
 
+    # Returns `self` so that legacy code using `git.lib.some_method` continues
+    # to work when `some_method` is a facade method on `Git::Repository`.
+    #
+    # @return [self]
+    #
+    # @api private
+    #
+    def lib = self
+
+    # @return [String, nil] the git directory path
+    #
+    # @api private
+    def git_dir = execution_context.git_dir
+
+    # @return [String, nil] the working directory path
+    #
+    # @api private
+    def git_work_dir = execution_context.git_work_dir
+
+    # @return [String, nil] the index file path
+    #
+    # @api private
+    def git_index_file = execution_context.git_index_file
+
+    # @return [Git::Version] the installed git version
+    #
+    # @api private
+    def git_version(timeout: nil) = execution_context.git_version(timeout: timeout)
+
+    # @return [String, nil] the SSH wrapper path
+    #
+    # @api private
+    def git_ssh = execution_context.git_ssh
+
+    # @return [String, :use_global_config] the path to the git binary
+    #
+    # @api private
+    def binary_path = execution_context.binary_path
+
+    # Runs a git command; delegates to the execution context.
+    #
+    # @api private
+    def command_capturing(...)
+      execution_context.command_capturing(...)
+    end
+
+    # Streams a git command; delegates to the execution context.
+    #
+    # @api private
+    def command_streaming(...)
+      execution_context.command_streaming(...)
+    end
+
     # Returns the size of the repository directory in bytes
     #
     # Sums the sizes of every regular file under the repository (`.git`)
@@ -142,6 +195,16 @@ module Git
         next
       end
       total
+    end
+
+    private
+
+    # Builds the git environment variable overrides for this repository;
+    # delegates to the execution context.
+    #
+    # @api private
+    def env_overrides(**additional_overrides)
+      execution_context.env_overrides(**additional_overrides)
     end
   end
 end

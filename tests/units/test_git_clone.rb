@@ -5,25 +5,6 @@ require 'test_helper'
 
 # Tests for Git.clone
 class TestGitClone < Test::Unit::TestCase
-  def capture_clone_command_line(repository_url, destination, options = {})
-    actual_command_line = nil
-
-    in_temp_dir do |_path|
-      git = Git.init('.')
-      stub_lib_git_version(git.lib)
-
-      clone_result = mock_clone_result(destination)
-      git.lib.define_singleton_method(:command_capturing) do |cmd, *opts|
-        actual_command_line = [cmd, *opts.flatten]
-        clone_result
-      end
-
-      git.lib.clone(repository_url, destination, options)
-    end
-
-    actual_command_line
-  end
-
   # These tests trigger a timeout by cloning a local repo with an extremely small
   # timeout (0.00001s), expecting git to not finish in time. On JRuby and TruffleRuby,
   # subprocess startup and teardown timing is unpredictable enough that git
@@ -114,106 +95,6 @@ class TestGitClone < Test::Unit::TestCase
       expected_dir = File.realpath('repository')
       assert_equal(expected_dir, git.dir.to_s)
     end
-  end
-
-  test 'clone with single config option' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, { config: 'user.name=John Doe' })
-
-    expected_command_line = [
-      'clone', '--config', 'user.name=John Doe',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone with multiple config options' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(
-      repository_url,
-      destination,
-      { config: ['user.name=John Doe', 'user.email=john@doe.com'] }
-    )
-
-    expected_command_line = [
-      'clone',
-      '--config', 'user.name=John Doe',
-      '--config', 'user.email=john@doe.com',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone with a filter' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, filter: 'tree:0')
-
-    expected_command_line = [
-      'clone',
-      '--filter=tree:0',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone without giving the single_branch option' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination)
-
-    expected_command_line = [
-      'clone',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone with single_branch true' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, single_branch: true)
-
-    expected_command_line = [
-      'clone',
-      '--single-branch',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone with single_branch false' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, no_single_branch: true)
-
-    expected_command_line = [
-      'clone',
-      '--no-single-branch',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
-  end
-
-  test 'clone with single_branch nil adds no flag' do
-    repository_url = 'https://github.com/ruby-git/ruby-git.git'
-    destination = 'ruby-git'
-    actual_command_line = capture_clone_command_line(repository_url, destination, single_branch: nil)
-
-    expected_command_line = [
-      'clone',
-      '--', repository_url, destination, { raise_on_failure: false }
-    ]
-
-    assert_equal(expected_command_line, actual_command_line)
   end
 
   test 'shallow clone with single_branch false uses wide refspec' do

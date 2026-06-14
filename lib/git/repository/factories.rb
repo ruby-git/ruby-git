@@ -12,9 +12,7 @@ module Git
     # Factory class methods for constructing {Git::Repository} instances
     #
     # The four public factories — {clone}, {init}, {open}, {bare} — mirror the
-    # top-level `Git.*` entry points but return a {Git::Repository} instead of a
-    # {Git::Base}. The top-level entry points continue to return {Git::Base} for
-    # backward compatibility.
+    # top-level `Git.*` entry points and return a {Git::Repository}.
     #
     # Extended by {Git::Repository}.
     #

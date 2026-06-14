@@ -38,9 +38,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- | :--------------: | :--------------: |
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 50% |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 60% |
 | Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **68%** |
+| **TOTAL** | -- | -- | **100%** | **72%** |
 
 ### Facade Modules Completed
 
@@ -77,9 +77,16 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 #### Step C1d — Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository`
 
-All prerequisite workstreams are ✅ complete. The next task is **Step C1d**: update
-`lib/git.rb` so that `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` call
-`Git::Repository.*` and return `Git::Repository` directly, bypassing `Git::Base`.
+All prerequisite workstreams are ✅ complete. Step C1d is split into three sub-steps:
+
+- **C1d-1** — Entry point flip (the breaking change itself): `Git.open`/`.bare`/`.clone`/`.init`
+  now return `Git::Repository` instead of `Git::Base`. Beyond the type change, some methods have
+  different return semantics — for example, `Git::Repository#merge_base` returns plain SHA strings
+  while `Git::Base#merge_base` returned `Git::Object::Commit` objects, and `commit_tree` returns
+  a raw SHA string rather than a typed object. Upgrade notes and downstream code must account for
+  these differences.
+- **C1d-2** — Eliminate all internal `.lib` callers in tests; add deprecation enforcement to both test suites
+- **C1d-3** — Remove dead fallback branches; replace silent `lib` shim with real deprecation warning
 
 **All C1d prerequisites met:**
 
@@ -94,15 +101,48 @@ All prerequisite workstreams are ✅ complete. The next task is **Step C1d**: up
 | C1c-2: public-API parity audit and remediation sweep | ✅ |
 | E: block-based helper/path-context methods migrated | ✅ |
 
-**What C1d requires** (see [Step C1d](#step-c1d--update-libgitrb-entry-points-to-return-gitrepository) below for full spec):
+**What C1d-1 requires** (see [Step C1d-1](#step-c1d-1--flip-entry-points) below for full spec):
 
 1. Change `Git.open`/`.bare`/`.clone` bodies from `Base.*` calls to `Git::Repository.*` calls.
 2. Simplify `Git.init` to delegate to `Git::Repository.init`; remove `open_initialized_repository`.
 3. Update all four `@return [Git::Base]` YARD tags to `@return [Git::Repository]`.
 4. Flip the return-type regression specs in `spec/integration/git/repository_spec.rb`
    from `be_a(Git::Base)` to `be_a(Git::Repository)`.
+5. **Prerequisite fix before landing:** delete `spec/integration/git/lib/config_spec.rb` after
+   confirming coverage exists in `spec/integration/git/repository/configuring_spec.rb`. The shim
+   `def lib = self` causes `subject(:lib) { repo.lib }` to return `Git::Repository`, triggering 19
+   deprecation warnings from deprecated aliases (config_set, config_get, global_config_set, etc.).
 
-**Commit type:** `feat!` with a `BREAKING CHANGE:` footer (explicit v5 boundary step).
+**Commit type for C1d-1:** `feat!` with a `BREAKING CHANGE:` footer (explicit v5 boundary step).
+
+**What C1d-2 requires** (see [Step C1d-2](#step-c1d-2--eliminate-internal-lib-callers) below):
+
+Clean up all internal `.lib` callers across both test suites — while the silent `def lib = self`
+shim is still in place — then add `Git::Deprecation.behavior = :raise` to both test suites. The
+RSpec cleanup must happen before wiring up the RSpec enforcement. The Test::Unit cleanup must
+happen before C1d-3 because `tests/test_helper.rb` already sets `behavior = :raise` and will
+hard-fail the moment the real deprecation warning lands.
+
+The cleanup phases in order (each a separate commit):
+
+| Phase | Files | Change |
+| ----- | ----- | ------ |
+| A | `spec/integration/git/repository/{merging,branching,stashing,object_operations,logging}_spec.rb`, stash command specs | `repo.lib.method(...)` → `repo.method(...)` |
+| B | `spec/support/contexts/{empty_repository,diff_test_repository}.rb`, `spec/integration/git/commands/{worktree/repair,diff}_spec.rb` | `repo.lib` → `repo.execution_context` (passed to command constructors) |
+| C | `spec/integration/git/parsers/{branch,stash,fsck,tag}_spec.rb` | `repo.lib.command_capturing(...)` → `repo.execution_context.command_capturing(...)`; `repo.lib.stash_save(...)` → `repo.stash_save(...)` |
+| D | `spec/spec_helper.rb` | Add `Git::Deprecation.behavior = :raise` inside `RSpec.configure` — safe only after Phases A–C. Document `collect_deprecations` pattern for tests that intentionally trigger deprecated methods. |
+| E | `tests/units/test_{branch,stashes,each_conflict,diff_path_status,stash_save}.rb` | `git.lib.facade_method(...)` → `git.facade_method(...)` |
+| F | `tests/units/test_command_raises_on_failure.rb`, `tests/units/test_set_index.rb`, `tests/units/test_lib.rb` | `git.lib.command_capturing(...)` → `git.execution_context.command_capturing(...)`; move `tag_sha` test (no facade equivalent) to `test_lib.rb` using `Git::Base.open(dir).lib` |
+| G | `tests/units/test_command_line_env_overrides.rb` | Introduce `lib = Git::Base.open(git.dir.to_s).lib` per-test; replace all `git.lib` references with `lib` |
+| H | `tests/test_helper.rb`, `tests/units/test_signed_commits.rb`, `tests/units/test_deprecations.rb` | Audit and update stubs; `Git.open(...).lib.lib_method` → `Git::Base.open(...).lib.lib_method`; `git.lib.facade_method` → `git.facade_method` |
+
+**What C1d-3 requires** (see [Step C1d-3](#step-c1d-3--remove-dead-fallbacks-and-add-deprecation-warning) below):
+
+1. Add `diff_numstat` delegator to `Git::Base` (prerequisite: `Git::Base` does not currently respond to `diff_numstat`).
+2. Remove dead `respond_to?` + `.lib` fallback branches from `lib/git/diff.rb`, `lib/git/diff_stats.rb`, `lib/git/diff_path_status.rb`, `lib/git/status.rb`.
+3. Replace `def lib = self` in `lib/git/repository.rb` with a `Git::Deprecation.warn` body that emits a `v6.0.0` removal message and returns `self`.
+4. Remove `command_capturing`, `command_streaming`, and the private `env_overrides` (using `send`) from `lib/git/repository.rb` — added only to feed the silent shim, have no production callers.
+5. Add a unit test in `spec/unit/git/repository_spec.rb` asserting the deprecation warning fires and `self` is returned. Use `Git::Deprecation.collect_deprecations { repo.lib }` to capture without raising.
 
 ---
 
@@ -143,8 +183,8 @@ graph LR
     C1a-2 --> C1c-2
     C1b --> C1c-2
     C1c-1 --> C1c-2
-    C1c-2 --> C1d
-    C1d --> D1 --> Phase4["Phase 4"]
+    C1c-2 --> C1d-1
+    C1d-1 --> C1d-2 --> C1d-3 --> D1 --> Phase4["Phase 4"]
     D2 --> Phase4
     F1 --> Phase4
     F2 --> Phase4
@@ -348,11 +388,34 @@ Files touched: `lib/git/repository/*.rb` (topic modules for migrated methods),
 
 Tracked as [Issue #1370](https://github.com/ruby-git/ruby-git/issues/1370).
 
-##### Step C1d — Update `lib/git.rb` entry points to return `Git::Repository`
+##### Step C1d-1 — Flip entry points
 
 With C1a, C1b, C1c, A, B, and E in place, update `Git.open`, `Git.clone`,
 `Git.init`, and `Git.bare` in `lib/git.rb` to call `Git::Repository.*` and return
 `Git::Repository` directly, bypassing `Git::Base` entirely.
+
+**Prerequisite fix before landing C1d-1:** delete `spec/integration/git/lib/config_spec.rb`
+after confirming behavior coverage exists in `spec/integration/git/repository/configuring_spec.rb`.
+The `def lib = self` shim causes `subject(:lib) { repo.lib }` to return `Git::Repository` (self),
+which triggers deprecation warnings from every deprecated alias call (config_set, config_get,
+global_config_set, etc.) in that spec.
+
+##### Step C1d-2 — Eliminate internal `.lib` callers
+
+Clean up all `.lib` callers from tests while the silent `def lib = self` shim is still in
+place, then add `Git::Deprecation.behavior = :raise` to both test suites. See the phase table
+in the [Next Task](#next-task) section for the full per-phase breakdown.
+
+##### Step C1d-3 — Remove dead fallbacks and add deprecation warning
+
+- Add `diff_numstat` delegator to `Git::Base` (prerequisite: not currently defined there)
+- Remove dead `respond_to?` + `.lib` fallback branches from `lib/git/diff.rb`,
+  `lib/git/diff_stats.rb`, `lib/git/diff_path_status.rb`, `lib/git/status.rb`
+- Replace `def lib = self` in `lib/git/repository.rb` with a `Git::Deprecation.warn` body
+  (removal version: v6.0.0; returns `self`)
+- Remove `command_capturing`, `command_streaming`, and private `env_overrides` from
+  `lib/git/repository.rb` — these were added only to feed the silent shim
+- Add unit test asserting the deprecation warning and `self` return
 
 ---
 
@@ -523,7 +586,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
 | C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
-| C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. |
+| C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. Split into C1d-1 (entry point flip), C1d-2 (eliminate internal .lib callers + add deprecation enforcement to both test suites), and C1d-3 (remove dead fallbacks + replace silent lib shim with real deprecation warning). |
 | D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
 | D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
 

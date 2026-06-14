@@ -130,6 +130,14 @@ RSpec.describe Git::Commands::UpdateRef::Batch do
 
         command.call('update refs/heads/main newsha', timeout: 5)
       end
+
+      it 'forwards :timeout to the git version check' do
+        expect(execution_context).to receive(:git_version).with(timeout: 5)
+                                                          .and_return(Git::Version.parse('99.99.99'))
+        allow(execution_context).to receive(:command_capturing).and_return(command_result)
+
+        command.call('update refs/heads/main newsha', timeout: 5)
+      end
     end
 
     context 'input validation' do

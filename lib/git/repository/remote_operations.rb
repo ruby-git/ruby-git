@@ -416,7 +416,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remote_add(name, url, opts = {})
-        url = url.repo.to_s if url.is_a?(Git::Base)
+        url = url.repo.to_s if url.is_a?(Git::Base) || url.is_a?(Git::Repository)
         opts = Private.normalize_add_remote_keys(opts)
         SharedPrivate.assert_valid_opts!(REMOTE_ADD_ALLOWED_OPTS, **opts)
         Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
@@ -515,7 +515,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remote_set_url(name, url)
-        url = url.repo.to_s if url.is_a?(Git::Base)
+        url = url.repo.to_s if url.is_a?(Git::Base) || url.is_a?(Git::Repository)
         Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
 
         Git::Remote.new(self, name)

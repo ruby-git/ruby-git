@@ -44,6 +44,27 @@ RSpec.describe Git::Repository::Configuring, :integration do
         expect(described_instance.config('user.name')).to eq('NewName')
       end
     end
+
+    context 'when called with a file: option pointing to a real file' do
+      let(:config_file) { File.join(repo_dir, 'custom.config') }
+
+      it 'returns a Hash of all entries in the given config file' do
+        File.write(config_file, "[section]\n\tkey = value\n")
+        result = described_instance.config(file: config_file)
+        expect(result).to be_a(Hash)
+        expect(result['section.key']).to eq('value')
+      end
+    end
+
+    context 'when writing with a file: option then reading back' do
+      let(:config_file) { File.join(repo_dir, 'custom.config') }
+
+      it 'persists the value to the specified file' do
+        described_instance.config('section.key', 'file_value', file: config_file)
+        result = described_instance.config(file: config_file)
+        expect(result['section.key']).to eq('file_value')
+      end
+    end
   end
 
   describe '#global_config' do

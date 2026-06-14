@@ -92,6 +92,16 @@ RSpec.describe Git::Commands::CatFile::Raw do
       end
     end
 
+    context 'with :timeout execution option' do
+      it 'forwards :timeout to the git version check' do
+        expect(execution_context).to receive(:git_version).with(timeout: 5)
+                                                          .and_return(Git::Version.parse('99.99.99'))
+        allow(execution_context).to receive(:command_capturing).and_return(command_result('commit'))
+
+        command.call('HEAD', t: true, timeout: 5)
+      end
+    end
+
     context 'exit code handling' do
       it 'returns result for exit code 1 with -e (object not found)' do
         allow(execution_context).to receive(:command_capturing)

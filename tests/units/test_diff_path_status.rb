@@ -56,11 +56,11 @@ class TestDiffPathStatus < Test::Unit::TestCase
     assert_equal('M', status_hash['example.txt'])
   end
 
-  def test_lib_path_status_path_option_deprecated
-    Git::Deprecation.expects(:warn).with('Git::Lib#diff_path_status :path option is deprecated. Use :path_limiter instead.')
+  def test_repository_diff_path_status_path_option_deprecated
+    Git::Deprecation.expects(:warn).with('Git::Repository#diff_path_status :path option is deprecated. Use :path_limiter instead.')
 
-    status_hash = @git.lib.diff_path_status('gitsearch1', 'v2.5', path: 'scott/')
-    assert(status_hash.key?('scott/newfile'))
+    status_hash = @git.diff_path_status('gitsearch1', 'v2.5', path: 'scott/')
+    assert(status_hash.to_h.key?('scott/newfile'))
   end
 
   def test_path_status_with_empty_path_array

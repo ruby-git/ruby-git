@@ -37,62 +37,45 @@ class TestPerInstanceConfig < Test::Unit::TestCase
     assert_equal '/custom/ssh', env['GIT_SSH']
   end
 
-  test 'Git.clone passes git_ssh to Git::Lib for execution' do
+  test 'Git.clone passes git_ssh through execution context' do
     git_ssh = '/custom/ssh'
 
-    # Git.clone calls Git::Lib.new({git_ssh: ...}, ...).clone(...)
-    # We verify that Git::Lib.new is called with the correct git_ssh option
+    in_temp_dir do |path|
+      source = Git.init(path, initial_branch: 'main')
+      source.commit('initial', allow_empty: true)
 
-    Git::Lib.expects(:new).with(has_entry(git_ssh: git_ssh), anything).returns(stub_everything(clone: {}))
-
-    begin
-      Git.clone('url', 'dir', git_ssh: git_ssh)
-    rescue StandardError
-      # Ignore errors after the part we are testing
+      clone_dir = Dir.mktmpdir
+      begin
+        repo = Git.clone(path, 'cloned', chdir: clone_dir, git_ssh: git_ssh)
+        assert_equal git_ssh, repo.execution_context.git_ssh
+      ensure
+        FileUtils.rm_rf(clone_dir)
+      end
     end
   end
 
   test 'per-instance git_ssh: nil overrides global SSH key' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    previous_git_ssh = Git.config.git_ssh
+    Git.configure { |c| c.git_ssh = '/global/ssh' }
+
     begin
-      # Set a global SSH key
-      Git.configure do |config|
-        config.git_ssh = '/global/ssh'
+      in_temp_dir do |path|
+        repo = Git.init(path, git_ssh: nil)
+        assert_nil repo.execution_context.git_ssh,
+                   'GIT_SSH should not be set when git_ssh: nil is passed'
       end
-
-      # When git_ssh: nil is passed, GIT_SSH should not be set for clone
-      Git::Lib.stubs(:new).with(has_entry(git_ssh: nil), anything).returns(stub_everything(clone: {}))
-      begin
-        Git.clone('url', 'dir', git_ssh: nil)
-      rescue StandardError
-        # Ignore errors after the part we are testing
-      end
-
-      # For env_overrides, use the real class
-      lib_real = Git::Lib.allocate
-      lib_real.send(:initialize_from_hash, { git_ssh: nil })
-      env = lib_real.send(:env_overrides)
-      assert_nil env['GIT_SSH'], 'GIT_SSH should not be set when git_ssh: nil is passed'
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.configure { |c| c.git_ssh = previous_git_ssh }
     end
   end
 
-  test 'Git.init passes git_ssh through Git::Base to Git::Lib' do
+  test 'Git.init passes git_ssh through execution context' do
     git_ssh = '/custom/ssh'
-
-    # Git.init creates a Git::Base with the git_ssh option, then calls base.lib.init
-    # The git_ssh flows through Git::Base#git_ssh to Git::Lib#initialize_from_base
 
     in_temp_dir do |path|
       repo = Git.init(path, git_ssh: git_ssh)
 
-      # Verify git_ssh is stored in the Git::Base instance
-      assert_equal git_ssh, repo.git_ssh
-
-      # Verify git_ssh flows through to the Git::Lib instance
-      env = repo.lib.send(:env_overrides)
-      assert_equal git_ssh, env['GIT_SSH']
+      assert_equal git_ssh, repo.execution_context.git_ssh
     end
   end
 end

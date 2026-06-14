@@ -23,6 +23,26 @@ RSpec.describe Git::Lib do
       expect(lib.git_version).to eq(parsed_version)
     end
 
+    context 'with a timeout:' do
+      it 'forwards the timeout to the Version command' do
+        allow(version_command).to receive(:call).with(timeout: 5).and_return(command_result(version_output))
+        allow(Git::Version).to receive(:parse).and_return(parsed_version)
+
+        lib.git_version(timeout: 5)
+
+        expect(version_command).to have_received(:call).with(timeout: 5)
+      end
+
+      it 'forwards nil timeout to the Version command' do
+        allow(version_command).to receive(:call).with(timeout: nil).and_return(command_result(version_output))
+        allow(Git::Version).to receive(:parse).and_return(parsed_version)
+
+        lib.git_version(timeout: nil)
+
+        expect(version_command).to have_received(:call).with(timeout: nil)
+      end
+    end
+
     context 'with unparseable output' do
       it 'raises Git::UnexpectedResultError' do
         allow(version_command).to receive(:call).and_return(command_result('not a version'))

@@ -14,12 +14,12 @@ class TestDeprecations < Test::Unit::TestCase
     # Cleanup handled by TestCase#git_teardown
   end
 
-  # --- Git::Base deprecations ---
+  # --- Git::Repository deprecations ---
 
   def test_base_is_local_branch_deprecation
     Git::Deprecation.expects(:warn).with(
-      'Git::Base#is_local_branch? is deprecated and will be removed in a future version. ' \
-      'Use Git::Base#local_branch? instead.'
+      'Git::Repository#is_local_branch? is deprecated and will be removed in a future version. ' \
+      'Use Git::Repository#local_branch? instead.'
     )
 
     assert_equal(true, @git.is_local_branch?(@git.current_branch))
@@ -27,8 +27,8 @@ class TestDeprecations < Test::Unit::TestCase
 
   def test_base_is_remote_branch_deprecation
     Git::Deprecation.expects(:warn).with(
-      'Git::Base#is_remote_branch? is deprecated and will be removed in a future version. ' \
-      'Use Git::Base#remote_branch? instead.'
+      'Git::Repository#is_remote_branch? is deprecated and will be removed in a future version. ' \
+      'Use Git::Repository#remote_branch? instead.'
     )
 
     # No remotes in fixture; method should return false
@@ -37,8 +37,8 @@ class TestDeprecations < Test::Unit::TestCase
 
   def test_base_is_branch_deprecation
     Git::Deprecation.expects(:warn).with(
-      'Git::Base#is_branch? is deprecated and will be removed in a future version. ' \
-      'Use Git::Base#branch? instead.'
+      'Git::Repository#is_branch? is deprecated and will be removed in a future version. ' \
+      'Use Git::Repository#branch? instead.'
     )
 
     assert_equal(true, @git.is_branch?(@git.current_branch))
@@ -75,8 +75,8 @@ class TestDeprecations < Test::Unit::TestCase
 
   def test_base_reset_hard_deprecation
     Git::Deprecation.expects(:warn).with(
-      'Git::Base#reset_hard is deprecated and will be removed in a future version. ' \
-      'Use Git::Base#reset(commitish, hard: true) instead.'
+      'Git::Repository::Staging#reset_hard is deprecated and will be removed in a future version. ' \
+      'Use #reset(commitish, hard: true) instead.'
     )
 
     # Call reset_hard - it should work but emit deprecation warning

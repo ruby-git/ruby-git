@@ -9,7 +9,7 @@ class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
     clone_working_repo
     @git = Git.open(@wdir)
 
-    @lib = Git.open(@wdir).lib
+    @lib = Git::Base.open(@wdir).lib
   end
 
   # This is the one real test that actually calls git.  The rest of the tests

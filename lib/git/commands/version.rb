@@ -28,6 +28,7 @@ module Git
       skip_version_validation
 
       arguments do
+        execution_option :timeout
         literal 'version'
         flag_option :build_options
       end
@@ -41,6 +42,10 @@ module Git
       #     @param options [Hash] command options
       #
       #     @option options [Boolean, nil] :build_options (nil) include build options in the output
+      #
+      #     @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
+      #       for the command to complete; if nil, uses the global timeout from
+      #       {Git::Config}; if 0, no timeout is enforced
       #
       #     @return [Git::CommandLineResult] the result of calling `git version`
       #

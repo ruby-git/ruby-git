@@ -1889,6 +1889,11 @@ module Git
     # Results are cached globally (keyed by binary path). It is assumed that the
     # git version doesn't change during runtime for a given binary.
     #
+    # @param timeout [Numeric, nil] seconds to wait for `git version`; `nil`
+    #   falls back to the global {Git::Config} timeout; `0` disables the timeout
+    #   entirely. Only used when the version has not yet been cached for the
+    #   current binary path.
+    #
     # @return [Git::Version] the parsed git version
     #
     # @raise [Git::UnexpectedResultError] if the version string cannot be parsed
@@ -1896,9 +1901,9 @@ module Git
     # @example
     #   lib.git_version #=> Git::Version.new(2, 42, 1)
     #
-    def git_version
+    def git_version(timeout: nil)
       self.class.cached_git_version(Git::Base.config.binary_path) do
-        output = Git::Commands::Version.new(self).call.stdout
+        output = Git::Commands::Version.new(self).call(timeout: timeout).stdout
         Git::Version.parse(output)
       end
     end
@@ -2614,11 +2619,8 @@ module Git
     # @api private
     #
     def stash_info_to_legacy(info, index = info.index)
-      full_message = info.message
-      match_data = full_message.match(/^[^:]+:(.*)$/)
-      message = match_data ? match_data[1] : full_message
-
-      [index, message.strip]
+      message = info.message.sub(/^(?:WIP on|On)\s+[^:]+:\s*/, '')
+      [index, message]
     end
 
     # Streams the staged content of a file at a given index stage to an IO object

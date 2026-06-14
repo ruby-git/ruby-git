@@ -212,5 +212,37 @@ RSpec.describe Git::ExecutionContext do
       expect { context.git_version }
         .to raise_error(Git::UnexpectedResultError, /Invalid version/)
     end
+
+    context 'with timeout: keyword' do
+      it 'forwards a non-nil timeout to the Version command' do
+        allow(version_command_double).to receive(:call)
+          .with(timeout: 5)
+          .and_return(command_result('git version 2.40.0'))
+
+        context.git_version(timeout: 5)
+
+        expect(version_command_double).to have_received(:call).with(timeout: 5)
+      end
+
+      it 'forwards timeout: 0 to the Version command (zero is not nil)' do
+        allow(version_command_double).to receive(:call)
+          .with(timeout: 0)
+          .and_return(command_result('git version 2.40.0'))
+
+        context.git_version(timeout: 0)
+
+        expect(version_command_double).to have_received(:call).with(timeout: 0)
+      end
+
+      it 'calls the Version command with no timeout when timeout is nil' do
+        allow(version_command_double).to receive(:call)
+          .with(no_args)
+          .and_return(command_result('git version 2.40.0'))
+
+        context.git_version(timeout: nil)
+
+        expect(version_command_double).to have_received(:call).with(no_args)
+      end
+    end
   end
 end

@@ -426,7 +426,7 @@ module Git
     #
     # @see Git.git_version
     #
-    def git_version
+    def git_version(timeout: nil) # rubocop:disable Lint/UnusedMethodArgument
       if binary_path == :use_global_config
         Git.git_version
       else
