@@ -196,7 +196,7 @@ class TestDeprecations < Test::Unit::TestCase
       'must implement it themselves using: Git.git_version >= Git::MINIMUM_GIT_VERSION.'
     )
 
-    assert_equal(true, Git::Lib.warn_if_old_command(@git.lib))
+    assert_equal(true, Git::Lib.warn_if_old_command(Git::Base.open(@wdir).lib))
   end
 
   def test_clean_ff_deprecation
@@ -210,7 +210,7 @@ class TestDeprecations < Test::Unit::TestCase
       )
 
       # Call clean with deprecated :ff option
-      git.lib.clean(ff: true)
+      git.clean(ff: true)
     end
   end
 

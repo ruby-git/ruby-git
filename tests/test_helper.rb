@@ -173,7 +173,7 @@ module Test
           git = Git.init('test_project')
 
           # Stub git_version to avoid calling real git version during validation
-          stub_lib_git_version(git.lib)
+          stub_lib_git_version(git.execution_context)
 
           # Create a mock for the command method
           mock_command = lambda do |*cmd, **opts|
@@ -189,13 +189,10 @@ module Test
             Git::CommandLineResult.new(['git', *cmd], status, mocked_output, '')
           end
 
-          git.lib.define_singleton_method(method, &mock_command)
-
-          # Also stub the execution context for methods that have been migrated
-          # from Git::Lib to Git::Repository facade modules.
+          # Stub the execution context for all methods (both legacy Git::Lib methods
+          # and facade methods that have been migrated from Git::Lib to Git::Repository).
           facade_ec = git.execution_context
           facade_ec.define_singleton_method(method, &mock_command)
-          facade_ec.define_singleton_method(:git_version) { |timeout: nil| git.lib.git_version } # rubocop:disable Lint/UnusedBlockArgument
 
           Dir.chdir 'test_project' do
             yield(git) if block_given?
