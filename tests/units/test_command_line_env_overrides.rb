@@ -13,11 +13,11 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
 
       assert_command_line_eq(expected_command_line_proc, include_env: true) do |git|
         expected_env = {
-          'GIT_DIR' => git.lib.git_dir,
+          'GIT_DIR' => git.execution_context.git_dir,
           'GIT_EDITOR' => 'true',
-          'GIT_INDEX_FILE' => git.lib.git_index_file,
+          'GIT_INDEX_FILE' => git.execution_context.git_index_file,
           'GIT_SSH' => 'ssh -i /path/to/key',
-          'GIT_WORK_TREE' => git.lib.git_work_dir,
+          'GIT_WORK_TREE' => git.execution_context.git_work_dir,
           'LC_ALL' => 'en_US.UTF-8'
         }
         expected_command_line = [expected_env, 'checkout', {}]
@@ -33,11 +33,11 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      env = git.lib.send(:env_overrides)
+      env = git.execution_context.send(:env_overrides)
 
-      assert_equal git.lib.git_dir, env['GIT_DIR']
-      assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
-      assert_equal git.lib.git_index_file, env['GIT_INDEX_FILE']
+      assert_equal git.execution_context.git_dir, env['GIT_DIR']
+      assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
+      assert_equal git.execution_context.git_index_file, env['GIT_INDEX_FILE']
       assert_equal 'en_US.UTF-8', env['LC_ALL']
       assert_equal Git::Base.config.git_ssh, env['GIT_SSH']
     end
@@ -47,12 +47,12 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      env = git.lib.send(:env_overrides, 'GIT_TRACE' => '1', 'GIT_CURL_VERBOSE' => '1')
+      env = git.execution_context.send(:env_overrides, 'GIT_TRACE' => '1', 'GIT_CURL_VERBOSE' => '1')
 
       # Original variables should still be present
-      assert_equal git.lib.git_dir, env['GIT_DIR']
-      assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
-      assert_equal git.lib.git_index_file, env['GIT_INDEX_FILE']
+      assert_equal git.execution_context.git_dir, env['GIT_DIR']
+      assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
+      assert_equal git.execution_context.git_index_file, env['GIT_INDEX_FILE']
 
       # Additional variables should be present
       assert_equal '1', env['GIT_TRACE']
@@ -64,15 +64,15 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      env = git.lib.send(:env_overrides, 'LC_ALL' => 'C', 'GIT_SSH' => '/custom/ssh')
+      env = git.execution_context.send(:env_overrides, 'LC_ALL' => 'C', 'GIT_SSH' => '/custom/ssh')
 
       # Overridden variables should have new values
       assert_equal 'C', env['LC_ALL']
       assert_equal '/custom/ssh', env['GIT_SSH']
 
       # Other variables should remain unchanged
-      assert_equal git.lib.git_dir, env['GIT_DIR']
-      assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
+      assert_equal git.execution_context.git_dir, env['GIT_DIR']
+      assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
     end
   end
 
@@ -80,15 +80,15 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      env = git.lib.send(:env_overrides, 'GIT_INDEX_FILE' => nil, 'GIT_SSH' => nil)
+      env = git.execution_context.send(:env_overrides, 'GIT_INDEX_FILE' => nil, 'GIT_SSH' => nil)
 
       # Excluded variables should be set to nil
       assert_nil env['GIT_INDEX_FILE']
       assert_nil env['GIT_SSH']
 
       # Other variables should remain unchanged
-      assert_equal git.lib.git_dir, env['GIT_DIR']
-      assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
+      assert_equal git.execution_context.git_dir, env['GIT_DIR']
+      assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
       assert_equal 'en_US.UTF-8', env['LC_ALL']
     end
   end
@@ -97,7 +97,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
     in_temp_dir do |_path|
       git = Git.init('test_project')
 
-      env = git.lib.send(:env_overrides,
+      env = git.execution_context.send(:env_overrides,
                          'GIT_TRACE' => '1',           # Add new variable
                          'GIT_INDEX_FILE' => nil,      # Exclude existing variable
                          'LC_ALL' => 'C')              # Override existing variable
@@ -112,8 +112,8 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       assert_equal 'C', env['LC_ALL']
 
       # Unchanged variables should remain
-      assert_equal git.lib.git_dir, env['GIT_DIR']
-      assert_equal git.lib.git_work_dir, env['GIT_WORK_TREE']
+      assert_equal git.execution_context.git_dir, env['GIT_DIR']
+      assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
     end
   end
 
@@ -127,7 +127,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         Git.init(bare_repo_path, bare: true)
         git = Git.bare(bare_repo_path, git_ssh: '/instance/ssh/script')
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
@@ -144,7 +144,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         create_and_init_repo(path)
         git = Git.open(path, git_ssh: '/instance/ssh/script')
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
@@ -160,7 +160,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       in_temp_dir do |_path|
         git = Git.init('test_project', git_ssh: '/instance/ssh/script')
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
@@ -184,7 +184,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
           git = Git.clone(source_repo, target_path, git_ssh: '/instance/ssh/script')
 
           # Verify the env_overrides has the instance git_ssh
-          env = git.lib.send(:env_overrides)
+          env = git.execution_context.send(:env_overrides)
           assert_equal '/instance/ssh/script', env['GIT_SSH']
         end
       end
@@ -202,7 +202,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         create_and_init_repo(path)
         git = Git.open(path, git_ssh: nil)
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_nil env['GIT_SSH'], 'GIT_SSH should be nil when git_ssh: nil is passed'
       end
     ensure
@@ -219,7 +219,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         create_and_init_repo(path)
         git = Git.open(path)
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_equal '/global/ssh/script', env['GIT_SSH']
       end
     ensure
@@ -238,7 +238,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
 
         git = Git.clone(source_repo, target_path, git_ssh: nil)
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_nil env['GIT_SSH'], 'GIT_SSH should be nil when git_ssh: nil is passed to Git.clone'
       end
     ensure
@@ -257,7 +257,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
 
         git = Git.clone(source_repo, target_path)
 
-        env = git.lib.send(:env_overrides)
+        env = git.execution_context.send(:env_overrides)
         assert_equal '/global/ssh/script', env['GIT_SSH']
       end
     ensure
