@@ -8,7 +8,7 @@ class TestStashSave < Test::Unit::TestCase
       new_file('test-file1', 'content1')
       g.add
 
-      result = g.lib.stash_save('save with changes')
+      result = g.stash_save('save with changes')
 
       assert_equal(true, result)
     end
@@ -16,7 +16,7 @@ class TestStashSave < Test::Unit::TestCase
 
   test 'stash_save returns false when there are no local changes to save' do
     in_bare_repo_clone do |g|
-      result = g.lib.stash_save('save without changes')
+      result = g.stash_save('save without changes')
 
       assert_equal(false, result)
     end
@@ -31,7 +31,7 @@ class TestStashSave < Test::Unit::TestCase
       git = Git.open('.')
 
       assert_raise(Git::FailedError) do
-        git.lib.stash_save('unborn stash')
+        git.stash_save('unborn stash')
       end
     end
   end
