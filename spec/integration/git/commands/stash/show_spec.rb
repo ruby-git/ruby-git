@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::Stash::Show, :integration do
     repo.commit('Initial commit')
 
     write_file('file.txt', "modified\n")
-    repo.lib.stash_save('WIP')
+    repo.stash_save('WIP')
   end
 
   describe '#call' do

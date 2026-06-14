@@ -27,7 +27,7 @@ RSpec.describe Git::Repository::Stashing, :integration do
     context 'when there is one stash entry with a branch prefix' do
       before do
         write_file('file.txt', 'modified content')
-        repo.lib.stash_save('my feature work')
+        repo.stash_save('my feature work')
       end
 
       it 'returns a single-element array with index 0' do
@@ -47,10 +47,10 @@ RSpec.describe Git::Repository::Stashing, :integration do
     context 'when there are multiple stash entries' do
       before do
         write_file('file.txt', 'change for stash 1')
-        repo.lib.stash_save('first change')
+        repo.stash_save('first change')
 
         write_file('file.txt', 'change for stash 2')
-        repo.lib.stash_save('second change')
+        repo.stash_save('second change')
       end
 
       it 'returns entries in oldest-first order' do
@@ -65,7 +65,7 @@ RSpec.describe Git::Repository::Stashing, :integration do
     context 'when a stash message contains a colon (e.g. "saving: work")' do
       before do
         write_file('file.txt', 'modified content')
-        repo.lib.stash_save('saving: work')
+        repo.stash_save('saving: work')
       end
 
       it 'strips only the branch prefix and keeps the rest of the message' do

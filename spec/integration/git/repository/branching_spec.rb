@@ -29,7 +29,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'in detached HEAD state' do
       before do
         sha = repo.log(1).execute.first.sha
-        repo.lib.checkout(sha)
+        repo.checkout(sha)
       end
 
       it "returns 'HEAD'" do
@@ -432,7 +432,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'when in detached HEAD state' do
       before do
         sha = repo.log(1).execute.first.sha
-        repo.lib.checkout(sha)
+        repo.checkout(sha)
       end
 
       it 'returns an Array of Git::BranchInfo' do
@@ -510,7 +510,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'in detached HEAD state (checked out at a commit SHA directly)' do
       before do
         sha = repo.log(1).execute.first.sha
-        repo.lib.checkout(sha)
+        repo.checkout(sha)
       end
 
       it 'returns HeadState with state :detached and name HEAD' do

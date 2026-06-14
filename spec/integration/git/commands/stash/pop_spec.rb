@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Stash::Pop, :integration do
     describe 'when the command succeeds' do
       before do
         write_file('file.txt', "modified content\n")
-        repo.lib.stash_save('WIP')
+        repo.stash_save('WIP')
       end
 
       it 'returns a CommandLineResult with output' do
