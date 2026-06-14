@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Apply, :integration do
         repo.add('file.txt')
         repo.commit('Add line2')
 
-        patch_content = execution_context.diff_full('HEAD~1', 'HEAD')
+        patch_content = repo.diff_full('HEAD~1', 'HEAD')
         File.write(patch_file, "#{patch_content}\n")
 
         repo.reset('HEAD~1', hard: true)

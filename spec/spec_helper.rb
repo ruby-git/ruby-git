@@ -47,14 +47,20 @@ RSpec.configure do |config|
     metadata[:integration] = true
   end
 
-  # Shared setup for all specs
-  config.before(:each) do
-    # Any global setup can go here
+  # Raise on any Git::Deprecation.warn call so that deprecated code paths are
+  # caught immediately as test failures. Tests that intentionally exercise a
+  # deprecated method must wrap the call in Git::Deprecation.silence { ... }
+  # to suppress the raise for that specific invocation.
+  #
+  # Use before(:suite) to apply globally (including before(:all) hooks) and
+  # after(:suite) to restore original behavior to avoid leaking global state.
+  config.before(:suite) do
+    @original_deprecation_behavior = Git::Deprecation.behavior
+    Git::Deprecation.behavior = :raise
   end
 
-  # Shared teardown for all specs
-  config.after(:each) do
-    # Any global teardown can go here
+  config.after(:suite) do
+    Git::Deprecation.behavior = @original_deprecation_behavior
   end
 end
 
