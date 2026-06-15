@@ -3,6 +3,7 @@
 require 'find'
 require 'pathname'
 
+require 'git/deprecation'
 require 'git/execution_context/repository'
 require 'git/repository/branching'
 require 'git/repository/context_helpers'
@@ -117,14 +118,23 @@ module Git
       index_file && Pathname.new(index_file)
     end
 
-    # Returns `self` so that legacy code using `git.lib.some_method` continues
-    # to work when `some_method` is a facade method on `Git::Repository`.
+    # Returns `self` after emitting a deprecation warning.
+    #
+    # Legacy callers that used `git.lib.some_method` can migrate to calling the
+    # facade method directly on the repository object. This shim will be removed
+    # in v6.0.0.
     #
     # @return [self]
     #
     # @api private
     #
-    def lib = self
+    def lib
+      Git::Deprecation.warn(
+        'Git::Repository#lib is deprecated and will be removed in v6.0.0. ' \
+        'Use the repository object directly.'
+      )
+      self
+    end
 
     # @return [String, nil] the git directory path
     #
