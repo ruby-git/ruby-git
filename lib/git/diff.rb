@@ -102,11 +102,7 @@ module Git
     # @return [String] the raw output of `git diff`
     #
     def patch
-      if @base.respond_to?(:diff_full)
-        @base.diff_full(@from, @to, path_limiter: @path)
-      else
-        @base.lib.diff_full(@from, @to, { path_limiter: @path })
-      end
+      @base.diff_full(@from, @to, path_limiter: @path)
     end
     alias to_s patch
 

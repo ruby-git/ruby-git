@@ -281,18 +281,10 @@ module Git
     class StatusFileFactory
       # Create a new factory backed by the given git object
       #
-      # When `base` is a {Git::Repository} (which exposes `#diff_index`
-      # directly), it is used as the data provider. When `base` is a
-      # {Git::Base} (the legacy path), `base.lib` is used instead.
-      #
-      # @param base [Git::Base, Git::Repository] the git object used as the
-      #   status data provider
+      # @param base [Git::Base, Git::Repository] the git object used as the status data provider
       #
       def initialize(base)
         @base = base
-        # When base is Git::Repository (which exposes #diff_index directly),
-        # use it as the data provider. Otherwise use base.lib (legacy path).
-        @provider = base.respond_to?(:diff_index) ? base : base.lib
       end
 
       # Gather all status data and build a hash of file paths to StatusFile objects
@@ -314,7 +306,7 @@ module Git
       # @return [Hash{String => Hash}] raw per-file status data keyed by path
       #
       def fetch_all_files_data
-        files = @provider.ls_files # Start with files tracked in the index.
+        files = @base.ls_files # Start with files tracked in the index.
         merge_untracked_files(files)
         merge_modified_files(files)
         merge_head_diffs(files)
@@ -328,7 +320,7 @@ module Git
       # @return [void]
       #
       def merge_untracked_files(files)
-        @provider.untracked_files.each do |file|
+        @base.untracked_files.each do |file|
           files[file] = { path: file, untracked: true }
         end
       end
@@ -341,7 +333,7 @@ module Git
       #
       def merge_modified_files(files)
         # Merge changes between the index and the working directory.
-        @provider.diff_files.each do |path, data|
+        @base.diff_files.each do |path, data|
           (files[path] ||= {}).merge!(data)
         end
       end
@@ -353,12 +345,11 @@ module Git
       # @return [void]
       #
       def merge_head_diffs(files)
-        # Git::Repository exposes #no_commits?; Git::Lib exposes #empty?.
-        is_empty = @provider.respond_to?(:no_commits?) ? @provider.no_commits? : @provider.empty?
+        is_empty = @base.no_commits?
         return if is_empty
 
         # Merge changes between HEAD and the index.
-        @provider.diff_index('HEAD').each do |path, data|
+        @base.diff_index('HEAD').each do |path, data|
           (files[path] ||= {}).merge!(data)
         end
       end

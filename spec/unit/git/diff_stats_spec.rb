@@ -13,12 +13,9 @@ RSpec.describe Git::DiffStats do
   end
 
   let(:repository_base) { instance_double(Git::Repository) }
-  let(:legacy_lib)      { double('legacy_lib') }
-  let(:legacy_base)     { double('legacy_base', lib: legacy_lib) }
 
   before do
     allow(repository_base).to receive(:diff_numstat).and_return(stats_hash)
-    allow(legacy_lib).to receive(:diff_stats).and_return(stats_hash)
   end
 
   describe '#initialize' do
@@ -34,68 +31,42 @@ RSpec.describe Git::DiffStats do
   end
 
   describe '#insertions' do
-    context 'when base responds to :diff_numstat (Git::Repository form)' do
-      subject(:result) { described_class.new(repository_base, 'HEAD~1', 'HEAD').insertions }
+    subject(:result) { described_class.new(repository_base, 'HEAD~1', 'HEAD').insertions }
 
-      it 'calls diff_numstat with from, to, and path_limiter: nil' do
+    it 'calls diff_numstat with from, to, and path_limiter: nil' do
+      expect(repository_base).to receive(:diff_numstat)
+        .with('HEAD~1', 'HEAD', path_limiter: nil)
+        .and_return(stats_hash)
+      result
+    end
+
+    it 'returns the total insertions from the diff_numstat result' do
+      expect(result).to eq(5)
+    end
+
+    context 'when path_limiter is given' do
+      it 'forwards path_limiter to diff_numstat' do
         expect(repository_base).to receive(:diff_numstat)
-          .with('HEAD~1', 'HEAD', path_limiter: nil)
+          .with('HEAD~1', 'HEAD', path_limiter: 'lib/')
           .and_return(stats_hash)
-        result
-      end
-
-      it 'returns the total insertions from the diff_numstat result' do
-        expect(result).to eq(5)
-      end
-
-      context 'when path_limiter is given' do
-        it 'forwards path_limiter to diff_numstat' do
-          expect(repository_base).to receive(:diff_numstat)
-            .with('HEAD~1', 'HEAD', path_limiter: 'lib/')
-            .and_return(stats_hash)
-          described_class.new(repository_base, 'HEAD~1', 'HEAD', 'lib/').insertions
-        end
-      end
-
-      context 'when obj2 is nil' do
-        it 'passes nil as the second positional argument to diff_numstat' do
-          expect(repository_base).to receive(:diff_numstat)
-            .with('HEAD', nil, path_limiter: nil)
-            .and_return(stats_hash)
-          described_class.new(repository_base, 'HEAD', nil).insertions
-        end
-      end
-
-      it 'memoizes the diff_numstat result across multiple accessor calls' do
-        expect(repository_base).to receive(:diff_numstat).once.and_return(stats_hash)
-        stats = described_class.new(repository_base, 'HEAD', nil)
-        stats.insertions
-        stats.deletions
+        described_class.new(repository_base, 'HEAD~1', 'HEAD', 'lib/').insertions
       end
     end
 
-    context 'when base does not respond to :diff_numstat (legacy Git::Base form)' do
-      subject(:result) { described_class.new(legacy_base, 'HEAD~1', 'HEAD').insertions }
-
-      it 'calls base.lib.diff_stats with from, to, and path_limiter option' do
-        expect(legacy_lib).to receive(:diff_stats)
-          .with('HEAD~1', 'HEAD', { path_limiter: nil })
+    context 'when obj2 is nil' do
+      it 'passes nil as the second positional argument to diff_numstat' do
+        expect(repository_base).to receive(:diff_numstat)
+          .with('HEAD', nil, path_limiter: nil)
           .and_return(stats_hash)
-        result
+        described_class.new(repository_base, 'HEAD', nil).insertions
       end
+    end
 
-      it 'returns the total insertions from the legacy diff_stats result' do
-        expect(result).to eq(5)
-      end
-
-      context 'when path_limiter is given' do
-        it 'forwards path_limiter to base.lib.diff_stats' do
-          expect(legacy_lib).to receive(:diff_stats)
-            .with('HEAD~1', 'HEAD', { path_limiter: 'lib/' })
-            .and_return(stats_hash)
-          described_class.new(legacy_base, 'HEAD~1', 'HEAD', 'lib/').insertions
-        end
-      end
+    it 'memoizes the diff_numstat result across multiple accessor calls' do
+      expect(repository_base).to receive(:diff_numstat).once.and_return(stats_hash)
+      stats = described_class.new(repository_base, 'HEAD', nil)
+      stats.insertions
+      stats.deletions
     end
   end
 

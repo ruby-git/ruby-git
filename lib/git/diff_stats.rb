@@ -88,17 +88,9 @@ module Git
 
     # Lazily fetches and caches the stats from the git lib
     #
-    # When `@base` implements `#diff_numstat`, delegates directly to that
-    # method. Otherwise falls back to the legacy `@base.lib.diff_stats` call
-    # so that existing `Git::Base`-backed callers continue to work unchanged.
-    #
     # @return [Hash] the fetched stats hash
     def fetch_stats
-      @fetch_stats ||= if @base.respond_to?(:diff_numstat)
-                         @base.diff_numstat(@from, @to, path_limiter: @path_limiter)
-                       else
-                         @base.lib.diff_stats(@from, @to, { path_limiter: @path_limiter })
-                       end
+      @fetch_stats ||= @base.diff_numstat(@from, @to, path_limiter: @path_limiter)
     end
   end
 end
