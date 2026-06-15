@@ -8,7 +8,7 @@ Address the unresolved **Copilot** review comments from the active pull request,
 
 This prompt references specific models by name (see below). If any named model is not available, stop and ask me which model to use instead rather than silently falling back to a default.
 
-Run the following in a loop, up to a maximum of **${input:maxIterations:5} iterations**. Each iteration of addressing issues must be performed using a subagent with the **"Claude Sonnet 4.6 - Medium"** model. Continue iterating until a Copilot review completes with no remaining comments, or until ${input:maxIterations:5} iterations have run.
+Run the following in a loop, up to a maximum of **${input:maxIterations:5} iterations**. Each iteration of addressing issues must be performed using a subagent with the **"Claude Sonnet 4.6 (copilot)"** model. Continue iterating until a Copilot review completes with no remaining comments, or until ${input:maxIterations:5} iterations have run.
 
 If there are no unresolved Copilot comments on the first pass, report that and exit without making any changes.
 
@@ -33,7 +33,7 @@ To keep token usage low, subagents must return only a short structured summary t
    - What issue(s) were addressed
    - How each issue was resolved
 
-6. **[BLOCKING — do not proceed until complete]** Wait for the new Copilot review to complete using a subagent with the cheapest available model (e.g. **"GPT-4o mini"**). That subagent should poll the review status every ~30 seconds and return only a single line per poll (`pending` or `done: N comments`), outputting "Waiting for Copilot review to complete... (Xs elapsed)" after each poll until the review is done. It must not re-fetch or print the full PR state. Do NOT move to step 7 or begin the next iteration until this subagent returns `done`.
+6. **[BLOCKING — do not proceed until complete]** Wait for the new Copilot review to complete using a subagent with the cheapest available model (e.g. **"GPT-5.4 mini (copilot)"**). That subagent should poll the review status every ~30 seconds and return only a single line per poll (`pending` or `done: N comments`), outputting "Waiting for Copilot review to complete... (Xs elapsed)" after each poll until the review is done. It must not re-fetch or print the full PR state. Do NOT move to step 7 or begin the next iteration until this subagent returns `done`.
 
 7. If the new Copilot review has no remaining comments, exit the loop. Otherwise, begin the next iteration (unless ${input:maxIterations:5} iterations have already run).
 
