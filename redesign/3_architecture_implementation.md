@@ -9,7 +9,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Phase 3 Public Interface Completion](#phase-3-public-interface-completion)
+    - [Step D1 — Remove domain-object `Git::Base` guards and `@base.lib` fallbacks](#step-d1--remove-domain-object-gitbase-guards-and-baselib-fallbacks)
+    - [~~Step C1d — Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository`~~ ✅ Complete](#step-c1d--flip-gitopencloneinitbare-to-return-gitrepository--complete)
+    - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
     - [Workstream C — C1: Prepare and flip top-level entry points to return `Git::Repository`](#workstream-c--c1-prepare-and-flip-top-level-entry-points-to-return-gitrepository)
@@ -38,9 +40,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- | :--------------: | :--------------: |
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 60% |
+| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 78% |
 | Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **72%** |
+| **TOTAL** | -- | -- | **100%** | **80%** |
 
 ### Facade Modules Completed
 
@@ -75,18 +77,22 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Step C1d — Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository`
+#### Step D1 — Remove domain-object `Git::Base` guards and `@base.lib` fallbacks
 
-All prerequisite workstreams are ✅ complete. Step C1d is split into three sub-steps:
+C1d is ✅ complete (all three sub-steps merged to `main`). The next steps are **D1** (v5 cleanup)
+and **F1/F2** (Phase 4 prerequisites, can run in parallel with D1).
 
-- **C1d-1** — Entry point flip (the breaking change itself): `Git.open`/`.bare`/`.clone`/`.init`
-  now return `Git::Repository` instead of `Git::Base`. Beyond the type change, some methods have
-  different return semantics — for example, `Git::Repository#merge_base` returns plain SHA strings
-  while `Git::Base#merge_base` returned `Git::Object::Commit` objects, and `commit_tree` returns
-  a raw SHA string rather than a typed object. Upgrade notes and downstream code must account for
-  these differences.
-- **C1d-2** — Eliminate all internal `.lib` callers in tests; add deprecation enforcement to both test suites
-- **C1d-3** — Remove dead fallback branches; replace silent `lib` shim with real deprecation warning
+See [Step D1](#step-d1--remove-domain-object-compatibility-fallbacks) below for the full spec.
+
+---
+
+#### ~~Step C1d — Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository`~~ ✅ Complete
+
+All three C1d sub-steps are merged to `main`:
+
+- **C1d-1** ✅ — Entry point flip: `Git.open`/`.bare`/`.clone`/`.init` now return `Git::Repository`
+- **C1d-2** ✅ — Eliminated all internal `.lib` callers in tests; added deprecation enforcement to both test suites
+- **C1d-3** ✅ — Removed dead fallback branches; replaced silent `lib` shim with real deprecation warning
 
 **All C1d prerequisites met:**
 
@@ -163,7 +169,7 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Worktree` + `Git::Worktrees` | — |
 
 The work was organized into six workstreams (A–F). All workstreams that are
-prerequisites for C1d are now ✅ complete. F1 and F2 (moving `Git` module utility
+prerequisites for C1d are ✅ complete, and C1d itself is ✅ complete. F1 and F2 (moving `Git` module utility
 methods off `Git::Lib`) are still pending but are not prerequisites for C1d — they
 feed Phase 4 independently.
 
@@ -586,7 +592,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
 | C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
-| C1d | ⬜ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. Split into C1d-1 (entry point flip), C1d-2 (eliminate internal .lib callers + add deprecation enforcement to both test suites), and C1d-3 (remove dead fallbacks + replace silent lib shim with real deprecation warning). |
+| C1d | ✅ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. Split into C1d-1 (entry point flip), C1d-2 (eliminate internal .lib callers + add deprecation enforcement to both test suites), and C1d-3 (remove dead fallbacks + replace silent lib shim with real deprecation warning). |
 | D1 | ⬜ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
 | D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
 
@@ -631,7 +637,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1b: Global config ownership (`Base.config` → `Git::Config`) | ✅ |
 | C1c-1: Guidance/process updates for signature compatibility (#1369) | ✅ |
 | C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ✅ |
-| C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ⬜ |
+| C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ✅ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ⬜ (v5 cleanup) |
 | D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
 | E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ✅ |
