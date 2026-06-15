@@ -176,12 +176,16 @@ RSpec.describe Git::Repository do
     end
 
     context 'when a file disappears during traversal' do
-      let(:vanishing_file) { File.join(repo_dir, 'vanishing.txt') }
-
+      let(:vanishing_file) do
+        File.join(repo_dir, 'vanishing.txt')
+      end
       before do
         File.write(vanishing_file, 'z' * 500)
         allow(File).to receive(:lstat).and_wrap_original do |original, path|
-          raise Errno::ENOENT, path if File.expand_path(path) == File.expand_path(vanishing_file)
+          if File.expand_path(path) == File.expand_path(vanishing_file)
+            raise Errno::ENOENT,
+                  path
+          end
 
           original.call(path)
         end
@@ -190,6 +194,23 @@ RSpec.describe Git::Repository do
       it 'skips the missing file and totals the remaining files' do
         expect(repo_size).to eq(150)
       end
+    end
+  end
+
+  describe '#lib' do
+    subject(:lib_result) { described_instance.lib }
+
+    it 'returns self' do
+      allow(Git::Deprecation).to receive(:warn)
+      expect(lib_result).to be(described_instance)
+    end
+
+    it 'emits a deprecation warning' do
+      allow(Git::Deprecation).to receive(:warn)
+      described_instance.lib
+      expect(Git::Deprecation).to have_received(:warn).with(
+        a_string_including('Git::Repository#lib', 'deprecated', 'v6.0.0')
+      )
     end
   end
 end
