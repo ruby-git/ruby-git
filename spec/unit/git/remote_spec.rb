@@ -4,10 +4,6 @@ require 'spec_helper'
 require 'git/remote'
 
 RSpec.describe Git::Remote do
-  # Git::Remote accepts either Git::Repository (new form) or Git::Base (legacy) as base.
-  # These specs cover both the Git::Repository path and the Git::Base duck-type path
-  # for the remote_repository bridge method.
-
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:base) { Git::Repository.new(execution_context: execution_context) }
   let(:remote_config) do
@@ -43,38 +39,6 @@ RSpec.describe Git::Remote do
       it 'calls config_remote on the repository' do
         expect(base).to receive(:config_remote).with('origin').and_return(remote_config)
         remote
-      end
-    end
-
-    context 'when base is a Git::Base instance' do
-      subject(:remote) { described_class.new(base_like, 'origin') }
-
-      let(:facade_repo) { instance_double(Git::Repository) }
-      # Plain object with is_a?(Git::Base) returning true — simulates the legacy
-      # Git::Base path without requiring a real Git repository on disk.
-      let(:base_like) do
-        repo = facade_repo
-        Object.new.tap do |obj|
-          obj.define_singleton_method(:facade_repository) { repo }
-          obj.define_singleton_method(:is_a?) { |klass| klass == Git::Base || super(klass) }
-        end
-      end
-
-      before do
-        allow(facade_repo).to receive(:config_remote).with('origin').and_return(remote_config)
-      end
-
-      it 'delegates config_remote through facade_repository' do
-        expect(facade_repo).to receive(:config_remote).with('origin').and_return(remote_config)
-        remote
-      end
-
-      it 'sets the name' do
-        expect(remote.name).to eq('origin')
-      end
-
-      it 'sets the url from config' do
-        expect(remote.url).to eq('https://github.com/test/repo.git')
       end
     end
   end

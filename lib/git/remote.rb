@@ -40,16 +40,11 @@ module Git
 
     # Initialize a new Remote object
     #
-    # @param base [Git::Base, Git::Repository] the git repository
-    #
-    #   Accepts either a {Git::Base} (legacy) or a {Git::Repository} (new form).
-    #   The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    #   in Phase 4.
+    # @param base [Git::Repository] the git repository
     #
     # @param name [String] the remote name (e.g. `'origin'`)
     #
-    # @note Use {Git::Base#remote} or the `remote` factory method on a
-    #   `Git::Repository` instance instead of constructing directly
+    # @note Use `Git::Repository#remote` instead of constructing directly
     #
     # @api private
     #
@@ -135,18 +130,12 @@ module Git
 
     private
 
-    # Resolves the {Git::Repository} for this remote
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    # in Phase 4.
-    #
     # @return [Git::Repository]
     #
     # @api private
     #
     def remote_repository
-      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      @base
     end
 
     def build_branch_info(refname)

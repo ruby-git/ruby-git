@@ -11,10 +11,6 @@ RSpec.describe Git::Worktree do
   let(:base) { instance_double(Git::Repository) }
   let(:dir)  { '/path/to/wt' }
 
-  before do
-    allow(base).to receive(:is_a?).with(Git::Base).and_return(false)
-  end
-
   # ---------------------------------------------------------------------------
   # #initialize
   # ---------------------------------------------------------------------------
@@ -84,27 +80,6 @@ RSpec.describe Git::Worktree do
         wt.gcommit
       end
     end
-
-    context 'when base is a Git::Base (legacy form) and no gcommit was given' do
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base) { instance_double(Git::Base) }
-      let(:commit_object) { instance_double(Git::Object::Commit) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-        allow(facade_repo).to receive(:gcommit).with(dir).and_return(commit_object)
-      end
-
-      it 'resolves facade_repository and calls gcommit on it with the full descriptor' do
-        expect(facade_repo).to receive(:gcommit).with(dir)
-        wt.gcommit
-      end
-
-      it 'returns the result from facade_repository.gcommit' do
-        expect(result).to eq(commit_object)
-      end
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -132,32 +107,6 @@ RSpec.describe Git::Worktree do
         end
       end
     end
-
-    context 'when base is a Git::Base (legacy form)' do
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base) { instance_double(Git::Base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-      end
-
-      context 'when gcommit is nil' do
-        it 'resolves facade_repository and calls worktree_add on it with dir and nil' do
-          expect(facade_repo).to receive(:worktree_add).with(dir, nil).and_return('output')
-          wt.add
-        end
-      end
-
-      context 'when gcommit is set' do
-        let(:gcommit) { 'main' }
-
-        it 'resolves facade_repository and calls worktree_add on it with dir and gcommit' do
-          expect(facade_repo).to receive(:worktree_add).with(dir, gcommit).and_return('output')
-          wt.add
-        end
-      end
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -170,21 +119,6 @@ RSpec.describe Git::Worktree do
     context 'when base is a Git::Repository (new form)' do
       it 'calls worktree_remove on base directly with dir' do
         expect(base).to receive(:worktree_remove).with(dir).and_return('')
-        wt.remove
-      end
-    end
-
-    context 'when base is a Git::Base (legacy form)' do
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base) { instance_double(Git::Base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-      end
-
-      it 'resolves facade_repository and calls worktree_remove on it with dir' do
-        expect(facade_repo).to receive(:worktree_remove).with(dir).and_return('')
         wt.remove
       end
     end

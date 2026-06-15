@@ -18,7 +18,7 @@ module Git
     # When `existing` is `false` (the default), immediately calls {#save} to push
     # the current working-directory state onto the stash stack.
     #
-    # @param base [Git::Repository, Git::Base] the git repository
+    # @param base [Git::Repository] the git repository
     #
     # @param message [String] the stash message
     #
@@ -93,15 +93,10 @@ module Git
 
     private
 
-    # Returns the facade interface for stash operations
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
-    #
     # @return [Git::Repository]
     #
     def stash_repository
-      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      @base
     end
   end
 end

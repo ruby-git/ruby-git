@@ -17,7 +17,6 @@ RSpec.describe Git::Worktrees do
   let(:described_instance) { described_class.new(repo_base) }
 
   before do
-    allow(repo_base).to receive(:is_a?).with(Git::Base).and_return(false)
     allow(repo_base).to receive(:worktrees_all).and_return([
                                                              ['/repo',        'abc123'],
                                                              ['/repo/linked', 'def456']
@@ -35,7 +34,6 @@ RSpec.describe Git::Worktrees do
       let(:base) { instance_double(Git::Repository) }
 
       before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(false)
         allow(base).to receive(:worktrees_all).and_return([
                                                             ['/repo',        'abc123'],
                                                             ['/repo/linked', 'def456']
@@ -57,33 +55,6 @@ RSpec.describe Git::Worktrees do
 
       it 'populates the collection with both worktrees' do
         expect(described_class.new(base).size).to eq(2)
-      end
-    end
-
-    context 'when base is a Git::Base (legacy form)' do
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base)        { instance_double(Git::Base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-        allow(facade_repo).to receive(:worktrees_all).and_return([
-                                                                   ['/repo',        'abc123'],
-                                                                   ['/repo/linked', 'def456']
-                                                                 ])
-        allow(Git::Worktree).to receive(:new).with(base, '/repo',        'abc123').and_return(wt_main)
-        allow(Git::Worktree).to receive(:new).with(base, '/repo/linked', 'def456').and_return(wt_linked)
-      end
-
-      it 'resolves facade_repository and calls worktrees_all on it' do
-        expect(facade_repo).to receive(:worktrees_all).and_return([])
-        described_class.new(base)
-      end
-
-      it 'passes the original base (not facade_repo) to Git::Worktree children' do
-        expect(Git::Worktree).to receive(:new).with(base, '/repo',        'abc123').and_return(wt_main)
-        expect(Git::Worktree).to receive(:new).with(base, '/repo/linked', 'def456').and_return(wt_linked)
-        described_class.new(base)
       end
     end
   end
@@ -186,24 +157,6 @@ RSpec.describe Git::Worktrees do
 
     it 'returns the result from worktree_prune' do
       expect(result).to eq('pruned output')
-    end
-
-    context 'when base is a Git::Base (legacy form)' do
-      let(:described_instance) { described_class.new(base) }
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base)        { instance_double(Git::Base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-        allow(facade_repo).to receive(:worktrees_all).and_return([])
-        allow(Git::Worktree).to receive(:new)
-      end
-
-      it 'resolves facade_repository and calls worktree_prune on it' do
-        expect(facade_repo).to receive(:worktree_prune).and_return('')
-        result
-      end
     end
   end
 end

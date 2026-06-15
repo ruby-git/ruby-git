@@ -393,9 +393,9 @@ module Git
       #
       # @param name [String] the name for the new remote
       #
-      # @param url [String, Git::Base] the URL of the remote repository
+      # @param url [String, Git::Repository] the URL of the remote repository
       #
-      #   A {Git::Base} instance is accepted for local references and converted
+      #   A {Git::Repository} instance is accepted for local references and converted
       #   to `url.repo.to_s`.
       #
       # @param opts [Hash] options for adding the remote
@@ -416,7 +416,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remote_add(name, url, opts = {})
-        url = url.repo.to_s if url.is_a?(Git::Base) || url.is_a?(Git::Repository)
+        url = url.repo.to_s if url.is_a?(Git::Repository)
         opts = Private.normalize_add_remote_keys(opts)
         SharedPrivate.assert_valid_opts!(REMOTE_ADD_ALLOWED_OPTS, **opts)
         Git::Commands::Remote::Add.new(@execution_context).call(name, url, **opts)
@@ -428,9 +428,9 @@ module Git
       #
       # @param name [String] the name for the new remote
       #
-      # @param url [String, Git::Base] the URL of the remote repository
+      # @param url [String, Git::Repository] the URL of the remote repository
       #
-      #   A {Git::Base} instance is accepted for local references and converted
+      #   A {Git::Repository} instance is accepted for local references and converted
       #   to `url.repo.to_s`.
       #
       # @param opts [Hash] options for adding the remote
@@ -505,9 +505,9 @@ module Git
       #
       # @param name [String] the name of the remote to update
       #
-      # @param url [String, Git::Base] the new URL for the remote
+      # @param url [String, Git::Repository] the new URL for the remote
       #
-      #   A {Git::Base} instance is accepted for local references and converted
+      #   A {Git::Repository} instance is accepted for local references and converted
       #   to `url.repo.to_s`.
       #
       # @return [Git::Remote] the updated remote
@@ -515,7 +515,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def remote_set_url(name, url)
-        url = url.repo.to_s if url.is_a?(Git::Base) || url.is_a?(Git::Repository)
+        url = url.repo.to_s if url.is_a?(Git::Repository)
         Git::Commands::Remote::SetUrl.new(@execution_context).call(name, url)
 
         Git::Remote.new(self, name)
@@ -525,9 +525,9 @@ module Git
       #
       # @param name [String] the name of the remote to update
       #
-      # @param url [String, Git::Base] the new URL for the remote
+      # @param url [String, Git::Repository] the new URL for the remote
       #
-      #   A {Git::Base} instance is accepted for local references and converted
+      #   A {Git::Repository} instance is accepted for local references and converted
       #   to `url.repo.to_s`.
       #
       # @return [Git::Remote] the updated remote

@@ -126,15 +126,10 @@ module Git
 
       private
 
-      # Returns the facade interface for git object queries.
-      #
-      # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-      # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
-      #
       # @return [Git::Repository]
       #
       def object_repository
-        @base.is_a?(Git::Base) ? @base.facade_repository : @base
+        @base
       end
     end
 
@@ -315,19 +310,23 @@ module Git
       attr_accessor :name
 
       # @overload initialize(base, name)
-      #   @param base [Git::Base] The Git base object
-      #   @param name [String] The name of the tag
+      #
+      #   @param base [Git::Repository] the git repository
+      #
+      #   @param name [String] the name of the tag
       #
       # @overload initialize(base, sha, name)
-      #   @param base [Git::Base] The Git base object
-      #   @param sha [String] The SHA of the tag object
-      #   @param name [String] The name of the tag
+      #
+      #   @param base [Git::Repository] the git repository
+      #
+      #   @param sha [String] the SHA of the tag object
+      #
+      #   @param name [String] the name of the tag
       #
       def initialize(base, sha, name = nil)
         if name.nil?
           name = sha
-          repo = base.is_a?(Git::Base) ? base.facade_repository : base
-          sha = repo.tag_sha(name)
+          sha = base.tag_sha(name)
           raise Git::UnexpectedResultError, "Tag '#{name}' does not exist." if sha == ''
         end
 
@@ -394,15 +393,10 @@ module Git
       Git::Object::Tag.new(base, objectish)
     end
 
-    # Returns the facade interface for git object queries.
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?` guard will be removed when {Git::Base} is deleted in Phase 4.
-    #
     # @return [Git::Repository]
     #
     private_class_method def self.object_repository_for(base)
-      base.is_a?(Git::Base) ? base.facade_repository : base
+      base
     end
   end
 end
