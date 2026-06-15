@@ -166,20 +166,6 @@ module Git
     # @api private
     def binary_path = execution_context.binary_path
 
-    # Runs a git command; delegates to the execution context.
-    #
-    # @api private
-    def command_capturing(...)
-      execution_context.command_capturing(...)
-    end
-
-    # Streams a git command; delegates to the execution context.
-    #
-    # @api private
-    def command_streaming(...)
-      execution_context.command_streaming(...)
-    end
-
     # Returns the size of the repository directory in bytes
     #
     # Sums the sizes of every regular file under the repository (`.git`)
@@ -205,16 +191,6 @@ module Git
         next
       end
       total
-    end
-
-    private
-
-    # Builds the git environment variable overrides for this repository;
-    # delegates to the execution context.
-    #
-    # @api private
-    def env_overrides(**additional_overrides)
-      execution_context.env_overrides(**additional_overrides)
     end
   end
 end
