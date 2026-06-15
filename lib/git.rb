@@ -3,11 +3,10 @@
 require 'active_support'
 require 'active_support/deprecation'
 
+require 'git/deprecation'
 require 'git/version'
 
 module Git
-  Deprecation = ActiveSupport::Deprecation.new('5.0.0', 'Git')
-
   # Minimum git version required by this gem
   #
   # Commands and features may require newer versions, but this is the absolute
