@@ -11,16 +11,8 @@ RSpec.describe Git::Diff do
 
   let(:repository_base) { instance_double(Git::Repository) }
 
-  # Duck-type collaborator: the legacy path models any base that exposes #lib
-  # but does NOT itself respond to #diff_full. No single concrete class in the
-  # codebase matches this interface (Git::Base defines #diff_full directly), so
-  # instance_double cannot be used here.
-  let(:legacy_lib)  { double('Git::Lib') }
-  let(:legacy_base) { double('legacy_base', lib: legacy_lib) }
-
   before do
     allow(repository_base).to receive(:diff_full).and_return(patch_text)
-    allow(legacy_lib).to receive(:diff_full).and_return(patch_text)
   end
 
   let(:described_instance) { described_class.new(repository_base, 'HEAD~1', 'HEAD') }
@@ -70,60 +62,34 @@ RSpec.describe Git::Diff do
   end
 
   describe '#patch' do
-    context 'when base responds to :diff_full (Git::Repository form)' do
-      subject(:result) { described_class.new(repository_base, 'HEAD~1', 'HEAD').patch }
+    subject(:result) { described_class.new(repository_base, 'HEAD~1', 'HEAD').patch }
 
-      it 'calls diff_full with from, to, and path_limiter: nil' do
+    it 'calls diff_full with from, to, and path_limiter: nil' do
+      expect(repository_base).to receive(:diff_full)
+        .with('HEAD~1', 'HEAD', path_limiter: nil)
+        .and_return(patch_text)
+      result
+    end
+
+    it 'returns the patch text' do
+      expect(result).to eq(patch_text)
+    end
+
+    context 'when a path filter has been set' do
+      it 'forwards the path to diff_full as path_limiter' do
         expect(repository_base).to receive(:diff_full)
-          .with('HEAD~1', 'HEAD', path_limiter: nil)
+          .with('HEAD~1', 'HEAD', path_limiter: 'lib/')
           .and_return(patch_text)
-        result
-      end
-
-      it 'returns the patch text' do
-        expect(result).to eq(patch_text)
-      end
-
-      context 'when a path filter has been set' do
-        it 'forwards the path to diff_full as path_limiter' do
-          expect(repository_base).to receive(:diff_full)
-            .with('HEAD~1', 'HEAD', path_limiter: 'lib/')
-            .and_return(patch_text)
-          described_class.new(repository_base, 'HEAD~1', 'HEAD').path('lib/').patch
-        end
-      end
-
-      context 'when obj2 is nil' do
-        it 'passes nil as the second positional argument to diff_full' do
-          expect(repository_base).to receive(:diff_full)
-            .with('HEAD', nil, path_limiter: nil)
-            .and_return(patch_text)
-          described_class.new(repository_base, 'HEAD', nil).patch
-        end
+        described_class.new(repository_base, 'HEAD~1', 'HEAD').path('lib/').patch
       end
     end
 
-    context 'when base does not respond to :diff_full (legacy Git::Base form)' do
-      subject(:result) { described_class.new(legacy_base, 'HEAD~1', 'HEAD').patch }
-
-      it 'calls base.lib.diff_full with from, to, and path_limiter option' do
-        expect(legacy_lib).to receive(:diff_full)
-          .with('HEAD~1', 'HEAD', { path_limiter: nil })
+    context 'when obj2 is nil' do
+      it 'passes nil as the second positional argument to diff_full' do
+        expect(repository_base).to receive(:diff_full)
+          .with('HEAD', nil, path_limiter: nil)
           .and_return(patch_text)
-        result
-      end
-
-      it 'returns the patch text' do
-        expect(result).to eq(patch_text)
-      end
-
-      context 'when a path filter has been set' do
-        it 'forwards the path to base.lib.diff_full as path_limiter' do
-          expect(legacy_lib).to receive(:diff_full)
-            .with('HEAD~1', 'HEAD', { path_limiter: 'lib/' })
-            .and_return(patch_text)
-          described_class.new(legacy_base, 'HEAD~1', 'HEAD').path('lib/').patch
-        end
+        described_class.new(repository_base, 'HEAD', nil).patch
       end
     end
   end

@@ -61,21 +61,10 @@ module Git
 
     # Lazily fetches and caches the path status from the git lib
     #
-    # When constructed with a pre-fetched hash, returns it directly.
-    # When `@base` responds to `#diff_name_status` (e.g. {Git::Repository} or
-    # {Git::Base}, which defines it as an alias for `#diff_path_status`),
-    # delegates directly to that method. Otherwise falls back to the legacy
-    # `@base.lib.diff_path_status` call for duck-typed base objects that only
-    # expose path-status via their lib.
-    #
     # @return [Hash{String => String}] a mapping of file paths to status codes
     #
     def fetch_path_status
-      @fetch_path_status ||= if @base.respond_to?(:diff_name_status)
-                               @base.diff_name_status(@from, @to, path_limiter: @path_limiter).to_h
-                             else
-                               @base.lib.diff_path_status(@from, @to, { path_limiter: @path_limiter })
-                             end
+      @fetch_path_status ||= @base.diff_name_status(@from, @to, path_limiter: @path_limiter).to_h
     end
 
     # Sets up legacy (base, from, to, path_limiter) instance state
