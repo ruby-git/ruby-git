@@ -103,6 +103,37 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '#diff_numstat' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.diff_numstat(obj1, obj2, opts) }
+
+    let(:obj1) { 'HEAD~1' }
+    let(:obj2) { 'HEAD' }
+    let(:opts) { { path_limiter: 'lib/' } }
+    let(:numstat_result) do
+      { total: { insertions: 2, deletions: 1, lines: 3, files: 1 }, files: {} }
+    end
+
+    it 'delegates to facade_repository.diff_numstat forwarding obj1, obj2, and path_limiter' do
+      expect(facade_repository).to receive(:diff_numstat)
+        .with(obj1, obj2, { path_limiter: 'lib/' })
+        .and_return(numstat_result)
+      expect(result).to be(numstat_result)
+    end
+
+    context 'when opts contains unknown keys' do
+      let(:opts) { { path_limiter: 'lib/', unknown: true } }
+
+      it 'strips unknown keys and forwards only path_limiter' do
+        expect(facade_repository).to receive(:diff_numstat)
+          .with(obj1, obj2, { path_limiter: 'lib/' })
+          .and_return(numstat_result)
+        result
+      end
+    end
+  end
+
   describe '#diff' do
     include_context 'with a stubbed facade_repository'
 

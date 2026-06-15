@@ -1227,6 +1227,36 @@ module Git
       facade_repository.diff_full(obj1, obj2, opts.slice(:path_limiter))
     end
 
+    # Returns the per-file insertion and deletion counts between two commits
+    #
+    # @example Get numstat between two commits
+    #   repo.diff_numstat('HEAD~1', 'HEAD')
+    #
+    # @param obj1 [String] the first commit or object to compare; defaults to
+    #   `'HEAD'`
+    #
+    # @param obj2 [String, nil] the second commit or object to compare
+    #
+    #   When `nil`, the comparison is against the index or working tree.
+    #
+    # @param opts [Hash] options to filter the diff
+    #
+    # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+    #   limit the numstat to the given path(s)
+    #
+    # @return [Hash] the per-file insertion/deletion counts
+    #
+    # @note Unknown option keys are silently ignored for backward compatibility;
+    #   only `:path_limiter` is forwarded to the underlying command.
+    #
+    # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+    #
+    # @see Git::Repository::Diffing#diff_numstat
+    #
+    def diff_numstat(obj1 = 'HEAD', obj2 = nil, opts = {})
+      facade_repository.diff_numstat(obj1, obj2, opts.slice(:path_limiter))
+    end
+
     # Returns a lazy {Git::DiffStats} object for accessing diff statistics
     #
     # Compares (1) two commits, (2) a commit against the working tree, or (3) the
