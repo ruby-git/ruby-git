@@ -4,34 +4,17 @@ require 'spec_helper'
 require 'git/status'
 require 'git/repository'
 
-# Unit tests for Git::Status::StatusFileFactory polymorphism.
-#
-# The factory has two provider paths:
-#   1. Git::Repository path — when base responds to :diff_index (has it as a
-#      facade method), the factory uses base directly as the provider.
-#   2. Legacy Git::Base path — when base does not respond to :diff_index, the
-#      factory falls back to base.lib.
-#
-# Each path has two sub-branches in #merge_head_diffs:
-#   - When the provider reports no commits (no_commits? / empty? is true), the
-#     factory skips the diff_index call entirely.
-#   - When there are commits, the factory calls diff_index('HEAD') to merge
-#     HEAD diffs into the status hash.
 RSpec.describe Git::Status::StatusFileFactory do
   describe '#construct_files' do
     subject(:result) { described_class.new(base).construct_files }
 
-    context 'when base is a Git::Repository (responds to :diff_index)' do
+    context 'when base is a Git::Repository' do
       let(:base) { instance_double(Git::Repository) }
 
       before do
         allow(base).to receive(:ls_files).and_return({})
         allow(base).to receive(:untracked_files).and_return([])
         allow(base).to receive(:diff_files).and_return({})
-        # instance_double(Git::Repository) already responds to :diff_index
-        # because the real class defines it. This stub provides a return value
-        # for any call that reaches it (overridden with specific expectations
-        # in nested contexts).
         allow(base).to receive(:diff_index).and_return({})
       end
 
@@ -104,54 +87,6 @@ RSpec.describe Git::Status::StatusFileFactory do
         it 'merges diff_index data for files not already in ls_files' do
           expect(result['b.rb']).to be_a(Git::Status::StatusFile)
           expect(result['b.rb'].type).to eq('A')
-        end
-      end
-    end
-
-    context 'when base is a legacy Git::Base (does not respond to :diff_index)' do
-      # Plain doubles are used here because:
-      # - base must NOT respond to :diff_index to exercise the legacy code path;
-      #   instance_double(Git::Base) would verify against the real class, which
-      #   may include modules that define :diff_index, making the test brittle.
-      # - lib_double represents Git::Lib, a large class not loaded in this spec;
-      #   a plain double avoids pulling in that dependency.
-      let(:lib_double) { double('lib') }                           # plain double: Git::Lib not loaded in this spec
-      let(:base)       { double('legacy_base', lib: lib_double) }  # plain double: must NOT respond to :diff_index
-
-      before do
-        allow(lib_double).to receive(:ls_files).and_return({})
-        allow(lib_double).to receive(:untracked_files).and_return([])
-        allow(lib_double).to receive(:diff_files).and_return({})
-      end
-
-      context 'when empty? returns true (repository has no commits)' do
-        before do
-          allow(lib_double).to receive(:empty?).and_return(true)
-        end
-
-        it 'does not call diff_index' do
-          expect(lib_double).not_to receive(:diff_index)
-          result
-        end
-
-        it 'returns an empty hash' do
-          expect(result).to eq({})
-        end
-      end
-
-      context 'when empty? returns false (repository has commits)' do
-        before do
-          allow(lib_double).to receive(:empty?).and_return(false)
-          allow(lib_double).to receive(:diff_index).with('HEAD').and_return({})
-        end
-
-        it 'calls diff_index with HEAD on the lib provider' do
-          expect(lib_double).to receive(:diff_index).with('HEAD').and_return({})
-          result
-        end
-
-        it 'returns an empty hash when all data is empty' do
-          expect(result).to eq({})
         end
       end
     end

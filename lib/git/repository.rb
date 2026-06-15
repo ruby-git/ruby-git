@@ -3,6 +3,7 @@
 require 'find'
 require 'pathname'
 
+require 'git/deprecation'
 require 'git/execution_context/repository'
 require 'git/repository/branching'
 require 'git/repository/context_helpers'
@@ -117,14 +118,23 @@ module Git
       index_file && Pathname.new(index_file)
     end
 
-    # Returns `self` so that legacy code using `git.lib.some_method` continues
-    # to work when `some_method` is a facade method on `Git::Repository`.
+    # Returns `self` after emitting a deprecation warning.
+    #
+    # Legacy callers that used `git.lib.some_method` can migrate to calling the
+    # facade method directly on the repository object. This shim will be removed
+    # in v6.0.0.
     #
     # @return [self]
     #
     # @api private
     #
-    def lib = self
+    def lib
+      Git::Deprecation.warn(
+        'Git::Repository#lib is deprecated and will be removed in v6.0.0. ' \
+        'Use the repository object directly.'
+      )
+      self
+    end
 
     # @return [String, nil] the git directory path
     #
@@ -156,20 +166,6 @@ module Git
     # @api private
     def binary_path = execution_context.binary_path
 
-    # Runs a git command; delegates to the execution context.
-    #
-    # @api private
-    def command_capturing(...)
-      execution_context.command_capturing(...)
-    end
-
-    # Streams a git command; delegates to the execution context.
-    #
-    # @api private
-    def command_streaming(...)
-      execution_context.command_streaming(...)
-    end
-
     # Returns the size of the repository directory in bytes
     #
     # Sums the sizes of every regular file under the repository (`.git`)
@@ -195,16 +191,6 @@ module Git
         next
       end
       total
-    end
-
-    private
-
-    # Builds the git environment variable overrides for this repository;
-    # delegates to the execution context.
-    #
-    # @api private
-    def env_overrides(**additional_overrides)
-      execution_context.env_overrides(**additional_overrides)
     end
   end
 end
