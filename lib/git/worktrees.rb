@@ -8,11 +8,6 @@ module Git
   # Wraps every linked and main worktree and provides enumeration and
   # path-based lookup.
   #
-  # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy
-  # form) as the `base` argument. The `is_a?(Git::Base)` guard routes git
-  # operations through the facade repository and will be removed when
-  # {Git::Base} is deleted in Phase 4.
-  #
   # @example Enumerate all worktrees
   #   worktrees = repo.worktrees
   #   worktrees.each { |wt| puts wt.dir }
@@ -24,7 +19,7 @@ module Git
 
     # Creates a new Worktrees collection populated from the given repository
     #
-    # @param base [Git::Base, Git::Repository] the repository to enumerate
+    # @param base [Git::Repository] the repository to enumerate
     #   worktrees from
     #
     # @return [void]
@@ -130,18 +125,12 @@ module Git
 
     private
 
-    # Resolves the {Git::Repository} for this collection of worktrees
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    # in Phase 4.
-    #
     # @return [Git::Repository] the repository used to enumerate worktrees
     #
     # @api private
     #
     def worktree_repository
-      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      @base
     end
   end
 end

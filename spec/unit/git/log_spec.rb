@@ -17,16 +17,6 @@ RSpec.describe Git::Log do
       end
     end
 
-    context 'when base is a Git::Base (legacy)' do
-      subject(:log) { described_class.new(base, 10) }
-
-      let(:base) { instance_double(Git::Base) }
-
-      it 'accepts Git::Base without raising' do
-        expect { log }.not_to raise_error
-      end
-    end
-
     context 'when max_count defaults to 30' do
       subject(:log) { described_class.new(repository) }
 
@@ -66,37 +56,6 @@ RSpec.describe Git::Log do
 
       it 'calls full_log_commits directly on the repository' do
         expect(repository).to receive(:full_log_commits).and_return(commit_data)
-        result
-      end
-
-      it 'returns a Git::Log::Result' do
-        expect(result).to be_a(Git::Log::Result)
-      end
-    end
-
-    context 'when base is a Git::Base (legacy)' do
-      subject(:result) { log.execute }
-
-      let(:base) { instance_double(Git::Base) }
-      let(:facade_repository) { instance_double(Git::Repository) }
-      let(:log) { described_class.new(base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repository)
-        allow(facade_repository).to receive(:full_log_commits).and_return(commit_data)
-        allow(Git::Object::Commit).to receive(:new).with(base, 'abc123', commit_data.first)
-                                                   .and_return(instance_double(Git::Object::Commit))
-      end
-
-      it 'routes full_log_commits through facade_repository' do
-        expect(facade_repository).to receive(:full_log_commits).and_return(commit_data)
-        result
-      end
-
-      it 'passes base (not facade_repository) to Git::Object::Commit.new' do
-        expect(Git::Object::Commit).to receive(:new).with(base, 'abc123', commit_data.first)
-                                                    .and_return(instance_double(Git::Object::Commit))
         result
       end
 

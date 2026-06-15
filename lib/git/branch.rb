@@ -68,17 +68,13 @@ module Git
 
     # Initialize a new Branch object
     #
-    # @param base [Git::Base, Git::Repository] the git repository
-    #
-    #   Accepts either a {Git::Base} (legacy) or a {Git::Repository} (new form).
-    #   The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    #   in Phase 4.
+    # @param base [Git::Repository] the git repository
     #
     # @param branch_info_or_name [Git::BranchInfo, String] branch info object or name string
     #
     #   Passing a BranchInfo is preferred; String support is for backward compatibility.
     #
-    # @note Use {Git::Base#branch} or {Git::Base#branches} instead of constructing directly
+    # @note Use {Git::Repository#branch} or {Git::Repository#branches} instead of constructing directly
     #
     # @api private
     #
@@ -464,18 +460,12 @@ module Git
       nil
     end
 
-    # Resolves the {Git::Repository} for this branch
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    # in Phase 4.
-    #
     # @return [Git::Repository]
     #
     # @api private
     #
     def branch_repository
-      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      @base
     end
   end
 end

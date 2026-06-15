@@ -37,7 +37,6 @@ RSpec.describe Git::Branches do
       let(:base) { instance_double(Git::Repository) }
 
       before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(false)
         allow(base).to receive(:branches_all).and_return([local_info, remote_info])
         allow(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
         allow(Git::Branch).to receive(:new).with(base, remote_info).and_return(remote_branch)
@@ -54,28 +53,6 @@ RSpec.describe Git::Branches do
         described_class.new(base)
       end
     end
-
-    context 'when passed a Git::Base' do
-      let(:facade_repo) { instance_double(Git::Repository) }
-      let(:base) { instance_double(Git::Base) }
-
-      before do
-        allow(base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(base).to receive(:facade_repository).and_return(facade_repo)
-        allow(facade_repo).to receive(:branches_all).and_return([local_info])
-        allow(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
-      end
-
-      it 'calls branches_all on the facade_repository, not on base directly' do
-        expect(facade_repo).to receive(:branches_all).and_return([local_info])
-        described_class.new(base)
-      end
-
-      it 'creates Git::Branch objects with the original base (not the facade repository)' do
-        expect(Git::Branch).to receive(:new).with(base, local_info).and_return(local_branch)
-        described_class.new(base)
-      end
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -87,7 +64,6 @@ RSpec.describe Git::Branches do
   let(:described_instance) { described_class.new(repo_base) }
 
   before do
-    allow(repo_base).to receive(:is_a?).with(Git::Base).and_return(false)
     allow(repo_base).to receive(:branches_all).and_return(branch_infos)
     allow(Git::Branch).to receive(:new).with(repo_base, local_info).and_return(local_branch)
     allow(Git::Branch).to receive(:new).with(repo_base, remote_info).and_return(remote_branch)

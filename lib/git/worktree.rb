@@ -9,11 +9,6 @@ module Git
   # {Git::Repository::WorktreeOperations#worktree} or populated by
   # {Git::Worktrees}.
   #
-  # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy form)
-  # as the `base` argument. The `is_a?(Git::Base)` guard routes git operations
-  # through the facade repository and will be removed when {Git::Base} is
-  # deleted in Phase 4.
-  #
   # @example Add and remove a linked worktree
   #   worktree = repo.worktree('/path/to/new-worktree')
   #   worktree.add
@@ -37,7 +32,7 @@ module Git
 
     # Creates a new Worktree object
     #
-    # @param base [Git::Base, Git::Repository] the repository that owns this
+    # @param base [Git::Repository] the repository that owns this
     #   worktree
     #
     # @param dir [String] filesystem path of the worktree
@@ -137,18 +132,12 @@ module Git
 
     private
 
-    # Resolves the {Git::Repository} for worktree operations
-    #
-    # Accepts either a {Git::Repository} (new form) or a {Git::Base} (legacy).
-    # The `is_a?(Git::Base)` guard will be removed when {Git::Base} is deleted
-    # in Phase 4.
-    #
     # @return [Git::Repository] the repository used for worktree operations
     #
     # @api private
     #
     def worktree_repository
-      @base.is_a?(Git::Base) ? @base.facade_repository : @base
+      @base
     end
   end
 end

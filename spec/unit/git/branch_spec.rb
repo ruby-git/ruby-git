@@ -3,10 +3,6 @@
 require 'spec_helper'
 
 RSpec.describe Git::Branch do
-  # Git::Branch accepts either Git::Repository (new form) or Git::Base (legacy) as base.
-  # These specs cover the Git::Repository path; the Git::Base path is exercised by the
-  # legacy integration tests in tests/units/test_branch.rb.
-
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:base) { Git::Repository.new(execution_context: execution_context) }
 
@@ -216,26 +212,6 @@ RSpec.describe Git::Branch do
 
       it 'returns false' do
         expect(branch.current).to be false
-      end
-    end
-
-    context 'when base is a Git::Base instance' do
-      subject(:branch) { described_class.new(base_like, branch_info) }
-
-      let(:facade_repo) { instance_double(Git::Repository) }
-      # Plain object with is_a?(Git::Base) returning true — simulates the legacy
-      # Git::Base path without requiring a real Git repository on disk.
-      let(:base_like) do
-        repo = facade_repo
-        Object.new.tap do |obj|
-          obj.define_singleton_method(:facade_repository) { repo }
-          obj.define_singleton_method(:is_a?) { |klass| klass == Git::Base || super(klass) }
-        end
-      end
-
-      it 'delegates current_branch through facade_repository' do
-        expect(facade_repo).to receive(:current_branch).and_return('feature')
-        expect(branch.current).to be true
       end
     end
   end

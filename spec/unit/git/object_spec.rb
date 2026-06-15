@@ -3,9 +3,8 @@
 require 'spec_helper'
 require 'git/object'
 
-# These specs cover Git::Object::* classes, exercising both the Git::Repository
-# (new form) and Git::Base (legacy) polymorphism branches.
-# Full integration via Git::Base is covered by tests/units/test_object.rb (Test::Unit).
+# These specs cover Git::Object::* classes.
+# Full integration is covered by tests/units/test_object.rb (Test::Unit).
 
 RSpec.describe Git::Object::Blob do
   # Git::Object::Blob is the concrete subclass used to exercise all
@@ -60,23 +59,6 @@ RSpec.describe Git::Object::Blob do
 
     it 'returns the object size in bytes from the repository' do
       expect(result).to eq(42)
-    end
-
-    context 'when initialized with a Git::Base (legacy path)' do
-      # instance_double is viable: facade_repository is defined on Git::Base
-      # (lib/git/base.rb) and is_a? is verifiable via Kernel.
-      let(:described_instance) { described_class.new(legacy_base, objectish) }
-      let(:legacy_base) { instance_double(Git::Base) }
-
-      before do
-        allow(legacy_base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(legacy_base).to receive(:facade_repository).and_return(repository)
-        allow(repository).to receive(:cat_file_size).with(objectish).and_return(99)
-      end
-
-      it 'delegates through the facade_repository of the Git::Base instance' do
-        expect(result).to eq(99)
-      end
     end
   end
 
@@ -624,26 +606,6 @@ RSpec.describe Git::Object::Tag do
         expect(tag.name).to eq('v1.0')
       end
     end
-
-    context 'with name only and a Git::Base (legacy path)' do
-      # instance_double is viable: facade_repository is defined on Git::Base
-      # (lib/git/base.rb) and is_a? is verifiable via Kernel.
-      let(:base) { legacy_base }
-      let(:sha) { 'v1.0' }
-      let(:name) { nil }
-      let(:legacy_base) { instance_double(Git::Base) }
-
-      before do
-        allow(legacy_base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(legacy_base).to receive(:facade_repository).and_return(repository)
-        allow(repository).to receive(:tag_sha).with('v1.0').and_return('tagsha123abc')
-      end
-
-      it 'resolves the SHA via the facade_repository of the Git::Base' do
-        expect(tag.objectish).to eq('tagsha123abc')
-        expect(tag.name).to eq('v1.0')
-      end
-    end
   end
 
   describe '#annotated?' do
@@ -836,24 +798,6 @@ RSpec.describe Git::Object do
       it 'raises NoMethodError due to nil class' do
         expect { described_class.new(repository, 'abc123', 'unknown') }
           .to raise_error(NoMethodError, /undefined method [`']new[`'].*nil/)
-      end
-    end
-
-    context 'when base is a Git::Base (legacy path)' do
-      # instance_double is viable: facade_repository is defined on Git::Base
-      # (lib/git/base.rb) and is_a? is verifiable via Kernel.
-      subject(:result) { described_class.new(legacy_base, 'HEAD') }
-
-      let(:legacy_base) { instance_double(Git::Base) }
-
-      before do
-        allow(legacy_base).to receive(:is_a?).with(Git::Base).and_return(true)
-        allow(legacy_base).to receive(:facade_repository).and_return(repository)
-        allow(repository).to receive(:cat_file_type).with('HEAD').and_return('commit')
-      end
-
-      it 'determines the object type via the facade_repository of the Git::Base' do
-        expect(result).to be_a(Git::Object::Commit)
       end
     end
   end

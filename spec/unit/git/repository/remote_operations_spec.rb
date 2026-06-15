@@ -611,28 +611,6 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
-    context 'with url as Git::Base' do
-      let(:url_base) do
-        Object.new.tap do |obj|
-          def obj.repo
-            Pathname.new('/tmp/source.git')
-          end
-
-          def obj.is_a?(klass)
-            klass == Git::Base || super
-          end
-        end
-      end
-
-      subject(:result) { described_instance.remote_add('upstream', url_base) }
-
-      it 'normalizes url to repo.to_s before calling the command' do
-        expect(remote_add_command)
-          .to receive(:call).with('upstream', '/tmp/source.git').and_return(remote_add_result)
-        result
-      end
-    end
-
     # --- :fetch option -------------------------------------------------------
 
     context 'with fetch: true' do
@@ -679,6 +657,24 @@ RSpec.describe Git::Repository::RemoteOperations do
         expect(remote_add_command).not_to receive(:call)
         expect { described_instance.remote_add('upstream', 'https://example.com/repo.git', unknown_opt: true) }
           .to raise_error(ArgumentError, /unknown_opt/)
+      end
+    end
+
+    # --- Git::Repository URL normalization -----------------------------------
+
+    context 'when url is a Git::Repository instance' do
+      let(:url_execution_context) do
+        instance_double(Git::ExecutionContext::Repository, git_dir: '/path/to/repo')
+      end
+      let(:url_repo) { Git::Repository.new(execution_context: url_execution_context) }
+
+      subject(:result) { described_instance.remote_add('upstream', url_repo) }
+
+      it 'converts the repository to a path string before calling the command' do
+        expect(remote_add_command)
+          .to receive(:call).with('upstream', '/path/to/repo')
+          .and_return(remote_add_result)
+        result
       end
     end
   end
@@ -903,24 +899,20 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
-    context 'with url as a Git::Base' do
-      let(:url_base) do
-        Object.new.tap do |obj|
-          def obj.repo
-            Pathname.new('/tmp/source.git')
-          end
+    # --- Git::Repository URL normalization -----------------------------------
 
-          def obj.is_a?(klass)
-            klass == Git::Base || super
-          end
-        end
+    context 'when url is a Git::Repository instance' do
+      let(:url_execution_context) do
+        instance_double(Git::ExecutionContext::Repository, git_dir: '/path/to/repo')
       end
+      let(:url_repo) { Git::Repository.new(execution_context: url_execution_context) }
 
-      subject(:result) { described_instance.remote_set_url('origin', url_base) }
+      subject(:result) { described_instance.remote_set_url('origin', url_repo) }
 
-      it 'normalizes the url to repo.to_s before calling the command' do
+      it 'converts the repository to a path string before calling the command' do
         expect(set_url_command)
-          .to receive(:call).with('origin', '/tmp/source.git').and_return(set_url_result)
+          .to receive(:call).with('origin', '/path/to/repo')
+          .and_return(set_url_result)
         result
       end
     end
