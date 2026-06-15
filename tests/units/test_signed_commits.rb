@@ -34,7 +34,7 @@ class TestSignedCommits < Test::Unit::TestCase
       `git add README.md`
       `git commit -S -m "Signed, sealed, delivered"`
 
-      data = Git.open('.').lib.cat_file_commit('HEAD')
+      data = Git.open('.').cat_file_commit('HEAD')
 
       assert_match(SSH_SIGNATURE_REGEXP, data['gpgsig'])
       assert_equal("Signed, sealed, delivered\n", data['message'])
