@@ -18,6 +18,48 @@ RSpec.describe Git::Base do
     end
   end
 
+  describe '.repository_default_branch' do
+    let(:context) { instance_double(Git::ExecutionContext::Global) }
+    let(:ls_remote_command) { instance_double(Git::Commands::LsRemote) }
+
+    before do
+      allow(Git::ExecutionContext::Global).to receive(:new).with(logger: nil).and_return(context)
+      allow(Git::Commands::LsRemote).to receive(:new).with(context).and_return(ls_remote_command)
+    end
+
+    it 'uses execution context + command path (not Git::Lib)' do
+      stdout = <<~OUTPUT
+        ref: refs/heads/main\tHEAD
+        292087efabc8423c3cf616d78fac5311d58e7425\tHEAD
+      OUTPUT
+
+      expect(Git::Lib).not_to receive(:new)
+      expect(ls_remote_command)
+        .to receive(:call).with('origin', 'HEAD', symref: true).and_return(command_result(stdout))
+
+      expect(described_class.repository_default_branch('origin')).to eq('main')
+    end
+
+    it 'raises the same error when the default branch cannot be determined' do
+      expect(ls_remote_command).to receive(:call).with('origin', 'HEAD', symref: true).and_return(command_result(''))
+
+      expect { described_class.repository_default_branch('origin') }
+        .to raise_error(Git::UnexpectedResultError, 'Unable to determine the default branch')
+    end
+
+    it 'passes options[:log] to the execution context' do
+      logger = instance_double(Logger)
+      allow(Git::ExecutionContext::Global).to receive(:new).with(logger: logger).and_return(context)
+      allow(ls_remote_command).to receive(:call).and_return(
+        command_result("ref: refs/heads/main\tHEAD\n292087efabc8423c3cf616d78fac5311d58e7425\tHEAD\n")
+      )
+
+      described_class.repository_default_branch('origin', log: logger)
+
+      expect(Git::ExecutionContext::Global).to have_received(:new).with(logger: logger)
+    end
+  end
+
   describe '#binary_path' do
     context 'when not specified' do
       subject(:base) { described_class.new }

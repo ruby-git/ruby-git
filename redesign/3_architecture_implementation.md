@@ -75,12 +75,12 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Step D2 / Phase 4 — Remove `base_object` bridge and delete `Git::Base`
+#### Step F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`
 
-D1 is ✅ complete. The next major step is Phase 4, which removes `Git::Base` and `Git::Lib`
-entirely. D2 is bundled with that deletion (see Step D2 below).
+F1 is ✅ complete. The remaining Phase 4 prerequisite in Workstream F is F2.
 
-Before Phase 4 can start, F1 and F2 (moving `Git` module utilities off `Git::Lib`) must complete.
+Before Phase 4 can start, F2 (moving the remaining `Git` module utility methods off
+`Git::Lib`) must complete.
 The following are also required and are already ✅ complete:
 
 | Step | Status |
@@ -109,9 +109,9 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Worktree` + `Git::Worktrees` | — |
 
 The work was organized into six workstreams (A–F). All workstreams that are
-prerequisites for C1d are now ✅ complete. F1 and F2 (moving `Git` module utility
-methods off `Git::Lib`) are still pending but are not prerequisites for C1d — they
-feed Phase 4 independently.
+prerequisites for C1d are now ✅ complete. F1 is complete; F2 (moving the remaining
+`Git` module utility methods off `Git::Lib`) is still pending and feeds Phase 4
+independently.
 
 **Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
 reasoning behind each edge):
@@ -465,7 +465,7 @@ Three `Git`-module-level methods bypass `Git::Repository` entirely and call
 non-`Git::Lib` adapter path using `Git::ExecutionContext::Global` plus existing
 parsing logic.
 
-**Step F1 — Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib`** ⬜
+**Step F1 — Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib`** ✅
 
 | `Git` module method | Current path | Required work |
 | --- | --- | --- |
@@ -528,7 +528,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | C1a-2 | ✅ | Add `Git::Repository.clone`/`.init` | 4.x-compatible additive | `Git.clone`/`.init` still return `Git::Base`; clone/init behavior is duplicated behind new factories without changing public entry points. |
 | C1b | [#1385](https://github.com/ruby-git/ruby-git/pull/1385) ✅ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ✅ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
-| F1 | ⬜ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
+| F1 | ✅ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
 | F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
 | C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |

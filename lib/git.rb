@@ -38,9 +38,11 @@ require 'git/encoding_utils'
 require 'git/errors'
 require 'git/escaped_path'
 require 'git/execution_context'
+require 'git/commands/ls_remote'
 require 'git/file_ref'
 require 'git/fsck_object'
 require 'git/fsck_result'
+require 'git/parsers/ls_remote'
 require 'git/version_constraint'
 require 'git/lib'
 require 'git/log'
@@ -415,6 +417,21 @@ module Git
     Git::Repository.init(directory, options)
   end
 
+  # Option keys accepted by {.ls_remote}
+  #
+  # Parser-incompatible options such as `:get_url` and `:symref` are intentionally
+  # excluded because {Git::Parsers::LsRemote.parse_output} cannot handle the
+  # non-standard output formats those flags produce.
+  #
+  # @return [Array<Symbol>]
+  #
+  # @api private
+  #
+  LS_REMOTE_ALLOWED_OPTS = %i[
+    branches b heads h tags t refs upload_pack quiet q exit_code sort server_option o timeout
+  ].freeze
+  private_constant :LS_REMOTE_ALLOWED_OPTS
+
   # returns a Hash containing information about the references
   # of the target repository
   #
@@ -424,7 +441,15 @@ module Git
   # @param [String|NilClass] location the target repository location or nil for '.'
   # @return [{String=>Hash}] the available references of the target repo.
   def self.ls_remote(location = nil, options = {})
-    Git::Lib.new.ls_remote(location, options)
+    options = options.dup
+    log = options.delete(:log)
+    unknown = options.keys - LS_REMOTE_ALLOWED_OPTS
+    raise ArgumentError, "Unknown options: #{unknown.join(', ')}" unless unknown.empty?
+
+    context = Git::ExecutionContext::Global.new(logger: log)
+    repository = location || '.'
+    output_lines = Git::Commands::LsRemote.new(context).call(repository, **options).stdout.split("\n")
+    Git::Parsers::LsRemote.parse_output(output_lines)
   end
 
   # Open a an existing Git working directory

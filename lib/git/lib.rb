@@ -8,6 +8,7 @@ require 'git/errors'
 require 'git/parsers/branch'
 require 'git/parsers/fsck'
 require 'git/parsers/grep'
+require 'git/parsers/ls_remote'
 require 'git/parsers/stash'
 require 'git/parsers/tag'
 require 'git/url'
@@ -184,14 +185,7 @@ module Git
     #
     def repository_default_branch(repository)
       output = Git::Commands::LsRemote.new(self).call(repository, 'HEAD', symref: true).stdout
-
-      match_data = output.match(%r{^ref: refs/remotes/origin/(?<default_branch>[^\t]+)\trefs/remotes/origin/HEAD$})
-      return match_data[:default_branch] if match_data
-
-      match_data = output.match(%r{^ref: refs/heads/(?<default_branch>[^\t]+)\tHEAD$})
-      return match_data[:default_branch] if match_data
-
-      raise Git::UnexpectedResultError, 'Unable to determine the default branch'
+      Git::Parsers::LsRemote.parse_default_branch(output)
     end
 
     ## READ COMMANDS ##
@@ -1082,7 +1076,7 @@ module Git
     def ls_remote(location = nil, opts = {})
       repository = location || '.'
       output_lines = Git::Commands::LsRemote.new(self).call(repository, **opts).stdout.split("\n")
-      parse_ls_remote_output(output_lines)
+      Git::Parsers::LsRemote.parse_output(output_lines)
     end
 
     def ignored_files
@@ -2583,29 +2577,6 @@ module Git
 
     def build_files_hash(file_stats)
       file_stats.to_h { |s| [s[:filename], s.slice(:insertions, :deletions)] }
-    end
-
-    def parse_ls_remote_output(lines)
-      lines.each_with_object(Hash.new { |h, k| h[k] = {} }) do |line, hsh|
-        type, name, value = parse_ls_remote_line(line)
-        if name
-          hsh[type][name] = value
-        else # Handles the HEAD entry, which has no name
-          hsh[type].update(value)
-        end
-      end
-    end
-
-    def parse_ls_remote_line(line)
-      sha, info = line.split("\t", 2)
-      ref, type, name = info.split('/', 3)
-
-      type ||= 'head'
-      type = 'branches' if type == 'heads'
-
-      value = { ref: ref, sha: sha }
-
-      [type, name, value]
     end
 
     # Convert a StashInfo to the legacy [index, message] format
