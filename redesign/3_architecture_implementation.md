@@ -38,9 +38,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | ----- | ------ | ----------- | :--------------: | :--------------: |
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
-| Phase 3 | ⏳ In Progress | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 90% |
+| Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
 | Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **86%** |
+| **TOTAL** | -- | -- | **100%** | **90%** |
 
 ### Facade Modules Completed
 
@@ -75,12 +75,11 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Step F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`
+#### F2 is ✅ complete — Phase 4 prerequisites met
 
-F1 is ✅ complete. The remaining Phase 4 prerequisite in Workstream F is F2.
+F1 and F2 are both ✅ complete. All Phase 4 prerequisites are now satisfied.
 
-Before Phase 4 can start, F2 (moving the remaining `Git` module utility methods off
-`Git::Lib`) must complete.
+Phase 4 (final cleanup and release — deleting `Git::Base`/`Git::Lib`) can now begin.
 The following are also required and are already ✅ complete:
 
 | Step | Status |
@@ -109,9 +108,9 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Worktree` + `Git::Worktrees` | — |
 
 The work was organized into six workstreams (A–F). All workstreams that are
-prerequisites for C1d are now ✅ complete. F1 is complete; F2 (moving the remaining
-`Git` module utility methods off `Git::Lib`) is still pending and feeds Phase 4
-independently.
+prerequisites for C1d are now ✅ complete. F1 and F2 are both ✅ complete — F2
+moved the remaining `Git` module utility methods off `Git::Lib`. Phase 4 is
+ready to proceed.
 
 **Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
 reasoning behind each edge):
@@ -480,7 +479,7 @@ use the same command class.
 Files touched: `lib/git.rb`, `lib/git/base.rb`, and parser/helper code extracted
 from `Git::Lib` as needed
 
-**Step F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`** ⬜
+**Step F2 — Move `Git.global_config`, `#config`, and `#global_config` off `Git::Lib`** ✅
 
 | `Git` module method | Current path | Required work |
 | --- | --- | --- |
@@ -529,7 +528,7 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | C1b | [#1385](https://github.com/ruby-git/ruby-git/pull/1385) ✅ | Move global config ownership | 4.x-compatible | `Git.config`, `Git.configure`, and `Git::Base.config` keep working; `Git::Base.config` remains as a delegator. |
 | E | ✅ | Add repository helper/path-context methods | 4.x-compatible additive | `Git::Base` helpers keep working; `Git::Repository` gains equivalent behavior before any top-level return-type change. Split index helpers and working-directory helpers if needed. |
 | F1 | ✅ | Move `Git.ls_remote` and `Git.default_branch` off `Git::Lib` | 4.x-compatible | Return formats and error behavior match current 4.x-compatible behavior. |
-| F2 | ⬜ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
+| F2 | ✅ | Move `Git.global_config`, module `#config`, and module `#global_config` off `Git::Lib` | 4.x-compatible | Config methods keep the same return formats and write behavior. |
 | C1c-1 | ✅ | Guidance/process: signature-compatibility policy for extraction and review ([#1369](https://github.com/ruby-git/ruby-git/issues/1369)) | 4.x-compatible / docs-only | Guidance and review checklists define legacy-contract vs 5.x-native signatures, including test expectations. |
 | C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
 | C1d | ✅ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. Split into C1d-1 (entry point flip), C1d-2 (eliminate internal .lib callers + add deprecation enforcement to both test suites), and C1d-3 (remove dead fallbacks + replace silent lib shim with real deprecation warning). |
@@ -581,7 +580,7 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ✅ |
 | D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
 | E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ✅ |
-| F: `Git` module utilities (`default_branch`, `global_config`, `ls_remote`) off `Git::Lib` | ⬜ (Phase 4 prereq) |
+| F: `Git` module utilities (`default_branch`, `global_config`, `ls_remote`) off `Git::Lib` | ✅ |
 
 #### Quality gates (per step)
 
