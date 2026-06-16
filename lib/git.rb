@@ -38,6 +38,8 @@ require 'git/encoding_utils'
 require 'git/errors'
 require 'git/escaped_path'
 require 'git/execution_context'
+require 'git/execution_context/global'
+require 'git/commands/config_option_syntax'
 require 'git/commands/ls_remote'
 require 'git/file_ref'
 require 'git/fsck_object'
@@ -522,7 +524,7 @@ module Git
     context = Git::ExecutionContext::Global.new
     options = global ? { global: true } : {}
 
-    return Git::Commands::ConfigOptionSyntax::Set.new(context).call(name, value, **options) if name && value
+    return Git::Commands::ConfigOptionSyntax::Set.new(context).call(name, value, **options) if !name.nil? && !value.nil?
     return run_config_get(context, name, options) if name
 
     output = Git::Commands::ConfigOptionSyntax::List.new(context).call(**options).stdout
