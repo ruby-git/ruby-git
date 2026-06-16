@@ -74,17 +74,7 @@ module Git
   # g.config('user.name')  # returns 'Scott Chacon'
   # g.config # returns whole config hash
   def config(name = nil, value = nil)
-    lib = Git::Lib.new
-    if name && value
-      # set value
-      lib.config_set(name, value)
-    elsif name
-      # return value
-      lib.config_get(name)
-    else
-      # return hash
-      lib.config_list
-    end
+    Git.__send__(:run_config_utility, name, value, global: false)
   end
 
   # Configures the gem by yielding {Git::Config.instance} to the block
@@ -117,7 +107,7 @@ module Git
   end
 
   def global_config(name = nil, value = nil)
-    self.class.global_config(name, value)
+    Git.global_config(name, value)
   end
 
   # Open a bare repository
@@ -338,17 +328,7 @@ module Git
   # g.config('user.name')  # returns 'Scott Chacon'
   # g.config # returns whole config hash
   def self.global_config(name = nil, value = nil)
-    lib = Git::Lib.new(nil, nil)
-    if name && value
-      # set value
-      lib.global_config_set(name, value)
-    elsif name
-      # return value
-      lib.global_config_get(name)
-    else
-      # return hash
-      lib.global_config_list
-    end
+    run_config_utility(name, value, global: true)
   end
 
   # Create an empty Git repository or reinitialize an existing Git repository
@@ -536,6 +516,36 @@ module Git
     Git::Version.parse(output)
   end
   private_class_method :run_git_version
+
+  # @api private
+  def self.run_config_utility(name, value, global:)
+    context = Git::ExecutionContext::Global.new
+    options = global ? { global: true } : {}
+
+    return Git::Commands::ConfigOptionSyntax::Set.new(context).call(name, value, **options) if name && value
+    return run_config_get(context, name, options) if name
+
+    output = Git::Commands::ConfigOptionSyntax::List.new(context).call(**options).stdout
+    parse_config_list(output.split("\n"))
+  end
+  private_class_method :run_config_utility
+
+  def self.run_config_get(context, name, options)
+    result = Git::Commands::ConfigOptionSyntax::Get.new(context).call(name, **options)
+    raise Git::FailedError, result if result.status.exitstatus != 0
+
+    result.stdout
+  end
+  private_class_method :run_config_get
+
+  # @api private
+  def self.parse_config_list(lines)
+    lines.each_with_object({}) do |line, hsh|
+      key, value = line.split('=', 2)
+      hsh[key] = value || ''
+    end
+  end
+  private_class_method :parse_config_list
 
   # Return the version of the git binary
   #
