@@ -6,6 +6,7 @@ require 'git/commands/ls_remote'
 require 'git/commands/pull'
 require 'git/commands/push'
 require 'git/commands/remote'
+require 'git/parsers/ls_remote'
 require 'git/remote'
 
 require 'git/repository/shared_private'
@@ -711,7 +712,7 @@ module Git
         SharedPrivate.assert_valid_opts!(LS_REMOTE_ALLOWED_OPTS, **opts)
         repository = location || '.'
         output_lines = Git::Commands::LsRemote.new(@execution_context).call(repository, **opts).stdout.split("\n")
-        Private.parse_ls_remote_output(output_lines)
+        Git::Parsers::LsRemote.parse_output(output_lines)
       end
 
       # Helpers private to the `RemoteOperations` topic module
@@ -720,51 +721,6 @@ module Git
       #
       module Private
         module_function
-
-        # Parse `git ls-remote` stdout lines into a structured Hash
-        #
-        # @param lines [Array<String>] the individual stdout lines
-        #
-        # @return [Hash{String => Hash}] ref types to name/value maps
-        #
-        # @api private
-        #
-        def parse_ls_remote_output(lines)
-          lines.each_with_object(Hash.new { |h, k| h[k] = {} }) do |line, hsh|
-            type, name, value = parse_ls_remote_line(line)
-            if name
-              hsh[type][name] = value
-            else
-              hsh[type].update(value)
-            end
-          end
-        end
-
-        # Parse a single `git ls-remote` output line
-        #
-        # Each line is tab-separated: `<sha>\t<ref>`. The ref is split on `/` to
-        # determine the type and name: `HEAD` has no slashes (type `"head"`),
-        # `refs/heads/<name>` maps to type `"branches"`, and `refs/tags/<name>`
-        # maps to type `"tags"`.
-        #
-        # @param line [String] a single line from ls-remote stdout
-        #
-        # @return [Array(String, String|nil, Hash)] `[type, name, value]` where
-        #   `value` is `{ ref: String, sha: String }`
-        #
-        # @api private
-        #
-        def parse_ls_remote_line(line)
-          sha, info = line.split("\t", 2)
-          ref, type, name = info.split('/', 3)
-
-          type ||= 'head'
-          type = 'branches' if type == 'heads'
-
-          value = { ref: ref, sha: sha }
-
-          [type, name, value]
-        end
 
         # Resolve the (remote, opts) pair for {#fetch}, supporting the hash-only form
         #

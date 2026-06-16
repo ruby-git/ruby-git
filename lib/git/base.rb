@@ -2,6 +2,9 @@
 
 require 'logger'
 require 'pathname'
+require 'git/commands/ls_remote'
+require 'git/execution_context'
+require 'git/parsers/ls_remote'
 require 'git/repository/path_resolver'
 
 module Git
@@ -36,7 +39,9 @@ module Git
 
     # (see Git.default_branch)
     def self.repository_default_branch(repository, options = {})
-      Git::Lib.new(nil, options[:log]).repository_default_branch(repository)
+      context = Git::ExecutionContext::Global.new(logger: options[:log])
+      output = Git::Commands::LsRemote.new(context).call(repository, 'HEAD', symref: true).stdout
+      Git::Parsers::LsRemote.parse_default_branch(output)
     end
 
     # Returns the process-wide {Git::Config} singleton
