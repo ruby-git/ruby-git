@@ -48,6 +48,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov-rspec', '~> 0.4'
   spec.add_development_dependency 'test-unit', '~> 3.7'
 
+  if RUBY_ENGINE == 'truffleruby' && Gem::Version.new(RUBY_ENGINE_VERSION) < Gem::Version.new('34.0.0')
+    # i18n 1.15+ uses Fiber.[] (Ruby 3.2 Fiber storage) which TruffleRuby < 34.0.0 does not implement
+    spec.add_development_dependency 'i18n', '< 1.15'
+  end
+
   unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
     spec.add_development_dependency 'irb', '~> 1.16'
     spec.add_development_dependency 'redcarpet', '~> 3.6'
