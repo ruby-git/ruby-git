@@ -9,7 +9,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Phase 3 Public Interface Completion](#phase-3-public-interface-completion)
+    - [D2 / Phase 4 is the remaining redesign step](#d2--phase-4-is-the-remaining-redesign-step)
+    - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
     - [Workstream C — C1: Prepare and flip top-level entry points to return `Git::Repository`](#workstream-c--c1-prepare-and-flip-top-level-entry-points-to-return-gitrepository)
@@ -46,40 +47,48 @@ risk and allows for a gradual, controlled migration to the new architecture.
 
 | Module | File | Included in `Git::Repository` | `Git::Base` delegates |
 | ------ | ---- | ------------------------------ | --------------------- |
-| `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset`, `rm`, `clean`, `ignored_files` |
+| `Git::Repository::Staging` | `lib/git/repository/staging.rb` | ✅ | `add`, `reset`, `reset_hard`, `apply`, `apply_mail`, `read_tree`, `rm`, `mv`, `clean`, `ignored_files` |
 | `Git::Repository::Committing` | `lib/git/repository/committing.rb` | ✅ | `commit`, `commit_all`, `write_tree`; `commit_tree` and `write_and_commit_tree` wrap the SHA result in `Git::Object::Commit.new(self, ...)` |
-| `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `local_branch?`, `remote_branch?`, `branch?`, `branch_delete`, `branch_new`, `branch_contains`, `branches_all`, `update_ref` |
+| `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `current_branch_state`, `local_branch?`, `remote_branch?`, `branch?`, `branch`, `branches`, `branch_delete`, `branch_new`, `change_head_branch`, `branch_contains`, `branches_all`, `update_ref` |
+| `Git::Repository::ContextHelpers` | `lib/git/repository/context_helpers.rb` | ✅ | `chdir`, `with_index`, `with_temp_index`, `with_working`, `with_temp_working`, `set_index`, `set_working` |
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
-| `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `add_remote`, `remove_remote`, `config_remote`, `remotes`, `set_remote_url`, `remote_set_branches` |
-| `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
-| `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_path_status`, `diff_name_status`, `diff_full` |
-| `Git::Repository::Inspecting` | `lib/git/repository/inspecting.rb` | ✅ | `show`, `fsck` |
-| `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `rev_parse`, `tree_depth`, `ls_tree`, `grep`, `archive`, `tags`, `add_tag`, `delete_tag` |
+| `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, remote add/remove/url helpers, `config_remote`, `remote`, `remotes`, `ls_remote`, `remote_set_branches` |
+| `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_list`, `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
+| `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_full`, `diff_numstat`, `diff_stats`, `diff`, `diff_path_status`, `diff_files`, `diff_index` |
+| `Git::Repository::Inspecting` | `lib/git/repository/inspecting.rb` | ✅ | `describe`, `show`, `fsck` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
-| `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` (renamed from `Git::Lib#empty?`), `untracked_files`, `status`; `Git::Base#ls_files` delegates to facade |
-| `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config`; `Git::Base#config` delegates to facade |
+| `Git::Repository::Maintenance` | `lib/git/repository/maintenance.rb` | ✅ | `repack`, `gc` |
+| `Git::Repository::ObjectOperations` | `lib/git/repository/object_operations.rb` | ✅ | `cat_file_contents`, `cat_file_size`, `cat_file_type`, `cat_file_commit`, `cat_file_tag`, `rev_parse`, `tag_sha`, `full_tree`, `tree_depth`, `name_rev`, `ls_tree`, `grep`, `archive`, `gblob`, `gcommit`, `gtree`, `tag`, `object`, `tags`, `add_tag`, `delete_tag` |
+| `Git::Repository::StatusOperations` | `lib/git/repository/status_operations.rb` | ✅ | `ls_files`, `no_commits?` / `empty?`, `untracked_files`, `status` |
+| `Git::Repository::Configuring` | `lib/git/repository/configuring.rb` | ✅ | `config`, `config_get`, `config_list`, `config_set`, `global_config`, `global_config_get`, `global_config_list`, `global_config_set` |
 | `Git::Repository::WorktreeOperations` | `lib/git/repository/worktree_operations.rb` | ✅ | `worktrees_all`, `worktree_add`, `worktree_remove`, `worktree_prune`, `worktree`, `worktrees` |
 
 #### Facade module naming convention
 
-New topic modules follow a **two-tier** convention:
+New topic modules follow a **three-tier** convention:
 
 - **Gerund** (verb-ing) when a single action word clearly names the whole module:
-  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`, `Configuring`.
+  `Staging`, `Committing`, `Branching`, `Merging`, `Logging`, `Diffing`, `Stashing`,
+  `Configuring`, `Inspecting`.
 - **Noun + `Operations`** when the module is a mixed bag of methods grouped by git
   concept rather than a single action: `RemoteOperations`, `ObjectOperations`,
   `StatusOperations`, `WorktreeOperations`.
+- **Descriptive utility names** for cross-cutting helpers or housekeeping APIs that
+  are not domain-object names: `ContextHelpers`, `Maintenance`.
 
 Do **not** use plain nouns that clash with existing domain-object class names
 such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### F2 is ✅ complete — Phase 4 prerequisites met
+#### D2 / Phase 4 is the remaining redesign step
 
-F1 and F2 are both ✅ complete. All Phase 4 prerequisites are now satisfied.
+F1 and F2 are both ✅ complete. All Phase 4 prerequisites are now satisfied, and
+the remaining unchecked redesign item is D2.
 
 Phase 4 (final cleanup and release — deleting `Git::Base`/`Git::Lib`) can now begin.
+The first cleanup PR should remove the `base_object` / `from_base` bridge in the
+same releasable change that deletes or retires `Git::Base`.
 The following are also required and are already ✅ complete:
 
 | Step | Status |
@@ -184,9 +193,10 @@ These are read-only repository inspection operations that don't fit an existing 
 
 Files touched: `lib/git/repository/inspecting.rb` (new), `lib/git/repository.rb` (add `include Git::Repository::Inspecting`), `spec/unit/git/repository/inspecting_spec.rb` (new), `lib/git/base.rb`
 
-**Not covered by A1–A4:** lower-level public methods such as `describe`, `repack`,
-`gc`, `apply`, `apply_mail`, `read_tree`, and `cat_file` are handled by the C1c-2
-public-API parity audit before `Git.open` starts returning `Git::Repository`.
+**Later covered by C1c-2:** lower-level public methods such as `describe`,
+`repack`, `gc`, `apply`, `apply_mail`, `read_tree`, and `cat_file_*` were
+subsequently migrated into `Inspecting`, `Maintenance`, `Staging`, and
+`ObjectOperations` before `Git.open` started returning `Git::Repository`.
 
 ---
 
@@ -324,7 +334,7 @@ Required audit buckets:
 | --- | --- |
 | Path/accessors | `dir`, `repo`, `index`, `repo_size` must exist on `Git::Repository` (C1a-1 owns this) |
 | Compatibility aliases/wrappers | `remove`, `revparse`, `diff_name_status`, `reset_hard`, `is_local_branch?`, `is_remote_branch?`, `is_branch?`, `checkout` must be migrated or intentionally removed with upgrade notes (`checkout` is called by `Git.export` on the `Git.clone` result) |
-| Low-level public methods | `describe`, `repack`, `gc`, `apply`, `apply_mail`, `read_tree`, `cat_file` must be migrated to topic modules or intentionally removed with upgrade notes |
+| Low-level public methods | Resolved in the current tree: `describe` → `Inspecting`; `repack`/`gc` → `Maintenance`; `apply`/`apply_mail`/`read_tree` → `Staging`; `cat_file_*` → `ObjectOperations`. Any intentional removals still require upgrade notes. |
 | Factory/domain-object returns | Confirm B plus A2/A3 cover `branch`, `branches`, `remote`, `remotes`, `tag`, `tags`, object factories, and tag create/delete return shapes |
 | Keyword-arg facades | For `legacy-contract` methods, preserve the exact 4.x call shape (including rare `**opts` signatures); for `5.x-native` methods, use `opts = {}` style for consistency |
 
@@ -449,8 +459,8 @@ or explicitly deprecated with removal in v6.0. The recommended path is migration
 removed at the same time, since `with_index`/`with_working` depend on the same
 invalidation logic.
 
-Files touched: `lib/git/repository.rb` (or a new `Git::Repository::ContextHelpers`
-module), `lib/git/base.rb`, `spec/unit/git/repository/` (new or extended spec)
+Files touched: `lib/git/repository/context_helpers.rb`, `lib/git/base.rb`,
+`spec/unit/git/repository/` (new or extended spec)
 
 ---
 
@@ -610,7 +620,7 @@ logic. The gem will be fully functional after this phase.*
 1. **Create New Directory Structure**
 
    - `lib/git/commands/` ✅
-   - `lib/git/repository/` ✅ — populated with 12 facade modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
+   - `lib/git/repository/` ✅ — populated with 15 included modules in Phase 3 (see [Facade Modules Completed](#facade-modules-completed))
 
 2. **Eliminate Custom Path Classes**
 
@@ -632,7 +642,7 @@ logic. The gem will be fully functional after this phase.*
      - `Git::ExecutionContext::Global` subclass in `lib/git/execution_context/global.rb` ✅
 
    - `Git::Repository` in `lib/git/repository.rb` ✅
-     - Now includes 12 facade modules (see [Facade Modules Completed](#facade-modules-completed))
+     - Now includes 15 modules via `include` (see [Facade Modules Completed](#facade-modules-completed))
 
    - `Git::Commands::Arguments` DSL in `lib/git/commands/arguments.rb` ✅
      - Provides declarative argument definition for command classes
@@ -1513,7 +1523,9 @@ order: Basic Snapshotting → Branching & Merging → etc.
 ***Goal**: Switch the public-facing classes to use the new architecture directly,
 breaking the final ties to the old implementation.*
 
-> **Status**: Task 1 below is complete; Task 2 is in progress — see the [Next Task](#next-task) section above for the current plan.
+> **Status**: Phase 3 is ✅ complete. Tasks 1 and 2 are both complete; the remaining
+> redesign work is the Phase 4 cleanup described in the [Next Task](#next-task)
+> section above.
 
 1. **Add `binary_path:` to `Git::ExecutionContext`** ✅
 
@@ -1523,15 +1535,15 @@ breaking the final ties to the old implementation.*
    stopgap in `Git.run_git_version` was replaced with
    `Git::Commands::Version.new(Git::ExecutionContext::Global.new(...)).call`.
 
-2. **Implement the Facade** ⏳
+2. **Implement the Facade** ✅
 
-   `Git::Repository` now includes 12 facade modules (see
-   [Facade Modules Completed](#facade-modules-completed)). `Git::Base` wraps the
-   corresponding methods via `facade_repository`. The domain-object migration
-   iterations (iters 1–9) add further facade methods, but full `Git::Base`
-   coverage requires additional facade PRs for methods not touched by those
-   iterations (e.g. `clean`, `rm`, `tags`/`add_tag`, `fsck`, `show`, `remotes`,
-   remote URL/branch helpers) before the cleanup PR can run.
+   `Git::Repository` now includes 15 modules via `include` in
+   `lib/git/repository.rb` (see [Facade Modules Completed](#facade-modules-completed)).
+   `Git::Base` wraps the corresponding methods via `facade_repository`, and the
+   end-of-Phase-3 parity sweep landed the remaining low-level facade coverage
+   needed before the entry-point flip — including `describe`, `show`, `fsck`,
+   `apply`, `apply_mail`, `read_tree`, `cat_file_*`, `repack`, `gc`, helper/path
+   context methods, and the remaining remote/tag convenience APIs.
 
 ## Phase 4: Final Cleanup and Release Preparation
 
