@@ -650,4 +650,37 @@ RSpec.describe Git::Base do
       expect(described_instance.global_config_set('user.name', 'Alice')).to be(set_result)
     end
   end
+
+  describe '#reset_hard' do
+    include_context 'with a stubbed facade_repository'
+
+    subject(:result) { described_instance.reset_hard }
+
+    before do
+      allow(facade_repository).to receive(:reset_hard).and_return('reset output')
+    end
+
+    it 'delegates to facade_repository.reset_hard with nil commitish and empty opts' do
+      expect(facade_repository).to receive(:reset_hard).with(nil, {}).and_return('reset output')
+      expect(result).to eq('reset output')
+    end
+
+    context 'with a commitish' do
+      subject(:result) { described_instance.reset_hard('HEAD~1') }
+
+      it 'passes the commitish to facade_repository.reset_hard' do
+        expect(facade_repository).to receive(:reset_hard).with('HEAD~1', {}).and_return('reset output')
+        result
+      end
+    end
+
+    context 'with opts' do
+      subject(:result) { described_instance.reset_hard('HEAD~1', hard: false) }
+
+      it 'forwards opts to facade_repository.reset_hard' do
+        expect(facade_repository).to receive(:reset_hard).with('HEAD~1', { hard: false }).and_return('reset output')
+        result
+      end
+    end
+  end
 end
