@@ -14,7 +14,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
     - [Workstream C — C1: Prepare and flip top-level entry points to return `Git::Repository`](#workstream-c--c1-prepare-and-flip-top-level-entry-points-to-return-gitrepository)
-    - [Workstream D — C2+C3: Remove compatibility bridges](#workstream-d--c2c3-remove-compatibility-bridges)
+    - [Workstream D — C3: Remove compatibility fallbacks](#workstream-d--c3-remove-compatibility-fallbacks)
     - [Workstream E — Migrate or deprecate instance helper methods](#workstream-e--migrate-or-deprecate-instance-helper-methods)
     - [Workstream F — `Git` module utility methods still using `Git::Lib` directly](#workstream-f--git-module-utility-methods-still-using-gitlib-directly)
     - [Phase 3 dependency order](#phase-3-dependency-order)
@@ -32,6 +32,10 @@ risk and allows for a gradual, controlled migration to the new architecture.
     - [⏳ Commands To Migrate](#-commands-to-migrate)
 - [Phase 3: Refactoring the Public Interface](#phase-3-refactoring-the-public-interface)
 - [Phase 4: Final Cleanup and Release Preparation](#phase-4-final-cleanup-and-release-preparation)
+  - [Phase 4 step graph](#phase-4-step-graph)
+    - [Step A — Remove old code](#step-a--remove-old-code)
+    - [Step B — Finalize test suite](#step-b--finalize-test-suite)
+    - [Step C — Update documentation](#step-c--update-documentation)
 
 ## Progress Tracker
 
@@ -52,9 +56,9 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | `Git::Repository::Branching` | `lib/git/repository/branching.rb` | ✅ | `checkout`, `checkout_file`, `checkout_index`, `current_branch`, `current_branch_state`, `local_branch?`, `remote_branch?`, `branch?`, `branch`, `branches`, `branch_delete`, `branch_new`, `change_head_branch`, `branch_contains`, `branches_all`, `update_ref` |
 | `Git::Repository::ContextHelpers` | `lib/git/repository/context_helpers.rb` | ✅ | `chdir`, `with_index`, `with_temp_index`, `with_working`, `with_temp_working`, `set_index`, `set_working` |
 | `Git::Repository::Merging` | `lib/git/repository/merging.rb` | ✅ | `merge`, `revert`, `each_conflict`; `merge_base` wraps the returned SHA strings in `Git::Object::Commit.new(self, ...)` instances |
-| `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, remote add/remove/url helpers, `config_remote`, `remote`, `remotes`, `ls_remote`, `remote_set_branches` |
+| `Git::Repository::RemoteOperations` | `lib/git/repository/remote_operations.rb` | ✅ | `fetch`, `pull`, `push`, `remote_add` (alias: `add_remote`), `remote_remove` (alias: `remove_remote`), `remote_set_url` (alias: `set_remote_url`), `config_remote`, `remote`, `remotes`, `ls_remote`, `remote_set_branches` |
 | `Git::Repository::Stashing` | `lib/git/repository/stashing.rb` | ✅ | `stash_list`, `stash_save`, `stash_apply`, `stash_clear`, `stashes_all` |
-| `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_full`, `diff_numstat`, `diff_stats`, `diff`, `diff_path_status`, `diff_files`, `diff_index` |
+| `Git::Repository::Diffing` | `lib/git/repository/diffing.rb` | ✅ | `diff_full`, `diff_numstat`, `diff_stats`, `diff`, `diff_path_status` (alias: `diff_name_status`), `diff_files`, `diff_index` |
 | `Git::Repository::Inspecting` | `lib/git/repository/inspecting.rb` | ✅ | `describe`, `show`, `fsck` |
 | `Git::Repository::Logging` | `lib/git/repository/logging.rb` | ✅ | `log`, `full_log_commits` |
 | `Git::Repository::Maintenance` | `lib/git/repository/maintenance.rb` | ✅ | `repack`, `gc` |
@@ -374,7 +378,7 @@ in the [Next Task](#next-task) section for the full per-phase breakdown.
 
 ---
 
-#### Workstream D — C2+C3: Remove compatibility bridges
+#### Workstream D — C3: Remove compatibility fallbacks
 
 ⚠️ These are v5-only cleanup steps. They are not 4.x-compatible and must be kept out
 of 4.x release candidates unless an explicit breaking-change decision has already
@@ -418,20 +422,6 @@ Also remove legacy `@base.lib` fallback paths that only exist to support
 After D1, domain objects should assume their provider is `Git::Repository` (or a
 compatible object that implements the repository facade methods directly), not an
 object with a `.lib` escape hatch.
-
-##### Step D2 — Remove the `base_object` bridge
-
-⚠️ Do **not** ship D2 as a standalone PR while `Git::Base` remains functional.
-`Git::Base#facade_repository` currently depends on
-`Git::ExecutionContext::Repository.from_base(self)`, so deleting the bridge before
-deleting or retiring `Git::Base` would leave the tree unreleasable.
-
-D2 belongs in the Phase 4 old-code deletion PR (or in the same v5 cleanup PR that
-removes `Git::Base` as a usable public entry point):
-
-- Delete `attr_reader :base_object`
-- Remove `base_object:` from `#initialize` and body
-- Remove or convert `from_base` factory
 
 ---
 
@@ -543,10 +533,6 @@ classified as a v5-only PR with upgrade-note coverage before it lands.
 | C1c-2 | ✅ | End-of-Phase-3 public-API parity audit and remediation sweep ([#1370](https://github.com/ruby-git/ruby-git/issues/1370)) | 4.x-compatible | All four parity audit buckets resolved (fix or documented removal) before C1d; no unclassified compatibility gap remains. |
 | C1d | ✅ | Flip `Git.open`/`.clone`/`.init`/`.bare` to return `Git::Repository` | v5 boundary | Explicit breaking change because class identity changes from `Git::Base` to `Git::Repository`; method-level parity must be complete first. Split into C1d-1 (entry point flip), C1d-2 (eliminate internal .lib callers + add deprecation enforcement to both test suites), and C1d-3 (remove dead fallbacks + replace silent lib shim with real deprecation warning). |
 | D1 | ✅ | Remove domain-object `Git::Base` guards and `@base.lib` fallbacks | v5 cleanup | Explicitly drops direct `Git::Base` provider support in domain-object constructors; normal factory-created objects remain supported. |
-| D2 / Phase 4 | ⬜ | Remove `base_object`/`from_base` with `Git::Base` deletion or retirement | v5 cleanup | Must land with the old-code deletion path; not releasable as a standalone PR while `Git::Base#facade_repository` depends on it. |
-
----
-
 #### Phase 3 completion criteria
 
 Use this table to decide whether a checklist item can be marked complete. A step is
@@ -566,7 +552,6 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1c-2: public-API parity audit and remediation | End-of-Phase-3 sweep complete (Issue #1370): a public-method inventory compares `Git::Base` and `Git::Repository`; every surviving public method has a repository implementation and focused coverage; every intentional removal has an upgrade-note/deprecation decision; no unclassified compatibility gap remains. |
 | C1d: entry-point flip | `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` return `Git::Repository`; common existing workflows still pass through those entry points; YARD return docs are updated; no top-level factory method calls `Git::Base.*`; full suite passes. |
 | D1: domain-object fallback removal | No `is_a?(Git::Base)` guards remain; no `@base.lib` fallback remains in domain objects; direct `Git::Base` provider support is documented as a v5-only removal; full suite passes. |
-| D2 / Phase 4: `base_object` bridge removal | `Git::ExecutionContext::Repository` no longer accepts or exposes `base_object`; `from_base` is removed or converted to a non-`Git::Base` path; this lands only with the PR that deletes or retires `Git::Base`, so no releasable state contains a broken `Git::Base#facade_repository`. |
 | E: instance helper methods | `Git::Repository` implements or explicitly deprecates `chdir`, `with_index`, `with_temp_index`, `with_working`, `with_temp_working`, `set_index`, and `set_working`; context rebuilding after index/worktree changes is covered by specs; helpers yield the same values and restore state after block exit/errors. |
 | F: `Git` module utilities off `Git::Lib` | `Git.default_branch`, `Git.global_config`, `Git.ls_remote`, module instance `#config`, and module instance `#global_config` no longer call `Git::Lib.new`; `Git::Base.repository_default_branch` migrated to use `Git::Commands::LsRemote` directly; existing `LsRemote` and `ConfigOptionSyntax` commands provide the behavior; parser/helper code needed from `Git::Lib` has moved; `grep -n 'Lib.new' lib/git.rb` returns no matches. |
 
@@ -588,7 +573,6 @@ done only when its code, focused specs, and delegation/cleanup checks are all tr
 | C1c-2: End-of-Phase-3 public-API parity audit and remediation (#1370) | ✅ |
 | C1d: Entry-point flip (`Git.open` etc. → `Git::Repository`) | ✅ |
 | D1 (C3): Remove `is_a?(Git::Base)` guards + `@base.lib` fallbacks | ✅ |
-| D2 (C2 / Phase 4): Remove `base_object` bridge with `Git::Base` deletion | ⬜ (v5 cleanup) |
 | E: Instance helpers (`#chdir`, `#with_index`, `#with_temp_index`, `#with_working`, `#with_temp_working`) | ✅ |
 | F: `Git` module utilities (`default_branch`, `global_config`, `ls_remote`) off `Git::Lib` | ✅ |
 
@@ -649,7 +633,7 @@ logic. The gem will be fully functional after this phase.*
 
 4. **Set Up RSpec Environment**
 
-    RSpec configured and working alongside TestUnit. Specs live in `spec/` and can be
+    RSpec configured and working alongside Test::Unit. Specs live in `spec/` and can be
     run with `bundle exec rspec`. ✅
 
 ## Phase 2: The Strangler Fig Pattern - Migrating Commands
@@ -1294,7 +1278,7 @@ future work:
     instantiate and call the new `Git::Commands::Add` object, passing `self` as the
     context.
 
-  - **Verify**: Run the full test suite (both TestUnit and RSpec). The existing tests
+  - **Verify**: Run the full test suite (both Test::Unit and RSpec). The existing tests
     for `g.add` should still pass, but they will now be executing the new, refactored
     code.
 
@@ -1550,28 +1534,39 @@ breaking the final ties to the old implementation.*
 ***Goal**: Remove all old code, finalize the test suite, and prepare for the v5.0.0
 release.*
 
-1. **Remove Old Code**:
+### Phase 4 step graph
 
-   - Delete the `Git::Lib` class entirely.
+```mermaid
+graph LR
+    A --> B
+    B --> C
+```
 
-   - Delete the `Git::Base` class file.
+#### Step A — Remove old code
 
-   - Remove any other dead code that was part of the old implementation.
+- Delete `attr_reader :base_object`, remove `base_object:` from `#initialize`, and remove or convert `from_base`.
+- Delete the `Git::Lib` class entirely.
+- Delete the `Git::Base` class file.
+- Remove any other dead code that was part of the old implementation.
 
-2. **Finalize Test Suite**:
+**Done when**: `lib/git/lib.rb` and `lib/git/base.rb` are deleted; `Git::ExecutionContext::Repository` no longer accepts or exposes `base_object`; no references to `Git::Lib` or `Git::Base` remain in `lib/`.
 
-   - Convert any remaining, relevant TestUnit tests to RSpec.
+**Planning tip**: Before generating a deletion plan, audit all remaining callers of `Git::Lib`, `Git::Base`, and `from_base` across `lib/` and `spec/`. The bridge removal and `Git::Base` deletion must land atomically in the same PR — plan for a single large deletion commit rather than incremental removals.
 
-   - Remove the `test-unit` dependency from the `Gemfile`.
+#### Step B — Finalize test suite
 
-   - Ensure the RSpec suite has comprehensive coverage for the new architecture.
+- Convert any remaining, relevant Test::Unit tests to RSpec.
+- Remove the `test-unit` dependency from the `Gemfile`.
+- Ensure the RSpec suite has comprehensive coverage for the new architecture.
 
-3. **Update Documentation**:
+**Done when**: The `tests/` directory is empty or removed; `test-unit` is no longer
+in `Gemfile`; RSpec is the sole test framework.
 
-   - Thoroughly document the new public API (`Git`, `Git::Repository`, etc.).
+#### Step C — Update documentation
 
-   - Mark all internal classes (`ExecutionContext`, `Commands`, `*Path`) with `@api
-     private` in the YARD documentation.
+- Thoroughly document the new public API (`Git`, `Git::Repository`, etc.).
+- Mark all internal classes (`ExecutionContext`, `Commands`, `*Path`) with `@api private` in the YARD documentation.
+- Update the `README.md` and create a `UPGRADING.md` guide explaining the breaking changes for v5.0.0.
 
-   - Update the `README.md` and create a `UPGRADING.md` guide explaining the breaking
-     changes for v5.0.0.
+**Done when**: `yard stats` reports no missing docs on public API; `UPGRADING.md`
+covers all breaking changes; `README.md` reflects the new entry points.
