@@ -9,7 +9,7 @@ module Git
     # {Git::CommandLine::Capturing} is the buffering strategy: it calls
     # `ProcessExecuter.run_with_capture`, which reads all subprocess output into
     # `String` objects before returning.  Use this class (via
-    # {Git::Lib#command_capturing}) for the vast majority of git subcommands whose
+    # {Git::ExecutionContext#command_capturing}) for the vast majority of git subcommands whose
     # output fits comfortably in memory.
     #
     # {Git::CommandLine::Streaming} is the complementary strategy for commands
@@ -23,7 +23,7 @@ module Git
     #   result.stdout   # => "abc1234 Initial commit\n..."
     #   result.stderr   # => ""
     #
-    # @see Git::Lib#command_capturing
+    # @see Git::ExecutionContext#command_capturing
     #
     # @see Git::CommandLine::Streaming
     #
