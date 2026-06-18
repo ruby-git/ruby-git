@@ -56,14 +56,33 @@ RSpec.describe Git do
   end
 
   describe '.default_branch' do
-    it 'delegates to Git::Base.repository_default_branch preserving options' do
+    let(:context) { instance_double(Git::ExecutionContext::Global) }
+    let(:ls_remote_command) { instance_double(Git::Commands::LsRemote) }
+
+    before do
+      allow(Git::ExecutionContext::Global).to receive(:new).with(logger: nil).and_return(context)
+      allow(Git::Commands::LsRemote).to receive(:new).with(context).and_return(ls_remote_command)
+    end
+
+    it 'uses the direct LsRemote + parser path (not Git::Base)' do
+      stdout = "ref: refs/heads/main\tHEAD\nabc123\tHEAD\n"
+
+      expect(Git::Base).not_to receive(:repository_default_branch)
+      expect(ls_remote_command).to receive(:call)
+        .with('origin', 'HEAD', symref: true).and_return(command_result(stdout))
+
+      expect(described_class.default_branch('origin')).to eq('main')
+    end
+
+    it 'passes options[:log] to the execution context' do
       logger = instance_double(Logger)
+      allow(Git::ExecutionContext::Global).to receive(:new).with(logger: logger).and_return(context)
+      allow(ls_remote_command).to receive(:call).and_return(command_result("ref: refs/heads/main\tHEAD\n"))
 
-      expect(Git::Base).to receive(:repository_default_branch)
-        .with('origin', { log: logger })
-        .and_return('main')
+      result = described_class.default_branch('origin', log: logger)
 
-      expect(described_class.default_branch('origin', log: logger)).to eq('main')
+      expect(Git::ExecutionContext::Global).to have_received(:new).with(logger: logger)
+      expect(result).to eq('main')
     end
   end
 end
