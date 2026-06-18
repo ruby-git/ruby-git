@@ -490,6 +490,24 @@ module Git
     Git::Repository.open(working_dir, options)
   end
 
+  # Thread-safe cache for git versions, keyed by binary path.
+  @git_version_cache_mutex = Mutex.new
+  @git_version_cache = {}
+
+  # @api private
+  def self.cached_git_version(binary_path, &block)
+    @git_version_cache_mutex.synchronize do
+      @git_version_cache[binary_path] ||= block.call
+    end
+  end
+
+  # @api private
+  def self.clear_git_version_cache
+    @git_version_cache_mutex.synchronize do
+      @git_version_cache.clear
+    end
+  end
+
   # Return the version of a git binary as a {Git::Version}
   #
   # @example Default binary
@@ -511,7 +529,7 @@ module Git
   #
   def self.git_version(binary_path = nil)
     path = binary_path || Git::Config.instance.binary_path
-    Git::Lib.cached_git_version(path) { run_git_version(path) }
+    cached_git_version(path) { run_git_version(path) }
   end
 
   # @api private
