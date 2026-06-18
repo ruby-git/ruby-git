@@ -5,9 +5,9 @@ require "#{File.dirname(__FILE__)}/../test_helper"
 require 'logger'
 require 'stringio'
 
-# Tests for Git::Lib#repository_default_branch
+# Tests for Git.default_branch
 #
-class TestLibRepositoryDefaultBranch < Test::Unit::TestCase
+class TestGitDefaultBranch < Test::Unit::TestCase
   def test_default_branch
     repository = 'new_repo'
     in_temp_dir do

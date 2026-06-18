@@ -14,7 +14,7 @@ class TestBranch < Test::Unit::TestCase
     @branches = @git.branches
   end
 
-  test 'Git::Lib#branch with no args should return current branch' do
+  test 'Git::Repository#branch with no args should return current branch' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'my_branch')
       File.write('file.txt', 'hello world')
@@ -26,7 +26,7 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Base#branches' do
+  test 'Git::Repository#branches' do
     in_temp_dir do
       remote_git = Git.init('remote_git', initial_branch: 'master')
       File.write('remote_git/file.txt', 'hello world')
@@ -50,7 +50,7 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Base#branches when checked out branch is a remote branch' do
+  test 'Git::Repository#branches when checked out branch is a remote branch' do
     in_temp_dir do
       Dir.mkdir('remote_git')
       Dir.chdir('remote_git') do
@@ -122,9 +122,9 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  # Git::Lib#branch_current
+  # Git::Repository::Branching#current_branch
 
-  test 'Git::Lib#branch_current -- active branch' do
+  test 'Git::Repository::Branching#current_branch -- active branch' do
     in_temp_dir do
       `git init --initial-branch=main`
       `echo "hello world" > file1.txt`
@@ -135,7 +135,7 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#branch_current -- unborn branch' do
+  test 'Git::Repository::Branching#current_branch -- unborn branch' do
     in_temp_dir do
       `git init --initial-branch=new_branch`
       git = Git.open('.')
@@ -143,7 +143,7 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  test 'Git::Lib#branch_current -- detached HEAD' do
+  test 'Git::Repository::Branching#current_branch -- detached HEAD' do
     in_temp_dir do
       `git init --initial-branch=main`
       `echo "hello world" > file1.txt`
@@ -158,9 +158,9 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  # Git::Base#branch
+  # Git::Repository#branch
 
-  test 'Git::Base#branch with detached head' do
+  test 'Git::Repository#branch with detached head' do
     in_temp_dir do
       `git init`
       `echo "hello world" > file1.txt`
@@ -178,9 +178,9 @@ class TestBranch < Test::Unit::TestCase
     end
   end
 
-  # Git::Base#branchs
+  # Git::Repository#branches
 
-  test 'Git::Base#branchs with detached head' do
+  test 'Git::Repository#branches with detached head' do
     in_temp_dir do
       git = Git.init('.', initial_branch: 'master')
       File.write('file1.txt', 'hello world')

@@ -182,23 +182,6 @@ class TestDeprecations < Test::Unit::TestCase
     commit.set_commit(data)
   end
 
-  # --- Git::Lib deprecations ---
-
-  def test_lib_warn_if_old_command_deprecation
-    # Ensure class-level check does not short-circuit the call in this test
-    Git::Lib.instance_variable_set(:@version_checked, nil)
-
-    Git::Deprecation.expects(:warn).with(
-      'Git::Lib.warn_if_old_command is deprecated and will be removed in 6.0. ' \
-      'Version validation is now handled automatically by Git::Commands::Base#validate_version!, ' \
-      'which RAISES Git::VersionError on failure (the old method only printed a warning ' \
-      'once per process and continued). Callers wanting the old warn-and-continue behavior ' \
-      'must implement it themselves using: Git.git_version >= Git::MINIMUM_GIT_VERSION.'
-    )
-
-    assert_equal(true, Git::Lib.warn_if_old_command(Git::Base.open(@wdir).lib))
-  end
-
   def test_clean_ff_deprecation
     Dir.mktmpdir('git_clean') do |dir|
       git = Git.init(dir)

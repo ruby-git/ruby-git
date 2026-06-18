@@ -83,7 +83,7 @@ class TestGitDir < Test::Unit::TestCase
     end
   end
 
-  # Test that Git::Lib::Diff.to_a works from a linked working tree (not the
+  # Test that Git::Diff#to_a works from a linked working tree (not the
   # main working tree).  See https://git-scm.com/docs/git-worktree for a
   # description of 'main' and 'linked' working tree.
   #

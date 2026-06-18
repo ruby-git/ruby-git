@@ -158,23 +158,5 @@ class TestGitClone < Test::Unit::TestCase
 
       assert_match(/depth/, error.result.stderr)
     end
-
-    #   git = Git.init('.')
-
-    #   # Mock the Git::Lib#command method to capture the actual command line args
-    #   git.lib.define_singleton_method(:command_capturing) do |cmd, *opts, &block|
-    #     actual_command_line = [cmd, *opts.flatten]
-    #   end
-
-    #   git.lib.clone(repository_url, destination, depth: -1)
-    # end
-
-    # expected_command_line = [
-    #   'clone',
-    #   '--depth', '-1',
-    #   '--', repository_url, destination, {timeout: nil}
-    # ]
-
-    # assert_equal(expected_command_line, actual_command_line)
   end
 end

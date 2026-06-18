@@ -5,9 +5,9 @@ require 'git'
 require 'fileutils'
 require 'tmpdir'
 
-# A test case to demonstrate the use of Git::Base#set_index
+# A test case to demonstrate the use of Git::Repository#set_index
 #
-# This test case will to programmatically create a new commit without affecting the
+# This test case will programmatically create a new commit without affecting the
 # main working directory or index.
 #
 class SetIndexTest < Test::Unit::TestCase
