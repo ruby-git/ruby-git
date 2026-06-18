@@ -9,10 +9,10 @@ class TestThreadSafety < Test::Unit::TestCase
 
   teardown
   def clean_environment
-    # TODO: this was needed because test_thread_safety.rb ocassionally leaks setting GIT_DIR.
+    # TODO: this was needed because test_thread_safety.rb occasionally leaks setting GIT_DIR.
     # Once that is fixed, this can be removed.
-    # I think it will be fixed by using System.spawn or something similar instead
-    # of backticks to run git in Git::Lib#command.
+    # I think it will be fixed by using Process.spawn or something similar instead
+    # of backticks to run git in Git::ExecutionContext#command_capturing.
     ENV['GIT_DIR'] = nil
     ENV['GIT_WORK_TREE'] = nil
     ENV['GIT_INDEX_FILE'] = nil

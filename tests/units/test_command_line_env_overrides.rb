@@ -3,13 +3,13 @@
 require 'test_helper'
 
 class TestCommandLineEnvOverrides < Test::Unit::TestCase
-  test 'it should set the GIT_SSH environment variable from Git::Base.config.git_ssh' do
+  test 'it should set the GIT_SSH environment variable from Git.config.git_ssh' do
     expected_command_line = nil
     expected_command_line_proc = -> { expected_command_line }
 
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = 'ssh -i /path/to/key'
+      Git.config.git_ssh = 'ssh -i /path/to/key'
 
       assert_command_line_eq(expected_command_line_proc, include_env: true) do |git|
         expected_env = {
@@ -25,7 +25,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         git.checkout
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
@@ -39,7 +39,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
       assert_equal git.execution_context.git_work_dir, env['GIT_WORK_TREE']
       assert_equal git.execution_context.git_index_file, env['GIT_INDEX_FILE']
       assert_equal 'en_US.UTF-8', env['LC_ALL']
-      assert_equal Git::Base.config.git_ssh, env['GIT_SSH']
+      assert_equal Git.config.git_ssh, env['GIT_SSH']
     end
   end
 
@@ -118,9 +118,9 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
   end
 
   test 'instance git_ssh option should override global config in Git.bare' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         bare_repo_path = File.join(path, 'test_project.git')
@@ -131,14 +131,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'instance git_ssh option should override global config in Git.open' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         create_and_init_repo(path)
@@ -148,14 +148,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'instance git_ssh option should override global config in Git.init' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |_path|
         git = Git.init('test_project', git_ssh: '/instance/ssh/script')
@@ -164,14 +164,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_equal '/instance/ssh/script', env['GIT_SSH']
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'instance git_ssh option should override global config in Git.clone' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         source_repo = create_and_init_repo(File.join(path, 'source'))
@@ -189,14 +189,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         end
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'instance git_ssh: nil should disable SSH (not use global config)' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         create_and_init_repo(path)
@@ -206,14 +206,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_nil env['GIT_SSH'], 'GIT_SSH should be nil when git_ssh: nil is passed'
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'no instance git_ssh option should use global config' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         create_and_init_repo(path)
@@ -223,14 +223,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_equal '/global/ssh/script', env['GIT_SSH']
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'instance git_ssh: nil should disable SSH in Git.clone' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         source_repo = create_and_init_repo(File.join(path, 'source'))
@@ -242,14 +242,14 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_nil env['GIT_SSH'], 'GIT_SSH should be nil when git_ssh: nil is passed to Git.clone'
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 
   test 'Git.clone without git_ssh option should use global config' do
-    saved_git_ssh = Git::Base.config.git_ssh
+    saved_git_ssh = Git.config.git_ssh
     begin
-      Git::Base.config.git_ssh = '/global/ssh/script'
+      Git.config.git_ssh = '/global/ssh/script'
 
       in_temp_dir do |path|
         source_repo = create_and_init_repo(File.join(path, 'source'))
@@ -261,7 +261,7 @@ class TestCommandLineEnvOverrides < Test::Unit::TestCase
         assert_equal '/global/ssh/script', env['GIT_SSH']
       end
     ensure
-      Git::Base.config.git_ssh = saved_git_ssh
+      Git.config.git_ssh = saved_git_ssh
     end
   end
 

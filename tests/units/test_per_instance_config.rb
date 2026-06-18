@@ -3,40 +3,6 @@
 require 'test_helper'
 
 class TestPerInstanceConfig < Test::Unit::TestCase
-  test 'Git::Lib initialized without base uses global git_ssh' do
-    saved_git_ssh = Git::Base.config.git_ssh
-    begin
-      Git::Base.config.git_ssh = '/global/ssh'
-
-      lib = Git::Lib.new
-      env = lib.send(:env_overrides)
-
-      assert_equal '/global/ssh', env['GIT_SSH']
-    ensure
-      Git::Base.config.git_ssh = saved_git_ssh
-    end
-  end
-
-  test 'Git::Lib initialized with nil base uses global git_ssh' do
-    saved_git_ssh = Git::Base.config.git_ssh
-    begin
-      Git::Base.config.git_ssh = '/global/ssh'
-
-      lib = Git::Lib.new(nil, Logger.new(nil))
-      env = lib.send(:env_overrides)
-
-      assert_equal '/global/ssh', env['GIT_SSH']
-    ensure
-      Git::Base.config.git_ssh = saved_git_ssh
-    end
-  end
-
-  test 'Git::Lib initialized from hash sets git_ssh' do
-    lib = Git::Lib.new(git_ssh: '/custom/ssh')
-    env = lib.send(:env_overrides)
-    assert_equal '/custom/ssh', env['GIT_SSH']
-  end
-
   test 'Git.clone passes git_ssh through execution context' do
     git_ssh = '/custom/ssh'
 

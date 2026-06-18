@@ -24,7 +24,7 @@ class TestTreeOps < Test::Unit::TestCase
       actual_output = git.write_tree
     end
 
-    # the git output should be returned from Git::Base#write_tree
+    # the git output should be returned from Git::Repository#write_tree
     assert_equal(expected_output, actual_output)
   end
 
@@ -76,7 +76,7 @@ class TestTreeOps < Test::Unit::TestCase
     assert_command_line_eq(expected_command_line) { |git| git.commit_tree(tree, parents: parents, message: message) }
   end
 
-  # Examples of how to use Git::Base#commit_tree, write_tree, and commit_tree
+  # Examples of how to use Git::Repository#commit_tree and #write_tree
   #
   # def test_tree_ops
   #   in_bare_repo_clone do |g|

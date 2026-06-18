@@ -5,7 +5,7 @@ require 'git'
 require 'fileutils'
 require 'tmpdir'
 
-# A test case to demonstrate the use of Git::Base#set_working
+# A test case to demonstrate the use of Git::Repository#set_working
 class SetWorkingTest < Test::Unit::TestCase
   # Set up a temporary Git repository before each test.
   def setup
