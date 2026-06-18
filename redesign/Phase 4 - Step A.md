@@ -34,6 +34,7 @@ graph TD
     PR1a["PR 1a"]
     PR1b["PR 1b"]
     PR1c["PR 1c"]
+    PR1d["PR 1d"]
     PR2a["PR 2a"]
     PR2b["PR 2b"]
     PR2c["PR 2c"]
@@ -46,6 +47,7 @@ graph TD
     PR1a --> PR4
     PR1b --> PR4
     PR1c --> PR4
+    PR1d --> PR4
     PR2a --> PR4
     PR2b --> PR4
     PR2c --> PR4
@@ -140,6 +142,62 @@ Doing this early is beneficial — it shrinks PR 4 and exercises the
 > folded into [PR 4](#pr-4--atomic-removal).
 
 **Gate:** full CI green; no `require 'git/base'` in domain object files.
+
+---
+
+## PR 1d — Update `{Git::Base}`/`{Git::Lib}` YARD Cross-References in Domain Object and Command Files
+
+**Releasable independently. Documentation only.**
+
+`.yardopts` sets `--fail-on-warning`, so any `{Git::Base#…}` or `{Git::Lib#…}` YARD
+cross-reference link that survives into PR 4 becomes a CI failure the moment
+`Git::Base` and `Git::Lib` are deleted. PRs 2a–2c cover the command layer,
+repository layer, and diff/status domain types, but five additional files have
+unresolved cross-references that are not covered by those PRs.
+
+### `lib/git/branch.rb`
+
+Replace two class-doc and one method-param cross-references:
+
+- Class docstring (lines 9–10): `{Git::Base#branch}` and `{Git::Base#branches}`
+  → `{Git::Repository#branch}` and `{Git::Repository#branches}`.
+- `attr_accessor :full` docstring (line 26): `{Git::Base#branches}`
+  → `{Git::Repository#branches}`.
+- `archive` method `@param opts` (line 149): `{Git::Base#archive}`
+  → `{Git::Repository#archive}`.
+
+### `lib/git/remote.rb`
+
+Replace two cross-references:
+
+- Class docstring (line 10): `{Git::Base#remote}` → `{Git::Repository#remote}`.
+- `fetch` method `@param opts` (line 63): `{Git::Base#fetch}`
+  → `{Git::Repository#fetch}`.
+
+### `lib/git/object.rb`
+
+- `archive` method `@param opts` (line 105): `{Git::Lib#archive}`
+  → `{Git::Repository#archive}`.
+
+### `lib/git/commands/base.rb`
+
+- `#initialize` `@param execution_context` (lines 176–177): change type from
+  `[Git::ExecutionContext, Git::Lib]` to `[Git::ExecutionContext]`; replace
+  `{Git::Lib#command_capturing}` / `{Git::Lib#command_streaming}` with
+  `{Git::ExecutionContext#command_capturing}` /
+  `{Git::ExecutionContext#command_streaming}`.
+- `with_stdin_pipe` inline doc (line 354): `{Git::Lib#command_capturing}`
+  → `{Git::ExecutionContext#command_capturing}`.
+
+### `lib/git/version.rb`
+
+- `to_a` docstring (line 103): demote `{Git::Lib#current_command_version}` from a
+  YARD cross-reference link to a code literal
+  (`Git::Lib#current_command_version`), since `Git::Lib` will not exist
+  after PR 4.
+
+**Gate:** linters and YARD doc build pass (`bundle exec rake rubocop yard build`);
+no behavior changes.
 
 ---
 
