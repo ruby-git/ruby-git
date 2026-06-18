@@ -6,8 +6,8 @@ module Git
   # Represents a Git branch
   #
   # Branch objects provide access to branch metadata and operations like checkout,
-  # delete, and merge. They should be obtained via {Git::Base#branch} or
-  # {Git::Base#branches}, not constructed directly.
+  # delete, and merge. They should be obtained via {Git::Repository#branch} or
+  # {Git::Repository#branches}, not constructed directly.
   #
   # @example Getting a branch
   #   git = Git.open('.')
@@ -23,7 +23,7 @@ module Git
     # The full refname of this branch
     #
     # For local branches this is the short name (e.g. `'main'`). For
-    # remote-tracking branches obtained via {Git::Base#branches} this includes
+    # remote-tracking branches obtained via {Git::Repository#branches} this includes
     # the `remotes/` prefix (e.g. `'remotes/origin/main'`). Branches constructed
     # by {Git::Remote#branch} use the `<remote>/<branch>` form (e.g.
     # `'origin/main'`) which does **not** populate {#remote}.
@@ -146,7 +146,7 @@ module Git
     #
     # @param file [String] path to the destination archive file
     #
-    # @param opts [Hash] archive options (see {Git::Base#archive})
+    # @param opts [Hash] archive options (see {Git::Repository#archive})
     #
     # @return [String] the path to the written archive file
     #
