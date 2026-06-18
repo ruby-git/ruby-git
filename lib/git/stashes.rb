@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/base'
-
 module Git
   # Collection of stash entries for a Git repository
   #

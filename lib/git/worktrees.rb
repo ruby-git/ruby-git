@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/base'
-
 module Git
   # Collection of all Git worktrees in a repository
   #

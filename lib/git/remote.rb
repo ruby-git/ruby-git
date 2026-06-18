@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/base'
 require 'git/branch'
 require 'git/branch_info'
 

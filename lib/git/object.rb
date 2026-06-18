@@ -4,7 +4,6 @@ require 'git/author'
 require 'git/diff'
 require 'git/errors'
 require 'git/log'
-require 'git/base'
 
 module Git
   # represents a git object
