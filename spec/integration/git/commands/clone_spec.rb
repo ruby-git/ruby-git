@@ -3,12 +3,14 @@
 require 'spec_helper'
 require 'git/commands/clone'
 
+require 'git/execution_context/global'
+
 RSpec.describe Git::Commands::Clone, :integration do
   # Clone creates new repositories, so it uses an unbound execution context
   # (no pre-existing repo), matching how Git.clone calls it in production.
   subject(:command) { described_class.new(execution_context) }
 
-  let(:execution_context) { Git::Lib.new(nil) }
+  let(:execution_context) { Git::ExecutionContext::Global.new }
   let(:source_dir) { Dir.mktmpdir }
   let(:clone_dir) { Dir.mktmpdir }
 

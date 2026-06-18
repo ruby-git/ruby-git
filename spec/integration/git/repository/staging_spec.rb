@@ -3,7 +3,6 @@
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/staging'
-require 'git/execution_context/repository'
 
 # Integration tests for Git::Repository::Staging.
 #
@@ -30,7 +29,6 @@ require 'git/execution_context/repository'
 RSpec.describe Git::Repository::Staging, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   describe '#ignored_files' do

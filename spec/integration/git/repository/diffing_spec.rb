@@ -3,7 +3,6 @@
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/diffing'
-require 'git/execution_context/repository'
 
 # Integration tests for Git::Repository::Diffing facade methods that perform
 # facade-owned post-processing of real git output:
@@ -25,7 +24,6 @@ require 'git/execution_context/repository'
 RSpec.describe Git::Repository::Diffing, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   before do

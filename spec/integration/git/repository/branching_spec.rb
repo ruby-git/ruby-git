@@ -7,7 +7,6 @@ require 'git/repository/branching'
 RSpec.describe Git::Repository::Branching, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # Create an initial commit so we have a proper HEAD
@@ -320,7 +319,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'with an unborn repository (no commits)' do
       let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
       let(:unborn_repo) { Git.init(unborn_repo_dir) }
-      let(:unborn_execution_context) { Git::ExecutionContext::Repository.from_base(unborn_repo) }
+      let(:unborn_execution_context) { unborn_repo.execution_context }
       let(:unborn_instance) { Git::Repository.new(execution_context: unborn_execution_context) }
 
       after { FileUtils.rm_rf(unborn_repo_dir) }
@@ -523,7 +522,7 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'on an unborn branch (repository initialized with no commits)' do
       let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
       let(:unborn_repo) { Git.init(unborn_repo_dir) }
-      let(:unborn_execution_context) { Git::ExecutionContext::Repository.from_base(unborn_repo) }
+      let(:unborn_execution_context) { unborn_repo.execution_context }
       let(:unborn_instance) { Git::Repository.new(execution_context: unborn_execution_context) }
 
       after { FileUtils.rm_rf(unborn_repo_dir) }

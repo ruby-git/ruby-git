@@ -3,12 +3,14 @@
 require 'spec_helper'
 require 'git/commands/init'
 
+require 'git/execution_context/global'
+
 RSpec.describe Git::Commands::Init, :integration do
   # Init creates new repositories, so it uses an unbound execution context
   # (no pre-existing repo), matching how Git.init calls it in production.
   subject(:command) { described_class.new(execution_context) }
 
-  let(:execution_context) { Git::Lib.new(nil) }
+  let(:execution_context) { Git::ExecutionContext::Global.new }
   let(:init_dir) { Dir.mktmpdir }
 
   after { FileUtils.rm_rf(init_dir) }
