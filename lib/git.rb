@@ -306,7 +306,9 @@ module Git
   # @return [String] the name of the default branch
   #
   def self.default_branch(repository, options = {})
-    Base.repository_default_branch(repository, options)
+    context = Git::ExecutionContext::Global.new(logger: options[:log])
+    output = Git::Commands::LsRemote.new(context).call(repository, 'HEAD', symref: true).stdout
+    Git::Parsers::LsRemote.parse_default_branch(output)
   end
 
   # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
