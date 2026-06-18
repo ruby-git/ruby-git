@@ -9,7 +9,7 @@ RSpec.describe Git do
     let(:version_cmd) { instance_double(Git::Commands::Version) }
 
     before do
-      Git::Lib.clear_git_version_cache
+      Git.clear_git_version_cache
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(context)
       allow(Git::Commands::Version).to receive(:new).with(context).and_return(version_cmd)
     end

@@ -45,6 +45,11 @@ Metrics/BlockLength:
     - "*.gemspec"
     - "lib/git/commands/**/*.rb"
 
+# lib/git.rb is the gem's main entry-point module and is expected to be long
+Metrics/ModuleLength:
+  Exclude:
+    - "lib/git.rb"
+
 # Don't force every test class to be described
 Style/Documentation:
   Exclude:

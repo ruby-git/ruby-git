@@ -34,14 +34,14 @@ RSpec.describe Git do
   end
 
   describe '.git_version default binary path' do
-    before { Git::Lib.clear_git_version_cache }
+    before { Git.clear_git_version_cache }
 
     it 'uses Git::Config.instance.binary_path (not Git::Base.config) when no arg given' do
       expected_path = Git::Config.instance.binary_path
-      allow(Git::Lib).to receive(:cached_git_version).and_return(Git::Version.new(2, 42, 0))
+      allow(Git).to receive(:cached_git_version).and_return(Git::Version.new(2, 42, 0))
       expect(Git::Base).not_to receive(:config)
       described_class.git_version
-      expect(Git::Lib).to have_received(:cached_git_version).with(expected_path)
+      expect(Git).to have_received(:cached_git_version).with(expected_path)
     end
   end
 
