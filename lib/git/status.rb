@@ -14,7 +14,7 @@ module Git
 
     # Create a new Status for the given repository
     #
-    # @param base [Git::Base, Git::Repository] the git object backing this status
+    # @param base [Git::Repository] the git object backing this status
     #
     def initialize(base)
       @base = base
@@ -239,7 +239,7 @@ module Git
 
       # Initialize a new StatusFile with the given git object and data hash
       #
-      # @param base [Git::Base, Git::Repository] the git object
+      # @param base [Git::Repository] the git object
       #
       # @param hash [Hash] raw status data for this file
       #
@@ -281,7 +281,7 @@ module Git
     class StatusFileFactory
       # Create a new factory backed by the given git object
       #
-      # @param base [Git::Base, Git::Repository] the git object used as the status data provider
+      # @param base [Git::Repository] the git object used as the status data provider
       #
       def initialize(base)
         @base = base
