@@ -7,7 +7,6 @@ require 'git/repository/merging'
 RSpec.describe Git::Repository::Merging, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # Create an initial commit on the default branch so we have a proper HEAD

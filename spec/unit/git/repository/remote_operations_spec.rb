@@ -10,8 +10,7 @@ require 'git/repository/remote_operations'
 # option whitelisting, delegation contracts).
 
 RSpec.describe Git::Repository::RemoteOperations do
-  let(:base_object) { instance_double(Git::Base) }
-  let(:execution_context) { instance_double(Git::ExecutionContext::Repository, base_object: base_object) }
+  let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # ---------------------------------------------------------------------------

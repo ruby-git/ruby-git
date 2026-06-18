@@ -3,13 +3,10 @@
 require 'spec_helper'
 require 'git/repository'
 require 'git/repository/stashing'
-require 'git/execution_context/repository'
-
 RSpec.describe Git::Repository::Stashing, :integration do
   include_context 'in an empty repository'
 
-  let(:facade_execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
-  let(:described_instance) { Git::Repository.new(execution_context: facade_execution_context) }
+  let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   before do
     write_file('file.txt', 'initial content')

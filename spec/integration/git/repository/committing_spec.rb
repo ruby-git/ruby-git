@@ -21,7 +21,6 @@ require 'git/repository/committing'
 RSpec.describe Git::Repository::Committing, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   # Create an initial commit so the index has a tree to write

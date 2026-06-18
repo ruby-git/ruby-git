@@ -4,12 +4,10 @@ require 'spec_helper'
 require 'git/log'
 require 'git/repository'
 require 'git/repository/logging'
-require 'git/execution_context/repository'
 
 RSpec.describe Git::Repository::Logging, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   describe '#full_log_commits' do

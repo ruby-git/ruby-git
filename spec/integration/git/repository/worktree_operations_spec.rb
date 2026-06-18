@@ -4,7 +4,6 @@ require 'spec_helper'
 require 'securerandom'
 require 'git/repository'
 require 'git/repository/worktree_operations'
-require 'git/execution_context/repository'
 
 # worktree_add, worktree_remove, and worktree_prune are one-line delegators with no
 # facade-owned post-processing. Their end-to-end coverage comes from the command
@@ -20,7 +19,6 @@ require 'git/execution_context/repository'
 RSpec.describe Git::Repository::WorktreeOperations, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   before do

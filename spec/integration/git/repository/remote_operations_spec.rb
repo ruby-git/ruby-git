@@ -7,7 +7,6 @@ require 'git/repository/remote_operations'
 RSpec.describe Git::Repository::RemoteOperations, :integration do
   include_context 'in an empty repository'
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   let(:bare_dir) { Dir.mktmpdir('bare_repo') }

@@ -36,14 +36,12 @@ RSpec.describe Git::ExecutionContext::Repository do
 
   describe '#dup_with' do
     let(:logger) { Logger.new(nil) }
-    let(:base_object) { instance_double(Git::Base) }
 
     let(:original) do
       described_class.new(
         git_dir: git_dir,
         git_work_dir: git_work_dir,
         git_index_file: git_index_file,
-        base_object: base_object,
         binary_path: :use_global_config,
         git_ssh: :use_global_config,
         logger: logger
@@ -65,10 +63,6 @@ RSpec.describe Git::ExecutionContext::Repository do
         git_work_dir: git_work_dir,
         git_index_file: git_index_file
       )
-    end
-
-    it 'preserves base_object' do
-      expect(original.dup_with.base_object).to be(base_object)
     end
 
     it 'preserves the logger instance' do
@@ -163,74 +157,6 @@ RSpec.describe Git::ExecutionContext::Repository do
 
       it 'returns nil' do
         expect(context.git_ssh).to be_nil
-      end
-    end
-  end
-
-  describe '.from_base' do
-    let(:repo_double) { instance_double(Pathname, to_s: git_dir) }
-    let(:index_double) { instance_double(Pathname, to_s: git_index_file) }
-    let(:dir_double) { instance_double(Pathname, to_s: git_work_dir) }
-    let(:base) do
-      instance_double(Git::Base,
-                      repo: repo_double, index: index_double, dir: dir_double,
-                      git_ssh: nil, binary_path: :use_global_config)
-    end
-
-    subject(:context) { described_class.from_base(base) }
-
-    it 'returns a Git::ExecutionContext::Repository' do
-      expect(context).to be_a(described_class)
-    end
-
-    it 'extracts git_dir from base.repo.to_s' do
-      expect(context.git_dir).to eq(git_dir)
-    end
-
-    it 'extracts git_work_dir from base.dir.to_s' do
-      expect(context.git_work_dir).to eq(git_work_dir)
-    end
-
-    it 'extracts git_index_file from base.index.to_s' do
-      expect(context.git_index_file).to eq(git_index_file)
-    end
-
-    it 'stores the originating base object' do
-      expect(context.base_object).to eq(base)
-    end
-
-    context 'when base.binary_path is an explicit path' do
-      let(:base) do
-        instance_double(Git::Base,
-                        repo: repo_double, index: index_double, dir: dir_double,
-                        git_ssh: nil, binary_path: '/custom/git')
-      end
-
-      it 'forwards binary_path to the context' do
-        expect(context.binary_path).to eq('/custom/git')
-      end
-    end
-
-    context 'when base.binary_path is :use_global_config (default)' do
-      it 'delegates binary_path resolution to Git::Config.instance' do
-        allow(Git::Config.instance).to receive(:binary_path).and_return('/global/git')
-        expect(context.binary_path).to eq('/global/git')
-      end
-    end
-
-    context 'when base.dir is nil' do
-      let(:dir_double) { nil }
-
-      it 'sets git_work_dir to nil' do
-        expect(context.git_work_dir).to be_nil
-      end
-    end
-
-    context 'when base.index is nil' do
-      let(:index_double) { nil }
-
-      it 'sets git_index_file to nil' do
-        expect(context.git_index_file).to be_nil
       end
     end
   end
