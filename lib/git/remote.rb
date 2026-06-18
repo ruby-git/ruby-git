@@ -7,9 +7,8 @@ module Git
   # A remote in a Git repository
   #
   # Remote objects provide access to remote metadata and operations like fetch,
-  # merge, and remove. They should be obtained via {Git::Base#remote} or the
-  # `remote` factory method on a `Git::Repository` instance, not constructed
-  # directly.
+  # merge, and remove. They should be obtained via `Git::Repository#remote`,
+  # not constructed directly.
   #
   # @example Getting a remote
   #   git = Git.open('.')
@@ -60,7 +59,7 @@ module Git
     # @example Fetch from origin
     #   git.remote('origin').fetch
     #
-    # @param opts [Hash] fetch options (see {Git::Base#fetch})
+    # @param opts [Hash] fetch options (see `Git::Repository#fetch`)
     #
     # @return [String] git's stdout from the fetch
     #

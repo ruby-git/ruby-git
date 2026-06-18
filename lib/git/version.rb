@@ -100,7 +100,7 @@ module Git
     # Return the version as an array of integers
     #
     # Useful when legacy code expects the array shape returned by the
-    # deprecated {Git::Lib#current_command_version} method.
+    # deprecated `Git::Lib#current_command_version` method.
     #
     # @return [Array<Integer>] [major, minor, patch]
     #

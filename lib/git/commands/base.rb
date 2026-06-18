@@ -173,8 +173,8 @@ module Git
         end
       end
 
-      # @param execution_context [Git::ExecutionContext, Git::Lib] context that provides
-      #   {Git::Lib#command_capturing} and {Git::Lib#command_streaming}
+      # @param execution_context [Git::ExecutionContext] context that provides
+      #   {Git::ExecutionContext#command_capturing} and {Git::ExecutionContext#command_streaming}
       def initialize(execution_context)
         @execution_context = execution_context
       end
@@ -351,7 +351,7 @@ module Git
       # the read end. The write and close happen concurrently with the block.
       #
       # The read end can be passed as the `in:` keyword to
-      # {Git::Lib#command_capturing} / {Git::CommandLine#run_with_capture}, connecting it directly to
+      # {Git::ExecutionContext#command_capturing} / {Git::CommandLine#run_with_capture}, connecting it directly to
       # the spawned git process's stdin without an intermediate file or shell
       # heredoc. This is required because `Process.spawn` only accepts real IO
       # objects with a file descriptor — `StringIO` does not work.
