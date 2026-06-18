@@ -61,19 +61,17 @@ module Git
   # {Git::CommandLine}, and return a raw {Git::CommandLineResult}.
   #
   # Commands do **not** parse output — that responsibility belongs to the
-  # {Git::Parsers} layer, orchestrated by the facade ({Git::Lib} / future
-  # {Git::Repository}).
+  # {Git::Parsers} layer, orchestrated by the facade ({Git::Repository}).
   #
   # All classes in this namespace are internal (`@api private`). End users
-  # should interact with the public API on {Git::Base} instead.
+  # should interact with the public API on {Git::Repository} instead.
   #
   # ## Architecture
   #
   # ```
-  # Git::Base (public API)
-  #   └── Git::Lib / Git::Repository (facade — orchestrates commands + parsers)
-  #         └── Git::Commands::* (defines CLI API, binds args, executes)
-  #               └── Git::CommandLine (subprocess execution)
+  # Git::Repository (public API / facade — orchestrates commands + parsers)
+  #   └── Git::Commands::* (defines CLI API, binds args, executes)
+  #         └── Git::CommandLine (subprocess execution)
   # ```
   #
   # Simple commands inherit from {Commands::Base} and only need an `arguments`

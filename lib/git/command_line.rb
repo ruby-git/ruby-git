@@ -14,9 +14,9 @@ module Git
   #   Use this for commands (e.g. `cat-file -p <blob>`) whose output may be
   #   too large to buffer.
   #
-  # Both classes inherit from {Git::CommandLine::Base} and are instantiated
-  # via factory helpers in {Git::Lib}: {Git::Lib#command_capturing} and
-  # {Git::Lib#command_streaming}.
+  # Both classes inherit from {Git::CommandLine::Base} and are used internally
+  # by {Git::ExecutionContext#command_capturing} and
+  # {Git::ExecutionContext#command_streaming}.
   #
   # Results are returned as {Git::CommandLine::Result} objects (also accessible
   # as {Git::CommandLineResult} for backward compatibility).

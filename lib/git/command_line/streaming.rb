@@ -12,7 +12,7 @@ module Git
     # IO object.  Stderr is always captured internally in a `StringIO` for error
     # diagnostics and is available as `result.stderr`.
     #
-    # Use this class (via {Git::Lib#command_streaming}) for commands such as
+    # Use this class (via {Git::ExecutionContext#command_streaming}) for commands such as
     # `cat-file -p <blob>` whose stdout may be too large to buffer in memory.
     #
     # {Git::CommandLine::Capturing} is the complementary strategy for the common case
@@ -26,7 +26,7 @@ module Git
     #     streaming.run('cat-file', 'blob', sha, out: f)
     #   end
     #
-    # @see Git::Lib#command_streaming
+    # @see Git::ExecutionContext#command_streaming
     #
     # @see Git::CommandLine::Capturing
     #
