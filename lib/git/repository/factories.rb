@@ -142,13 +142,13 @@ module Git
       #   SSH executable
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.git_ssh`.
+      #   `Git.config.git_ssh`.
       #
       # @option options [String, :use_global_config] :binary_path path to the git
       #   binary
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.binary_path`.
+      #   `Git.config.binary_path`.
       #
       # @option options [Logger, nil] :log logger used for git operations
       #
@@ -216,13 +216,13 @@ module Git
       #   SSH executable
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.git_ssh`.
+      #   `Git.config.git_ssh`.
       #
       # @option options [String, :use_global_config] :binary_path path to the git
       #   binary
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.binary_path`.
+      #   `Git.config.binary_path`.
       #
       # @option options [Logger, nil] :log logger used for git operations
       #
@@ -275,13 +275,13 @@ module Git
       #   path to a custom SSH executable
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.git_ssh`.
+      #   `Git.config.git_ssh`.
       #
       # @option options [String, :use_global_config] :binary_path
       #   path to the git binary
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.binary_path`.
+      #   `Git.config.binary_path`.
       #
       # @return [Git::Repository] a repository bound to the resolved paths
       #
@@ -319,13 +319,13 @@ module Git
       #   path to a custom SSH executable
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.git_ssh`.
+      #   `Git.config.git_ssh`.
       #
       # @option options [String, :use_global_config] :binary_path
       #   path to the git binary
       #
       #   Pass `:use_global_config` (the default) to use
-      #   `Git::Base.config.binary_path`.
+      #   `Git.config.binary_path`.
       #
       # @return [Git::Repository] a repository bound to the bare repository directory
       #
@@ -636,7 +636,7 @@ module Git
         return unless opts.key?(:path)
 
         if defined?(Git::Deprecation)
-          Git::Deprecation.warn('The :path option for Git::Lib#clone is deprecated, use :chdir instead')
+          Git::Deprecation.warn('The :path option for Git::Repository.clone is deprecated, use :chdir instead')
         end
         path = opts.delete(:path)
         opts[:chdir] ||= path
@@ -655,7 +655,7 @@ module Git
 
         if defined?(Git::Deprecation)
           Git::Deprecation.warn(
-            'The :recursive option for Git::Lib#clone is deprecated, use :recurse_submodules instead'
+            'The :recursive option for Git::Repository.clone is deprecated, use :recurse_submodules instead'
           )
         end
         opts[:recurse_submodules] = opts.delete(:recursive)
@@ -673,7 +673,7 @@ module Git
         return unless opts.key?(:remote)
 
         if defined?(Git::Deprecation)
-          Git::Deprecation.warn('The :remote option for Git::Lib#clone is deprecated, use :origin instead')
+          Git::Deprecation.warn('The :remote option for Git::Repository.clone is deprecated, use :origin instead')
         end
         opts[:origin] = opts.delete(:remote)
       end

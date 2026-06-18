@@ -70,7 +70,7 @@ module Git
       # @param binary_path [String, :use_global_config] path to the git binary
       #
       #   Controls which git binary is invoked during root detection. Defaults to
-      #   `:use_global_config`, which resolves to `Git::Base.config.binary_path`.
+      #   `:use_global_config`, which resolves to `Git.config.binary_path`.
       #
       # @param git_ssh [String, nil, :use_global_config] the SSH wrapper path
       #
