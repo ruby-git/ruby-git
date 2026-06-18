@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/base'
 require_relative 'branch_info'
 
 module Git

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'git/base'
-
 module Git
   # Builds and executes a `git log` query
   #
