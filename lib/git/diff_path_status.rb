@@ -69,7 +69,7 @@ module Git
 
     # Sets up legacy (base, from, to, path_limiter) instance state
     #
-    # @param base [Git::Base, Git::Repository] the git object
+    # @param base [Git::Repository] the git object
     #
     # @param from [String] the first commit or object to compare
     #
