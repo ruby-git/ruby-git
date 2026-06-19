@@ -6,10 +6,7 @@ module Git
     # Returns the process-wide singleton {Git::Config} instance
     #
     # All calls to {Git.configure}, {Git.config}, and the {Git::ExecutionContext}
-    # classes resolve global configuration through this method. Owning the
-    # singleton here (rather than on {Git::Base}) means these call sites are
-    # independent of `Git::Base` and will continue to work when `Git::Base` is
-    # removed in a future version.
+    # classes resolve global configuration through this method.
     #
     # @example Read the configured binary path
     #   Git::Config.instance.binary_path  #=> "git"

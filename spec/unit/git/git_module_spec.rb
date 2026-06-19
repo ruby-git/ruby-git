@@ -8,7 +8,6 @@ RSpec.describe Git do
 
     before do
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
-      expect(Git::Lib).not_to receive(:new)
     end
 
     context 'when called with no arguments (list mode)' do
@@ -22,9 +21,8 @@ RSpec.describe Git do
           .to receive(:new).with(execution_context).and_return(list_command)
       end
 
-      it 'creates a Git::ExecutionContext::Global (not Git::Lib)' do
+      it 'creates a Git::ExecutionContext::Global' do
         allow(list_command).to receive(:call).with(global: true).and_return(list_result)
-        expect(Git::Lib).not_to receive(:new)
         expect(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
         result
       end
@@ -127,7 +125,6 @@ RSpec.describe Git do
 
     before do
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
-      expect(Git::Lib).not_to receive(:new)
     end
 
     context 'when called with no arguments (list mode)' do
@@ -141,9 +138,8 @@ RSpec.describe Git do
           .to receive(:new).with(execution_context).and_return(list_command)
       end
 
-      it 'creates a Git::ExecutionContext::Global (not Git::Lib)' do
+      it 'creates a Git::ExecutionContext::Global' do
         allow(list_command).to receive(:call).with(no_args).and_return(list_result)
-        expect(Git::Lib).not_to receive(:new)
         expect(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
         result
       end
