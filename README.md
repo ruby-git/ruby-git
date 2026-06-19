@@ -52,7 +52,7 @@ Get started by obtaining a repository object by:
   [Git.clone](https://rubydoc.info/gems/git/Git#clone-class_method)
 
 Methods that can be called on a repository object are documented in
-[Git::Base](https://rubydoc.info/gems/git/Git/Base)
+[Git::Repository](https://rubydoc.info/gems/git/Git/Repository)
 
 ## Install
 
@@ -87,8 +87,8 @@ All functionality for this gem starts with the top-level
 non-repo scoped `git` commands such as `config`.
 
 The `Git` module also has factory methods such as `open`, `clone`, and `init` which
-return a [`Git::Base`](https://rubydoc.info/gems/git/Git/Base) object. The
-`Git::Base` object is used to run repo-specific `git` commands such as `add`,
+return a [`Git::Repository`](https://rubydoc.info/gems/git/Git/Repository) object. The
+`Git::Repository` object is used to run repo-specific `git` commands such as `add`,
 `commit`, `push`, and `log`.
 
 Clone, read status, and log:
@@ -417,7 +417,7 @@ repo.merge([branch1, branch2])
 repo.merge_base('branch1', 'branch2')
 
 r = repo.remote_add(name, uri)  # Git::Remote
-r = repo.remote_add(name, other_repo)  # Git::Remote (other_repo is a Git::Base instance)
+r = repo.remote_add(name, other_repo)  # Git::Remote (other_repo is a Git::Repository instance)
 
 repo.remotes  # array of Git::Remotes
 repo.remote(name).fetch

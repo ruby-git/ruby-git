@@ -13,14 +13,9 @@ module Git
     #
     # ### Construction
     #
-    # Prefer the factory class methods over `new` when building from a
-    # {Git::Base} object or a hash:
+    # Use {.from_hash} to build from a configuration hash:
     #
-    #   context = Git::ExecutionContext::Repository.from_base(base)
     #   context = Git::ExecutionContext::Repository.from_hash(repository: '/repo/.git', ...)
-    #
-    # @example Build from a Git::Base object
-    #   context = Git::ExecutionContext::Repository.from_base(git)
     #
     # @example Build from a configuration hash
     #   context = Git::ExecutionContext::Repository.from_hash(
@@ -31,31 +26,6 @@ module Git
     # @api private
     #
     class Repository < ExecutionContext
-      # Creates a Repository context from a {Git::Base} instance
-      #
-      # @example Build from a base object
-      #   git = Git.open('/path/to/repo')
-      #   context = Git::ExecutionContext::Repository.from_base(git)
-      #
-      # @param base_object [Git::Base] the base Git object to derive context from
-      #
-      # @param logger [Logger, nil] logger forwarded to the CommandLine layer;
-      #   `nil` uses a null logger (see {Git::ExecutionContext#initialize})
-      #
-      # @return [Git::ExecutionContext::Repository] the new repository context
-      #
-      def self.from_base(base_object, logger: nil)
-        new(
-          git_dir: base_object.repo.to_s,
-          git_index_file: base_object.index&.to_s,
-          git_work_dir: base_object.dir&.to_s,
-          base_object: base_object,
-          git_ssh: base_object.git_ssh,
-          binary_path: base_object.binary_path,
-          logger: logger
-        )
-      end
-
       # Creates a Repository context from a Hash
       #
       # Expected keys: `:repository`, `:working_directory`, `:index`, `:git_ssh`,
@@ -96,8 +66,6 @@ module Git
       #
       # @param git_index_file [String, nil] path to the index file
       #
-      # @param base_object [Git::Base, nil] originating base object
-      #
       # @param binary_path [String, :use_global_config] path to the git binary
       #
       #   Give `:use_global_config` (the default) to use
@@ -121,7 +89,6 @@ module Git
         git_dir:,
         git_work_dir: nil,
         git_index_file: nil,
-        base_object: nil,
         binary_path: :use_global_config,
         git_ssh: :use_global_config,
         logger: nil
@@ -130,7 +97,6 @@ module Git
         @git_dir = git_dir
         @git_work_dir = git_work_dir
         @git_index_file = git_index_file
-        @base_object = base_object
       end
 
       # @return [String, nil] path to the `.git` directory
@@ -141,9 +107,6 @@ module Git
 
       # @return [String, nil] path to the index file
       attr_reader :git_index_file
-
-      # @return [Git::Base, nil] originating base object
-      attr_reader :base_object
 
       # Returns a new instance with the same configuration, applying `overrides`
       #
@@ -162,7 +125,6 @@ module Git
           git_dir: @git_dir,
           git_work_dir: @git_work_dir,
           git_index_file: @git_index_file,
-          base_object: @base_object,
           binary_path: @binary_path,
           git_ssh: @git_ssh,
           logger: @logger,

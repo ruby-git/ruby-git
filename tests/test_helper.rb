@@ -317,11 +317,13 @@ def mock_git_binary(script, subdir: 'bin')
     FileUtils.mkdir_p(File.dirname(git_binary_path))
     File.write(git_binary_path, script)
     File.chmod(0o755, git_binary_path) unless windows_platform?
-    saved_binary_path = Git::Base.config.binary_path
-    Git::Base.config.binary_path = git_binary_path
+    saved_binary_path = Git.config.binary_path
+    Git.config.binary_path = git_binary_path
 
-    yield git_binary_path
-
-    Git::Base.config.binary_path = saved_binary_path
+    begin
+      yield git_binary_path
+    ensure
+      Git.config.binary_path = saved_binary_path
+    end
   end
 end

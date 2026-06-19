@@ -12,13 +12,12 @@ RSpec.describe Git do
       allow(Git::Commands::LsRemote).to receive(:new).with(context).and_return(ls_remote_command)
     end
 
-    it 'uses execution context + command path (not Git::Lib)' do
+    it 'uses execution context + command path' do
       stdout = <<~OUTPUT
         abc123\tHEAD
         abc123\trefs/heads/main
       OUTPUT
 
-      expect(Git::Lib).not_to receive(:new)
       expect(ls_remote_command).to receive(:call).with('.', tags: true).and_return(command_result(stdout))
 
       expect(described_class.ls_remote(nil, tags: true)).to eq(
@@ -64,10 +63,9 @@ RSpec.describe Git do
       allow(Git::Commands::LsRemote).to receive(:new).with(context).and_return(ls_remote_command)
     end
 
-    it 'uses the direct LsRemote + parser path (not Git::Base)' do
+    it 'uses the direct LsRemote + parser path' do
       stdout = "ref: refs/heads/main\tHEAD\nabc123\tHEAD\n"
 
-      expect(Git::Base).not_to receive(:repository_default_branch)
       expect(ls_remote_command).to receive(:call)
         .with('origin', 'HEAD', symref: true).and_return(command_result(stdout))
 
