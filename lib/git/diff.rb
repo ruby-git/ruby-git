@@ -25,7 +25,7 @@ module Git
     # @example
     #   diff = Git::Diff.new(base, 'HEAD~1', 'HEAD')
     #
-    # @param base [Git::Base, Git::Repository] the git repository
+    # @param base [Git::Repository] the git repository
     #
     # @param from [String, nil] the starting commit ref, or `nil` to compare
     #   from the index
@@ -283,7 +283,7 @@ module Git
       #     mode: '100644', src: 'abc123', dst: 'def456',
       #     type: 'modified', binary: false)
       #
-      # @param base [Git::Base, Git::Repository] the git repository
+      # @param base [Git::Repository] the git repository
       #
       # @param hash [Hash] the parsed diff attributes
       #
@@ -398,7 +398,7 @@ module Git
     class FullDiffParser
       # Creates a new FullDiffParser
       #
-      # @param base [Git::Base, Git::Repository] the git repository
+      # @param base [Git::Repository] the git repository
       #
       # @param patch_text [String] the raw `git diff` output to parse
       #
