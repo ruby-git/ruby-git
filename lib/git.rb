@@ -71,11 +71,13 @@ require 'git/worktrees'
 # @author Scott Chacon (mailto:schacon@gmail.com)
 #
 module Git
-  # g.config('user.name', 'Scott Chacon') # sets value
-  # g.config('user.email', 'email@email.com')  # sets value
-  # g.config('user.name')  # returns 'Scott Chacon'
-  # g.config # returns whole config hash
+  # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
+  #   Use `Git.open(Dir.pwd).config(...)` instead.
   def config(name = nil, value = nil)
+    Git::Deprecation.warn(
+      'Git#config is deprecated and will be removed in v6.0.0. ' \
+      'Use Git.open(Dir.pwd).config(...) instead.'
+    )
     Git.__send__(:run_config_utility, name, value, global: false)
   end
 
@@ -108,7 +110,13 @@ module Git
     Git::Config.instance
   end
 
+  # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
+  #   Use `Git.global_config(...)` instead.
   def global_config(name = nil, value = nil)
+    Git::Deprecation.warn(
+      'Git#global_config is deprecated and will be removed in v6.0.0. ' \
+      'Use Git.global_config(...) instead.'
+    )
     Git.global_config(name, value)
   end
 
