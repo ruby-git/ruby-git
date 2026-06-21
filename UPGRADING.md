@@ -135,5 +135,7 @@ are removed in v6.0.0.
 | `g.set_remote_url(name, url)` | `g.remote_set_url(name, url)` |
 | `g.add_tag(name, ...)` | `g.tag_add(name, ...)` |
 | `g.delete_tag(name)` | `g.tag_delete(name)` |
+| `include Git; config(...)` | `Git.open(Dir.pwd).config(...)` |
+| `include Git; global_config(...)` | `Git.global_config(...)` |
 
 ---

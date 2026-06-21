@@ -126,6 +126,7 @@ RSpec.describe Git do
     let(:execution_context) { instance_double(Git::ExecutionContext::Global) }
 
     before do
+      expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git#config is deprecated'))
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
       expect(Git::Lib).not_to receive(:new)
     end
@@ -224,6 +225,10 @@ RSpec.describe Git do
     end
 
     let(:described_instance) { git_class.new }
+
+    before do
+      expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git#global_config is deprecated'))
+    end
 
     it 'delegates to Git.global_config' do
       expect(described_class).to receive(:global_config).with('user.name', nil)
