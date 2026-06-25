@@ -12,10 +12,12 @@ require 'git/repository/configuring'
 #
 # Single-command get and set modes are covered by dedicated command integration
 # tests under spec/integration/git/commands/config_option_syntax/{get,set,list}_spec.rb.
-# Error-path assertions and argument-forwarding tests are skipped here because
-# they test command behavior, not the facade. The set→get round-trip test is
-# retained to confirm the facade's dispatch logic routes both modes correctly
-# end-to-end against real git.
+# Argument-forwarding tests are skipped here because they test command behavior,
+# not the facade. The missing-key error path is retained to pin the 4.x-equivalent
+# dispatch contract: #config(name) must propagate Git::FailedError when git exits
+# non-zero, which is facade behavior (Private.config_get raises on a non-zero exit). The
+# set→get round-trip test is retained to confirm the facade's dispatch logic routes
+# both modes correctly end-to-end against real git.
 
 RSpec.describe Git::Repository::Configuring, :integration do
   include_context 'in an empty repository'
@@ -33,6 +35,16 @@ RSpec.describe Git::Repository::Configuring, :integration do
       it 'returns the configured user.name value' do
         result = described_instance.config
         expect(result['user.name']).to eq('Test User')
+      end
+    end
+
+    context 'when called with a name only' do
+      it 'returns the config value as a String' do
+        expect(described_instance.config('user.name')).to eq('Test User')
+      end
+
+      it 'raises Git::FailedError when the key does not exist' do
+        expect { described_instance.config('ruby-git-rspec.nonexistent-key') }.to raise_error(Git::FailedError)
       end
     end
 
@@ -65,7 +77,7 @@ RSpec.describe Git::Repository::Configuring, :integration do
     end
   end
 
-  describe '#global_config' do
+  describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
     around do |example|
       with_isolated_global_config { example.run }
     end
@@ -91,10 +103,18 @@ RSpec.describe Git::Repository::Configuring, :integration do
       end
     end
 
+    context 'when called with name and value' do
+      it 'persists the value so a subsequent get returns it' do
+        described_instance.global_config('user.name', 'SetUser')
+
+        expect(described_instance.global_config('user.name')).to eq('SetUser')
+      end
+    end
+
     def with_isolated_global_config
-      global_config = File.join(repo_dir, 'global.config')
-      FileUtils.touch(global_config)
       saved = ENV.fetch('GIT_CONFIG_GLOBAL', nil)
+      global_config = File.join(repo_dir, 'global.config')
+      File.write(global_config, '')
       ENV['GIT_CONFIG_GLOBAL'] = global_config
       yield
     ensure
