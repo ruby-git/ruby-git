@@ -297,4 +297,44 @@ RSpec.describe Git::Repository, :integration do
       FileUtils.rm_rf(clone_dir)
     end
   end
+
+  describe '#config_get' do
+    include_context 'in an empty repository'
+
+    let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
+
+    it 'returns a Git::ConfigEntryInfo for an existing key' do
+      entry = described_instance.config_get('user.name')
+
+      expect(entry).to be_a(Git::ConfigEntryInfo)
+      expect(entry.value).to eq('Test User')
+    end
+
+    it 'returns nil when the key does not exist' do
+      entry = described_instance.config_get('nonexistent.key', local: true)
+
+      expect(entry).to be_nil
+    end
+  end
+
+  describe '#config_list' do
+    include_context 'in an empty repository'
+
+    let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
+
+    it 'returns an Array of Git::ConfigEntryInfo objects' do
+      entries = described_instance.config_list
+
+      expect(entries).to be_an(Array)
+      expect(entries).to all(be_a(Git::ConfigEntryInfo))
+    end
+
+    it 'includes an entry for user.name from local config' do
+      entries = described_instance.config_list(local: true)
+
+      user_name_entry = entries.find { |e| e.key == 'user.name' }
+      expect(user_name_entry).not_to be_nil
+      expect(user_name_entry.value).to eq('Test User')
+    end
+  end
 end

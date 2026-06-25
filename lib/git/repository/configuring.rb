@@ -5,13 +5,16 @@ require 'git/repository/shared_private'
 
 module Git
   class Repository
-    # Facade methods for reading and writing git configuration
+    # Legacy facade methods for reading and writing git configuration
     #
-    # Provides the {#config} and {#global_config} methods, which dispatch to read a
-    # single entry, list all entries, or write a value depending on the arguments
-    # supplied. {#config} uses git's default config scope (reads from the full
-    # resolution chain; set operations write to the repository's `.git/config`);
-    # {#global_config} targets the git global config scope (`git config --global`).
+    # Provides the {#config} and {#global_config} dispatch methods for 4.x
+    # compatibility. These methods return raw `String` / `Hash` values instead of
+    # {Git::ConfigEntryInfo} objects and are retained so that internal callers such
+    # as `Git::Status` continue to work unchanged.
+    #
+    # The structured `config_*` methods (e.g. `config_get`, `config_list`) are
+    # provided by {Git::Configuring}, which is included directly into
+    # {Git::Repository}.
     #
     # Included by {Git::Repository}.
     #
@@ -170,136 +173,6 @@ module Git
         else
           Private.global_config_list(@execution_context)
         end
-      end
-
-      # @deprecated Use {#global_config} instead.
-      def global_config_get(name)
-        Git::Deprecation.warn(
-          'Git::Repository#global_config_get is deprecated and will be removed in a future version. ' \
-          'Use global_config(name) instead.'
-        )
-        global_config(name)
-      end
-
-      # @deprecated Use {#global_config} instead.
-      def global_config_list
-        Git::Deprecation.warn(
-          'Git::Repository#global_config_list is deprecated and will be removed in a future version. ' \
-          'Use global_config instead.'
-        )
-        global_config
-      end
-
-      # @deprecated Use {#global_config} instead.
-      def global_config_set(name, value)
-        Git::Deprecation.warn(
-          'Git::Repository#global_config_set is deprecated and will be removed in a future version. ' \
-          'Use global_config(name, value) instead.'
-        )
-        global_config(name, value)
-      end
-
-      # Return a single git configuration entry
-      #
-      # @deprecated Use {#config} with a name argument instead.
-      #
-      # @example Get the committer name from config
-      #   repo.config_get('user.name') #=> "Alice"
-      #
-      # @param name [String] the dotted config key to look up (e.g. `"user.name"`)
-      #
-      # @return [String] the value of the config entry
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @see #config
-      #
-      def config_get(name)
-        Git::Deprecation.warn(
-          'Git::Repository#config_get is deprecated and will be removed in a future version. ' \
-          'Use config(name) instead.'
-        )
-        config(name)
-      end
-
-      # Return all git configuration entries as a Hash
-      #
-      # @deprecated Use {#config} with no arguments instead.
-      #
-      # @example List all config entries
-      #   repo.config_list #=> { "user.name" => "Alice", "core.bare" => "false" }
-      #
-      # @return [Hash{String => String}] all visible config entries, keyed by their
-      #   full dotted key names (e.g. `"user.name"`)
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @see #config
-      #
-      def config_list
-        Git::Deprecation.warn(
-          'Git::Repository#config_list is deprecated and will be removed in a future version. ' \
-          'Use config instead.'
-        )
-        config
-      end
-
-      # Write a git configuration entry
-      #
-      # @deprecated Use {#config} with name and value arguments instead.
-      #
-      # @example Set the committer name in local config
-      #   repo.config_set('user.name', 'Alice')
-      #
-      # @param name [String] the dotted config key to write (e.g. `"user.name"`)
-      #
-      # @param value [#to_s] the value to assign; must not be `nil` (a `nil`
-      #   value is treated as "no value" and routes to the get overload).
-      #   Any non-nil object is converted to a String via `#to_s` before
-      #   being passed to git
-      #
-      # @param opts [Hash] options for the set operation
-      #
-      # @option opts [String, nil] :file (nil) path to a custom config file to
-      #   write to instead of the repository's default `.git/config`
-      #
-      # @return [Git::CommandLineResult] the raw result of `git config <name> <value>`
-      #
-      # @raise [ArgumentError] if unsupported options are provided
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @see #config
-      #
-      def config_set(name, value, opts = {})
-        Git::Deprecation.warn(
-          'Git::Repository#config_set is deprecated and will be removed in a future version. ' \
-          'Use config(name, value, options) instead.'
-        )
-        config(name, value, opts)
-      end
-
-      # Read all entries from an arbitrary git-format config file
-      #
-      # @example Read all entries from a custom config file
-      #   repo.parse_config('/path/to/.gitconfig')
-      #   #=> { "user.name" => "Alice", "core.bare" => "false" }
-      #
-      # @param file [String] path to the git-format config file to read
-      #
-      # @return [Hash{String => String}] all config entries in the file, keyed by
-      #   their full dotted key names (e.g. `"user.name"`)
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @deprecated Use {#config} with the `:file` option instead
-      #
-      def parse_config(file)
-        Git::Deprecation.warn(
-          'Git::Repository#parse_config is deprecated and will be removed in a future version. ' \
-          'Use config(file: <path>) instead.'
-        )
-        config(file: file)
       end
 
       # Private helpers local to {Git::Repository::Configuring}
