@@ -4,8 +4,54 @@ require 'spec_helper'
 
 # These specs verify that Git.configure, Git.config, Git.git_version, and
 # Git.binary_version resolve global config through Git::Config.instance.
+# They also verify that Git extends Git::Configuring for structured config access.
 #
 RSpec.describe Git do
+  describe 'Git::Configuring mixin' do
+    it 'extends Git with Git::Configuring so all config_* class methods are available' do
+      expect(described_class.singleton_class.ancestors).to include(Git::Configuring)
+    end
+
+    describe 'assert_valid_scope! rejects repository-specific scopes' do
+      it 'raises ArgumentError for local: scope' do
+        expect { described_class.config_get('user.name', local: true) }
+          .to raise_error(ArgumentError, /local/)
+      end
+
+      it 'raises ArgumentError for worktree: scope' do
+        expect { described_class.config_get('user.name', worktree: true) }
+          .to raise_error(ArgumentError, /worktree/)
+      end
+
+      it 'raises ArgumentError for blob: scope' do
+        expect { described_class.config_get('user.name', blob: 'HEAD:.gitconfig') }
+          .to raise_error(ArgumentError, /blob/)
+      end
+    end
+
+    describe 'assert_valid_scope! allows non-repository scopes' do
+      let(:get_command) { instance_double(Git::Commands::ConfigOptionSyntax::Get) }
+
+      before do
+        allow(Git::Commands::ConfigOptionSyntax::Get)
+          .to receive(:new).with(instance_of(Git::ExecutionContext::Global)).and_return(get_command)
+        allow(get_command).to receive(:call).and_return(command_result(''))
+      end
+
+      it 'allows global: scope' do
+        expect { described_class.config_get('user.name', global: true) }.not_to raise_error
+      end
+
+      it 'allows system: scope' do
+        expect { described_class.config_get('user.name', system: true) }.not_to raise_error
+      end
+
+      it 'allows file: scope' do
+        expect { described_class.config_get('user.name', file: '/tmp/config') }.not_to raise_error
+      end
+    end
+  end
+
   describe '.config' do
     it 'returns Git::Config.instance' do
       expect(described_class.config).to be(Git::Config.instance)

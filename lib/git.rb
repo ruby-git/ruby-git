@@ -72,6 +72,8 @@ require 'git/worktrees'
 # @author Scott Chacon (mailto:schacon@gmail.com)
 #
 module Git
+  extend Git::Configuring
+
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
   #   Use `Git.open(Dir.pwd).config(...)` instead.
   def config(name = nil, value = nil)
@@ -577,6 +579,34 @@ module Git
     end
   end
   private_class_method :parse_config_list
+
+  # @api private
+  def self.execution_context
+    Git::ExecutionContext::Global.new
+  end
+  private_class_method :execution_context
+
+  # Scopes that require an active repository and cannot be used at the Git module level
+  #
+  # @api private
+  #
+  REPOSITORY_SPECIFIC_SCOPES = %i[local worktree blob].freeze
+  private_constant :REPOSITORY_SPECIFIC_SCOPES
+
+  # Raises +ArgumentError+ when a repository-specific scope is requested.
+  #
+  # The +:local+, +:worktree+, and +:blob+ scopes require an active git
+  # repository and are therefore not valid at the Git module level.
+  #
+  # @api private
+  #
+  def self.assert_valid_scope!(**opts)
+    invalid = REPOSITORY_SPECIFIC_SCOPES.select { |s| opts[s] }
+    return if invalid.empty?
+
+    raise ArgumentError, "#{invalid.join(', ')} scope requires a repository"
+  end
+  private_class_method :assert_valid_scope!
 
   # Return the version of the git binary
   #
