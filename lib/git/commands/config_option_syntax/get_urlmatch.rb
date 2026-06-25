@@ -45,6 +45,9 @@ module Git
           # General read options
           flag_option :includes, negatable: true
 
+          # Output modifiers
+          flag_option :show_scope
+
           # Operands
           end_of_options
           operand :name, required: true
@@ -90,6 +93,8 @@ module Git
         #
         #     @option options [Boolean, nil] :no_includes (nil) disable include directives
         #       in config files (`--no-includes`)
+        #
+        #     @option options [Boolean, nil] :show_scope (nil) show the scope of each config entry
         #
         #     @return [Git::CommandLineResult] the result of calling `git config --get-urlmatch`
         #

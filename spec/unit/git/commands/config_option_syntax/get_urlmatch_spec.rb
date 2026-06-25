@@ -113,6 +113,14 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch do
       end
     end
 
+    context 'with the :show_scope option' do
+      it 'adds --show-scope to the command line' do
+        expect_command_capturing('config', '--get-urlmatch', '--show-scope', '--', 'http', 'https://example.com').and_return(command_result)
+
+        command.call('http', 'https://example.com', show_scope: true)
+      end
+    end
+
     context 'exit code handling' do
       it 'returns result for exit code 0 (match found)' do
         result = command_result(exitstatus: 0)
