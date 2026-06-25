@@ -213,4 +213,44 @@ RSpec.describe Git::Repository do
       )
     end
   end
+
+  describe 'Git::Configuring mixin' do
+    it 'is included in Git::Repository so that all config_* methods are available' do
+      expect(described_class.ancestors).to include(Git::Configuring)
+    end
+
+    describe 'assert_valid_scope! allows all repository scopes' do
+      let(:get_command) { instance_double(Git::Commands::ConfigOptionSyntax::Get) }
+
+      before do
+        allow(Git::Commands::ConfigOptionSyntax::Get)
+          .to receive(:new).with(execution_context).and_return(get_command)
+        allow(get_command).to receive(:call).and_return(command_result(''))
+      end
+
+      it 'allows local: scope' do
+        expect { described_instance.config_get('user.name', local: true) }.not_to raise_error
+      end
+
+      it 'allows global: scope' do
+        expect { described_instance.config_get('user.name', global: true) }.not_to raise_error
+      end
+
+      it 'allows system: scope' do
+        expect { described_instance.config_get('user.name', system: true) }.not_to raise_error
+      end
+
+      it 'allows worktree: scope' do
+        expect { described_instance.config_get('user.name', worktree: true) }.not_to raise_error
+      end
+
+      it 'allows file: scope' do
+        expect { described_instance.config_get('user.name', file: '/tmp/config') }.not_to raise_error
+      end
+
+      it 'allows blob: scope' do
+        expect { described_instance.config_get('user.name', blob: 'HEAD:.gitconfig') }.not_to raise_error
+      end
+    end
+  end
 end

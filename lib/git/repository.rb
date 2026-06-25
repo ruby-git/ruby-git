@@ -3,6 +3,7 @@
 require 'find'
 require 'pathname'
 
+require 'git/configuring'
 require 'git/deprecation'
 require 'git/execution_context/repository'
 require 'git/repository/branching'
@@ -50,6 +51,7 @@ module Git
   class Repository
     extend Git::Repository::Factories
 
+    include Git::Configuring
     include Git::Repository::Branching
     include Git::Repository::ContextHelpers
     include Git::Repository::Committing
@@ -191,6 +193,16 @@ module Git
         next
       end
       total
+    end
+
+    private
+
+    # All git config scopes are valid in a repository context
+    #
+    # @return [void]
+    #
+    def assert_valid_scope!(**)
+      nil
     end
   end
 end
