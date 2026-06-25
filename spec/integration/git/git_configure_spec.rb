@@ -60,4 +60,44 @@ RSpec.describe Git do
       expect(keys).to include('integration.key', 'integration.other')
     end
   end
+
+  describe '.global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
+    around { |example| with_isolated_global_config { example.run } }
+
+    context 'when called with no arguments (list mode)' do
+      before do
+        Git.config_set('user.name', 'GlobalUser', global: true)
+        Git.config_set('user.email', 'global@example.com', global: true)
+      end
+
+      it 'returns a Hash' do
+        expect(Git.global_config).to be_a(Hash)
+      end
+
+      it 'includes the written entries keyed by dotted name' do
+        result = Git.global_config
+        expect(result).to include('user.name' => 'GlobalUser', 'user.email' => 'global@example.com')
+      end
+    end
+
+    context 'when called with a name only (get mode)' do
+      before { Git.config_set('user.name', 'GlobalUser', global: true) }
+
+      it 'returns the String value for the named key' do
+        expect(Git.global_config('user.name')).to eq('GlobalUser')
+      end
+
+      it 'raises Git::FailedError when the key does not exist' do
+        expect { Git.global_config('ruby-git-rspec.nonexistent-key') }.to raise_error(Git::FailedError)
+      end
+    end
+
+    context 'when called with name and value (set mode)' do
+      it 'persists the value so a subsequent get returns it' do
+        Git.global_config('user.name', 'SetUser')
+
+        expect(Git.global_config('user.name')).to eq('SetUser')
+      end
+    end
+  end
 end
