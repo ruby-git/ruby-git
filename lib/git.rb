@@ -75,11 +75,11 @@ module Git
   extend Git::Configuring
 
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
-  #   Use `Git.open(Dir.pwd).config(...)` instead.
+  #   Use `Git.config_get(name)`, `Git.config_set(name, value)`, or `Git.config_list` instead.
   def config(name = nil, value = nil)
     Git::Deprecation.warn(
       'Git#config is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.open(Dir.pwd).config(...) instead.'
+      'Use Git.config_get(name), Git.config_set(name, value), or Git.config_list instead.'
     )
     Git.__send__(:run_config_utility, name, value, global: false)
   end
@@ -114,11 +114,13 @@ module Git
   end
 
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
-  #   Use `Git.global_config(...)` instead.
+  #   Use `Git.config_get(name, global: true)`, `Git.config_set(name, value, global: true)`, or
+  #   `Git.config_list(global: true)` instead.
   def global_config(name = nil, value = nil)
     Git::Deprecation.warn(
       'Git#global_config is deprecated and will be removed in v6.0.0. ' \
-      'Use Git.global_config(...) instead.'
+      'Use Git.config_get(name, global: true), Git.config_set(name, value, global: true), ' \
+      'or Git.config_list(global: true) instead.'
     )
     Git.global_config(name, value)
   end
