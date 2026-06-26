@@ -7,10 +7,10 @@ class TestTags < Test::Unit::TestCase
     in_temp_dir do |_path|
       r1 = Git.clone(BARE_REPO_PATH, 'repo1')
       r2 = Git.clone(BARE_REPO_PATH, 'repo2')
-      r1.config('user.name', 'Test User')
-      r1.config('user.email', 'test@email.com')
-      r2.config('user.name', 'Test User')
-      r2.config('user.email', 'test@email.com')
+      r1.config_set('user.name', 'Test User')
+      r1.config_set('user.email', 'test@email.com')
+      r2.config_set('user.name', 'Test User')
+      r2.config_set('user.email', 'test@email.com')
 
       error = assert_raise Git::UnexpectedResultError do
         r1.tag('first')

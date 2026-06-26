@@ -132,7 +132,7 @@ class TestGitClone < Test::Unit::TestCase
 
       shallow_path = File.join(path, 'shallow')
       shallow_clone = Git.clone(repository_path, shallow_path, depth: 1, no_single_branch: true)
-      fetch_spec = shallow_clone.config('remote.origin.fetch')
+      fetch_spec = shallow_clone.config_get('remote.origin.fetch').value
 
       assert_equal('+refs/heads/*:refs/remotes/origin/*', fetch_spec)
     end

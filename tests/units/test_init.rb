@@ -50,7 +50,7 @@ class TestInit < Test::Unit::TestCase
       repo = Git.init(path)
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exist?(File.join(path, '.git', 'config')))
-      assert_equal('false', repo.config('core.bare'))
+      assert_equal('false', repo.config_get('core.bare').value)
 
       branch = `git config --get init.defaultBranch`.strip
       branch = 'master' if branch.empty?
@@ -62,7 +62,7 @@ class TestInit < Test::Unit::TestCase
     in_temp_dir do |path|
       repo = Git.init(path, bare: true)
       assert(File.exist?(File.join(path, 'config')))
-      assert_equal('true', repo.config('core.bare'))
+      assert_equal('true', repo.config_get('core.bare').value)
     end
   end
 
@@ -93,7 +93,7 @@ class TestInit < Test::Unit::TestCase
       repo = Git.init(path, initial_branch: 'main')
       assert(File.directory?(File.join(path, '.git')))
       assert(File.exist?(File.join(path, '.git', 'config')))
-      assert_equal('false', repo.config('core.bare'))
+      assert_equal('false', repo.config_get('core.bare').value)
       assert_equal("ref: refs/heads/main\n", File.read("#{path}/.git/HEAD"))
     end
   end

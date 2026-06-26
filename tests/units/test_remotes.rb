@@ -102,8 +102,8 @@ class TestRemotes < Test::Unit::TestCase
   def test_remote_set_branches_fetches_additional_branch
     in_temp_dir do |_path|
       upstream = Git.clone(BARE_REPO_PATH, 'upstream', config: 'receive.denyCurrentBranch=ignore')
-      upstream.config('user.name', 'Test User')
-      upstream.config('user.email', 'test@example.com')
+      upstream.config_set('user.name', 'Test User')
+      upstream.config_set('user.email', 'test@example.com')
 
       upstream.chdir do
         default_branch = upstream.current_branch
@@ -116,7 +116,7 @@ class TestRemotes < Test::Unit::TestCase
 
       local = Git.clone(upstream.dir.to_s, 'local', branch: upstream.current_branch, single_branch: true)
       fetch_refspec = "+refs/heads/#{upstream.current_branch}:refs/remotes/origin/#{upstream.current_branch}"
-      local.config('remote.origin.fetch', fetch_refspec)
+      local.config_set('remote.origin.fetch', fetch_refspec)
 
       assert(!local.branches.remote.map(&:full).include?('remotes/origin/nondefault'))
 
@@ -130,8 +130,8 @@ class TestRemotes < Test::Unit::TestCase
   def test_remote_set_branches_replaces_fetch_refspecs
     in_temp_dir do |_path|
       upstream = Git.clone(BARE_REPO_PATH, 'upstream', config: 'receive.denyCurrentBranch=ignore')
-      upstream.config('user.name', 'Test User')
-      upstream.config('user.email', 'test@example.com')
+      upstream.config_set('user.name', 'Test User')
+      upstream.config_set('user.email', 'test@example.com')
 
       upstream.chdir do
         default_branch = upstream.current_branch
