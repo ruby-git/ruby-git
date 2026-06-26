@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/repository'
 require 'git/repository/configuring'
 
-RSpec.describe Git::Repository::Configuring do
+RSpec.describe Git::Repository do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
