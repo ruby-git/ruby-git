@@ -134,15 +134,17 @@ Configure the `git` command line:
 
 ```ruby
 # Global config (in ~/.gitconfig)
-settings = Git.global_config # returns a Hash
-username = Git.global_config('user.email')
-Git.global_config('user.email', 'user@example.com')
+entries = Git.config_list(global: true)         # returns Array<Git::ConfigEntryInfo>
+entry   = Git.config_get('user.email', global: true) # returns Git::ConfigEntryInfo or nil
+email    = entry&.value                          # => "user@example.com" or nil
+Git.config_set('user.email', 'user@example.com', global: true)
 
 # Repository config
 repo = Git.open('path/to/repo')
-settings = repo.config # returns a Hash
-username = repo.config('user.email')
-repo.config('user.email', 'anotheruser@example.com')
+entries  = repo.config_list                     # returns Array<Git::ConfigEntryInfo>
+entry    = repo.config_get('user.email')        # returns Git::ConfigEntryInfo or nil
+email    = entry&.value                         # => "anotheruser@example.com" or nil
+repo.config_set('user.email', 'anotheruser@example.com')
 ```
 
 Configure the git gem:
@@ -293,8 +295,8 @@ result = repo.fsck(unreachable: true, strict: true)
 # Suppress dangling object output
 result = repo.fsck(dangling: false)
 
-repo.config('user.name')  # returns 'Scott Chacon'
-repo.config # returns whole config hash
+repo.config_get('user.name')&.value  # returns 'Scott Chacon'
+repo.config_list                     # returns Array<Git::ConfigEntryInfo>
 
 # Configuration can be set when cloning using the :config option.
 # This option can be an single configuration String or an Array
@@ -343,8 +345,8 @@ path = '/tmp/clone'
 repo = Git.clone(git_url, name, :path => path)
 repo.dir #=> /tmp/clone/ruby-git-clean
 
-repo.config('user.name', 'Scott Chacon')
-repo.config('user.email', 'email@email.com')
+repo.config_set('user.name', 'Scott Chacon')
+repo.config_set('user.email', 'email@email.com')
 
 # Clone can take a filter to tell the serve to send a partial clone
 repo = Git.clone(git_url, name, :path => path, :filter => 'tree:0')
@@ -371,7 +373,7 @@ repo.commit('message')
 repo.commit_all('message')
 
 # Sign a commit using the gpg key configured in the user.signingkey config setting
-repo.config('user.signingkey', '0A46826A')
+repo.config_set('user.signingkey', '0A46826A')
 repo.commit('message', gpg_sign: true)
 
 # Sign a commit using a specified gpg key
