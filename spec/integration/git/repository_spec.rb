@@ -11,6 +11,8 @@ require 'git/repository'
 # Git::Repository as of Step C1d.
 
 RSpec.describe Git::Repository, :integration do
+  include Git::IntegrationTestHelpers
+
   describe '.open' do
     include_context 'in an empty repository'
 
@@ -81,10 +83,7 @@ RSpec.describe Git::Repository, :integration do
     let(:clone_dir) { File.join(parent_dir, 'cloned') }
 
     before do
-      source = Git.init(source_dir, initial_branch: 'main')
-      source.config('user.email', 'test@example.com')
-      source.config('user.name', 'Test User')
-      source.config('commit.gpgsign', 'false')
+      source = init_test_repo(source_dir)
       File.write(File.join(source_dir, 'README.md'), '# Test')
       source.add('README.md')
       source.commit('Initial commit')

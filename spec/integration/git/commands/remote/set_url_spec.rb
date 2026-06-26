@@ -11,16 +11,10 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
   let(:remote_dir) { Dir.mktmpdir }
   let(:replacement_dir) { Dir.mktmpdir }
   let(:remote_repo) do
-    test_repo = Git.init(remote_dir, initial_branch:)
-    test_repo.config('user.email', 'test@example.com')
-    test_repo.config('user.name', 'Test User')
-    test_repo
+    init_test_repo(remote_dir, initial_branch:)
   end
   let(:replacement_repo) do
-    test_repo = Git.init(replacement_dir, initial_branch:)
-    test_repo.config('user.email', 'test@example.com')
-    test_repo.config('user.name', 'Test User')
-    test_repo
+    init_test_repo(replacement_dir, initial_branch:)
   end
 
   after do
