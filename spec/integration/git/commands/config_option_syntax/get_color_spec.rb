@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColor, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       before do
-        repo.config('color.test.slot', 'red')
+        repo.config_set('color.test.slot', 'red')
       end
 
       it 'returns a CommandLineResult' do

@@ -118,8 +118,8 @@ module DiffTestRepositorySetup
     # Create a separate repository to use as submodule
     submodule_source = Dir.mktmpdir('submodule-source')
     sub_repo = Git.init(submodule_source, initial_branch: 'main')
-    sub_repo.config('user.email', 'test@example.com')
-    sub_repo.config('user.name', 'Test User')
+    sub_repo.config_set('user.email', 'test@example.com')
+    sub_repo.config_set('user.name', 'Test User')
     File.write(File.join(submodule_source, 'sub.txt'), "Submodule content\n")
     sub_repo.add('sub.txt')
     sub_repo.commit('Initial submodule commit')
@@ -221,10 +221,10 @@ RSpec.shared_context 'in a diff test repository' do
   before(:all) do
     @repo_dir = Dir.mktmpdir
     @repo = Git.init(@repo_dir, initial_branch: 'main')
-    @repo.config('user.email', 'test@example.com')
-    @repo.config('user.name', 'Test User')
-    @repo.config('commit.gpgsign', 'false')
-    @repo.config('core.editor', 'false')
+    @repo.config_set('user.email', 'test@example.com')
+    @repo.config_set('user.name', 'Test User')
+    @repo.config_set('commit.gpgsign', 'false')
+    @repo.config_set('core.editor', 'false')
 
     setup_diff_test_history
 

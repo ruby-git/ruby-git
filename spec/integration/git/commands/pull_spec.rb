@@ -31,9 +31,9 @@ RSpec.describe Git::Commands::Pull, :integration do
       # so the original repo can pull it
       Git.clone(bare_dir, second_clone_dir)
       second_clone = Git.open(second_clone_dir)
-      second_clone.config('user.email', 'test@example.com')
-      second_clone.config('user.name', 'Test User')
-      second_clone.config('commit.gpgsign', 'false')
+      second_clone.config_set('user.email', 'test@example.com')
+      second_clone.config_set('user.name', 'Test User')
+      second_clone.config_set('commit.gpgsign', 'false')
       File.write(File.join(second_clone_dir, 'new_file.txt'), 'New content')
       second_clone.add('new_file.txt')
       second_clone.commit('Second commit')

@@ -2,13 +2,14 @@
 
 require 'spec_helper'
 require 'git/repository'
-require 'git/repository/configuring'
 
 RSpec.describe Git::Repository do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   describe '#config' do
+    before { allow(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Repository#config is deprecated')) }
+
     context 'when called with no arguments' do
       subject(:result) { described_instance.config }
 
@@ -224,6 +225,8 @@ RSpec.describe Git::Repository do
   end
 
   describe '#global_config' do
+    before { allow(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Repository#global_config is deprecated')) }
+
     context 'when called with no arguments' do
       subject(:result) { described_instance.global_config }
 

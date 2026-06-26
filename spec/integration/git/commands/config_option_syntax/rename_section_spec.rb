@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RenameSection, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       before do
-        repo.config('oldsection.key', 'value')
+        repo.config_set('oldsection.key', 'value')
       end
 
       it 'returns a CommandLineResult' do
@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RenameSection, :integration do
       it 'renames the section' do
         command.call('oldsection', 'newsection')
 
-        expect(repo.config('newsection.key')).to eq('value')
+        expect(repo.config_get('newsection.key').value).to eq('value')
       end
     end
 

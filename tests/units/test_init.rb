@@ -132,7 +132,7 @@ class TestInit < Test::Unit::TestCase
   def test_git_clone_config
     in_temp_dir do |_path|
       g = Git.clone(BARE_REPO_PATH, 'config.git', config: 'receive.denyCurrentBranch=ignore')
-      assert_equal('ignore', g.config['receive.denycurrentbranch'])
+      assert_equal('ignore', g.config_get('receive.denycurrentbranch').value)
       assert(File.exist?(File.join(g.repo.to_s, 'config')))
       assert(g.dir)
     end
