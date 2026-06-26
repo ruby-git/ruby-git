@@ -337,10 +337,10 @@ RSpec.shared_context 'in an empty repository' do
   let(:execution_context) { repo.execution_context }
 
   before do
-    repo.config('user.email', 'test@example.com')
-    repo.config('user.name', 'Test User')
-    repo.config('commit.gpgsign', 'false')
-    repo.config('core.editor', 'false') # fail fast if editor is invoked
+    repo.config_set('user.email', 'test@example.com')
+    repo.config_set('user.name', 'Test User')
+    repo.config_set('commit.gpgsign', 'false')
+    repo.config_set('core.editor', 'false') # fail fast if editor is invoked
   end
 
   after do

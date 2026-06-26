@@ -2,7 +2,6 @@
 
 require 'spec_helper'
 require 'git/repository'
-require 'git/repository/configuring'
 
 # Integration tests for deprecated Git::Repository#config and #global_config.
 #
@@ -25,6 +24,8 @@ RSpec.describe Git::Repository, :integration do
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   describe '#config' do
+    before { allow(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Repository#config is deprecated')) }
+
     context 'when called with no arguments' do
       it 'returns a Hash containing expected config keys' do
         result = described_instance.config
@@ -78,6 +79,8 @@ RSpec.describe Git::Repository, :integration do
   end
 
   describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
+    before { allow(Git::Deprecation).to receive(:warn).with(a_string_including('Git::Repository#global_config is deprecated')) }
+
     around do |example|
       with_isolated_global_config { example.run }
     end
