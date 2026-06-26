@@ -118,7 +118,7 @@ class TestDiff < Test::Unit::TestCase
 
   def test_diff_hashkey_min
     git = Git.open(@wdir)
-    git.config('core.abbrev', 4)
+    git.config_set('core.abbrev', 4)
     diff = git.diff('gitsearch1', 'v2.5')
     assert_equal('5d46', diff['scott/newfile'].src)
     assert_nil(diff['scott/newfile'].blob(:dst))
@@ -127,7 +127,7 @@ class TestDiff < Test::Unit::TestCase
 
   def test_diff_hashkey_max
     git = Git.open(@wdir)
-    git.config('core.abbrev', 40)
+    git.config_set('core.abbrev', 40)
     diff = git.diff('gitsearch1', 'v2.5')
     assert_equal('5d4606820736043f9eed2a6336661d6892c820a5', diff['scott/newfile'].src)
     assert_nil(diff['scott/newfile'].blob(:dst))

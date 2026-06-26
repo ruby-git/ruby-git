@@ -90,7 +90,7 @@ class TestStatus < Test::Unit::TestCase
   def test_added_boolean
     in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
-      git.config('core.ignorecase', 'false')
+      git.config_set('core.ignorecase', 'false')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
       create_file('test_dot_files_status/test_file_2', 'content tets_file_2')
@@ -101,7 +101,7 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.added?('test_file_2'))
       assert(!git.status.added?('TEST_FILE_1'))
 
-      git.config('core.ignorecase', 'true')
+      git.config_set('core.ignorecase', 'true')
       assert(git.status.added?('TEST_FILE_1'))
     end
   end
@@ -109,7 +109,7 @@ class TestStatus < Test::Unit::TestCase
   def test_changed_boolean
     in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
-      git.config('core.ignorecase', 'false')
+      git.config_set('core.ignorecase', 'false')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
       create_file('test_dot_files_status/test_file_2', 'content tets_file_2')
@@ -126,7 +126,7 @@ class TestStatus < Test::Unit::TestCase
       assert(git.status.changed?('scott/text.txt'))
       assert(!git.status.changed?('scott/TEXT.txt'))
 
-      git.config('core.ignorecase', 'true')
+      git.config_set('core.ignorecase', 'true')
       assert(git.status.changed?('scott/TEXT.txt'))
     end
   end
@@ -134,7 +134,7 @@ class TestStatus < Test::Unit::TestCase
   def test_deleted_boolean
     in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
-      git.config('core.ignorecase', 'false')
+      git.config_set('core.ignorecase', 'false')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
       create_file('test_dot_files_status/test_file_2', 'content tets_file_2')
@@ -147,7 +147,7 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.deleted?('test_file_2'))
       assert(!git.status.deleted?('TEST_FILE_1'))
 
-      git.config('core.ignorecase', 'true')
+      git.config_set('core.ignorecase', 'true')
       assert(git.status.deleted?('TEST_FILE_1'))
     end
   end
@@ -205,7 +205,7 @@ class TestStatus < Test::Unit::TestCase
   def test_untracked_boolean
     in_temp_dir do |_path|
       git = Git.clone(@wdir, 'test_dot_files_status')
-      git.config('core.ignorecase', 'false')
+      git.config_set('core.ignorecase', 'false')
 
       create_file('test_dot_files_status/test_file_1', 'content tets_file_1')
       create_file('test_dot_files_status/test_file_2', 'content tets_file_2')
@@ -215,7 +215,7 @@ class TestStatus < Test::Unit::TestCase
       assert(!git.status.untracked?('test_file_2'))
       assert(!git.status.untracked?('TEST_FILE_1'))
 
-      git.config('core.ignorecase', 'true')
+      git.config_set('core.ignorecase', 'true')
       assert(git.status.untracked?('TEST_FILE_1'))
     end
   end
