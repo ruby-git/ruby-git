@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'git/repository'
 require 'git/repository/configuring'
 
-# Integration tests for Git::Repository::Configuring.
+# Integration tests for deprecated Git::Repository#config and #global_config.
 #
 # #config (list mode) performs facade-owned post-processing: it parses the raw
 # stdout of `git config --list` into a Ruby Hash. A real git invocation is
@@ -19,7 +19,7 @@ require 'git/repository/configuring'
 # set→get round-trip test is retained to confirm the facade's dispatch logic routes
 # both modes correctly end-to-end against real git.
 
-RSpec.describe Git::Repository::Configuring, :integration do
+RSpec.describe Git::Repository, :integration do
   include_context 'in an empty repository'
 
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
