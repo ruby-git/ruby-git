@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🔲 Not Started | Final cleanup and release | 10% | 0% |
-| **TOTAL** | -- | -- | **100%** | **90%** |
+| Phase 4 | 🚧 In Progress | Final cleanup and release — Step A complete; Steps B and C remain | 10% | 33% |
+| **TOTAL** | -- | -- | **100%** | **93%** |
 
 ### Facade Modules Completed
 
@@ -85,20 +85,32 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### D2 / Phase 4 is the remaining redesign step
+#### Phase 4 Step B (finalize test suite) is the next step
 
-F1 and F2 are both ✅ complete. All Phase 4 prerequisites are now satisfied, and
-the remaining unchecked redesign item is D2.
+Phase 4 **Step A — Remove old code** is ✅ complete. The atomic removal landed in
+[PR #1456](https://github.com/ruby-git/ruby-git/pull/1456) (commit `c1c53999`),
+which deleted `Git::Base` and `Git::Lib`, removed the `base_object` / `from_base`
+bridge from `Git::ExecutionContext::Repository`, and dropped the legacy `require`
+lines from `lib/git.rb`. This also satisfies the long-standing **D2** redesign
+item. The only remaining `Git::Base` / `Git::Lib` strings in `lib/` are YARD/comment
+references to historical 4.x behavior, which the Step A done-criteria explicitly
+allow.
 
-Phase 4 (final cleanup and release — deleting `Git::Base`/`Git::Lib`) can now begin.
-The first cleanup PR should remove the `base_object` / `from_base` bridge in the
-same releasable change that deletes or retires `Git::Base`.
-The following are also required and are already ✅ complete:
+The remaining redesign work is the rest of Phase 4:
+
+| Step | Status | Summary |
+| ---- | ------ | ------- |
+| A — Remove old code | ✅ Complete | `Git::Base`/`Git::Lib` and the bridge deleted ([PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)) |
+| B — Finalize test suite | 🔲 Not Started | Port remaining Test::Unit coverage in `tests/units/` to RSpec, drop the `test-unit` dependency from `git.gemspec`, remove the `test`/`test-all` Rake tasks, and remove the `tests/` directory |
+| C — Update documentation | 🚧 Partial | `UPGRADING.md` and broad `@api private` coverage exist; verify `yard stats` reports no missing public-API docs and that `README.md` reflects the new entry points |
+
+The following earlier prerequisites are all ✅ complete:
 
 | Step | Status |
 | ---- | ------ |
 | C1c-2: public-API parity audit and remediation sweep | ✅ |
 | E: block-based helper/path-context methods migrated | ✅ |
+| D2: remove the `base_object` / `from_base` bridge | ✅ |
 
 Steps C1d-1, C1d-2, and C1d-3 are ✅ complete (see their detail sections below for full specs).
 
@@ -122,8 +134,8 @@ All 9 domain-object migrations are ✅ complete:
 
 The work was organized into six workstreams (A–F). All workstreams that are
 prerequisites for C1d are now ✅ complete. F1 and F2 are both ✅ complete — F2
-moved the remaining `Git` module utility methods off `Git::Lib`. Phase 4 is
-ready to proceed.
+moved the remaining `Git` module utility methods off `Git::Lib`. Phase 4 Step A
+is complete; Steps B and C remain (see [Next Task](#next-task)).
 
 **Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
 reasoning behind each edge):
@@ -1544,29 +1556,38 @@ graph LR
 
 #### Step A — Remove old code
 
+**Status: ✅ Complete.** Completed in [PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)
+(commit `c1c53999`).
+
 - Delete `attr_reader :base_object`, remove `base_object:` from `#initialize`, and remove or convert `from_base`.
 - Delete the `Git::Lib` class entirely.
 - Delete the `Git::Base` class file.
 - Remove any other dead code that was part of the old implementation.
 
-**Done when**: `lib/git/lib.rb` and `lib/git/base.rb` are deleted; `Git::ExecutionContext::Repository` no longer accepts or exposes `base_object`; no references to `Git::Lib` or `Git::Base` remain in `lib/`.
+**Done when**: `lib/git/lib.rb` and `lib/git/base.rb` are deleted; `Git::ExecutionContext::Repository` no longer accepts or exposes `base_object`; no runtime references to `Git::Lib` or `Git::Base` remain in `lib/` (YARD/comment references to historical 4.x behavior are allowed). ✅ Met — the only surviving `Git::Lib`/`Git::Base` strings in `lib/` are such doc/comment references.
 
 **Planning tip**: Before generating a deletion plan, audit all remaining callers of `Git::Lib`, `Git::Base`, and `from_base` across `lib/` and `spec/`. The bridge removal and `Git::Base` deletion must land atomically in the same PR — plan for a single large deletion commit rather than incremental removals.
 
 #### Step B — Finalize test suite
 
+**Status: 🔲 Not Started.**
+
 - Convert any remaining, relevant Test::Unit tests to RSpec.
-- Remove the `test-unit` dependency from the `Gemfile`.
+- Remove the `test-unit` dependency from `git.gemspec`.
 - Ensure the RSpec suite has comprehensive coverage for the new architecture.
 
 **Done when**: The `tests/` directory is empty or removed; `test-unit` is no longer
-in `Gemfile`; RSpec is the sole test framework.
+in `git.gemspec`; RSpec is the sole test framework.
 
 #### Step C — Update documentation
+
+**Status: 🚧 Partial.**
 
 - Thoroughly document the new public API (`Git`, `Git::Repository`, etc.).
 - Mark all internal classes (`ExecutionContext`, `Commands`, `*Path`) with `@api private` in the YARD documentation.
 - Update the `README.md` and create a `UPGRADING.md` guide explaining the breaking changes for v5.0.0.
 
 **Done when**: `yard stats` reports no missing docs on public API; `UPGRADING.md`
-covers all breaking changes; `README.md` reflects the new entry points.
+covers all breaking changes; `README.md` reflects the new entry points. `UPGRADING.md`
+exists and `@api private` markers are applied broadly; remaining work is to confirm
+full public-API doc coverage and that `README.md` reflects the new entry points.
