@@ -11,8 +11,8 @@ RSpec.describe Git::Commands::Remote::SetBranches, :integration do
   let(:remote_dir) { Dir.mktmpdir }
   let(:remote_repo) do
     test_repo = Git.init(remote_dir, initial_branch:)
-    test_repo.config('user.email', 'test@example.com')
-    test_repo.config('user.name', 'Test User')
+    test_repo.config_set('user.email', 'test@example.com')
+    test_repo.config_set('user.name', 'Test User')
     test_repo
   end
 

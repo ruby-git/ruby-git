@@ -173,16 +173,14 @@ module Git
     # Return `true` when git is configured to ignore filename case
     #
     # Reads `core.ignoreCase` from the repository config. Returns `false` if
-    # the config value is absent or if reading it raises {Git::FailedError}.
+    # the config value is absent.
     #
     # @return [Boolean] `true` when `core.ignoreCase` is `"true"`
     #
     def ignore_case?
-      return @_ignore_case if defined?(@_ignore_case)
+      return @ignore_case if defined?(@ignore_case)
 
-      @_ignore_case = (@base.config('core.ignoreCase') == 'true')
-    rescue Git::FailedError
-      @_ignore_case = false
+      @ignore_case = (@base.config_get('core.ignoreCase')&.value == 'true')
     end
   end
 end

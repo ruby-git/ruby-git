@@ -12,14 +12,14 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd, :integration do
   let(:extra_dir) { Dir.mktmpdir }
   let(:remote_repo) do
     test_repo = Git.init(remote_dir, initial_branch:)
-    test_repo.config('user.email', 'test@example.com')
-    test_repo.config('user.name', 'Test User')
+    test_repo.config_set('user.email', 'test@example.com')
+    test_repo.config_set('user.name', 'Test User')
     test_repo
   end
   let(:extra_repo) do
     test_repo = Git.init(extra_dir, initial_branch:)
-    test_repo.config('user.email', 'test@example.com')
-    test_repo.config('user.name', 'Test User')
+    test_repo.config_set('user.email', 'test@example.com')
+    test_repo.config_set('user.name', 'Test User')
     test_repo
   end
 

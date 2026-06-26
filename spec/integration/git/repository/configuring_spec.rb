@@ -25,6 +25,8 @@ RSpec.describe Git::Repository::Configuring, :integration do
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   describe '#config' do
+    before { allow(Git::Deprecation).to receive(:warn) }
+
     context 'when called with no arguments' do
       it 'returns a Hash containing expected config keys' do
         result = described_instance.config
@@ -78,6 +80,8 @@ RSpec.describe Git::Repository::Configuring, :integration do
   end
 
   describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
+    before { allow(Git::Deprecation).to receive(:warn) }
+
     around do |example|
       with_isolated_global_config { example.run }
     end

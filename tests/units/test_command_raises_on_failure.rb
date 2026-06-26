@@ -57,7 +57,7 @@ class TestCommandRaisesOnFailure < Test::Unit::TestCase
       Dir.chdir('test_project') do
         # git config --get returns exit code 1 when key doesn't exist
         assert_raise(Git::FailedError) do
-          git.config('nonexistent.config.key.that.does.not.exist')
+          Git::Deprecation.silence { git.config('nonexistent.config.key.that.does.not.exist') }
         end
       end
     end

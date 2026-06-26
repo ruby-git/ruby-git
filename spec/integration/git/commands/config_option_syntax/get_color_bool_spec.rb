@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColorBool, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       it 'returns a CommandLineResult with exit status 0 when color is enabled' do
-        repo.config('color.test', 'always')
+        repo.config_set('color.test', 'always')
         result = command.call('color.test')
 
         expect(result).to be_a(Git::CommandLineResult)
@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColorBool, :integration do
       end
 
       it 'returns exit status 1 when color is disabled' do
-        repo.config('color.test', 'never')
+        repo.config_set('color.test', 'never')
         result = command.call('color.test')
 
         expect(result.status.exitstatus).to eq(1)

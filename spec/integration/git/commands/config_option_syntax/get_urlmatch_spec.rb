@@ -11,7 +11,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetUrlmatch, :integration do
   describe '#call' do
     context 'when the command succeeds' do
       before do
-        repo.config('http.https://example.com.proxy', 'http://proxy.example.com')
+        repo.config_set('http.https://example.com.proxy', 'http://proxy.example.com')
       end
 
       it 'returns a CommandLineResult' do

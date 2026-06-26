@@ -51,9 +51,9 @@ RSpec.describe Git::Commands::Diff, :integration do
       before(:all) do
         @check_repo_dir = Dir.mktmpdir
         check_repo = Git.init(@check_repo_dir, initial_branch: 'main')
-        check_repo.config('user.email', 'test@example.com')
-        check_repo.config('user.name', 'Test User')
-        check_repo.config('commit.gpgsign', 'false')
+        check_repo.config_set('user.email', 'test@example.com')
+        check_repo.config_set('user.name', 'Test User')
+        check_repo.config_set('commit.gpgsign', 'false')
 
         # Initial commit with clean content
         File.write(File.join(@check_repo_dir, 'file.txt'), "clean content\n")

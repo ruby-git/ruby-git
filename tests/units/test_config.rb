@@ -2,6 +2,10 @@
 
 require 'test_helper'
 
+# Tests for the deprecated Git::Repository#config method.
+# Git::Deprecation.silence is used around each call because the test helper
+# configures Git::Deprecation.behavior = :raise and these tests intentionally
+# exercise the deprecated method to verify backward-compatible behavior.
 class TestConfig < Test::Unit::TestCase
   def setup
     clone_working_repo
@@ -9,30 +13,30 @@ class TestConfig < Test::Unit::TestCase
   end
 
   def test_config
-    c = @git.config
+    c = Git::Deprecation.silence { @git.config }
     assert_equal('Scott Chacon', c['user.name'])
     assert_equal('false', c['core.bare'])
   end
 
   def test_read_config
-    assert_equal('Scott Chacon', @git.config('user.name'))
-    assert_equal('false', @git.config('core.bare'))
+    assert_equal('Scott Chacon', Git::Deprecation.silence { @git.config('user.name') })
+    assert_equal('false', Git::Deprecation.silence { @git.config('core.bare') })
   end
 
   def test_set_config
-    assert_not_equal('bully', @git.config('user.name'))
-    @git.config('user.name', 'bully')
-    assert_equal('bully', @git.config('user.name'))
+    assert_not_equal('bully', Git::Deprecation.silence { @git.config('user.name') })
+    Git::Deprecation.silence { @git.config('user.name', 'bully') }
+    assert_equal('bully', Git::Deprecation.silence { @git.config('user.name') })
   end
 
   def test_set_config_with_custom_file
     Dir.chdir(@wdir) do
       custom_config_path = "#{Dir.pwd}/.git/custom-config"
-      assert_not_equal('bully', @git.config('user.name'))
-      @git.config('user.name', 'bully', file: custom_config_path)
-      assert_not_equal('bully', @git.config('user.name'))
-      @git.config('include.path', custom_config_path)
-      assert_equal('bully', @git.config('user.name'))
+      assert_not_equal('bully', Git::Deprecation.silence { @git.config('user.name') })
+      Git::Deprecation.silence { @git.config('user.name', 'bully', file: custom_config_path) }
+      assert_not_equal('bully', Git::Deprecation.silence { @git.config('user.name') })
+      Git::Deprecation.silence { @git.config('include.path', custom_config_path) }
+      assert_equal('bully', Git::Deprecation.silence { @git.config('user.name') })
       assert_equal("[user]\n\tname = bully\n", File.read(custom_config_path))
     end
   end

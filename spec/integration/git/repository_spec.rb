@@ -82,9 +82,9 @@ RSpec.describe Git::Repository, :integration do
 
     before do
       source = Git.init(source_dir, initial_branch: 'main')
-      source.config('user.email', 'test@example.com')
-      source.config('user.name', 'Test User')
-      source.config('commit.gpgsign', 'false')
+      source.config_set('user.email', 'test@example.com')
+      source.config_set('user.name', 'Test User')
+      source.config_set('commit.gpgsign', 'false')
       File.write(File.join(source_dir, 'README.md'), '# Test')
       source.add('README.md')
       source.commit('Initial commit')

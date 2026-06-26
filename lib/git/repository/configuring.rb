@@ -29,6 +29,16 @@ module Git
       CONFIG_READ_ALLOWED_OPTS = %i[file].freeze
       private_constant :CONFIG_READ_ALLOWED_OPTS
 
+      CONFIG_DEPRECATION_WARNING = 'Git::Repository#config is deprecated and will be removed in v6.0.0. ' \
+                                   'Use config_get(name), config_set(name, value), or config_list instead.'
+      private_constant :CONFIG_DEPRECATION_WARNING
+
+      GLOBAL_CONFIG_DEPRECATION_WARNING =
+        'Git::Repository#global_config is deprecated and will be removed in v6.0.0. ' \
+        'Use config_get(name, global: true), config_set(name, value, global: true), ' \
+        'or config_list(global: true) instead.'
+      private_constant :GLOBAL_CONFIG_DEPRECATION_WARNING
+
       # Read or write a git configuration entry
       #
       # Dispatches to one of three modes depending on the arguments supplied:
@@ -108,6 +118,7 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def config(name = nil, value = nil, options = {})
+        Git::Deprecation.warn(CONFIG_DEPRECATION_WARNING)
         name, value, options = Private.normalize_config_args(name, value, options)
 
         if !name.nil? && !value.nil?
@@ -166,6 +177,7 @@ module Git
       #   @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def global_config(name = nil, value = nil)
+        Git::Deprecation.warn(GLOBAL_CONFIG_DEPRECATION_WARNING)
         if !name.nil? && !value.nil?
           Private.global_config_set(@execution_context, name, value)
         elsif !name.nil?

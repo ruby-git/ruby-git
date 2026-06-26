@@ -16,8 +16,8 @@ RSpec.describe Git::Commands::Clone, :integration do
 
   before do
     source_repo = Git.init(source_dir, initial_branch: 'main')
-    source_repo.config('user.email', 'test@example.com')
-    source_repo.config('user.name', 'Test User')
+    source_repo.config_set('user.email', 'test@example.com')
+    source_repo.config_set('user.name', 'Test User')
     File.write(File.join(source_dir, 'file.txt'), "content\n")
     source_repo.add('file.txt')
     source_repo.commit('Initial commit')
