@@ -6,6 +6,8 @@ require 'git/commands/clone'
 require 'git/execution_context/global'
 
 RSpec.describe Git::Commands::Clone, :integration do
+  include Git::IntegrationTestHelpers
+
   # Clone creates new repositories, so it uses an unbound execution context
   # (no pre-existing repo), matching how Git.clone calls it in production.
   subject(:command) { described_class.new(execution_context) }
@@ -15,9 +17,7 @@ RSpec.describe Git::Commands::Clone, :integration do
   let(:clone_dir) { Dir.mktmpdir }
 
   before do
-    source_repo = Git.init(source_dir, initial_branch: 'main')
-    source_repo.config('user.email', 'test@example.com')
-    source_repo.config('user.name', 'Test User')
+    source_repo = init_test_repo(source_dir)
     File.write(File.join(source_dir, 'file.txt'), "content\n")
     source_repo.add('file.txt')
     source_repo.commit('Initial commit')

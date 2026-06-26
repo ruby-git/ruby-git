@@ -305,6 +305,26 @@ module Git
     def directory_exist?(name)
       File.directory?(File.join(repo_dir, name))
     end
+
+    # Initialize a Git repository configured for integration testing
+    #
+    # Sets the same four config keys used by the 'in an empty repository' shared
+    # context: user.email, user.name, commit.gpgsign, and core.editor.
+    #
+    # @param dir [String] path to the directory to initialize
+    #
+    # @param initial_branch [String] name of the initial branch (default: 'main')
+    #
+    # @return [Git::Repository] the initialized repository
+    #
+    def init_test_repo(dir, initial_branch: 'main')
+      repo = Git.init(dir, initial_branch:)
+      repo.config_set('user.email', 'test@example.com')
+      repo.config_set('user.name', 'Test User')
+      repo.config_set('commit.gpgsign', 'false')
+      repo.config_set('core.editor', 'false')
+      repo
+    end
   end
 end
 
