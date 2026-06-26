@@ -1,5 +1,11 @@
 # Phase 4 / Step A — Remove Old Code: Execution Plan
 
+> **✅ Status: Complete.** All PRs in this plan (1a–1d, 2a–2c, 3a–3d, and the
+> atomic removal PR 4) have merged. The final removal landed in
+> [PR #1456](https://github.com/ruby-git/ruby-git/pull/1456) (commit `c1c53999`),
+> deleting `Git::Base`, `Git::Lib`, and the `base_object` / `from_base` bridge.
+> This document is retained as a historical record of how Step A was executed.
+
 ## Goal
 
 Delete `Git::Base`, `Git::Lib`, and the `from_base`/`base_object` bridge in a
