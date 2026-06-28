@@ -106,10 +106,26 @@ module Git
       #
       # @return [String] the path to the written archive file
       #
+      # @raise [ArgumentError] when archive options or destination path are invalid
+      #
       # @raise [Git::FailedError] if `git archive` fails
       #
       # @example Archive a tree to a zip file
       #   git.object('v1.0').archive('/tmp/release.zip', format: 'zip')
+      #
+      # @example Archive a tree to a temporary tar file
+      #   git.object('v2.6').archive(nil, format: 'tar')
+      #
+      # @example Archive a tree to a tgz file with a path prefix
+      #   git.object('v2.6').archive('/tmp/release.tgz', format: 'tgz', prefix: 'test/')
+      #
+      # @example Archive one directory with a path prefix
+      #   git.object('v2.6').archive(
+      #     '/tmp/ex-dir.tar',
+      #     format: 'tar',
+      #     prefix: 'test/',
+      #     path: 'ex_dir/'
+      #   )
       #
       def archive(file = nil, opts = {})
         object_repository.archive(@objectish, file, opts)
