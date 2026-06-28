@@ -2,10 +2,13 @@
 
 > **🚧 Status: In progress.** W1 (the legacy-test audit) is **complete and verified**;
 > its results are captured below and in the companion data file
-> [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv). Execution
-> decisions are now **resolved** (see [Resolved Decisions](#resolved-decisions)).
-> W1.5–W5 (matrix enrichment, port, remove infrastructure, update docs, finalize)
-> are not yet started.
+> [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv). **W1.5 (matrix
+> enrichment) is complete and signed off** — the TSV now carries `disposition`,
+> `target_spec`, and `port_status`; results are summarized in
+> [W1.5 enrichment results](#w15-enrichment-results-for-sign-off). The one-time human
+> sign-off that gates W2 has been **given**, so W2 may begin. Execution decisions are
+> **resolved** (see [Resolved Decisions](#resolved-decisions)). W2–W5 and W-Doc (port,
+> documentation salvage, remove infrastructure, update docs, finalize) are not yet started.
 
 ## Goal
 
@@ -34,8 +37,9 @@ those classes were originally written against.
   redesign historical docs, and `.github/skills-deprecated/`.
 - All **unique** behavioral coverage from `tests/units/` now lives in `spec/`,
   placed in the correct layer (logic in `spec/unit/`, real-git wiring in
-  `spec/integration/`), except rows explicitly classified as `intentional_drop` or
-  `obsolete` in the enriched audit matrix.
+  `spec/integration/`), except rows explicitly classified as `intentional_drop`,
+  `document`, or `obsolete` in the enriched audit matrix (`document` rows are preserved
+  as documentation rather than specs).
 - Full quality gate green: `bundle exec rake default:parallel`
   (RSpec unit + integration + RuboCop + YARD + build).
 
@@ -69,9 +73,12 @@ delete if *every* method in it is covered.
 
 All **484 individual test cases** (307 `def test_*` methods + 177 declarative
 `test '...' do` macros, across 70 files) received their own verdict. The full matrix
-is persisted as [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv)
-(columns: `file, line, style, test_name, initial_verdict, final_verdict,
-target_layer, spec_coverage, verify_notes, behavior`).
+is persisted as [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv).
+The **W1 baseline** carried 10 columns (`file, line, style, test_name,
+initial_verdict, final_verdict, target_layer, spec_coverage, verify_notes, behavior`);
+**W1.5 enrichment appended three more** (`disposition, target_spec, port_status`), so the
+file on disk is now the enriched **13-column** version — see
+[W1.5 enrichment results](#w15-enrichment-results-for-sign-off).
 
 The audit ran in two passes:
 
@@ -86,6 +93,10 @@ The audit ran in two passes:
    and correcting verdicts that the first pass got wrong.
 
 ### Verified totals
+
+These are the **W1** outputs (first pass + verification). W1.5 enrichment later reconciled
+them to **292 REDUNDANT / 192 PORT** (4 archive cases flipped PORT → `document`) — see
+[W1.5 enrichment results](#w15-enrichment-results-for-sign-off).
 
 | Verdict | Count | Meaning |
 | --- | ---: | --- |
@@ -132,12 +143,13 @@ test_git_path.rb                    test_show.rb
 
 ### Per-file verdict roll-up
 
-Counts are `REDUNDANT / PORT-unit / PORT-integration / total`. Use the TSV for the
-exact line numbers, behaviors, and verification notes behind each count.
+Counts are the **post-W1.5 enriched** `REDUNDANT / PORT-unit / PORT-integration / total`.
+Use the TSV for the exact line numbers, behaviors, and verification notes behind each
+count.
 
 | File | Red | Unit | Integ | Total |
 | --- | ---: | ---: | ---: | ---: |
-| test_archive.rb | 3 | 1 | 4 | 8 |
+| test_archive.rb | 7 | 1 | 0 | 8 |
 | test_bare.rb | 0 | 0 | 1 | 1 |
 | test_branch.rb | 18 | 0 | 2 | 20 |
 | test_checkout.rb | 8 | 1 | 1 | 10 |
@@ -207,7 +219,7 @@ exact line numbers, behaviors, and verification notes behind each count.
 | test_url_parse.rb | 0 | 3 | 0 | 3 |
 | test_windows_cmd_escaping.rb | 0 | 1 | 0 | 1 |
 | test_worktree.rb | 5 | 0 | 5 | 10 |
-| **Total** | **288** | **158** | **38** | **484** |
+| **Total** | **292** | **158** | **34** | **484** |
 
 ---
 
@@ -260,7 +272,9 @@ Skills with Test::Unit references to reconcile: `extract-command-from-lib`,
 flowchart LR
     W1["W1 (audit ✅)"] --> W15["W1.5 (enrich matrix)"]
     W15 --> W2["W2 (port)"]
+    W15 --> WDoc["W-Doc (documentation salvage)"]
     W2 --> W3["W3 (remove infra)"]
+    WDoc --> W3
     W3 --> W4b["W4b (TU docs)"]
     W4b --> W5["W5 (verify/finalize)"]
     W4a["W4a (deprecate extract-* skills)"] --> W5
@@ -270,6 +284,9 @@ flowchart LR
   before any porting starts.
 - **W2 → W3 → W4b → W5** run in order (W4b's doc claims only become true after W3
   deletes `tests/`).
+- **W-Doc** (documentation salvage of `disposition = document` rows) is gated by the same
+  W1.5 sign-off and may run in parallel with W2, but **must merge before W3** — W3 deletes
+  `tests/units/`, so the source examples must already be relocated to docs.
 - **W4a** (retiring the finished `extract-*` skills) is independent of W2/W3 and may
   land at any time; W5 waits on W4a as well so the final verification sees the retired
   skills.
@@ -279,17 +296,38 @@ flowchart LR
 Before any W2 porting starts, extend the audit matrix so an agent can execute without
 guessing and the human reviewer can validate each case quickly.
 
-- Add a **`disposition`** column for non-ported rows. Keep `final_verdict` stable, but
-  distinguish why a REDUNDANT row is safe to delete:
+- Add a **`disposition`** column for non-ported rows. Keep `final_verdict` stable unless
+  the W1.5 sign-off explicitly approves a verdict flip (as it did for the 4 archive
+  `document` rows), and distinguish why a REDUNDANT row is safe to delete:
   - `covered` — behavior is already covered by an existing cited spec.
   - `intentional_drop` — behavior is deliberately not ported because it is flaky,
     obsolete, an exhaustive real-git matrix, or otherwise outside the RSpec testing
-    philosophy.
+    philosophy, **and** the example carries no residual user value.
+  - `document` — the case is **not** kept as a spec, but its *usage example* has
+    user-facing value, so it is converted into documentation (a YARD `@example` or a
+    README usage section) instead of being discarded. This is an `intentional_drop` whose
+    "how" is worth preserving; W-Doc relocates it.
   - `obsolete` — behavior no longer applies after the architectural redesign.
   PORT rows may use `port` or leave `disposition` blank.
-- Add a **`target_spec`** column for every PORT row. Prefer extending an existing spec
-  file that mirrors the source under test; only create a new spec file when no suitable
-  target exists. This is required before W2 so placement is deterministic and reviewable.
+
+  **Pass-through vs. parse rule (when content checks become `intentional_drop` /
+  `document`).** A legacy test that asserts on the *content* git produces is testing
+  **git**, not the gem, when the gem is a pure **pass-through** — it forwards options as
+  CLI flags and hands back git's bytes without inspecting them (e.g. `archive` writes a
+  tar/tgz the gem never parses). Once that gem's option→flag forwarding is unit-covered
+  and its byte-capture-to-file is integration-covered, the residual content assertion adds
+  no gem coverage → classify it `intentional_drop`, or `document` when the example teaches
+  the user something. When the gem instead **parses or transforms** git output into Ruby
+  objects (diff, status, log, branch/tag metadata, encoding, fsck), the content assertion
+  exercises the gem's parser → keep it as **PORT**. Flag any PORT→REDUNDANT flip this rule
+  produces for the one-time enriched-matrix sign-off.
+- Add a **`target_spec`** column naming the **destination** for every actionable row. For
+  PORT rows it is a spec path — prefer extending an existing spec file that mirrors the
+  source under test; only create a new spec file when no suitable target exists. For
+  `document` rows it is the **doc destination** instead, written as `yard:<Class>#<method>`
+  (add/extend a YARD `@example`) or `readme:<section>` (a README usage section). The
+  `disposition` value disambiguates how to read the column, so no separate doc column is
+  needed. This is required before W2 so placement is deterministic and reviewable.
 - **Split rows by destination, not by individual example.** The unit of work is a
   **destination** — one `(target_layer, target_spec)` pair — and a single row may produce
   **multiple `it` examples** in that one spec (porting a legacy test is rarely 1:1 with a
@@ -311,14 +349,16 @@ guessing and the human reviewer can validate each case quickly.
   core invariant that **one row = one destination (`target_layer` + `target_spec`) = one
   review gate = one commit = one `port_status`** (the mirror image of the dedup/`grouped`
   rule, which merges rows). A single row never spans more than one destination.
-- Add a **`port_status`** column — the single, authoritative progress tracker for the
-  W2 per-case loop. It lives **only** in this TSV; the prose plans (this document and
-  the session plan) describe the protocol but never maintain their own per-row status,
-  so there is exactly one source of truth. Initialize it during W1.5:
-  - PORT rows → `pending`.
-  - non-PORT rows → leave blank (their fate is governed by `disposition`, not
-    `port_status`).
-  See [W2](#w2--port-unique-coverage-to-rspec-batched-prs) for exactly when the agent
+- Add a **`port_status`** column — the single, authoritative progress tracker for every
+  actionable row (PORT rows in W2, and `document` rows in W-Doc). It lives **only** in
+  this TSV; the prose plans (this document and the session plan) describe the protocol but
+  never maintain their own per-row status, so there is exactly one source of truth.
+  Initialize it during W1.5:
+  - PORT and `document` rows → `pending`.
+  - `covered` / `intentional_drop` / `obsolete` rows → leave blank (their fate is governed
+    by `disposition`; no further action follows).
+  See [W2](#w2--port-unique-coverage-to-rspec-batched-prs) and
+  [W-Doc](#w-doc--documentation-salvage-disposition--document) for exactly when the agent
   advances each value.
 - Define W2 PR batches from `target_spec` / component groupings. A batch must contain
   **no more than 10 matrix rows** (the cap counts *work items / examples*, i.e. enriched
@@ -333,26 +373,104 @@ guessing and the human reviewer can validate each case quickly.
 
 - Every PORT row has a non-empty `target_spec`, and any case needing more than one layer
   has been split into one row per `(target_layer, target_spec)`.
-- Every non-PORT row has a `disposition` (`covered`, `intentional_drop`, or `obsolete`).
-- Every PORT row has `port_status = pending`; proposed dedup groups are recorded.
+- Every non-PORT row has a `disposition` (`covered`, `intentional_drop`, `document`, or
+  `obsolete`); every `document` row has a `target_spec` doc destination.
+- Every PORT row and every `document` row has `port_status = pending`; proposed dedup
+  groups are recorded.
 - The proposed W2 batches (≤ 10 matrix rows each) are listed, and the final PORT
   work-item count (after splits/merges) is reconciled in the TSV — the 196 figure is the
   W1 starting count and may shift during enrichment.
-- **The human reviewer approves the enriched matrix once, as a whole, before W2
-  starts.** This front-loads the placement/disposition decisions into a single review
-  so they are not re-litigated at the per-case gates. W2 MUST NOT begin until this
-  approval is given.
+- **The human reviewer approves the enrichment once, before W2 starts — reviewing a
+  generated review summary, not the raw 484-row TSV.** A line-by-line read of the matrix
+  is not an effective review, so the gate artifact is a concise summary
+  ([W1.5 enrichment results](#w15-enrichment-results-for-sign-off)) that surfaces only the
+  decisions that carry risk: every PORT→REDUNDANT verdict flip, every `intentional_drop`
+  and `obsolete` row, every `document` row and its doc target, and every **new** spec file
+  the ports will create. The bulk `covered` and ordinary `port` rows are summarized in
+  aggregate, not individually. This front-loads the placement/disposition decisions into a
+  single review so they are not re-litigated at the per-case gates. W2 MUST NOT begin
+  until this approval is given.
+
+#### W1.5 enrichment results (for sign-off)
+
+The full pass is complete; the enriched TSV has 13 columns (`disposition`, `target_spec`,
+`port_status` appended). Reconciled totals:
+
+| Metric | W1 start | After W1.5 |
+| --- | ---: | ---: |
+| PORT | 196 | **192** |
+| REDUNDANT | 288 | **292** |
+| — of which `covered` | — | 287 |
+| — of which `document` | — | 4 |
+| — of which `intentional_drop` | — | 1 |
+| Rows with `port_status = pending` (PORT + document) | — | 196 |
+
+**Verdict flips to review (the risk surface):**
+
+- **4 PORT → REDUNDANT/`document`** — all `test_archive.rb` content-validation cases, by
+  the pass-through rule (the gem forwards `--format`/`--prefix` and hands back git's bytes
+  it never inspects; forwarding is unit-covered, byte-capture is integration-covered).
+  Salvaged as YARD examples: L41/62/80 → `yard:Git::Object#archive`, L93 →
+  `yard:Git::Branch#archive`.
+- **1 `intentional_drop`** — `test_git_clone.rb:15` (flaky real-clone global-timeout test;
+  timeout plumbing is unit-covered by the ExecutionContext/CommandLine specs).
+- **0 `obsolete`.**
+
+**New spec files the ports will create** (no existing mirror; all error/cross-cutting):
+`spec/unit/git/command_line_error_spec.rb` (2 rows),
+`spec/unit/git/escaped_path_spec.rb` (3), `spec/unit/git/failed_error_spec.rb` (2),
+`spec/unit/git/signaled_error_spec.rb` (2), `spec/unit/git/timeout_error_spec.rb` (2),
+`spec/integration/git/thread_safety_spec.rb` (1). All other 180 PORT rows extend an
+existing spec.
+
+**Proposed dedup group (needs reviewer approval in W2):** `test_log.rb` and
+`test_log_execute.rb` carry the same 14 query-builder test names, both targeting
+`spec/unit/git/log_spec.rb`; they are near-duplicate sources that likely collapse to one
+set of examples (`test_log_execute.rb` adds 2 unique `#execute` snapshot/empty-repo cases).
+Recorded as a proposal; rows are not pre-merged.
+
+**Initial W2 batch plan** (all row counts are enriched matrix rows before deduplication
+is approved by a reviewer; each batch stays at or below the 10-row cap):
+
+| Batch | Scope | Rows |
+| --- | --- | ---: |
+| U1 | CommandLine base/capturing/error rows | 9 |
+| U2 | Git error objects (`FailedError`, `SignaledError`, `TimeoutError`) | 6 |
+| U3 | `Diff` unit rows, first chunk | 10 |
+| U4 | `Diff` remainder plus path/status/stats/escaped-path rows | 7 |
+| U5 | `ExecutionContext` environment override rows, first chunk | 7 |
+| U6 | `ExecutionContext` remainder plus config/init/path-resolver rows | 10 |
+| U7 | Git remote URL utilities | 10 |
+| U8 | `Log` deprecation rows plus first `test_log.rb` chunk | 10 |
+| U9 | `Log` remaining `test_log.rb` rows | 10 |
+| U10 | `Log#execute` first chunk | 10 |
+| U11 | `Log#execute` remainder | 6 |
+| U12 | Object/repository/remote miscellaneous rows | 10 |
+| U13 | Repository staging/committing rows | 3 |
+| U14 | `Fsck` parser rows, first chunk | 10 |
+| U15 | `Fsck` parser remainder | 6 |
+| U16 | `Status` facade rows plus ignore-case rows | 10 |
+| U17 | `StatusFile` rows, first chunk | 10 |
+| U18 | `StatusFile` remainder plus empty-repo first chunk | 10 |
+| U19 | `StatusFile` empty-repo remainder | 4 |
+| I1 | Command-line subprocess integration rows | 5 |
+| I2 | Branch/checkout integration rows | 3 |
+| I3 | Commit/config/remote integration rows | 7 |
+| I4 | Diff/status/staging integration rows | 7 |
+| I5 | Object/stash/submodule integration rows | 6 |
+| I6 | Worktree/thread-safety integration rows | 6 |
 
 ### W2 — Port unique coverage to RSpec (batched PRs)
 
-Drive W2 entirely from the enriched audit matrix; port only the **196 PORT** cases,
+Drive W2 entirely from the enriched audit matrix; port only the **192 PORT** cases,
 honoring each row's `target_layer` and `target_spec`.
 
-**Execution protocol — one test at a time, with review gates.** Each workstream from
-here on (W2–W5) is delivered as **one PR**, but the per-case work happens on the topic
-branch *before* that PR is opened: the agent advances one discrete item at a time and
+**Execution protocol — one test at a time, with review gates.** Each W2 **batch** (not
+all of W2) is delivered as **one PR** with no more than 10 matrix rows; W3–W5 follow
+their own workstream-level PR rules below. The per-case work happens on the topic branch
+*before* that batch PR is opened: the agent advances one discrete item at a time and
 **stops for human review** after each, only continuing on an explicit go-ahead. The
-per-step review gates and the single-PR delivery are not in tension — the branch
+per-step review gates and the single-batch-PR delivery are not in tension — the branch
 accumulates locally-reviewed commits, and the PR is opened **once, at the end of the
 batch**, as a single ready unit (see [Branch & PR lifecycle](#branch--pr-lifecycle)
 below). For W2, the discrete item is **exactly one legacy audit row**. Multiple audit
@@ -430,7 +548,7 @@ This keeps each review small and lets the reviewer catch convention drift early.
 - **158 `target_layer = unit`** → write/extend `spec/unit/` specs with stubbed
   externals (no real git), preserving 100% branch coverage. This is the bulk of the
   work and where logic coverage belongs.
-- **38 `target_layer = integration`** → add only **minimal** `spec/integration/`
+- **34 `target_layer = integration`** → add only **minimal** `spec/integration/`
   examples that prove the facade ↔ command wiring against real git; do not recreate
   the legacy exhaustive matrices.
 - **Integration deduplication rule:** before adding an integration example, check
@@ -467,6 +585,27 @@ This keeps each review small and lets the reviewer catch convention drift early.
   necessary but **not sufficient** — RuboCop does not enforce the stub-don't-shell-out,
   determinism, one-behavior-per-example, or unit-vs-integration boundary rules.
 
+### W-Doc — Documentation salvage (`disposition = document`)
+
+Independent of the spec porting in W2, but gated by the same W1.5 sign-off and **must
+merge before W3** (which deletes `tests/units/`, the source of these examples). Delivered
+as one docs-only PR under the same one-at-a-time review cadence as W2.
+
+- Process every row with `disposition = document`. The `target_spec` column names the
+  destination: `yard:<Class>#<method>` (add/extend a YARD `@example` on that method) or
+  `readme:<section>` (a usage section in `README.md`).
+- Per row: (1) announce file:line and the `target_spec` doc destination; (2) write the
+  documentation example, derived from the legacy test's usage (the *how*, not its content
+  assertions); (3) confirm it renders/builds (YARD example blocks must be valid Ruby;
+  `bundle exec rake yard` clean), then set `port_status = ported`; (4) pause for review,
+  setting `port_status = reviewed` on approval. After the PR merges, set
+  `port_status = merged`.
+- Examples must be runnable and accurate — prefer the minimal, idiomatic gem call the
+  legacy test demonstrated (e.g. `git.object('HEAD').archive('out.tgz', format: 'tgz',
+  prefix: 'release/')`), not the git-content assertions that motivated the drop.
+- Gate: `bundle exec rake yard build` clean; every processed row is `reviewed`; no
+  `document` row is left `pending` before W3's pre-delete gate runs.
+
 ### W3 — Remove Test::Unit infrastructure (single atomic PR, after W2)
 
 W3 follows the same per-step review cadence as W2 (the agent pauses for review after
@@ -479,11 +618,20 @@ atomic PR — the repository must never be left in a half-removed state on the b
 - Update `Rakefile`: remove `test-all` + `test-all:parallel` tasks; drop `test` /
   `test:parallel` from `default_tasks` / `default_tasks_parallel`.
 - Remove `test-unit` from `git.gemspec`; `bundle install` to update `Gemfile.lock`.
-- **Pre-delete verification gate:** before deleting `tests/units/`, re-check the 288
+- **Pre-delete verification gate:** before deleting `tests/units/`, re-check the
   non-ported rows from the enriched audit matrix:
-  - automated check that every `disposition = covered` row cites an existing spec path;
-  - manual review of every `disposition = intentional_drop` row;
-  - sampled manual review of ordinary `covered` rows;
+  - automated check that every `disposition = covered` row **whose `spec_coverage` cites a
+    single spec path** points at a spec file that still exists (202 rows);
+  - automated check that every `disposition = covered` row **whose `spec_coverage` cites
+    multiple semicolon-separated spec paths** points only at spec files that still exist
+    (37 rows);
+  - **full** manual review of every `disposition = covered` row whose `spec_coverage` is
+    `none` — these are diffusely covered across multiple specs (the citation lives in
+    `verify_notes`, so the automated single-path check cannot reach them; 48 rows);
+  - manual review of every `disposition = intentional_drop` row (1 row);
+  - confirmation that every `disposition = document` row has been relocated to its
+    `target_spec` doc destination (W-Doc merged), so deleting the legacy test loses no
+    example (4 rows);
   - explicit confirmation that any `obsolete` row is obsolete because of the redesign.
   Do not delete the legacy suite until this gate passes.
 - **Relocate the `command_line_test` fixture (Q4).** The 6 subprocess integration
@@ -572,10 +720,11 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
 These were the open questions for Step B; all are now decided and folded into the
 workstreams above.
 
-1. **PR decomposition** → **Batched PRs W2–W5**, grouped by `target_spec` / component
-   with **no more than 10 legacy audit rows per PR**. Within each PR, the agent ports
+1. **PR decomposition** → **Batched PRs for W2**, grouped by `target_spec` / component
+   with **no more than 10 legacy audit rows per PR**. Within each W2 PR, the agent ports
    one legacy audit row at a time and stops for human review before moving on (the
-   per-test review-loop protocol in W2). Small, reviewable increments.
+   per-test review-loop protocol in W2). W3–W5 follow the workstream-specific PR rules
+   above.
 2. **Fate of the `extract-*` skills** → **Deprecate by relocation.** Move both
    completed migration skills to a new `.github/skills-deprecated/` directory (outside
    the auto-discovered `.github/skills/` tree) so they no longer load into agent
@@ -598,19 +747,22 @@ workstreams above.
    > stdout, stderr, exit status, signals, sleep/duration, and file redirection, an
    > inline one-liner would be unreadable. Relocating the real script is cleaner and
    > preserves the genuine shell-out.
-5. **Non-ported REDUNDANT classification** → keep `final_verdict` stable and add a
-   `disposition` column (`covered`, `intentional_drop`, `obsolete`) before W2/W3 so
-   deletion decisions are auditable.
+5. **Non-ported REDUNDANT classification** → keep `final_verdict` stable unless the W1.5
+   sign-off explicitly approves a verdict flip; add a `disposition` column (`covered`,
+   `intentional_drop`, `document`, `obsolete`) before W2/W3 so deletion decisions are
+   auditable.
 6. **PORT placement** → add a `target_spec` column for every PORT row before W2 so the
    agent does not infer destination files during conversion.
 7. **One-at-a-time strictness and integration deduplication** → default to one audit row
    per review gate. Group rows only when the agent proposes the grouping and the
    reviewer explicitly approves it; this especially applies to minimal integration
    examples that may satisfy multiple rows.
-8. **Pre-delete REDUNDANT verification** → automated citation/path check for all
-   `covered` rows, manual review for all `intentional_drop` rows, sampled review for
-   ordinary `covered` rows, and explicit confirmation for `obsolete` rows before W3
-   deletes `tests/units/`.
+8. **Pre-delete REDUNDANT verification** → automated citation/path checks for `covered`
+   rows that cite a single spec path (202) or multiple semicolon-separated spec paths
+   (37), **full** manual review for the diffusely covered rows whose `spec_coverage` is
+   `none` (48, citation in `verify_notes`), manual review for all `intentional_drop` rows
+   (1), confirmation that every `document` row has been relocated to docs (W-Doc merged,
+   4), and explicit confirmation for `obsolete` rows before W3 deletes `tests/units/`.
 9. **Repo-wide reference cleanup scope** → allow historical/reference mentions only in
    `CHANGELOG.md`, redesign historical docs, and `.github/skills-deprecated/`; clean
    all live references elsewhere.
@@ -645,15 +797,27 @@ workstreams above.
     rows (work items)**, not original legacy tests or individual examples, and the 196
     PORT figure is the W1 starting count that may shift as enrichment splits or merges
     rows.
+15. **Documentation salvage (`document` disposition)** → a legacy case whose behavior is
+    not kept as a spec but whose *usage example* has user value is classified
+    `disposition = document` (not `intentional_drop`), and its example is converted to
+    documentation. This is driven by the **pass-through vs. parse rule**: content
+    assertions against git output the gem never inspects (pure pass-through, e.g.
+    `archive`) become `intentional_drop` / `document` once forwarding + byte-capture are
+    covered; content assertions against output the gem parses into Ruby objects (diff,
+    status, log, metadata, encoding, fsck) stay PORT. The doc destination is recorded by
+    **reusing the `target_spec` column** (`yard:<Class>#<method>` or `readme:<section>`),
+    disambiguated by the `disposition` value, so no extra column is added. These rows are
+    delivered by **W-Doc**, a dedicated documentation-only PR that runs under the same
+    one-at-a-time gate, is gated by the W1.5 sign-off, and **must merge before W3** so the
+    source examples are relocated before the legacy suite is deleted.
 
 ---
 
 ## Companion Data
 
 - [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv) — the authoritative
-  per-test-case audit matrix (484 rows). This is the source matrix for W1.5. Before W2
-  starts, enrich it with `disposition`, `target_spec`, and `port_status` so it becomes
-  the executable work-breakdown input **and** the single per-row progress tracker.
-  Current columns (`|`-separated fields): `file, line, style, test_name, initial_verdict,
-  final_verdict, target_layer, spec_coverage, verify_notes, behavior`. W1.5 appends
-  `disposition`, `target_spec`, and `port_status`.
+  per-test-case audit matrix (484 rows). W1.5 enriched it into the executable
+  work-breakdown input **and** the single per-row progress tracker for W2/W-Doc/W3.
+  The file uses `|`-separated fields despite the historical `.tsv` extension. Current
+  columns: `file, line, style, test_name, initial_verdict, final_verdict, target_layer,
+  spec_coverage, verify_notes, behavior, disposition, target_spec, port_status`.
