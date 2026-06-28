@@ -144,11 +144,16 @@ module Git
     # @example Archive to a zip file
     #   git.branch('main').archive('/tmp/main.zip', format: 'zip')
     #
+    # @example Archive a remote branch to a tgz file
+    #   git.remote('origin').branch('main').archive('/tmp/main.tgz', format: 'tgz')
+    #
     # @param file [String] path to the destination archive file
     #
     # @param opts [Hash] archive options (see {Git::Repository#archive})
     #
     # @return [String] the path to the written archive file
+    #
+    # @raise [ArgumentError] when archive options or destination path are invalid
     #
     # @raise [Git::FailedError] if `git archive` fails
     #
