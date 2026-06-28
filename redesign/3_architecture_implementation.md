@@ -1570,11 +1570,20 @@ graph LR
 
 #### Step B — Finalize test suite
 
-**Status: 🔲 Not Started.**
+**Status: 🚧 In progress** — see the detailed execution plan in
+[Phase 4 - Step B.md](Phase%204%20-%20Step%20B.md). The legacy-test audit (W1) is
+complete and verified; matrix enrichment, porting, and removal (W1.5–W5) remain.
 
 - Convert any remaining, relevant Test::Unit tests to RSpec.
 - Remove the `test-unit` dependency from `git.gemspec`.
 - Ensure the RSpec suite has comprehensive coverage for the new architecture.
+
+**Audit outcome (W1):** all 484 legacy test cases were classified per-method and
+layer-verified → 288 non-ported rows, 196 PORT (158 to `spec/unit/`, 38 to minimal
+`spec/integration/`). The authoritative source matrix is persisted at
+[phase-4-step-b-test-audit.tsv](phase-4-step-b-test-audit.tsv); before W2 it will be
+enriched with `disposition`, `target_spec`, and `port_status` columns (the TSV is the
+single source of truth for per-row port progress).
 
 **Done when**: The `tests/` directory is empty or removed; `test-unit` is no longer
 in `git.gemspec`; RSpec is the sole test framework.
