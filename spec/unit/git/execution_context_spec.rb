@@ -49,6 +49,109 @@ RSpec.describe Git::ExecutionContext do
     end
   end
 
+  describe '#env_overrides' do
+    subject(:env) { context.env_overrides(**additional_overrides) }
+
+    let(:context) do
+      Git::ExecutionContext::Repository.new(
+        git_dir: git_dir,
+        git_work_dir: git_work_dir,
+        git_index_file: git_index_file,
+        git_ssh: git_ssh
+      )
+    end
+    let(:git_dir)              { '/fake/repo/.git' }
+    let(:git_work_dir)         { '/fake/repo' }
+    let(:git_index_file)       { '/fake/repo/.git/index' }
+    let(:git_ssh)              { :use_global_config }
+    let(:additional_overrides) { {} }
+
+    before { allow(Git::Config.instance).to receive(:git_ssh).and_return('/configured/ssh') }
+
+    context 'when no additional overrides are given' do
+      it 'returns the default environment variables for the context' do
+        expect(env).to eq(
+          'GIT_DIR' => '/fake/repo/.git',
+          'GIT_WORK_TREE' => '/fake/repo',
+          'GIT_INDEX_FILE' => '/fake/repo/.git/index',
+          'GIT_SSH' => '/configured/ssh',
+          'GIT_EDITOR' => 'true',
+          'LC_ALL' => 'en_US.UTF-8'
+        )
+      end
+
+      it 'resolves GIT_SSH from the global config on each call' do
+        allow(Git::Config.instance).to receive(:git_ssh).and_return('/first/ssh', '/second/ssh')
+        expect(context.env_overrides['GIT_SSH']).to eq('/first/ssh')
+        expect(context.env_overrides['GIT_SSH']).to eq('/second/ssh')
+      end
+    end
+
+    context 'when the context was built with an explicit git_ssh' do
+      let(:git_ssh) { '/instance/ssh/script' }
+
+      it 'uses the instance git_ssh in preference to the global config' do
+        allow(Git::Config.instance).to receive(:git_ssh).and_return('/global/ssh/script')
+        expect(env['GIT_SSH']).to eq('/instance/ssh/script')
+      end
+    end
+
+    context 'when additional overrides add new variables' do
+      let(:additional_overrides) { { 'GIT_TRACE' => '1', 'GIT_CURL_VERBOSE' => '1' } }
+
+      it 'merges the new variables while preserving the defaults' do
+        expect(env).to include(
+          'GIT_TRACE' => '1',
+          'GIT_CURL_VERBOSE' => '1',
+          'GIT_DIR' => '/fake/repo/.git',
+          'GIT_WORK_TREE' => '/fake/repo',
+          'GIT_INDEX_FILE' => '/fake/repo/.git/index'
+        )
+      end
+    end
+
+    context 'when additional overrides replace existing variables' do
+      let(:additional_overrides) { { 'LC_ALL' => 'C', 'GIT_SSH' => '/custom/ssh' } }
+
+      it 'uses the override values and leaves the other defaults unchanged' do
+        expect(env).to include(
+          'LC_ALL' => 'C',
+          'GIT_SSH' => '/custom/ssh',
+          'GIT_DIR' => '/fake/repo/.git',
+          'GIT_WORK_TREE' => '/fake/repo'
+        )
+      end
+    end
+
+    context 'when additional overrides set variables to nil' do
+      let(:additional_overrides) { { 'GIT_INDEX_FILE' => nil, 'GIT_SSH' => nil } }
+
+      it 'unsets those variables while preserving the other defaults' do
+        expect(env).to include(
+          'GIT_INDEX_FILE' => nil,
+          'GIT_SSH' => nil,
+          'GIT_DIR' => '/fake/repo/.git',
+          'GIT_WORK_TREE' => '/fake/repo',
+          'LC_ALL' => 'en_US.UTF-8'
+        )
+      end
+    end
+
+    context 'when additional overrides add, override, and exclude simultaneously' do
+      let(:additional_overrides) { { 'GIT_TRACE' => '1', 'GIT_INDEX_FILE' => nil, 'LC_ALL' => 'C' } }
+
+      it 'applies every kind of override in a single call' do
+        expect(env).to include(
+          'GIT_TRACE' => '1',
+          'GIT_INDEX_FILE' => nil,
+          'LC_ALL' => 'C',
+          'GIT_DIR' => '/fake/repo/.git',
+          'GIT_WORK_TREE' => '/fake/repo'
+        )
+      end
+    end
+  end
+
   describe '#binary_path' do
     context 'when using global config (default)' do
       it 'delegates to Git::Config.instance' do
