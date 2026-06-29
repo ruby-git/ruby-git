@@ -57,5 +57,17 @@ RSpec.describe Git::Commands::Clone, :integration do
         expect { command.call(nonexistent, File.join(clone_dir, 'cloned')) }.to raise_error(Git::FailedError)
       end
     end
+
+    describe 'when the execution context has a logger' do
+      let(:log_output) { StringIO.new }
+      let(:logger) { Logger.new(log_output, level: Logger::DEBUG) }
+      let(:execution_context) { Git::ExecutionContext::Global.new(logger: logger) }
+
+      it 'logs the clone command to the configured logger' do
+        command.call(source_dir, File.join(clone_dir, 'logged'))
+
+        expect(log_output.string).to match(/clone/)
+      end
+    end
   end
 end

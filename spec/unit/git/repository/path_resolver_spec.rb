@@ -37,6 +37,10 @@ RSpec.describe Git::Repository::PathResolver do
       it 'uses the given repository path' do
         expect(paths[:repository]).to eq(File.expand_path('/custom/git'))
       end
+
+      it 'derives the index from the explicit repository path when no index is given' do
+        expect(paths[:index]).to eq(File.expand_path('/custom/git/index'))
+      end
     end
 
     context 'with an explicit index path' do
