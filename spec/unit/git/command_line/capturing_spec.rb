@@ -72,6 +72,30 @@ RSpec.describe Git::CommandLine::Capturing do
       end
     end
 
+    context 'with a logger' do
+      let(:log_output) { StringIO.new }
+      let(:logger) { Logger.new(log_output, level: Logger::DEBUG) }
+
+      before do
+        mocked = mock_result(
+          command: %w[git status],
+          stdout: "modified: foo.rb\n",
+          stderr: "warning: bar\n"
+        )
+        allow(ProcessExecuter).to receive(:run_with_capture).and_return(mocked)
+      end
+
+      it 'logs the command and its exit status at INFO level' do
+        described_instance.run('status')
+        expect(log_output.string).to match(/^I, .*\["git", "status"\].*exited with status/)
+      end
+
+      it 'logs the inspected stdout and stderr at DEBUG level' do
+        described_instance.run('status')
+        expect(log_output.string).to match(/^D, .*stdout:\n"modified: foo\.rb\\n"\nstderr:\n"warning: bar\\n"/m)
+      end
+    end
+
     context 'with normalize: false (the default)' do
       let(:run_opts) { { normalize: false } }
 
