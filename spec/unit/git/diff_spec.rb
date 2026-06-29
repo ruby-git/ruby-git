@@ -265,6 +265,25 @@ RSpec.describe Git::Diff do
       end
     end
 
+    context 'when a changed file has a non-ASCII name that git quoted with octal escapes' do
+      let(:patch_text) do
+        # Git quotes non-ASCII filenames: \342\230\240 are the octal-escaped UTF-8
+        # bytes for ☠ (U+2620). Using a single-quoted heredoc so backslashes are literal.
+        <<~'DIFF'
+          diff --git "a/my_other_file_\342\230\240" "b/my_other_file_\342\230\240"
+          index abc1234..def5678 100644
+          --- "a/my_other_file_\342\230\240"
+          +++ "b/my_other_file_\342\230\240"
+          @@ -1 +1 @@
+          -First Line
+          +Second Line
+        DIFF
+      end
+
+      it 'unescapes the octal-encoded non-ASCII filename' do
+        expect(described_instance.map(&:path)).to eq(['my_other_file_☠'])
+      end
+    end
   end
 
   describe '#[]' do
