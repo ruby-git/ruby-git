@@ -96,6 +96,15 @@ RSpec.describe Git::ExecutionContext do
       end
     end
 
+    context 'when the context was built with git_ssh set to nil' do
+      let(:git_ssh) { nil }
+
+      it 'sets GIT_SSH to nil instead of falling back to the global config' do
+        allow(Git::Config.instance).to receive(:git_ssh).and_return('/global/ssh/script')
+        expect(env).to include('GIT_SSH' => nil)
+      end
+    end
+
     context 'when additional overrides add new variables' do
       let(:additional_overrides) { { 'GIT_TRACE' => '1', 'GIT_CURL_VERBOSE' => '1' } }
 
