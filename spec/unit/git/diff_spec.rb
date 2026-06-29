@@ -423,5 +423,17 @@ RSpec.describe Git::Diff::DiffFile do
         expect(blob).to be(blob_double)
       end
     end
+
+    context 'when type is :src and src is a null SHA' do
+      let(:blob_kind) { :src }
+      let(:src_sha) { '0000000' }
+      let(:dst_sha) { 'def4567' }
+
+      before { allow(repository_base).to receive(:object).with('def4567').and_return(blob_double) }
+
+      it 'returns nil rather than falling back to the destination blob' do
+        expect(blob).to be_nil
+      end
+    end
   end
 end

@@ -326,11 +326,8 @@ module Git
       #   SHA is the null SHA
       #
       def blob(type = :dst)
-        if type == :src && !NIL_BLOB_REGEXP.match(@src)
-          @base.object(@src)
-        elsif !NIL_BLOB_REGEXP.match(@dst)
-          @base.object(@dst)
-        end
+        sha = type == :src ? @src : @dst
+        @base.object(sha) unless NIL_BLOB_REGEXP.match(sha)
       end
     end
 
