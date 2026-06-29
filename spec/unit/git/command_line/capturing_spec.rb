@@ -72,6 +72,22 @@ RSpec.describe Git::CommandLine::Capturing do
       end
     end
 
+    context 'with normalize: false (the default)' do
+      let(:run_opts) { { normalize: false } }
+
+      before do
+        # A Latin-1 (ISO-8859-1) byte sequence that is not valid UTF-8.
+        # With normalize: false, the bytes must be returned unchanged.
+        latin1_out = "caf\xE9 output\n".dup.force_encoding(Encoding::ISO_8859_1)
+        mocked = mock_result(command: %w[git version], stdout: latin1_out, stderr: '')
+        allow(ProcessExecuter).to receive(:run_with_capture).and_return(mocked)
+      end
+
+      it 'preserves raw non-UTF-8 stdout bytes unchanged' do
+        expect(result.stdout.bytes).to eq("caf\xE9 output\n".bytes)
+      end
+    end
+
     context 'with normalize: true' do
       let(:run_opts) { { normalize: true } }
 
