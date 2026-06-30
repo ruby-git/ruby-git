@@ -109,7 +109,7 @@ module Git
         'Calling Git::Log#size is deprecated. Call #execute and then #size on the result object.'
       )
       run_log_if_dirty
-      @commits&.size
+      @commits.size
     end
 
     # @deprecated Use {#execute} and call `to_s` on the result.
@@ -118,7 +118,7 @@ module Git
         'Calling Git::Log#to_s is deprecated. Call #execute and then #to_s on the result object.'
       )
       run_log_if_dirty
-      @commits&.join("\n")
+      @commits.join("\n")
     end
 
     # @deprecated Use {#execute} and call the method on the result.
@@ -127,7 +127,7 @@ module Git
         'Calling Git::Log#first is deprecated. Call #execute and then #first on the result object.'
       )
       run_log_if_dirty
-      @commits&.first
+      @commits.first
     end
 
     # @deprecated Use {#execute} and call the method on the result.
@@ -136,7 +136,7 @@ module Git
         'Calling Git::Log#last is deprecated. Call #execute and then #last on the result object.'
       )
       run_log_if_dirty
-      @commits&.last
+      @commits.last
     end
 
     # @deprecated Use {#execute} and call the method on the result.
@@ -145,7 +145,7 @@ module Git
         'Calling Git::Log#[] is deprecated. Call #execute and then #[] on the result object.'
       )
       run_log_if_dirty
-      @commits&.[](index)
+      @commits[index]
     end
 
     # @!endgroup
