@@ -803,6 +803,120 @@ RSpec.describe Git::Status::StatusFileFactory do
             )
           end
         end
+
+        context 'when a staged modification is deleted from the working tree' do
+          before do
+            allow(base).to receive(:ls_files).and_return(
+              'file1' => { path: 'file1', mode_index: '100644', sha_index: sha1_staged, stage: '0' },
+              'file2' => { path: 'file2', mode_index: '100755', sha_index: sha2, stage: '0' }
+            )
+            allow(base).to receive(:untracked_files).and_return([])
+            # diff_files: index (sha1_staged) vs worktree (deleted; sha uncomputed = zeros)
+            allow(base).to receive(:diff_files).and_return(
+              'file1' => { path: 'file1', type: 'D', mode_index: '000000', mode_repo: '100644',
+                           sha_index: zeros_sha, sha_repo: sha1_staged }
+            )
+          end
+
+          it 'sets type D with sha_repo from the staged sha and zeros for sha_index' do
+            expect(result['file1']).to have_attributes(
+              path: 'file1', type: 'D', stage: '0', untracked: nil,
+              mode_index: '000000', sha_index: zeros_sha,
+              mode_repo: '100644', sha_repo: sha1_staged
+            )
+          end
+        end
+
+        context 'when a new file is added to the working tree only (untracked, no_commits? is true)' do
+          before do
+            allow(base).to receive(:ls_files).and_return(
+              'file1' => { path: 'file1', mode_index: '100644', sha_index: sha1, stage: '0' },
+              'file2' => { path: 'file2', mode_index: '100755', sha_index: sha2, stage: '0' }
+            )
+            allow(base).to receive(:untracked_files).and_return(['file3'])
+            allow(base).to receive(:diff_files).and_return({})
+          end
+
+          it 'shows file3 as untracked with nil mode/sha/type/stage' do
+            expect(result['file3']).to have_attributes(
+              path: 'file3', type: nil, stage: nil, untracked: true,
+              mode_index: nil, sha_index: nil, mode_repo: nil, sha_repo: nil
+            )
+          end
+
+          it 'preserves existing staged files unaffected' do
+            expect(result['file1']).to have_attributes(type: nil, sha_index: sha1)
+            expect(result['file2']).to have_attributes(type: nil, sha_index: sha2)
+          end
+        end
+
+        context 'when a new file is staged (no_commits? is true, no diff_index)' do
+          before do
+            allow(base).to receive(:ls_files).and_return(
+              'file1' => { path: 'file1', mode_index: '100644', sha_index: sha1, stage: '0' },
+              'file2' => { path: 'file2', mode_index: '100755', sha_index: sha2, stage: '0' },
+              'file3' => { path: 'file3', mode_index: '100644', sha_index: sha_file3, stage: '0' }
+            )
+            allow(base).to receive(:untracked_files).and_return([])
+            allow(base).to receive(:diff_files).and_return({})
+          end
+
+          # diff_index is not called (no_commits? = true), so type remains nil
+          it 'returns file3 with type nil (diff_index skipped for repos with no commits)' do
+            expect(result['file3']).to have_attributes(
+              path: 'file3', type: nil, stage: '0', untracked: nil,
+              mode_index: '100644', sha_index: sha_file3, mode_repo: nil, sha_repo: nil
+            )
+          end
+        end
+
+        context 'when a newly staged file is modified in the working tree (no_commits? is true)' do
+          before do
+            allow(base).to receive(:ls_files).and_return(
+              'file1' => { path: 'file1', mode_index: '100644', sha_index: sha1, stage: '0' },
+              'file2' => { path: 'file2', mode_index: '100755', sha_index: sha2, stage: '0' },
+              'file3' => { path: 'file3', mode_index: '100644', sha_index: sha_file3, stage: '0' }
+            )
+            allow(base).to receive(:untracked_files).and_return([])
+            # diff_files: index (sha_file3) vs worktree (modified; sha uncomputed = zeros)
+            allow(base).to receive(:diff_files).and_return(
+              'file3' => { path: 'file3', type: 'M', mode_index: '100644', mode_repo: '100644',
+                           sha_index: zeros_sha, sha_repo: sha_file3 }
+            )
+          end
+
+          it 'sets type M from diff_files with sha_repo from the staged sha and zeros for sha_index' do
+            expect(result['file3']).to have_attributes(
+              path: 'file3', type: 'M', stage: '0', untracked: nil,
+              mode_index: '100644', sha_index: zeros_sha,
+              mode_repo: '100644', sha_repo: sha_file3
+            )
+          end
+        end
+
+        context 'when a newly staged file is deleted from the working tree (no_commits? is true)' do
+          before do
+            allow(base).to receive(:ls_files).and_return(
+              'file1' => { path: 'file1', mode_index: '100644', sha_index: sha1, stage: '0' },
+              'file2' => { path: 'file2', mode_index: '100755', sha_index: sha2, stage: '0' },
+              'file3' => { path: 'file3', mode_index: '100644', sha_index: sha_file3, stage: '0' }
+            )
+            allow(base).to receive(:untracked_files).and_return([])
+            # diff_files: index (sha_file3) vs worktree (deleted; sha uncomputed = zeros)
+            allow(base).to receive(:diff_files).and_return(
+              'file3' => { path: 'file3', type: 'D', mode_index: '000000', mode_repo: '100644',
+                           sha_index: zeros_sha, sha_repo: sha_file3 }
+            )
+          end
+
+          it 'sets type D from diff_files with sha_repo from the staged sha and zeros for sha_index' do
+            expect(result['file3']).to have_attributes(
+              path: 'file3', type: 'D', stage: '0', untracked: nil,
+              mode_index: '000000', sha_index: zeros_sha,
+              mode_repo: '100644', sha_repo: sha_file3
+            )
+          end
+        end
       end
     end
   end
