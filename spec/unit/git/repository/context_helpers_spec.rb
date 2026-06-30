@@ -131,10 +131,37 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(described_instance.set_index('/repo/.git/new-index', must_exist: false)).to be_nil
     end
 
+    context 'when must_exist: true and the index file exists' do
+      let(:existing_index_path) { '/repo/.git/existing-index' }
+      let(:expanded_index_path) { File.expand_path(existing_index_path) }
+      let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_index_path) }
+
+      before do
+        allow(Pathname).to receive(:new).and_call_original
+        allow(Pathname).to receive(:new).with(expanded_index_path).and_return(existing_pathname)
+      end
+
+      it 'rebuilds the execution context with the existing index path without raising' do
+        expect(execution_context).to receive(:dup_with)
+          .with(git_index_file: expanded_index_path)
+          .and_return(new_context)
+        expect { described_instance.set_index(existing_index_path, must_exist: true) }
+          .not_to raise_error
+      end
+    end
+
     context 'signature compatibility (legacy-contract)' do
       it 'accepts a positional check argument with a deprecation warning' do
         expect(Git::Deprecation).to receive(:warn).once
         expect { described_instance.set_index('/nonexistent/index', false) }.not_to raise_error
+      end
+
+      it 'warns with the documented "check" argument deprecation message' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'Use "must_exist:" instead.'
+        )
+        described_instance.set_index('/nonexistent/index', false)
       end
 
       it 'performs existence check when both check=true and must_exist: false are given (more restrictive wins)' do
@@ -280,10 +307,37 @@ RSpec.describe Git::Repository::ContextHelpers do
       expect(described_instance.set_working('/other/dir', must_exist: false)).to be_nil
     end
 
+    context 'when must_exist: true and the directory exists' do
+      let(:existing_work_dir) { '/repo/existing-workdir' }
+      let(:expanded_work_dir) { File.expand_path(existing_work_dir) }
+      let(:existing_pathname) { instance_double(Pathname, exist?: true, to_s: expanded_work_dir) }
+
+      before do
+        allow(Pathname).to receive(:new).and_call_original
+        allow(Pathname).to receive(:new).with(expanded_work_dir).and_return(existing_pathname)
+      end
+
+      it 'rebuilds the execution context with the existing working directory without raising' do
+        expect(execution_context).to receive(:dup_with)
+          .with(git_work_dir: expanded_work_dir)
+          .and_return(new_context)
+        expect { described_instance.set_working(existing_work_dir, must_exist: true) }
+          .not_to raise_error
+      end
+    end
+
     context 'signature compatibility (legacy-contract)' do
       it 'accepts a positional check argument with a deprecation warning' do
         expect(Git::Deprecation).to receive(:warn).once
         expect { described_instance.set_working('/nonexistent/dir', false) }.not_to raise_error
+      end
+
+      it 'warns with the documented "check" argument deprecation message' do
+        expect(Git::Deprecation).to receive(:warn).with(
+          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'Use "must_exist:" instead.'
+        )
+        described_instance.set_working('/nonexistent/dir', false)
       end
 
       it 'performs existence check when both check=true and must_exist: false are given (more restrictive wins)' do

@@ -126,6 +126,22 @@ RSpec.describe Git::Object::Blob do
     it 'delegates to the repository with the objectish, destination, and options' do
       expect(result).to eq('/tmp/out.zip')
     end
+
+    context 'without a destination file' do
+      subject(:result) { described_instance.archive }
+
+      before do
+        allow(repository).to receive(:archive)
+          .with(objectish, nil, {})
+          .and_return(generated_archive_path)
+      end
+
+      let(:generated_archive_path) { 'generated-archive-path' }
+
+      it 'delegates with a nil destination and returns the generated temp file path' do
+        expect(result).to eq(generated_archive_path)
+      end
+    end
   end
 
   describe '#blob?' do
@@ -418,6 +434,27 @@ RSpec.describe Git::Object::Commit do
         expect(repository).not_to receive(:cat_file_commit)
         expect(commit.message).to eq('Initial commit')
       end
+    end
+  end
+
+  describe '#sha' do
+    subject(:sha) { described_instance.sha }
+
+    # Lazily loaded commit data carries a *different* 'sha' field than the value
+    # #sha resolves via rev_parse, so the test below is a meaningful guard.
+    let(:commit_data) { super().merge('sha' => 'lazyloadedsha000') }
+
+    before do
+      allow(repository).to receive(:rev_parse).with(commit_sha).and_return('resolvedfullsha999')
+    end
+
+    it 'remains stable after #date lazily loads commit data with a different sha field' do
+      # #sha resolves to 'resolvedfullsha999' via rev_parse. Calling #date lazily
+      # loads commit data whose 'sha' field is 'lazyloadedsha000'; the
+      # `@sha ||= data['sha']` memoization in #from_data must not clobber the
+      # already-resolved SHA.
+      expect { described_instance.date }
+        .not_to change(described_instance, :sha).from('resolvedfullsha999')
     end
   end
 
@@ -769,15 +806,42 @@ RSpec.describe Git::Object do
       end
     end
 
-    context 'when type is not provided' do
+    context 'when type is not provided and the object is a commit' do
       subject(:result) { described_class.new(repository, 'HEAD') }
 
       before do
         allow(repository).to receive(:cat_file_type).with('HEAD').and_return('commit')
       end
 
-      it 'calls cat_file_type on the repository to determine the object type' do
+      it 'creates a Commit by resolving the type via cat_file_type' do
         expect(result).to be_a(Git::Object::Commit)
+        expect(repository).to have_received(:cat_file_type).with('HEAD')
+      end
+    end
+
+    context 'when type is not provided and the object is a tree' do
+      subject(:result) { described_class.new(repository, 'HEAD^{tree}') }
+
+      before do
+        allow(repository).to receive(:cat_file_type).with('HEAD^{tree}').and_return('tree')
+      end
+
+      it 'creates a Tree by resolving the type via cat_file_type' do
+        expect(result).to be_a(Git::Object::Tree)
+        expect(repository).to have_received(:cat_file_type).with('HEAD^{tree}')
+      end
+    end
+
+    context 'when type is not provided and the object is a blob' do
+      subject(:result) { described_class.new(repository, 'HEAD:file.txt') }
+
+      before do
+        allow(repository).to receive(:cat_file_type).with('HEAD:file.txt').and_return('blob')
+      end
+
+      it 'creates a Blob by resolving the type via cat_file_type' do
+        expect(result).to be_a(Git::Object::Blob)
+        expect(repository).to have_received(:cat_file_type).with('HEAD:file.txt')
       end
     end
 

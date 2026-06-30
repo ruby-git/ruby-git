@@ -61,6 +61,26 @@ RSpec.describe Git::Repository::RemoteOperations do
       end
     end
 
+    # --- Argument forwarding: remote name is opaque data ---------------------
+
+    context 'when the remote name looks like a git option' do
+      subject(:result) { described_instance.fetch(option_like_remote, ref: 'some/ref/head') }
+
+      let(:option_like_remote) { '--upload-pack=touch VULNERABILITY_EXISTS;' }
+
+      it 'forwards the remote name verbatim as a single positional argument' do
+        # The facade treats the remote as opaque data: it must reach the command
+        # as one discrete positional argument, never split or reinterpreted. The
+        # command layer is responsible for emitting `--` before operands so git
+        # cannot mistake this value for an option (see Git::Commands::Fetch).
+        expect(fetch_command)
+          .to receive(:call)
+          .with(option_like_remote, 'some/ref/head', merge: true)
+          .and_return(fetch_result)
+        result
+      end
+    end
+
     # --- Hash as first argument (opts only, no remote) -----------------------
 
     context 'when the first argument is a Hash (opts-only form)' do
