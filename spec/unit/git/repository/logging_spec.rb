@@ -114,6 +114,31 @@ RSpec.describe Git::Repository::Logging do
       end
     end
 
+    context 'with a commit that has an empty message' do
+      let(:raw_output) do
+        <<~RAW
+          commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          tree tttttttttttttttttttttttttttttttttttttttt
+          parent bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          author A <a@example.com> 2 +0000
+          committer A <a@example.com> 2 +0000
+
+          commit bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          tree uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
+          author A <a@example.com> 1 +0000
+          committer A <a@example.com> 1 +0000
+
+              first message
+        RAW
+      end
+
+      it 'preserves the empty message as an empty string' do
+        allow(log_command).to receive(:call).with(no_color: true, pretty: 'raw').and_return(command_result(raw_output))
+
+        expect(result.map { |commit| commit['message'] }).to eq(['', "first message\n"])
+      end
+    end
+
     context 'with all documented options and a between revision range' do
       let(:opts) do
         {

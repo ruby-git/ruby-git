@@ -117,6 +117,104 @@ RSpec.describe Git::Log do
     end
   end
 
+  describe '#skip' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards the skip offset to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(skip: 1)).and_return([])
+      described_instance.skip(1).execute
+    end
+  end
+
+  describe '#since' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards the since date to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(since: '2 weeks ago')).and_return([])
+      described_instance.since('2 weeks ago').execute
+    end
+  end
+
+  describe '#grep' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards the grep pattern to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(grep: 'search')).and_return([])
+      described_instance.grep('search').execute
+    end
+  end
+
+  describe '#author' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards the author pattern to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(author: 'chacon')).and_return([])
+      described_instance.author('chacon').execute
+    end
+  end
+
+  describe '#cherry' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards cherry: true to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(cherry: true)).and_return([])
+      described_instance.cherry.execute
+    end
+  end
+
+  describe '#merges' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards merges: true to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(merges: true)).and_return([])
+      described_instance.merges.execute
+    end
+  end
+
+  describe '#between' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    it 'forwards the revision range as a two-element array to full_log_commits' do
+      expect(repository).to receive(:full_log_commits).with(hash_including(between: ['v2.5', 'test'])).and_return([])
+      described_instance.between('v2.5', 'test').execute
+    end
+
+    context 'when chained with #path' do
+      it 'forwards both the revision range and the path limiter to full_log_commits' do
+        expect(repository).to receive(:full_log_commits)
+          .with(hash_including(between: ['v2.5', 'test'], path_limiter: 'example.txt')).and_return([])
+        described_instance.between('v2.5', 'test').path('example.txt').execute
+      end
+    end
+  end
+
+  describe '#path' do
+    before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+    context 'with a string path' do
+      it 'forwards the string as the path limiter to full_log_commits' do
+        expect(repository).to receive(:full_log_commits)
+          .with(hash_including(path_limiter: 'example.txt')).and_return([])
+        described_instance.path('example.txt').execute
+      end
+    end
+
+    context 'with a wildcard string path' do
+      it 'forwards the wildcard string as the path limiter to full_log_commits' do
+        expect(repository).to receive(:full_log_commits).with(hash_including(path_limiter: 'example*')).and_return([])
+        described_instance.path('example*').execute
+      end
+    end
+
+    context 'with an array of paths' do
+      it 'forwards the array as the path limiter to full_log_commits' do
+        expect(repository).to receive(:full_log_commits)
+          .with(hash_including(path_limiter: ['example.txt', 'scott/text.txt'])).and_return([])
+        described_instance.path(['example.txt', 'scott/text.txt']).execute
+      end
+    end
+  end
+
   # The deprecated Enumerable interface emits a Git::Deprecation warning and
   # delegates to the commits produced by #execute.
   describe 'deprecated Enumerable interface' do
@@ -204,6 +302,24 @@ RSpec.describe Git::Log do
       it 'returns the commit at the given index from the executed results' do
         expect(described_instance[1]).to be(commits[1])
       end
+    end
+  end
+end
+
+RSpec.describe Git::Log::Result do
+  subject(:result) { described_class.new(commits) }
+
+  # #to_s on a real Git::Object::Commit returns its objectish (the sha), so the
+  # doubles mirror that to mimic how commits render when joined.
+  let(:commits) do
+    %w[aaa111 bbb222 ccc333].map do |sha|
+      instance_double(Git::Object::Commit, sha: sha, to_s: sha)
+    end
+  end
+
+  describe '#to_s' do
+    it 'joins the commit string representations with newlines, leading with the first commit sha' do
+      expect(result.to_s).to eq("aaa111\nbbb222\nccc333")
     end
   end
 end
