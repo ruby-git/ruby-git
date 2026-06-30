@@ -543,6 +543,20 @@ RSpec.describe Git::Repository::Diffing do
       end
     end
 
+    context 'when path_limiter is an empty Array' do
+      let(:opts) { { path_limiter: [] } }
+
+      it 'normalizes to nil and sends path: nil to the command' do
+        expect(diff_command).to receive(:call).with(
+          'HEAD',
+          raw: true, numstat: true, shortstat: true,
+          src_prefix: 'a/', dst_prefix: 'b/',
+          path: nil
+        ).and_return(diff_result)
+        subject
+      end
+    end
+
     context 'when the raw output contains a rename' do
       let(:rename_output) do
         ":100644 100644 abc1234 def5678 R100\told.rb\tnew.rb\n"
