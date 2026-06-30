@@ -156,6 +156,20 @@ RSpec.describe Git::Repository::Committing do
       end
     end
 
+    context 'with both gpg_sign: true and no_gpg_sign: true (conflicting options)' do
+      subject(:result) { described_instance.commit('msg', gpg_sign: true, no_gpg_sign: true) }
+
+      before do
+        # Use the real Commit command so the arguments DSL conflict check fires;
+        # it raises before execute_command touches the execution context.
+        allow(Git::Commands::Commit).to receive(:new).with(execution_context).and_call_original
+      end
+
+      it 'raises ArgumentError for conflicting GPG signing options' do
+        expect { result }.to raise_error(ArgumentError, /cannot specify :gpg_sign and :no_gpg_sign/)
+      end
+    end
+
     context 'with deprecated :add_all option' do
       subject(:result) { described_instance.commit('msg', add_all: true) }
 
