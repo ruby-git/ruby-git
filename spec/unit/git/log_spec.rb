@@ -81,6 +81,37 @@ RSpec.describe Git::Log do
         described_instance.execute
       end
     end
+
+    context 'when the query is modified after a previous execution' do
+      let(:first_data) { [{ 'sha' => 'aaa111' }] }
+      let(:second_data) { [{ 'sha' => 'aaa111' }, { 'sha' => 'bbb222' }] }
+
+      before do
+        allow(repository).to receive(:full_log_commits).and_return(first_data, second_data)
+        allow(Git::Object::Commit).to receive(:new).with(repository, 'aaa111', { 'sha' => 'aaa111' })
+                                                   .and_return(instance_double(Git::Object::Commit))
+        allow(Git::Object::Commit).to receive(:new).with(repository, 'bbb222', { 'sha' => 'bbb222' })
+                                                   .and_return(instance_double(Git::Object::Commit))
+      end
+
+      it 're-queries the repository and returns an independent snapshot, leaving the earlier result unchanged' do
+        first_result = described_instance.execute
+        described_instance.max_count(5)
+        second_result = described_instance.execute
+
+        expect(first_result.size).to eq(1)
+        expect(second_result.size).to eq(2)
+      end
+    end
+
+    context 'when the repository has no commits' do
+      before { allow(repository).to receive(:full_log_commits).and_return([]) }
+
+      it 'returns an empty Git::Log::Result' do
+        expect(result).to be_a(Git::Log::Result)
+        expect(result.size).to eq(0)
+      end
+    end
   end
 
   describe '#max_count' do
