@@ -53,6 +53,15 @@ RSpec.describe Git::DiffStats do
       end
     end
 
+    context 'when path_limiter is an empty Array' do
+      it 'forwards path_limiter: [] to diff_numstat (normalization is the diffing layer\'s responsibility)' do
+        expect(repository_base).to receive(:diff_numstat)
+          .with('HEAD~1', 'HEAD', path_limiter: [])
+          .and_return(stats_hash)
+        described_class.new(repository_base, 'HEAD~1', 'HEAD', []).insertions
+      end
+    end
+
     context 'when obj2 is nil' do
       it 'passes nil as the second positional argument to diff_numstat' do
         expect(repository_base).to receive(:diff_numstat)
