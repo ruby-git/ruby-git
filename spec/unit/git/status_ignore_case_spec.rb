@@ -48,4 +48,88 @@ RSpec.describe Git::Status do
       end
     end
   end
+
+  describe '#added?' do
+    let(:status_file) { instance_double(Git::Status::StatusFile, type: 'A', untracked: nil) }
+
+    context 'when core.ignoreCase is true' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(double(value: 'true'))
+      end
+
+      it 'finds a file using a different-cased path' do
+        expect(status.added?('FILE.RB')).to be(true)
+      end
+    end
+
+    context 'when core.ignoreCase is absent' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(nil)
+      end
+
+      it 'does not find a file with a different-cased path' do
+        expect(status.added?('FILE.RB')).to be(false)
+      end
+
+      it 'finds a file with the exact path' do
+        expect(status.added?('file.rb')).to be(true)
+      end
+    end
+  end
+
+  describe '#deleted?' do
+    let(:status_file) { instance_double(Git::Status::StatusFile, type: 'D', untracked: nil) }
+
+    context 'when core.ignoreCase is true' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(double(value: 'true'))
+      end
+
+      it 'finds a file using a different-cased path' do
+        expect(status.deleted?('FILE.RB')).to be(true)
+      end
+    end
+
+    context 'when core.ignoreCase is absent' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(nil)
+      end
+
+      it 'does not find a file with a different-cased path' do
+        expect(status.deleted?('FILE.RB')).to be(false)
+      end
+
+      it 'finds a file with the exact path' do
+        expect(status.deleted?('file.rb')).to be(true)
+      end
+    end
+  end
+
+  describe '#untracked?' do
+    let(:status_file) { instance_double(Git::Status::StatusFile, type: nil, untracked: true) }
+
+    context 'when core.ignoreCase is true' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(double(value: 'true'))
+      end
+
+      it 'finds a file using a different-cased path' do
+        expect(status.untracked?('FILE.RB')).to be(true)
+      end
+    end
+
+    context 'when core.ignoreCase is absent' do
+      before do
+        allow(base).to receive(:config_get).with('core.ignoreCase').and_return(nil)
+      end
+
+      it 'does not find a file with a different-cased path' do
+        expect(status.untracked?('FILE.RB')).to be(false)
+      end
+
+      it 'finds a file with the exact path' do
+        expect(status.untracked?('file.rb')).to be(true)
+      end
+    end
+  end
 end
