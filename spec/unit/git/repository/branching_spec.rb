@@ -230,6 +230,16 @@ RSpec.describe Git::Repository::Branching do
       end
     end
 
+    context 'with legacy new_branch: true and no start_point' do
+      subject(:result) { described_instance.checkout('feature1', new_branch: true) }
+
+      it 'passes a nil target and b: branch to the command' do
+        expect(checkout_branch_command)
+          .to receive(:call).with(nil, b: 'feature1').and_return(checkout_branch_result)
+        result
+      end
+    end
+
     context 'with legacy new_branch: true and start_point option' do
       subject(:result) { described_instance.checkout('new-branch', new_branch: true, start_point: 'main') }
 
