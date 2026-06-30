@@ -6,9 +6,14 @@
 > enrichment) is complete and signed off** — the TSV now carries `disposition`,
 > `target_spec`, and `port_status`; results are summarized in
 > [W1.5 enrichment results](#w15-enrichment-results-for-sign-off). The one-time human
-> sign-off that gates W2 has been **given**, so W2 may begin. Execution decisions are
-> **resolved** (see [Resolved Decisions](#resolved-decisions)). W2–W5 and W-Doc (port,
-> documentation salvage, remove infrastructure, update docs, finalize) are not yet started.
+> sign-off that gates W2 has been **given**. Execution decisions are
+> **resolved** (see [Resolved Decisions](#resolved-decisions)). **W-Doc (documentation
+> salvage) is complete and merged** — the 4 `test_archive.rb` content cases were salvaged
+> as YARD examples on `Git::Object#archive` / `Git::Branch#archive`. **W2 (port) is in
+> progress:** of **159 PORT rows** (down from the planned 192 after dedup), **57 are
+> complete and merged (~36%)** and **102 remain** — see
+> [W2 progress](#w2-progress). **W3, W4a, W4b, and W5** (remove infrastructure, deprecate
+> `extract-*` skills, update Test::Unit docs, finalize) are not yet started.
 
 ## Goal
 
@@ -270,9 +275,9 @@ Skills with Test::Unit references to reconcile: `extract-command-from-lib`,
 
 ```mermaid
 flowchart LR
-    W1["W1 (audit ✅)"] --> W15["W1.5 (enrich matrix)"]
-    W15 --> W2["W2 (port)"]
-    W15 --> WDoc["W-Doc (documentation salvage)"]
+    W1["W1 (audit ✅)"] --> W15["W1.5 (enrich matrix ✅)"]
+    W15 --> W2["W2 (port 🚧 ~36%)"]
+    W15 --> WDoc["W-Doc (documentation salvage ✅)"]
     W2 --> W3["W3 (remove infra)"]
     WDoc --> W3
     W3 --> W4b["W4b (TU docs)"]
@@ -432,38 +437,58 @@ Recorded as a proposal; rows are not pre-merged.
 **Initial W2 batch plan** (all row counts are enriched matrix rows before deduplication
 is approved by a reviewer; each batch stays at or below the 10-row cap):
 
-| Batch | Scope | Rows |
-| --- | --- | ---: |
-| U1 | CommandLine base/capturing/error rows | 9 |
-| U2 | Git error objects (`FailedError`, `SignaledError`, `TimeoutError`) | 6 |
-| U3 | `Diff` unit rows, first chunk | 10 |
-| U4 | `Diff` remainder plus path/status/stats/escaped-path rows | 7 |
-| U5 | `ExecutionContext` environment override rows, first chunk | 7 |
-| U6 | `ExecutionContext` remainder plus config/init/path-resolver rows | 10 |
-| U7 | Git remote URL utilities | 10 |
-| U8 | `Log` deprecation rows plus first `test_log.rb` chunk | 10 |
-| U9 | `Log` remaining `test_log.rb` rows | 10 |
-| U10 | `Log#execute` first chunk | 10 |
-| U11 | `Log#execute` remainder | 6 |
-| U12 | Object/repository/remote miscellaneous rows | 10 |
-| U13 | Repository staging/committing rows | 3 |
-| U14 | `Fsck` parser rows, first chunk | 10 |
-| U15 | `Fsck` parser remainder | 6 |
-| U16 | `Status` facade rows plus ignore-case rows | 10 |
-| U17 | `StatusFile` rows, first chunk | 10 |
-| U18 | `StatusFile` remainder plus empty-repo first chunk | 10 |
-| U19 | `StatusFile` empty-repo remainder | 4 |
-| I1 | Command-line subprocess integration rows | 5 |
-| I2 | Branch/checkout integration rows | 3 |
-| I3 | Commit/config/remote integration rows | 7 |
-| I4 | Diff/status/staging integration rows | 7 |
-| I5 | Object/stash/submodule integration rows | 6 |
-| I6 | Worktree/thread-safety integration rows | 6 |
+| Batch | Scope | Rows | Status |
+| --- | --- | ---: | --- |
+| U1 | CommandLine base/capturing/error rows | 9 | ✅ merged |
+| U2 | Git error objects (`FailedError`, `SignaledError`, `TimeoutError`) | 6 | ✅ merged |
+| U3 | `Diff` unit rows, first chunk | 10 | ✅ merged |
+| U4 | `Diff` remainder plus path/status/stats/escaped-path rows | 7 | ✅ merged |
+| U5 | `ExecutionContext` environment override rows, first chunk | 7 | ✅ merged |
+| U6 | `ExecutionContext` remainder plus config/init/path-resolver rows | 10 | ✅ merged |
+| U7 | Git remote URL utilities | 10 | ✅ merged |
+| U8 | `Log` deprecation rows plus first `test_log.rb` chunk | 10 | ✅ merged |
+| U9 | `Log` remaining `test_log.rb` rows | 10 | ✅ merged |
+| U10 | `Log#execute` snapshot/empty-repo rows (deduped against `test_log.rb`) | 10 | ✅ merged |
+| U11 | `Log#execute` remainder | 6 | ➖ folded into U10 (dedup) |
+| U12 | Object/repository/remote miscellaneous rows | 10 | ⬜ pending |
+| U13 | Repository staging/committing rows | 3 | ⬜ pending |
+| U14 | `Fsck` parser rows, first chunk | 10 | ⬜ pending |
+| U15 | `Fsck` parser remainder | 6 | ⬜ pending |
+| U16 | `Status` facade rows plus ignore-case rows | 10 | ⬜ pending |
+| U17 | `StatusFile` rows, first chunk | 10 | ⬜ pending |
+| U18 | `StatusFile` remainder plus empty-repo first chunk | 10 | ⬜ pending |
+| U19 | `StatusFile` empty-repo remainder | 4 | ⬜ pending |
+| I1 | Command-line subprocess integration rows | 5 | ⬜ pending |
+| I2 | Branch/checkout integration rows | 3 | ⬜ pending |
+| I3 | Commit/config/remote integration rows | 7 | ⬜ pending |
+| I4 | Diff/status/staging integration rows | 7 | ⬜ pending |
+| I5 | Object/stash/submodule integration rows | 6 | ⬜ pending |
+| I6 | Worktree/thread-safety integration rows | 6 | ⬜ pending |
 
 ### W2 — Port unique coverage to RSpec (batched PRs)
 
-Drive W2 entirely from the enriched audit matrix; port only the **192 PORT** cases,
-honoring each row's `target_layer` and `target_spec`.
+#### W2 progress
+
+Snapshot from the authoritative `port_status` column in
+[`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv):
+
+| Metric | Rows |
+| --- | ---: |
+| **Total PORT rows** (current, after dedups) | **159** |
+| — unit (`target_layer = unit`) | 123 |
+| — integration (`target_layer = integration`) | 36 |
+| **Complete and merged** (`ported` + `reviewed`) | **57** (55 unit + 2 integration) |
+| **Remaining** (`pending`) | **102** (68 unit + 34 integration) |
+| **Percent complete** | **~36%** (57 / 159) |
+
+Batches **U1–U10** are merged; **U11 folded into U10** during the `test_log.rb` /
+`test_log_execute.rb` dedup. The PORT total dropped from the W1.5 figure of **192** to
+**159** because ~33 rows were reclassified PORT → REDUNDANT (`covered`) as in-flight
+dedups confirmed the behavior was already covered by an existing or sibling-batch spec.
+Remaining work is batches **U12–U19** (unit) and **I1–I6** (integration).
+
+Drive W2 entirely from the enriched audit matrix; port only the **PORT** cases (159 after
+dedup; 192 at W1.5 sign-off), honoring each row's `target_layer` and `target_spec`.
 
 **Execution protocol — one test at a time, with review gates.** Each W2 **batch** (not
 all of W2) is delivered as **one PR** with no more than 10 matrix rows; W3–W5 follow
@@ -545,12 +570,12 @@ Status: waiting for review; say "continue" to proceed
 
 This keeps each review small and lets the reviewer catch convention drift early.
 
-- **158 `target_layer = unit`** → write/extend `spec/unit/` specs with stubbed
-  externals (no real git), preserving 100% branch coverage. This is the bulk of the
-  work and where logic coverage belongs.
-- **34 `target_layer = integration`** → add only **minimal** `spec/integration/`
-  examples that prove the facade ↔ command wiring against real git; do not recreate
-  the legacy exhaustive matrices.
+- **`target_layer = unit`** (123 now; 158 at W1.5 sign-off) → write/extend `spec/unit/`
+  specs with stubbed externals (no real git), preserving 100% branch coverage. This is the
+  bulk of the work and where logic coverage belongs.
+- **`target_layer = integration`** (36 now; 34 at W1.5 sign-off) → add only **minimal**
+  `spec/integration/` examples that prove the facade ↔ command wiring against real git; do
+  not recreate the legacy exhaustive matrices.
 - **Integration deduplication rule:** before adding an integration example, check
   whether a minimal wiring example for the same path already exists or is proposed in
   the current batch. Folding multiple audit rows into one integration example is allowed
