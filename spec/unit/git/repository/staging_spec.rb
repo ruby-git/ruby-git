@@ -488,10 +488,22 @@ RSpec.describe Git::Repository::Staging do
     context 'with the deprecated :ff option combined with an explicit force: 0' do
       subject(:result) { described_instance.clean(ff: true, force: 0) }
 
+      it 'emits the deprecation warning and propagates the ArgumentError from the command' do
+        # The facade passes force: 0 through to the Clean command, which rejects
+        # values <= 0. The ff: true should not mask the invalid force value.
+        allow(Git::Commands::Clean).to receive(:new).with(execution_context).and_call_original
+        expect(Git::Deprecation).to receive(:warn).with(':ff option is deprecated. Use force: 2 instead.')
+        expect { result }.to raise_error(ArgumentError, /force.*positive Integer/)
+      end
+    end
+
+    context 'with the deprecated :ff option combined with an explicit force: nil' do
+      subject(:result) { described_instance.clean(ff: true, force: nil) }
+
       before { allow(Git::Deprecation).to receive(:warn) }
 
-      it 'forwards the below-one integer force value unchanged' do
-        expect(clean_command).to receive(:call).with(force: 0).and_return(clean_result)
+      it 'treats the explicit nil as unspecified and applies the ff default of force: 2' do
+        expect(clean_command).to receive(:call).with(force: 2).and_return(clean_result)
         result
       end
     end
