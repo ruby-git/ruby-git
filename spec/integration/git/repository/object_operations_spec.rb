@@ -181,6 +181,26 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
           .to raise_error(Git::FailedError)
       end
     end
+
+    context 'with a bare repository clone' do
+      let(:clone_parent_dir) { Dir.mktmpdir }
+      let(:bare_clone_dir) { File.join(clone_parent_dir, 'bare') }
+      let(:bare_repo) { Git.clone(repo_dir, bare_clone_dir, bare: true) }
+      let(:bare_instance) { Git::Repository.new(execution_context: bare_repo.execution_context) }
+
+      after do
+        FileUtils.rm_rf(clone_parent_dir)
+      end
+
+      it 'returns commit metadata including tree, author, committer, and parents' do
+        sha = bare_repo.rev_parse('HEAD')
+        result = bare_instance.cat_file_commit(sha)
+        expect(result).to include('tree', 'author', 'committer', 'message', 'parent')
+        expect(result['tree']).to match(/\A[0-9a-f]{40}\z/)
+        expect(result['author']).to be_a(String).and include('Test User', 'test@example.com')
+        expect(result['parent']).to be_an(Array)
+      end
+    end
   end
 
   describe '#cat_file_tag' do

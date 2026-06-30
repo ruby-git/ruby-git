@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'securerandom'
 require 'git/repository'
 require 'git/repository/diffing'
 
@@ -63,6 +64,80 @@ RSpec.describe Git::Repository::Diffing, :integration do
       it 'returns an empty string' do
         result = described_instance.diff_full('HEAD', 'HEAD')
         expect(result).to eq('')
+      end
+    end
+
+    context 'when HEAD has unstaged working tree changes' do
+      before do
+        write_file('README.md', "# Project\n\nFRANCO\n")
+        # intentionally not staged
+      end
+
+      it 'returns patch text showing the unstaged change' do
+        result = described_instance.diff_full
+        expect(result).to include('+FRANCO')
+      end
+    end
+
+    context 'when the patch contains Greek UTF-8 characters' do
+      before do
+        skip 'requires UTF-8 as the default external encoding' unless Encoding.default_external == Encoding::UTF_8
+
+        write_file('greek.txt', "Φθγητ οπορτερε ιν ιδεριντ\n")
+        repo.add('greek.txt')
+        repo.commit('Add Greek text file')
+        write_file('greek.txt', "Φεθγιατ θρβανιτασ ρεπριμιqθε\n")
+        # intentionally not staged
+      end
+
+      it 'returns patch text that preserves Greek characters' do
+        result = described_instance.diff_full
+        expect(result).to include('-Φθγητ οπορτερε ιν ιδεριντ')
+        expect(result).to include('+Φεθγιατ θρβανιτασ ρεπριμιqθε')
+      end
+    end
+
+    context 'when a path-limited diff contains CJK UTF-8 text' do
+      let(:japanese_text) { "違いを生み出すサンプルテキスト\nこれは1行目です\nこれが最後の行です\n" }
+      let(:korean_text) { "이것은 파일이다\n이것은 두 번째 줄입니다\n이것이 마지막 줄입니다\n" }
+
+      before do
+        skip 'requires UTF-8 as the default external encoding' unless Encoding.default_external == Encoding::UTF_8
+
+        write_file('cjk.txt', japanese_text)
+        write_file('other.txt', "original content\n")
+        repo.add(all: true)
+        repo.commit('Add multilingual text files')
+        write_file('cjk.txt', korean_text)
+        write_file('other.txt', "modified content\n")
+        # intentionally not staged
+      end
+
+      it 'returns patch text for only the given path that preserves CJK characters' do
+        result = described_instance.diff_full('HEAD', nil, path_limiter: 'cjk.txt')
+        expect(result).not_to include('other.txt')
+        expect(result).to include('-違いを生み出すサンプルテキスト')
+        expect(result).to include('+이것은 파일이다')
+      end
+    end
+
+    context 'when the working directory is a linked worktree (where .git is a file)' do
+      let(:worktree_path) { File.join(repo_dir, '..', "linked-#{SecureRandom.hex(4)}") }
+
+      before do
+        repo.worktree_add(worktree_path)
+      end
+
+      after do
+        repo.worktree_remove(worktree_path)
+        FileUtils.rm_rf(worktree_path)
+      end
+
+      it 'returns an empty patch when there are no changes in the linked worktree' do
+        # Verify the precondition: in a linked worktree, .git is a file (not a directory)
+        expect(File.file?(File.join(worktree_path, '.git'))).to be(true)
+        linked_instance = Git::Repository.new(execution_context: Git.open(worktree_path).execution_context)
+        expect(linked_instance.diff_full).to eq('')
       end
     end
   end
