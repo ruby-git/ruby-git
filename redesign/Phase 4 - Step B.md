@@ -738,6 +738,49 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
 - Update [`3_architecture_implementation.md`](3_architecture_implementation.md)
   progress tracker: mark Step B ✅ and bump the Phase 4 percentage.
 
+### W6 — Remove stale `Git::Base`/`Git::Lib` references from active skills (independent docs-only PR)
+
+This workstream has **no dependency on W2/W3/W4a/W4b/W5** — it is not gated by,
+and does not gate, the Test::Unit removal work above. It exists because Phase 4
+**Step A** (the atomic `Git::Base`/`Git::Lib` removal, PR #1456) only required
+`lib/` source to be clean of live references; `.github/skills/` was never audited
+and still describes those two classes as though they currently exist and are the
+live facade layer. The execution PR for this workstream should be branched from
+`main` after PRs #1504 and #1505 merge, as both touch files in the list below
+and would conflict with concurrent edits.
+
+- **Audit every active skill under `.github/skills/`** for `Git::Base` / `Git::Lib`
+  mentions that describe them as *current* — as opposed to mentions that are correctly
+  historical/contextual (e.g., explaining what the redesign replaced). The following
+  files have at least one stale "current" reference and need review/rewrite
+  (verified by grep after PRs #1504 and #1505 merged, which cleaned up
+  `facade-implementation/SKILL.md` and `development-workflow/SKILL.md`):
+  - `command-implementation/SKILL.md`
+  - `command-implementation/REFERENCE.md`
+  - `command-test-conventions/SKILL.md`
+  - `facade-implementation/REFERENCE.md`
+  - `facade-test-conventions/SKILL.md`
+  - `yard-documentation/SKILL.md`
+  - `breaking-change-analysis/SKILL.md`
+  - `review-backward-compatibility/SKILL.md`
+  - `review-arguments-dsl/CHECKLIST.md`
+  - `refactor-command-to-commandlineresult/SKILL.md`
+- **Rewrite each stale reference** to describe the current architecture: `Git::Lib`
+  facade-delegation examples (e.g. the now-deleted `lib/git/lib.rb` and
+  `spec/unit/git/lib_command_spec.rb`) become `Git::Repository::*` facade examples
+  (`lib/git/repository/<topic>.rb`, `spec/unit/git/repository/<topic>_spec.rb`);
+  `Git::Base` becomes `Git::Repository`.
+  Where a skill's own code example depends on the deleted classes (not just prose),
+  rewrite the example against a real current class, following the same approach used
+  for the stale TDD-cycle example fixed in W4b.
+- **Do not touch** `redesign/1_architecture_existing.md` and
+  `redesign/2_architecture_redesign.md` — those documents intentionally describe the
+  pre-redesign architecture as history, and `.github/skills-deprecated/*` — already
+  scoped as retired reference material in W4a.
+- Gate: a grep for `Git::Base` and `Git::Lib` across `.github/skills/` returns
+  only mentions that are unambiguously historical/contextual, not descriptions
+  of current behavior.
+
 ---
 
 ## Resolved Decisions
