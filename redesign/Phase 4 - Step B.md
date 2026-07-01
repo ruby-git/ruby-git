@@ -9,11 +9,16 @@
 > sign-off that gates W2 has been **given**. Execution decisions are
 > **resolved** (see [Resolved Decisions](#resolved-decisions)). **W-Doc (documentation
 > salvage) is complete and merged** — the 4 `test_archive.rb` content cases were salvaged
-> as YARD examples on `Git::Object#archive` / `Git::Branch#archive`. **W2 (port) is in
-> progress:** of **159 PORT rows** (down from the planned 192 after dedup), **57 are
-> complete and merged (~36%)** and **102 remain** — see
-> [W2 progress](#w2-progress). **W3, W4a, W4b, and W5** (remove infrastructure, deprecate
-> `extract-*` skills, update Test::Unit docs, finalize) are not yet started.
+> as YARD examples on `Git::Object#archive` / `Git::Branch#archive`. **W2 (port) is
+> complete:** all **159 PORT rows** (down from the planned 192 after dedup) have been
+> ported and merged across batches U1–U21 (final batch PR #1501) — see
+> [W2 progress](#w2-progress). **W3** (remove Test::Unit infrastructure) **is merged** —
+> PR #1502 removed `tests/units/`, tooling, and the `test-unit` gem dependency; PR #1503
+> followed up with the `tests/files/` fixture deletion deferred from W3 due to the
+> 300-file review limit. **W4a** (deprecate `extract-*` skills) **is merged** — PR #1504.
+> **W4b** (remove Test::Unit documentation references) **is merged** — PR #1505. The
+> **W6 plan** (remove stale `Git::Base`/`Git::Lib` skill references) **is merged** —
+> PR #1506. **W5** (verify & finalize) and **W6 execution** have not yet started.
 
 ## Goal
 
@@ -276,13 +281,14 @@ Skills with Test::Unit references to reconcile: `extract-command-from-lib`,
 ```mermaid
 flowchart LR
     W1["W1 (audit ✅)"] --> W15["W1.5 (enrich matrix ✅)"]
-    W15 --> W2["W2 (port 🚧 ~36%)"]
+    W15 --> W2["W2 (port ✅)"]
     W15 --> WDoc["W-Doc (documentation salvage ✅)"]
-    W2 --> W3["W3 (remove infra)"]
+    W2 --> W3["W3 (remove infra ✅)"]
     WDoc --> W3
-    W3 --> W4b["W4b (TU docs)"]
+    W3 --> W4b["W4b (TU docs ✅)"]
     W4b --> W5["W5 (verify/finalize)"]
-    W4a["W4a (deprecate extract-* skills)"] --> W5
+    W4a["W4a (deprecate extract-* skills ✅)"] --> W5
+    W6["W6 (plan ✅ / exec pending)"]
 ```
 
 - **W1.5 → W2** is a hard one-time gate: the human signs off the enriched matrix once
@@ -450,20 +456,22 @@ is approved by a reviewer; each batch stays at or below the 10-row cap):
 | U9 | `Log` remaining `test_log.rb` rows | 10 | ✅ merged |
 | U10 | `Log#execute` snapshot/empty-repo rows (deduped against `test_log.rb`) | 10 | ✅ merged |
 | U11 | `Log#execute` remainder | 6 | ➖ folded into U10 (dedup) |
-| U12 | Object/repository/remote miscellaneous rows | 10 | ⬜ pending |
-| U13 | Repository staging/committing rows | 3 | ⬜ pending |
-| U14 | `Fsck` parser rows, first chunk | 10 | ⬜ pending |
-| U15 | `Fsck` parser remainder | 6 | ⬜ pending |
-| U16 | `Status` facade rows plus ignore-case rows | 10 | ⬜ pending |
-| U17 | `StatusFile` rows, first chunk | 10 | ⬜ pending |
-| U18 | `StatusFile` remainder plus empty-repo first chunk | 10 | ⬜ pending |
-| U19 | `StatusFile` empty-repo remainder | 4 | ⬜ pending |
-| I1 | Command-line subprocess integration rows | 5 | ⬜ pending |
-| I2 | Branch/checkout integration rows | 3 | ⬜ pending |
-| I3 | Commit/config/remote integration rows | 7 | ⬜ pending |
-| I4 | Diff/status/staging integration rows | 7 | ⬜ pending |
-| I5 | Object/stash/submodule integration rows | 6 | ⬜ pending |
-| I6 | Worktree/thread-safety integration rows | 6 | ⬜ pending |
+| U12 | Object/repository/remote miscellaneous rows | 10 | ✅ merged |
+| U13 | Repository staging/committing rows | 3 | ✅ merged |
+| U14 | `Fsck` parser rows, first chunk | 10 | ✅ merged |
+| U15 | `Fsck` parser remainder | 6 | ✅ merged |
+| U16 | `Status` facade rows plus ignore-case rows | 10 | ✅ merged |
+| U17 | `StatusFile` rows, first chunk | 10 | ✅ merged |
+| U18 | `StatusFile` remainder plus empty-repo first chunk | 10 | ✅ merged |
+| U19 | `StatusFile` empty-repo remainder | 4 | ✅ merged |
+| U20 | Signed-commits, stash, status, submodule integration rows | 9 | ✅ merged |
+| U21 | Thread-safety, worktree integration rows (final batch) | 14 | ✅ merged (PR #1501) |
+| I1 | Command-line subprocess integration rows | 5 | ✅ merged (folded into U batches) |
+| I2 | Branch/checkout integration rows | 3 | ✅ merged (folded into U batches) |
+| I3 | Commit/config/remote integration rows | 7 | ✅ merged (folded into U batches) |
+| I4 | Diff/status/staging integration rows | 7 | ✅ merged (folded into U batches) |
+| I5 | Object/stash/submodule integration rows | 6 | ✅ merged (folded into U batches) |
+| I6 | Worktree/thread-safety integration rows | 6 | ✅ merged (folded into U batches) |
 
 ### W2 — Port unique coverage to RSpec (batched PRs)
 
@@ -477,15 +485,18 @@ Snapshot from the authoritative `port_status` column in
 | **Total PORT rows** (current, after dedups) | **159** |
 | — unit (`target_layer = unit`) | 123 |
 | — integration (`target_layer = integration`) | 36 |
-| **Complete and merged** (`ported` + `reviewed`) | **57** (55 unit + 2 integration) |
-| **Remaining** (`pending`) | **102** (68 unit + 34 integration) |
-| **Percent complete** | **~36%** (57 / 159) |
+| **Complete** (`ported`) | **159** (123 unit + 36 integration) |
+| **Remaining** (`pending`) | **0** |
+| **Percent complete** | **100%** (159 / 159) |
 
-Batches **U1–U10** are merged; **U11 folded into U10** during the `test_log.rb` /
+Batches **U1–U21** are all merged. U11 was folded into U10 during the `test_log.rb` /
 `test_log_execute.rb` dedup. The PORT total dropped from the W1.5 figure of **192** to
 **159** because ~33 rows were reclassified PORT → REDUNDANT (`covered`) as in-flight
 dedups confirmed the behavior was already covered by an existing or sibling-batch spec.
-Remaining work is batches **U12–U19** (unit) and **I1–I6** (integration).
+All 159 PORT rows have `port_status = ported` in the TSV. Note: `ported` became the de
+facto terminal state for PORT rows in this project — merged batches were not
+systematically bumped through `reviewed` → `merged` in the TSV, so `ported` represents
+done. W2 is **complete**.
 
 Drive W2 entirely from the enriched audit matrix; port only the **PORT** cases (159 after
 dedup; 192 at W1.5 sign-off), honoring each row's `target_layer` and `target_spec`.
@@ -633,6 +644,13 @@ as one docs-only PR under the same one-at-a-time review cadence as W2.
 
 ### W3 — Remove Test::Unit infrastructure (single atomic PR, after W2)
 
+**Status: MERGED.** Infrastructure removal done across two PRs: PR #1502
+(`test/phase-4-step-b-w3-remove-infra` branch: removed `tests/units/`, `bin/test`,
+`bin/test-verbose`, `tasks/test.rake`, the `test-unit` gem dependency, and introduced
+`bin/spec-in-docker` and `docker/test/Dockerfile`) and PR #1503
+(`chore/remove-tests-files-fixtures` branch: deleted the 545 `tests/files/` fixture
+files deferred from W3 due to the Copilot 300-file review limit).
+
 W3 follows the same per-step review cadence as W2 (the agent pauses for review after
 each discrete change below), but all of the deletions/relocations ship together as one
 atomic PR — the repository must never be left in a half-removed state on the branch tip.
@@ -678,6 +696,8 @@ atomic PR — the repository must never be left in a half-removed state on the b
 
 ### W4a — Deprecate the finished `extract-*` skills (independent docs-only PR)
 
+**Status: MERGED.** PR #1504, `chore/deprecate-extract-skills` branch.
+
 This workstream has **no dependency on W2/W3** — the Base/Lib extraction these two
 skills describe is already complete, so they can be retired at any time and this PR may
 land early.
@@ -711,6 +731,8 @@ land early.
 
 ### W4b — Remove Test::Unit documentation references (docs-only PR, after W3)
 
+**Status: MERGED.** PR #1505, `chore/remove-test-unit-docs` branch.
+
 This workstream **depends on W3**: the docs only become true once `tests/` and the
 Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges.
 
@@ -729,6 +751,8 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
 
 ### W5 — Verify & finalize (after W3, W4a, and W4b)
 
+**Status: Not yet started.** Unblocked — W3, W4a, and W4b have all merged.
+
 - Full local gate: `bundle exec rake default:parallel` (and a serial `rake default`
   smoke for JRuby parity if feasible).
 - Confirm W3, W4a, and W4b have all merged so the verification reflects the final
@@ -739,6 +763,9 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
   progress tracker: mark Step B ✅ and bump the Phase 4 percentage.
 
 ### W6 — Remove stale `Git::Base`/`Git::Lib` references from active skills (independent docs-only PR)
+
+**Status: Plan merged** (PR #1506, `docs/plan-w6-remove-stale-base-lib-refs` branch).
+Execution not yet started.
 
 This workstream has **no dependency on W2/W3/W4a/W4b/W5** — it is not gated by,
 and does not gate, the Test::Unit removal work above. It exists because Phase 4
