@@ -32,5 +32,31 @@ RSpec.describe Git::Branch, :integration do
         expect(repo.branches.remote.map(&:full)).not_to include('remotes/origin/feature')
       end
     end
+
+    context 'when the branch is the current branch' do
+      before { repo.branch('feature').checkout }
+
+      it 'raises Git::Error' do
+        expect { repo.branch('feature').delete }.to raise_error(Git::Error, /cannot delete branch|checked out/)
+      end
+    end
+  end
+
+  describe '#create' do
+    it 'creates the branch without switching to it' do
+      repo.branch('new-branch').create
+
+      expect(repo.branch('new-branch').current).to be(false)
+      expect(repo.branches.local.map(&:name)).to include('new-branch')
+    end
+  end
+
+  describe '#checkout' do
+    it 'switches HEAD to the checked-out branch' do
+      repo.branch('new-branch').create
+      repo.branch('new-branch').checkout
+
+      expect(repo.branch('new-branch').current).to be(true)
+    end
   end
 end

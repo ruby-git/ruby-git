@@ -99,6 +99,47 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
         expect(result).to be_a(String)
       end
     end
+
+    context 'with no remote or branch arguments (tracking branch workflow)' do
+      let(:clone_parent_dir) { Dir.mktmpdir('clone_parent') }
+      let(:bare_origin_dir) { File.join(clone_parent_dir, 'origin.git') }
+      let(:clone_dir) { File.join(clone_parent_dir, 'clone') }
+
+      after { FileUtils.rm_rf(clone_parent_dir) }
+
+      context 'when the clone has a new commit to push' do
+        let(:clone_instance) do
+          Git.init(bare_origin_dir, bare: true)
+          git = Git.clone(bare_origin_dir, clone_dir)
+          git.config_set('user.email', 'test@example.com')
+          git.config_set('user.name', 'Test User')
+          git.config_set('commit.gpgsign', 'false')
+          File.write(File.join(clone_dir, 'file.txt'), 'content')
+          git.add('file.txt')
+          git.commit('First commit')
+          Git::Repository.new(execution_context: git.execution_context)
+        end
+
+        it 'returns a String' do
+          expect(clone_instance.push).to be_a(String)
+        end
+      end
+
+      context 'when the clone has no commits to push' do
+        let(:clone_instance) do
+          Git.init(bare_origin_dir, bare: true)
+          git = Git.clone(bare_origin_dir, clone_dir)
+          git.config_set('user.email', 'test@example.com')
+          git.config_set('user.name', 'Test User')
+          git.config_set('commit.gpgsign', 'false')
+          Git::Repository.new(execution_context: git.execution_context)
+        end
+
+        it 'raises Git::FailedError' do
+          expect { clone_instance.push }.to raise_error(Git::FailedError, /push/)
+        end
+      end
+    end
   end
 
   # ---------------------------------------------------------------------------

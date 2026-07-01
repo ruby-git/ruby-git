@@ -35,6 +35,23 @@ RSpec.describe Git::Repository::Branching, :integration do
         expect(described_instance.current_branch).to eq('HEAD')
       end
     end
+
+    context 'when the repository has no commits (unborn branch)' do
+      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
+      let(:unborn_repo) do
+        r = Git.init(unborn_repo_dir, initial_branch: 'new-branch')
+        r.config_set('user.email', 'test@example.com')
+        r.config_set('user.name', 'Test User')
+        r
+      end
+      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
+
+      after { FileUtils.rm_rf(unborn_repo_dir) }
+
+      it 'returns the initial branch name' do
+        expect(unborn_instance.current_branch).to eq('new-branch')
+      end
+    end
   end
 
   describe '#checkout_file' do
@@ -70,6 +87,25 @@ RSpec.describe Git::Repository::Branching, :integration do
       it 'creates and switches to the new branch' do
         described_instance.checkout('feature', new_branch: true, start_point: 'HEAD')
         expect(described_instance.current_branch).to eq('feature')
+      end
+    end
+
+    context 'when the repository has no commits' do
+      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
+      let(:unborn_repo) do
+        r = Git.init(unborn_repo_dir, initial_branch: 'master')
+        r.config_set('user.email', 'test@example.com')
+        r.config_set('user.name', 'Test User')
+        r.config_set('commit.gpgsign', 'false')
+        r
+      end
+      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
+
+      after { FileUtils.rm_rf(unborn_repo_dir) }
+
+      it 'raises Git::FailedError' do
+        expect { unborn_instance.checkout('master') }
+          .to raise_error(Git::FailedError, /master/)
       end
     end
   end

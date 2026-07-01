@@ -171,4 +171,20 @@ RSpec.describe Git::Repository::Staging, :integration do
       end
     end
   end
+
+  describe '#rm' do
+    before do
+      write_file('README.txt', 'hello world')
+      repo.add('README.txt')
+      repo.commit('Initial commit')
+    end
+
+    context 'when removing a tracked file with force: true' do
+      it 'removes the file from the working tree' do
+        described_instance.rm('README.txt', force: true)
+
+        expect(file_exist?('README.txt')).to be(false)
+      end
+    end
+  end
 end

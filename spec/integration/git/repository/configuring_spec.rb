@@ -76,6 +76,17 @@ RSpec.describe Git::Repository, :integration do
         expect(result['section.key']).to eq('file_value')
       end
     end
+
+    context 'when include.path is set to chain a custom config file' do
+      let(:custom_config_path) { File.join(repo_dir, 'custom.config') }
+
+      it 'makes settings from the included file visible via config' do
+        described_instance.config('user.name', 'bully', file: custom_config_path)
+        described_instance.config('include.path', custom_config_path)
+
+        expect(described_instance.config('user.name')).to eq('bully')
+      end
+    end
   end
 
   describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do
