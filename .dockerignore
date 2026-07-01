@@ -1,0 +1,27 @@
+# Keep the Docker build context free of host-generated artifacts so the
+# image always builds gems fresh instead of picking up stale or
+# host-specific state (see .gitignore for the equivalent git-tracked list).
+#
+# .git is also excluded: the Dockerfile initializes its own throwaway git
+# repo instead of relying on the host's, since the host's `.git` may be a
+# linked-worktree pointer file referencing a path that doesn't exist in the
+# image (see docker/test/Dockerfile for details).
+.git
+*.gem
+*.kpf
+*.sw?
+.DS_Store
+.bundle/
+vendor/bundle/
+coverage
+doc
+.yardoc
+pkg
+rdoc
+Gemfile.lock
+node_modules
+package-lock.json
+ai-prompt.erb
+rubocop-report.json
+.rspec_status
+git-reference/

@@ -7,53 +7,21 @@ inherit_mode:
   merge:
     - Exclude
 
-# Don't care about complexity offenses in the TestUnit tests This exclusions
-# will be removed when we switch to RSpec.
-Metrics/CyclomaticComplexity:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-
-Metrics/ClassLength:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-
-Metrics/AbcSize:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-
-# Don't care so much about length of methods in tests
-Metrics/MethodLength:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-
-# Allow test data to have long lines
-Layout/LineLength:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-    - "*.gemspec"
-
-# Testing, gemspec, and command DSL blocks are intentionally long
-Metrics/BlockLength:
-  Exclude:
-    - "tests/test_helper.rb"
-    - "tests/units/**/*"
-    - "*.gemspec"
-    - "lib/git/commands/**/*.rb"
-
 # lib/git.rb is the gem's main entry-point module and is expected to be long
 Metrics/ModuleLength:
   Exclude:
     - "lib/git.rb"
 
-# Don't force every test class to be described
-Style/Documentation:
+# gemspec and command DSL blocks are intentionally long
+Metrics/BlockLength:
   Exclude:
-    - "tests/units/**/*"
+    - "*.gemspec"
+    - "lib/git/commands/**/*.rb"
+
+# Allow gemspec to have long lines
+Layout/LineLength:
+  Exclude:
+    - "*.gemspec"
 
 Style/OneClassPerFile:
   Enabled: false

@@ -1,0 +1,21 @@
+#!/bin/bash -e
+
+# This script is used to run the RSpec suite for this project in a Docker container.
+#
+# bin/spec-in-docker
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"/..
+
+IMAGE=ruby-git-dev-tester
+CONTAINER=ruby-git-dev-tester-run
+
+docker rm -f "$CONTAINER" > /dev/null 2>&1 || true
+
+docker build --force-rm -f docker/test/Dockerfile -t "$IMAGE" .
+
+status=0
+docker run --name "$CONTAINER" "$IMAGE" "$@" || status=$?
+
+[ "$status" -ne 0 ] && docker logs "$CONTAINER"
+docker rm -f "$CONTAINER" > /dev/null 2>&1 || true
+exit "$status"

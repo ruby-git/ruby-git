@@ -30,7 +30,12 @@ RSpec.describe 'CommandLine::Capturing#run raise_on_failure integration' do
 end
 
 RSpec.describe Git::CommandLine::Capturing, :integration do
-  let(:described_instance) { described_class.new({}, 'ruby', ['bin/command_line_test'], Logger.new(nil)) }
+  let(:command_line_test_fixture) do
+    File.expand_path('../../support/fixtures/command_line_test', __dir__)
+  end
+  let(:described_instance) do
+    described_class.new({}, 'ruby', [command_line_test_fixture], Logger.new(nil))
+  end
 
   describe '#run' do
     context 'when the command exceeds the timeout' do

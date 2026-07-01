@@ -4,8 +4,9 @@ require 'spec_helper'
 
 RSpec.describe Git::Stash do
   # Git::Stash accepts either Git::Repository (new form) or Git::Base (legacy) as base.
-  # These specs cover the Git::Repository path; the Git::Base path is exercised by the
-  # legacy integration tests in tests/units/test_stashes.rb.
+  # These specs cover the Git::Repository path with stubbed collaborators; the
+  # Git::Base path is exercised end-to-end by
+  # spec/integration/git/repository/stashing_spec.rb.
 
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
   let(:repository) { Git::Repository.new(execution_context: execution_context) }
