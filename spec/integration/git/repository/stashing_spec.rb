@@ -71,6 +71,21 @@ RSpec.describe Git::Repository::Stashing, :integration do
         expect(result.first.last).to eq('saving: work')
       end
     end
+
+    context 'when the stash was created from a detached HEAD' do
+      before do
+        sha = repo.log(1).execute.first.sha
+        repo.checkout(sha)
+        write_file('file.txt', 'detached change')
+        repo.stash_save('detached stash')
+      end
+
+      it 'returns the stash message without a branch prefix' do
+        result = described_instance.stashes_all
+        # Git stores detached-HEAD stashes without an "On <branch>:" prefix
+        expect(result.first).to eq([0, 'detached stash'])
+      end
+    end
   end
 
   describe '#stash_list' do
@@ -98,6 +113,42 @@ RSpec.describe Git::Repository::Stashing, :integration do
     it 'contains the stash message' do
       allow(Git::Deprecation).to receive(:warn)
       expect(described_instance.stash_list).to include('WIP')
+    end
+  end
+
+  describe '#stash_save' do
+    context 'when the repository has no commits (unborn branch)' do
+      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
+      let(:unborn_repo) { init_test_repo(unborn_repo_dir) }
+      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
+
+      before do
+        File.write(File.join(unborn_repo_dir, 'file.txt'), 'hello')
+        unborn_repo.add('file.txt')
+      end
+
+      after { FileUtils.rm_rf(unborn_repo_dir) }
+
+      it 'raises Git::FailedError' do
+        expect { unborn_instance.stash_save('unborn stash') }.to raise_error(Git::FailedError, /stash/)
+      end
+    end
+  end
+
+  describe '#stash_apply' do
+    context 'after saving a stash and resetting the working tree' do
+      before do
+        write_file('file.txt', 'modified content')
+        repo.add('file.txt')
+        described_instance.stash_save('testing')
+        repo.reset
+      end
+
+      it 'restores the stashed changes to the working tree' do
+        described_instance.stash_apply
+
+        expect(repo.status.changed.keys).to include('file.txt')
+      end
     end
   end
 end

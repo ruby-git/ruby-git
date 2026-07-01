@@ -47,6 +47,75 @@ RSpec.describe Git::Repository, :integration do
         expect(repository.repo).to eq(Pathname.new(File.join(repo_dir, '.git')))
       end
     end
+
+    context 'when opening a submodule checkout' do
+      context 'with a submodule added at the repository root' do
+        let(:submodule_parent_dir) { Dir.mktmpdir('submodule_parent') }
+        let(:submodule_dir) { File.join(submodule_parent_dir, 'submodule') }
+        let(:main_repo_dir) { File.join(submodule_parent_dir, 'repo') }
+
+        let(:submodule_repo) do
+          submodule = init_test_repo(submodule_dir)
+          File.write(File.join(submodule_dir, 'README.md'), '# Submodule')
+          submodule.add('README.md')
+          submodule.commit('Add README.md')
+          submodule
+        end
+
+        before do
+          submodule_repo
+          main = init_test_repo(main_repo_dir)
+          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository')
+          main.add('README.md')
+          main.commit('Add README.md')
+
+          Dir.chdir(main_repo_dir) do
+            system('git', '-c', 'protocol.file.allow=always', 'submodule', 'add', '../submodule', 'submodule',
+                   out: File::NULL, err: File::NULL, exception: true)
+            system('git', 'commit', '-am', 'Add submodule', out: File::NULL, err: File::NULL, exception: true)
+          end
+        end
+
+        after { FileUtils.rm_rf(submodule_parent_dir) }
+
+        it "resolves the submodule checkout's HEAD to the submodule's own commit" do
+          submodule_checkout = described_class.open(File.join(main_repo_dir, 'submodule'))
+          expect(submodule_checkout.object('HEAD').sha).to eq(submodule_repo.object('HEAD').sha)
+        end
+      end
+
+      context 'with a submodule containing a nested subdirectory' do
+        let(:submodule_parent_dir) { Dir.mktmpdir('submodule_parent') }
+        let(:submodule_dir) { File.join(submodule_parent_dir, 'submodule') }
+        let(:main_repo_dir) { File.join(submodule_parent_dir, 'repo') }
+
+        before do
+          submodule = init_test_repo(submodule_dir)
+          FileUtils.mkdir_p(File.join(submodule_dir, 'subdir'))
+          File.write(File.join(submodule_dir, 'subdir', 'README.md'), '# Submodule')
+          submodule.add('subdir/README.md')
+          submodule.commit('Add README.md')
+
+          main = init_test_repo(main_repo_dir)
+          File.write(File.join(main_repo_dir, 'README.md'), '# Main Repository')
+          main.add('README.md')
+          main.commit('Add README.md')
+
+          Dir.chdir(main_repo_dir) do
+            system('git', '-c', 'protocol.file.allow=always', 'submodule', 'add', '../submodule', 'submodule',
+                   out: File::NULL, err: File::NULL, exception: true)
+            system('git', 'commit', '-am', 'Add submodule', out: File::NULL, err: File::NULL, exception: true)
+          end
+        end
+
+        after { FileUtils.rm_rf(submodule_parent_dir) }
+
+        it 'resolves the repository root to the submodule when opened from its subdirectory' do
+          submodule_subdir_checkout = described_class.open(File.join(main_repo_dir, 'submodule', 'subdir'))
+          expect(submodule_subdir_checkout.ls_files.keys).to include('subdir/README.md')
+        end
+      end
+    end
   end
 
   describe '.bare' do

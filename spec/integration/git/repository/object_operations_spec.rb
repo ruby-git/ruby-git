@@ -201,6 +201,30 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result['parent']).to be_an(Array)
       end
     end
+
+    context 'with a real SSH-signed commit',
+            if: !Gem.win_platform?,
+            skip: unless_git('2.34', 'SSH commit signing') || unless_command('ssh-keygen', 'SSH commit signing') do
+      let(:ssh_key_file) { File.join(repo_dir, '.git', 'test-key') }
+
+      before do
+        system('ssh-keygen', '-t', 'ed25519', '-N', '', '-C', 'test key', '-f', ssh_key_file,
+               out: File::NULL, err: File::NULL, exception: true)
+        repo.config_set('gpg.format', 'ssh')
+        repo.config_set('user.signingkey', ssh_key_file)
+
+        write_file('SIGNED.md', '# Signed commit content')
+        repo.add('SIGNED.md')
+        execution_context.command_capturing('commit', '-S', '-m', 'Signed, sealed, delivered')
+      end
+
+      it 'parses the gpgsig header as an SSH signature and the message correctly' do
+        result = described_instance.cat_file_commit('HEAD')
+
+        expect(result['gpgsig']).to match(/-----BEGIN SSH SIGNATURE-----.*-----END SSH SIGNATURE-----/m)
+        expect(result['message']).to eq("Signed, sealed, delivered\n")
+      end
+    end
   end
 
   describe '#cat_file_tag' do
