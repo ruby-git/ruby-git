@@ -9,7 +9,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Phase 4 Step B (finalize test suite) is the next step](#phase-4-step-b-finalize-test-suite-is-the-next-step)
+    - [Phase 4 Steps A and B complete — W6 and Step C remain](#phase-4-steps-a-and-b-complete--w6-and-step-c-remain)
     - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🚧 In Progress | Final cleanup and release — Step A complete; Step B in progress (W2 ✅, W3/W4a/W4b ✅, W5 pending, W6 plan merged/execution pending); Step C partial | 10% | 55% |
-| **TOTAL** | -- | -- | **100%** | **96%** |
+| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 (remove stale `Git::Base`/`Git::Lib` skill refs) pending; Step C partial | 10% | 70% |
+| **TOTAL** | -- | -- | **100%** | **97%** |
 
 ### Facade Modules Completed
 
@@ -85,7 +85,7 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Phase 4 Step B (finalize test suite) is the next step
+#### Phase 4 Steps A and B complete — W6 and Step C remain
 
 Phase 4 **Step A — Remove old code** is ✅ complete. The atomic removal landed in
 [PR #1456](https://github.com/ruby-git/ruby-git/pull/1456) (commit `c1c53999`),
@@ -96,12 +96,18 @@ item. The only remaining `Git::Base` / `Git::Lib` strings in `lib/` are YARD/com
 references to historical 4.x behavior, which the Step A done-criteria explicitly
 allow.
 
+Phase 4 **Step B — Finalize test suite** is ✅ complete. All 192 PORT rows were ported
+to RSpec (batches U1–U21), `tests/` and the Test::Unit tooling were removed (W3), the
+`extract-*` skills were deprecated (W4a), Test::Unit documentation references were
+removed (W4b), and the full quality gate (`bundle exec rake default:parallel`) was
+verified green — 5668 unit + 893 integration examples, 0 failures (W5).
+
 The remaining redesign work is the rest of Phase 4:
 
 | Step | Status | Summary |
 | ---- | ------ | ------- |
 | A — Remove old code | ✅ Complete | `Git::Base`/`Git::Lib` and the bridge deleted ([PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)) |
-| B — Finalize test suite | 🚧 In Progress | W2 ✅ (all 159 PORT rows ported and merged, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 (verify & finalize) pending; W6 plan ✅ merged, execution pending |
+| B — Finalize test suite | ✅ Complete | W2 ✅ (all 192 PORT rows ported and merged, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 ✅ (gate green: 5668 unit + 893 integration, 0 failures) |
 | C — Update documentation | 🚧 Partial | `UPGRADING.md` and broad `@api private` coverage exist; verify `yard stats` reports no missing public-API docs and that `README.md` reflects the new entry points |
 
 The following earlier prerequisites are all ✅ complete:
@@ -1550,7 +1556,7 @@ release.*
 
 ```mermaid
 graph LR
-    A["A ✅ Remove old code"] --> B["B 🚧 Finalize test suite"]
+    A["A ✅ Remove old code"] --> B["B ✅ Finalize test suite"]
     B --> C["C 🚧 Update documentation"]
 ```
 
@@ -1570,24 +1576,19 @@ graph LR
 
 #### Step B — Finalize test suite
 
-**Status: 🚧 In progress** — see the detailed execution plan in
-[Phase 4 - Step B.md](Phase%204%20-%20Step%20B.md). The legacy-test audit (W1) and matrix
-enrichment (W1.5) are complete and signed off; porting, documentation salvage, and
-removal (W2–W5 and W-Doc) remain.
+**Status: ✅ Complete.**
 
-- Convert any remaining, relevant Test::Unit tests to RSpec.
-- Remove the `test-unit` dependency from `git.gemspec`.
-- Ensure the RSpec suite has comprehensive coverage for the new architecture.
+All 192 PORT rows from the W1/W1.5 audit were ported to RSpec across batches U1–U21
+(W2). The `tests/` directory and all Test::Unit tooling were removed (W3). The
+`extract-*` skills were deprecated (W4a). All Test::Unit documentation references
+were removed (W4b). The full quality gate was verified green (W5): 5668 unit examples
++ 893 integration examples, 0 failures; RuboCop clean; YARD 83.6% (threshold 75%);
+gem build successful. W6 (remove stale `Git::Base`/`Git::Lib` skill references from
+active skills) is planned and its design is merged — execution is the next pending
+task in Phase 4.
 
-**Audit outcome (W1 + W1.5):** all 484 legacy test cases were classified per-method,
-layer-verified, and enriched for execution → 292 non-ported rows, 192 PORT (158 to
-`spec/unit/`, 34 to minimal `spec/integration/`). The authoritative enriched matrix is
-persisted at [phase-4-step-b-test-audit.tsv](phase-4-step-b-test-audit.tsv) with
-`disposition`, `target_spec`, and `port_status` columns (the TSV is the single source of
-truth for per-row port progress).
-
-**Done when**: The `tests/` directory is empty or removed; `test-unit` is no longer
-in `git.gemspec`; RSpec is the sole test framework.
+See the detailed execution plan in
+[Phase 4 - Step B.md](Phase%204%20-%20Step%20B.md).
 
 #### Step C — Update documentation
 
