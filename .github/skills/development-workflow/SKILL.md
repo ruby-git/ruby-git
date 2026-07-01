@@ -205,8 +205,8 @@ When all tasks are complete, proceed to **Phase 3: FINALIZE**.
    - **Keep It Minimal:** Only write enough of a test to get an expected, failing
      result (the test should fail for the *right* reason).
    - **Execute and Analyze:** Run the specific test file (e.g.,
-     `bundle exec rspec spec/unit/git/commands/<command>_spec.rb` for RSpec or
-     `bundle exec bin/test <test_file>` for TestUnit) and analyze the output.
+     `bundle exec rspec spec/unit/git/commands/<command>_spec.rb`) and analyze the
+     output.
    - **Confirm Expected Failure:** Confirm it fails with an expected error (e.g.,
      assertion failure or missing definition).
    - **Validate:** If the test passes without implementation, the test is invalid or
@@ -474,20 +474,31 @@ Each task follows this cycle: **RED → GREEN → REFACTOR → VERIFY → COMMIT
 **RED:** Write a failing test that describes the desired behavior.
 
 ```ruby
-def test_creates_new_branch
-  @git.branch('feature').create
-  assert @git.branches.local.map(&:name).include?('feature')
+# spec/unit/git/commands/example_spec.rb
+it 'passes the --force flag when force: true is given' do
+  expect_command_capturing('example', '--force').and_return(command_result(''))
+
+  described_class.new(execution_context).call(force: true)
 end
-# Run: bundle exec bin/test test_branch → fails with NoMethodError
+# Run: bundle exec rspec spec/unit/git/commands/example_spec.rb
+#      → fails: NameError (Git::Commands::Example is not defined yet)
 ```
 
 **GREEN:** Write minimal code to make the test pass.
 
 ```ruby
-def create
-  @base.lib.branch_new(@name)
+# lib/git/commands/example.rb
+module Git
+  module Commands
+    class Example < Base
+      arguments do
+        literal 'example'
+        flag_option :force
+      end
+    end
+  end
 end
-# Run: bundle exec bin/test test_branch → passes
+# Run: bundle exec rspec spec/unit/git/commands/example_spec.rb → passes
 ```
 
 **REFACTOR:** Improve code quality without changing behavior, then run all tests.

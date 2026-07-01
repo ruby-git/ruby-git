@@ -862,11 +862,7 @@ process.stdin.on('end', () =>
 - The entire test suite must pass when `bundle exec rake default` is run from the
   project's local working copy.
 
-This project uses two test frameworks:
-
-- **RSpec** (`spec/`) - **Primary framework for all new tests.**
-- **Test::Unit** (`tests/units/`) - **Legacy test suite.** Maintained for existing
-  coverage but should not be extended for new features unless absolutely necessary.
+This project uses **RSpec** (`spec/`) as its sole test framework.
 
 #### RSpec best practices
 
@@ -919,13 +915,7 @@ correctly parses git's branch list format, not that git can create branches.
 While working on specific features, you can run tests using:
 
 ```bash
-# Run all tests (TestUnit + RSpec):
-$ bundle exec rake test_all
-
-# Run only TestUnit integration tests:
-$ bundle exec rake test
-
-# Run only RSpec tests (unit + integration):
+# Run all RSpec tests (unit + integration):
 $ bundle exec rake spec
 
 # Run only RSpec unit tests:
@@ -934,17 +924,11 @@ $ bundle exec rake spec:unit
 # Run only RSpec integration tests:
 $ bundle exec rake spec:integration
 
-# Run a single TestUnit file (from tests/units):
-$ bin/test test_object
-
-# Run multiple TestUnit files:
-$ bin/test test_object test_archive
-
 # Run a specific RSpec file:
 $ bundle exec rspec spec/unit/git/commands/add_spec.rb
 
-# Run TestUnit tests with a different version of the git command line:
-$ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
+# Run tests with a different version of the git command line:
+$ GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bundle exec rake spec
 ```
 
 New and updated public-facing features should be documented in the project's
@@ -1011,7 +995,7 @@ assert_equal(Git::Version.new(2, 30, 2), Git.git_version)
 Tests can be run using the newly built Git version as follows:
 
 ```shell
-GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bin/test
+GIT_PATH=/Users/james/Downloads/git-2.30.2/bin-wrappers bundle exec rake spec
 ```
 
 Note: `GIT_PATH` refers to the directory containing the `git` executable.

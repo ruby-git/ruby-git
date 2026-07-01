@@ -40,20 +40,15 @@ or explanation does not require a skill.
 | Purpose | Command |
 | --- | --- |
 | First-time setup | `bin/setup` |
-| Run all tests and linters(CI-equivalent) | `bundle exec rake default:parallel` |
-| Run all tests (both suites) | `bundle exec rake test-all:parallel` |
-| Run Test::Unit tests | `bundle exec rake test:parallel` |
+| Run all tests and linters (CI-equivalent) | `bundle exec rake default` |
+| Run all tests and linters (force parallel) | `bundle exec rake default:parallel` |
 | Run all RSpec tests | `bundle exec rake spec:parallel` |
 | Run RSpec unit tests | `bundle exec rake spec:unit:parallel` |
 | Run RSpec integration tests | `bundle exec rake spec:integration:parallel` |
-| Run a specific Test::Unit test | `bundle exec bin/test <test-base-name>` |
 | Run a specific RSpec spec | `bundle exec rspec <path>` |
 | Run linters | `bundle exec rake rubocop yard build` |
 
-**Test suites:** `spec/` (RSpec) is the current suite — all new tests go here.
-`tests/` (Test::Unit) is legacy; only touch it when modifying existing tests there
-or adding pre-migration coverage to verify that a `Git::Lib` → `Git::Commands`
-migration doesn't break existing behavior.
+**Test suite:** `spec/` (RSpec) is the sole test suite — all new tests go here.
 
 ## Commit Conventions
 
