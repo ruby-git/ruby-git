@@ -34,12 +34,7 @@ coding standard details, or implementation constraints.
 - [Command Implementation](../command-implementation/SKILL.md) — generating and
   reviewing command classes in the layered architecture
 - [Facade Implementation](../facade-implementation/SKILL.md) — generating and
-  reviewing `Git::Repository::*` facade methods (the planned v5.0.0 facade
-  layer is being introduced incrementally during the architectural redesign;
-  `Git::Base` / `Git::Lib` remain the current public API until the migration
-  completes)
-- [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) —
-  migrating public methods from `Git::Base` / `Git::Lib` into facade methods
+  reviewing `Git::Repository::*` facade methods, the gem's public API layer
 - [YARD Documentation](../yard-documentation/SKILL.md) — documentation
   standards
 
@@ -49,8 +44,8 @@ coding standard details, or implementation constraints.
 
 | Class | Role |
 | --- | --- |
-| `Git::Base` | Main facade — entry point for all user-facing operations |
-| `Git::Lib` | Low-level adapter/facade; calls `Git::Commands::*`, builds rich objects via parsers |
+| `Git::Repository` | Main facade — entry point for all user-facing operations; methods live in `Git::Repository::*` topic modules under `lib/git/repository/`, included into the class |
+| `Git::ExecutionContext::*` | Configured subprocess runner; holds binary path, env vars, and global opts; provides `#command_capturing`/`#command_streaming` to command classes |
 | `Git::Commands::*` | Command classes: define CLI API, bind args, execute → return `CommandLineResult` |
 | `Git::CommandLine` | Subprocess execution: escaping, timeout, stdout/stderr capture |
 | `Git::Parsers::*` | Transform raw stdout into structured data |
@@ -67,7 +62,7 @@ coding standard details, or implementation constraints.
 
 - `lib/git/` — Core library code
 - `lib/git/commands/` — Command classes (new architecture)
-- `tests/units/` — Legacy Test::Unit suite
+- `lib/git/repository/` — Facade topic modules (`Git::Repository::*`)
 - `spec/unit/` — RSpec unit tests (mocked execution context)
 - `spec/integration/` — RSpec integration tests (real git repositories)
 - `spec/support/` — Shared test contexts and helpers
@@ -81,9 +76,9 @@ coding standard details, or implementation constraints.
 The three-layer architecture separates concerns cleanly:
 
 ```
-Git::Base (facade)
-  └── Git::Lib (adapter — pre-processes args, builds rich objects)
-        └── Git::Commands::* (defines CLI API, binds args, executes)
+Git::Repository (facade — topic modules under lib/git/repository/)
+  └── Git::Commands::* (defines CLI API, binds args, executes via execution_context)
+        └── Git::ExecutionContext::* (configured subprocess runner: env, binary, global opts)
               └── Git::CommandLine (subprocess execution)
 ```
 
@@ -99,13 +94,11 @@ Git::Base (facade)
     for the same operation with different output modes are an anti-pattern.
 - **Parser layer** (`Git::Parsers::*`): Transforms raw stdout/stderr into structured
   Ruby data. No execution.
-- **Facade layer** (`Git::Lib`): Pre-processes caller arguments, invokes the right
-  command class, calls parsers, constructs rich response objects. **Parser-contract
-  options** (e.g. `no_color: true`, `pretty: 'raw'`, `format: FORMAT_STRING`) are
-  passed explicitly at the facade call site — this makes the parser contract
-  auditable by reading `Git::Lib`. Being incrementally migrated to `Git::Repository`.
-- **Interface layer** (`Git::Base`): User-facing API. Delegates to `Git::Lib`.
-  Returns domain objects.
+- **Facade layer** (`Git::Repository::*`): Pre-processes caller arguments, invokes
+  the right command class, calls parsers, constructs rich response objects.
+  **Parser-contract options** (e.g. `no_color: true`, `pretty: 'raw'`,
+  `format: FORMAT_STRING`) are passed explicitly at the facade call site — this makes
+  the parser contract auditable by reading the topic module method.
 
 `Git::Commands::Base` provides default `#initialize(execution_context)` and `#call`.
 Command classes that need non-zero successful exits declare
@@ -115,7 +108,7 @@ Command classes that need non-zero successful exits declare
 
 Command classes are neutral, faithful representations of the git CLI. They declare
 options via the DSL but never embed policy choices (output-control flags, editor
-suppression, progress, verbose mode). The facade (`Git::Lib`) sets safe defaults
+suppression, progress, verbose mode). The facade (`Git::Repository::*`) sets safe defaults
 at each call site. Some defaults are **fixed** (not in `ALLOWED_OPTS` — rejected by
 `assert_valid_opts!` before reaching the command); others are **overridable** (in
 `ALLOWED_OPTS`, placed before the caller's `**opts` so the caller's value wins).
@@ -209,7 +202,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for authoritative, complete guideli
 
 - **Lightweight wrapper** — minimal abstraction over `git` CLI
 - **Principle of least surprise** — predictable, follows git conventions
-- **Direct CLI mapping** — `git add` → `Git::Base#add`; use prefix + suffix for
+- **Direct CLI mapping** — `git add` → `Git::Repository#add`; use prefix + suffix for
   multi-purpose commands (`#ls_files_untracked`, `#ls_files_staged`)
 - **Parameter naming** mirrors long CLI options
 - **Rich output objects** — translate git output to Ruby objects when useful to
@@ -233,7 +226,7 @@ swallow exceptions silently.
 ### Path Handling
 
 - Working-directory paths: relative to repo working directory
-- Paths stored as `Pathname` objects on `Git::Base`
+- Paths stored as `Pathname` objects on `Git::Repository`
 - `Git::EscapedPath` for paths with special characters
 - Handle Windows path separators; test with Unicode filenames
 
@@ -292,7 +285,7 @@ swallow exceptions silently.
 ### Adding new commands
 
 Follow the three-layer pattern: command class (CLI contract) → parser (output
-transform) → `Git::Lib` method (orchestration + rich object). See
+transform) → `Git::Repository::*` facade method (orchestration + rich object). See
 [Command Implementation](../command-implementation/SKILL.md).
 
 ### Working with paths

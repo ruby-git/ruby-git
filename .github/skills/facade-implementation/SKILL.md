@@ -48,9 +48,6 @@ Facade Implementation review: Git::Repository::Committing#commit.
   reviewing tests)
 - [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — facade-specific
   YARD rules for module-level and method-level docs
-- [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) — when a
-  new facade method is migrated from `Git::Base` or `Git::Lib`, the extraction
-  workflow drives this skill in scaffold/update mode
 - [Command Implementation](../command-implementation/SKILL.md) — the underlying
   `Git::Commands::*` classes a facade method calls. Scaffold any missing command
   class first.
@@ -69,8 +66,6 @@ The user provides:
 2. **Git operation(s)** — which `Git::Commands::*` class(es) the method orchestrates.
    If the relevant command class does not exist yet, scaffold it first via
    [Command Implementation](../command-implementation/SKILL.md).
-3. **Optional context** — the source `Git::Lib` / `Git::Base` method when migrating
-   (handled by [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md)).
 
 > **Note:** `Git::Repository` is intentionally empty during early phases of the
 > redesign. Its `initialize(execution_context:)` constructor is introduced

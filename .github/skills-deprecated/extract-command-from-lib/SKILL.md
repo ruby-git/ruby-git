@@ -55,22 +55,22 @@ from the `#command` call (or both).
 
 Before starting, you **MUST** load the following skill(s) in their entirety:
 
-- [YARD Documentation](../yard-documentation/SKILL.md) — authoritative
+- [YARD Documentation](../../skills/yard-documentation/SKILL.md) — authoritative
   source for YARD formatting rules and writing standards;
 
 ## Related skills
 
 Run or reference these skills during the workflow:
 
-- [Command Implementation](../command-implementation/SKILL.md) — generates and reviews `Git::Commands::*`
+- [Command Implementation](../../skills/command-implementation/SKILL.md) — generates and reviews `Git::Commands::*`
   classes, unit tests, integration tests, and YARD docs (used in Step 4 if the
   command class does not exist yet); also the canonical class-shape checklist,
   phased rollout gates, and internal compatibility contracts
-- [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
-- [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
-- [Command YARD Documentation](../command-yard-documentation/SKILL.md) — documentation completeness for command classes
-- [Review Cross-Command Consistency](../review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
-- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
+- [Review Arguments DSL](../../skills/review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
+- [Command Test Conventions](../../skills/command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
+- [Command YARD Documentation](../../skills/command-yard-documentation/SKILL.md) — documentation completeness for command classes
+- [Review Cross-Command Consistency](../../skills/review-cross-command-consistency/SKILL.md) — sibling consistency within a command family
+- [Review Backward Compatibility](../../skills/review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
 - [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) — the
   follow-on extraction that moves the public method from `Git::Base` /
   `Git::Lib` into a `Git::Repository::*` facade method (Phase 4 deletes both
@@ -192,7 +192,7 @@ Before making any changes, verify that `tests/units/` has adequate tests for the
 2. **If the command class already exists**, skip to Step 5.
 
 3. **If the command class does not exist**, scaffold it using the
-  [Command Implementation](../command-implementation/SKILL.md) skill. This produces:
+  [Command Implementation](../../skills/command-implementation/SKILL.md) skill. This produces:
 
    - `lib/git/commands/<command>.rb` (or `lib/git/commands/<family>/<action>.rb`)
    - `spec/unit/git/commands/<command>_spec.rb`
@@ -292,7 +292,7 @@ changes were needed for that step):
 
 During implementation, you may use multiple task-level commits. Before opening a
 PR, follow the repository finalize workflow (see
-[Development Workflow](../development-workflow/SKILL.md)) and squash commits as
+[Development Workflow](../../skills/development-workflow/SKILL.md)) and squash commits as
 required.
 
 **Issue and PR references in commit bodies:** Do not use `#<number>` in the
