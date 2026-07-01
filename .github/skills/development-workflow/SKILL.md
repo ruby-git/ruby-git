@@ -65,11 +65,6 @@ needed.
   reviewing `Git::Commands::*` classes during implementation
 - [Facade Implementation](../facade-implementation/SKILL.md) — scaffolding and
   reviewing `Git::Repository::*` facade methods during implementation
-- [Extract Command from Lib](../extract-command-from-lib/SKILL.md) — migrating a
-  `#command` call in `Git::Lib` into a `Git::Commands::*` class
-- [Extract Facade from Base/Lib](../extract-facade-from-base-lib/SKILL.md) —
-  migrating a public method from `Git::Base` / `Git::Lib` into a
-  `Git::Repository::*` facade method
 
 ## Core TDD Principles
 

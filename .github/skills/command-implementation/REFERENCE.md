@@ -878,10 +878,6 @@ Key points for the facade method:
 - **Return the legacy type** — typically `.stdout` or a parsed struct, not
   `CommandLineResult`.
 
-See [Extract Command from Lib](../extract-command-from-lib/SKILL.md) for the complete
-delegation workflow and additional patterns (stdout passthrough, parsed return
-values, opts-hash normalization).
-
 ## Internal compatibility contract
 
 This is the canonical location for the internal compatibility contract. Other

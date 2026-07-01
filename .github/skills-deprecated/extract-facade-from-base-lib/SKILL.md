@@ -67,24 +67,24 @@ Extract Facade: Git::Lib#branches_all (called publicly via g.lib.branches_all)
 
 Before starting, you **MUST** load the following skill(s):
 
-- [Facade Implementation](../facade-implementation/SKILL.md) — drives the actual
+- [Facade Implementation](../../skills/facade-implementation/SKILL.md) — drives the actual
   scaffolding of the new facade method
-- [YARD Documentation](../yard-documentation/SKILL.md) — baseline YARD rules
+- [YARD Documentation](../../skills/yard-documentation/SKILL.md) — baseline YARD rules
 
 ## Related skills
 
-- [Facade Implementation](../facade-implementation/SKILL.md) — used in Step 5 to
+- [Facade Implementation](../../skills/facade-implementation/SKILL.md) — used in Step 5 to
   scaffold the new facade method
-- [Facade Test Conventions](../facade-test-conventions/SKILL.md) — unit and
+- [Facade Test Conventions](../../skills/facade-test-conventions/SKILL.md) — unit and
   integration test conventions for the new facade method
-- [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — YARD docs
+- [Facade YARD Documentation](../../skills/facade-yard-documentation/SKILL.md) — YARD docs
   for the new facade module/method
 - [Extract Command from Lib](../extract-command-from-lib/SKILL.md) — sibling
   extraction skill that moves the underlying CLI call into a
   `Git::Commands::*` class. **Run first** when no command class exists yet.
-- [Command Implementation](../command-implementation/SKILL.md) — used in Step 4
+- [Command Implementation](../../skills/command-implementation/SKILL.md) — used in Step 4
   if a new `Git::Commands::*` class needs to be scaffolded
-- [Project Context](../project-context/SKILL.md) — three-layer architecture and
+- [Project Context](../../skills/project-context/SKILL.md) — three-layer architecture and
   Phase 4 deletion plan
 
 ## Input
@@ -126,7 +126,7 @@ implementation.
 > When migrating, the facade method **must** preserve this signature exactly
 > (e.g. `commit(message, opts = {})`) — even though greenfield facade methods
 > would prefer `**options` per
-> [facade-implementation REFERENCE.md — Choosing the method signature](../facade-implementation/REFERENCE.md#choosing-the-method-signature).
+> [facade-implementation REFERENCE.md — Choosing the method signature](../../skills/facade-implementation/REFERENCE.md#choosing-the-method-signature).
 > The legacy public contract wins during migration.
 
 ### Pattern B — `Git::Lib`-only (public-by-exposure)
@@ -286,11 +286,11 @@ Also state:
 - For `legacy-contract` methods, confirm the exact 4.x call shape is preserved
   verbatim (including rare `**opts` signatures).
 - Whether a new topic module is required (justify per
-  [facade-implementation REFERENCE.md](../facade-implementation/REFERENCE.md#decision-rules-for-adding-a-new-module)).
+  [facade-implementation REFERENCE.md](../../skills/facade-implementation/REFERENCE.md#decision-rules-for-adding-a-new-module)).
   When extracting one method at a time, scan `Git::Base` / `Git::Lib` for
   siblings on the same git topic and check
   `redesign/3_architecture_implementation.md` before deciding — see
-  [One-at-a-time extraction](../facade-implementation/REFERENCE.md#one-at-a-time-extraction-from-gitbase--gitlib).
+  [One-at-a-time extraction](../../skills/facade-implementation/REFERENCE.md#one-at-a-time-extraction-from-gitbase--gitlib).
 - The delegation strategy for `Git::Base` and/or `Git::Lib` (Step 6) — both
   remain in place during the migration window and delegate to the new facade.
 - For Pattern B: explicit note that `g.lib.foo` callers will need to migrate
@@ -338,7 +338,7 @@ preserves backward compatibility.
 The facade method calls one or more `Git::Commands::*` classes. If any required
 command class does not exist yet, scaffold it first using
 [Extract Command from Lib](../extract-command-from-lib/SKILL.md) (which in turn
-uses [Command Implementation](../command-implementation/SKILL.md)).
+uses [Command Implementation](../../skills/command-implementation/SKILL.md)).
 
 For Pattern C migrations, the source `Git::Base` method may not currently call
 through a `Git::Commands::*` class at all (it uses `command(...)` directly or
@@ -349,7 +349,7 @@ Skip this step when every required command class already exists.
 
 ### Step 5 — Implement the facade method
 
-Delegate to the [Facade Implementation](../facade-implementation/SKILL.md) skill
+Delegate to the [Facade Implementation](../../skills/facade-implementation/SKILL.md) skill
 in **Scaffold** or **Update** mode. That skill handles:
 
 - topic module selection
