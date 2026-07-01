@@ -113,6 +113,35 @@ def unless_git(minimum_version, feature)
   "#{feature} requires git #{minimum_version} or later; your git version is #{actual_version}"
 end
 
+# Returns `false` if `command` is found on `PATH`, otherwise a skip-reason string.
+# Use as the `skip:` metadata value for tests that depend on an optional external
+# executable (e.g. `ssh-keygen`) not guaranteed to be present in every test
+# environment.
+#
+# @param command [String] the executable name to look up on `PATH`
+#
+# @param feature [String] the feature name to include in the skip reason
+#
+# @return [false, String] `false` if `command` is found on `PATH`; otherwise a
+#   human-readable skip reason string
+#
+# @example Skip an example group when ssh-keygen is unavailable
+#   RSpec.describe MyFeature, skip: unless_command('ssh-keygen', 'SSH commit signing') do
+#     it 'works' do
+#       # ...
+#     end
+#   end
+#
+def unless_command(command, feature)
+  found = ENV.fetch('PATH', '').split(File::PATH_SEPARATOR).any? do |dir|
+    File.executable?(File.join(dir, command)) && !File.directory?(File.join(dir, command))
+  end
+
+  return false if found
+
+  "#{feature} requires the `#{command}` executable, which was not found on PATH"
+end
+
 def ci_build? = ENV.fetch('GITHUB_ACTIONS', 'false') == 'true'
 
 # Returns false when running on CI, or a skip-reason string when not on CI.

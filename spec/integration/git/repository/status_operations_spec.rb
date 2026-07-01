@@ -113,6 +113,32 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
           expect(described_instance.status.changed.keys).to include('README.md')
         end
       end
+
+      context 'when a tracked file is deleted and recreated with the same content' do
+        before do
+          content = read_file('README.md')
+          remove('README.md')
+          write_file('README.md', content)
+        end
+
+        it 'reports the file as unchanged via status.changed?' do
+          expect(described_instance.status.changed?('README.md')).to be(false)
+        end
+      end
+
+      context 'when opened from a subdirectory' do
+        before do
+          write_file('subdir/tracked.txt', 'tracked')
+          write_file('subdir/untracked.txt', 'untracked')
+          repo.add('subdir/tracked.txt')
+          repo.commit('Add subdir file')
+        end
+
+        it "returns untracked file paths relative to the repository's root" do
+          subdir_repo = Git.open(File.join(repo_dir, 'subdir'))
+          expect(subdir_repo.status.untracked.keys).to include('subdir/untracked.txt')
+        end
+      end
     end
   end
 
