@@ -40,17 +40,14 @@ requests unless the user asks for implementation.
 1. **Run the failing test:**
 
    ```bash
-   # TestUnit (legacy tests in tests/units/)
-   bundle exec bin/test <test_file_name>
-
    # RSpec unit test
    bundle exec rspec spec/unit/git/commands/<command>_spec.rb
 
    # RSpec integration test
    bundle exec rspec spec/integration/git/commands/<command>_spec.rb
 
-   # Specific test method (TestUnit)
-   bundle exec ruby -I lib:tests tests/units/test_base.rb -n test_method_name
+   # Specific example, by line number
+   bundle exec rspec spec/unit/git/commands/<command>_spec.rb:42
    ```
 
 2. **For suspected flaky tests, run multiple times:**
@@ -58,15 +55,15 @@ requests unless the user asks for implementation.
    ```bash
    for i in {1..20}; do
      echo "Run $i"
-     bundle exec bin/test <test_file> || break
+     bundle exec rspec <spec_file> || break
    done
    ```
 
 3. **Check test isolation** — run the test alone vs. within the full suite:
 
    ```bash
-   bundle exec bin/test <test_file>   # alone
-   bundle exec rake default           # full suite
+   bundle exec rspec <spec_file>   # alone
+   bundle exec rake default        # full suite
    ```
 
 ## Step 2: Investigate Root Cause
@@ -129,13 +126,12 @@ Present diagnostic findings to the user:
 
 ```bash
 # Run the specific test
-bundle exec bin/test <test_file>        # TestUnit
-bundle exec rspec <spec_file>           # RSpec
+bundle exec rspec <spec_file>
 
 # For flaky test fixes, run many times
 for i in {1..50}; do
   echo "Run $i"
-  bundle exec bin/test <test_file> || break
+  bundle exec rspec <spec_file> || break
 done
 
 # Run full suite
@@ -144,17 +140,22 @@ bundle exec rake default
 
 ## Project-Specific Considerations
 
-**Test frameworks:** This project uses both TestUnit (legacy tests in `tests/units/`)
-and RSpec (new tests in `spec/`). Run both when verifying changes.
+**Test framework:** This project uses RSpec exclusively (`spec/unit/` and
+`spec/integration/`).
 
-**Test helpers:** Use `clone_working_repo`, `create_temp_repo`, `in_temp_dir` from
-test helpers for TestUnit. Use `include_context` shared contexts for RSpec.
+**Test helpers:** Use the `'in an empty repository'` shared context (and other
+`spec/support/contexts/` shared contexts) plus `Git::IntegrationTestHelpers` methods
+(e.g. `write_file`) for integration specs. Use `let`/`let!` and verifying doubles for
+unit specs — see [RSpec Unit Testing Standards](../rspec-unit-testing-standards/SKILL.md).
 
-**Mocking:** The project uses Mocha for TestUnit mocking and RSpec doubles for RSpec.
-Be careful with stubs — they can mask real issues.
+**Mocking:** The project uses RSpec doubles (`instance_double`, `class_double`) for
+unit specs. Be careful with stubs — they can mask real issues.
 
-**Test data:** Fixtures are in `tests/files/`. Use test helpers to create temporary
-repos. Clean up in teardown.
+**Test data:** Integration specs create temporary repos on the fly (e.g. via
+`Dir.mktmpdir` and the shared contexts above). Static fixture files in
+`spec/support/fixtures/` exist for a small number of specs that need pre-built
+content (e.g. `spec/integration/git/command_line_spec.rb`); prefer dynamic helpers
+for new specs. Clean up any state created outside those helpers.
 
 **CI vs. local differences:** If tests pass locally but fail in CI, use the
 ci-cd-troubleshooting skill.

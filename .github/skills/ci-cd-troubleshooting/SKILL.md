@@ -132,7 +132,7 @@ Based on the failure type, investigate:
 2. Run the failing tests locally:
 
    ```bash
-   bundle exec bin/test <test-name>
+   bundle exec rspec <path/to/spec.rb>
    ```
 
 3. Run linters:
@@ -211,7 +211,7 @@ After implementing fixes:
 1. **Run Affected Tests Locally:**
 
    ```bash
-   bundle exec bin/test <test-name>
+   bundle exec rspec <path/to/spec.rb>
    ```
 
 2. **Run Full CI Suite:**
