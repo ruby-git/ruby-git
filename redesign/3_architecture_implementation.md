@@ -9,7 +9,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [D2 / Phase 4 is the remaining redesign step](#d2--phase-4-is-the-remaining-redesign-step)
+    - [Phase 4 Step B (finalize test suite) is the next step](#phase-4-step-b-finalize-test-suite-is-the-next-step)
     - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🚧 In Progress | Final cleanup and release — Step A complete; Steps B and C remain | 10% | 33% |
-| **TOTAL** | -- | -- | **100%** | **93%** |
+| Phase 4 | 🚧 In Progress | Final cleanup and release — Step A complete; Step B in progress (W2 ✅, W3/W4a/W4b ✅, W5 pending, W6 plan merged/execution pending); Step C partial | 10% | 55% |
+| **TOTAL** | -- | -- | **100%** | **96%** |
 
 ### Facade Modules Completed
 
@@ -101,7 +101,7 @@ The remaining redesign work is the rest of Phase 4:
 | Step | Status | Summary |
 | ---- | ------ | ------- |
 | A — Remove old code | ✅ Complete | `Git::Base`/`Git::Lib` and the bridge deleted ([PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)) |
-| B — Finalize test suite | 🔲 Not Started | Port remaining Test::Unit coverage in `tests/units/` to RSpec, drop the `test-unit` dependency from `git.gemspec`, remove the `test`/`test-all` Rake tasks, and remove the `tests/` directory |
+| B — Finalize test suite | 🚧 In Progress | W2 ✅ (all 159 PORT rows ported and merged, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 (verify & finalize) pending; W6 plan ✅ merged, execution pending |
 | C — Update documentation | 🚧 Partial | `UPGRADING.md` and broad `@api private` coverage exist; verify `yard stats` reports no missing public-API docs and that `README.md` reflects the new entry points |
 
 The following earlier prerequisites are all ✅ complete:
@@ -1550,8 +1550,8 @@ release.*
 
 ```mermaid
 graph LR
-    A --> B
-    B --> C
+    A["A ✅ Remove old code"] --> B["B 🚧 Finalize test suite"]
+    B --> C["C 🚧 Update documentation"]
 ```
 
 #### Step A — Remove old code
