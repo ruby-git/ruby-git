@@ -20,7 +20,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     repo.add('README.md')
     repo.commit('Initial commit')
 
-    Git.init(bare_dir, bare: true)
+    Git.init(bare_dir, bare: true, initial_branch: 'main')
     repo.remote_add('origin', bare_dir)
     repo.push('origin', 'main')
   end

@@ -5,8 +5,8 @@ require 'optparse'
 
 # A script used to test calling a command line program from Ruby
 #
-# This script is used to test the `Git::CommandLine` class. It is called
-# from the `test_command_line` unit test.
+# This script is used to test the `Git::CommandLine` class. It is invoked as a
+# real subprocess by spec/integration/git/command_line_spec.rb.
 #
 # --stdout: string to output to stdout
 # --stderr: string to output to stderr
@@ -20,16 +20,16 @@ require 'optparse'
 #
 # Examples:
 # Output "Hello, world!" to stdout and exit with status 0
-#    $ bin/command_line_test --stdout="Hello, world!" --exitstatus=0
+#    $ ruby spec/support/fixtures/command_line_test --stdout="Hello, world!" --exitstatus=0
 #
 # Output "ERROR: timeout" to stderr and exit with status 1
-#   $ bin/command_line_test --stderr="ERROR: timeout" --exitstatus=1
+#   $ ruby spec/support/fixtures/command_line_test --stderr="ERROR: timeout" --exitstatus=1
 #
 # Output "Fatal: killed by parent" to stderr and signal 9
-#   $ bin/command_line_test --stderr="Fatal: killed by parent" --signal=9
+#   $ ruby spec/support/fixtures/command_line_test --stderr="Fatal: killed by parent" --signal=9
 #
 # Output to both stdout and stderr return default exitstatus 0
-#   $ bin/command_line_test --stdout="Hello, world!" --stderr="ERROR: timeout"
+#   $ ruby spec/support/fixtures/command_line_test --stdout="Hello, world!" --stderr="ERROR: timeout"
 #
 
 # The command line parser for this script

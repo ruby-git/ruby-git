@@ -37,8 +37,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'create_github_release', '~> 2.1'
   spec.add_development_dependency 'fuubar', '~> 2.5'
   spec.add_development_dependency 'main_branch_shared_rubocop_config', '~> 0.1'
-  spec.add_development_dependency 'minitar', '~> 1.1'
-  spec.add_development_dependency 'mocha', '~> 2.8'
   spec.add_development_dependency 'parallel_tests', '~> 5.6'
   spec.add_development_dependency 'rake', '~> 13.3'
   spec.add_development_dependency 'rspec', '~> 3.13'
@@ -46,7 +44,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov', '~> 0.22'
   spec.add_development_dependency 'simplecov-lcov', '~> 0.9'
   spec.add_development_dependency 'simplecov-rspec', '~> 0.4'
-  spec.add_development_dependency 'test-unit', '~> 3.7'
 
   if RUBY_ENGINE == 'truffleruby' && Gem::Version.new(RUBY_ENGINE_VERSION) < Gem::Version.new('34.0.0')
     # i18n 1.15+ uses Fiber.[] (Ruby 3.2 Fiber storage) which TruffleRuby < 34.0.0 does not implement

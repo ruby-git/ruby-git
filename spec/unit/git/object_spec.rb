@@ -3,8 +3,9 @@
 require 'spec_helper'
 require 'git/object'
 
-# These specs cover Git::Object::* classes.
-# Full integration is covered by tests/units/test_object.rb (Test::Unit).
+# These specs cover Git::Object::* classes with stubbed collaborators. See
+# spec/integration/git/repository/object_operations_spec.rb for minimal
+# real-git wiring checks.
 
 RSpec.describe Git::Object::Blob do
   # Git::Object::Blob is the concrete subclass used to exercise all

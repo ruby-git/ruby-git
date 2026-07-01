@@ -4,14 +4,9 @@ require 'spec_helper'
 require 'git/repository'
 require 'git/repository/diffing'
 
-# Integration coverage for Git::Repository::Diffing:
-#   spec/integration/git/repository/diffing_spec.rb covers #diff_full and
-#   #diff_numstat, which have facade-owned post-processing.
-#   tests/units/test_diff_path_status.rb covers #diff_path_status /
-#   #diff_name_status end-to-end (via Git::Base, which delegates to the facade);
-#   both methods parse raw diff output via Private.extract_name_status_from_raw.
-#   tests/units/test_diff_stats.rb covers #diff_stats, which is a lazy factory
-#   delegator (no facade-owned post-processing).
+# Unit coverage for Git::Repository::Diffing (mocked collaborators). See
+# spec/integration/git/repository/diffing_spec.rb for minimal real-git wiring
+# checks of #diff_full and #diff_numstat.
 
 RSpec.describe Git::Repository::Diffing do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }

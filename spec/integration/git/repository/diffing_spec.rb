@@ -12,15 +12,9 @@ require 'git/repository/diffing'
 #   - #diff_numstat: parse_numstat_output parses combined numstat/shortstat
 #     output into a structured hash
 #
-# Methods with facade-owned parsing covered by the legacy test suite
-# (Git::Base delegates to the facade, so coverage is end-to-end):
-#   tests/units/test_diff_path_status.rb covers #diff_path_status /
-#   #diff_name_status, which parse raw diff output via
-#   Private.extract_name_status_from_raw.
-#
-# #diff_stats is a lazy factory delegator (no facade-owned post-processing)
-# and is covered by:
-#   tests/units/test_diff_stats.rb
+# #diff_path_status / #diff_name_status and #diff_stats are covered at the unit
+# layer (spec/unit/git/repository/diffing_spec.rb) with stubbed collaborators,
+# since neither has facade-owned post-processing beyond what is unit-tested there.
 
 RSpec.describe Git::Repository::Diffing, :integration do
   include_context 'in an empty repository'
