@@ -61,16 +61,25 @@ All breaking changes are complete; this step documents them for users.
 
 ## Workstreams & PR Granularity
 
-This step is organized into three workstreams, each with **one PR per substep** for finer-grained reviews:
+This step is organized into workstreams, each with **one PR per substep** for finer-grained reviews:
 
 - **C1a: Identify Public API Scope** (1 PR)
 - **C1b: Add Missing YARD Docs to Public API** (1 PR)
 - **C1c: Mark Internal Classes with @api private** (1 PR)
 - **C1d: Final YARD Coverage Audit** (1 PR)
-- **C2: README & Guidance Update** (1 PR)
+- **C2a: Update UPGRADING.md** (1 PR)
+- **C2b: Update README.md** (1 PR)
 - **C3: Release Readiness Verification** (1 PR)
 
-Dependencies: C1a → C1b → C1c → C1d → C3; C2 → C3
+Dependencies: C1a → C1b → C1c → C1d → C3; C2a, C2b → C3
+
+**Documentation skill requirements:** All C1b-C1d PRs must apply the
+[yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill to all
+YARD comments changed or added. Additionally:
+- For `Git::Commands::*` classes, also apply the
+  [command-yard-documentation](../.github/skills/command-yard-documentation/SKILL.md) skill
+- For `Git::Repository::*` facade methods, also apply the
+  [facade-yard-documentation](../.github/skills/facade-yard-documentation/SKILL.md) skill
 
 ```mermaid
 graph LR
@@ -78,15 +87,37 @@ graph LR
     C1b["C1b: Add Docs"]
     C1c["C1c: Mark Private"]
     C1d["C1d: Final Audit"]
-    C2["C2: README & Guidance"]
+    C2a["C2a: UPGRADING"]
+    C2b["C2b: README"]
     C3["C3: Release Readiness"]
 
     C1a --> C1b
     C1b --> C1c
     C1c --> C1d
     C1d --> C3
-    C2 --> C3
+    C2a --> C3
+    C2b --> C3
 ```
+
+---
+
+## C1a Results Storage
+
+The results of C1a (public API scope identification) will be stored in:
+```
+redesign/c1a-public-api-scope.tsv
+```
+
+This TSV file will contain columns:
+- `class_name` — fully qualified class/module name
+- `type` — "class", "module", "method"
+- `scope` — "public" or "internal"
+- `category` — e.g. "top-level", "return-type", "helper", "command-wrapper", etc.
+- `notes` — any relevant context
+
+Subsequent PRs (C1b, C1c, C1d) will reference this file to understand the scope
+decisions made in C1a. The file serves as the source of truth for public vs.
+internal classification.
 
 ---
 
