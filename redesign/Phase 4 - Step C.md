@@ -2,22 +2,61 @@
 
 > **🚧 Status: Partial.**
 >
-> Core infrastructure complete (`UPGRADING.md` exists, `@api private` markers
-> applied broadly).
+> **Documentation coverage is complete.** `yardstick` has been retired and
+> replaced by [`yard-lint`](https://github.com/mensfeld/yard-lint) (config in
+> `.yard-lint.yml`, run via `bundle exec rake yard:lint`). Every file under
+> `lib/` passes `yard-lint` with **no offenses and no baseline exceptions**, so
+> the C1b documentation-coverage work and the C1d coverage-gate work are already
+> done (see Done-When). `UPGRADING.md` also already exists.
 >
 > Remaining work:
 >
-> - verify `yard stats` reports no missing docs on public API classes/methods
-> - confirm `README.md` reflects the new entry points and links to migration guide
-> - run full final documentation audit before v5.0.0 release.
+> - **C1c:** finish the `@api`-visibility decisions (e.g., the `Git::Repository::*`
+>   topic modules are still `@api public`; decide/flip per plan)
+> - **C2:** confirm `README.md` reflects the new entry points and links to the
+>   migration guide, and review `UPGRADING.md`
+> - **C3:** run the full final documentation verification before v5.0.0 release.
 >
+
+- [Goal](#goal)
+- [Done-When Criteria](#done-when-criteria)
+- [Workstreams \& PR Granularity](#workstreams--pr-granularity)
+- [PR Creation Protocol](#pr-creation-protocol)
+- [C1a Results Storage](#c1a-results-storage)
+- [C1 — Public API YARD Audit \& Coverage](#c1--public-api-yard-audit--coverage)
+  - [C1a — Identify public API scope](#c1a--identify-public-api-scope)
+    - [C1a Steps (executable)](#c1a-steps-executable)
+    - [Classification heuristics](#classification-heuristics)
+  - [C1b — Document all elements (already complete)](#c1b--document-all-elements-already-complete)
+  - [C1c — Set correct `@api` tags](#c1c--set-correct-api-tags)
+  - [C1d — Coverage gate (already complete)](#c1d--coverage-gate-already-complete)
+- [C2 — Guidance \& README Update](#c2--guidance--readme-update)
+  - [C2a — Update `UPGRADING.md` (PR)](#c2a--update-upgradingmd-pr)
+  - [C2b — Update `README.md` (PR)](#c2b--update-readmemd-pr)
+- [C3 — Documentation Completeness Verification](#c3--documentation-completeness-verification)
+  - [C3a — Run full CI pipeline](#c3a--run-full-ci-pipeline)
+  - [C3b — Manual documentation spot-check](#c3b--manual-documentation-spot-check)
+  - [C3c — Link validation](#c3c--link-validation)
+  - [C3d — Step C sign-off](#c3d--step-c-sign-off)
+- [Resolved Decisions](#resolved-decisions)
+  - [YARD `@api private` scope](#yard-api-private-scope)
+  - [Topic module documentation](#topic-module-documentation)
+  - [README vs. UPGRADING split](#readme-vs-upgrading-split)
+  - [Documentation coverage bar](#documentation-coverage-bar)
+- [Execution Notes](#execution-notes)
+  - [Sequencing \& Parallelization](#sequencing--parallelization)
+  - [RSpec for documentation examples](#rspec-for-documentation-examples)
+  - [Out of scope: gem release](#out-of-scope-gem-release)
+- [File Checklist](#file-checklist)
+- [Step C Completion Checklist (C3d)](#step-c-completion-checklist-c3d)
 
 ## Goal
 
 Complete the documentation required for a stable v5.0.0 release:
 
-1. Ensure all **public-API classes and methods** have complete YARD documentation
-   with no gaps.
+1. ✅ **Done.** Ensure all **public-API classes and methods** have complete YARD
+   documentation with no gaps — enforced by `yard-lint`, which passes with no
+   offenses across `lib/`.
 2. Mark all **internal classes** (`ExecutionContext`, `Commands::*`, `Path*`,
    `Parser*`) with `@api private` to signal they are not part of the stable
    public contract.
@@ -38,9 +77,36 @@ All breaking changes are complete; this step documents them for users.
 
 ## Done-When Criteria
 
-- `bundle exec yard stats` reports **0 missing docs** on all public-API classes
-  and methods (i.e., `@api private` and top-level library classes are the only
-  items without docs). The coverage percentage should be 100% for public API.
+- ✅ **Documentation coverage is complete and enforced by `yard-lint`.**
+  `yardstick` has been retired; `bundle exec rake yard:lint` (which runs
+  `bundle exec yard-lint lib/`) passes with **no offenses**. `yard-lint` lints
+  every object — including Ruby-private and protected ones (`--private
+  --protected`) — and enforces the project's documentation standard from
+  `.github/skills/yard-documentation/SKILL.md`: a summary, documented parameters
+  and return values, example formatting/title rules when examples exist, and tag
+  ordering/style rules.
+  Configuration lives in `.yard-lint.yml`; there is **no** `.yard-lint-todo.yml`
+  baseline, so nothing is grandfathered. (The skill's generic baseline-removal
+  guidance is not applicable in this repo because no baseline file exists.)
+  - `@api private` is a **stability/visibility signal** (it marks internal
+    implementation detail that users must not depend on); it is **not** a
+    documentation exemption. Internal classes are documented too.
+- ✅ **The bar is 100% documented — zero undocumented objects — enforced
+  per-object.** `yard-lint`'s `Documentation/UndocumentedObjects` validator (on by
+  default at `warning` severity) combined with `.yard-lint.yml`'s
+  `FailOnSeverity: convention` fails the build on **any** undocumented object, which
+  holds the line at 100%. This per-object gate is the source of truth, not a
+  percentage: it gives a bright line and names the exact object that needs docs, so
+  contributor friction is handled by actionable feedback and maintainer discretion
+  rather than by leaving slack in a threshold. The `MinCoverage` setting (currently
+  `75.0`) is only a coarse secondary backstop; the per-object validator is strictly
+  stricter. `bundle exec rake yard:build` reports **100.00% documented** — an
+  informational cross-check, not the enforced gate.
+- `bundle exec rake yard:build` passes with no warnings. The `--fail-on-warning`
+  flag lives in `.yardopts` (which `yard:build` reads), not in the rake task
+  itself, so undocumented-object and other YARD warnings fail the build. Use
+  `bundle exec yard-lint lib/` (optionally `--stats` or `--diff main`) as the
+  diagnostic to locate any gaps.
 - `UPGRADING.md` exists (already done) and comprehensively covers:
   - Breaking change overview (v4.x → v5.0.0).
   - Old entry points (`Git::Base`, `Git::Lib`) and their replacements
@@ -56,6 +122,9 @@ All breaking changes are complete; this step documents them for users.
   library documentation — only CHANGELOG, historical design docs, and deprecated
   skill stubs (if any) may mention old classes contextually.
 - Full CI pipeline (RSpec + YARD + linters) is green.
+- **Out of scope:** the actual v5.0.0 gem release (CHANGELOG finalization, `v5.0.0`
+  tag, `gem build`/`push`, GitHub release notes). Step C ends at docs-complete + CI
+  green and hands off to the separate release process.
 
 ---
 
@@ -63,19 +132,24 @@ All breaking changes are complete; this step documents them for users.
 
 This step is organized into workstreams, each with **one PR per substep** for finer-grained reviews:
 
-- **C1a: Identify Public API Scope** (1 PR)
-- **C1b: Add Missing YARD Docs to Public API** (1 PR)
-- **C1c: Mark Internal Classes with @api private** (1 PR)
-- **C1d: Final YARD Coverage Audit** (1 PR)
+- **C1a: Identify Public API Scope** (1 PR) — informs C1c
+- **C1b: Document All Elements** — ✅ **already done** (all of `lib/` passes
+  `yard-lint`; no PR needed)
+- **C1c: Set Correct @api Tags (incl. flip topic modules to private)** (1 PR)
+- **C1d: Coverage Gate** — ✅ **already done** (`yard-lint` + `.yard-lint.yml`
+  replaced the retired `yardstick` gate and pass; no PR needed)
 - **C2a: Update UPGRADING.md** (1 PR)
 - **C2b: Update README.md** (1 PR)
-- **C3: Release Readiness Verification** (1 PR)
+- **C3: Documentation Completeness Verification** (1 PR)
 
-Dependencies: C1a → C1b → C1c → C1d → C3; C2a, C2b → C3
+Dependencies (remaining): C1a → C1c → C3; C2a, C2b → C3. (C1b and C1d are
+already complete.)
 
-**Documentation skill requirements:** All C1b-C1d PRs must apply the
+**Documentation skill requirements:** Any remaining PR that touches YARD
+comments (e.g., C1c) must apply the
 [yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill to all
 YARD comments changed or added. Additionally:
+
 - For `Git::Commands::*` classes, also apply the
   [command-yard-documentation](../.github/skills/command-yard-documentation/SKILL.md) skill
 - For `Git::Repository::*` facade methods, also apply the
@@ -84,36 +158,79 @@ YARD comments changed or added. Additionally:
 ```mermaid
 graph LR
     C1a["C1a: Identify Scope"]
-    C1b["C1b: Add Docs"]
+    C1b["C1b: Add Docs (done)"]
     C1c["C1c: Mark Private"]
-    C1d["C1d: Final Audit"]
+    C1d["C1d: Coverage Gate (done)"]
     C2a["C2a: UPGRADING"]
     C2b["C2b: README"]
-    C3["C3: Release Readiness"]
+    C3["C3: Docs Verification"]
 
-    C1a --> C1b
-    C1b --> C1c
-    C1c --> C1d
-    C1d --> C3
+    %% Remaining (active) gating dependencies:
+    C1a --> C1c
+    C1c --> C3
     C2a --> C3
     C2b --> C3
+
+    %% Already-satisfied historical dependencies (C1b, C1d complete):
+    C1a -.-> C1b
+    C1b -.-> C1c
+    C1d -.-> C3
+
+    classDef done fill:#e6ffe6,stroke:#2e7d32;
+    class C1b,C1d done;
 ```
+
+---
+
+## PR Creation Protocol
+
+All Step C PRs are created in **`ruby-git/ruby-git`** and target base branch
+**`main`**. Use one PR per substep from the granularity list above.
+
+- Create a dedicated topic branch per substep (for example:
+  `docs/phase-4-step-c-c1a-scope`).
+- Open each PR with `gh pr create` after pushing that topic branch.
+- Keep each PR scoped to the substep's deliverables:
+  - **C1a PR:** `redesign/c1a-public-api-scope.tsv` (and only minimal related plan/tracker
+    adjustments if strictly required for accuracy).
+  - **C1b PR:** ✅ already complete — all of `lib/**/*.rb` passes `yard-lint`, so
+    no documentation-coverage PR is required.
+  - **C1c PR:** correct `@api` tags in `lib/**/*.rb` for every element per the C1a
+    TSV, including flipping the `Git::Repository::*` topic modules that are
+    currently `@api public` to `@api private`.
+  - **C1d PR:** ✅ already complete — `yardstick` was retired in favor of
+    `yard-lint` (`.yard-lint.yml` + `rake yard:lint`), which passes; no
+    coverage-gate PR is required.
+  - **C2a PR:** `UPGRADING.md` updates only.
+  - **C2b PR:** `README.md` updates only.
+  - **C3 PR:** verification/sign-off updates only (for example Step C completion
+    tracking in `redesign/3_architecture_implementation.md`).
+
+If verification discovers additional documentation defects, fix them in the
+appropriate workstream PR (C1* or C2*) rather than broadening C3 scope.
 
 ---
 
 ## C1a Results Storage
 
 The results of C1a (public API scope identification) will be stored in:
-```
+
+```text
 redesign/c1a-public-api-scope.tsv
 ```
 
 This TSV file will contain columns:
-- `class_name` — fully qualified class/module name
-- `type` — "class", "module", "method"
+
+- `constant_name` — fully qualified class/module/method name
+- `type` — "class", "module", or "method"
 - `scope` — "public" or "internal"
-- `category` — e.g. "top-level", "return-type", "helper", "command-wrapper", etc.
-- `notes` — any relevant context
+- `category` — e.g. "entry-point", "return-type", "value-object", "topic-module",
+  "command-wrapper", "parser", "plumbing", "state-object", etc.
+- `api_private_current` — "yes" or "no": whether `@api private` is already applied
+  (drives the C1c gap-fill so it only touches what's still unmarked)
+- `defining_file` — path to the file where the constant is defined (e.g.,
+  `lib/git/object.rb` for `Git::Object::Blob`)
+- `notes` — any relevant context or classification rationale
 
 Subsequent PRs (C1b, C1c, C1d) will reference this file to understand the scope
 decisions made in C1a. The file serves as the source of truth for public vs.
@@ -128,35 +245,94 @@ mark internal classes with `@api private`.
 
 ### C1a — Identify public API scope
 
-Identify all classes/modules that are intentionally part of the public contract
-and deserve YARD documentation:
+**Goal:** Produce a complete, authoritative classification of every class/module
+in `lib/` as either **public** (part of the stable v5.0.0 contract) or **internal**
+(`@api private`). This classification is the source of truth consumed by C1b, C1c,
+and C1d.
 
-**Public-API top-level exports** (documented in root `lib/git.rb`):
+> **⚠️ The lists below are ILLUSTRATIVE, not exhaustive.** The C1a agent MUST
+> enumerate the real set of classes/modules via tooling (`yard list`) and classify
+> every entry — do not treat these lists as complete. Many public value objects are
+> not named here (e.g., `Git::Author`, `Git::Branches`, `Git::Stash`,
+> `Git::Worktree`, `Git::Url`, `Git::FileRef`, and numerous `*Info`/`*Result`
+> objects), and the majority of internal classes are `Git::Commands::*` and parser
+> classes.
+
+#### C1a Steps (executable)
+
+1. **Enumerate all top-level and nested constants.** Generate the full class/module
+   inventory with YARD:
+
+   ```bash
+   bundle exec yard list --query 'object.type == :class || object.type == :module'
+   ```
+
+   (Or parse `bundle exec yard stats --list-undoc` output.) Cross-check
+   against the file tree (Ruby is cross-platform; `find` is not available in a
+   default Windows shell):
+
+   ```bash
+   ruby -e "puts Dir.glob('lib/**/*.rb').sort"
+   ```
+
+2. **Classify each constant** as `public` or `internal` using the heuristics below.
+3. **Detect current `@api private` state per constant** so C1c knows what still
+   needs marking. Query YARD for every object that already carries an
+   `@api private` tag — this reports each element individually as
+   `file:line: Fully::Qualified::Name`, not just the containing file:
+
+   ```bash
+   bundle exec yard list --query 'object.has_tag?(:api) && object.tag(:api).text == "private"'
+   ```
+
+   Set `api_private_current = yes` for each enumerated constant whose fully
+   qualified name appears in that output, and `no` for the rest. (Avoid
+   `git grep -l '@api private'`, which only reports files and cannot tell you
+   which specific constant in a multi-class file is tagged.)
+
+4. **Write the results** to `redesign/c1a-public-api-scope.tsv` (schema in the
+   "C1a Results Storage" section above). Every enumerated constant gets one row.
+
+#### Classification heuristics
+
+**Public-API entry points** (illustrative — verify against real inventory):
 
 - `Git` — module with factory methods (`.open`, `.clone`, `.init`, `.bare`,
-  `.git_version`, `.default_branch`)
+  `.git_version`, `.default_branch`), defined in `lib/git.rb`
 - `Git::Repository` — main facade for repository operations
-- `Git::Object` — represents a Git object (commit, tree, blob, tag)
-- `Git::Blob`, `Git::Tree`, `Git::Commit`, `Git::Tag` — subclasses of `Git::Object`
-- `Git::Branch` — branch representation
+- `Git::Object` and its nested subclasses `Git::Object::Blob`, `::Tree`,
+  `::Commit`, `::Tag` — **all defined in `lib/git/object.rb`** (there are no
+  separate `blob.rb`/`tree.rb`/`commit.rb`/`tag.rb` files)
+- `Git::Branch`, `Git::Branches` — branch representation and collection
 - `Git::Remote` — remote representation
-- `Git::Diff` — diff representation
+- `Git::Diff`, `Git::DiffResult`, `Git::DiffStats` — diff representations
 - `Git::Status` — repository status snapshot
 - `Git::Log` — log entry and log enumeration
-- `Git::Index` — staging area operations
 - `Git::Config` — configuration access
+- `Git::Stash`, `Git::Stashes`, `Git::Worktree`, `Git::Worktrees` — collections
+  and value objects returned from facade methods
 
-**Common return/support types** (likely already documented):
+> **Note:** There is **no `Git::Index` class.** Staging is handled by the
+> `Git::Repository::Staging` module. Do not document a non-existent class.
 
-- `Git::Diff::DiffFile`, `Git::Diff::DiffHunk` — parts of diffs
-- `Git::Status::StatusFile` — parts of status
-- Relevant exceptions (e.g., `Git::GitExecuteError`)
+**Value objects / return types** (public if returned from public methods —
+classify each individually):
+
+- `Git::Author`, `Git::FileRef`, `Git::Url`
+- `Git::*Info` classes (`BranchInfo`, `TagInfo`, `StashInfo`, `ConfigEntryInfo`,
+  `DetachedHeadInfo`, `DiffInfo`, `DirstatInfo`, etc.)
+- `Git::*Result` / `Git::*Failure` classes (`BranchDeleteResult`,
+  `TagDeleteResult`, `FsckResult`, `DiffResult`, etc.)
+- Relevant exceptions in `lib/git/errors.rb`
 
 **Internal / private classes** (must be marked `@api private`):
 
-- `Git::ExecutionContext::Repository` — internal execution context
+- `Git::ExecutionContext` and nested — internal execution context
 - `Git::Commands::*` — command wrappers (impl detail of command layer)
-- `Git::Parsers::*` — output parsers (impl detail of parser layer)
+- `Git::Parsers::*` / parser value objects — output parsers (impl detail)
+- `Git::ArgsBuilder`, `Git::CommandLine`, `Git::CommandLineResult`,
+  `Git::EncodingUtils`, `Git::EscapedPath` — internal plumbing (candidates for
+  `@api private` — verify current state and flag if unmarked)
 - `Git::Repository::*` topic modules (e.g., `Branching`, `Staging`, `Committing`) —
   organizational containers that group facade methods; the modules are `@api private`
   but the **methods** they define are public (see C1b for documentation location)
@@ -167,7 +343,33 @@ and deserve YARD documentation:
   `@return` tag (e.g., `@return [Git::Repository::Branching::HeadState]`).
 - Any `::Internal::*` helpers
 
-### C1b — Add missing YARD docs to public API
+**Done-when (C1a):** `redesign/c1a-public-api-scope.tsv` exists with one row per
+enumerated constant, each classified `public`/`internal` with its current
+`@api private` state recorded.
+
+### C1b — Document all elements (already complete)
+
+> ✅ **Already done.** All of `lib/` passes `bundle exec rake yard:lint` with no
+> offenses, so the documentation-coverage work below is complete. The steps are
+> retained for historical context. `yardstick` has been retired; `yard-lint`
+> (config in `.yard-lint.yml`) now enforces documentation completeness.
+
+**Input:** `redesign/c1a-public-api-scope.tsv` (from C1a). Process **every** row —
+both `public` and `internal` — adding whatever docs `yard-lint` requires: a
+summary, an `@api` tag, and documented params/returns for every element (public
+and internal alike). `@example` blocks are **strongly encouraged on key public
+methods** where they aid understanding, but they are **not** machine-enforced —
+`yard-lint` validates the syntax/style of examples that exist (`Tags/ExampleSyntax`)
+but has no validator that requires an example to be present. Example coverage on
+the key public-API classes is therefore verified manually in C3b, not gated by
+`yard-lint`.
+
+**Documentation conventions:** Every YARD comment added or changed in this PR MUST
+follow the [yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill.
+For `Git::Repository::*` facade methods also apply
+[facade-yard-documentation](../.github/skills/facade-yard-documentation/SKILL.md); for
+`Git::Commands::*` also apply
+[command-yard-documentation](../.github/skills/command-yard-documentation/SKILL.md).
 
 **Important:** Methods are documented where they are defined, even if in a private topic module.
 
@@ -175,6 +377,7 @@ For **methods in `Git::Repository::*` topic modules** (e.g., `Git::Repository::B
 
 - Document the method in the topic module where it's defined
 - Mark the **module itself** as `@api private` to signal it's an organizational container
+  (the actual marking happens in C1c; C1b only adds method docs)
 - The **method** remains public (do NOT mark methods `@api private`)
 - YARD automatically includes these docs in the public `Git::Repository` interface
 - Users will see `Git::Repository#current_branch` with docs from the topic module
@@ -182,6 +385,7 @@ For **methods in `Git::Repository::*` topic modules** (e.g., `Git::Repository::B
 For **other public classes** (e.g., `Git::Object`, `Git::Branch`):
 
 - Document each class and its methods in the file where it's defined
+  (remember `Blob`/`Tree`/`Commit`/`Tag` live in `lib/git/object.rb`)
 
 **General documentation checklist** for each public class/method:
 
@@ -189,18 +393,33 @@ For **other public classes** (e.g., `Git::Object`, `Git::Branch`):
    review output in `doc/` or use `bundle exec yardoc --no-output` to check
    warnings.
 2. **Add docs if missing.** Write clear, concise YARD comments following
-   project style (see `yard-documentation` skill):
+   the skills referenced above:
    - `@param` for each argument with type and description
    - `@return` with type and description
-   - `@example` for common usage patterns
+   - `@example` for common usage patterns on key public methods (encouraged where
+     it aids understanding; not required on trivial accessors, and not
+     machine-enforced by `yard-lint`)
    - Cross-references to related methods using `{ClassName#method_name}`
    - `@raise` for exceptions that may be raised
 3. **Verify docs render correctly.** Generate HTML docs and visually inspect
    that parameter names, types, and examples are rendered correctly.
 
-### C1c — Mark internal classes with `@api private`
+### C1c — Set correct `@api` tags
 
-For each internal class identified in C1a:
+**Input:** `redesign/c1a-public-api-scope.tsv` (from C1a). Set the correct `@api`
+tag on **every** element per the TSV: `@api public` for the `public` surface,
+`@api private` for `internal` implementation detail. Add or correct tags
+wherever they are missing or wrong — including flipping the `Git::Repository::*`
+topic modules that are currently `@api public` to `@api private`.
+
+> **Note:** `@api` tags are already present on parts of `lib/`, but coverage is
+> uneven — some topic modules are still `@api public` and some internal plumbing
+> classes are unmarked. Treat C1c as an **audit and gap-fill** driven entirely by
+> the C1a TSV: for every element whose recorded tag is missing or wrong, set the
+> correct value. Do not rely on hard-coded lists here — the TSV is the source of
+> truth.
+
+For each internal class needing the marker:
 
 1. **Add `@api private` tag** at the top of the class/module YARD comment.
    Examples:
@@ -240,59 +459,89 @@ For each internal class identified in C1a:
 2. **Note:** Topic modules like `Git::Repository::Branching` are marked `@api private`
    to indicate they are organizational containers, but the **methods they define are
    public** and should be fully documented (they are mixed into the public
-   `Git::Repository` class).
+   `Git::Repository` class). Do not add `@api private` to those methods.
 
-3. **Verify YARD respects the marker.** Run `bundle exec yard stats` — internal
-   classes marked `@api private` are excluded from the public-API coverage count.
+3. **Verify the tag renders.** Run `bundle exec rake yard:build` (CI-equivalent)
+   and confirm generated docs show `@api private` objects with a private
+   annotation. They remain documented (and linted) but are marked as internal,
+   non-public contract.
 
-### C1d — Run final YARD coverage audit
+**Done-when (C1c):** Every element in `redesign/c1a-public-api-scope.tsv` has an
+effective `@api` status matching its recorded `scope` — `internal` rows resolve to
+`@api private` (tagged directly or inherited from an enclosing `@api private`
+namespace) and `public` rows resolve to `@api public`. YARD propagates an
+`@api private` tag from a namespace to its children, so a method inside an
+`@api private` class is already private without its own tag; do not require a literal
+tag on every element. Concretely: all `Git::Repository::*` topic modules are
+`@api private`; the per-constant `@api private` query from C1a step 3 lists every
+`internal` element and no `public` one; `bundle exec rake yard:lint` passes with no
+offenses; and generated docs render internal elements with `@api private`
+annotation (not as public API contract).
 
-1. **Generate YARD statistics:** `bundle exec yard stats --list-undocumented`.
-2. **Confirm 100% public-API coverage:** All non-`@api private` classes and
-   methods must appear as documented. If undocumented items are found:
-   - Determine if they are truly part of the public API (if yes, add docs; if no,
-     mark `@api private`).
-   - Re-run stats until no public-API undocumented items remain.
-3. **Document the final count:** Record the YARD statistics in a comment in
-   `lib/git.rb` or in release notes for v5.0.0.
+### C1d — Coverage gate (already complete)
+
+> ✅ **Already done.** The coverage gate has been migrated from the retired
+> `yardstick` tool to [`yard-lint`](https://github.com/mensfeld/yard-lint):
+>
+> - `tasks/yard.rake` defines a `yard:lint` task (`bundle exec yard-lint lib/`)
+>   that is part of the aggregate `yard` task on Ruby 3.3+.
+> - Configuration lives in `.yard-lint.yml` (lints `--private`/`--protected`
+>   objects, `FailOnSeverity: convention`). The enforced bar is **100% — zero
+>   undocumented objects** — via the `Documentation/UndocumentedObjects` validator
+>   plus `FailOnSeverity: convention`; the `MinCoverage: 75.0` setting is only a
+>   coarse secondary backstop. Tuned to the project's `yard-documentation` skill.
+> - `bundle exec rake yard:lint` passes with **no offenses** and there is no
+>   `.yard-lint-todo.yml` baseline, so the codebase is clean with no exceptions.
+>
+> No further action is required for the coverage gate. The per-object validator
+> already holds the line at 100%; `bundle exec rake yard:build` reports **100.00%
+> documented** as an informational cross-check.
 
 ---
 
-## C2 — README & Guidance Update
+## C2 — Guidance & README Update
 
-**Goal:** Update `README.md` to reflect the new public API and link users to
-migration guidance.
+**Goal:** Ensure `UPGRADING.md` comprehensively covers v4.x → v5.0.0 migration and
+that `README.md` reflects the new public API and links to the migration guide.
+Delivered as **two independent PRs** (C2a and C2b) that both gate C3.
 
-### C2a — Review current README and UPGRADING
+### C2a — Update `UPGRADING.md` (PR)
+
+**Input:** existing `UPGRADING.md` (already present, ~6 KB from earlier release
+prep) and the list of v5.0.0 breaking changes from Steps A and B.
+
+1. **Read `UPGRADING.md` end-to-end** to understand current coverage.
+2. **Verify it comprehensively covers** (add/expand any gaps):
+   - Breaking change overview (v4.x → v5.0.0).
+   - Old entry points (`Git::Base`, `Git::Lib`) and their replacements
+     (`Git::Repository` via `Git.open`, etc.).
+   - Common migration patterns (command usage, return types, error handling).
+   - Any deprecated methods still available for transitional use.
+3. **Verify all code snippets** are valid against the v5.0.0 API (spot-check a
+   representative sample against the real classes identified in C1a).
+4. **Verify internal links** (e.g., to class docs, README) use correct Markdown.
+
+**Done-when (C2a):** `UPGRADING.md` covers every breaking change with accurate
+before/after examples; all links valid.
+
+### C2b — Update `README.md` (PR)
+
+**Input:** existing `README.md` and the finalized `UPGRADING.md` (C2a). C2b can
+proceed in parallel with C2a since it only links to `UPGRADING.md` (which already
+exists); coordinate wording if both change the upgrade callout.
 
 1. **Read `README.md` end-to-end** to understand current structure and messaging.
-2. **Review `UPGRADING.md`** to confirm it comprehensively covers breaking
-   changes and migration patterns. (This file should already exist from earlier
-   release prep.)
-
-### C2b — Update README entry points section
-
-If `README.md` still contains examples or references to `Git::Base` / `Git::Lib`:
-
-1. **Replace with new public API examples:**
-
+2. **Replace any `Git::Base` / `Git::Lib` references with new public API examples:**
    - Old: `repo = Git::Base.new(path)` → New: `repo = Git.open(path)`
    - Old: `Git::Lib.new.ls_files` → New: `repo.ls_files`
-   - Add brief explanation of what `Git::Repository` is and why it's the main
+   - Add a brief explanation of what `Git::Repository` is and why it's the main
      interface.
-
-2. **Add "Getting Started" or "Basic Usage" section** with 2–3 clear examples
-   showing:
-
+3. **Add or refresh a "Getting Started" / "Basic Usage" section** with 2–3 clear
+   examples showing:
    - Opening/creating repositories
    - Running common operations (listing files, checking status, etc.)
    - Accessing objects (commits, branches)
-
-### C2c — Add migration guide link
-
-1. **Add a prominent link or callout** in `README.md` pointing to `UPGRADING.md`
-   for users migrating from v4.x.
-2. **Example text:**
+4. **Add a prominent migration callout** pointing to `UPGRADING.md`:
 
    ```markdown
    ## Upgrading from v4.x to v5.0.0
@@ -301,19 +550,25 @@ If `README.md` still contains examples or references to `Git::Base` / `Git::Lib`
    [UPGRADING.md](UPGRADING.md) for a comprehensive migration guide.
    ```
 
-### C2d — Verify links and examples
+5. **Test all code examples** by running them locally or in an isolated RSpec
+   example, and **verify all internal links** are valid.
 
-1. **Test all code examples** in `README.md` by running them locally or in an
-   isolated RSpec example.
-2. **Verify all internal links** (e.g., to `UPGRADING.md`, class documentation)
-   are valid and use correct Markdown syntax.
+**Done-when (C2b):** `README.md` shows the new entry points, includes working
+examples, and links to `UPGRADING.md`; no stale `Git::Base`/`Git::Lib` references
+remain outside historical context.
 
 ---
 
-## C3 — Release Readiness Verification
+## C3 — Documentation Completeness Verification
 
-**Goal:** Final comprehensive check that all documentation is complete and
-correct before release.
+**Goal:** Final comprehensive check that all documentation is complete and correct.
+Step C ends here at **docs-complete + CI green**. The actual v5.0.0 gem release
+(tagging, `gem build`/`push`, publishing) is **out of scope** and handled by a
+separate release process (see the [release-management](../.github/skills/release-management/SKILL.md)
+skill).
+
+**Input:** finalized `redesign/c1a-public-api-scope.tsv` (C1a–C1d) and the updated
+`UPGRADING.md`/`README.md` (C2a/C2b).
 
 ### C3a — Run full CI pipeline
 
@@ -325,25 +580,36 @@ This runs:
 
 - RSpec (unit + integration) ✓
 - RuboCop linting ✓
-- YARD documentation coverage ✓
+- YARD documentation build (plus lint on Ruby 3.3+) ✓
 - Gem build check ✓
 
 All must pass with 0 failures and 0 warnings.
 
+> **Note:** The YARD tasks are **not defined on JRuby or TruffleRuby** (redcarpet
+> cannot install there), and `yard:lint` is only defined on **Ruby 3.3+**.
+> On MRI Ruby 3.2, `rake default` still runs `yard:build` but omits `yard:lint`.
+> Run the final documentation verification on MRI Ruby 3.3+ to exercise both
+> `yard:build` and `yard:lint`.
+
 ### C3b — Manual documentation spot-check
 
-1. **Generate docs locally:**
+1. **Generate docs locally** using the same command CI runs:
 
    ```bash
-   bundle exec yard doc
+   bundle exec rake yard:build
    ```
 
 2. **Spot-check 5–10 key public-API classes** in the generated HTML docs
    (`doc/index.html`):
 
-   - Verify each has complete parameter/return/example documentation.
+   - Verify each has complete parameter/return documentation.
+   - Verify key public methods carry a usable `@example`. This is the
+     **authoritative check for example presence** — `yard-lint` validates the
+     syntax of examples that exist but cannot require one, so a human confirms the
+     important entry points have them here.
    - Verify cross-references render correctly.
-   - Verify `@api private` items are not visible in the public API listing.
+   - Verify `@api private` items are clearly annotated as private/internal and
+     not presented as stable public API contract.
 
 ### C3c — Link validation
 
@@ -354,17 +620,19 @@ All must pass with 0 failures and 0 warnings.
 
 2. **Check cross-file references:**
 
-   - CHANGELOG mentions v5.0.0 breaking changes.
    - Any internal skill or doc files that reference the API use correct examples.
 
-### C3d — Final sign-off
+### C3d — Step C sign-off
 
-Once C1, C2, and C3a–c are complete:
+Once C1a–C1d, C2a/C2b, and C3a–c are complete:
 
-1. **Create a release PR** summarizing all documentation updates.
-2. **Include the final YARD stats** in the PR description or commit message.
-3. **Request final review** from maintainers.
-4. **On approval, merge and tag v5.0.0.**
+1. **Open the C3 verification PR** summarizing that all documentation is complete
+   and CI is green.
+2. **Include the final YARD stats** in the PR description.
+3. **Mark Phase 4 → Step C complete** in
+   [`3_architecture_implementation.md`](3_architecture_implementation.md).
+4. **Hand off to the separate release process** for the actual v5.0.0 release
+   (out of Step C scope).
 
 ---
 
@@ -378,6 +646,9 @@ Once C1, C2, and C3a–c are complete:
 - **Rationale:** Users should interact only through `Git` and `Git::Repository`
   facades. Exposing internals would lock us into API stability for details that
   should remain flexible.
+- **Note:** `@api private` signals *instability*, not *absence of docs*. These
+  classes must still be fully documented (see the coverage bar below); `yard-lint`
+  lints them too (it runs with `--private --protected`).
 
 ### Topic module documentation
 
@@ -400,19 +671,38 @@ Once C1, C2, and C3a–c are complete:
 
 ### Documentation coverage bar
 
-- **Decision:** 100% public-API YARD coverage (no undocumented public classes/methods).
-- **Rationale:** Users relying on the gem need to trust that the public surface is
-  fully documented. Missing docs are a support liability and source of confusion.
+- **Decision (locked):** The documentation bar is **100% — zero undocumented
+  objects — enforced per-object**, not as a coverage percentage. `yard-lint`
+  (which replaced the retired `yardstick` tooling) enforces it: `.yard-lint.yml`
+  lints all objects (`--private --protected`) and fails on any offense at
+  `convention` severity or higher, so the built-in
+  `Documentation/UndocumentedObjects` validator fails the build on **any**
+  undocumented object. `bundle exec rake yard:lint` currently passes with **no
+  offenses** and no baseline exceptions, and `bundle exec rake yard:build` reports
+  **100.00% documented**. The `MinCoverage` setting (`75.0`) is only a coarse
+  secondary backstop; the per-object validator is the source of truth.
+- **Rationale:** A single, tool-enforced bright line aligned with the
+  `yard-documentation` skill. Per-object enforcement catches new undocumented code
+  immediately and names the exact object to fix, so contributor friction is handled
+  by that actionable feedback and by maintainer discretion (a maintainer can add a
+  missing doc or fix a gap in a follow-up) — not by baking permanent slack into a
+  threshold, which would let debt accumulate and eventually block an unrelated PR.
+  `@api private` documents internal detail for maintainers while signaling users not
+  to depend on it; it does not exempt code from documentation.
 
 ---
 
 ## Execution Notes
 
-### Parallelization
+### Sequencing & Parallelization
 
-- **C1a, C1b, C1c can start immediately** once C1a scope is confirmed.
-- **C2a, C2b, C2c can start in parallel** with C1 once `UPGRADING.md` is reviewed.
-- **C3 gates final merge** — requires C1 and C2 complete.
+- **Remaining C1 work is sequential:** `C1a → C1c → C3`. (C1b documentation
+  coverage and the C1d coverage gate are already complete — see their sections.)
+  C1c consumes `redesign/c1a-public-api-scope.tsv` from C1a to set the correct
+  `@api` tags, so C1a must land first.
+- **C2a and C2b are independent** of C1 and of each other, and may proceed in
+  parallel at any time (both only require the pre-existing `UPGRADING.md`).
+- **C3 gates the Step's completion** — requires C1c, C2a, and C2b all merged.
 
 ### RSpec for documentation examples
 
@@ -426,46 +716,65 @@ For examples added to YARD comments (e.g., in `@example` blocks), consider:
 Do not add new tests purely to support documentation examples; reuse existing
 integration tests if possible.
 
-### Gem release process
+### Out of scope: gem release
 
-Once C3 is complete:
-
-1. **Ensure CHANGELOG.md is up to date** with all v5.0.0 entries (auto-generated
-   by release-please if configured).
-2. **Create a git tag** `v5.0.0` pointing to the release commit.
-3. **Run `gem build` and `gem push`** (or use release automation if available).
+The actual v5.0.0 release (CHANGELOG finalization, `v5.0.0` git tag, `gem build`,
+`gem push`, GitHub release notes) is **not part of Step C**. It is handled
+separately via the
+[release-management](../.github/skills/release-management/SKILL.md) skill once
+Step C reaches docs-complete + CI green.
 
 ---
 
 ## File Checklist
 
-- [ ] `lib/git.rb` — top-level module docs complete
-- [ ] `lib/git/repository.rb` — facade class docs complete
-- [ ] `lib/git/object.rb` — base object class docs complete
-- [ ] `lib/git/blob.rb`, `tree.rb`, `commit.rb`, `tag.rb` — subclass docs complete
-- [ ] `lib/git/branch.rb` — branch class docs complete
-- [ ] `lib/git/remote.rb` — remote class docs complete
-- [ ] `lib/git/diff.rb`, `diff/diff_file.rb` — diff classes docs complete
-- [ ] `lib/git/status.rb`, `status/status_file.rb` — status classes docs complete
-- [ ] `lib/git/log.rb` — log class docs complete
-- [ ] `lib/git/index.rb` — index class docs complete
-- [ ] `lib/git/config.rb` — config class docs complete
-- [ ] All internal classes marked `@api private` ✓
-- [ ] `README.md` updated with new entry points ✓
-- [ ] `UPGRADING.md` reviewed and complete ✓
-- [ ] `yard stats` reports 100% public-API coverage ✓
-- [ ] Full CI pipeline green ✓
+> Illustrative anchor points — the authoritative list is
+> `redesign/c1a-public-api-scope.tsv` produced by C1a. Paths reflect the real
+> file layout (e.g., `Blob`/`Tree`/`Commit`/`Tag` live inside `object.rb`; there
+> is no `index.rb`).
+
+> ✅ **Documentation coverage is complete:** all files under `lib/` pass
+> `bundle exec rake yard:lint`. The per-file "docs complete" boxes below are
+> checked accordingly; the remaining unchecked items are `@api`-tag (C1c),
+> `README`/`UPGRADING` (C2), and CI (C3) work.
+
+- [x] `lib/git.rb` — top-level `Git` module + factory method docs complete
+- [x] `lib/git/repository.rb` — facade class docs complete
+- [x] `lib/git/object.rb` — `Object` base class **and nested** `Blob`, `Tree`,
+      `Commit`, `Tag` subclass docs complete
+- [x] `lib/git/branch.rb`, `lib/git/branches.rb` — branch class/collection docs complete
+- [x] `lib/git/remote.rb` — remote class docs complete
+- [x] `lib/git/diff.rb` + diff value objects (`diff_result.rb`, `diff_stats.rb`,
+      `diff_info.rb`, `diff_file_*.rb`) — docs complete
+- [x] `lib/git/status.rb` — status class docs complete
+- [x] `lib/git/log.rb` — log class docs complete
+- [x] `lib/git/config.rb` — config class docs complete
+- [x] `lib/git/stash*.rb`, `lib/git/worktree*.rb` — collection/value object docs complete
+- [ ] Public value objects (`author.rb`, `url.rb`, `file_ref.rb`, `*_info.rb`,
+      `*_result.rb`, `*_failure.rb`) — classified in C1a (docs already complete)
+- [ ] Every element carries a correct `@api` tag; topic modules flipped to
+      `@api private` (per C1a TSV) — C1c
+- [ ] `README.md` updated with new entry points — C2b
+- [ ] `UPGRADING.md` reviewed and complete — C2a
+- [x] Documentation coverage complete and gated by `yard-lint`
+      (`.yard-lint.yml`); `rake yard:lint` passes with no offenses — C1b/C1d
+- [ ] Full CI pipeline green — C3
 
 ---
 
-## Release Checklist (C3d)
+## Step C Completion Checklist (C3d)
 
-- [ ] All YARD docs written and reviewed
-- [ ] `yard stats` shows 100% public-API coverage
-- [ ] `bundle exec rake default` passes
-- [ ] `README.md` examples tested and working
-- [ ] All links in docs are valid
-- [ ] CHANGELOG.md updated with v5.0.0 changes
-- [ ] Git tag created (`v5.0.0`)
-- [ ] Gem released to rubygems.org
-- [ ] Release notes published (GitHub releases page)
+Step C is complete (docs-complete + CI green) when all of the following hold. The
+actual gem release is tracked separately and is **not** part of this checklist.
+
+- [ ] `redesign/c1a-public-api-scope.tsv` produced and kept authoritative (C1a)
+- [x] All elements (public and internal) documented; `rake yard:lint` passes with
+      no offenses (C1b)
+- [ ] Every element carries a correct `@api` tag; topic modules `@api private` (C1c)
+- [x] Coverage gate migrated to `yard-lint` (`.yard-lint.yml`) and green (C1d)
+- [ ] `UPGRADING.md` comprehensive and links valid (C2a)
+- [ ] `README.md` examples tested and working; links valid (C2b)
+- [ ] `bundle exec rake default` passes (C3a)
+- [ ] Manual doc spot-check passes; `@api private` items annotated as internal
+      and not presented as stable public API contract (C3b)
+- [ ] Phase 4 → Step C marked complete in `3_architecture_implementation.md` (C3d)
