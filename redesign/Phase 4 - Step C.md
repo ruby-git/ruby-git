@@ -116,7 +116,10 @@ and deserve YARD documentation:
   organizational containers that group facade methods; the modules are `@api private`
   but the **methods** they define are public (see C1b for documentation location)
 - `Git::Repository::<topic>::*Path`, `*State` — path/state objects within
-  facade modules
+  facade modules (e.g., `Git::Repository::Branching::HeadState`). These are
+  internal helper classes that should be marked `@api private` and documented in
+  their own class definition. The owning method simply references them in its
+  `@return` tag (e.g., `@return [Git::Repository::Branching::HeadState]`).
 - Any `::Internal::*` helpers
 
 ### C1b — Add missing YARD docs to public API
