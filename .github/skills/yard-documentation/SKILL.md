@@ -270,8 +270,8 @@ YARD renders `{ClassName#method}` as a hyperlink only when the target method is
 included in the generated documentation. Public objects are included by default,
 and objects marked with `@api private` remain included with a private annotation.
 Ruby private methods are excluded by default. Do not write
-`{Git::Lib#some_private_method}` — it will render as plain text and may generate
-an unresolved reference warning.
+`{Git::Commands::Base#execute_command}` — it will render as plain text and may
+generate an unresolved reference warning.
 
 If you need to refer to a private method, describe it in prose instead, or link to
 the public method that callers should use.
@@ -295,10 +295,10 @@ unresolved link warning.
 Link to other code objects anywhere in a doc comment using `{ClassName}`,
 `{ClassName#method}`, `{#method_in_same_class}`, or `{Class::CONSTANT}`. An
 optional title follows the reference separated by a space:
-`{Git::Base#log the log method}`. Do not use brace syntax inside `@see` tags —
+`{Git::Repository#log the log method}`. Do not use brace syntax inside `@see` tags —
 `@see` links automatically without braces. `@see` accepts three target forms:
 
-- Code objects: `@see Git::Base#log`
+- Code objects: `@see Git::Repository#log`
 - URLs: `@see https://git-scm.com/docs/git-log`
 - Quoted text: `@see "Pro Git, Chapter 2"`
 
@@ -306,7 +306,7 @@ optional title follows the reference separated by a space:
 
 The `[Types]` field in `@param`, `@return`, `@raise`, etc. supports:
 
-- Plain types: `[String]`, `[Integer]`, `[Git::Base]`
+- Plain types: `[String]`, `[Integer]`, `[Git::Repository]`
 - Multiple types: `[String, nil]`, `[String, Array<String>]`
 - Parametrized types: `[Array<String>]`, `[Hash<Symbol, String>]`
 - Duck-types (responds to): `[#read]`, `[#to_s]`
@@ -352,7 +352,7 @@ classes or fully implemented methods.
     `Encapsulates branch state`
 - `@api public` or `@api private` tag to declare visibility — use `@api public` for
   stable user-facing classes; use `@api private` for internal implementation classes
-  (e.g., `Git::Lib`, `Git::Commands::*`, parsers)
+  (e.g., `Git::ExecutionContext::*`, `Git::Commands::*`, parsers)
 - At least one `@example` showing typical instantiation or primary usage — this
   applies to all classes including `@api private` classes
 - Error/exception classes must also state when the error is raised in class-level
@@ -503,7 +503,7 @@ BranchDeleteFailure = Data.define(:name, :result)
 bundle exec yard stats --list-undoc
 
 # Check a specific file
-bundle exec yard doc lib/git/base.rb --no-output
+bundle exec yard doc lib/git/repository.rb --no-output
 ```
 
 ## Step 2: Write Documentation
@@ -783,11 +783,11 @@ bundle exec yard stats
 bundle exec yard stats --list-undoc
 
 # Generate docs for specific file
-bundle exec yard doc lib/git/base.rb
+bundle exec yard doc lib/git/repository.rb
 
 # Check for YARD syntax errors
 bundle exec yard doc --no-output 2>&1
 
 # View documentation for specific class
-bundle exec yard ri Git::Base
+bundle exec yard ri Git::Repository
 ```
