@@ -1592,13 +1592,21 @@ See the detailed execution plan in
 
 #### Step C — Update documentation
 
-**Status: 🚧 Partial.**
+**Status: 🚧 Partial.** See detailed execution plan in
+[Phase 4 - Step C.md](Phase%204%20-%20Step%20C.md).
 
-- Thoroughly document the new public API (`Git`, `Git::Repository`, etc.).
-- Mark all internal classes (`ExecutionContext`, `Commands`, `*Path`) with `@api private` in the YARD documentation.
-- Update the `README.md` and create a `UPGRADING.md` guide explaining the breaking changes for v5.0.0.
+- ✅ Thoroughly document the new public API (`Git`, `Git::Repository`, etc.) and all
+  of `lib/` — **done**: every file passes `yard-lint` (which replaced the retired
+  `yardstick` tooling) with no offenses.
+- Set correct `@api` tags across `lib/` (including flipping the `Git::Repository::*`
+  topic modules to `@api private`).
+- Update the `README.md` and expand the existing `UPGRADING.md` guide explaining the
+  breaking changes for v5.0.0.
 
-**Done when**: `yard stats` reports no missing docs on public API; `UPGRADING.md`
-covers all breaking changes; `README.md` reflects the new entry points. `UPGRADING.md`
-exists and `@api private` markers are applied broadly; remaining work is to confirm
-full public-API doc coverage and that `README.md` reflects the new entry points.
+**Done when**: the criteria in the Step C execution plan
+([Phase 4 - Step C.md](Phase%204%20-%20Step%20C.md) → "Done-When Criteria") are all
+met. In brief: documentation coverage is complete and enforced by `yard-lint`
+(`.yard-lint.yml`; `rake yard:lint` passes with no offenses) — already done — the
+`@api`-visibility tags are correct, `UPGRADING.md` covers all breaking changes,
+`README.md` reflects the new entry points, and the full CI pipeline is green. This
+tracker defers to the Step C plan as the single source of truth to avoid drift.
