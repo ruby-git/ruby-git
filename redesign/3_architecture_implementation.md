@@ -9,7 +9,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Phase 4 Steps A and B complete — W6 and Step C remain](#phase-4-steps-a-and-b-complete--w6-and-step-c-remain)
+    - [Phase 4 Steps A, B, and W6 complete — Step C remains](#phase-4-steps-a-b-and-w6-complete--step-c-remains)
     - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 (remove stale `Git::Base`/`Git::Lib` skill refs) pending; Step C partial | 10% | 70% |
-| **TOTAL** | -- | -- | **100%** | **97%** |
+| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 ✅ (remove stale `Git::Base`/`Git::Lib` skill refs); Step C partial | 10% | 80% |
+| **TOTAL** | -- | -- | **100%** | **98%** |
 
 ### Facade Modules Completed
 
@@ -85,7 +85,7 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Phase 4 Steps A and B complete — W6 and Step C remain
+#### Phase 4 Steps A, B, and W6 complete — Step C remains
 
 Phase 4 **Step A — Remove old code** is ✅ complete. The atomic removal landed in
 [PR #1456](https://github.com/ruby-git/ruby-git/pull/1456) (commit `c1c53999`),
@@ -96,18 +96,19 @@ item. The only remaining `Git::Base` / `Git::Lib` strings in `lib/` are YARD/com
 references to historical 4.x behavior, which the Step A done-criteria explicitly
 allow.
 
-Phase 4 **Step B — Finalize test suite** is ✅ complete. All 192 PORT rows were ported
+Phase 4 **Step B — Finalize test suite** is ✅ complete. All 159 PORT rows (after dedup) were ported
 to RSpec (batches U1–U21), `tests/` and the Test::Unit tooling were removed (W3), the
 `extract-*` skills were deprecated (W4a), Test::Unit documentation references were
-removed (W4b), and the full quality gate (`bundle exec rake default:parallel`) was
-verified green — 5668 unit + 893 integration examples, 0 failures (W5).
+removed (W4b), the full quality gate was verified green (W5 — 5668 unit + 893
+integration examples, 0 failures), and stale `Git::Base`/`Git::Lib` references were
+removed from active Copilot skills (W6 — [PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)).
 
 The remaining redesign work is the rest of Phase 4:
 
 | Step | Status | Summary |
 | ---- | ------ | ------- |
 | A — Remove old code | ✅ Complete | `Git::Base`/`Git::Lib` and the bridge deleted ([PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)) |
-| B — Finalize test suite | ✅ Complete | W2 ✅ (all 192 PORT rows ported and merged, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 ✅ (gate green: 5668 unit + 893 integration, 0 failures) |
+| B — Finalize test suite | ✅ Complete | W2 ✅ (all 159 PORT rows ported and merged after dedup, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 ✅ (gate green: 5668 unit + 893 integration, 0 failures); W6 ✅ (removed stale `Git::Base`/`Git::Lib` skill refs, [PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)) |
 | C — Update documentation | 🚧 Partial | `UPGRADING.md` and broad `@api private` coverage exist; verify `yard stats` reports no missing public-API docs and that `README.md` reflects the new entry points |
 
 The following earlier prerequisites are all ✅ complete:
@@ -1578,14 +1579,13 @@ graph LR
 
 **Status: ✅ Complete.**
 
-All 192 PORT rows from the W1/W1.5 audit were ported to RSpec across batches U1–U21
+All 159 PORT rows (after dedup) from the W1/W1.5 audit were ported to RSpec across batches U1–U21
 (W2). The `tests/` directory and all Test::Unit tooling were removed (W3). The
 `extract-*` skills were deprecated (W4a). All Test::Unit documentation references
 were removed (W4b). The full quality gate was verified green (W5): 5668 unit examples
 + 893 integration examples, 0 failures; RuboCop clean; YARD 83.6% (threshold 75%);
 gem build successful. W6 (remove stale `Git::Base`/`Git::Lib` skill references from
-active skills) is planned and its design is merged — execution is the next pending
-task in Phase 4.
+active skills) is complete — both plan ([PR #1506](https://github.com/ruby-git/ruby-git/pull/1506)) and execution ([PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)) have merged.
 
 See the detailed execution plan in
 [Phase 4 - Step B.md](Phase%204%20-%20Step%20B.md).
