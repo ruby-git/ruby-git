@@ -10,7 +10,7 @@ is loaded by subagents during the [Facade Implementation](SKILL.md) workflow.
 - [Topic module selection](#topic-module-selection)
   - [Existing modules](#existing-modules)
   - [Decision rules for adding a new module](#decision-rules-for-adding-a-new-module)
-    - [One-at-a-time extraction from `Git::Base` / `Git::Lib`](#one-at-a-time-extraction-from-gitbase--gitlib)
+    - [Choosing a module for a new facade method](#choosing-a-module-for-a-new-facade-method)
   - [Naming a new topic module](#naming-a-new-topic-module)
 - [Designing a facade method](#designing-a-facade-method)
   - [Choosing the return type](#choosing-the-return-type)
@@ -85,16 +85,15 @@ methods is fine when the topic is genuinely distinct; the question is always
 *fit*, not count. Default to extending an existing module whenever the new method
 plausibly fits there.
 
-#### One-at-a-time extraction from `Git::Base` / `Git::Lib`
+#### Choosing a module for a new facade method
 
-When migrating a single method without a planned batch:
+When placing a single facade method without a planned batch:
 
-1. Before deciding placement, scan `Git::Base` and `Git::Lib` for sibling methods
-   on the same git topic (e.g. when extracting `branches_all`, also look for
-   `branch`, `branch_current`, `branch_delete`, `current_branch_state`).
+1. Before deciding placement, scan existing `Git::Repository::*` modules for
+   sibling methods on the same git topic (e.g. when adding a method related to
+   branches, check `Git::Repository::Branching` for existing siblings).
 2. If those siblings form a coherent topic that does not fit any existing module,
-   create the new module on this first extraction so subsequent extractions have
-   a home.
+   create the new module so subsequent additions have a home.
 3. Otherwise place the method in the closest existing module. Revisit module
    organization later if a distinct topic emerges; promote the cluster to its own
    module in a single `refactor(repository):` commit at that point.
@@ -133,11 +132,10 @@ cases, orchestration sequence otherwise.
 
 Apply these rules in order:
 
-1. **Extracting from `Git::Base` or `Git::Lib`?** The facade method **must**
-   return exactly what the legacy method returned (same type, same shape, same
-   nil/empty semantics). Backward compatibility for users who called
-   `g.foo` / `g.lib.foo` is the public contract being preserved during
-   migration; capture the legacy return in the Step 2 plan.
+1. **Changing an existing `Git::Repository` method?** Preserve the existing return
+   type exactly — same shape, same nil/empty semantics. Backward compatibility for
+   callers of `Git::Repository` is the public contract; capture the existing return
+   in the Step 2 plan.
 2. **No legacy method (greenfield facade method)?** Choose the return type from
    the public-API perspective, in this order of preference:
    1. A **domain object** (`Git::BranchInfo`, `Git::DiffResult`, …) when the
@@ -158,11 +156,10 @@ Apply these rules in order:
 The Ruby signature is part of the public contract — just as binding as the
 return type. Apply these rules in order:
 
-1. **Extracting from `Git::Base` or `Git::Lib`?** The facade method **must**
-   preserve the legacy signature exactly: same positional arguments in the same
-   order, same defaults, same `opts = {}` vs. `**options` shape, same
-   nil/sentinel semantics. Capture the legacy signature in the Step 2 plan and
-   diff against it after implementation.
+1. **Changing an existing `Git::Repository` method?** Preserve the existing
+   signature exactly: same positional arguments in the same order, same defaults,
+   same `opts = {}` vs. `**options` shape, same nil/sentinel semantics. Capture the
+   existing signature in the Step 2 plan and diff against it after implementation.
 2. **No legacy method (greenfield facade method)?** Design the signature from
    the public-API perspective:
    1. **Positional arguments** for the natural domain identifiers the method
@@ -197,7 +194,7 @@ patterns](#argument-pre-processing-patterns).
 When the facade method takes no options hash, does no pre-processing, and only
 a trivial post-processing step (such as `.stdout.chomp`), it is a single-line
 delegation. For example, a hypothetical `Git::Repository::Inspection#current_branch`
-preserving `Git::Lib#current_branch`'s `String` contract:
+preserving the `String` return type contract:
 
 ```ruby
 # Return the name of the currently checked-out branch
@@ -491,7 +488,7 @@ or via `include`). `include` copies private instance methods onto the host class
 so any caller with a `Git::Repository` instance can `repo.send(:helper, ...)`.
 This:
 
-1. Re-creates the `Git::Lib` god-class problem the redesign is escaping.
+1. Re-creates the god-class problem `Git::Lib` had — the reason the redesign introduced topic modules.
 2. Couples every topic module silently to ambient mixin state.
 3. Is not actually private and not `@api`-marked, so YARD/tooling cannot enforce it.
 
@@ -782,9 +779,9 @@ body.
 
 ### Changing the legacy return type or signature on extraction
 
-When a facade method is extracted from `Git::Base` / `Git::Lib`, returning a
+When adding or changing a `Git::Repository` facade method, returning a
 different type, accepting a different positional/keyword shape, or changing
-nil-handling silently breaks every caller. Capture the legacy contract in the
+nil-handling silently breaks every caller. Capture the existing contract in the
 Step 2 plan and diff before/after — see
 [Choosing the return type](#choosing-the-return-type) rule 1 and
 [Choosing the method signature](#choosing-the-method-signature) rule 1.

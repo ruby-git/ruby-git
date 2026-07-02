@@ -241,20 +241,20 @@ expect `--no-edit` unless the test is specifically exercising that option.
 > **Correct pattern:** test each option independently (`it 'passes --no-edit
 > when no_edit is true'`); test the default (no option passed) separately. Policy
 > enforcement (which options the facade passes and why) is tested at the facade
-> layer (`lib_command_spec.rb`).
+> layer (for example, `spec/unit/git/repository/remote_operations_spec.rb`).
 
 **Where to test policy enforcement:** Policy tests belong in the facade layer,
-not in command specs. When a `Git::Lib` method sets policy defaults like
-`no_edit: true` or `no_progress: true`, the corresponding `lib_command_spec.rb`
-(or `lib_spec.rb`) test should verify those defaults reach the command:
+not in command specs. When a `Git::Repository::*` facade method sets policy defaults like
+`no_edit: true` or `no_progress: true`, the corresponding facade unit spec
+(e.g. `spec/unit/git/repository/remote_operations_spec.rb`) should verify those defaults reach the command:
 
 ```ruby
-# spec/unit/git/lib_command_spec.rb — facade policy-default test
+# spec/unit/git/repository/remote_operations_spec.rb — facade policy-default test
 describe '#pull' do
   it 'defaults to no_edit: true for non-interactive execution' do
     expect_any_instance_of(Git::Commands::Pull)
       .to receive(:call).with(anything, no_edit: true).and_call_original
-    lib.pull('origin', 'main')
+    described_instance.pull('origin', 'main')
   end
 end
 ```

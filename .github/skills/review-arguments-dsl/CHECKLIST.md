@@ -101,14 +101,14 @@ output-control, editor-suppression, or progress flags. Declare these as
 > `no_edit: true` passed from the facade call site.
 
 **The `--edit` / `--no-edit` pair:** Model as `flag_option :edit, negatable: true`.
-The facade (`Git::Lib`) passes `no_edit: true` at each call site. Do **not** hardcode
+The `Git::Repository::*` facade passes `no_edit: true` at each call site. Do **not** hardcode
 `literal '--no-edit'` — that prevents the facade from controlling the option — and do
 **not** exclude `--edit` from the DSL.
 
 **Output-format options belong at the facade call site, not as `literal` entries:**
 When a parser requires specific output flags (e.g. `--pretty=raw`, `--numstat`),
 declare those flags in the DSL with `flag_option` or `value_option`, and pass them
-explicitly from `Git::Lib`. Never hardcode them as `literal` entries inside the
+explicitly from the `Git::Repository::*` facade. Never hardcode them as `literal` entries inside the
 command class — that hides the parser contract and prevents the facade from choosing
 the format. See Insight 16 in `redesign/3_architecture_implementation.md`.
 
@@ -571,7 +571,7 @@ Values are forwarded as Ruby kwargs to the underlying command runner (e.g.,
 
 The authoritative set of accepted execution option names is defined by
 `COMMAND_CAPTURING_ARG_DEFAULTS` and `COMMAND_STREAMING_ARG_DEFAULTS` in
-`lib/git/lib.rb`. The complete set of accepted names is:
+`lib/git/execution_context.rb`. The complete set of accepted names is:
 
 | Name | Purpose | Capturing | Streaming | Notes |
 | --- | --- | --- | --- | --- |
