@@ -36,7 +36,8 @@ Additional related skills:
   sibling consistency within a command family
 - [Facade Implementation](../facade-implementation/SKILL.md) — the v5.0.0 facade
   layer (`Git::Repository::*`) that calls these command classes; new facade
-  wiring goes there rather than into `Git::Lib`
+  wiring goes into a `Git::Repository::*` facade module rather than directly into
+  the command class
 
 ## Input
 
@@ -181,7 +182,7 @@ This skill supports three modes. Determine which mode applies before starting:
    failures](REFERENCE.md#common-failures). Additionally:
 
    - For **scaffold** and **update** modes: write or update the
-     `Git::Lib` method per [Facade delegation and policy
+     `Git::Repository::*` facade method per [Facade delegation and policy
      options](REFERENCE.md#facade-delegation-and-policy-options).
    - For **migration PRs**: verify [Phased rollout
      requirements](REFERENCE.md#phased-rollout-requirements).
@@ -210,8 +211,8 @@ For **scaffold** and **update** modes, produce:
    module file for the first command in a namespace)
 2. **Unit tests** — `spec/unit/git/commands/{command}_spec.rb`
 3. **Integration tests** — `spec/integration/git/commands/{command}_spec.rb`
-4. **Facade delegation** — updated `Git::Lib` method in `lib/git/lib.rb`
-5. **All quality gates pass** — rspec, minitest, rubocop, and yard all green
+4. **Facade delegation** — updated `Git::Repository::*` facade method in `lib/git/repository/<topic>.rb`
+5. **All quality gates pass** — RSpec, RuboCop, YARD, and build all green
 
 For **review** mode, produce:
 
