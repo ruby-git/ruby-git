@@ -59,18 +59,32 @@ All breaking changes are complete; this step documents them for users.
 
 ---
 
-## Workstreams
+## Workstreams & PR Granularity
 
-This step is organized into three workstreams. C1 and C2 are independent and can
-proceed in parallel; C3 gates the final release readiness check.
+This step is organized into three workstreams, each with **one PR per substep** for finer-grained reviews:
+
+- **C1a: Identify Public API Scope** (1 PR)
+- **C1b: Add Missing YARD Docs to Public API** (1 PR)
+- **C1c: Mark Internal Classes with @api private** (1 PR)
+- **C1d: Final YARD Coverage Audit** (1 PR)
+- **C2: README & Guidance Update** (1 PR)
+- **C3: Release Readiness Verification** (1 PR)
+
+Dependencies: C1a → C1b → C1c → C1d → C3; C2 → C3
 
 ```mermaid
 graph LR
-    C1["C1: Public API YARD Audit & Coverage"]
-    C2["C2: README & Guidance Update"]
-    C3["C3: Release Readiness Verification"]
+    C1a["C1a: Identify Scope"]
+    C1b["C1b: Add Docs"]
+    C1c["C1c: Mark Private"]
+    C1d["C1d: Final Audit"]
+    C2["C2: README & Guidance"]
+    C3["C3: Release Readiness"]
 
-    C1 --> C3
+    C1a --> C1b
+    C1b --> C1c
+    C1c --> C1d
+    C1d --> C3
     C2 --> C3
 ```
 
@@ -112,7 +126,7 @@ and deserve YARD documentation:
 - `Git::ExecutionContext::Repository` — internal execution context
 - `Git::Commands::*` — command wrappers (impl detail of command layer)
 - `Git::Parsers::*` — output parsers (impl detail of parser layer)
-- `Git::Repository::*` topic modules (e.g., `Branching`, `Staging`, `Committing`) — 
+- `Git::Repository::*` topic modules (e.g., `Branching`, `Staging`, `Committing`) —
   organizational containers that group facade methods; the modules are `@api private`
   but the **methods** they define are public (see C1b for documentation location)
 - `Git::Repository::<topic>::*Path`, `*State` — path/state objects within
@@ -127,6 +141,7 @@ and deserve YARD documentation:
 **Important:** Methods are documented where they are defined, even if in a private topic module.
 
 For **methods in `Git::Repository::*` topic modules** (e.g., `Git::Repository::Branching#current_branch`):
+
 - Document the method in the topic module where it's defined
 - Mark the **module itself** as `@api private` to signal it's an organizational container
 - The **method** remains public (do NOT mark methods `@api private`)
@@ -134,6 +149,7 @@ For **methods in `Git::Repository::*` topic modules** (e.g., `Git::Repository::B
 - Users will see `Git::Repository#current_branch` with docs from the topic module
 
 For **other public classes** (e.g., `Git::Object`, `Git::Branch`):
+
 - Document each class and its methods in the file where it's defined
 
 **General documentation checklist** for each public class/method:
