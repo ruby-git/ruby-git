@@ -293,17 +293,14 @@ integration grouping. Use a multi-command or post-processing facade method —
 single-command delegators do not warrant integration tests (see [When to skip
 integration tests](#when-to-skip-integration-tests)):
 
-The shared context (e.g. `'in an empty repository'`) provides `repo` and
-`repo_dir` helpers. Facade integration specs must override `execution_context`
-to a `Git::ExecutionContext::Repository` (the shared context's default is
-`repo.lib`, a `Git::Lib`). Stage any required repository state in a `before`
-block inside the spec itself.
+The shared context (e.g. `'in an empty repository'`) provides `repo`,
+`repo_dir`, and `execution_context` helpers. Stage any required repository state
+in a `before` block inside the spec itself.
 
 ```ruby
 RSpec.describe Git::Repository::Stashing, :integration do
-  include_context 'in an empty repository' # provides repo and repo_dir helpers
+  include_context 'in an empty repository' # provides repo, repo_dir, and execution_context helpers
 
-  let(:execution_context) { Git::ExecutionContext::Repository.from_base(repo) }
   let(:described_instance) { Git::Repository.new(execution_context: execution_context) }
 
   before do

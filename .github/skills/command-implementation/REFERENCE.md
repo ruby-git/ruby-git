@@ -98,8 +98,8 @@ class Diff < Git::Commands::Base
   end
 end
 
-# lib/git/lib.rb — parser contract is visible and auditable:
-Git::Commands::Diff.new(self).call(patch: true, numstat: true, ...)
+# lib/git/repository/diffing.rb — parser contract is visible and auditable:
+Git::Commands::Diff.new(@execution_context).call(patch: true, numstat: true, ...)
 ```
 
 The same applies for `--format=<string>`, `--pretty=<fmt>`, `--no-color`, and all
@@ -285,7 +285,7 @@ Structural requirements:
   `@execution_context`
 - `require` statements are limited to files actually used within the command
   class file itself — do not carry over `require` entries that belong only to
-  the facade (`Git::Lib`) or parser layer
+  the `Git::Repository::*` facade or parser layer
 
 ## Command template (Base pattern)
 
@@ -683,7 +683,7 @@ single source of truth for its own option semantics. There are two narrow except
 See `redesign/3_architecture_implementation.md` Insight 6 for the full policy.
 
 This step is required. A command class that only exposes the options that happen to
-be used today in `Git::Lib` is incomplete — callers of the future API should not need
+be used today in the `Git::Repository::*` facade is incomplete — callers of the future API should not need
 to re-open the docs just because the scaffold only covered current usage.
 
 ### Scoping options to sub-command classes
@@ -728,7 +728,7 @@ single-class commands, include all options as described in the decision table ab
 ### Execution-model conflicts
 
 Command classes are neutral — they never hardcode policy choices. Policy defaults
-(`no_edit: true`, `no_progress: true`, etc.) belong to the facade (`Git::Lib`).
+(`no_edit: true`, `no_progress: true`, etc.) belong to the `Git::Repository::*` facade.
 
 > **Anti-pattern:** `literal '--no-edit'` inside a command class.
 >
@@ -833,7 +833,7 @@ allow_exit_status 0..7
 ## Facade delegation and policy options
 
 The command class is only half the story. After scaffolding the command, you must
-also write (or update) the `Git::Lib` method that **delegates** to it. The facade
+also write (or update) the `Git::Repository::*` facade method that **delegates** to it. The facade
 sets safe policy defaults at each call site — `no_edit: true`, `no_progress: true`,
 etc. — not as `literal` entries inside the command class. See "Command-layer
 neutrality" in CONTRIBUTING.md.
@@ -850,7 +850,7 @@ Policy defaults fall into two categories (see also
   that goes through `**opts`.
 
 ```ruby
-# lib/git/lib.rb — facade method for `git pull`
+# lib/git/repository/remote_operations.rb — facade method for `git pull`
 
 PULL_ALLOWED_OPTS = %i[allow_unrelated_histories].freeze
 
@@ -861,7 +861,7 @@ def pull(remote = nil, branch = nil, opts = {})
   allowed_opts = opts.slice(*PULL_ALLOWED_OPTS)
   positional_args = [remote, branch].compact
   # no_edit: true is the non-interactive default (see CONTRIBUTING.md)
-  Git::Commands::Pull.new(self).call(*positional_args, no_edit: true, **allowed_opts).stdout
+  Git::Commands::Pull.new(@execution_context).call(*positional_args, no_edit: true, **allowed_opts).stdout
 end
 ```
 
@@ -936,10 +936,10 @@ flag_option :progress, negatable: true
 flag_option :verbose
 value_option :format
 
-# ✅ In Git::Lib — facade passes the policy value explicitly
-Git::Commands::Pull.new(self).call(no_edit: true, no_progress: true)
-Git::Commands::Mv.new(self).call(*args, verbose: true)
-Git::Commands::Fsck.new(self).call(no_progress: true)
+# ✅ In Git::Repository::* — facade passes the policy value explicitly
+Git::Commands::Pull.new(@execution_context).call(no_edit: true, no_progress: true)
+Git::Commands::Mv.new(@execution_context).call(*args, verbose: true)
+Git::Commands::Fsck.new(@execution_context).call(no_progress: true)
 ```
 
 See "Command-layer neutrality" in CONTRIBUTING.md for the full policy.
@@ -961,8 +961,8 @@ newlines are data), hardcode it in a `def call` override instead — exposing it
 ### Unnecessary `require` statements
 
 A command class file should only `require` what it actually uses. The canonical
-example is parser requires: `require 'git/parsers/foo'` is needed by the facade
-(`Git::Lib`) but not by the command class itself — the command class just runs git
+example is parser requires: `require 'git/parsers/foo'` is needed by the
+`Git::Repository::*` facade but not by the command class itself — the command class just runs git
 and returns `CommandLineResult`.
 
 ```ruby

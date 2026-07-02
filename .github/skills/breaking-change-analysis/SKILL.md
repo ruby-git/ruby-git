@@ -26,8 +26,6 @@ impact and plan migration.
 
 ## Related skills
 
-- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) —
-   verify backward compatibility after command migrations
 - [Development Workflow](../development-workflow/SKILL.md) — implement required
    changes using strict TDD
 
@@ -35,20 +33,20 @@ impact and plan migration.
 
 1. Determine which classes and methods are affected.
 2. Check API visibility (`@api public` vs `@api private` in YARD docs).
-3. Check if the change affects `Git::Lib` (facade layer used by most callers).
+3. Check if the change affects `Git::Repository` (the current facade layer, modules under `lib/git/repository/`).
 
 ## Step 2: Find All Usages
 
 1. **Internal usages:**
 
    ```bash
-   grep -rn "method_name" lib/ tests/ spec/
+   grep -rn "method_name" lib/ spec/
    ```
 
 2. **External usage (if applicable):**
 
    ```bash
-   gh search code "Git::Base#method_name language:ruby"
+   gh search code "Git::Repository#method_name language:ruby"
    ```
 
 ## Step 3: Assess and Document Impact
@@ -82,14 +80,13 @@ Produce an impact assessment:
 ## Step 4: Plan Migration Path
 
 **Project versioning policy:**
-- Current release line: v4.x (heading to v5.0.0)
-- Breaking changes are batched for major releases (v5.0.0)
-- Use deprecation warnings in the current release line before removal in the next major
+- Breaking changes are batched for major releases
+- Use deprecation warnings in the current major series before removal in the next major release
 
 **Deprecation approach:**
 
 ```ruby
-# @deprecated Use {#new_method} instead. Will be removed in v5.0.
+# @deprecated Use {#new_method} instead. Will be removed in the next major release.
 def old_method(*args)
   warn "[DEPRECATION] `old_method` is deprecated. Use `new_method` instead."
   new_method(*args)

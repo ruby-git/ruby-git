@@ -51,7 +51,7 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   rollout gates, and internal compatibility contracts
 - [Review Arguments DSL](../review-arguments-dsl/SKILL.md) — verifying DSL entries match git CLI
 - [Command Test Conventions](../command-test-conventions/SKILL.md) — unit/integration test conventions for command classes
-- [Review Backward Compatibility](../review-backward-compatibility/SKILL.md) — preserving `Git::Lib` return-value contracts
+- [Facade Implementation](../facade-implementation/SKILL.md) — preserving `Git::Repository::*` return-value contracts
 
 ## Target end state
 
