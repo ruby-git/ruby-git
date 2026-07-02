@@ -1,6 +1,6 @@
 # Phase 4 / Step B — Finalize Test Suite: Execution Plan
 
-> **🚧 Status: In progress.** W1 (the legacy-test audit) is **complete and verified**;
+> **✅ Status: Complete.** W1 (the legacy-test audit) is **complete and verified**;
 > its results are captured below and in the companion data file
 > [`phase-4-step-b-test-audit.tsv`](phase-4-step-b-test-audit.tsv). **W1.5 (matrix
 > enrichment) is complete and signed off** — the TSV now carries `disposition`,
@@ -18,7 +18,7 @@
 > 300-file review limit. **W4a** (deprecate `extract-*` skills) **is merged** — PR #1504.
 > **W4b** (remove Test::Unit documentation references) **is merged** — PR #1505. The
 > **W6 plan** (remove stale `Git::Base`/`Git::Lib` skill references) **is merged** —
-> PR #1506. **W5** (verify & finalize) and **W6 execution** have not yet started.
+> PR #1506. **W5** (verify & finalize) is complete — gate is green: 5668 unit + 893 integration examples, 0 failures. **W6 execution** (remove stale `Git::Base`/`Git::Lib` skill references) is merged — [PR #1509](https://github.com/ruby-git/ruby-git/pull/1509).
 
 ## Goal
 
@@ -286,9 +286,9 @@ flowchart LR
     W2 --> W3["W3 (remove infra ✅)"]
     WDoc --> W3
     W3 --> W4b["W4b (TU docs ✅)"]
-    W4b --> W5["W5 (verify/finalize)"]
+    W4b --> W5["W5 (verify/finalize ✅)"]
     W4a["W4a (deprecate extract-* skills ✅)"] --> W5
-    W6["W6 (plan ✅ / exec pending)"]
+    W6["W6 (plan ✅ / exec ✅)"]
 ```
 
 - **W1.5 → W2** is a hard one-time gate: the human signs off the enriched matrix once
@@ -751,7 +751,7 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
 
 ### W5 — Verify & finalize (after W3, W4a, and W4b)
 
-**Status: Not yet started.** Unblocked — W3, W4a, and W4b have all merged.
+**Status: ✅ Complete.** W3, W4a, and W4b have all merged; full quality gate passed.
 
 - Full local gate: `bundle exec rake default:parallel` (and a serial `rake default`
   smoke for JRuby parity if feasible).
@@ -764,15 +764,18 @@ Test::Unit tooling are actually gone, so it lands after the W3 removal PR merges
 
 ### W6 — Remove stale `Git::Base`/`Git::Lib` references from active skills (independent docs-only PR)
 
-**Status: Plan merged** (PR #1506, `docs/plan-w6-remove-stale-base-lib-refs` branch).
-Execution not yet started.
+**Status: ✅ Plan merged** (PR #1506) **and execution merged** (PR #1509, `docs/w6-remove-stale-base-lib-skill-refs` branch).
 
 This workstream has **no dependency on W2/W3/W4a/W4b/W5** — it is not gated by,
 and does not gate, the Test::Unit removal work above. It exists because Phase 4
 **Step A** (the atomic `Git::Base`/`Git::Lib` removal, PR #1456) only required
 `lib/` source to be clean of live references; `.github/skills/` was never audited
 and still describes those two classes as though they currently exist and are the
-live facade layer. The execution PR for this workstream should be branched from
+live facade layer.
+
+> **Note:** The following is historical context from execution planning. This work was completed in PR #1509.
+
+The execution PR for this workstream should be branched from
 `main` after PRs #1504 and #1505 merge, as both touch files in the list below
 and would conflict with concurrent edits.
 
