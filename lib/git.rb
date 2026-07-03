@@ -138,12 +138,12 @@ module Git
   #   repository = Git.bare('ruby-git.git')
   #   puts repository.log[0].sha #=> "64c6fa011d3287bab9158049c85f3e85718854a0"
   #
-  # @param [Pathname] git_dir The path to the bare repository directory
+  # @param git_dir [Pathname] The path to the bare repository directory
   #   containing an initialized Git repository. If a relative path is given, it
   #   is converted to an absolute path using
   #   [File.expand_path](https://www.rubydoc.info/stdlib/core/File.expand_path).
   #
-  # @param [Hash] options The options for this command (see list of valid
+  # @param options [Hash] The options for this command (see list of valid
   #   options below)
   #
   # @option options [String, nil] :git_ssh An optional custom SSH command
@@ -309,7 +309,7 @@ module Git
   #   See [GIT URLS](https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a)
   #   for more information.
   #
-  # @param [Hash] options The options for this command (see list of valid
+  # @param options [Hash] The options for this command (see list of valid
   #   options below)
   #
   # @option options [Logger] :log A logger to use for Git operations.  Git
@@ -435,7 +435,7 @@ module Git
   # options
   #   :refs
   #
-  # @param [String|NilClass] location the target repository location or nil for '.'
+  # @param location [String|NilClass] the target repository location or nil for '.'
   # @return [{String=>Hash}] the available references of the target repo.
   def self.ls_remote(location = nil, options = {})
     options = options.dup
@@ -470,14 +470,14 @@ module Git
   # @example Open a working copy whose repository is in a non-standard directory
   #   git = Git.open('~/Projects/ruby-git', repository: '~/Project/ruby-git.git')
   #
-  # @param [Pathname] working_dir the path to the working directory to use
+  # @param working_dir [Pathname] the path to the working directory to use
   #   for git commands.
   #
   #   A relative path is referenced from the current working directory of the process
   #   and converted to an absolute path using
   #   [File.expand_path](https://www.rubydoc.info/stdlib/core/File.expand_path).
   #
-  # @param [Hash] options The options for this command (see list of valid
+  # @param options [Hash] The options for this command (see list of valid
   #   options below)
   #
   # @option options [Pathname] :repository used to specify a non-standard path to

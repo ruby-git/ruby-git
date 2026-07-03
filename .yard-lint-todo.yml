@@ -336,10 +336,6 @@ Tags/RedundantParamDescription:
   Exclude:
     - 'lib/git/command_line/base.rb'
 
-Tags/TagTypePosition:
-  Exclude:
-    - 'lib/git.rb'
-
 Tags/TypeSyntax:
   Exclude:
     - 'lib/git.rb'
