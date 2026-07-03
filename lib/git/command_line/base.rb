@@ -35,7 +35,7 @@ module Git
       #
       # @param global_opts [Array<String>] global options to pass to git
       #
-      # @param logger [Logger] the logger to use
+      # @param logger [Logger] used to log git commands and their results
       #
       def initialize(env, binary_path, global_opts, logger)
         @env = env
