@@ -332,10 +332,6 @@ Tags/Order:
     - 'lib/git/tag_delete_result.rb'
     - 'lib/git/version.rb'
 
-Tags/RedundantParamDescription:
-  Exclude:
-    - 'lib/git/command_line/base.rb'
-
 Tags/TypeSyntax:
   Exclude:
     - 'lib/git.rb'
