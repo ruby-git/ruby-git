@@ -738,6 +738,34 @@ yielded to.
 
 ## Step 3: Verify Documentation
 
+First, run the automated linter. `yard-lint` enforces many of the rules in this
+skill (undocumented objects, missing `@param`/`@option`/`@return`, tag order,
+type syntax, orphaned doc comments) and the minimum documentation coverage
+threshold:
+
+```bash
+# Lint YARD docs against the project standards (config: .yard-lint.yml)
+bundle exec yard-lint lib/
+
+# Lint only the files you changed
+bundle exec yard-lint lib/ --diff main
+
+# Or run it through rake (build + lint + example-test)
+bundle exec rake yard
+```
+
+A clean `yard-lint` run is necessary but not sufficient: the linter cannot check
+every rule here (e.g. the `LINE_LIMIT`/`LINE_MAX` distinction, `SUMMARY_LIMIT`,
+short-description capitalization and punctuation, noun-phrase class descriptions,
+required `@example` titles). Still perform the manual checks below.
+
+Legacy offenses are baselined in `.yard-lint-todo.yml`; when you touch a file
+listed there, remove it from every `Exclude:` list that names it (a file may be
+baselined under more than one validator) and fix the offenses as part of your
+change.
+
+Then generate and review the rendered docs:
+
 ```bash
 # Generate and review docs
 bundle exec yard doc
@@ -770,6 +798,15 @@ and `@yieldreturn` tag, check both limits:
 ## Command Reference
 
 ```bash
+# Lint YARD documentation against the project standards
+bundle exec yard-lint lib/
+
+# Lint only changed files (great for pre-commit / CI)
+bundle exec yard-lint lib/ --diff main
+
+# Show documentation coverage statistics
+bundle exec yard-lint lib/ --stats
+
 # Generate documentation
 bundle exec yard doc
 
