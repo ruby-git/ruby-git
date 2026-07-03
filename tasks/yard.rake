@@ -16,20 +16,15 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
   CLEAN << '.yardoc'
   CLEAN << 'doc'
 
-  # yard:audit
+  # yard:lint
 
-  desc 'Run yardstick to show missing YARD doc elements'
-  task :'yard:audit' do
-    sh "yardstick 'lib/**/*.rb'"
-  end
-
-  # yard:coverage
-
-  require 'yardstick/rake/verify'
-
-  Yardstick::Rake::Verify.new(:'yard:coverage') do |verify|
-    verify.threshold = 75
-    verify.require_exact_threshold = false
+  # Lints YARD documentation against the project's standards and enforces the
+  # minimum documentation coverage threshold. Configuration lives in
+  # .yard-lint.yml; legacy offenses are baselined in .yard-lint-todo.yml.
+  #
+  desc 'Lint YARD documentation with yard-lint'
+  task :'yard:lint' do
+    sh 'bundle exec yard-lint lib/'
   end
 
   # yard:example-test
@@ -42,9 +37,6 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
 
   # yard
 
-  # Do not include yard:audit in the yard task because there are too many
-  # missing YARD doc elements
-  #
-  desc 'Run YARD documentation tasks (build, coverage, example-test)'
-  task yard: %i[yard:build yard:coverage yard:example-test]
+  desc 'Run YARD documentation tasks (build, lint, example-test)'
+  task yard: %i[yard:build yard:lint yard:example-test]
 end
