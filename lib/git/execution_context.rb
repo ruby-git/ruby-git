@@ -435,9 +435,9 @@ module Git
     #
     # Per `Process.spawn` semantics, a value of `nil` unsets the variable.
     #
-    # @param additional_overrides [Hash<String, String|nil>] per-call overrides
+    # @param additional_overrides [Hash{String => String, nil}] per-call overrides
     #
-    # @return [Hash<String, String|nil>] the merged environment variable overrides
+    # @return [Hash{String => String, nil}] the merged environment variable overrides
     #
     # @api private
     #

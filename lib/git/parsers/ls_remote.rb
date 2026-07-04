@@ -36,7 +36,7 @@ module Git
       #
       # @param line [String] a single line from ls-remote stdout
       #
-      # @return [Array(String, String|nil, Hash)] `[type, name, value]` where
+      # @return [Array(String, (String, nil), Hash)] `[type, name, value]` where
       #   `value` is `{ ref: String, sha: String }`
       #
       # @raise [Git::UnexpectedResultError] if the line is not in `<sha>\t<ref>` format

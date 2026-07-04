@@ -224,7 +224,7 @@ module Git
         # Parse potential rename path into [dst_path, src_path]
         #
         # @param filename [String] the path string from numstat output
-        # @return [Array<String, String|nil>] [destination_path, source_path_or_nil]
+        # @return [Array(String, (String, nil))] [destination_path, source_path_or_nil]
         #
         def parse_rename_path(filename)
           if (match = filename.match(BRACE_RENAME_PATTERN))
@@ -263,7 +263,7 @@ module Git
         #
         # @param output [String] combined output
         # @param include_dirstat [Boolean] whether to expect dirstat section
-        # @return [Array<Array<String>, Array<String>, String|nil, Array<String>>]
+        # @return [Array(Array<String>, Array<String>, (String, nil), Array<String>)]
         #
         def split_sections(output, include_dirstat)
           lines = output.split("\n").reject(&:empty?)
@@ -309,7 +309,7 @@ module Git
         # Parse status character and optional similarity percentage
         #
         # @param status_char [String] e.g., 'M', 'A', 'R075'
-        # @return [Array<Symbol, Integer|nil>] [status, similarity]
+        # @return [Array(Symbol, (Integer, nil))] [status, similarity]
         #
         def parse_status(status_char)
           letter = status_char[0]
@@ -320,7 +320,7 @@ module Git
         # Extract source and destination paths from raw output paths
         #
         # @param paths [Array<String>] paths array
-        # @return [Array<String|nil, String|nil>] [src_path, dst_path]
+        # @return [Array((String, nil), (String, nil))] [src_path, dst_path]
         #
         def extract_paths(paths)
           if paths.length == 2
@@ -394,7 +394,7 @@ module Git
         #
         # @param output [String] combined output
         # @param include_dirstat [Boolean] whether to expect dirstat section
-        # @return [Array<Array<String>, String|nil, Array<String>, String>]
+        # @return [Array(Array<String>, (String, nil), Array<String>, String)]
         #
         def split_sections(output, include_dirstat)
           lines = output.lines

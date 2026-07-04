@@ -780,7 +780,7 @@ module Git
         # @param branch [String, Hash, nil] branch/refspec, or opts hash
         # @param opts [Hash, Boolean, nil] options hash or legacy Boolean shorthand
         #
-        # @return [Array(String|nil, String|nil, Hash)] normalized [remote, branch, opts]
+        # @return [Array((String, nil), (String, nil), Hash)] normalized [remote, branch, opts]
         #
         # @api private
         #
