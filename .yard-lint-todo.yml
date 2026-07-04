@@ -225,15 +225,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/repository/staging.rb'
 
 # Tags validators
-Tags/InvalidTypes:
-  Exclude:
-    - 'lib/git.rb'
-    - 'lib/git/execution_context.rb'
-    - 'lib/git/parsers/diff.rb'
-    - 'lib/git/parsers/ls_remote.rb'
-    - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/remote_operations.rb'
-
 Tags/OptionTags:
   Exclude:
     - 'lib/git.rb'
