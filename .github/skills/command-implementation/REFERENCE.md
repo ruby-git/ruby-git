@@ -326,9 +326,14 @@ module Git
       class Bar < Git::Commands::Base  # never name the class Object
         arguments do
           # Group related options with section comments (e.g. # Output, # Safety)
-          # NEVER add trailing inline comments (e.g. `# --verbose`) to DSL entries.
-          # The DSL is self-documenting; inline comments duplicate YARD docs and
-          # were removed project-wide in commit 370dffb.
+          # NEVER add trailing inline comments (e.g. `# --verbose`) to DSL entries;
+          # the DSL is self-documenting and inline comments duplicate the YARD docs.
+          # NEVER put YARD tags (@see, @param, @return, etc.) in comments inside this
+          # block. A DSL call such as `flag_option :x` is not a documentable construct,
+          # so YARD silently drops the whole comment (an orphaned doc comment that
+          # Documentation/OrphanedDocComment flags). Put per-option references in the
+          # matching @option tag (use continuation text for URLs) and command-wide
+          # references in a class-level @see.
         end
 
         # Optional: for commands where non-zero exits are valid
