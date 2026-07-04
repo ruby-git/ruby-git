@@ -308,10 +308,30 @@ The `[Types]` field in `@param`, `@return`, `@raise`, etc. supports:
 
 - Plain types: `[String]`, `[Integer]`, `[Git::Repository]`
 - Multiple types: `[String, nil]`, `[String, Array<String>]`
-- Parametrized types: `[Array<String>]`, `[Hash<Symbol, String>]`
+- Parametrized collections: `[Array<String>]`, `[Hash<Symbol, String>]`
+- Fixed-position tuples: `[Array(String, Integer)]`, `[Array(Symbol, (Integer, nil))]`
 - Duck-types (responds to): `[#read]`, `[#to_s]`
 - `[Boolean]` — conventional meta-type for `true` or `false` (not a real Ruby class)
 - `[void]` — for `@return` tags on methods whose return value must not be used
+
+**`Array<...>` (collection) vs `Array(...)` (tuple)**
+
+YARD treats angle brackets and parentheses as distinct type constructors, so
+choose the one that matches the value's shape:
+
+- `Array<T>` (angle brackets) — a **collection**: an array *of* `T` with any
+  number of elements, e.g. `Array<String>` is zero or more strings. Listing
+  several types inside `<...>` means each element is one *of* those types
+  (`Array<String, Symbol>` is an array whose elements are each a String or a
+  Symbol), **not** a fixed sequence.
+- `Array(A, B)` (parentheses) — a **tuple**: an array *containing* exactly `A`
+  then `B` in that order, e.g. `Array(String, Integer)` is a two-element
+  `[name, count]`. Use this whenever a method returns or accepts a
+  fixed-position array such as `[status, similarity]` or `[path, options]`.
+
+The same rule applies to nested types: `Array<Array(Integer, String)>` is a
+collection of `[index, message]` tuples. Use `[Array]` with a prose description
+only when the element types cannot be expressed concisely.
 
 **`@api private` vs `@private`**
 
