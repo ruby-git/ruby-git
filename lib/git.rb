@@ -301,8 +301,9 @@ module Git
   # @example with the logging option
   #   logger = Logger.new(STDOUT, level: Logger::INFO)
   #   Git.default_branch('.', log: logger) # => 'master'
-  #   I, [2022-04-13T16:01:33.221596 #18415]  INFO -- : git '-c' 'core.quotePath=true'
-  #     '-c' 'color.ui=false' ls-remote '--symref' '--' '.' 'HEAD'  2>&1
+  #   # Logs the executed git command to STDOUT, for example:
+  #   #   I, [2022-04-13T16:01:33.221596 #18415]  INFO -- : git '-c' 'core.quotePath=true'
+  #   #     '-c' 'color.ui=false' ls-remote '--symref' '--' '.' 'HEAD'  2>&1
   #
   # @param repository [URI, Pathname, String] The (possibly remote) repository to get the default branch name for
   #
