@@ -225,12 +225,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/repository/staging.rb'
 
 # Tags validators
-Tags/ExampleSyntax:
-  Exclude:
-    - 'lib/git.rb'
-    - 'lib/git/commands/base.rb'
-    - 'lib/git/repository/diffing.rb'
-
 Tags/InvalidTypes:
   Exclude:
     - 'lib/git.rb'

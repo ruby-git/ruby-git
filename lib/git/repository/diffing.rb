@@ -133,10 +133,11 @@ module Git
       #   repo.diff_numstat('abc1234', 'def5678')
       #
       # @example Get working tree changes since HEAD
-      #   repo.diff_numstat #=> {
-      #     total: { insertions: 5, deletions: 2, lines: 7, files: 1 },
-      #     files: { "lib/foo.rb" => { insertions: 5, deletions: 2 } }
-      #   }
+      #   repo.diff_numstat
+      #   #=> {
+      #   #     total: { insertions: 5, deletions: 2, lines: 7, files: 1 },
+      #   #     files: { "lib/foo.rb" => { insertions: 5, deletions: 2 } }
+      #   #   }
       #
       # @example Get unstaged changes (index vs. working tree)
       #   repo.diff_numstat(nil) #=> { ... }
