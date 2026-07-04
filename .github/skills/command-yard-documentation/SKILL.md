@@ -177,6 +177,13 @@ conflicting documentation for the method.
 - Missing `# @!method call(*, **)` directive when there is no `def call` override
   (loses child-specific docs in generated YARD)
 - `@option` docs out of sync with `arguments do`
+- **YARD tags inside the `arguments do` block** — placing a tag (`@see`, `@param`,
+  `@return`, etc.) in a comment above a DSL entry such as `flag_option :x` produces an
+  orphaned doc comment. The DSL call is not a documentable construct, so YARD silently
+  drops the comment and `Documentation/OrphanedDocComment` flags it. Document each
+  option in its `@option` tag (put URLs in continuation text) and use a class-level
+  `@see` for command-wide references. A plain-prose comment (no leading `@tag`) inside
+  the block is fine.
 - **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
   every `@overload` that includes `**options` requires
   `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
