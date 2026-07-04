@@ -219,10 +219,6 @@ module Git
     #
     # Wraps `git config --get-urlmatch --show-scope --null`.
     #
-    # Note: `--show-origin` is not supported by git for `--get-urlmatch`, so
-    # the {Git::ConfigEntryInfo} entries returned by this method always have
-    # `origin: nil`.
-    #
     # @example Get config entries for a specific URL
     #   entries = repo.config_get_urlmatch('http', 'https://github.com/user/repo')
     #   entries.map(&:key)
@@ -238,6 +234,10 @@ module Git
     # @raise [ArgumentError] if unsupported options are provided
     #
     # @raise [Git::FailedError] if git exits with an unexpected non-zero status
+    #
+    # @note `--show-origin` is not supported by git for `--get-urlmatch`, so the
+    #   {Git::ConfigEntryInfo} entries returned by this method always have
+    #   `origin: nil`.
     #
     def config_get_urlmatch(name, url, **options)
       Private.assert_valid_opts!(CONFIG_GET_URLMATCH_ALLOWED_OPTS, **options)

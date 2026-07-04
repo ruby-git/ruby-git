@@ -249,9 +249,6 @@ module Git
 
       # Open a working copy at an existing path
       #
-      # Note: this method opens working copies only. To open a bare repository, use
-      # `Git::Repository.bare`.
-      #
       # @example Open the working copy in the current directory
       #   repository = Git::Repository.open('.')
       #
@@ -287,6 +284,9 @@ module Git
       #
       # @raise [ArgumentError] if `working_dir` is not a directory or is not inside
       #   a git working tree
+      #
+      # @note This method opens working copies only. To open a bare repository, use
+      #   `Git::Repository.bare`.
       #
       # @api public
       #

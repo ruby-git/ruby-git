@@ -319,8 +319,6 @@ module Git
     # Annotated tags contain additional metadata such as the tagger's name, email, and
     # the date when the tag was created, along with a message.
     #
-    # TODO: Annotated tags are not objects
-    #
     class Tag < AbstractObject
       attr_accessor :name
 
