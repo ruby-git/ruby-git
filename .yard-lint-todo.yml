@@ -231,13 +231,6 @@ Tags/ExampleSyntax:
     - 'lib/git/commands/base.rb'
     - 'lib/git/repository/diffing.rb'
 
-Tags/InformalNotation:
-  Exclude:
-    - 'lib/git/commands/arguments.rb'
-    - 'lib/git/configuring.rb'
-    - 'lib/git/object.rb'
-    - 'lib/git/repository/factories.rb'
-
 Tags/InvalidTypes:
   Exclude:
     - 'lib/git.rb'

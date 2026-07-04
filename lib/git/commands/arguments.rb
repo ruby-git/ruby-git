@@ -19,7 +19,7 @@ module Git
     #
     # See {Git::Commands::Init} for a usage example.
     #
-    # Example: Defining arguments for a command
+    # For example, defining arguments for a command:
     #
     # ```ruby
     # # 1. Definition of expected CLI arguments and their constraints
@@ -62,7 +62,7 @@ module Git
     # An **argument specification** declares what command inputs are accepted and
     # their constraints.
     #
-    # Example:
+    # For example:
     #
     # ```text
     # git branch (--set-upstream-to=<upstream>|-u <upstream>) [<branch-name>]
@@ -74,7 +74,7 @@ module Git
     # - **Operands**: Arguments identified by position
     # - **Options**: Arguments identified by name (prefixed with `-` or `--`)
     #
-    # Example:
+    # For example:
     #
     # ```shell
     # git branch --set-upstream-to=origin/main main
@@ -88,7 +88,7 @@ module Git
     # A **DSL definition** declares what arguments the {#bind} method accepts and how
     # they map to CLI arguments.
     #
-    # Example:
+    # For example:
     #
     # ```ruby
     # Arguments.define do
@@ -103,7 +103,7 @@ module Git
     # - **Positional arguments**: Arguments identified by position
     # - **Keyword arguments**: Arguments identified by name
     #
-    # Example:
+    # For example:
     #
     # ```ruby
     # args_def.bind('main', set_upstream_to: 'origin/main')
@@ -253,7 +253,7 @@ module Git
     #
     #   Supported by: {#flag_option}, {#value_option}, {#flag_or_value_option}.
     #
-    # Note: {#literal} and {#execution_option} do not support these validation parameters.
+    # Note that {#literal} and {#execution_option} do not support these validation parameters.
     #
     # These parameters affect **output generation** (what CLI arguments are
     # produced):
@@ -428,7 +428,7 @@ module Git
     # `Pathname`, etc. — can be passed as a value without the DSL needing to know
     # about the type.
     #
-    # Note: `flag_option` values control *presence or absence* of a flag and are not
+    # Note that `flag_option` values control *presence or absence* of a flag and are not
     # stringified. `custom_option` builders receive the raw value and are responsible
     # for producing CLI strings themselves.
     #
