@@ -854,7 +854,7 @@ module Git
       #
       #   @param name [String] the name of the tag to delete
       #
-      #   @param delete_options [{ d: true }, { delete: true }] deletion options;
+      #   @param delete_options [Hash{Symbol => Boolean}] deletion options;
       #     only `:d` or `:delete` (set to `true`) is accepted — no other keys
       #     and no `target` argument may be combined with this form
       #
