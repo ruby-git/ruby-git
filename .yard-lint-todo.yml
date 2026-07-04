@@ -14,15 +14,6 @@ Documentation/BlankLineBeforeDefinition:
   Exclude:
     - 'lib/git/diff_info.rb'
 
-Documentation/OrphanedDocComment:
-  Exclude:
-    - 'lib/git/commands/cat_file/batch.rb'
-    - 'lib/git/commands/cat_file/filtered.rb'
-    - 'lib/git/commands/cat_file/raw.rb'
-    - 'lib/git/commands/show_ref/exclude_existing.rb'
-    - 'lib/git/commands/show_ref/list.rb'
-    - 'lib/git/commands/show_ref/verify.rb'
-
 Documentation/UndocumentedMethodArguments:
   Exclude:
     - 'lib/git.rb'

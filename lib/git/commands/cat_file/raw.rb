@@ -34,28 +34,28 @@ module Git
           literal 'cat-file'
 
           # Exit 0 if object exists and is valid; exit 1 otherwise (no output)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--e
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--e
           flag_option :e
 
           # Pretty-print the object content based on its type
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--p
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--p
           flag_option :p
 
           # Print the object type (`blob`, `tree`, `commit`, or `tag`)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--t
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--t
           flag_option :t
 
           # Print the object size in bytes
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--s
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--s
           flag_option :s
 
           # Allow -t and -s to query broken or corrupt objects of unknown type;
           # rejected by git in any other mode — enforced by constraint below
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---allow-unknown-type
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---allow-unknown-type
           flag_option :allow_unknown_type
 
           # Map committer/author identities through the mailmap before reporting size
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
           flag_option :use_mailmap, negatable: true
 
           # Stream stdout to this IO object instead of buffering in memory.
