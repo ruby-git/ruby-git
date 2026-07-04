@@ -555,11 +555,19 @@ signature (see [Documenting anonymous splats with `@overload`](#documenting-anon
 ### Standard template (no `@overload`)
 
 When present, tags must appear in the order shown. `@param` tags appear in
-parameter order; `@option` tags appear immediately after the `@param` for the hash
-they describe. Every `@option` tag **must** be preceded by a `@param` for the
-options hash, and all `@option` tags under that `@param` must reference the same
-parameter name. For keyword arguments (`**options` or `**kwargs`), use
-`@param options [Hash]` (or the actual splat name) as the preceding `@param`:
+parameter order, with one exception described below; `@option` tags appear
+immediately after the `@param` for the hash they describe. Every `@option` tag
+**must** be preceded by a `@param` for the options hash, and all `@option` tags
+under that `@param` must reference the same parameter name. For keyword arguments
+(`**options` or `**kwargs`), use `@param options [Hash]` (or the actual splat
+name) as the preceding `@param`.
+
+The exception to parameter order: all `@param` tags must come before the first
+`@option` tag, because yard-lint's `Tags/Order` validator rejects a `@param` that
+follows an `@option`. When a positional parameter follows the options hash in the
+signature, document the options-hash `@param` (and its `@option` tags) last so the
+`@option` tags stay grouped at the end — that is, move the options-hash `@param`
+after the later positional `@param` rather than in strict signature order:
 
 ```ruby
 # Short description of what the method does
@@ -576,11 +584,11 @@ parameter name. For keyword arguments (`**options` or `**kwargs`), use
 #
 # @param name [Type] description of parameter
 #
+# @param path [String] a parameter that follows the options hash in the signature
+#
 # @param options [Hash] options hash description
 #
 # @option options [Type] :key description of option
-#
-# @param path [String] a parameter after the options hash
 #
 # @return [Type] description of return value
 #

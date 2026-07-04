@@ -156,11 +156,11 @@ the pattern of `cat_file.rb`. The file has three required sections in this order
 4. A "This module contains command classes split by…" paragraph with a bullet for
    every sub-command class using `{Foo::Bar}` YARD links followed by ` — ` and a
    short description
-5. `@api private`
-6. `@see https://git-scm.com/docs/git-foo git-foo documentation`
-7. At least two `@example` blocks — one per sub-command class; each example should
+5. At least two `@example` blocks — one per sub-command class; each example should
    demonstrate the most common (non-error-path) call using a local variable named
    `cmd` and `lib` as the constructor argument
+6. `@see https://git-scm.com/docs/git-foo git-foo documentation`
+7. `@api private`
 8. Empty `module Foo` + `end` block (no methods, no constants)
 
 **Tag ordering inside the YARD comment block:**
@@ -173,10 +173,6 @@ the pattern of `cat_file.rb`. The file has three required sections in this order
 # - {Foo::Bar} — short description
 # - {Foo::Baz} — short description
 #
-# @api private
-#
-# @see https://git-scm.com/docs/git-foo git-foo documentation
-#
 # @example <Short description of the Bar use case>
 #   cmd = Git::Commands::Foo::Bar.new(lib)
 #   cmd.call(...)
@@ -184,6 +180,10 @@ the pattern of `cat_file.rb`. The file has three required sections in this order
 # @example <Short description of the Baz use case>
 #   cmd = Git::Commands::Foo::Baz.new(lib)
 #   cmd.call(...)
+#
+# @see https://git-scm.com/docs/git-foo git-foo documentation
+#
+# @api private
 ```
 
 **Full template:**
@@ -203,10 +203,6 @@ module Git
     # - {Foo::Bar} — what Bar does
     # - {Foo::Baz} — what Baz does
     #
-    # @api private
-    #
-    # @see https://git-scm.com/docs/git-foo git-foo documentation
-    #
     # @example <Short description for bar>
     #   cmd = Git::Commands::Foo::Bar.new(lib)
     #   cmd.call(...)
@@ -214,6 +210,10 @@ module Git
     # @example <Short description for baz>
     #   cmd = Git::Commands::Foo::Baz.new(lib)
     #   cmd.call(...)
+    #
+    # @see https://git-scm.com/docs/git-foo git-foo documentation
+    #
+    # @api private
     #
     module Foo
     end
@@ -233,7 +233,7 @@ module's overview.
 - [ ] `@see` link points to `git-scm.com/docs/git-foo` documentation
 - [ ] At least one `@example` block per sub-command class
 - [ ] Each example uses `cmd = Git::Commands::Foo::Bar.new(lib)` form (variable `cmd`, arg `lib`)
-- [ ] Tag order: summary → bullet list → `@api private` → `@see` → `@examples`
+- [ ] Tag order: summary → bullet list → `@example` blocks → `@see` → `@api private`
 - [ ] No class is defined inside the module file; the `module Foo` block is empty
 
 ## Architecture contract
