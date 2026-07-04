@@ -65,3 +65,13 @@ Tags/Order:
     - deprecated
     - see
     - api
+
+# Enforce a blank line between different YARD tag groups (and after the leading
+# description) to match the project's house style, where doc blocks visually
+# separate semantically related tags. This validator is disabled by default in
+# yard-lint. Note: it only separates tag *groups* — it cannot require a blank
+# line between two consecutive same-type tags (e.g. two `@param` tags).
+Tags/TagGroupSeparator:
+  Enabled: true
+  Severity: convention
+  RequireAfterDescription: true
