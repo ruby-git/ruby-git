@@ -47,56 +47,56 @@ module Git
           # Full content mode: header + raw bytes + newline separator per object;
           # accepts a format string to customise the per-object output header
           # (e.g. `"%(objectname) %(objecttype) %(objectsize)"`)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch
           flag_or_value_option :batch, inline: true
 
           # Metadata-only mode: one `<sha> <type> <size>` line per object;
           # accepts a format string to customise the per-object output line
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-check
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-check
           flag_or_value_option :batch_check, inline: true
 
           # Command-dispatch mode: stdin carries `contents`/`info`/`flush` verbs;
           # accepts a format string to customise the output of `info` and `contents` commands
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-command
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-command
           flag_or_value_option :batch_command, inline: true
 
           # Enumerate all objects in the repository without reading stdin.
           # Incompatible with `batch_command:`.
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-all-objects
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---batch-all-objects
           flag_option :batch_all_objects
 
           # Use normal stdio buffering; enables explicit `flush` semantics when used
           # with `batch_command:` and improves throughput with `batch_check:`
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---buffer
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---buffer
           flag_option :buffer
 
           # Follow symlinks inside the repository when traversing tree objects
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---follow-symlinks
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---follow-symlinks
           flag_option :follow_symlinks
 
           # Allow `--batch-all-objects` to output objects in an arbitrary, potentially
           # faster order
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---unordered
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---unordered
           flag_option :unordered
 
           # Apply textconv filters to blob content (combine with `batch_command:`)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---textconv
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---textconv
           flag_option :textconv
 
           # Apply the full working-tree filter pipeline (combine with `batch_command:`)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filters
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filters
           flag_option :filters
 
           # Map committer/author identities through mailmap for all batch modes
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---use-mailmap
           flag_option :use_mailmap, negatable: true
 
           # Omit objects matching the filter spec from the output (batched modes only)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filterltfilter-specgt
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filterltfilter-specgt
           value_option :filter, inline: true
 
           # Use NUL-delimited input/output instead of newline-delimited
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--Z
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt--Z
           flag_option :Z
 
           # Stream stdout to this IO object instead of buffering in memory.

@@ -44,7 +44,7 @@ module Git
 
           # Mode selector: pass `true` (default) to test all refs, or a pattern
           # string to restrict testing to refs whose names start with the pattern.
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---exclude-existingltpatterngt
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---exclude-existingltpatterngt
           flag_or_value_option :exclude_existing, inline: true
 
           execution_option :timeout

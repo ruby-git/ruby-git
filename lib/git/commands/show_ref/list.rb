@@ -49,34 +49,34 @@ module Git
           literal 'show-ref'
 
           # Include the HEAD ref even if it would normally be filtered out
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---head
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---head
           flag_option :head
 
           # Dereference annotated tags; outputs an additional line per tag with
           # the de-referenced object SHA followed by `^{}`
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---dereference
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---dereference
           flag_option %i[dereference d]
 
           # Show only the SHA part of the ref, optionally abbreviated to <n> hex digits;
           # pass `true` for full-length SHA, or an integer for the abbreviation length
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---hashn
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---hashn
           flag_or_value_option %i[hash s], inline: true
 
           # Abbreviate the object names to at least <n> hex digits; pass `true` to
           # use the default abbreviation length, or an integer for an explicit length
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---abbrevlength
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---abbrevlength
           flag_or_value_option :abbrev, inline: true
 
           # Limit to refs under refs/heads/ only (preferred over :heads on git >= 2.46)
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
           flag_option :branches
 
           # Limit to refs under refs/heads/ only (deprecated synonym for :branches in git >= 2.46)
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---branches
           flag_option :heads
 
           # Limit to refs under refs/tags/ only
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---tags
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---tags
           flag_option :tags
 
           execution_option :timeout

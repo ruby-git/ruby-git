@@ -37,16 +37,16 @@ module Git
           literal 'cat-file'
 
           # Apply only the textconv filter (binary-to-text conversion)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---textconv
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---textconv
           flag_option :textconv
 
           # Apply the full working-tree filter pipeline (smudge, EOL, textconv)
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filters
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---filters
           flag_option :filters
 
           # Specify the path separately when the rev is passed as a bare revision.
           # When used, the `rev` operand must be a plain revision (not `<rev>:<path>`).
-          # @see https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---pathltpathgt
+          # See https://git-scm.com/docs/git-cat-file#Documentation/git-cat-file.txt---pathltpathgt
           value_option :path, inline: true
 
           end_of_options

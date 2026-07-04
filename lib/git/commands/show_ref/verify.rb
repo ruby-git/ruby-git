@@ -49,19 +49,19 @@ module Git
           literal '--verify'
 
           # Suppress output; useful when you only care whether the ref exists
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---quiet
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---quiet
           flag_option %i[quiet q]
 
           # Dereference annotated tags; emit an extra line per tag with SHA^{}
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---dereference
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---dereference
           flag_option %i[dereference d]
 
           # Show only the SHA; pass `true` for full-length or an integer for abbreviated length
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---hashn
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---hashn
           flag_or_value_option %i[hash s], inline: true
 
           # Abbreviate object names; pass `true` for default or integer for explicit length
-          # @see https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---abbrevlength
+          # See https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---abbrevlength
           flag_or_value_option :abbrev, inline: true
 
           execution_option :timeout
