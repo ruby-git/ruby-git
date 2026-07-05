@@ -99,13 +99,13 @@ module Git
   DiffInfo = Data.define(:stats, :file_patches) do
     # @!method insertions
     #   @return [Integer] total number of lines inserted
-
+    #
     # @!method deletions
     #   @return [Integer] total number of lines deleted
-
+    #
     # @!method lines
     #   @return [Integer] total number of lines changed (insertions + deletions)
-
+    #
     # @!method file_count
     #   @return [Integer] number of files changed
 
