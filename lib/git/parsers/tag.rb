@@ -94,6 +94,7 @@ module Git
       #   # => [#<Git::TagInfo name: "v1.0.0", ...>]
       #
       # @param stdout [String] output from git tag --list --format=...
+      #
       # @return [Array<Git::TagInfo>] parsed tag information
       #
       # @raise [Git::UnexpectedResultError] if any record has unexpected format
@@ -116,8 +117,11 @@ module Git
       # these are converted to nil by {#parse_optional_field} and {#parse_message}.
       #
       # @param record [String] a single tag record from git tag --format output
+      #
       # @param index [Integer] record index for error reporting
+      #
       # @param all_records [Array<String>] all output records for error messages
+      #
       # @return [Git::TagInfo] tag info with all fields populated
       #
       # @raise [Git::UnexpectedResultError] if record format is unexpected
@@ -135,6 +139,7 @@ module Git
       # Build a TagInfo object from parsed parts
       #
       # @param parts [Array<String>] the parsed format fields
+      #
       # @return [Git::TagInfo]
       #
       # @note For annotated tags:
@@ -165,6 +170,7 @@ module Git
       # Parse an optional field, returning nil if empty
       #
       # @param value [String] the field value
+      #
       # @return [String, nil] the value or nil if empty
       #
       def parse_optional_field(value)
@@ -175,7 +181,9 @@ module Git
       # Strips trailing newlines that git adds to %(contents) output
       #
       # @param objecttype [String] the object type ('tag' or 'commit')
+      #
       # @param message [String] the raw message field
+      #
       # @return [String, nil] the message or nil
       #
       def parse_message(objecttype, message)
@@ -190,6 +198,7 @@ module Git
       #   # => ["v1.0.0"]
       #
       # @param stdout [String] command stdout
+      #
       # @return [Array<String>] names of successfully deleted tags
       #
       def parse_deleted_tags(stdout)
@@ -203,6 +212,7 @@ module Git
       #   # => {"missing" => "error: tag 'missing' not found."}
       #
       # @param stderr [String] command stderr
+      #
       # @return [Hash<String, String>] map of tag name to error message
       #
       def parse_error_messages(stderr)
@@ -215,9 +225,13 @@ module Git
       # Build the TagDeleteResult from parsed data
       #
       # @param requested_names [Array<String>] originally requested tag names
+      #
       # @param existing_tags [Hash<String, Git::TagInfo>] tags that existed before delete
+      #
       # @param deleted_names [Array<String>] names confirmed deleted in stdout
+      #
       # @param error_map [Hash<String, String>] map of tag name to error message
+      #
       # @return [Git::TagDeleteResult] the result object
       #
       def build_delete_result(requested_names, existing_tags, deleted_names, error_map)
@@ -234,8 +248,11 @@ module Git
       # Generate error message for unexpected tag record format
       #
       # @param records [Array<String>] all output records
+      #
       # @param record [String] the problematic record
+      #
       # @param index [Integer] the record index
+      #
       # @return [String] formatted error message
       #
       def unexpected_tag_record_error(records, record, index)

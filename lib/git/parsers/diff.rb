@@ -64,8 +64,11 @@ module Git
       # Build a DiffResult from parsed components
       #
       # @param files [Array] array of file info objects
+      #
       # @param shortstat [Hash] parsed shortstat data
+      #
       # @param dirstat [Git::DirstatInfo, nil] parsed dirstat data
+      #
       # @return [Git::DiffResult]
       #
       def build_result(files:, shortstat:, dirstat:)
@@ -96,6 +99,7 @@ module Git
       #   # => { files_changed: 3, insertions: 10, deletions: 5 }
       #
       # @param line [String, nil] the shortstat line
+      #
       # @return [Hash] { files_changed:, insertions:, deletions: }
       #
       def parse_shortstat(line)
@@ -115,6 +119,7 @@ module Git
       #   # => #<Git::DirstatInfo entries: [...]>
       #
       # @param lines [Array<String>] dirstat output lines
+      #
       # @return [Git::DirstatInfo]
       #
       def parse_dirstat(lines)
@@ -129,6 +134,7 @@ module Git
       # Parse a stat value (handles '-' for binary files)
       #
       # @param value [String] the stat value string
+      #
       # @return [Integer] the numeric value (0 for binary files)
       #
       def parse_stat_value(value)
@@ -138,6 +144,7 @@ module Git
       # Unescape quoted path from git output
       #
       # @param path [String] potentially quoted path
+      #
       # @return [String] unescaped path
       #
       def unescape_path(path)
@@ -153,7 +160,9 @@ module Git
         # Parse numstat output into DiffResult
         #
         # @param output [String] raw numstat + shortstat output
+        #
         # @param include_dirstat [Boolean] whether dirstat output is expected
+        #
         # @return [Git::DiffResult]
         #
         def parse(output, include_dirstat: false)
@@ -170,6 +179,7 @@ module Git
         # Parse numstat lines into DiffFileNumstatInfo array
         #
         # @param lines [Array<String>] numstat lines
+        #
         # @return [Array<Git::DiffFileNumstatInfo>]
         #
         def parse_file_stats(lines)
@@ -188,7 +198,9 @@ module Git
         # Parse numstat lines into a path -> stats hash (for combining with other formats)
         #
         # @param lines [Array<String>] numstat lines
+        #
         # @param include_binary [Boolean] whether to include binary flag
+        #
         # @return [Hash<String, Hash>] path to stats mapping (keyed by destination path)
         #
         def parse_as_map(lines, include_binary: false)
@@ -210,7 +222,9 @@ module Git
         # Split output into numstat, shortstat, and dirstat sections
         #
         # @param lines [Array<String>] all output lines
+        #
         # @param include_dirstat [Boolean] whether to expect dirstat section
+        #
         # @return [Array] [numstat_lines, shortstat_line, dirstat_lines]
         #
         def split_sections(lines, include_dirstat)
@@ -224,6 +238,7 @@ module Git
         # Parse potential rename path into [dst_path, src_path]
         #
         # @param filename [String] the path string from numstat output
+        #
         # @return [Array(String, (String, nil))] [destination_path, source_path_or_nil]
         #
         def parse_rename_path(filename)
@@ -245,7 +260,9 @@ module Git
         # Parse combined raw + numstat + shortstat output into DiffResult
         #
         # @param output [String] combined output
+        #
         # @param include_dirstat [Boolean] whether dirstat output is expected
+        #
         # @return [Git::DiffResult]
         #
         def parse(output, include_dirstat: false)
@@ -262,7 +279,9 @@ module Git
         # Split output into raw, numstat, shortstat, and dirstat sections
         #
         # @param output [String] combined output
+        #
         # @param include_dirstat [Boolean] whether to expect dirstat section
+        #
         # @return [Array(Array<String>, Array<String>, (String, nil), Array<String>)]
         #
         def split_sections(output, include_dirstat)
@@ -279,7 +298,9 @@ module Git
         # Parse a single --raw output line
         #
         # @param line [String] a single raw output line
+        #
         # @param numstat_map [Hash<String, Hash>] path to stats mapping
+        #
         # @return [Git::DiffFileRawInfo]
         #
         def parse_raw_line(line, numstat_map)
@@ -309,6 +330,7 @@ module Git
         # Parse status character and optional similarity percentage
         #
         # @param status_char [String] e.g., 'M', 'A', 'R075'
+        #
         # @return [Array(Symbol, (Integer, nil))] [status, similarity]
         #
         def parse_status(status_char)
@@ -320,6 +342,7 @@ module Git
         # Extract source and destination paths from raw output paths
         #
         # @param paths [Array<String>] paths array
+        #
         # @return [Array((String, nil), (String, nil))] [src_path, dst_path]
         #
         def extract_paths(paths)
@@ -334,8 +357,11 @@ module Git
         # Build a FileRef, returning nil if the file doesn't exist on this side
         #
         # @param mode [String] file mode
+        #
         # @param sha [String] file SHA
+        #
         # @param path [String, nil] file path
+        #
         # @return [Git::FileRef, nil]
         #
         def build_file_ref(mode, sha, path)
@@ -374,7 +400,9 @@ module Git
         # Parse combined patch + numstat + shortstat output into DiffResult
         #
         # @param output [String] combined output
+        #
         # @param include_dirstat [Boolean] whether dirstat output is expected
+        #
         # @return [Git::DiffResult]
         #
         def parse(output, include_dirstat: false)
@@ -393,7 +421,9 @@ module Git
         # Split output into numstat, shortstat, dirstat, and patch sections
         #
         # @param output [String] combined output
+        #
         # @param include_dirstat [Boolean] whether to expect dirstat section
+        #
         # @return [Array(Array<String>, (String, nil), Array<String>, String)]
         #
         def split_sections(output, include_dirstat)
@@ -413,6 +443,7 @@ module Git
         end
 
         # Methods for parsing patch metadata lines (index, mode, rename, etc.)
+        #
         # @api private
         module PatchMetadataParser
           private
@@ -503,6 +534,7 @@ module Git
         end
 
         # Stateful parser for unified diff patch output
+        #
         # @api private
         class PatchFileParser
           include PatchMetadataParser

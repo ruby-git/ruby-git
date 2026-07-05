@@ -25,6 +25,7 @@ module Git
 
     # An immutable, Enumerable collection of `Git::Object::Commit` objects.
     # Returned by `Git::Log#execute`.
+    #
     # @api public
     Result = Data.define(:commits) do
       include Enumerable

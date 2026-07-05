@@ -986,8 +986,11 @@ module Git
         # ArgumentError if a target or incompatible options are also supplied.
         #
         # @param facade [ObjectOperations] the calling facade instance
+        #
         # @param name [String] tag name
+        #
         # @param target [String, nil] target argument (must be nil)
+        #
         # @param opts [Hash] options hash (must contain only :d/:delete)
         #
         # @return [String] stdout from tag_delete
@@ -1016,6 +1019,13 @@ module Git
           line ? line.split[0] : ''
         end
 
+        # Parses the result of a git grep command
+        #
+        # @param result [Git::CommandLineResult] the result of a git grep command
+        #
+        # @return [Hash<String, Array<Array(Integer, String)>>] hash mapping "treeish:filename"
+        #   keys to arrays of [line_number, text] pairs
+        #
         def parse_grep_result(result)
           exitstatus = result.status.exitstatus
           return {} if exitstatus == 1 && result.stderr.empty?
@@ -1051,8 +1061,11 @@ module Git
         # are determined from `opts` via {#parse_archive_format_options}.
         #
         # @param execution_context [Git::ExecutionContext] for the git command
+        #
         # @param treeish [String] tree-ish passed to `git archive`
+        #
         # @param opts [Hash] caller-supplied options (read-only)
+        #
         # @param dest_dir [String] directory for the staging temp file; use
         #   {#staging_dir_for} to select the optimal directory for the destination
         #
@@ -1078,10 +1091,14 @@ module Git
         # method returns and after the caller stores only the path string.
         #
         # @param execution_context [Git::ExecutionContext] for the git command
+        #
         # @param treeish [String] tree-ish passed to `git archive`
+        #
         # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
         #   :remote, and :path)
+        #
         # @param format [String] archive format string (e.g. `'zip'` or `'tar'`)
+        #
         # @param dest_dir [String] directory in which to create the temp file
         #
         # @return [File] the closed file containing the archive
@@ -1102,10 +1119,14 @@ module Git
         # Invoke `git archive` and stream output into `tmp_file`
         #
         # @param execution_context [Git::ExecutionContext] for the git command
+        #
         # @param treeish [String] tree-ish passed to `git archive`
+        #
         # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
         #   :remote, and :path)
+        #
         # @param format [String] archive format to pass to `git archive --format`
+        #
         # @param tmp_file [File] open, binary-mode IO to write archive data to
         #
         # @return [Git::CommandLineResult] the result of the git command
@@ -1134,6 +1155,7 @@ module Git
         # staging file rather than writing through the link to its target.
         #
         # @param src [String] staging file path to rename; removed on success
+        #
         # @param dest [String] destination file path
         #
         # @return [void]

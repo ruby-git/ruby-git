@@ -60,6 +60,7 @@ module Git
       #   # => #<Git::FsckResult dangling: [...], missing: [...]>
       #
       # @param stdout [String] output from git fsck command
+      #
       # @return [Git::FsckResult] the parsed result
       #
       def parse(stdout)
@@ -71,7 +72,9 @@ module Git
       # Parse a single line of fsck output
       #
       # @param line [String] a line of output
+      #
       # @param result [Hash] the result hash to populate
+      #
       # @return [Boolean] true if the line was parsed
       #
       def parse_line(line, result)
@@ -84,7 +87,9 @@ module Git
       # Parse a dangling/missing/unreachable object line
       #
       # @param line [String] a line of output
+      #
       # @param result [Hash] the result hash to populate
+      #
       # @return [Boolean] true if the line was parsed
       #
       def parse_object_line(line, result)
@@ -96,7 +101,9 @@ module Git
       # Parse a warning line
       #
       # @param line [String] a line of output
+      #
       # @param result [Hash] the result hash to populate
+      #
       # @return [Boolean] true if the line was parsed
       #
       def parse_warning_line(line, result)
@@ -108,7 +115,9 @@ module Git
       # Parse a root line
       #
       # @param line [String] a line of output
+      #
       # @param result [Hash] the result hash to populate
+      #
       # @return [Boolean] true if the line was parsed
       #
       def parse_root_line(line, result)
@@ -120,7 +129,9 @@ module Git
       # Parse a tagged line
       #
       # @param line [String] a line of output
+      #
       # @param result [Hash] the result hash to populate
+      #
       # @return [Boolean] true if the line was parsed
       #
       def parse_tagged_line(line, result)

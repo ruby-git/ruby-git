@@ -166,6 +166,7 @@ module Git
   # Clone a repository into an empty or newly created directory
   #
   # @see https://git-scm.com/docs/git-clone git clone
+  #
   # @see https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a GIT URLs
   #
   # @param repository_url [URI, Pathname] The (possibly remote) repository url to clone
@@ -437,6 +438,7 @@ module Git
   #   :refs
   #
   # @param location [String, nil] the target repository location or nil for '.'
+  #
   # @return [Hash{String => Hash}] the available references of the target repo
   def self.ls_remote(location = nil, options = {})
     options = options.dup

@@ -29,17 +29,21 @@ module Git
   #   result.not_deleted.first.error_message #=> "tag 'nonexistent' not found."
   #
   # @see Git::TagInfo
+  #
   # @see Git::TagDeleteFailure
+  #
   # @see Git::Commands::Tag::Delete
   #
   # @api public
   #
   # @!attribute [r] deleted
   #   Tags that were successfully deleted
+  #
   #   @return [Array<Git::TagInfo>]
   #
   # @!attribute [r] not_deleted
   #   Tags that could not be deleted, with the reason for each failure
+  #
   #   @return [Array<Git::TagDeleteFailure>]
   #
   TagDeleteResult = Data.define(:deleted, :not_deleted) do
@@ -47,7 +51,7 @@ module Git
     #
     # @return [Boolean] true if no tags failed to delete, false otherwise
     #
-    # @example
+    # @example Check if the delete operation succeeded
     #   result = tag_delete.call('v1.0.0')
     #   if result.success?
     #     puts "All tags deleted successfully"

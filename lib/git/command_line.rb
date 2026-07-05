@@ -39,6 +39,7 @@ module Git
   #   end
   #
   # @see Git::CommandLine::Base
+  #
   # @see Git::CommandLine::Result
   #
   module CommandLine

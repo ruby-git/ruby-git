@@ -29,17 +29,21 @@ module Git
   #   result.not_deleted.first.error_message #=> "branch 'nonexistent' not found."
   #
   # @see Git::BranchInfo
+  #
   # @see Git::BranchDeleteFailure
+  #
   # @see Git::Commands::Branch::Delete
   #
   # @api public
   #
   # @!attribute [r] deleted
   #   Branches that were successfully deleted
+  #
   #   @return [Array<Git::BranchInfo>]
   #
   # @!attribute [r] not_deleted
   #   Branches that could not be deleted, with the reason for each failure
+  #
   #   @return [Array<Git::BranchDeleteFailure>]
   #
   BranchDeleteResult = Data.define(:deleted, :not_deleted) do
@@ -47,7 +51,7 @@ module Git
     #
     # @return [Boolean] true if no branches failed to delete, false otherwise
     #
-    # @example
+    # @example Check if the delete operation succeeded
     #   result = branch_delete.call('feature-branch')
     #   if result.success?
     #     puts "All branches deleted successfully"

@@ -81,6 +81,7 @@ module Git
   # @api private
   #
   # @see Git::Commands::Base
+  #
   # @see Git::Commands::Arguments
   #
   module Commands; end

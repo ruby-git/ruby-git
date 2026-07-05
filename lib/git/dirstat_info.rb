@@ -5,7 +5,7 @@ module Git
   #
   # @api public
   #
-  # @example
+  # @example Create a DirstatEntry
   #   info = Git::DirstatEntry.new(directory: 'lib/commands/', percentage: 45.2)
   #   info.directory   #=> "lib/commands/"
   #   info.percentage  #=> 45.2
@@ -24,7 +24,7 @@ module Git
   #
   # @api public
   #
-  # @example
+  # @example Create a DirstatInfo
   #   dirstat = Git::DirstatInfo.new(
   #     entries: [
   #       Git::DirstatEntry.new(directory: 'lib/commands/', percentage: 45.2),
@@ -42,6 +42,7 @@ module Git
     # Look up percentage by directory path
     #
     # @param directory [String] the directory path
+    #
     # @return [Float, nil] the percentage or nil if not found
     #
     def [](directory)
@@ -75,6 +76,7 @@ module Git
     # Iterate over entries
     #
     # @yield [DirstatEntry] each entry
+    #
     # @return [Enumerator] if no block given
     #
     def each(&block)

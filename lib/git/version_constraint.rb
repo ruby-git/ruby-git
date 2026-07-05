@@ -26,8 +26,12 @@ module Git
   # @api public
   #
   VersionConstraint = Data.define(:min, :before) do
+    # Initialize a new VersionConstraint
+    #
     # @param min [Git::Version, nil] minimum version (inclusive)
+    #
     # @param before [Git::Version, nil] upper bound version (exclusive)
+    #
     def initialize(min: nil, before: nil)
       super
     end

@@ -38,6 +38,7 @@ module Git
   #   info.tagger        #=> nil
   #
   # @see Git::Tag for the full-featured tag object with operations
+  #
   # @see Git::Commands::Tag::List for the command that produces these
   #
   # @api public
