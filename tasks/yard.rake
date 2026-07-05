@@ -22,9 +22,16 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
   # minimum documentation coverage threshold. Configuration lives in
   # .yard-lint.yml; legacy offenses are baselined in .yard-lint-todo.yml.
   #
-  desc 'Lint YARD documentation with yard-lint'
-  task :'yard:lint' do
-    sh 'bundle exec yard-lint lib/'
+  # yard-lint requires Ruby >= 3.3, so the lint task is only defined and only
+  # included in the aggregate `yard` task on Ruby 3.3+.
+  #
+  yard_lint_supported = Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.3.0')
+
+  if yard_lint_supported
+    desc 'Lint YARD documentation with yard-lint'
+    task :'yard:lint' do
+      sh 'bundle exec yard-lint lib/'
+    end
   end
 
   # yard:example-test
@@ -37,6 +44,14 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
 
   # yard
 
-  desc 'Run YARD documentation tasks (build, lint, example-test)'
-  task yard: %i[yard:build yard:lint yard:example-test]
+  yard_tasks = %i[yard:build]
+  yard_tasks << :'yard:lint' if yard_lint_supported
+  yard_tasks << :'yard:example-test'
+
+  yard_steps = ['build']
+  yard_steps << 'lint' if yard_lint_supported
+  yard_steps << 'example-test'
+
+  desc "Run YARD documentation tasks (#{yard_steps.join(', ')})"
+  task yard: yard_tasks
 end

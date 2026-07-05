@@ -65,3 +65,22 @@ Tags/Order:
     - deprecated
     - see
     - api
+
+# --- Opt-in validators that enforce the skill's house style ------------------
+
+# The skill's templates put a blank comment line between the description and the
+# first tag and between every tag, so that the source formatter keeps each tag
+# visually separated. The built-in Tags/TagGroupSeparator can only separate
+# different tag *groups* (it can never split two sibling @param tags), so this
+# project uses Tags/TagSeparator, which requires a blank line between every
+# consecutive tag. @option is exempt so it can cluster directly beneath the
+# @param hash it documents.
+#
+# Tags/TagSeparator is not yet part of a released yard-lint; it is sourced from a
+# fork branch via the Gemfile until it is merged upstream and published.
+Tags/TagSeparator:
+  Enabled: true
+  Severity: convention
+  RequireAfterDescription: true
+  Exempt:
+    - option
