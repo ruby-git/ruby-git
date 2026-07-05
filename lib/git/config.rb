@@ -20,7 +20,23 @@ module Git
       @instance ||= new
     end
 
-    attr_writer :binary_path, :git_ssh, :timeout
+    # Sets the configuration options for the git executable, SSH, and timeout
+    #
+    # @return [String] the configured value
+    #
+    attr_writer :binary_path
+
+    # Sets the SSH command to use for git operations
+    #
+    # @return [String] the configured SSH command
+    #
+    attr_writer :git_ssh
+
+    # Sets the timeout for git operations
+    #
+    # @return [Integer] the configured timeout in seconds
+    #
+    attr_writer :timeout
 
     def initialize
       @binary_path = nil

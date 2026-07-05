@@ -12,6 +12,13 @@ module Git
     class AbstractObject
       attr_accessor :objectish, :type, :mode
 
+      # Sets the size of the git object in bytes
+      #
+      # @example Set the size to 60 bytes
+      #   object.size = 60
+      #
+      # @return [Integer] the size of the git object in bytes
+      #
       attr_writer :size
 
       def initialize(base, objectish)

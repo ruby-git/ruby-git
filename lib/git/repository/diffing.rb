@@ -625,6 +625,7 @@ module Git
         # Parses a single raw `git diff-files` output line into a path/entry pair
         #
         # @param line [String] a single non-empty line containing a tab character
+        #
         # @param tab_pos [Integer] the index of the first tab in the line
         #
         # @return [Array(String, Hash)] two-element array of `[path, entry_hash]`
@@ -638,6 +639,7 @@ module Git
         # Builds a single file-info hash for {#parse_diff_files_output}
         #
         # @param path [String] the file path
+        #
         # @param parts [Array<String>] the whitespace-split fields from the info
         #   portion of the diff-files line: `[mode_src, mode_dest, sha_src,
         #   sha_dest, type]`

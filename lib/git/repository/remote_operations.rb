@@ -730,6 +730,7 @@ module Git
         # would otherwise be silently promoted to the remote-name slot) is rejected.
         #
         # @param remote [String, Hash, nil] the remote name, or an options hash
+        #
         # @param opts [Hash] the options hash when remote is given positionally
         #
         # @return [Array(String, Hash), Array(nil, Hash)] the resolved remote and opts
@@ -777,7 +778,9 @@ module Git
         #   `{ tags: opts }` for backward compatibility
         #
         # @param remote [String, Hash, nil] remote name, URL, or opts hash
+        #
         # @param branch [String, Hash, nil] branch/refspec, or opts hash
+        #
         # @param opts [Hash, Boolean, nil] options hash or legacy Boolean shorthand
         #
         # @return [Array((String, nil), (String, nil), Hash)] normalized [remote, branch, opts]
@@ -809,8 +812,11 @@ module Git
         # {push_tags_separately?} is true.
         #
         # @param execution_context [Git::ExecutionContext::Repository] the repository execution context
+        #
         # @param remote [String, nil] remote name or URL
+        #
         # @param branch [String, nil] branch or refspec
+        #
         # @param opts [Hash] push options (`:tags` key will be stripped)
         #
         # @return [Git::CommandLineResult]
@@ -841,7 +847,9 @@ module Git
         # Issue the tags push (second push when `:tags` is requested without `:mirror`)
         #
         # @param execution_context [Git::ExecutionContext::Repository] the repository execution context
+        #
         # @param remote [String, nil] remote name or URL
+        #
         # @param opts [Hash] push options (`:tags` key included to emit `--tags`)
         #
         # @return [Git::CommandLineResult]

@@ -1848,7 +1848,9 @@ module Git
       # Run all cross-field validations on bound inputs
       #
       # @param normalized_opts [Hash] normalized keyword options
+      #
       # @param allocated_positionals [Hash] allocated positional arguments
+      #
       # @return [void]
       #
       def validate_bind_inputs!(normalized_opts, allocated_positionals)
@@ -1873,7 +1875,9 @@ module Git
       # Validate and normalize keyword options
       #
       # @param opts [Hash] raw keyword options
+      #
       # @return [Hash] normalized options with aliases resolved
+      #
       # @raise [ArgumentError] if options are unsupported, conflicting, or invalid
       #
       def validate_and_normalize_options!(opts)
@@ -1888,6 +1892,7 @@ module Git
       # Build a hash of all option values for the Bound object
       #
       # @param normalized_opts [Hash] the normalized options
+      #
       # @return [Hash{Symbol => Object}] option values with defaults applied
       def build_options_hash(normalized_opts)
         result = {}
@@ -1900,6 +1905,7 @@ module Git
       # Get the default value for an option when not provided
       #
       # @param name [Symbol] the option name
+      #
       # @return [Object] the default value (false for flags, nil for values)
       def default_option_value(name)
         definition = @option_definitions[name]
@@ -1912,7 +1918,9 @@ module Git
       # Determine the internal option type based on inline and as_operand modifiers
       #
       # @param inline [Boolean] whether to use inline format (--flag=value)
+      #
       # @param as_operand [Boolean] whether to output as operand (positional argument)
+      #
       # @return [Symbol] the internal option type
       #
       def determine_value_option_type(inline, as_operand)
@@ -1928,8 +1936,11 @@ module Git
       # Validate value modifier combinations
       #
       # @param names [Symbol, Array<Symbol>] the option name(s)
+      #
       # @param inline [Boolean] whether inline: true was specified
+      #
       # @param as_operand [Boolean] whether as_operand: true was specified
+      #
       # @raise [ArgumentError] if invalid modifier combination is used
       #
       def validate_value_modifiers!(names, inline, as_operand)
@@ -1940,7 +1951,9 @@ module Git
       # Register an option with optional aliases
       #
       # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
       # @param definition [Hash] the option definition
+      #
       # @return [void]
       #
       def register_option(names, **definition)
@@ -2129,7 +2142,9 @@ module Git
       # Validate that flag-producing options are not defined after a '--' boundary
       #
       # @param type [Symbol] the option type
+      #
       # @param option_name [Symbol] the primary option name
+      #
       # @raise [ArgumentError] if a flag-producing option is defined after '--'
       #
       def validate_option_after_separator!(type, option_name)
@@ -2165,7 +2180,9 @@ module Git
       # Build arguments by iterating over definitions in their defined order
       #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
       # @param normalized_opts [Hash] normalized keyword options
+      #
       # @return [Array<String>] the command-line arguments
       #
       def build_ordered_arguments(allocated_positionals, normalized_opts)
@@ -2185,9 +2202,13 @@ module Git
       # Build a single definition entry and append to args
       #
       # @param args [Array<String>] the argument array to append to
+      #
       # @param entry [Hash] the definition entry with :kind and name/flag
+      #
       # @param normalized_opts [Hash] normalized keyword options
+      #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
       # @return [void]
       #
       def build_entry(args, entry, normalized_opts, allocated_positionals)
@@ -2209,6 +2230,7 @@ module Git
       # follows it, or strip it
       #
       # @param args [Array] the built argument array (may contain END_OF_OPTIONS_MARKER)
+      #
       # @return [Array<String>] the argument array with the marker resolved
       #
       def resolve_end_of_options_marker(args)
@@ -2226,6 +2248,7 @@ module Git
       # Allocate positionals and perform validation, returning the allocation hash
       #
       # @param positionals [Array] positional argument values
+      #
       # @return [Hash] allocation of positional names to values
       #
       def allocate_and_validate_positionals(positionals)
@@ -2245,8 +2268,11 @@ module Git
       # Build a single positional argument
       #
       # @param args [Array<String>] the argument array to append to
+      #
       # @param name [Symbol] the positional argument name
+      #
       # @param allocation [Hash] the allocated positional values
+      #
       # @return [void]
       #
       def build_single_positional(args, name, allocation)
@@ -2334,6 +2360,7 @@ module Git
       # multi-character options use double dash (--force)
       #
       # @param name [Symbol] the option name
+      #
       # @return [String] the argument specification (e.g., '-f' or '--force')
       #
       def default_arg_spec(name)
@@ -2344,6 +2371,7 @@ module Git
       # Check if an argument specification is for a short (single-character) option
       #
       # @param arg_spec [String] the argument specification
+      #
       # @return [Boolean] true if this is a short option (single dash, single char)
       #
       def short_option?(arg_spec)
@@ -2442,6 +2470,7 @@ module Git
       # - Long options (double dash like --name): = separator (--name=value)
       #
       # @param arg_spec [String] the argument specification
+      #
       # @return [String] empty string ('') for short options, '=' for long options;
       #   never returns nil, safe to concatenate directly
       #
@@ -2504,6 +2533,7 @@ module Git
       # For long options (--force), transforms to --no-force
       #
       # @param arg_spec [String] the argument specification
+      #
       # @return [String] the negated flag
       #
       def negate_flag(arg_spec)
@@ -2540,6 +2570,7 @@ module Git
       # - Single array pair: ['key', 'value']
       #
       # @param value [Hash, Array] the input value
+      #
       # @return [Array<Array>] array of [key, value] pairs
       #
       def normalize_key_value_pairs(value)
@@ -2573,7 +2604,9 @@ module Git
       # Validate that a key-value pair array has at most 2 elements
       #
       # @param pair [Array] the pair to validate
+      #
       # @param option_name [Symbol] the option name for error messages
+      #
       # @raise [ArgumentError] if pair has more than 2 elements
       #
       def validate_key_value_pair_size!(pair, option_name)
@@ -2586,8 +2619,11 @@ module Git
       # Validate a key for key_value options
       #
       # @param key [Object] the key to validate
+      #
       # @param separator [String] the key-value separator
+      #
       # @param option_name [Symbol] the option name for error messages
+      #
       # @raise [ArgumentError] if key is nil, empty, or contains the separator
       #
       def validate_key_value_key!(key, separator, option_name)
@@ -2603,7 +2639,9 @@ module Git
       # Validate a value for key_value options
       #
       # @param value [Object] the value to validate
+      #
       # @param option_name [Symbol] the option name for error messages
+      #
       # @raise [ArgumentError] if value is a Hash or Array (non-scalar)
       #
       def validate_key_value_value!(value, option_name)
@@ -2686,6 +2724,7 @@ module Git
       # a hyphen, which could be misinterpreted as a git option.
       #
       # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      #
       # @raise [ArgumentError] if any pre-separator operand value starts with '-'
       #
       def validate_no_option_like_operands!(allocation)
@@ -2717,6 +2756,7 @@ module Git
       # Check if an operand is configured with skip_cli: true
       #
       # @param name [Symbol] the operand name
+      #
       # @return [Boolean] true if operand has skip_cli enabled
       #
       def operand_skip_cli?(name)
@@ -2730,6 +2770,7 @@ module Git
       # even when its runtime `--` may be suppressed by {#resolve_end_of_options_marker}.
       #
       # @param defn [Hash] a definition entry from @ordered_definitions
+      #
       # @return [Boolean] true if this definition is an active '--' boundary
       #
       def separator_boundary_active?(defn)
@@ -2742,6 +2783,7 @@ module Git
       # Check if a definition is a literal '--' static flag
       #
       # @param defn [Hash] the entry definition
+      #
       # @return [Boolean]
       #
       def literal_separator_flag?(defn)
@@ -2751,7 +2793,9 @@ module Git
       # Check that a single operand value does not look like a command-line option
       #
       # @param name [Symbol] the operand name
+      #
       # @param value [Object] the operand value
+      #
       # @raise [ArgumentError] if the value starts with '-'
       #
       def check_operand_not_option_like(name, value)
@@ -2783,6 +2827,7 @@ module Git
       # arrays are valid values that should be passed through.
       #
       # @param value [Object] the value to check
+      #
       # @return [Boolean] true if the value is nil
       #
       def value_empty?(value)
@@ -2968,7 +3013,9 @@ module Git
       # Validate that no bound values match a forbidden exact-value tuple
       #
       # @param opts [Hash] normalized keyword options (aliases already resolved)
+      #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
       # @raise [ArgumentError] if all names in a forbidden tuple are present with
       #   their declared values
       #
@@ -2988,8 +3035,11 @@ module Git
       # key never triggers a forbidden-values match.
       #
       # @param tuple [Hash{Symbol => Object}] canonical name → forbidden value
+      #
       # @param opts [Hash] normalized keyword options
+      #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
       # @return [Boolean]
       #
       def forbidden_tuple_matches?(tuple, opts, allocated_positionals)
@@ -3013,7 +3063,9 @@ module Git
       #   :single    — true when declared via `requires` (affects error message wording)
       #
       # @param opts [Hash] normalized keyword options (aliases already resolved)
+      #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
       # @raise [ArgumentError] if none of the arguments in any applicable group is present
       #
       def validate_requires_one_of!(opts, allocated_positionals = {})
@@ -3025,7 +3077,9 @@ module Git
       # Validate a single requires_one_of entry
       #
       # @param entry [Hash] the group entry with :names, :condition, :single keys
+      #
       # @param opts [Hash] normalized keyword options
+      #
       # @param allocated_positionals [Hash] the allocated positional values
       #
       def validate_requires_one_of_entry!(entry, opts, allocated_positionals)
@@ -3042,8 +3096,11 @@ module Git
       # Build the error message for a failed requires_one_of check
       #
       # @param names [Array<Symbol>] the required argument names
+      #
       # @param condition [Symbol, nil] the trigger argument name, or nil for unconditional
+      #
       # @param single [Boolean] true when declared via `requires` (single required arg)
+      #
       # @return [String] the error message
       #
       def requires_one_of_error_message(names, condition, single)
@@ -3057,6 +3114,7 @@ module Git
       # Validate a single name used in a requires_one_of declaration
       #
       # @param sym [Symbol] the name to validate
+      #
       # @raise [ArgumentError] if sym is not a known option or operand
       #
       def validate_requires_one_of_name!(sym)
@@ -3066,6 +3124,7 @@ module Git
       # Validate a single name used in a requires or conditional requires_one_of declaration
       #
       # @param sym [Symbol] the name to validate
+      #
       # @raise [ArgumentError] if sym is not a known option or operand
       #
       def validate_requires_name!(sym)
@@ -3079,6 +3138,7 @@ module Git
       # the name is used directly.
       #
       # @param names [Array<Symbol, String>] raw argument names
+      #
       # @return [Array<Symbol>] canonical, deduplicated names
       #
       def canonicalize_requires_names(names)
@@ -3092,6 +3152,7 @@ module Git
       # Validate and canonicalize the `when:` condition for requires/requires_one_of
       #
       # @param condition [Symbol, nil] the raw trigger argument name
+      #
       # @return [Symbol, nil] canonical trigger name, or nil when condition is nil
       #
       def resolve_requires_condition(condition)
@@ -3105,6 +3166,7 @@ module Git
       # Return true if the given name refers to a defined option or operand
       #
       # @param name [Symbol] the argument name to look up
+      #
       # @return [Boolean]
       def known_argument?(name)
         @alias_map.key?(name) || @operand_definitions.any? { |d| d[:name] == name }
@@ -3119,6 +3181,7 @@ module Git
       # emit tokens for non-empty arrays even when every element is '' or false.
       #
       # @param value [Object] the argument value to test
+      #
       # @return [Boolean]
       def argument_present?(value)
         return false if value.nil?
@@ -3190,13 +3253,18 @@ module Git
         # excludes options with nil values.
         #
         # @return [Hash{Symbol => Object}] frozen hash of execution option values
+        #
         # @!attribute [r] execution_options
         attr_reader :execution_options
 
         # @param args_array [Array<String>] the CLI argument array (frozen)
+        #
         # @param options [Hash{Symbol => Object}] normalized options hash (frozen)
+        #
         # @param positionals [Hash{Symbol => Object}] positional arguments hash (frozen)
+        #
         # @param execution_option_names [Array<Symbol>] option names declared via {Arguments#execution_option}
+        #
         # @param flag_names [Array<Symbol>] option names declared via {Arguments#flag_option}
         #
         def initialize(args_array, options, positionals, execution_option_names = [], flag_names = [])
@@ -3242,6 +3310,7 @@ module Git
         # accessor methods defined.
         #
         # @param key [Symbol] the option or positional name
+        #
         # @return [Object, nil] the value, or nil if not found
         def [](key)
           return @options[key] if @options.key?(key)
@@ -3267,6 +3336,7 @@ module Git
         # by {#initialize} after all plain accessors have been set up.
         #
         # @param name [Symbol] the option or positional name
+        #
         # @param source [Hash] the hash to read from (@options or @positionals)
         #
         def define_accessor(name, source)
@@ -3312,7 +3382,9 @@ module Git
       end
 
       # Allocate values to definitions
+      #
       # @param values [Array] the positional argument values
+      #
       # @return [Array(Hash, Integer)] [allocation_hash, consumed_count]
       def allocate(values)
         allocation = {}
@@ -3449,6 +3521,7 @@ module Git
       end
 
       # Encapsulates state for allocating leading positionals
+      #
       # @api private
       class LeadingAllocationState
         def initialize(definitions, values, required_check)

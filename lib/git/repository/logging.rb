@@ -106,12 +106,28 @@ module Git
       module Private
         module_function
 
+        # Validates the :count log option
+        #
+        # @param opts [Hash] the log options
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] if the log count option is not an Integer
+        #
         def validate_log_count_option!(opts)
           return if opts[:count].nil? || opts[:count].is_a?(Integer)
 
           raise ArgumentError, "The log count option must be an Integer but was #{opts[:count].inspect}"
         end
 
+        # Validates the :between log option
+        #
+        # @param opts [Hash] the log options
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] if the :between option is not an Array with exactly two non-nil values
+        #
         def validate_log_between_option!(opts)
           between = opts[:between]
           return if between.nil?

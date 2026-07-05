@@ -97,18 +97,6 @@ module Git
   #   @return [Array<FileDiffInfo>] array of file diff info objects (empty if patch not requested)
   #
   DiffInfo = Data.define(:stats, :file_patches) do
-    # @!method insertions
-    #   @return [Integer] total number of lines inserted
-    #
-    # @!method deletions
-    #   @return [Integer] total number of lines deleted
-    #
-    # @!method lines
-    #   @return [Integer] total number of lines changed (insertions + deletions)
-    #
-    # @!method file_count
-    #   @return [Integer] number of files changed
-
     # Total number of lines inserted
     #
     # @return [Integer]
@@ -160,6 +148,7 @@ module Git
     # Get patch info for a specific file
     #
     # @param path [String] the file path
+    #
     # @return [FileDiffInfo, nil] the diff info or nil if not found
     #
     def patch_for(path)

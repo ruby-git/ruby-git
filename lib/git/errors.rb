@@ -54,11 +54,17 @@ module Git
   #   end
   #
   # @see Git::CommandLineError
+  #
   # @see Git::FailedError
+  #
   # @see Git::SignaledError
+  #
   # @see Git::TimeoutError
+  #
   # @see Git::ProcessIOError
+  #
   # @see Git::UnexpectedResultError
+  #
   # @see Git::VersionError
   #
   # @api public
@@ -234,7 +240,9 @@ module Git
     # Create a VersionError
     #
     # @param subject [#to_s] the entity with the version requirement (e.g., "The git gem", a Class)
+    #
     # @param constraint [Git::VersionConstraint] the version constraint that was violated
+    #
     # @param actual_version [Git::Version] the installed git version
     #
     def initialize(subject:, constraint:, actual_version:)

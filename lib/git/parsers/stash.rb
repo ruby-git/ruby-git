@@ -92,6 +92,7 @@ module Git
       #   # => [#<Git::StashInfo index: 0, ...>]
       #
       # @param stdout [String] output from git stash list --format=...
+      #
       # @return [Array<Git::StashInfo>] parsed stash information
       #
       # @raise [Git::UnexpectedResultError] if stash output cannot be parsed
@@ -104,7 +105,9 @@ module Git
       # Parse a single stash list line into a StashInfo object
       #
       # @param line [String] a line from git stash list output (custom format)
+      #
       # @param expected_index [Integer] the expected stash index for validation
+      #
       # @param all_lines [Array<String>] all output lines (for error messages)
       #
       # @return [Git::StashInfo] parsed stash info
@@ -121,7 +124,9 @@ module Git
       # Build a StashInfo from parsed format parts
       #
       # @param parts [Array<String>] the parsed format fields
+      #
       # @param expected_index [Integer] fallback index if not parseable from reflog
+      #
       # @return [Git::StashInfo]
       #
       def build_stash_info(parts, expected_index)
@@ -133,7 +138,9 @@ module Git
       # Build StashInfo attributes hash from parsed parts
       #
       # @param parts [Array<String>] the parsed format fields
+      #
       # @param index [Integer] the resolved stash index
+      #
       # @return [Hash] attributes for StashInfo.new
       #
       def stash_info_attrs(parts, index)
@@ -165,6 +172,7 @@ module Git
       # Extract the stash index from a reflog selector
       #
       # @param reflog_selector [String] e.g., "stash@\\{0}"
+      #
       # @return [Integer, nil] the index or nil if not found
       #
       def extract_index(reflog_selector)
@@ -175,6 +183,7 @@ module Git
       # Extract the branch name from a stash message
       #
       # @param message [String] the stash message
+      #
       # @return [String, nil] the branch name or nil for custom messages
       #
       def extract_branch(message)
@@ -185,8 +194,11 @@ module Git
       # Generate error message for unexpected stash line format
       #
       # @param lines [Array<String>] all output lines
+      #
       # @param line [String] the problematic line
+      #
       # @param index [Integer] the stash index
+      #
       # @return [String] formatted error message
       #
       def unexpected_stash_line_error(lines, line, index)
