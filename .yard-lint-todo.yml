@@ -10,10 +10,6 @@
 # To regenerate this file, run: yard-lint --regenerate-todo
 
 # Documentation validators
-Documentation/BlankLineBeforeDefinition:
-  Exclude:
-    - 'lib/git/diff_info.rb'
-
 Documentation/UndocumentedMethodArguments:
   Exclude:
     - 'lib/git.rb'
