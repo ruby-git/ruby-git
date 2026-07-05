@@ -96,7 +96,8 @@ module Git
         attr_reader :git_version_constraint
 
         # @!attribute [r] skip_version_validation?
-        # @return [Boolean] whether this command skips version validation
+        #
+        #   @return [Boolean] whether this command skips version validation
         def skip_version_validation? = !!@skip_version_validation
 
         # Declare that this command should skip version validation.
@@ -129,6 +130,7 @@ module Git
         #   requires_git_version before: '2.50.0'
         #
         # @param min [String, nil] minimum version
+        #
         # @param before [String, nil] upper bound version (exclusive)
         #
         # @raise [ArgumentError] if version format is invalid or called twice
@@ -145,6 +147,7 @@ module Git
         # Normalize a version constraint to a VersionConstraint
         #
         # @param min [String, nil] minimum version
+        #
         # @param before_version [String, nil] upper bound version
         #
         # @return [Git::VersionConstraint] the normalized constraint

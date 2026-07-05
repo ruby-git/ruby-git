@@ -28,6 +28,7 @@ module Git
   #   system("git log #{head.short_name}")    # Works for both types
   #
   # @see Git::BranchInfo for the branch counterpart
+  #
   # @see Git::Commands::Branch::ShowCurrent for the command that produces this
   #
   # @api public

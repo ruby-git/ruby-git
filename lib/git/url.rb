@@ -8,7 +8,8 @@ module Git
   # Any URL that can be passed to `git clone` can be parsed by this class.
   #
   # @see https://git-scm.com/docs/git-clone#_git_urls GIT URLs
-  # @see https://github.com/sporkmonger/addressable Addresable::URI
+  #
+  # @see https://github.com/sporkmonger/addressable Addressable::URI
   #
   # @api public
   #
@@ -90,7 +91,9 @@ module Git
     #   uri.to_s #=> 'james@github.com/james/ruby-git'
     #
     # @param user [String, nil] the user from the URL or nil
+    #
     # @param host [String] the host from the URL
+    #
     # @param path [String] the path from the URL
     #
     def initialize(user:, host:, path:)

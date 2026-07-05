@@ -76,6 +76,7 @@ module Git
       # Parse a single formatted branch line
       #
       # @param line [String] the line to parse (pipe-delimited fields)
+      #
       # @return [Git::BranchInfo, nil] branch info object, or nil if line should be skipped
       #
       def parse_branch_line(line)
@@ -89,6 +90,7 @@ module Git
       # Build a BranchInfo from parsed fields
       #
       # @param fields [Array<String>] the parsed fields: [refname, objectname, head, worktreepath, symref, upstream]
+      #
       # @return [Git::BranchInfo] the branch info object
       #
       def build_branch_info(fields)
@@ -112,6 +114,7 @@ module Git
       # - "(not a branch)" for non-branch entries
       #
       # @param refname [String] the refname to check
+      #
       # @return [Boolean] true if this is a non-branch entry
       #
       def non_branch_entry?(refname)
@@ -125,6 +128,7 @@ module Git
       # - refs/remotes/origin/main -> remotes/origin/main
       #
       # @param refname [String] the full refname from git
+      #
       # @return [String] normalized refname
       #
       def normalize_refname(refname)
@@ -137,7 +141,9 @@ module Git
       # (worktreepath is non-empty AND it's not the current branch)
       #
       # @param worktreepath [String, nil] the worktree path from git output
+      #
       # @param current [Boolean] whether this is the current branch
+      #
       # @return [Boolean] true if checked out in another worktree
       #
       def in_other_worktree?(worktreepath, current)
@@ -148,6 +154,7 @@ module Git
       # Build upstream BranchInfo from upstream refname
       #
       # @param upstream_ref [String, nil] the upstream ref (e.g., 'refs/remotes/origin/main')
+      #
       # @return [Git::BranchInfo, nil] upstream branch info or nil
       #
       def build_upstream_info(upstream_ref)
@@ -166,6 +173,7 @@ module Git
       # Return value if non-empty, nil otherwise
       #
       # @param value [String, nil] the value to check
+      #
       # @return [String, nil] the value or nil
       #
       def presence(value)
@@ -179,6 +187,7 @@ module Git
       #   # => ["feature"]
       #
       # @param stdout [String] command stdout
+      #
       # @return [Array<String>] names of successfully deleted branches
       #
       def parse_deleted_branches(stdout)
@@ -192,6 +201,7 @@ module Git
       #   # => {"missing" => "error: branch 'missing' not found."}
       #
       # @param stderr [String] command stderr
+      #
       # @return [Hash<String, String>] map of branch name to error message
       #
       def parse_error_messages(stderr)
@@ -204,9 +214,13 @@ module Git
       # Build the BranchDeleteResult from parsed data
       #
       # @param requested_names [Array<String>] originally requested branch names
+      #
       # @param existing_branches [Hash<String, Git::BranchInfo>] branches that existed before delete
+      #
       # @param deleted_names [Array<String>] names confirmed deleted in stdout
+      #
       # @param error_map [Hash<String, String>] map of branch name to error message
+      #
       # @return [Git::BranchDeleteResult] the result object
       #
       def build_delete_result(requested_names, existing_branches, deleted_names, error_map)

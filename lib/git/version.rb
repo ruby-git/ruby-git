@@ -14,14 +14,17 @@ module Git
   #
   # @!attribute [r] major
   #   The major version number
+  #
   #   @return [Integer]
   #
   # @!attribute [r] minor
   #   The minor version number
+  #
   #   @return [Integer]
   #
   # @!attribute [r] patch
   #   The patch version number
+  #
   #   @return [Integer]
   #
   # @example Creating a version directly

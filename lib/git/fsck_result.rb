@@ -10,26 +10,32 @@ module Git
   #
   class FsckResult
     # Objects not referenced by any other object
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :dangling
 
     # Objects that are referenced but not present in the repository
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :missing
 
     # Objects not reachable from any ref
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :unreachable
 
     # Objects with warnings (each includes a message)
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :warnings
 
     # Root nodes (commits with no parents) when --root is used
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :root
 
     # Tagged objects when --tags is used
+    #
     # @return [Array<Git::FsckObject>]
     attr_reader :tagged
 
@@ -38,10 +44,15 @@ module Git
     # Create a new FsckResult
     #
     # @param dangling [Array<Git::FsckObject>] dangling objects
+    #
     # @param missing [Array<Git::FsckObject>] missing objects
+    #
     # @param unreachable [Array<Git::FsckObject>] unreachable objects
+    #
     # @param warnings [Array<Git::FsckObject>] objects with warnings
+    #
     # @param root [Array<Git::FsckObject>] root nodes
+    #
     # @param tagged [Array<Git::FsckObject>] tagged objects
     #
     def initialize(dangling: [], missing: [], unreachable: [], warnings: [], root: [], tagged: [])

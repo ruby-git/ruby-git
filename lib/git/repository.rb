@@ -86,6 +86,7 @@ module Git
 
     # @return [Git::ExecutionContext::Repository] the execution context used to run
     #   git commands for this repository
+    #
     # @api private
     attr_reader :execution_context
 
