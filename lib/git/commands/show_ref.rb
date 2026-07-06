@@ -21,10 +21,6 @@ module Git
     # - {ShowRef::Exists} — boolean existence check without output (git >= 2.43)
     #   (`git show-ref --exists <ref>`)
     #
-    # @api private
-    #
-    # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation
-    #
     # @example List all refs matching a pattern
     #   cmd = Git::Commands::ShowRef::List.new(execution_context)
     #   result = cmd.call('refs/tags/', tags: true)
@@ -35,6 +31,10 @@ module Git
     #   cmd = Git::Commands::ShowRef::Verify.new(execution_context)
     #   result = cmd.call('refs/heads/main')
     #   result.stdout  # => "abc1234 refs/heads/main\n"
+    #
+    # @see https://git-scm.com/docs/git-show-ref git-show-ref documentation
+    #
+    # @api private
     #
     module ShowRef
     end

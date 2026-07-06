@@ -9,6 +9,9 @@ module Git
       #
       # Removes all stash entries. Use with caution as this cannot be undone.
       #
+      # @example Clear all stashes
+      #   Git::Commands::Stash::Clear.new(execution_context).call
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -16,9 +19,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example Clear all stashes
-      #   Git::Commands::Stash::Clear.new(execution_context).call
       #
       class Clear < Git::Commands::Base
         arguments do

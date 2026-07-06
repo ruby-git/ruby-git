@@ -86,6 +86,8 @@ module Git
       #
       # @param lines [Array<String>] mutable output lines from a cat-file response
       #
+      # @return [void]
+      #
       # @yield [key, value] each parsed header pair
       #
       # @yieldparam key [String] header field name
@@ -93,8 +95,6 @@ module Git
       # @yieldparam value [String] unfolded header value text
       #
       # @yieldreturn [void]
-      #
-      # @return [void]
       #
       # @api private
       #

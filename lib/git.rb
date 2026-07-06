@@ -89,13 +89,13 @@ module Git
   # @example Set the global git binary path
   #   Git.configure { |c| c.binary_path = '/usr/local/bin/git' }
   #
+  # @return [void]
+  #
   # @yield [config] yields the singleton config object
   #
   # @yieldparam config [Git::Config] the singleton config object
   #
   # @yieldreturn [void]
-  #
-  # @return [void]
   #
   def self.configure
     yield Git::Config.instance
@@ -131,9 +131,6 @@ module Git
   # Since there is no working copy, you can not checkout or commit
   # but you can do most read operations.
   #
-  # @see https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbarerepositoryabarerepository
-  #   What is a bare repository?
-  #
   # @example Open a bare repository and retrieve the first commit SHA
   #   repository = Git.bare('ruby-git.git')
   #   puts repository.log[0].sha #=> "64c6fa011d3287bab9158049c85f3e85718854a0"
@@ -159,15 +156,49 @@ module Git
   # @return [Git::Repository] an object that can execute git commands in the context
   #   of the bare repository.
   #
+  # @see https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbarerepositoryabarerepository
+  #   What is a bare repository?
+  #
   def self.bare(git_dir, options = {})
     Git::Repository.bare(git_dir, options)
   end
 
   # Clone a repository into an empty or newly created directory
   #
-  # @see https://git-scm.com/docs/git-clone git clone
+  # @example Clone into the default directory `ruby-git`
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git')
   #
-  # @see https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a GIT URLs
+  # @example Clone and then checkout the `development` branch
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', branch: 'development')
+  #
+  # @example Clone into a different directory `my-ruby-git`
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', 'my-ruby-git')
+  #
+  # @example Clone into a specific parent directory
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', chdir: '/path/to/projects')
+  #   # clones into /path/to/projects/ruby-git
+  #
+  # @example Create a bare repository in the directory `ruby-git.git`
+  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', bare: true)
+  #
+  # @example Clone a repository and set a single config option
+  #   git = Git.clone(
+  #     'https://github.com/ruby-git/ruby-git.git',
+  #     config: 'submodule.recurse=true'
+  #   )
+  #
+  # @example Clone a repository and set multiple config options
+  #   git = Git.clone(
+  #     'https://github.com/ruby-git/ruby-git.git',
+  #     config: ['user.name=John Doe', 'user.email=john@doe.com']
+  #   )
+  #
+  # @example Clone using a specific SSH key
+  #   git = Git.clone(
+  #     'git@github.com:ruby-git/ruby-git.git',
+  #     'local-dir',
+  #     git_ssh: 'ssh -i /path/to/private_key'
+  #   )
   #
   # @param repository_url [URI, Pathname] The (possibly remote) repository url to clone
   #   from. See [GIT URLS](https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a)
@@ -240,43 +271,12 @@ module Git
   # @option options [Boolean] :recursive After the clone is created, initialize
   #   all submodules within, using their default settings.
   #
-  # @example Clone into the default directory `ruby-git`
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git')
-  #
-  # @example Clone and then checkout the `development` branch
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', branch: 'development')
-  #
-  # @example Clone into a different directory `my-ruby-git`
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', 'my-ruby-git')
-  #
-  # @example Clone into a specific parent directory
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', chdir: '/path/to/projects')
-  #   # clones into /path/to/projects/ruby-git
-  #
-  # @example Create a bare repository in the directory `ruby-git.git`
-  #   git = Git.clone('https://github.com/ruby-git/ruby-git.git', bare: true)
-  #
-  # @example Clone a repository and set a single config option
-  #   git = Git.clone(
-  #     'https://github.com/ruby-git/ruby-git.git',
-  #     config: 'submodule.recurse=true'
-  #   )
-  #
-  # @example Clone a repository and set multiple config options
-  #   git = Git.clone(
-  #     'https://github.com/ruby-git/ruby-git.git',
-  #     config: ['user.name=John Doe', 'user.email=john@doe.com']
-  #   )
-  #
-  # @example Clone using a specific SSH key
-  #   git = Git.clone(
-  #     'git@github.com:ruby-git/ruby-git.git',
-  #     'local-dir',
-  #     git_ssh: 'ssh -i /path/to/private_key'
-  #   )
-  #
   # @return [Git::Repository] an object that can execute git commands in the context
   #   of the cloned local working copy or cloned repository.
+  #
+  # @see https://git-scm.com/docs/git-clone git clone
+  #
+  # @see https://git-scm.com/docs/git-clone#_git_urls_a_id_urls_a GIT URLs
   #
   def self.clone(repository_url, directory = nil, options = {})
     Git::Repository.clone(repository_url, directory, options)
@@ -352,7 +352,19 @@ module Git
 
   # Create an empty Git repository or reinitialize an existing Git repository
   #
-  # @param [Pathname] directory If the `:bare` option is NOT given or is not
+  # @example Initialize a repository in the current directory
+  #   git = Git.init
+  #
+  # @example Initialize a repository in some other directory
+  #   git = Git.init '~/code/ruby-git'
+  #
+  # @example Initialize a bare repository
+  #   git = Git.init '~/code/ruby-git.git', bare: true
+  #
+  # @example Initialize a repository in a non-default location (outside of the working copy)
+  #   git = Git.init '~/code/ruby-git', repository: '~/code/ruby-git.git'
+  #
+  # @param directory [String, Pathname] if the `:bare` option is NOT given or is not
   #   `true`, the repository will be created in `"#{directory}/.git"`.
   #   Otherwise, the repository is created in `"#{directory}"`.
   #
@@ -362,7 +374,7 @@ module Git
   #   and converted to an absolute path using
   #   [File.expand_path](https://www.rubydoc.info/stdlib/core/File.expand_path).
   #
-  # @param [Hash] options The options for this command (see list of valid
+  # @param options [Hash] the options for this command (see list of valid
   #   options below)
   #
   # @option options [Boolean] :bare Instead of creating a repository at
@@ -397,18 +409,6 @@ module Git
   #
   # @return [Git::Repository] an object that can execute git commands in the context
   #   of the newly initialized repository
-  #
-  # @example Initialize a repository in the current directory
-  #   git = Git.init
-  #
-  # @example Initialize a repository in some other directory
-  #   git = Git.init '~/code/ruby-git'
-  #
-  # @example Initialize a bare repository
-  #   git = Git.init '~/code/ruby-git.git', bare: true
-  #
-  # @example Initialize a repository in a non-default location (outside of the working copy)
-  #   git = Git.init '~/code/ruby-git', repository: '~/code/ruby-git.git'
   #
   # @see https://git-scm.com/docs/git-init git init
   #

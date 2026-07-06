@@ -33,9 +33,9 @@ module Git
     # - {Remote::Prune} - prune stale tracking refs for remotes
     # - {Remote::Update} - update one or more remotes or groups
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-remote git-remote documentation
+    #
+    # @api private
     module Remote
     end
   end

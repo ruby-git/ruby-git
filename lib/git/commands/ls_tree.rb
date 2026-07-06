@@ -10,12 +10,6 @@ module Git
     # name, and file name of each item. Supports recursive listing, output
     # format control, and path filtering.
     #
-    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-tree/2.53.0
-    #
-    # @see https://git-scm.com/docs/git-ls-tree git-ls-tree
-    #
-    # @api private
-    #
     # @example List the top-level tree of HEAD
     #   ls_tree = Git::Commands::LsTree.new(execution_context)
     #   ls_tree.call('HEAD')
@@ -31,6 +25,12 @@ module Git
     # @example List entries under a specific path
     #   ls_tree = Git::Commands::LsTree.new(execution_context)
     #   ls_tree.call('HEAD', 'lib/')
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-tree/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-ls-tree git-ls-tree
+    #
+    # @api private
     #
     class LsTree < Git::Commands::Base
       arguments do

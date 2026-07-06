@@ -19,9 +19,9 @@ module Git
     # - {Revert::Abort} — abort the in-progress revert (`--abort`)
     # - {Revert::Quit} — forget the in-progress revert (`--quit`)
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-revert git-revert documentation
+    #
+    # @api private
     #
     module Revert
     end

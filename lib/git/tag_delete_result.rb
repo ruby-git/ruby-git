@@ -49,9 +49,7 @@ module Git
   TagDeleteResult = Data.define(:deleted, :not_deleted) do
     # Returns true if all requested tags were successfully deleted
     #
-    # @return [Boolean] true if no tags failed to delete, false otherwise
-    #
-    # @example
+    # @example Check if the delete operation succeeded
     #   result = tag_delete.call('v1.0.0')
     #   if result.success?
     #     puts "All tags deleted successfully"
@@ -60,6 +58,7 @@ module Git
     #     result.not_deleted.each { |f| puts "  #{f.name}: #{f.error_message}" }
     #   end
     #
+    # @return [Boolean] true if no tags failed to delete, false otherwise
     def success?
       not_deleted.empty?
     end

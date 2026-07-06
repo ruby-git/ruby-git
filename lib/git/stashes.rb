@@ -19,16 +19,15 @@ module Git
     #
     # Loads all existing stash entries from the repository at construction time.
     #
+    # @example Load stashes for a repository
+    #   stashes = Git::Stashes.new(repo)
+    #   stashes.size  #=> 2
+    #
     # @param base [Git::Repository] the git repository
     #
     # @return [void]
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    # @example Load stashes for a repository
-    #   stashes = Git::Stashes.new(repo)
-    #   stashes.size  #=> 2
-    #
     def initialize(base)
       @stashes = []
       @base = base
@@ -57,16 +56,15 @@ module Git
 
     # Saves the current working-directory state to a new stash entry
     #
+    # @example Save current changes to the stash
+    #   git.stashes.save('WIP: feature work')
+    #   git.stashes.size  #=> 1
+    #
     # @param message [String] the stash message
     #
     # @return [void]
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
-    # @example Save current changes to the stash
-    #   git.stashes.save('WIP: feature work')
-    #   git.stashes.size  #=> 1
-    #
     def save(message)
       s = Git::Stash.new(@base, message)
       @stashes.unshift(s) if s.saved?
@@ -74,32 +72,30 @@ module Git
 
     # Applies a stash entry to the working directory
     #
-    # @param index [Integer, nil] the stash index to apply (default: latest)
-    #
-    # @return [String] the output from the git stash apply command
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
     # @example Apply the most recent stash
     #   git.stashes.apply
     #
     # @example Apply a specific stash by index
     #   git.stashes.apply(1)
     #
+    # @param index [Integer, nil] the stash index to apply (default: latest)
+    #
+    # @return [String] the output from the git stash apply command
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
     def apply(index = nil)
       stash_repository.stash_apply(index)
     end
 
     # Removes all stash entries
     #
-    # @return [void]
-    #
-    # @raise [Git::FailedError] if git exits with a non-zero exit status
-    #
     # @example Clear all stashes
     #   git.stashes.clear
     #   git.stashes.size  #=> 0
     #
+    # @return [void]
+    #
+    # @raise [Git::FailedError] if git exits with a non-zero exit status
     def clear
       stash_repository.stash_clear
       @stashes = []
@@ -108,11 +104,10 @@ module Git
 
     # Returns the number of stash entries
     #
-    # @return [Integer] the number of stashes
-    #
     # @example Check how many stashes exist
     #   git.stashes.size  #=> 2
     #
+    # @return [Integer] the number of stashes
     def size
       @stashes.size
     end
@@ -144,13 +139,12 @@ module Git
     #
     # Stashes are stored in newest-first order; index 0 is the most recent stash.
     #
-    # @param index [Integer, #to_i] the stash index (0 = most recent)
-    #
-    # @return [Git::Stash, nil] the stash entry, or `nil` if the index is out of bounds
-    #
     # @example Access the most recent stash
     #   git.stashes[0].message  #=> "WIP: feature work"
     #
+    # @param index [Integer, #to_i] the stash index (0 = most recent)
+    #
+    # @return [Git::Stash, nil] the stash entry, or `nil` if the index is out of bounds
     def [](index)
       @stashes[index.to_i]
     end

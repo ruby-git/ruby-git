@@ -11,14 +11,6 @@ module Git
       # stashed contents and the commit back when the stash entry was first
       # created.
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
-      #
-      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
-      #
-      # @see https://git-scm.com/docs/git-stash git-stash documentation
-      #
-      # @api private
-      #
       # @example Show numstat for the latest stash
       #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true)
       #
@@ -28,6 +20,14 @@ module Git
       # @example Show with directory statistics
       #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: true)
       #   Git::Commands::Stash::Show.new(ctx).call(numstat: true, shortstat: true, dirstat: 'lines,cumulative')
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      # @api private
       #
       class Show < Git::Commands::Base
         arguments do

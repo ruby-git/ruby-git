@@ -78,11 +78,11 @@ module Git
   # block. Multi-mode git commands (e.g., `git branch`, `git stash`) are split
   # into namespace modules with one class per mode.
   #
-  # @api private
-  #
   # @see Git::Commands::Base
   #
   # @see Git::Commands::Arguments
+  #
+  # @api private
   #
   module Commands; end
 end

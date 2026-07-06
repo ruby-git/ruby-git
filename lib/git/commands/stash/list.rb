@@ -8,6 +8,9 @@ module Git
     module Stash
       # List all stash entries
       #
+      # @example List all stashes
+      #   Git::Commands::Stash::List.new(execution_context).call
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -15,9 +18,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example List all stashes
-      #   Git::Commands::Stash::List.new(execution_context).call
       #
       class List < Git::Commands::Base
         arguments do

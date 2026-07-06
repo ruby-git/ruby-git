@@ -8,7 +8,6 @@ module Git
   # its index, reference name, commit SHA, branch, message, author/committer
   # details, and timestamps.
   #
-  # @api public
   #
   # @example Create a StashInfo from parsed stash list output
   #   info = Git::StashInfo.new(
@@ -38,6 +37,8 @@ module Git
   #   info.committer_name  # => 'Jane Doe'
   #   info.committer_email # => 'jane@example.com'
   #   info.committer_date  # => '2026-01-24T10:30:00-08:00'
+  #
+  # @api public
   #
   # @!attribute [r] index
   #   @return [Integer] the stash index (0, 1, 2, ...)
@@ -92,11 +93,10 @@ module Git
   ) do
     # Returns the stash reference name
     #
-    # @return [String] the stash name (e.g., 'stash@\\{0}')
-    #
-    # @example
+    # @example Convert to string
     #   info.to_s # => 'stash@{0}'
     #
+    # @return [String] the stash name (e.g., 'stash@\\{0}')
     def to_s
       name
     end

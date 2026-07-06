@@ -17,10 +17,6 @@ module Git
     # - {UpdateRef::Batch} — read update/create/delete/verify instructions
     #   from stdin (`--stdin`); all modifications are applied atomically
     #
-    # @api private
-    #
-    # @see https://git-scm.com/docs/git-update-ref git-update-ref documentation
-    #
     # @example Update a branch ref to a new commit SHA
     #   cmd = Git::Commands::UpdateRef::Update.new(lib)
     #   cmd.call('refs/heads/main', 'abc1234')
@@ -35,6 +31,10 @@ module Git
     #     'update refs/heads/main newsha oldsha',
     #     'delete refs/heads/old'
     #   )
+    #
+    # @see https://git-scm.com/docs/git-update-ref git-update-ref documentation
+    #
+    # @api private
     #
     module UpdateRef
     end

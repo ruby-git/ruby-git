@@ -425,8 +425,6 @@ module Git
         Git::Remote.new(self, name)
       end
 
-      # @deprecated Use {#remote_add} instead.
-      #
       # @param name [String] the name for the new remote
       #
       # @param url [String, Git::Repository] the URL of the remote repository
@@ -450,6 +448,8 @@ module Git
       # @raise [ArgumentError] when unsupported option keys are provided
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      # @deprecated Use {#remote_add} instead
       #
       def add_remote(name, url, opts = {})
         Git::Deprecation.warn(
@@ -477,13 +477,13 @@ module Git
         Git::Commands::Remote::Remove.new(@execution_context).call(name)
       end
 
-      # @deprecated Use {#remote_remove} instead.
-      #
       # @param name [String] the name of the remote to remove
       #
       # @return [Git::CommandLineResult] the result of calling `git remote remove`
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      # @deprecated Use {#remote_remove} instead
       #
       def remove_remote(name)
         Git::Deprecation.warn(
@@ -522,8 +522,6 @@ module Git
         Git::Remote.new(self, name)
       end
 
-      # @deprecated Use {#remote_set_url} instead.
-      #
       # @param name [String] the name of the remote to update
       #
       # @param url [String, Git::Repository] the new URL for the remote
@@ -534,6 +532,8 @@ module Git
       # @return [Git::Remote] the updated remote
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
+      #
+      # @deprecated Use {#remote_set_url} instead
       #
       def set_remote_url(name, url)
         Git::Deprecation.warn(
@@ -665,12 +665,6 @@ module Git
       #   # => {"head"=>{ref: "HEAD", sha: "abc123"},
       #   #     "branches"=>{"main"=>{ref: "refs", sha: "abc123"}}}
       #
-      # @note The `:ref` value in each pair is only the **first path segment** of the
-      #   full git ref (e.g. `"refs"` for `refs/heads/main`), not the complete ref
-      #   path. This matches the behavior of 4.x. See
-      #   [issue 1416](https://github.com/ruby-git/ruby-git/issues/1416) for the
-      #   planned fix.
-      #
       # @example List all refs from a named remote
       #   repo.ls_remote('origin')
       #   # => {"head"=>..., "branches"=>..., "tags"=>...}
@@ -707,6 +701,12 @@ module Git
       # @raise [ArgumentError] if unsupported options are provided
       #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+      #
+      # @note The `:ref` value in each pair is only the **first path segment** of the
+      #   full git ref (e.g. `"refs"` for `refs/heads/main`), not the complete ref
+      #   path. This matches the behavior of 4.x. See
+      #   [issue 1416](https://github.com/ruby-git/ruby-git/issues/1416) for the
+      #   planned fix.
       #
       def ls_remote(location = nil, opts = {})
         SharedPrivate.assert_valid_opts!(LS_REMOTE_ALLOWED_OPTS, **opts)

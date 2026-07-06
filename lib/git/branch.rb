@@ -180,13 +180,13 @@ module Git
     #
     # @param message [String] commit message used when the block returns truthy
     #
-    # @yield Executes the block with this branch checked out
-    #
-    # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
-    #
     # @return [String] git's stdout from the final checkout back to the original branch
     #
     # @raise [Git::FailedError] if any of the underlying git operations (checkout, commit, reset) fail
+    #
+    # @yield Executes the block with this branch checked out
+    #
+    # @yieldreturn [Object] return a truthy value to commit all changes, a falsy value to hard-reset
     #
     def in_branch(message = 'in branch work')
       old_current = branch_repository.current_branch

@@ -11,7 +11,6 @@ module Git
   # dst for deleted files), the entire FileRef should be nil rather than having
   # a FileRef with nil attributes.
   #
-  # @api public
   #
   # @example A modified file's source reference
   #   src = Git::FileRef.new(mode: '100644', sha: 'abc1234', path: 'lib/foo.rb')
@@ -19,6 +18,8 @@ module Git
   # @example A new file (src would be nil, not a FileRef)
   #   # src = nil
   #   dst = Git::FileRef.new(mode: '100644', sha: 'def5678', path: 'lib/new_file.rb')
+  #
+  # @api public
   #
   # @!attribute [r] mode
   #   @return [String] the file mode (e.g., '100644' for regular file, '100755' for executable,
@@ -59,13 +60,13 @@ module Git
     #
     # Useful for bit operations on file permissions.
     #
-    # @return [Integer] the mode as an integer
-    #
     # @example Check file permissions
     #   ref.mode_bits & 0o777  # => 0o644 (420 decimal)
     #
     # @example Check if group writable
     #   (ref.mode_bits & 0o020) != 0
+    #
+    # @return [Integer] the mode as an integer
     #
     def mode_bits
       mode.to_i(8)

@@ -28,9 +28,9 @@ module Git
     # - {Stash::Create} — create a stash object without storing it
     # - {Stash::Store} — store a stash object created with `create`
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-stash git-stash documentation
+    #
+    # @api private
     #
     module Stash
     end

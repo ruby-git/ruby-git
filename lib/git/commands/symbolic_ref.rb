@@ -16,10 +16,6 @@ module Git
     #   at a given branch
     # - {SymbolicRef::Delete} — delete a symbolic ref
     #
-    # @api private
-    #
-    # @see https://git-scm.com/docs/git-symbolic-ref git-symbolic-ref documentation
-    #
     # @example Read the current HEAD
     #   cmd = Git::Commands::SymbolicRef::Read.new(lib)
     #   cmd.call('HEAD')
@@ -31,6 +27,10 @@ module Git
     # @example Delete a symbolic ref
     #   cmd = Git::Commands::SymbolicRef::Delete.new(lib)
     #   cmd.call('HEAD')
+    #
+    # @see https://git-scm.com/docs/git-symbolic-ref git-symbolic-ref documentation
+    #
+    # @api private
     #
     module SymbolicRef
     end

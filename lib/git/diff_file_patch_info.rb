@@ -9,7 +9,6 @@ module Git
   # including source and destination file references, the patch text, change type,
   # and line statistics.
   #
-  # @api public
   #
   # @example A modified file patch
   #   patch_info = Git::DiffFilePatchInfo.new(
@@ -59,6 +58,7 @@ module Git
   # @!attribute [r] deletions
   #   @return [Integer] number of lines deleted
   #
+  # @api public
   DiffFilePatchInfo = Data.define(
     :src,
     :dst,

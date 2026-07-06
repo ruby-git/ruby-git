@@ -885,8 +885,6 @@ module Git
         tag(name)
       end
 
-      # @deprecated Use {#tag_add} instead.
-      #
       # @overload add_tag(name, options = {})
       #
       #   @param name [String] the name of the tag to create
@@ -911,6 +909,8 @@ module Git
       #   a message
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#tag_add} instead
       #
       def add_tag(name, *options)
         Git::Deprecation.warn(
@@ -938,13 +938,13 @@ module Git
         result.stdout
       end
 
-      # @deprecated Use {#tag_delete} instead.
-      #
       # @param name [String] the name of the tag to delete
       #
       # @return [String] git's stdout from the delete
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#tag_delete} instead
       #
       def delete_tag(name)
         Git::Deprecation.warn(

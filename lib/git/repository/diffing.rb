@@ -388,11 +388,6 @@ module Git
       # (staging area) and the working directory. These are changes that have
       # been made to tracked files but not yet staged.
       #
-      # @note The field names in the returned hash are **legacy names** inherited
-      #   from `Git::Lib#diff_files` and appear counterintuitive: `:mode_repo`
-      #   and `:sha_repo` hold **index (staging area)** values, while
-      #   `:mode_index` and `:sha_index` hold **working tree** values.
-      #
       # @example List all files with unstaged changes
       #   repo.diff_files
       #   #=> {
@@ -419,6 +414,11 @@ module Git
       #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
+      # @note The field names in the returned hash are **legacy names** inherited
+      #   from `Git::Lib#diff_files` and appear counterintuitive: `:mode_repo`
+      #   and `:sha_repo` hold **index (staging area)** values, while
+      #   `:mode_index` and `:sha_index` hold **working tree** values.
+      #
       # @see https://git-scm.com/docs/git-diff-files git-diff-files documentation
       #
       def diff_files
@@ -437,18 +437,6 @@ module Git
       #
       # This is equivalent to the 4.x `Git::Lib#diff_index` behavior, which also
       # ran `git diff-index` without `--cached`.
-      #
-      # @note `git diff-index` without `--cached` uses the index as a stat cache:
-      #   any file whose index entry differs from the tree is reported as changed,
-      #   even when the on-disk working-tree content is byte-for-byte identical to
-      #   the tree. A staged change that has been reverted in the working tree will
-      #   therefore still appear in the result (because the index still differs from
-      #   the tree).
-      #
-      # @note The field names in the returned hash are **legacy names** inherited
-      #   from `Git::Lib#diff_index` and appear counterintuitive: `:mode_repo`
-      #   and `:sha_repo` hold **tree (treeish)** values, while `:mode_index` and
-      #   `:sha_index` hold **working tree** values.
       #
       # @example List all working-tree files that differ from HEAD
       #   repo.diff_index('HEAD')
@@ -478,6 +466,18 @@ module Git
       #   * `:type`       [String] the status code (e.g. `"M"`, `"A"`, `"D"`)
       #
       # @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+      #
+      # @note `git diff-index` without `--cached` uses the index as a stat cache:
+      #   any file whose index entry differs from the tree is reported as changed,
+      #   even when the on-disk working-tree content is byte-for-byte identical to
+      #   the tree. A staged change that has been reverted in the working tree will
+      #   therefore still appear in the result (because the index still differs from
+      #   the tree).
+      #
+      # @note The field names in the returned hash are **legacy names** inherited
+      #   from `Git::Lib#diff_index` and appear counterintuitive: `:mode_repo`
+      #   and `:sha_repo` hold **tree (treeish)** values, while `:mode_index` and
+      #   `:sha_index` hold **working tree** values.
       #
       # @see https://git-scm.com/docs/git-diff-index git-diff-index documentation
       #

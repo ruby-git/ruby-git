@@ -10,6 +10,12 @@ module Git
       # Removes a single stash entry from the list of stash entries.
       # If no stash reference is given, it removes the latest one.
       #
+      # @example Drop the latest stash
+      #   Git::Commands::Stash::Drop.new(execution_context).call
+      #
+      # @example Drop a specific stash
+      #   Git::Commands::Stash::Drop.new(execution_context).call('stash@\\{2}')
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -17,12 +23,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example Drop the latest stash
-      #   Git::Commands::Stash::Drop.new(execution_context).call
-      #
-      # @example Drop a specific stash
-      #   Git::Commands::Stash::Drop.new(execution_context).call('stash@\\{2}')
       #
       class Drop < Git::Commands::Base
         arguments do

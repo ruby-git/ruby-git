@@ -29,6 +29,9 @@ module Git
     # @example Print each path and status
     #   diff_path_status.each { |path, status| puts "#{path}: #{status}" }
     #
+    # @return [Enumerator, Hash{String => String}] an `Enumerator` when no block
+    #   is given; the name-status hash when a block is given
+    #
     # @yield [path, status] each file path with its git status code
     #
     # @yieldparam path [String] the file path relative to the repository root
@@ -36,9 +39,6 @@ module Git
     # @yieldparam status [String] the git status code (e.g. `"M"`, `"A"`, `"D"`)
     #
     # @yieldreturn [void]
-    #
-    # @return [Enumerator, Hash{String => String}] an `Enumerator` when no block
-    #   is given; the name-status hash when a block is given
     #
     def each(&)
       return to_enum(__method__) unless block_given?

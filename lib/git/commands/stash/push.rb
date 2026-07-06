@@ -11,14 +11,6 @@ module Git
       # to HEAD (in the working tree and index). The command takes
       # various options to customize what gets stashed.
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
-      #
-      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
-      #
-      # @see https://git-scm.com/docs/git-stash git-stash documentation
-      #
-      # @api private
-      #
       # @example Save all changes with a message
       #   Git::Commands::Stash::Push.new(execution_context).call(message: 'WIP: feature work')
       #
@@ -30,6 +22,14 @@ module Git
       #
       # @example Include untracked files
       #   Git::Commands::Stash::Push.new(execution_context).call(include_untracked: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      # @api private
       #
       class Push < Git::Commands::Base
         arguments do

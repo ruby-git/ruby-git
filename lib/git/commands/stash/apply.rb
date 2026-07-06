@@ -10,14 +10,6 @@ module Git
       # Applies the changes recorded in a stash to the working tree.
       # Unlike {Pop}, this does not remove the stash from the stash list.
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
-      #
-      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
-      #
-      # @see https://git-scm.com/docs/git-stash git-stash documentation
-      #
-      # @api private
-      #
       # @example Apply the latest stash
       #   Git::Commands::Stash::Apply.new(execution_context).call
       #
@@ -26,6 +18,14 @@ module Git
       #
       # @example Apply and restore index state
       #   Git::Commands::Stash::Apply.new(execution_context).call(index: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      # @api private
       #
       class Apply < Git::Commands::Base
         arguments do
