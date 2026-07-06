@@ -164,12 +164,36 @@ module Git
 
       private
 
+      # Execute the git command with the given arguments and options, capturing the output
+      #
+      # @param args [Array<String>] the git command arguments
+      #
+      # @param options_hash [Hash] the merged run options forwarded from {#run}
+      #
+      #   Only the keys consumed by this method are listed below; remaining keys
+      #   from {RUN_OPTION_DEFAULTS} (`:normalize`, `:chomp`, `:raise_on_failure`)
+      #   are present in the hash but are not used here.
+      #
+      # @option options_hash [IO, nil] :in stdin IO object for the subprocess
+      #
+      # @option options_hash [#write, nil] :out stdout redirect target
+      #
+      # @option options_hash [#write, nil] :err stderr redirect target
+      #
+      # @option options_hash [String, nil] :chdir working directory for the subprocess
+      #
+      # @option options_hash [Numeric, nil] :timeout execution timeout in seconds
+      #
+      # @option options_hash [Boolean] :merge (false) merge stdout into stderr
+      #
+      # @option options_hash [Hash] :env ({}) environment variable overrides
+      #
       # @return [ProcessExecuter::ResultWithCapture] the process result with captured output
       #
       # @api private
       def execute(*args, **options_hash)
         git_cmd = build_git_cmd(args)
-        options = execute_options(**options_hash)
+        options = execution_options(**options_hash)
         run_process_executer do
           ProcessExecuter.run_with_capture(merged_env(options_hash), *git_cmd, **options)
         end
@@ -177,10 +201,24 @@ module Git
 
       # Build the ProcessExecuter options hash for a capturing run
       #
+      # @param options_hash [Hash] the merged run options forwarded from {#run}
+      #
+      # @option options_hash [IO, nil] :in stdin IO object for the subprocess
+      #
+      # @option options_hash [#write, nil] :out stdout redirect target
+      #
+      # @option options_hash [#write, nil] :err stderr redirect target
+      #
+      # @option options_hash [String, nil] :chdir working directory for the subprocess
+      #
+      # @option options_hash [Numeric, nil] :timeout execution timeout in seconds
+      #
+      # @option options_hash [Boolean] :merge (false) merge stdout into stderr
+      #
       # @return [Hash]
       #
       # @api private
-      def execute_options(**options_hash)
+      def execution_options(**options_hash)
         chdir = options_hash[:chdir] || :not_set
         timeout_after = options_hash[:timeout]
         merge_output = options_hash[:merge] || false
@@ -190,14 +228,22 @@ module Git
         end
       end
 
-      # Extract non-nil redirect options (`:in`, `:out`, `:err`) from options_hash
+      # Extract non-nil redirect options (`:in`, `:out`, `:err`) from `options`
       #
-      # @return [Hash]
+      # @param options [Hash] the options hash containing potential redirect options
+      #
+      # @option options [IO, nil] :in the input IO stream
+      #
+      # @option options [#write, nil] :out the output IO stream
+      #
+      # @option options [#write, nil] :err the error IO stream
+      #
+      # @return [Hash] the non-nil redirect options
       #
       # @api private
-      def redirect_options(options_hash)
+      def redirect_options(options)
         %i[in out err].filter_map do |key|
-          val = options_hash[key]
+          val = options[key]
           [key, val] unless val.nil?
         end.to_h
       end
@@ -207,7 +253,15 @@ module Git
       #
       # @param result [ProcessExecuter::ResultWithCapture] the raw result
       #
-      # @param options [Hash] the merged run options
+      # @param options [Hash] the merged run options forwarded from {#run}
+      #
+      # @option options [Boolean] :normalize (false) normalize encoding of captured output
+      #
+      # @option options [Boolean] :chomp (false) chomp trailing newlines from captured output
+      #
+      # @option options [Numeric, nil] :timeout execution timeout used to construct the result
+      #
+      # @option options [Boolean] :raise_on_failure (true) raise {Git::FailedError} on non-zero exit
       #
       # @return [Git::CommandLineResult]
       #

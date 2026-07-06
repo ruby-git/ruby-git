@@ -122,6 +122,28 @@ module Git
 
       private
 
+      # Execute the git command in streaming mode
+      #
+      # @param args [Array<String>] the git command arguments
+      #
+      # @param err_io [StringIO, #write] the internal stderr destination
+      #
+      # @param options_hash [Hash] the merged run options forwarded from {#run}
+      #
+      #   Only the keys consumed by this method are listed below; `:err` and
+      #   `:raise_on_failure` are present in the hash but not used here (`:err`
+      #   is handled via the separate `err_io:` argument).
+      #
+      # @option options_hash [IO, nil] :in stdin IO object for the subprocess
+      #
+      # @option options_hash [#write, nil] :out stdout streaming destination
+      #
+      # @option options_hash [String, nil] :chdir working directory for the subprocess
+      #
+      # @option options_hash [Numeric, nil] :timeout execution timeout in seconds
+      #
+      # @option options_hash [Hash] :env ({}) environment variable overrides
+      #
       # @return [ProcessExecuter::Result] the result of running the command (non-capturing)
       #
       # @api private
@@ -134,6 +156,18 @@ module Git
       end
 
       # Build the ProcessExecuter options hash for a streaming run
+      #
+      # @param err_io [StringIO, #write] the stderr destination (internal buffer or tee)
+      #
+      # @param options_hash [Hash] the merged run options forwarded from {#run}
+      #
+      # @option options_hash [IO, nil] :in stdin IO object for the subprocess
+      #
+      # @option options_hash [#write, nil] :out stdout streaming destination
+      #
+      # @option options_hash [String, nil] :chdir working directory for the subprocess
+      #
+      # @option options_hash [Numeric, nil] :timeout execution timeout in seconds
       #
       # @return [Hash]
       #
@@ -178,7 +212,11 @@ module Git
       #
       # @param err_io [StringIO] the internal StringIO that captured stderr
       #
-      # @param options [Hash] the merged run options
+      # @param options [Hash] the merged run options forwarded from {#run}
+      #
+      # @option options [Numeric, nil] :timeout execution timeout used to construct the result
+      #
+      # @option options [Boolean] :raise_on_failure (true) raise {Git::FailedError} on non-zero exit
       #
       # @return [Git::CommandLineResult]
       #
