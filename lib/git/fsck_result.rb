@@ -68,11 +68,11 @@ module Git
 
     # Returns true if any issues were found
     #
-    # @return [Boolean]
-    #
-    # @example
+    # @example Check for repository issues
     #   result = git.fsck
     #   puts "Repository has issues!" if result.any_issues?
+    #
+    # @return [Boolean]
     #
     def any_issues?
       [dangling, missing, unreachable, warnings].any?(&:any?)
@@ -80,11 +80,11 @@ module Git
 
     # Returns true if no issues were found
     #
-    # @return [Boolean]
-    #
-    # @example
+    # @example Check if the result is empty
     #   result = git.fsck
     #   puts "Repository is clean" if result.empty?
+    #
+    # @return [Boolean]
     #
     def empty?
       !any_issues?
@@ -92,11 +92,11 @@ module Git
 
     # Returns all objects from all categories (excluding informational root/tagged)
     #
-    # @return [Array<Git::FsckObject>]
-    #
-    # @example
+    # @example Iterate over all objects
     #   result = git.fsck
     #   result.all_objects.each { |obj| puts obj.oid }
+    #
+    # @return [Array<Git::FsckObject>]
     #
     def all_objects
       dangling + missing + unreachable + warnings
@@ -104,11 +104,11 @@ module Git
 
     # Returns the total number of issues found
     #
-    # @return [Integer]
-    #
-    # @example
+    # @example Count all issues
     #   result = git.fsck
     #   puts "Found #{result.count} issues"
+    #
+    # @return [Integer]
     #
     def count
       all_objects.size
@@ -116,11 +116,11 @@ module Git
 
     # Returns a hash representation of the result
     #
-    # @return [Hash{Symbol => Array<Git::FsckObject>}]
-    #
-    # @example
+    # @example Convert to a hash
     #   result = git.fsck
     #   result.to_h # => { dangling: [...], missing: [...], ... }
+    #
+    # @return [Hash{Symbol => Array<Git::FsckObject>}]
     #
     def to_h
       {

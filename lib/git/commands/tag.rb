@@ -16,9 +16,9 @@ module Git
     # - {Tag::List} — list tags with optional filtering (`--list`)
     # - {Tag::Verify} — verify GPG signatures of tags (`--verify`)
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-tag git-tag documentation
+    #
+    # @api private
     #
     module Tag
     end

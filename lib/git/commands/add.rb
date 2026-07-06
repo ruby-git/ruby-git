@@ -9,6 +9,12 @@ module Git
     # This command updates the index using the current content found in the working tree,
     # to prepare the content staged for the next commit.
     #
+    # @example Basic usage
+    #   add = Git::Commands::Add.new(execution_context)
+    #   add.call('path/to/file')
+    #   add.call('file1.rb', 'file2.rb')
+    #   add.call(all: true)
+    #
     # @note `arguments` block audited against https://git-scm.com/docs/git-add/2.53.0
     #
     # @see https://git-scm.com/docs/git-add git-add
@@ -16,12 +22,6 @@ module Git
     # @see Git::Commands
     #
     # @api private
-    #
-    # @example Basic usage
-    #   add = Git::Commands::Add.new(execution_context)
-    #   add.call('path/to/file')
-    #   add.call('file1.rb', 'file2.rb')
-    #   add.call(all: true)
     #
     class Add < Git::Commands::Base
       arguments do

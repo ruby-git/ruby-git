@@ -10,14 +10,6 @@ module Git
     # associated commit IDs. Can be used to detect changes in a remote
     # repository without cloning or fetching.
     #
-    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-remote/2.53.0
-    #
-    # @see https://git-scm.com/docs/git-ls-remote git-ls-remote documentation
-    #
-    # @see Git::Commands
-    #
-    # @api private
-    #
     # @example List all refs in a remote
     #   ls_remote = Git::Commands::LsRemote.new(execution_context)
     #   ls_remote.call('origin')
@@ -37,6 +29,14 @@ module Git
     # @example Detect the default branch of a remote
     #   ls_remote = Git::Commands::LsRemote.new(execution_context)
     #   ls_remote.call('origin', 'HEAD', symref: true)
+    #
+    # @note `arguments` block audited against https://git-scm.com/docs/git-ls-remote/2.53.0
+    #
+    # @see https://git-scm.com/docs/git-ls-remote git-ls-remote documentation
+    #
+    # @see Git::Commands
+    #
+    # @api private
     #
     class LsRemote < Git::Commands::Base
       arguments do

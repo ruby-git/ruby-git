@@ -8,7 +8,6 @@ module Git
   # Contains the source and destination file references, change status,
   # similarity percentage (for renames/copies), and line change statistics.
   #
-  # @api public
   #
   # @example A modified file
   #   info = Git::DiffFileRawInfo.new(
@@ -64,6 +63,7 @@ module Git
   # @!attribute [r] binary
   #   @return [Boolean] whether this is a binary file
   #
+  # @api public
   DiffFileRawInfo = Data.define(:src, :dst, :status, :similarity, :insertions, :deletions, :binary) do
     # Get the primary file path
     #

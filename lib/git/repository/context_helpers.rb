@@ -27,16 +27,16 @@ module Git
       #     repo.add('hello.txt')
       #   end
       #
+      # @return [Object] the value returned by the block
+      #
+      # @raise [ArgumentError] if the repository has no working directory (bare
+      #   repository)
+      #
       # @yield [dir] the repository working directory
       #
       # @yieldparam dir [Pathname] the working directory path
       #
       # @yieldreturn [Object] returned as the method's return value
-      #
-      # @return [Object] the value returned by the block
-      #
-      # @raise [ArgumentError] if the repository has no working directory (bare
-      #   repository)
       #
       def chdir
         raise ArgumentError, 'cannot chdir: repository has no working directory (bare repository)' if dir.nil?
@@ -58,13 +58,13 @@ module Git
       #
       # @param new_index [String, Pathname] path to the replacement index file
       #
+      # @return [Object] the value returned by the block
+      #
       # @yield [repo] the repository instance with the new index active
       #
       # @yieldparam repo [Git::Repository] `self`
       #
       # @yieldreturn [Object] returned as the method's return value
-      #
-      # @return [Object] the value returned by the block
       #
       def with_index(new_index) # :yields: self
         old_context = @execution_context
@@ -90,13 +90,13 @@ module Git
       #     repo.write_tree
       #   end
       #
+      # @return [Object] the value returned by the block
+      #
       # @yield [repo] the repository instance with the temporary index active
       #
       # @yieldparam repo [Git::Repository] `self`
       #
       # @yieldreturn [Object] returned as the method's return value
-      #
-      # @return [Object] the value returned by the block
       #
       def with_temp_index(&) # :yields: self
         # Use a unique temp directory so the index file path is collision-free
@@ -127,16 +127,16 @@ module Git
       # @param work_dir [String, Pathname] path to the replacement working
       #   directory
       #
+      # @return [Object] the value returned by the block
+      #
+      # @raise [ArgumentError] if `work_dir` does not exist on disk
+      #
       # @yield [repo] the repository instance with the new working directory
       #   active
       #
       # @yieldparam repo [Git::Repository] `self`
       #
       # @yieldreturn [Object] returned as the method's return value
-      #
-      # @return [Object] the value returned by the block
-      #
-      # @raise [ArgumentError] if `work_dir` does not exist on disk
       #
       def with_working(work_dir) # :yields: self
         old_context = @execution_context
@@ -158,14 +158,14 @@ module Git
       #     File.write('scratch.txt', 'temporary content')
       #   end
       #
+      # @return [Object] the value returned by the block
+      #
       # @yield [repo] the repository instance with the temporary working
       #   directory active
       #
       # @yieldparam repo [Git::Repository] `self`
       #
       # @yieldreturn [Object] returned as the method's return value
-      #
-      # @return [Object] the value returned by the block
       #
       def with_temp_working(&block) # :yields: self
         Dir.mktmpdir('temp-workdir') { |temp_dir| with_working(temp_dir, &block) }

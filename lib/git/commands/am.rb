@@ -23,9 +23,9 @@ module Git
     # - {Am::ShowCurrentPatch} — show the patch being applied (`--show-current-patch`)
     # - {Am::Skip} — skip the current patch (`--skip`)
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-am git-am documentation
+    #
+    # @api private
     #
     module Am
     end

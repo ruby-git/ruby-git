@@ -19,8 +19,6 @@ module Git
       # For stdin-based filtering, use {Git::Commands::ShowRef::ExcludeExisting}.
       # For a simple boolean existence check (git >= 2.43), use {Git::Commands::ShowRef::Exists}.
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
-      #
       # @example List all refs
       #   cmd = Git::Commands::ShowRef::List.new(execution_context)
       #   result = cmd.call
@@ -37,6 +35,8 @@ module Git
       # @example Match a pattern
       #   cmd = Git::Commands::ShowRef::List.new(execution_context)
       #   result = cmd.call('v1.0', 'v2.0', tags: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-show-ref/2.53.0
       #
       # @see Git::Commands::ShowRef
       #

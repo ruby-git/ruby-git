@@ -91,13 +91,19 @@ module Git
 
     # Iterate over all status files
     #
-    # @yield [file] each {Git::Status::StatusFile} in the repository
+    # @overload each
     #
-    # @yieldparam file [Git::Status::StatusFile] a single file's status
+    #   @return [Enumerator<Git::Status::StatusFile>] an enumerator over all status files
     #
-    # @return [Enumerator<Git::Status::StatusFile>] if no block is given
+    # @overload each(&block)
     #
-    # @return [Array<Git::Status::StatusFile>] if a block is given
+    #   @return [Array<Git::Status::StatusFile>] the full list of status files
+    #
+    #   @yield [file] each {Git::Status::StatusFile} in the repository
+    #
+    #   @yieldparam file [Git::Status::StatusFile] a single file's status
+    #
+    #   @yieldreturn [void]
     #
     def each(&) = @files.values.each(&)
 
@@ -131,11 +137,13 @@ module Git
 
     # Return a hash of files for which the block returns a truthy value
     #
+    # @return [Hash{String => Git::Status::StatusFile}] matching files keyed by path
+    #
     # @yield [file] each {Git::Status::StatusFile} in the repository
     #
     # @yieldparam file [Git::Status::StatusFile] a single file's status
     #
-    # @return [Hash{String => Git::Status::StatusFile}] matching files keyed by path
+    # @yieldreturn [Boolean] truthy to include the file in the result
     #
     def select_files(&block)
       @files.select { |_path, file| block.call(file) }

@@ -52,11 +52,12 @@ module Git
 
         # Define the command's arguments using the {Arguments} DSL.
         #
-        # @yield the block passed to {Arguments.define}
+        # @return [void]
         #
         # @raise [ArgumentError] if called more than once on the same class
         #
-        # @return [void]
+        # @yield the block passed to {Arguments.define}
+        #
         def arguments(&)
           raise ArgumentError, "arguments already defined for #{name}" if @args_definition
 
@@ -76,9 +77,10 @@ module Git
         #
         # @param range [Range] range of accepted exit status values
         #
+        # @return [void]
+        #
         # @raise [ArgumentError] if range is invalid
         #
-        # @return [void]
         def allow_exit_status(range)
           raise ArgumentError, 'allow_exit_status expects a Range' unless range.is_a?(Range)
           unless range.begin.is_a?(Integer) && range.end.is_a?(Integer)
@@ -106,9 +108,10 @@ module Git
         # `git version` command, which cannot validate versions without
         # causing infinite recursion.
         #
+        # @return [void]
+        #
         # @api private
         #
-        # @return [void]
         def skip_version_validation
           @skip_version_validation = true
         end
@@ -133,9 +136,10 @@ module Git
         #
         # @param before [String, nil] upper bound version (exclusive)
         #
+        # @return [void]
+        #
         # @raise [ArgumentError] if version format is invalid or called twice
         #
-        # @return [void]
         def requires_git_version(min = nil, before: nil)
           raise ArgumentError, 'requires_git_version already declared for this class' if @git_version_constraint
 
@@ -376,10 +380,14 @@ module Git
       #
       # @param content [String] text to write to the process's stdin
       #
-      # @yield [reader [IO]] the read end of the pipe; valid only for the
+      # @return [Object] the value returned by the block
+      #
+      # @yield [reader] the read end of the pipe
+      #
+      # @yieldparam reader [IO] the read end of the pipe; valid only for the
       #   duration of the block
       #
-      # @return [Object] the value returned by the block
+      # @yieldreturn [Object] the block's return value, which becomes the method's return value
       #
       def with_stdin(content)
         reader, writer = IO.pipe

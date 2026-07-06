@@ -21,11 +21,11 @@ module Git
       # For queries across multiple objects, use {CatFile::Batch}.
       # For filter-processed content, use {CatFile::Filtered}.
       #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-cat-file/2.53.0
+      #
       # @see Git::Commands::CatFile
       #
       # @see https://git-scm.com/docs/git-cat-file git-cat-file documentation
-      #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-cat-file/2.53.0
       #
       # @api private
       #

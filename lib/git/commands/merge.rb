@@ -18,9 +18,9 @@ module Git
     # - {Merge::Quit} — forget the in-progress merge but leave the working tree
     #   as-is (`--quit`)
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-merge git-merge documentation
+    #
+    # @api private
     #
     module Merge
     end

@@ -141,6 +141,8 @@ module Git
       # Yield to a block that calls ProcessExecuter and translate any ProcessExecuter
       # errors to their ruby-git equivalents
       #
+      # @return [Object] the return value of the block
+      #
       # @raise [ArgumentError] in place of ProcessExecuter::ArgumentError
       #
       # @raise [Git::Error] in place of ProcessExecuter::SpawnError (binary not found or
@@ -152,8 +154,6 @@ module Git
       #   `Process.kill` raises `Errno::ESRCH` when the spawned process exits between the
       #   timeout firing and the kill signal being delivered. This is a race in
       #   process_executer's timeout handling and is semantically equivalent to a timeout.
-      #
-      # @return [Object] the return value of the block
       #
       # @api private
       #

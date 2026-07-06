@@ -10,14 +10,6 @@ module Git
       # Like {Apply}, but removes the stash from the stash list after
       # applying, unless there are conflicts.
       #
-      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
-      #
-      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
-      #
-      # @see https://git-scm.com/docs/git-stash git-stash documentation
-      #
-      # @api private
-      #
       # @example Pop the latest stash
       #   Git::Commands::Stash::Pop.new(execution_context).call
       #
@@ -29,6 +21,14 @@ module Git
       #
       # @example Pop quietly
       #   Git::Commands::Stash::Pop.new(execution_context).call(quiet: true)
+      #
+      # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
+      #
+      # @see Git::Commands::Stash Git::Commands::Stash for usage examples
+      #
+      # @see https://git-scm.com/docs/git-stash git-stash documentation
+      #
+      # @api private
       #
       class Pop < Git::Commands::Base
         arguments do

@@ -49,9 +49,7 @@ module Git
   BranchDeleteResult = Data.define(:deleted, :not_deleted) do
     # Returns true if all requested branches were successfully deleted
     #
-    # @return [Boolean] true if no branches failed to delete, false otherwise
-    #
-    # @example
+    # @example Check if the delete operation succeeded
     #   result = branch_delete.call('feature-branch')
     #   if result.success?
     #     puts "All branches deleted successfully"
@@ -60,6 +58,7 @@ module Git
     #     result.not_deleted.each { |f| puts "  #{f.name}: #{f.error_message}" }
     #   end
     #
+    # @return [Boolean] true if no branches failed to delete, false otherwise
     def success?
       not_deleted.empty?
     end

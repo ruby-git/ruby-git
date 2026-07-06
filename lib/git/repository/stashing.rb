@@ -19,13 +19,6 @@ module Git
       # message is the stash description with the leading branch prefix (e.g.
       # `"On main:"` or `"WIP on main:"`) stripped.
       #
-      # @note The sequential index returned here is **not** the same as git's
-      #   `stash@{N}` reference used by {#stash_apply}. In git, `stash@{0}` is the
-      #   **most recent** stash, while index `0` here is the **oldest**. To apply a
-      #   specific stash from this list, convert the entry's position to a git
-      #   reference: `'stash@{%d}' % (total - 1 - index)`, or pass the string
-      #   reference directly to {#stash_apply}.
-      #
       # @example List all stashes (oldest first)
       #   repo.stashes_all #=> [[0, "Fix bug"], [1, "Add feature"]]
       #
@@ -34,6 +27,13 @@ module Git
       #   stash description with the branch prefix stripped
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @note The sequential index returned here is **not** the same as git's
+      #   `stash@{N}` reference used by {#stash_apply}. In git, `stash@{0}` is the
+      #   **most recent** stash, while index `0` here is the **oldest**. To apply a
+      #   specific stash from this list, convert the entry's position to a git
+      #   reference: `'stash@{%d}' % (total - 1 - index)`, or pass the string
+      #   reference directly to {#stash_apply}.
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
@@ -48,8 +48,6 @@ module Git
 
       # Returns stash entries as a formatted string matching `git stash list` output
       #
-      # @deprecated Use {#stashes_all} instead.
-      #
       # @example List stashes as a formatted string
       #   repo.stash_list #=> "stash@{0}: On main: WIP\nstash@{1}: On feature: Fix bug"
       #
@@ -58,6 +56,8 @@ module Git
       #   output
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @deprecated Use {#stashes_all} instead
       #
       # @see #stashes_all
       #
@@ -75,15 +75,15 @@ module Git
 
       # Save the current working directory and index state to a new stash
       #
+      # @example Save current changes
+      #   repo.stash_save('WIP: feature work')
+      #
       # @param message [String] the stash message
       #
       # @return [Boolean] true if changes were stashed, false if there were no
       #   local changes to save
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @example Save current changes
-      #   repo.stash_save('WIP: feature work')
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
@@ -125,13 +125,13 @@ module Git
       # Removes all entries from the stash list. Use with caution as this
       # operation cannot be undone.
       #
+      # @example Clear all stashes
+      #   repo.stash_clear #=> ""
+      #
       # @return [String] the output from the git stash clear command
       #   (typically empty)
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
-      #
-      # @example Clear all stashes
-      #   repo.stash_clear #=> ""
       #
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #

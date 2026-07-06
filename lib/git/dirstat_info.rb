@@ -3,12 +3,12 @@
 module Git
   # Immutable value object representing a single directory's contribution to a diff
   #
-  # @api public
-  #
-  # @example
+  # @example Create a DirstatEntry
   #   info = Git::DirstatEntry.new(directory: 'lib/commands/', percentage: 45.2)
   #   info.directory   #=> "lib/commands/"
   #   info.percentage  #=> 45.2
+  #
+  # @api public
   #
   # @!attribute [r] directory
   #   @return [String] the directory path (always ends with '/')
@@ -22,9 +22,7 @@ module Git
   #
   # Contains the list of directories and their contribution percentages to the diff.
   #
-  # @api public
-  #
-  # @example
+  # @example Create a DirstatInfo
   #   dirstat = Git::DirstatInfo.new(
   #     entries: [
   #       Git::DirstatEntry.new(directory: 'lib/commands/', percentage: 45.2),
@@ -34,6 +32,8 @@ module Git
   #   dirstat.entries.first.directory  #=> "lib/commands/"
   #   dirstat['lib/commands/']         #=> 45.2
   #   dirstat.to_h  #=> { "lib/commands/" => 45.2, "spec/unit/" => 30.1 }
+  #
+  # @api public
   #
   # @!attribute [r] entries
   #   @return [Array<DirstatEntry>] directory statistics in order from git output
@@ -75,9 +75,19 @@ module Git
 
     # Iterate over entries
     #
-    # @yield [DirstatEntry] each entry
+    # @overload each
     #
-    # @return [Enumerator] if no block given
+    #   @return [Enumerator<Git::DirstatEntry>] an enumerator over all dirstat entries
+    #
+    # @overload each(&block)
+    #
+    #   @return [Array<Git::DirstatEntry>] the full list of dirstat entries
+    #
+    #   @yield [entry] each dirstat entry
+    #
+    #   @yieldparam entry [Git::DirstatEntry] a single dirstat entry
+    #
+    #   @yieldreturn [void]
     #
     def each(&block)
       entries.each(&block)

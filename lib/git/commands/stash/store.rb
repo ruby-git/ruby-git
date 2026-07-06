@@ -13,6 +13,12 @@ module Git
       # This command is typically used after {Create} to actually record
       # the stash in the reflog.
       #
+      # @example Store a stash commit
+      #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456')
+      #
+      # @example Store with a custom message
+      #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456', message: 'WIP: feature')
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -20,12 +26,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example Store a stash commit
-      #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456')
-      #
-      # @example Store with a custom message
-      #   Git::Commands::Stash::Store.new(execution_context).call('abc123def456', message: 'WIP: feature')
       #
       class Store < Git::Commands::Base
         arguments do

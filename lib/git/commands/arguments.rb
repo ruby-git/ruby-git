@@ -593,17 +593,17 @@ module Git
     class Arguments
       # Define a new Arguments instance using the DSL
       #
-      # @yield [] block evaluated in the context of the new Arguments instance via
-      #   +instance_eval+, so DSL methods ({#flag_option}, {#operand}, etc.) are called
-      #   directly without an explicit receiver
-      #
-      # @return [Arguments] The configured Arguments instance
-      #
       # @example Basic flag
       #   args_def = Arguments.define do
       #     flag_option :verbose
       #   end
       #   args_def.bind(verbose: true).to_a  # => ['--verbose']
+      #
+      # @return [Arguments] the configured Arguments instance
+      #
+      # @yield [] block evaluated in the context of the new Arguments instance via
+      #   +instance_eval+, so DSL methods ({#flag_option}, {#operand}, etc.) are called
+      #   directly without an explicit receiver
       #
       def self.define(&block)
         args = new
@@ -625,54 +625,6 @@ module Git
       end
 
       # Define a boolean flag option (--flag when true)
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
-      #
-      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
-      #   `--no-<flag>` when set to `true`. Both keys use standard boolean semantics: `true`
-      #   emits the flag, `false` or absent emits nothing. A conflict is automatically registered
-      #   between the two keys so that `name: true, no_name: true` raises at bind time.
-      #   The primary key must be snake_case (e.g. `:verify`, `:three_way`). When `as:` is
-      #   given, it must be a long-form (`--flag`) String; Arrays and short-form flags (e.g.
-      #   `-S`) are not compatible with `negatable: true` because the synthesized companion is
-      #   always `--no-<flag>`.
-      #
-      # @param required [Boolean] whether the option must be provided (the key must be present
-      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
-      #   group is automatically registered so that either the primary or companion key satisfies
-      #   the requirement (e.g. `bind(no_verify: true)` satisfies `required: true` for `:verify`).
-      #   Note that under the companion-key model, `bind(verify: false)` does **not** satisfy
-      #   the requirement because `false` is treated as absent.
-      #
-      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
-      #   When false with required: true, raises ArgumentError if value is nil.
-      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
-      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
-      #
-      # @param max_times [Integer, nil] maximum number of times the flag may be repeated (default: nil).
-      #   When set, the caller may pass a positive Integer up to this limit to emit the flag
-      #   multiple times (e.g. `force: 2` emits `--force --force`). Must be an Integer >= 2;
-      #   0 and 1 raise ArgumentError at definition time. When nil (the default), only boolean
-      #   values are accepted.
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
-      #
-      # @raise [ArgumentError] if max_times is not nil and not an Integer >= 2
-      #
-      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
-      #
-      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
-      #   with an already-registered key
-      #
-      # @raise [ArgumentError] if negatable: true and as: is an Array
-      #
-      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
-      #
-      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
       #
       # @example Basic flag
       #   args_def = Arguments.define do
@@ -722,6 +674,54 @@ module Git
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :force"
       #   args_def.bind(force: nil) #=> raise ArgumentError, "Required options cannot be nil: :force"
       #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @param as [String, Array<String>, nil] custom argument(s) to output (e.g., '-r' or ['--amend', '--no-edit'])
+      #
+      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
+      #   `--no-<flag>` when set to `true`. Both keys use standard boolean semantics: `true`
+      #   emits the flag, `false` or absent emits nothing. A conflict is automatically registered
+      #   between the two keys so that `name: true, no_name: true` raises at bind time.
+      #   The primary key must be snake_case (e.g. `:verify`, `:three_way`). When `as:` is
+      #   given, it must be a long-form (`--flag`) String; Arrays and short-form flags (e.g.
+      #   `-S`) are not compatible with `negatable: true` because the synthesized companion is
+      #   always `--no-<flag>`.
+      #
+      # @param required [Boolean] whether the option must be provided (the key must be present
+      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   group is automatically registered so that either the primary or companion key satisfies
+      #   the requirement (e.g. `bind(no_verify: true)` satisfies `required: true` for `:verify`).
+      #   Note that under the companion-key model, `bind(verify: false)` does **not** satisfy
+      #   the requirement because `false` is treated as absent.
+      #
+      # @param allow_nil [Boolean] whether nil is allowed when required is true (defaults to true)
+      #
+      #   When false with required: true, raises ArgumentError if value is nil.
+      #   Cannot be combined with `negatable: true` and `required: true` — raises ArgumentError
+      #   at definition time (nil is already caught by the auto `requires_one_of` group).
+      #
+      # @param max_times [Integer, nil] maximum number of times the flag may be repeated (default: nil)
+      #   When set, the caller may pass a positive Integer up to this limit to emit the flag
+      #   multiple times (e.g. `force: 2` emits `--force --force`). Must be an Integer >= 2;
+      #   0 and 1 raise ArgumentError at definition time. When nil (the default), only boolean
+      #   values are accepted.
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #
+      # @raise [ArgumentError] if max_times is not nil and not an Integer >= 2
+      #
+      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
+      #
+      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
+      #   with an already-registered key
+      #
+      # @raise [ArgumentError] if negatable: true and as: is an Array
+      #
+      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
+      #
+      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
       def flag_option(names, as: nil, negatable: false, required: false, allow_nil: true, max_times: nil)
         primary = Array(names).first
         validate_max_times!(primary, max_times)
@@ -742,40 +742,6 @@ module Git
       # - **Default**: `--flag value` (flag and value as separate arguments)
       # - **Inline**: `--flag=value` (single argument with `inline: true`)
       # - **Operand**: `value` (no flag, just the value with `as_operand: true`)
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @param as [String, nil] custom option string (arrays not supported for value types)
-      #
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
-      #   descriptive message if value doesn't match.
-      #
-      # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
-      #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
-      #
-      # @param as_operand [Boolean] when true, outputs value as operand without flag
-      #   (default: false). Cannot be combined with inline:.
-      #
-      # @param allow_empty [Boolean] whether to include the option even when value is an empty string.
-      #   When false (default), empty strings are skipped entirely. When true, the option and empty
-      #   value are included in the output.
-      #
-      # @param repeatable [Boolean] whether to allow multiple values. When true, accepts an array
-      #   of values and repeats the option for each value. A single value or nil is also accepted.
-      #   Behavior varies by output mode (see examples below).
-      #
-      # @param required [Boolean] when true, the option key must be present in the provided options hash.
-      #   Raises ArgumentError if the key is missing. Defaults to false.
-      #
-      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
-      #   Raises ArgumentError if a nil value is provided. Defaults to true.
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if inline: and as_operand: are both true
-      #
-      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
-      #   (unless as_operand: true)
       #
       # @example Basic value (default mode)
       #   args_def = Arguments.define do
@@ -860,6 +826,39 @@ module Git
       #   args_def.bind(message: nil) #=> raise ArgumentError, "Required options cannot be nil: :message"
       #   args_def.bind() #=> raise ArgumentError, "Required options not provided: :message"
       #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @param as [String, nil] custom option string (arrays not supported for value types)
+      #
+      # @param type [Class, Array<Class>, nil] expected type(s) for validation. Raises ArgumentError with
+      #   descriptive message if value doesn't match.
+      #
+      # @param inline [Boolean] when true, outputs --flag=value as single argument instead of
+      #   --flag value as separate arguments (default: false). Cannot be combined with as_operand:.
+      #
+      # @param as_operand [Boolean] when true, outputs value as operand without flag
+      #   (default: false). Cannot be combined with inline:.
+      #
+      # @param allow_empty [Boolean] whether to include the option even when value is an empty string.
+      #   When false (default), empty strings are skipped entirely. When true, the option and empty
+      #   value are included in the output.
+      #
+      # @param repeatable [Boolean] whether to allow multiple values. When true, accepts an array
+      #   of values and repeats the option for each value. A single value or nil is also accepted.
+      #   Behavior varies by output mode (see examples below).
+      #
+      # @param required [Boolean] when true, the option key must be present in the provided options hash.
+      #   Raises ArgumentError if the key is missing. Defaults to false.
+      #
+      # @param allow_nil [Boolean] when false (with required: true), the value cannot be nil.
+      #   Raises ArgumentError if a nil value is provided. Defaults to true.
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if inline: and as_operand: are both true
+      #
+      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #   (unless as_operand: true)
       def value_option(names, as: nil, type: nil, inline: false, as_operand: false,
                        allow_empty: false, repeatable: false, required: false, allow_nil: true)
         validate_value_modifiers!(names, inline, as_operand)
@@ -878,55 +877,6 @@ module Git
       # - Flag with value when value is any non-boolean, non-nil object (stringified via #to_s;
       #   e.g., --flag value or --flag=value if inline: true)
       # - Nothing when value is nil
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @param as [String, nil] custom option string
-      #
-      # @param type [Class, Array<Class>, nil] expected type(s) for validation
-      #
-      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
-      #   `--no-<flag>` when set to `true`. The positive key retains flag-or-value semantics;
-      #   the negative key is boolean-only (accepts only `true`/`false`/`nil`). A conflict is
-      #   automatically registered so that `name: true, no_name: true` raises at bind time.
-      #   The primary key must be snake_case. When `as:` is given, it must be a long-form
-      #   (`--flag`) String; Arrays and short-form flags (e.g. `-S`) are not compatible with
-      #   `negatable: true` because the synthesized companion is always `--no-<flag>`.
-      #
-      # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
-      #
-      # @param repeatable [Boolean] when true, accepts an Array of values and repeats the option
-      #   for each element. Each element must be +true+, +false+, or a non-nil object (which is
-      #   stringified via +#to_s+); nil elements raise ArgumentError at bind time.
-      #   A single (non-Array) value is also accepted. Default false.
-      #
-      # @param required [Boolean] whether the option must be provided (the key must be present
-      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
-      #   group is automatically registered so that either side satisfies the requirement. Note
-      #   that `bind(name: false)` does **not** satisfy the requirement because `false` is
-      #   treated as absent under the companion-key model.
-      #
-      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
-      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
-      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] at bind time if +repeatable: true+ is used and any
-      #   Array element is nil
-      #
-      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
-      #
-      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
-      #
-      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
-      #   with an already-registered key
-      #
-      # @raise [ArgumentError] if negatable: true and as: is an Array
-      #
-      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
-      #
-      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
       #
       # @example Basic flag or value (new capability - not possible with old DSL)
       #   args_def = Arguments.define do
@@ -977,6 +927,54 @@ module Git
       #   args_def.bind(recurse_submodules: [nil])
       #   # => raise_error ArgumentError, /Invalid value for flag_or_inline_value/
       #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @param as [String, nil] custom option string
+      #
+      # @param type [Class, Array<Class>, nil] expected type(s) for validation
+      #
+      # @param negatable [Boolean] when true, registers a companion `no_<name>` key that emits
+      #   `--no-<flag>` when set to `true`. The positive key retains flag-or-value semantics;
+      #   the negative key is boolean-only (accepts only `true`/`false`/`nil`). A conflict is
+      #   automatically registered so that `name: true, no_name: true` raises at bind time.
+      #   The primary key must be snake_case. When `as:` is given, it must be a long-form
+      #   (`--flag`) String; Arrays and short-form flags (e.g. `-S`) are not compatible with
+      #   `negatable: true` because the synthesized companion is always `--no-<flag>`.
+      #
+      # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
+      #
+      # @param repeatable [Boolean] when true, accepts an Array of values and repeats the option
+      #   for each element. Each element must be +true+, +false+, or a non-nil object (which is
+      #   stringified via +#to_s+); nil elements raise ArgumentError at bind time.
+      #   A single (non-Array) value is also accepted. Default false.
+      #
+      # @param required [Boolean] whether the option must be provided (the key must be present
+      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   group is automatically registered so that either side satisfies the requirement. Note
+      #   that `bind(name: false)` does **not** satisfy the requirement because `false` is
+      #   treated as absent under the companion-key model.
+      #
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
+      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] at bind time if +repeatable: true+ is used and any
+      #   Array element is nil
+      #
+      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #
+      # @raise [ArgumentError] if negatable: true and the primary key is not snake_case
+      #
+      # @raise [ArgumentError] if negatable: true and the generated `no_<name>` key collides
+      #   with an already-registered key
+      #
+      # @raise [ArgumentError] if negatable: true and as: is an Array
+      #
+      # @raise [ArgumentError] if negatable: true and as: is not a long-form (`--flag`) String
+      #
+      # @raise [ArgumentError] if negatable: true and required: true and allow_nil: false
       def flag_or_value_option(names, as: nil, type: nil, negatable: false, inline: false,
                                repeatable: false, required: false, allow_nil: true)
         if negatable
@@ -994,31 +992,6 @@ module Git
       #
       # This is useful for git options like --trailer that take key=value pairs
       # and can be repeated. Accepts Hash or Array of arrays for flexible input.
-      #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @param as [String, nil] custom option string (e.g., '--trailer')
-      #
-      # @param key_separator [String] separator between key and value (default: '=')
-      #
-      # @param inline [Boolean] when true, outputs --flag=key=value instead of --flag key=value
-      #
-      # @param required [Boolean] whether the option must be provided (key must exist in opts).
-      #   Note: empty hash/array is considered "present" and produces no output without error.
-      #
-      # @param allow_nil [Boolean] whether nil is allowed when required is true
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] at bind time if array input is not a [key, value] pair or array of pairs
-      #
-      # @raise [ArgumentError] at bind time if a sub-array has more than 2 elements
-      #
-      # @raise [ArgumentError] at bind time if a key is nil, empty, or contains the separator
-      #
-      # @raise [ArgumentError] at bind time if a value is a Hash or Array (non-scalar)
-      #
-      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
       #
       # @example Basic key-value (like --trailer)
       #   args_def = Arguments.define do
@@ -1070,6 +1043,30 @@ module Git
       #   args_def.bind(trailers: []).to_a   # => []
       #   args_def.bind(trailers: nil).to_a  # => []
       #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @param as [String, nil] custom option string (e.g., '--trailer')
+      #
+      # @param key_separator [String] separator between key and value (default: '=')
+      #
+      # @param inline [Boolean] when true, outputs --flag=key=value instead of --flag key=value
+      #
+      # @param required [Boolean] whether the option must be provided (key must exist in opts).
+      #   Note: empty hash/array is considered "present" and produces no output without error.
+      #
+      # @param allow_nil [Boolean] whether nil is allowed when required is true
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] at bind time if array input is not a [key, value] pair or array of pairs
+      #
+      # @raise [ArgumentError] at bind time if a sub-array has more than 2 elements
+      #
+      # @raise [ArgumentError] at bind time if a key is nil, empty, or contains the separator
+      #
+      # @raise [ArgumentError] at bind time if a value is a Hash or Array (non-scalar)
+      #
+      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
       def key_value_option(names, as: nil, key_separator: '=', inline: false, required: false, allow_nil: true)
         option_type = inline ? :inline_key_value : :key_value
         register_option(names, type: option_type, as: as, key_separator: key_separator,
@@ -1081,10 +1078,6 @@ module Git
       # Literals are output at their definition position (not grouped at the start).
       # This allows precise control over argument ordering, which is important for
       # git commands where argument position matters.
-      #
-      # @param flag_string [String] the static flag string (e.g., '--', '--no-progress')
-      #
-      # @return [void]
       #
       # @example Static flag for subcommand mode
       #   args_def = Arguments.define do
@@ -1104,6 +1097,9 @@ module Git
       #   args_def.bind('HEAD', 'file.txt', force: true).to_a
       #   # => ['--force', 'HEAD', '--', 'file.txt']
       #
+      # @param flag_string [String] the static flag string (e.g., '--', '--no-progress')
+      #
+      # @return [void]
       def literal(flag_string)
         @ordered_definitions << { kind: :static, flag: flag_string }
         @past_separator = true if flag_string == '--'
@@ -1122,16 +1118,6 @@ module Git
       # `end_of_options` also acts as an always-active validation boundary: operands
       # defined before it are always validated for option-like values (starting with
       # `-`), regardless of whether the terminator will ultimately be emitted.
-      #
-      # @param as [String] the CLI token to emit as the options terminator
-      #   (default `'--'`). Some commands use a different terminator; for example,
-      #   `git rev-parse` uses `'--end-of-options'`.
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if called more than once per definition block
-      #
-      # @raise [ArgumentError] if a flag-producing option is defined after this call
       #
       # @example Basic usage (git checkout tree-ish -- pathspecs)
       #   args_def = Arguments.define do
@@ -1154,6 +1140,15 @@ module Git
       #   args_def.bind('HEAD').to_a               # => ['--end-of-options', 'HEAD']
       #   args_def.bind.to_a                       # => []
       #
+      # @param as [String] the CLI token to emit as the options terminator
+      #   (default `'--'`). Some commands use a different terminator; for example,
+      #   `git rev-parse` uses `'--end-of-options'`.
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if called more than once per definition block
+      #
+      # @raise [ArgumentError] if a flag-producing option is defined after this call
       def end_of_options(as: '--')
         raise ArgumentError, 'end_of_options cannot be declared twice' if @end_of_options_declared
 
@@ -1165,24 +1160,6 @@ module Git
 
       # Define a custom option with a custom builder block
       #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @param required [Boolean] whether the option must be provided (key must exist in opts)
-      #
-      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
-      #   When false with required: true, raises ArgumentError if value is nil.
-      #
-      # @yield [value] block that receives the option value and returns the CLI argument(s)
-      #
-      # @yieldparam value [Object] the bound value for this option
-      #
-      # @yieldreturn [String, Array<String>, nil] the CLI argument(s) to emit;
-      #   nil or an empty array emits nothing
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
-      #
       # @example Custom transformation (e.g., formatting a Date value)
       #   args_def = Arguments.define do
       #     custom_option :since do |val|
@@ -1191,6 +1168,24 @@ module Git
       #   end
       #   args_def.bind(since: Date.new(2024, 1, 1)).to_a  # => ['--since=2024-01-01']
       #   args_def.bind.to_a                               # => []
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @param required [Boolean] whether the option must be provided (key must exist in opts)
+      #
+      # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
+      #   When false with required: true, raises ArgumentError if value is nil.
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
+      #
+      # @yield [value] block that receives the option value and returns the CLI argument(s)
+      #
+      # @yieldparam value [Object] the bound value for this option
+      #
+      # @yieldreturn [String, Array<String>, nil] the CLI argument(s) to emit;
+      #   nil or an empty array emits nothing
       #
       def custom_option(names, required: false, allow_nil: true, &block)
         register_option(names, type: :custom, builder: block, required: required, allow_nil: allow_nil)
@@ -1202,10 +1197,6 @@ module Git
       # their values are still accessible on the {Bound} object. This is useful for options that
       # control Ruby-side execution context (e.g., working directory) rather than git flags.
       #
-      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
-      #
-      # @return [void]
-      #
       # @example Chdir option forwarded to execution context, not emitted as a CLI flag
       #   args_def = Arguments.define do
       #     flag_option :verbose
@@ -1215,6 +1206,9 @@ module Git
       #   bound.to_a        # => ['--verbose']  # :chdir is not included
       #   bound[:chdir]     # => '/tmp'          # still accessible on the Bound object
       #
+      # @param names [Symbol, Array<Symbol>] the option name(s), first is primary
+      #
+      # @return [void]
       def execution_option(names)
         register_option(names, type: :execution_option)
       end
@@ -1236,16 +1230,6 @@ module Git
       # The error message has the general form:
       #
       #   "cannot specify :name1 and :name2"
-      #
-      # @param names [Array<Symbol>] the option/operand names that conflict within
-      #   this group
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if any name is not a known option or operand
-      #
-      # @raise [ArgumentError] if more than one argument in the same conflict group
-      #   is present when building arguments
       #
       # @example Option-only conflict group
       #   args_def = Arguments.define do
@@ -1270,6 +1254,15 @@ module Git
       #   args_def.bind('main', 'file.txt', merge: true)
       #     # => raise ArgumentError, 'cannot specify :merge and :tree_ish'
       #
+      # @param names [Array<Symbol>] the option/operand names that conflict within
+      #   this group
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name is not a known option or operand
+      #
+      # @raise [ArgumentError] if more than one argument in the same conflict group
+      #   is present when building arguments
       def conflicts(*names)
         names.each do |name|
           sym = name.to_sym
@@ -1303,16 +1296,6 @@ module Git
       #
       #   "cannot specify :name1=value1 with :name2=value2"
       #
-      # @param pairs [Hash] keyword pairs mapping argument name to forbidden value
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if any name in +pairs+ is not a known option or
-      #   operand
-      #
-      # @raise [ArgumentError] during {#bind} if all names are present and all
-      #   values exactly match the declared tuple
-      #
       # @example Reject only the contradictory negatable flag combinations
       #   args_def = Arguments.define do
       #     flag_option :all,            negatable: true
@@ -1331,6 +1314,15 @@ module Git
       #   args_def.bind(all: true,    no_ignore_removal: true).to_a  # => ['--all', '--no-ignore-removal']
       #   args_def.bind(no_all: true, ignore_removal: true).to_a     # => ['--no-all', '--ignore-removal']
       #
+      # @param pairs [Hash] keyword pairs mapping argument name to forbidden value
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name in +pairs+ is not a known option or
+      #   operand
+      #
+      # @raise [ArgumentError] during {#bind} if all names are present and all
+      #   values exactly match the declared tuple
       def forbid_values(**pairs)
         raise ArgumentError, 'forbid_values must be given at least one name-value pair' if pairs.empty?
 
@@ -1379,22 +1371,6 @@ module Git
       #
       #   ":trigger requires at least one of :name1, :name2"
       #
-      # @param names [Array<Symbol>] the option/operand names where at least one
-      #   must be present
-      #
-      # @option kwargs [Symbol] :when optional trigger argument; when given, the check is
-      #   only performed if the trigger argument is present
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if no names are given
-      #
-      # @raise [ArgumentError] if any name (or the `when:` trigger) is not a known
-      #   option or operand
-      #
-      # @raise [ArgumentError] if none of the arguments in the group is present
-      #   when binding arguments (and the trigger, if any, is present)
-      #
       # @example At-least-one of two keyword options (unconditional)
       #   args_def = Arguments.define do
       #     value_option :pathspec_from_file, inline: true
@@ -1442,6 +1418,21 @@ module Git
       #     # => raise ArgumentError, ':annotate requires at least one of :message, :file'
       #   args_def.bind  # trigger absent — no error
       #
+      # @param names [Array<Symbol>] the option/operand names where at least one
+      #   must be present
+      #
+      # @option kwargs [Symbol] :when optional trigger argument; when given, the check is
+      #   only performed if the trigger argument is present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if no names are given
+      #
+      # @raise [ArgumentError] if any name (or the `when:` trigger) is not a known
+      #   option or operand
+      #
+      # @raise [ArgumentError] if none of the arguments in the group is present
+      #   when binding arguments (and the trigger, if any, is present)
       def requires_one_of(*names, **kwargs)
         condition = kwargs.delete(:when)
         raise ArgumentError, "requires_one_of: unknown keyword arguments: #{kwargs.keys.inspect}" unless kwargs.empty?
@@ -1479,17 +1470,6 @@ module Git
       #   "at least one of :a, :b, :c must be provided"   # zero present
       #   "cannot specify :a and :b"                       # two or more present
       #
-      # @param names [Array<Symbol>] the option/operand names where exactly one
-      #   must be present
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if any name is not a known option or operand
-      #
-      # @raise [ArgumentError] at bind time if none of the arguments in the group is present
-      #
-      # @raise [ArgumentError] at bind time if more than one argument in the group is present
-      #
       # @example Mode flags where exactly one must be supplied
       #   args_def = Arguments.define do
       #     flag_option :mode_a
@@ -1503,6 +1483,16 @@ module Git
       #   args_def.bind(mode_a: true, mode_c: true)
       #     # => raise ArgumentError, 'cannot specify :mode_a and :mode_c'
       #
+      # @param names [Array<Symbol>] the option/operand names where exactly one
+      #   must be present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any name is not a known option or operand
+      #
+      # @raise [ArgumentError] at bind time if none of the arguments in the group is present
+      #
+      # @raise [ArgumentError] at bind time if more than one argument in the group is present
       def requires_exactly_one_of(*names)
         requires_one_of(*names)
         conflicts(*names)
@@ -1529,20 +1519,6 @@ module Git
       #
       #   ":trigger requires :name"
       #
-      # @param name [Symbol] the option/operand name that must be present
-      #
-      # @option kwargs [Symbol] :when the trigger argument; when present, *name* must also be present
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if `when:` is not provided
-      #
-      # @raise [ArgumentError] if *name* or the `when:` trigger is not a known option
-      #   or operand
-      #
-      # @raise [ArgumentError] if the trigger is present and *name* is absent when
-      #   binding arguments
-      #
       # @example Require pathspec_from_file when pathspec_file_nul is present
       #   args_def = Arguments.define do
       #     flag_option :pathspec_file_nul
@@ -1564,6 +1540,19 @@ module Git
       #   args_def.bind(ignore_missing: true)
       #   # => raise ArgumentError, ':ignore_missing requires :dry_run'
       #
+      # @param name [Symbol] the option/operand name that must be present
+      #
+      # @option kwargs [Symbol] :when the trigger argument; when present, *name* must also be present
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if `when:` is not provided
+      #
+      # @raise [ArgumentError] if *name* or the `when:` trigger is not a known option
+      #   or operand
+      #
+      # @raise [ArgumentError] if the trigger is present and *name* is absent when
+      #   binding arguments
       def requires(name, **kwargs)
         condition = kwargs.delete(:when)
         raise ArgumentError, 'requires: `when:` keyword is required' unless condition
@@ -1584,27 +1573,6 @@ module Git
       # `nil` and absent values are always skipped. Empty strings are skipped when
       # `allow_empty: true` is set on the option. For `repeatable: true` options
       # each element of the array is validated individually.
-      #
-      # @param name [Symbol] the option name (primary or alias); must refer to a
-      #   previously defined {#value_option} or {#flag_or_value_option}
-      #
-      # @param in [#each] accepted values enumerable. Each value is coerced with
-      #   +to_s+ and compared as a string.
-      #
-      # For \\{#flag_or_value_option} variants (including +negatable: true+),
-      # boolean values (+true+ / +false+) are skipped by this check because they
-      # control flag-emission behavior rather than representing candidate string
-      # values.
-      #
-      # @return [void]
-      #
-      # @raise [ArgumentError] if +name+ is not a known option at definition time
-      #
-      # @raise [ArgumentError] if +name+ refers to a non-value option (e.g., a flag)
-      #
-      # @raise [ArgumentError] during {#bind} if the bound value is not in the
-      #   accepted set, with a message of the form:
-      #   `"Invalid value for :name: expected one of [...], got \"actual\""`
       #
       # @example Constrain chmod to '+x' or '-x'
       #   args_def = Arguments.define do
@@ -1635,6 +1603,26 @@ module Git
       #   args_def.bind(strategy: %w[ours other])
       #     # => raise ArgumentError, 'Invalid value for :strategy: expected one of ["ours", "theirs"], got "other"'
       #
+      # @param name [Symbol] the option name (primary or alias); must refer to a
+      #   previously defined {#value_option} or {#flag_or_value_option}
+      #
+      # @param in [#each] accepted values enumerable. Each value is coerced with
+      #   +to_s+ and compared as a string.
+      #
+      # For \\{#flag_or_value_option} variants (including +negatable: true+),
+      # boolean values (+true+ / +false+) are skipped by this check because they
+      # control flag-emission behavior rather than representing candidate string
+      # values.
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if +name+ is not a known option at definition time
+      #
+      # @raise [ArgumentError] if +name+ refers to a non-value option (e.g., a flag)
+      #
+      # @raise [ArgumentError] during {#bind} if the bound value is not in the
+      #   accepted set, with a message of the form:
+      #   `"Invalid value for :name: expected one of [...], got \"actual\""`
       def allowed_values(name, in:)
         sym = name.to_sym
         defn = validate_allowed_values_definition!(sym)
@@ -1649,31 +1637,6 @@ module Git
       # semantics. Required operands before a repeatable are filled left-to-right,
       # required operands after a repeatable are filled from the end, and the
       # repeatable gets whatever remains in the middle.
-      #
-      # @param name [Symbol] the operand name (used in error messages)
-      #
-      # @param required [Boolean] whether the argument is required. For repeatable
-      #   operands, this means at least one value must be provided.
-      #
-      # @param repeatable [Boolean] whether the argument accepts multiple values
-      #   (like Ruby's splat operator *args). Only one repeatable operand is
-      #   allowed per definition; attempting to define a second will raise an
-      #   ArgumentError.
-      #
-      # @param default [Object] the default value if not provided. For repeatable
-      #   operands, this should be an array (e.g., `default: ['.']`).
-      #
-      # @param allow_nil [Boolean] whether nil is a valid value for a required
-      #   operand. When true, nil consumes the operand slot but is omitted
-      #   from output. This is useful for commands like `git checkout` where
-      #   the tree-ish is required to consume a slot but may be nil to restore
-      #   from the index. Defaults to false.
-      #
-      # @param skip_cli [Boolean] whether this operand participates in binding,
-      #   validation, and accessors but is omitted from CLI argv emission.
-      #   Defaults to false.
-      #
-      # @return [void]
       #
       # @example Required operand (like `def clone(repository)`)
       #   args_def = Arguments.define do
@@ -1755,10 +1718,33 @@ module Git
       #   args_def.bind(nil, 'file.rb').to_a
       #   # => ['--', 'file.rb']
       #
+      # @param name [Symbol] the operand name (used in error messages)
+      #
+      # @param required [Boolean] whether the argument is required. For repeatable
+      #   operands, this means at least one value must be provided.
+      #
+      # @param repeatable [Boolean] whether the argument accepts multiple values
+      #   (like Ruby's splat operator *args). Only one repeatable operand is
+      #   allowed per definition; attempting to define a second will raise an
+      #   ArgumentError.
+      #
+      # @param default [Object] the default value if not provided. For repeatable
+      #   operands, this should be an array (e.g., `default: ['.']`).
+      #
+      # @param allow_nil [Boolean] whether nil is a valid value for a required
+      #   operand. When true, nil consumes the operand slot but is omitted
+      #   from output. This is useful for commands like `git checkout` where
+      #   the tree-ish is required to consume a slot but may be nil to restore
+      #   from the index. Defaults to false.
+      #
+      # @param skip_cli [Boolean] whether this operand participates in binding,
+      #   validation, and accessors but is omitted from CLI argv emission.
+      #   Defaults to false.
+      #
+      # @return [void]
+      #
       # @raise [ArgumentError] during {#bind} if the operand appears before a '--'
       #   boundary (or no boundary exists) and the bound value starts with '-'
-      #
-      #
       def operand(name, required: false, repeatable: false, default: nil, allow_nil: false,
                   skip_cli: false)
         validate_single_repeatable!(name) if repeatable
@@ -1772,16 +1758,6 @@ module Git
       # - Provides accessor methods for all defined options and positional arguments
       # - Automatically normalizes option aliases to their canonical names
       # - Supports splatting via `to_ary` for seamless use with `command(*bound)`
-      #
-      # @param positionals [Array] positional argument values
-      #
-      # @param opts [Hash] the keyword options
-      #
-      # @return [Bound] a frozen object with accessor methods for all arguments
-      #
-      # @raise [ArgumentError] if unsupported options are provided or validation fails
-      #
-      # @raise [ArgumentError] if an operand value before a '--' boundary starts with '-'
       #
       # @example Simple splatting (same behavior as build)
       #   def call(*, **)
@@ -1806,6 +1782,15 @@ module Git
       #   bound_args = args_def.bind(hash: 'abc123')
       #   bound_args[:hash]  # => 'abc123'
       #
+      # @param positionals [Array] positional argument values
+      #
+      # @param opts [Hash] the keyword options
+      #
+      # @return [Bound] a frozen object with accessor methods for all arguments
+      #
+      # @raise [ArgumentError] if unsupported options are provided or validation fails
+      #
+      # @raise [ArgumentError] if an operand value before a '--' boundary starts with '-'
       def bind(*positionals, **opts)
         normalized_opts = validate_and_normalize_options!(opts)
         allocated_positionals = allocate_and_validate_positionals(positionals)
@@ -3207,8 +3192,6 @@ module Git
       # generated to avoid overriding built-in `Object` methods. Use hash-style
       # access (`bound[:nil]`) when the flag name is reserved.
       #
-      # @api private
-      #
       # @example Accessing bound arguments
       #   args_def = Arguments.define do
       #     flag_option :force
@@ -3236,6 +3219,8 @@ module Git
       #   end
       #   bound = args_def.bind(hash: 'abc123')
       #   bound[:hash]  # => 'abc123'
+      #
+      # @api private
       #
       class Bound
         # Names that cannot have accessor methods defined (would override Object methods)

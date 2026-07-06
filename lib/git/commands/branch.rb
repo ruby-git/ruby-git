@@ -24,9 +24,9 @@ module Git
     # - {Branch::SetUpstream} — set upstream tracking (`--set-upstream-to`)
     # - {Branch::UnsetUpstream} — remove upstream tracking (`--unset-upstream`)
     #
-    # @api private
-    #
     # @see https://git-scm.com/docs/git-branch git-branch documentation
+    #
+    # @api private
     #
     module Branch
     end

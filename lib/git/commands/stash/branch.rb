@@ -16,6 +16,12 @@ module Git
       # be created at the commit that was HEAD when the stash was created, so
       # applying the stash should succeed.
       #
+      # @example Create branch from latest stash
+      #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch')
+      #
+      # @example Create branch from specific stash
+      #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch', 'stash@{2}')
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -23,12 +29,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example Create branch from latest stash
-      #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch')
-      #
-      # @example Create branch from specific stash
-      #   Git::Commands::Stash::Branch.new(execution_context).call('my-branch', 'stash@{2}')
       #
       class Branch < Git::Commands::Base
         arguments do

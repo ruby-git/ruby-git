@@ -105,18 +105,6 @@ module Git
 
       # Creates an archive of this object and writes it to a file
       #
-      # @api public
-      #
-      # @param file [String, nil] destination file path; a temp file is created if `nil`
-      #
-      # @param opts [Hash] archive options (see {Git::Repository#archive})
-      #
-      # @return [String] the path to the written archive file
-      #
-      # @raise [ArgumentError] when archive options or destination path are invalid
-      #
-      # @raise [Git::FailedError] if `git archive` fails
-      #
       # @example Archive a tree to a zip file
       #   git.object('v1.0').archive('/tmp/release.zip', format: 'zip')
       #
@@ -133,6 +121,18 @@ module Git
       #     prefix: 'test/',
       #     path: 'ex_dir/'
       #   )
+      #
+      # @param file [String, nil] destination file path; a temp file is created if `nil`
+      #
+      # @param opts [Hash] archive options (see {Git::Repository#archive})
+      #
+      # @return [String] the path to the written archive file
+      #
+      # @raise [ArgumentError] when archive options or destination path are invalid
+      #
+      # @raise [Git::FailedError] if `git archive` fails
+      #
+      # @api public
       #
       def archive(file = nil, opts = {})
         object_repository.archive(@objectish, file, opts)

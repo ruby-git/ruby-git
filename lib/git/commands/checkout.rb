@@ -12,10 +12,6 @@ module Git
     # - {Checkout::Branch} — switch branches or create and switch to a new branch
     # - {Checkout::Files} — restore working tree files from a given tree-ish
     #
-    # @api private
-    #
-    # @see https://git-scm.com/docs/git-checkout git-checkout documentation
-    #
     # @example Switch to an existing branch
     #   cmd = Git::Commands::Checkout::Branch.new(lib)
     #   cmd.call('main')
@@ -31,6 +27,10 @@ module Git
     # @example Restore a file from a specific branch
     #   cmd = Git::Commands::Checkout::Files.new(lib)
     #   cmd.call('main', pathspec: ['lib/my_file.rb'])
+    #
+    # @see https://git-scm.com/docs/git-checkout git-checkout documentation
+    #
+    # @api private
     #
     module Checkout
     end

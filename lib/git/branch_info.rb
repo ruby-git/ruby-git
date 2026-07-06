@@ -7,6 +7,12 @@ module Git
   #   - remote_name: the remote name (e.g., 'origin') for remote branches, nil for local
   #   - branch_name: the branch name without the remote prefix
   #
+  # @example Parse branch refnames
+  #   'main' => { remote_name: nil, branch_name: 'main' }
+  #   'remotes/origin/main' => { remote_name: 'origin', branch_name: 'main' }
+  #   'feature/foo' => { remote_name: nil, branch_name: 'feature/foo' }
+  #   'remotes/origin/feature/bar' => { remote_name: 'origin', branch_name: 'feature/bar' }
+  #
   # @note This regex is similar to Git::Branch::BRANCH_NAME_REGEXP but uses \A/\z anchors
   #   instead of ^/$ for stricter matching. As part of the architectural redesign,
   #   Git::Branch will eventually be refactored to use BranchInfo internally, at which
@@ -17,12 +23,6 @@ module Git
   #   would parse as remote_name='team' instead of 'team/upstream'. This is an inherent
   #   ambiguity in git refnames that can only be resolved with knowledge of configured
   #   remotes. See: https://github.com/ruby-git/ruby-git/issues/919
-  #
-  # @example
-  #   'main' => { remote_name: nil, branch_name: 'main' }
-  #   'remotes/origin/main' => { remote_name: 'origin', branch_name: 'main' }
-  #   'feature/foo' => { remote_name: nil, branch_name: 'feature/foo' }
-  #   'remotes/origin/feature/bar' => { remote_name: 'origin', branch_name: 'feature/bar' }
   #
   # @api private
   BRANCH_REFNAME_REGEXP = %r{

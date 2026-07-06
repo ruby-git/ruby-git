@@ -94,13 +94,11 @@ module Git
 
       # Reset the current HEAD to a specified state with `--hard`
       #
-      # @deprecated Use {#reset} with `hard: true` instead.
+      # @example Hard reset to HEAD
+      #   repo.reset_hard
       #
-      #   @example Hard reset to HEAD
-      #     repo.reset_hard
-      #
-      #   @example Hard reset to a specific commit
-      #     repo.reset_hard('HEAD~1')
+      # @example Hard reset to a specific commit
+      #   repo.reset_hard('HEAD~1')
       #
       # @param commitish [String, nil] the commit or tree-ish to reset to;
       #   defaults to HEAD when `nil`
@@ -112,6 +110,8 @@ module Git
       # @raise [ArgumentError] when unsupported options are provided
       #
       # @raise [Git::FailedError] when git exits with a non-zero exit status
+      #
+      # @deprecated Use {#reset} with `hard: true` instead
       #
       def reset_hard(commitish = nil, opts = {})
         Git::Deprecation.warn(

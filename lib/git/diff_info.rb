@@ -8,7 +8,6 @@ module Git
   #
   # This class is used by DiffInfo for the legacy diff API.
   #
-  # @api public
   #
   # @example Create a FileDiffInfo from parsed diff output
   #   diff_info = Git::FileDiffInfo.new(
@@ -42,6 +41,7 @@ module Git
   # @!attribute [r] binary
   #   @return [Boolean] whether this is a binary file
   #
+  # @api public
   FileDiffInfo = Data.define(
     :path,
     :patch,
@@ -70,8 +70,6 @@ module Git
   # - `:total` - Hash with `:insertions`, `:deletions`, `:lines`, `:files` keys
   # - `:files` - Hash mapping file paths to `{ insertions:, deletions: }` hashes
   #
-  # @api public
-  #
   # @example Create a DiffInfo from parsed stats output
   #   info = Git::DiffInfo.new(
   #     stats: {
@@ -89,6 +87,8 @@ module Git
   #   info.deletions   # => 5
   #   info.lines       # => 15
   #   info.file_count  # => 2
+  #
+  # @api public
   #
   # @!attribute [r] stats
   #   @return [Hash] the statistics hash with :total and :files keys

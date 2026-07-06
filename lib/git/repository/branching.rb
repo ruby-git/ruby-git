@@ -432,18 +432,18 @@ module Git
       #   repo.change_head_branch('my-branch')
       #   # HEAD now points at refs/heads/my-branch before any commits exist
       #
+      # @param branch_name [String] the branch name to point HEAD at
+      #
+      # @return [void]
+      #
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
       # @note Pointing HEAD at a branch that does not yet exist places the
       #   repository in unborn-branch state. This is intentional for repository
       #   initialization workflows — for example, setting a custom default branch
       #   name before any commits land — but is unexpected if done by mistake.
       #   The repository will appear to have no commits until the first commit is
       #   made on the new branch.
-      #
-      # @param branch_name [String] the branch name to point HEAD at
-      #
-      # @return [void]
-      #
-      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def change_head_branch(branch_name)
         Git::Commands::SymbolicRef::Update.new(@execution_context).call('HEAD', "refs/heads/#{branch_name}")

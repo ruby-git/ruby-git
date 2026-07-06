@@ -14,6 +14,12 @@ module Git
       # The command creates a stash commit and outputs its SHA, but does not
       # update refs/stash. Use {Store} to store the commit in the stash reflog.
       #
+      # @example Create a stash commit
+      #   Git::Commands::Stash::Create.new(execution_context).call
+      #
+      # @example Create a stash commit with a message
+      #   Git::Commands::Stash::Create.new(execution_context).call('WIP: my changes')
+      #
       # @note `arguments` block audited against https://git-scm.com/docs/git-stash/2.53.0
       #
       # @see Git::Commands::Stash Git::Commands::Stash for usage examples
@@ -21,12 +27,6 @@ module Git
       # @see https://git-scm.com/docs/git-stash git-stash documentation
       #
       # @api private
-      #
-      # @example Create a stash commit
-      #   Git::Commands::Stash::Create.new(execution_context).call
-      #
-      # @example Create a stash commit with a message
-      #   Git::Commands::Stash::Create.new(execution_context).call('WIP: my changes')
       #
       class Create < Git::Commands::Base
         arguments do

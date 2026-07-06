@@ -333,13 +333,13 @@ module Git
         #
         # @param stage [Integer] git stage index (2 = ours, 3 = theirs)
         #
+        # @return [void]
+        #
         # @yield [f] yields the open Tempfile containing the staged content
         #
         # @yieldparam f [Tempfile] open IO object for the staged content
         #
         # @yieldreturn [void]
-        #
-        # @return [void]
         #
         # @api private
         #

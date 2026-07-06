@@ -21,8 +21,6 @@ module Git
   # Results are returned as {Git::CommandLine::Result} objects (also accessible
   # as {Git::CommandLineResult} for backward compatibility).
   #
-  # @api public
-  #
   # @example Buffered command via Git::CommandLine::Capturing
   #   cli = Git::CommandLine::Capturing.new(
   #     {}, '/usr/bin/git', [], Logger.new(nil)
@@ -41,6 +39,8 @@ module Git
   # @see Git::CommandLine::Base
   #
   # @see Git::CommandLine::Result
+  #
+  # @api public
   #
   module CommandLine
   end
