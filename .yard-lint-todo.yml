@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git/author.rb'
     - 'lib/git/command_line/capturing.rb'
     - 'lib/git/command_line/streaming.rb'
     - 'lib/git/commands/arguments.rb'
@@ -38,7 +37,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git/author.rb'
     - 'lib/git/commands/arguments.rb'
     - 'lib/git/commands/base.rb'
     - 'lib/git/commands/cat_file/batch.rb'
