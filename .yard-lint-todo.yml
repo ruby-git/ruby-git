@@ -39,7 +39,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git.rb'
     - 'lib/git/args_builder.rb'
     - 'lib/git/author.rb'
     - 'lib/git/commands/arguments.rb'
@@ -64,7 +63,6 @@ Documentation/UndocumentedObjects:
 
 Documentation/UndocumentedOptions:
   Exclude:
-    - 'lib/git.rb'
     - 'lib/git/args_builder.rb'
     - 'lib/git/branch.rb'
     - 'lib/git/command_line/capturing.rb'
