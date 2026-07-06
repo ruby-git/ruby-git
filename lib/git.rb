@@ -74,8 +74,32 @@ require 'git/worktrees'
 module Git
   extend Git::Configuring
 
+  # A mixin for git configuration methods for the local configuration
+  #
+  # @overload config(name, value)
+  #   Set the value for the git named configuration option
+  #
+  #   @param name [String] the name of the git configuration option
+  #
+  #   @param value [String, nil] the value to set for the git configuration option
+  #
+  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #
+  # @overload config(name)
+  #   Get the value for the git named configuration option
+  #
+  #   @param name [String] the name of the git configuration option
+  #
+  #   @return [String, nil] the value of the git configuration option
+  #
+  # @overload config()
+  #   List all git configuration options
+  #
+  #   @return [Hash{String => String}] a hash of all git configuration options
+  #
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
   #   Use `Git.config_get(name)`, `Git.config_set(name, value)`, or `Git.config_list` instead.
+  #
   def config(name = nil, value = nil)
     Git::Deprecation.warn(
       'Git#config is deprecated and will be removed in v6.0.0. ' \
@@ -113,6 +137,29 @@ module Git
     Git::Config.instance
   end
 
+  # A mixin for git configuration methods for the global configuration
+  #
+  # @overload global_config(name, value)
+  #   Set the value for the git named configuration option
+  #
+  #   @param name [String] the name of the git configuration option
+  #
+  #   @param value [String, nil] the value to set for the git configuration option
+  #
+  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #
+  # @overload global_config(name)
+  #   Get the value for the git named configuration option
+  #
+  #   @param name [String] the name of the git configuration option
+  #
+  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #
+  # @overload global_config()
+  #   List all git configuration options
+  #
+  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
   #   Use `Git.config_get(name, global: true)`, `Git.config_set(name, value, global: true)`, or
   #   `Git.config_list(global: true)` instead.
@@ -626,6 +673,16 @@ module Git
   @git_version_cache_mutex = Mutex.new
   @git_version_cache = {}
 
+  # Return the cached git version for the given binary path
+  #
+  #   If it isn't already known, compute it using the given block.
+  #
+  # @param binary_path [String] the path to the git binary
+  #
+  # @param block [Proc] a block to compute the git version if it is not cached
+  #
+  # @return [Git::Version] the git version
+  #
   # @api private
   def self.cached_git_version(binary_path, &block)
     @git_version_cache_mutex.synchronize do
@@ -785,7 +842,14 @@ module Git
   end
   private_class_method :legacy_config_list
 
+  # Parse the output of `git config --list` into a hash
+  #
+  # @param lines [Array<String>] the lines of output from `git config --list`
+  #
+  # @return [Hash{String => String}] the parsed git configuration options
+  #
   # @api private
+  #
   def self.parse_config_list(lines)
     lines.each_with_object({}) do |line, hsh|
       key, value = line.split('=', 2)
@@ -813,6 +877,12 @@ module Git
   # repository and are therefore not valid at the Git module level.
   #
   # @param options_to_check [Hash{Symbol => Object}] the scope options to check
+  #
+  # @option options_to_check [Object] :local truthy value requests local scope
+  #
+  # @option options_to_check [Object] :worktree truthy value requests worktree scope
+  #
+  # @option options_to_check [Object] :blob truthy value requests blob scope
   #
   # @raise [ArgumentError] if a repository-specific scope is requested
   #

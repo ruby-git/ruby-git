@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git.rb'
     - 'lib/git/args_builder.rb'
     - 'lib/git/author.rb'
     - 'lib/git/command_line/capturing.rb'
