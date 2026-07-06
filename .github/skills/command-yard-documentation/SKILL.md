@@ -186,10 +186,11 @@ conflicting documentation for the method.
   the block is fine.
 - **Missing `@raise [ArgumentError]` when `**options` is in the overload signature** —
   every `@overload` that includes `**options` requires
-  `@raise [ArgumentError] if unsupported options are provided`. The base `ArgsBuilder`
-  always raises this at bind time for unknown keys. For commands whose `arguments`
-  block declares **no** options (only `operand` entries), drop `**options` from the
-  signature entirely — then no `@raise [ArgumentError]` is needed.
+  `@raise [ArgumentError] if unsupported options are provided`. The `Arguments` DSL
+  always raises this at bind time for unknown keys via `validate_unsupported_options!`.
+  For commands whose `arguments` block declares **no** options (only `operand` entries),
+  drop `**options` from the signature entirely — then no `@raise [ArgumentError]` is
+  needed.
 - **`**options` in `@overload` without `@param options [Hash]`** — whenever an
   `@overload` signature includes `**options`, a corresponding `@param options [Hash]`
   tag is required. For commands whose `arguments` block declares **no** options (only
@@ -344,8 +345,8 @@ For each command file, run through these checks in order:
       tags) — every command class is `@api private` at the class level, but `call` is
       the public contract and must be marked `@api public`
 - [ ] whenever the `@overload` signature includes `**options`, include
-      `@raise [ArgumentError] if unsupported options are provided` — the base
-      `ArgsBuilder` always raises this at bind time for unknown keys
+      `@raise [ArgumentError] if unsupported options are provided` — the `Arguments`
+      DSL always raises this at bind time for unknown keys via `validate_unsupported_options!`
 - [ ] `@raise [Git::FailedError]` uses the canonical generic wording — **never**
       enumerate specific failure causes; use the form that matches the command's
       declared exit-status range:

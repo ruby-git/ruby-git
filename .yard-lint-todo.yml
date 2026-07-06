@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git/args_builder.rb'
     - 'lib/git/author.rb'
     - 'lib/git/command_line/capturing.rb'
     - 'lib/git/command_line/streaming.rb'
@@ -39,7 +38,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git/args_builder.rb'
     - 'lib/git/author.rb'
     - 'lib/git/commands/arguments.rb'
     - 'lib/git/commands/base.rb'
@@ -63,7 +61,6 @@ Documentation/UndocumentedObjects:
 
 Documentation/UndocumentedOptions:
   Exclude:
-    - 'lib/git/args_builder.rb'
     - 'lib/git/branch.rb'
     - 'lib/git/command_line/capturing.rb'
     - 'lib/git/command_line/streaming.rb'
@@ -211,7 +208,6 @@ Documentation/UndocumentedOptions:
 # Tags validators
 Tags/OptionTags:
   Exclude:
-    - 'lib/git/args_builder.rb'
     - 'lib/git/branch.rb'
     - 'lib/git/command_line/capturing.rb'
     - 'lib/git/command_line/streaming.rb'
