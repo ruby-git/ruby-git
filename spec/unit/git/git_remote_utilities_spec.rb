@@ -20,7 +20,7 @@ RSpec.describe Git do
 
       expect(ls_remote_command).to receive(:call).with('.', tags: true).and_return(command_result(stdout))
 
-      expect(described_class.ls_remote(nil, tags: true)).to eq(
+      expect(described_class.ls_remote('.', tags: true)).to eq(
         'head' => { ref: 'HEAD', sha: 'abc123' },
         'branches' => { 'main' => { ref: 'refs', sha: 'abc123' } }
       )
@@ -35,6 +35,14 @@ RSpec.describe Git do
 
       expect(Git::ExecutionContext::Global).to have_received(:new).with(logger: logger)
       expect(ls_remote_command).to have_received(:call).with('origin')
+    end
+
+    context 'when repository is nil' do
+      it "emits a deprecation warning and defaults to '.'" do
+        expect(ls_remote_command).to receive(:call).with('.').and_return(command_result(''))
+        expect(Git::Deprecation).to receive(:warn).with(a_string_including('nil'))
+        described_class.ls_remote(nil)
+      end
     end
 
     context 'with a parser-incompatible option' do

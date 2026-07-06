@@ -7,7 +7,16 @@ RSpec.describe Git do
     let(:execution_context) { instance_double(Git::ExecutionContext::Global) }
 
     before do
+      allow(Git::Deprecation).to receive(:warn)
       allow(Git::ExecutionContext::Global).to receive(:new).and_return(execution_context)
+    end
+
+    it 'emits a deprecation warning' do
+      list_command = instance_double(Git::Commands::ConfigOptionSyntax::List)
+      allow(Git::Commands::ConfigOptionSyntax::List).to receive(:new).and_return(list_command)
+      allow(list_command).to receive(:call).and_return(command_result(''))
+      expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git.global_config is deprecated'))
+      described_class.global_config
     end
 
     context 'when called with no arguments (list mode)' do
@@ -226,13 +235,13 @@ RSpec.describe Git do
       expect(Git::Deprecation).to receive(:warn).with(a_string_including('Git#global_config is deprecated'))
     end
 
-    it 'delegates to Git.global_config' do
-      expect(described_class).to receive(:global_config).with('user.name', nil)
+    it 'delegates to legacy_config_set_get_list with global: true' do
+      expect(Git).to receive(:legacy_config_set_get_list).with('user.name', nil, global: true)
       described_instance.global_config('user.name')
     end
 
-    it 'delegates to Git.global_config with value' do
-      expect(described_class).to receive(:global_config).with('user.name', 'Alice')
+    it 'delegates to legacy_config_set_get_list with value and global: true' do
+      expect(Git).to receive(:legacy_config_set_get_list).with('user.name', 'Alice', global: true)
       described_instance.global_config('user.name', 'Alice')
     end
   end
