@@ -214,7 +214,6 @@ Documentation/UndocumentedOptions:
 # Tags validators
 Tags/OptionTags:
   Exclude:
-    - 'lib/git.rb'
     - 'lib/git/args_builder.rb'
     - 'lib/git/branch.rb'
     - 'lib/git/command_line/capturing.rb'

@@ -81,7 +81,7 @@ module Git
       'Git#config is deprecated and will be removed in v6.0.0. ' \
       'Use Git.config_get(name), Git.config_set(name, value), or Git.config_list instead.'
     )
-    Git.__send__(:run_config_utility, name, value, global: false)
+    Git.__send__(:legacy_config_set_get_list, name, value, global: false)
   end
 
   # Configures the gem by yielding {Git::Config.instance} to the block
@@ -122,7 +122,7 @@ module Git
       'Use Git.config_get(name, global: true), Git.config_set(name, value, global: true), ' \
       'or Git.config_list(global: true) instead.'
     )
-    Git.global_config(name, value)
+    Git.__send__(:legacy_config_set_get_list, name, value, global: true)
   end
 
   # Open a bare repository
@@ -326,28 +326,58 @@ module Git
     Git::Parsers::LsRemote.parse_default_branch(output)
   end
 
-  # Export the current HEAD (or a branch, if <tt>options[:branch]</tt>
-  # is specified) into the +name+ directory, then remove all traces of git from the
-  # directory.
+  # Clone a repository into `directory` then remove its `.git` directory
   #
-  # See +clone+ for options.  Does not obey the <tt>:remote</tt> option,
-  # since the .git info will be deleted anyway; always uses the default
-  # remote, 'origin.'
-  def self.export(repository, name, options = {})
+  # Exports the current HEAD (or the specific branch given in <tt>options[:branch]</tt>)
+  # into the given `directory`. It then removes all traces of git from the directory.
+  #
+  # Takes the same options as {Git.clone} except that `:remote` is silently ignored
+  # and `:depth` defaults to 1.
+  #
+  # @param (see Git.clone)
+  #
+  # @option options (see Git.clone)
+  #
+  # @return [void]
+  #
+  def self.export(repository_url, directory = nil, options = {})
     options.delete(:remote)
-    repo = clone(repository, name, { depth: 1 }.merge(options))
+    repo = clone(repository_url, directory, { depth: 1 }.merge(options))
     repo.checkout("origin/#{options[:branch]}") if options[:branch]
     FileUtils.rm_r File.join(repo.dir.to_s, '.git')
   end
 
-  # Same as g.config, but forces it to be at the global level
+  # Get or set a git global configuration value
   #
-  # g.config('user.name', 'Scott Chacon') # sets value
-  # g.config('user.email', 'email@email.com')  # sets value
-  # g.config('user.name')  # returns 'Scott Chacon'
-  # g.config # returns whole config hash
+  # @example Set a value
+  #   Git.global_config('user.name', 'Scott Chacon')
+  #
+  # @example Get a value
+  #   Git.global_config('user.name')  # => 'Scott Chacon'
+  #
+  # @example List all global config entries
+  #   Git.global_config  # => { 'user.name' => 'Scott Chacon', ... }
+  #
+  # @param name [String, nil] the config key to get or set; omit to list all
+  #
+  # @param value [Object, nil] the value to set; omit to get or list
+  #
+  # @return [String, Hash, Git::CommandLineResult] the config value, all entries,
+  #   or the result of the set command
+  #
+  # @deprecated Use {Git.config_get}, {Git.config_set}, or {Git.config_list} instead.
+  #
+  #   - `Git.global_config('user.name')` → `Git.config_get('user.name', global: true)`
+  #   - `Git.global_config('user.name', 'Bob')` → `Git.config_set('user.name', 'Bob', global: true)`
+  #   - `Git.global_config` → `Git.config_list(global: true)`
+  #
   def self.global_config(name = nil, value = nil)
-    run_config_utility(name, value, global: true)
+    Git::Deprecation.warn(
+      'Git.global_config is deprecated and will be removed in v6.0.0. ' \
+      'Use Git.config_get(name, global: true), Git.config_set(name, value, global: true), ' \
+      'or Git.config_list(global: true) instead.'
+    )
+    legacy_config_set_get_list(name, value, global: true)
   end
 
   # Create an empty Git repository or reinitialize an existing Git repository
@@ -431,26 +461,112 @@ module Git
   ].freeze
   private_constant :LS_REMOTE_ALLOWED_OPTS
 
-  # returns a Hash containing information about the references
-  # of the target repository
+  # Displays references available in a remote repository along with the associated commit IDs
   #
-  # options
-  #   :refs
+  # @example From a remote repository given its URL
+  #   references = Git.ls_remote('https://github.com/user/repo.git')
   #
-  # @param location [String, nil] the target repository location or nil for '.'
+  # @example From the default remote of the current repository
+  #   references = Git.ls_remote
+  #
+  # @example From a specific remote of the current repository
+  #   references = Git.ls_remote('origin')
+  #
+  # @param repository [String, nil] the target repository location or the name of a remote
+  #
+  #   Defaults to `'.'` (the current directory). Passing `nil` explicitly is
+  #   deprecated and will be removed in v6.0.0; pass `'.'` or omit the argument.
+  #
+  # @param options [Hash] the options to pass to the git command
+  #
+  # @option options [Boolean, nil] :branches (nil) limit output to refs under `refs/heads/`
+  #
+  #   Alias: `:b`
+  #
+  # @option options [Boolean, nil] :heads (nil) limit output to refs under `refs/heads/`
+  #
+  #   Deprecated: use `:branches` instead. Kept for backward compatibility with
+  #   older git versions where `--heads` is the only supported flag.
+  #
+  #   Alias: `:h`
+  #
+  # @option options [Boolean, nil] :tags (nil) limit output to refs under `refs/tags/`
+  #
+  #   Alias: `:t`
+  #
+  # @option options [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
+  #   like `HEAD` from the output
+  #
+  # @option options [String] :upload_pack (nil) full path to `git-upload-pack` on the
+  #   remote host
+  #
+  #   Useful when accessing repositories via SSH where the daemon does not use the
+  #   PATH configured by the user.
+  #
+  # @option options [Boolean, nil] :quiet (nil) do not print the remote URL to stderr
+  #
+  #   Alias: `:q`
+  #
+  # @option options [Boolean, nil] :exit_code (nil) exit with status `2` when no
+  #   matching refs are found in the remote repository
+  #
+  #   Without this option, the command exits `0` whenever it successfully
+  #   communicates with the remote, even if no refs match.
+  #
+  # @option options [String] :sort (nil) sort output by the given key
+  #
+  #   Prefix `-` for descending order. Supports `"version:refname"` or `"v:refname"`.
+  #   See `git for-each-ref` for sort key documentation.
+  #
+  # @option options [String, Array<String>] :server_option (nil) transmit a string to
+  #   the server when communicating using protocol version 2
+  #
+  #   The string must not contain NUL or LF characters. Repeatable by passing an
+  #   Array. Alias: `:o`
+  #
+  # @option options [Numeric] :timeout (nil) execution timeout in seconds
+  #
+  # @option options [Logger] :log (nil) a logger to use for Git operations
+  #
+  #   Git commands are logged at the `:info` level. Additional logging is done at
+  #   the `:debug` level.
   #
   # @return [Hash{String => Hash}] the available references of the target repo
-  def self.ls_remote(location = nil, options = {})
+  #
+  def self.ls_remote(repository = '.', options = {})
+    repository = normalize_ls_remote_repository(repository)
     options = options.dup
     log = options.delete(:log)
     unknown = options.keys - LS_REMOTE_ALLOWED_OPTS
     raise ArgumentError, "Unknown options: #{unknown.join(', ')}" unless unknown.empty?
 
     context = Git::ExecutionContext::Global.new(logger: log)
-    repository = location || '.'
     output_lines = Git::Commands::LsRemote.new(context).call(repository, **options).stdout.split("\n")
     Git::Parsers::LsRemote.parse_output(output_lines)
   end
+
+  # Normalize the repository argument for {.ls_remote}
+  #
+  # Returns the repository unchanged unless it is nil, in which case a
+  # deprecation warning is emitted and `'.'` is returned.
+  #
+  # @param repository [String, nil] the repository argument passed by the caller
+  #
+  # @return [String] the normalized repository value (`'.'` when nil was given)
+  #
+  # @api private
+  #
+  def self.normalize_ls_remote_repository(repository)
+    return repository unless repository.nil?
+
+    Git::Deprecation.warn(
+      'Passing nil as the repository to Git.ls_remote is deprecated and will ' \
+      "be removed in v6.0.0. Pass '.' explicitly or omit the argument instead."
+    )
+
+    '.'
+  end
+  private_class_method :normalize_ls_remote_repository
 
   # Open a an existing Git working directory
   #
@@ -548,33 +664,126 @@ module Git
     cached_git_version(path) { run_git_version(path) }
   end
 
+  # Return the version of the git binary
+  #
+  # @param path [String] the path to the git binary
+  #
+  # @return [Git::Version] the parsed git version
+  #
+  # @raise [Git::UnexpectedResultError] if the version output cannot be parsed
+  #
+  # @raise [Git::FailedError] if the git binary exits with a non-zero status
+  #
+  # @raise [Git::Error] if the binary is not found or fails to launch
+  #
   # @api private
+  #
   def self.run_git_version(path)
     output = Git::Commands::Version.new(Git::ExecutionContext::Global.new(binary_path: path)).call.stdout
     Git::Version.parse(output)
   end
   private_class_method :run_git_version
 
+  # Get or set a git config value
+  #
+  # @overload legacy_config_set_get_list(name, value, global:)
+  #
+  #   Set the value of a git configuration option
+  #
+  #   @param name [String] the name of the git configuration value to set
+  #
+  #   @param value [String, Boolean] the value to set
+  #
+  #   @param global [Boolean] true to use the global git configuration, false for the
+  #     local repo config
+  #
+  #   @return [Git::CommandLineResult] the result of the git config command
+  #
+  # @overload legacy_config_set_get_list(name, global:)
+  #
+  #   Get the value of a git configuration option
+  #
+  #   @param name [String] the name of the git configuration value to get
+  #
+  #   @param global [Boolean] true to use the global git configuration, false for the
+  #     local repo config
+  #
+  #   @return [String] the value of the git configuration option
+  #
+  # @overload legacy_config_set_get_list(global:)
+  #
+  #   Get all git configuration options
+  #
+  #   @param global [Boolean] true to use the global git configuration, false for the
+  #     local repo config
+  #
+  #   @return [Hash{String => String}] all git configuration options
+  #
+  # @raise [Git::FailedError] if the git config command fails
+  #
   # @api private
-  def self.run_config_utility(name, value, global:)
-    context = Git::ExecutionContext::Global.new
-    options = global ? { global: true } : {}
-
-    return Git::Commands::ConfigOptionSyntax::Set.new(context).call(name, value, **options) if !name.nil? && !value.nil?
-    return run_config_get(context, name, options) if name
-
-    output = Git::Commands::ConfigOptionSyntax::List.new(context).call(**options).stdout
-    parse_config_list(output.split("\n"))
+  #
+  def self.legacy_config_set_get_list(name, value, global:)
+    if !name.nil? && !value.nil?
+      legacy_config_set(name, value, global:)
+    elsif !name.nil?
+      legacy_config_get(name, global:)
+    else
+      legacy_config_list(global:)
+    end
   end
-  private_class_method :run_config_utility
+  private_class_method :legacy_config_set_get_list
 
-  def self.run_config_get(context, name, options)
-    result = Git::Commands::ConfigOptionSyntax::Get.new(context).call(name, **options)
+  # Set the value of a git configuration option
+  #
+  # @param name [String] the name of the git configuration value to set
+  #
+  # @param value [String, Boolean] the value to set
+  #
+  # @param global [Boolean] whether to use the global git configuration
+  #
+  # @api private
+  #
+  def self.legacy_config_set(name, value, global:)
+    options = global ? { global: true } : {}
+    Git::Commands::ConfigOptionSyntax::Set.new(execution_context).call(name, value, **options)
+  end
+  private_class_method :legacy_config_set
+
+  # Get the value of a git configuration option
+  #
+  # @param name [String] the name of the git configuration option
+  #
+  # @param global [Boolean] whether to use the global git configuration
+  #
+  # @return [String] the value of the git configuration option
+  #
+  # @api private
+  #
+  def self.legacy_config_get(name, global:)
+    options = global ? { global: true } : {}
+    result = Git::Commands::ConfigOptionSyntax::Get.new(execution_context).call(name, **options)
     raise Git::FailedError, result if result.status.exitstatus != 0
 
     result.stdout
   end
-  private_class_method :run_config_get
+  private_class_method :legacy_config_get
+
+  # Get a list of all git configuration options
+  #
+  # @param global [Boolean] true to use the global git configuration, false for the
+  #     local repo config
+  #
+  # @return [Hash{String => String}] all git configuration options
+  #
+  # @api private
+  #
+  def self.legacy_config_list(global:)
+    options = global ? { global: true } : {}
+    output = Git::Commands::ConfigOptionSyntax::List.new(execution_context).call(**options).stdout
+    parse_config_list(output.split("\n"))
+  end
+  private_class_method :legacy_config_list
 
   # @api private
   def self.parse_config_list(lines)
@@ -603,10 +812,14 @@ module Git
   # The +:local+, +:worktree+, and +:blob+ scopes require an active git
   # repository and are therefore not valid at the Git module level.
   #
+  # @param options_to_check [Hash{Symbol => Object}] the scope options to check
+  #
+  # @raise [ArgumentError] if a repository-specific scope is requested
+  #
   # @api private
   #
-  def self.assert_valid_scope!(**opts)
-    invalid = REPOSITORY_SPECIFIC_SCOPES.select { |s| opts[s] }
+  def self.assert_valid_scope!(**options_to_check)
+    invalid = REPOSITORY_SPECIFIC_SCOPES.select { |s| options_to_check[s] }
     return if invalid.empty?
 
     raise ArgumentError, "#{invalid.join(', ')} scope requires a repository"
