@@ -123,8 +123,6 @@ module Git
       #{result.git_cmd}, status: #{result.status}, stderr: #{result.stderr.inspect}
     MESSAGE
 
-    # @attribute [r] result
-    #
     # The result of the git command including the git command and its status and output
     #
     # @example

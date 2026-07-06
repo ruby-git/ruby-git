@@ -54,8 +54,6 @@ module Git
         raise NotImplementedError, "#{self.class}#run is not implemented"
       end
 
-      # @attribute [r] env
-      #
       # Variables to set (or unset) in the git command's environment
       #
       # @example
@@ -70,8 +68,6 @@ module Git
       #
       attr_reader :env
 
-      # @attribute [r] binary_path
-      #
       # The path to the command line binary to run
       #
       # @example
@@ -82,8 +78,6 @@ module Git
       #
       attr_reader :binary_path
 
-      # @attribute [r] global_opts
-      #
       # The global options to pass to git
       #
       # These are options that are passed to git before the command name and
@@ -99,8 +93,6 @@ module Git
       #
       attr_reader :global_opts
 
-      # @attribute [r] logger
-      #
       # The logger to use for logging git commands and results
       #
       # @example

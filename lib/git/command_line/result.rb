@@ -35,8 +35,6 @@ module Git
         @stderr = stderr
       end
 
-      # @attribute [r] git_cmd
-      #
       # The git command that was executed
       #
       # @example
@@ -48,8 +46,6 @@ module Git
       #
       attr_reader :git_cmd
 
-      # @attribute [r] status
-      #
       # The process result object returned by ProcessExecuter
       #
       # In practice this is a `ProcessExecuter::ResultWithCapture` (from
@@ -66,8 +62,6 @@ module Git
       #
       attr_reader :status
 
-      # @attribute [r] stdout
-      #
       # The output of the process
       #
       # @example
@@ -79,8 +73,6 @@ module Git
       #
       attr_reader :stdout
 
-      # @attribute [r] stderr
-      #
       # The error output of the process
       #
       # @example
