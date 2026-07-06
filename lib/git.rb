@@ -74,14 +74,14 @@ require 'git/worktrees'
 module Git
   extend Git::Configuring
 
-  # A mixin for git configuration methods for the local configuration
+  # Gets or sets local git configuration options
   #
   # @overload config(name, value)
   #   Set the value for the git named configuration option
   #
   #   @param name [String] the name of the git configuration option
   #
-  #   @param value [String, nil] the value to set for the git configuration option
+  #   @param value [String, Boolean] the value to set for the git configuration option
   #
   #   @return [Git::CommandLineResult] the result of the git configuration command
   #
@@ -90,7 +90,7 @@ module Git
   #
   #   @param name [String] the name of the git configuration option
   #
-  #   @return [String, nil] the value of the git configuration option
+  #   @return [String] the value of the git configuration option
   #
   # @overload config()
   #   List all git configuration options
@@ -137,14 +137,14 @@ module Git
     Git::Config.instance
   end
 
-  # A mixin for git configuration methods for the global configuration
+  # Gets or sets global git configuration options
   #
   # @overload global_config(name, value)
   #   Set the value for the git named configuration option
   #
   #   @param name [String] the name of the git configuration option
   #
-  #   @param value [String, nil] the value to set for the git configuration option
+  #   @param value [String, Boolean] the value to set for the git configuration option
   #
   #   @return [Git::CommandLineResult] the result of the git configuration command
   #
@@ -153,12 +153,12 @@ module Git
   #
   #   @param name [String] the name of the git configuration option
   #
-  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #   @return [String] the value of the git configuration option
   #
   # @overload global_config()
   #   List all git configuration options
   #
-  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #   @return [Hash{String => String}] a hash of all git configuration options
   #
   # @deprecated Mixing in the `Git` module is deprecated and will be removed in v6.0.0.
   #   Use `Git.config_get(name, global: true)`, `Git.config_set(name, value, global: true)`, or
@@ -675,13 +675,15 @@ module Git
 
   # Return the cached git version for the given binary path
   #
-  #   If it isn't already known, compute it using the given block.
+  # If it isn't already known, compute it using the given block.
   #
   # @param binary_path [String] the path to the git binary
   #
-  # @param block [Proc] a block to compute the git version if it is not cached
-  #
   # @return [Git::Version] the git version
+  #
+  # @yield [] compute the git version if it is not cached
+  #
+  # @yieldreturn [Git::Version] the computed git version
   #
   # @api private
   def self.cached_git_version(binary_path, &block)
@@ -877,6 +879,9 @@ module Git
   # repository and are therefore not valid at the Git module level.
   #
   # @param options_to_check [Hash{Symbol => Object}] the scope options to check
+  #
+  #   If any of the options listed in +REPOSITORY_SPECIFIC_SCOPES+ are present and
+  #   truthy, an +ArgumentError+ will be raised.
   #
   # @option options_to_check [Object] :local truthy value requests local scope
   #
