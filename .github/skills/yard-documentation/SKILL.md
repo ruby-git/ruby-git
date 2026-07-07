@@ -562,6 +562,26 @@ under that `@param` must reference the same parameter name. For keyword argument
 (`**options` or `**kwargs`), use `@param options [Hash]` (or the actual splat
 name) as the preceding `@param`.
 
+For public APIs with known option keys, every `@option` tag must document a real
+supported key, such as `:force` or `:timeout`. Do not invent placeholder option
+keys for a public `options` hash.
+
+For private helpers whose `options` hash accepts arbitrary key-value pairs, use
+`key_name` as the placeholder option key. The description may be generic, or more
+specific when the helper's purpose is clear:
+
+```ruby
+# @param options [Hash<Symbol, Object>] arbitrary key-value pairs
+#
+# @option options [Object] key_name an arbitrary key-value pair
+```
+
+```ruby
+# @param options [Hash<Symbol, Object>] arbitrary key-value pairs to validate
+#
+# @option options [Object] key_name an arbitrary key-value pair to validate
+```
+
 The exception to parameter order: all `@param` tags must come before the first
 `@option` tag, because yard-lint's `Tags/Order` validator rejects a `@param` that
 follows an `@option`. When a positional parameter follows the options hash in the
@@ -677,6 +697,7 @@ Use this matrix to decide whether to use `@overload` and where to place tags:
 | --- | --- |
 | Single named signature, no `*`/`**`/`...` | Standard template (no `@overload`) |
 | Uses anonymous `*`, `**`, or `...` | `@overload` required |
+| Private helper accepts arbitrary option keys | `@option options [Object] key_name ...` |
 | Multiple call shapes (different params and/or return types) | One `@overload` per shape |
 | Shared errors across all call shapes | Top-level `@raise` once |
 | Error only for specific call shape | `@raise` only in that overload |
