@@ -270,6 +270,10 @@ module Git
 
     private
 
+    # Builds the error message for the violated version constraint.
+    #
+    # @return [String]
+    #
     def build_message
       if constraint.too_new?(actual_version)
         "#{subject} requires git < #{constraint.before} (found #{actual_version})"
