@@ -134,11 +134,11 @@ module Git
     #
     # Key internal components:
     #
-    # - +@ordered_definitions+: Array tracking all definitions in definition order
-    # - +@option_definitions+: Hash mapping option names to their definitions
-    # - +@operand_definitions+: Array of operand (positional argument) definitions
-    # - +@alias_map+: Maps option aliases to their primary names
-    # - +BUILDERS+: Hash of lambdas that convert values to CLI arguments by type
+    # - `@ordered_definitions`: Array tracking all definitions in definition order
+    # - `@option_definitions`: Hash mapping option names to their definitions
+    # - `@operand_definitions`: Array of operand (positional argument) definitions
+    # - `@alias_map`: Maps option aliases to their primary names
+    # - `BUILDERS`: Hash of lambdas that convert values to CLI arguments by type
     # - {OperandAllocator}: Handles Ruby-like operand allocation
     #
     # ## Argument Ordering
@@ -385,7 +385,7 @@ module Git
     # Only `value_option` with `as_operand: true` and `execution_option` are allowed
     # after the boundary because they do not produce flag-prefixed output.
     #
-    # For example, this will raise +ArgumentError+ during definition:
+    # For example, this will raise `ArgumentError` during definition:
     #
     #     Arguments.define do
     #       literal '--'
@@ -602,7 +602,7 @@ module Git
       # @return [Arguments] the configured Arguments instance
       #
       # @yield [] block evaluated in the context of the new Arguments instance via
-      #   +instance_eval+, so DSL methods ({#flag_option}, {#operand}, etc.) are called
+      #   `instance_eval`, so DSL methods ({#flag_option}, {#operand}, etc.) are called
       #   directly without an explicit receiver
       #
       def self.define(&block)
@@ -611,6 +611,7 @@ module Git
         args
       end
 
+      # Initialize an empty Arguments definition
       def initialize
         @option_definitions = {}
         @alias_map = {} # Maps alias keys to primary keys
@@ -688,7 +689,7 @@ module Git
       #   always `--no-<flag>`.
       #
       # @param required [Boolean] whether the option must be provided (the key must be present
-      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   in opts). When combined with `negatable: true`, a `requires_one_of [name, no_name]`
       #   group is automatically registered so that either the primary or companion key satisfies
       #   the requirement (e.g. `bind(no_verify: true)` satisfies `required: true` for `:verify`).
       #   Note that under the companion-key model, `bind(verify: false)` does **not** satisfy
@@ -944,23 +945,23 @@ module Git
       # @param inline [Boolean] when true, outputs --flag=value instead of --flag value (default: false)
       #
       # @param repeatable [Boolean] when true, accepts an Array of values and repeats the option
-      #   for each element. Each element must be +true+, +false+, or a non-nil object (which is
-      #   stringified via +#to_s+); nil elements raise ArgumentError at bind time.
+      #   for each element. Each element must be `true`, `false`, or a non-nil object (which is
+      #   stringified via `#to_s`); nil elements raise ArgumentError at bind time.
       #   A single (non-Array) value is also accepted. Default false.
       #
       # @param required [Boolean] whether the option must be provided (the key must be present
-      #   in opts). When combined with +negatable: true+, a `requires_one_of [name, no_name]`
+      #   in opts). When combined with `negatable: true`, a `requires_one_of [name, no_name]`
       #   group is automatically registered so that either side satisfies the requirement. Note
       #   that `bind(name: false)` does **not** satisfy the requirement because `false` is
       #   treated as absent under the companion-key model.
       #
       # @param allow_nil [Boolean] whether nil is allowed when required is true. Defaults to true.
-      #   Cannot be combined with +negatable: true+ and +required: true+ — raises ArgumentError
-      #   at definition time (nil is already caught by the auto +requires_one_of+ group).
+      #   Cannot be combined with `negatable: true` and `required: true` — raises ArgumentError
+      #   at definition time (nil is already caught by the auto `requires_one_of` group).
       #
       # @return [void]
       #
-      # @raise [ArgumentError] at bind time if +repeatable: true+ is used and any
+      # @raise [ArgumentError] at bind time if `repeatable: true` is used and any
       #   Array element is nil
       #
       # @raise [ArgumentError] if defined after an `end_of_options` or `literal '--'` boundary
@@ -1225,7 +1226,7 @@ module Git
       # `[]`, or `''`. `false` is always treated as absent for all option types.
       #
       # An ArgumentError is raised at definition time if any name given to
-      # +conflicts+ is not a known option or operand, catching typos early.
+      # `conflicts` is not a known option or operand, catching typos early.
       #
       # The error message has the general form:
       #
@@ -1262,7 +1263,7 @@ module Git
       # @raise [ArgumentError] if any name is not a known option or operand
       #
       # @raise [ArgumentError] if more than one argument in the same conflict group
-      #   is present when building arguments
+      #   is present when binding arguments (during {#bind})
       def conflicts(*names)
         names.each do |name|
           sym = name.to_sym
@@ -1314,11 +1315,17 @@ module Git
       #   args_def.bind(all: true,    no_ignore_removal: true).to_a  # => ['--all', '--no-ignore-removal']
       #   args_def.bind(no_all: true, ignore_removal: true).to_a     # => ['--no-all', '--ignore-removal']
       #
-      # @param pairs [Hash] keyword pairs mapping argument name to forbidden value
+      # @param pairs [Hash{Symbol => Object}] keyword pairs mapping argument name to forbidden value
+      #
+      #   Each key must be a known option or operand name. During {#bind}, an
+      #   `ArgumentError` is raised when all names are present and all values
+      #   exactly match the declared tuple.
+      #
+      # @option pairs [Object] :"argument_name" the value forbidden for the argument with that name
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if any name in +pairs+ is not a known option or
+      # @raise [ArgumentError] if any name in `pairs` is not a known option or
       #   operand
       #
       # @raise [ArgumentError] during {#bind} if all names are present and all
@@ -1607,18 +1614,18 @@ module Git
       #   previously defined {#value_option} or {#flag_or_value_option}
       #
       # @param in [#each] accepted values enumerable. Each value is coerced with
-      #   +to_s+ and compared as a string.
+      #   `to_s` and compared as a string.
       #
-      # For \\{#flag_or_value_option} variants (including +negatable: true+),
-      # boolean values (+true+ / +false+) are skipped by this check because they
+      # For {#flag_or_value_option} variants (including `negatable: true`),
+      # boolean values (`true` / `false`) are skipped by this check because they
       # control flag-emission behavior rather than representing candidate string
       # values.
       #
       # @return [void]
       #
-      # @raise [ArgumentError] if +name+ is not a known option at definition time
+      # @raise [ArgumentError] if `name` is not a known option at definition time
       #
-      # @raise [ArgumentError] if +name+ refers to a non-value option (e.g., a flag)
+      # @raise [ArgumentError] if `name` refers to a non-value option (e.g., a flag)
       #
       # @raise [ArgumentError] during {#bind} if the bound value is not in the
       #   accepted set, with a message of the form:
@@ -1786,6 +1793,8 @@ module Git
       #
       # @param opts [Hash] the keyword options
       #
+      # @option opts [Object] :"option_name" value for any option registered in this argument definition
+      #
       # @return [Bound] a frozen object with accessor methods for all arguments
       #
       # @raise [ArgumentError] if unsupported options are provided or validation fails
@@ -1849,7 +1858,7 @@ module Git
       #
       # @param types [Array<Symbol>] the option types to match
       #
-      # @return [Array<Symbol>]
+      # @return [Array<Symbol>] matching option names
       #
       def option_names_by_type(*types)
         @option_definitions.each_with_object([]) do |(name, definition), names|
@@ -1860,6 +1869,8 @@ module Git
       # Validate and normalize keyword options
       #
       # @param opts [Hash] raw keyword options
+      #
+      # @option opts [Object] :"option_name" value for any option registered in this argument definition
       #
       # @return [Hash] normalized options with aliases resolved
       #
@@ -1939,6 +1950,28 @@ module Git
       #
       # @param definition [Hash] the option definition
       #
+      # @option definition [Symbol] :type the DSL option type (e.g. `:flag`, `:value`)
+      #
+      # @option definition [String, Array<String>, nil] :as the CLI flag name override
+      #
+      # @option definition [Class, nil] :expected_type the required Ruby class for the value
+      #
+      # @option definition [Proc, nil] :validator a callable that validates the value
+      #
+      # @option definition [Boolean] :required (false) whether the option is required
+      #
+      # @option definition [Boolean] :allow_nil whether nil is a valid value
+      #
+      # @option definition [Proc, nil] :builder a custom argument builder callable
+      #
+      # @option definition [Integer, nil] :max_times maximum repeat count for flag options
+      #
+      # @option definition [Boolean] :allow_empty whether empty values should be emitted
+      #
+      # @option definition [Boolean] :repeatable whether the option accepts multiple values
+      #
+      # @option definition [String] :key_separator separator used by key-value options
+      #
       # @return [void]
       #
       def register_option(names, **definition)
@@ -1953,15 +1986,34 @@ module Git
         store_option(primary, keys, definition)
       end
 
+      # Store option in the option definitions and alias map
+      #
+      # @param primary [Symbol] the primary option name
+      #
+      # @param keys [Array<Symbol>] all alias keys including the primary
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def store_option(primary, keys, definition)
         @option_definitions[primary] = definition
         keys.each { |key| @alias_map[key] = primary }
         @ordered_definitions << { kind: :option, name: primary }
       end
 
-      # Raise if any of +keys+ collides with a previously synthesized +no_<name>+
+      # Raise if any of `keys` collides with a previously synthesized `no_<name>`
       # companion entry. This catches the case where a user declares
-      # +flag_option :foo, negatable: true+ followed by +flag_option :no_foo+.
+      # `flag_option :foo, negatable: true` followed by `flag_option :no_foo`.
+      #
+      # @param keys [Array<Symbol>] the option alias keys to check
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any key is already registered as a negatable companion
+      #
+      # @api private
       def validate_no_companion_collision!(keys)
         keys.each do |key|
           next unless @negatable_companions.include?(key)
@@ -1971,11 +2023,19 @@ module Git
         end
       end
 
-      # Raise if the +keys+ array contains duplicate entries.
+      # Raise if the `keys` array contains duplicate entries
       #
-      # Duplicate aliases in a single declaration (e.g. +flag_option %i[foo foo]+)
+      # Duplicate aliases in a single declaration (e.g. `flag_option %i[foo foo]`)
       # are a programming mistake and would silently overwrite each other in
-      # +@alias_map+. Catching them at definition time makes the error obvious.
+      # `@alias_map`. Catching them at definition time makes the error obvious.
+      #
+      # @param keys [Array<Symbol>] the option alias keys to check for duplicates
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the keys array contains duplicate entries
+      #
+      # @api private
       def validate_no_duplicate_aliases!(keys)
         seen = Set.new
         keys.each do |key|
@@ -1983,6 +2043,17 @@ module Git
         end
       end
 
+      # Validate that max_times is nil or an Integer >= 2
+      #
+      # @param option_name [Symbol] the option name (for error messages)
+      #
+      # @param max_times [Integer, nil] the max_times value to validate
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if max_times is not nil and not an Integer >= 2
+      #
+      # @api private
       def validate_max_times!(option_name, max_times)
         return if max_times.nil?
 
@@ -1993,9 +2064,23 @@ module Git
 
       # Register two companion :flag entries for a negatable flag option
       #
-      # Registers a positive entry for +names+ and a boolean-only negative entry for
-      # <tt>:no_<primary></tt>. An automatic conflict is added so that both being
+      # Registers a positive entry for `names` and a boolean-only negative entry for
+      # `:no_<primary>`. An automatic conflict is added so that both being
       # true at bind time raises ArgumentError.
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s); first is primary
+      #
+      # @param as [String, nil] the CLI flag string, or nil to derive from name
+      #
+      # @param required [Boolean] whether at least one of the pair must be provided
+      #
+      # @param allow_nil [Boolean] whether nil is a permitted bound value
+      #
+      # @param max_times [Integer, nil] maximum number of times the flag may be repeated
+      #
+      # @return [void]
+      #
+      # @api private
       def register_negatable_flag_pair(names, as:, required:, allow_nil:, max_times:)
         primary = Array(names).first
         validate_negatable_allow_nil!(primary, required: required, allow_nil: allow_nil)
@@ -2008,6 +2093,24 @@ module Git
 
       # Register a positive flag-or-value entry and a boolean-only negative companion
       # entry for a negatable flag-or-value option
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s); first is primary
+      #
+      # @param as [String, nil] the CLI flag string, or nil to derive from name
+      #
+      # @param type [Class, Array<Class>, nil] expected Ruby type(s) for the value
+      #
+      # @param inline [Boolean] whether to use inline format (--flag=value)
+      #
+      # @param repeatable [Boolean] whether the option may be given multiple times
+      #
+      # @param required [Boolean] whether at least one of the pair must be provided
+      #
+      # @param allow_nil [Boolean] whether nil is a permitted bound value
+      #
+      # @return [void]
+      #
+      # @api private
       def register_negatable_flag_or_value_pair(names, as:, type:, inline:, repeatable:, required:, allow_nil:)
         primary = Array(names).first
         validate_negatable_allow_nil!(primary, required: required, allow_nil: allow_nil)
@@ -2020,6 +2123,18 @@ module Git
       end
 
       # Run shared validations for a negatable option before registering either side
+      #
+      # @param primary [Symbol] the primary option name
+      #
+      # @param names [Symbol, Array<Symbol>] the option name(s) including aliases
+      #
+      # @param as [String, nil] the CLI flag string, or nil to derive from name
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any negatable precondition is violated
+      #
+      # @api private
       def prepare_negatable!(primary, names, as)
         validate_negatable_primary_key!(primary)
         validate_negatable_as_not_array!(primary, as)
@@ -2029,8 +2144,18 @@ module Git
         validate_no_companion_in_alias_list!(no_name, Array(names))
       end
 
-      # Register the synthesized +no_<primary>+ flag entry, the auto-conflict, and
-      # (when +required: true+) the auto requires_one_of group
+      # Register the synthesized `no_<primary>` flag entry, the auto-conflict, and
+      # (when `required: true`) the auto requires_one_of group
+      #
+      # @param primary [Symbol] the primary option name
+      #
+      # @param as [String, nil] the positive CLI flag string used to derive the negative form
+      #
+      # @param required [Boolean] whether an auto requires_one_of group should be added
+      #
+      # @return [void]
+      #
+      # @api private
       def register_negative_companion(primary, as:, required:)
         no_name = :"no_#{primary}"
         positive_flag = as || default_arg_spec(primary)
@@ -2057,6 +2182,8 @@ module Git
       #
       # @param allow_nil [Boolean] whether nil is allowed
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if `required: true` and `allow_nil: false` are combined
       #   with `negatable: true`
       #
@@ -2068,8 +2195,15 @@ module Git
               '(nil is caught by the auto requires_one_of group, not allow_nil)'
       end
 
+      # Validate that the primary key is snake_case so a meaningful no_ companion can be generated
+      #
+      # @param key [Symbol] the primary option name to validate
+      #
+      # @return [void]
+      #
       # @raise [ArgumentError] if key is not snake_case
       #
+      # @api private
       def validate_negatable_primary_key!(key)
         return if key.to_s.match?(/\A[a-z][a-z0-9_]*\z/)
 
@@ -2083,6 +2217,16 @@ module Git
       # Arrays for as: are not compatible with negatable: true regardless of the
       # underlying option type — the synthesized +--no-<flag>+ form has no sensible
       # mapping when the positive form expands to multiple CLI tokens.
+      #
+      # @param primary [Symbol] the primary option name (for error messages)
+      #
+      # @param as [Object] the as: parameter value to check
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if as: is an Array
+      #
+      # @api private
       def validate_negatable_as_not_array!(primary, as)
         return unless as.is_a?(Array)
 
@@ -2094,6 +2238,16 @@ module Git
       # Negation requires a long-form flag because the synthesized companion is
       # always +--no-<flag>+; deriving it from a short flag would yield a
       # nonexistent git form like +--no-S+.
+      #
+      # @param primary [Symbol] the primary option name (for error messages)
+      #
+      # @param as [String, nil] the as: parameter value to check
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if as: is not nil and not a long-form flag
+      #
+      # @api private
       def validate_negatable_as_long_form!(primary, as)
         return if as.nil?
         return if as.is_a?(String) && as.start_with?('--')
@@ -2104,6 +2258,13 @@ module Git
 
       # Raise if the generated no_ companion key is already registered
       #
+      # @param no_name [Symbol] the synthesized companion key (e.g. :no_force)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the companion key is already in the alias map
+      #
+      # @api private
       def validate_no_negatable_collision!(no_name)
         return unless @alias_map.key?(no_name)
 
@@ -2111,11 +2272,21 @@ module Git
               "negatable: true would register :#{no_name} but that key is already registered"
       end
 
-      # Raise if the synthesized companion key appears in the same declaration's alias list.
+      # Raise if the synthesized companion key appears in the same declaration's alias list
       #
-      # This catches e.g. +flag_option %i[foo no_foo], negatable: true+ where :no_foo
+      # This catches e.g. `flag_option %i[foo no_foo], negatable: true` where `:no_foo`
       # is listed as an alias and would be silently overwritten when the companion is
-      # registered, corrupting @alias_map and @option_definitions.
+      # registered, corrupting `@alias_map` and `@option_definitions`.
+      #
+      # @param no_name [Symbol] the synthesized companion key (e.g. :no_force)
+      #
+      # @param keys [Array<Symbol>] the alias list from the current declaration
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the companion key is already listed as an alias
+      #
+      # @api private
       def validate_no_companion_in_alias_list!(no_name, keys)
         return unless keys.include?(no_name)
 
@@ -2130,6 +2301,8 @@ module Git
       #
       # @param option_name [Symbol] the primary option name
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if a flag-producing option is defined after '--'
       #
       def validate_option_after_separator!(type, option_name)
@@ -2141,6 +2314,17 @@ module Git
               'boundary because its flags would be treated as operands by git'
       end
 
+      # Apply a type-checking validator to a definition when expected_type is set
+      #
+      # @param definition [Hash] the option definition hash (mutated in place)
+      #
+      # @param option_name [Symbol] the option name (for error messages)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if both `expected_type` and `validator` are specified
+      #
+      # @api private
       def apply_type_validator!(definition, option_name)
         return unless definition[:expected_type]
 
@@ -2152,6 +2336,17 @@ module Git
         definition[:validator] = create_type_validator(option_name, definition[:expected_type])
       end
 
+      # Validate that array as: values are only used with flag-type options
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @param option_name [Symbol] the primary option name (for error messages)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if as: is an Array and the type is not :flag
+      #
+      # @api private
       def validate_as_parameter!(definition, option_name)
         return unless definition[:as].is_a?(Array)
 
@@ -2268,6 +2463,15 @@ module Git
         append_positional_to_args(args, value, definition)
       end
 
+      # Raise if a second repeatable operand is declared
+      #
+      # @param name [Symbol] the name of the operand being added
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if a repeatable operand is already registered
+      #
+      # @api private
       def validate_single_repeatable!(name)
         existing_repeatable = @operand_definitions.find { |d| d[:repeatable] }
         return unless existing_repeatable
@@ -2277,6 +2481,23 @@ module Git
               "cannot add :#{name} as repeatable"
       end
 
+      # Append a positional operand definition to the internal arrays
+      #
+      # @param name [Symbol] the operand name
+      #
+      # @param required [Boolean] whether the operand is required
+      #
+      # @param repeatable [Boolean] whether the operand may accept multiple values
+      #
+      # @param default [Object] the default value when the operand is not provided
+      #
+      # @param allow_nil [Boolean] whether nil is a permitted value
+      #
+      # @param skip_cli [Boolean] whether to omit this operand from the CLI array
+      #
+      # @return [void]
+      #
+      # @api private
       def add_operand_definition(name, required, repeatable, default, allow_nil, skip_cli)
         @operand_definitions << {
           name: name, required: required, repeatable: repeatable,
@@ -2285,6 +2506,9 @@ module Git
         @ordered_definitions << { kind: :operand, name: name }
       end
 
+      # Maps option types to their build strategy (Symbol method name or lambda)
+      #
+      # @api private
       BUILDERS = {
         flag: :build_flag,
         value: lambda do |args, arg_spec, value, definition|
@@ -2327,6 +2551,19 @@ module Git
       }.freeze
       private_constant :BUILDERS
 
+      # Build a single option's CLI tokens and append them to args
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param name [Symbol] the canonical option name
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @param value [Object] the bound value for the option
+      #
+      # @return [void]
+      #
+      # @api private
       def build_option(args, name, definition, value)
         return if should_skip_option?(value, definition)
 
@@ -2363,6 +2600,19 @@ module Git
         arg_spec.is_a?(String) && arg_spec.match?(/\A-[^-]\z/)
       end
 
+      # Build key_value option tokens and append to args
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String] the CLI flag string
+      #
+      # @param value [Hash, Array] the key-value input
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_key_value(args, arg_spec, value, definition)
         sep = definition[:key_separator] || '='
         option_name = definition[:aliases].first
@@ -2375,6 +2625,19 @@ module Git
         end
       end
 
+      # Build inline_key_value option tokens and append to args
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String] the CLI flag string
+      #
+      # @param value [Hash, Array] the key-value input
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_inline_key_value(args, arg_spec, value, definition)
         sep = definition[:key_separator] || '='
         option_name = definition[:aliases].first
@@ -2392,6 +2655,17 @@ module Git
       # Short options (single-char) use no separator: -n3
       # Long options (multi-char) use = separator: --name=value
       #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String] the CLI flag string
+      #
+      # @param value [Object] the bound value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_inline_value(args, arg_spec, value, definition)
         sep = inline_value_separator(arg_spec)
         if definition[:repeatable]
@@ -2403,6 +2677,17 @@ module Git
 
       # Build flag or inline value option with POSIX-compliant formatting
       #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String] the CLI flag string
+      #
+      # @param value [Boolean, Object] the bound value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_flag_or_inline_value(args, arg_spec, value, definition)
         each_flag_or_value_value(value, definition, 'flag_or_inline_value') do |v|
           next if v == false
@@ -2413,6 +2698,17 @@ module Git
 
       # Build flag or value option
       #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String] the CLI flag string
+      #
+      # @param value [Boolean, Object] the bound value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_flag_or_value(args, arg_spec, value, definition)
         each_flag_or_value_value(value, definition, 'flag_or_value') do |v|
           next if v == false
@@ -2425,6 +2721,21 @@ module Git
         end
       end
 
+      # Iterate over each individual flag-or-value element, validating and yielding
+      #
+      # @param value [Object] the bound value (scalar or array for repeatable)
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @param option_type [String] the option type name (for error messages)
+      #
+      # @return [void]
+      #
+      # @yield [value] each validated element
+      #
+      # @yieldparam value [Object] the validated scalar value (true, false, or a non-nil object)
+      #
+      # @api private
       def each_flag_or_value_value(value, definition, option_type)
         values = definition[:repeatable] ? Array(value) : [value]
         values.each do |v|
@@ -2436,10 +2747,19 @@ module Git
       # Validate that a flag_or_value element is not nil.
       #
       # Boolean values (true/false) control flag presence/absence. Any other non-nil
-      # object is accepted and converted to a CLI argument string via +#to_s+.
+      # object is accepted and converted to a CLI argument string via `#to_s`.
       # Nil is rejected only within repeatable arrays — non-repeatable nil values are
-      # filtered out earlier by +should_skip_option?+ and never reach here.
+      # filtered out earlier by `should_skip_option?` and never reach here.
       #
+      # @param value [Object] the element value to validate
+      #
+      # @param option_type [String] the option type name (for error messages)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if value is nil
+      #
+      # @api private
       def validate_flag_or_value_type!(value, option_type)
         return unless value.nil?
 
@@ -2463,11 +2783,35 @@ module Git
         short_option?(arg_spec) ? '' : '='
       end
 
+      # Build flag option tokens and append to args
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String, Array<String>] the CLI flag string(s)
+      #
+      # @param value [Boolean, Integer] the bound flag value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def build_flag(args, arg_spec, value, definition)
         count = normalize_flag_value!(value, definition)
         append_repeated_flag(args, arg_spec, count)
       end
 
+      # Append a flag to the args array the given number of times
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param arg_spec [String, Array<String>] the CLI flag string(s)
+      #
+      # @param count [Integer] the number of times to append the flag
+      #
+      # @return [void]
+      #
+      # @api private
       def append_repeated_flag(args, arg_spec, count)
         return if count <= 0
 
@@ -2476,6 +2820,17 @@ module Git
         end
       end
 
+      # Normalize a flag bound value to a repeat count integer
+      #
+      # @param value [Boolean, Integer, nil] the bound flag value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [Integer] the number of times the flag should be emitted
+      #
+      # @raise [ArgumentError] if the value is not valid for this flag type
+      #
+      # @api private
       def normalize_flag_value!(value, definition)
         return 1 if value == true
         return 0 if value.nil? || value == false
@@ -2490,15 +2845,50 @@ module Git
         raise ArgumentError, "Invalid value for :#{option_name}: expected true, false, or a positive Integer"
       end
 
+      # Raise a type error for a flag option that received a non-boolean value without max_times
+      #
+      # @param value [Object] the invalid value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] always
+      #
+      # @api private
       def raise_flag_type_boolean_error!(value, definition)
         raise_flag_boolean_error!(definition[:aliases].first, value)
       end
 
+      # Raise an ArgumentError describing a non-boolean value for a boolean-only flag option
+      #
+      # @param option_name [Symbol] the option name (for the error message)
+      #
+      # @param value [Object] the invalid value received
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] always
+      #
+      # @api private
       def raise_flag_boolean_error!(option_name, value)
         raise ArgumentError,
               "flag_option :#{option_name} expects a boolean value, got #{value.inspect} (#{value.class})"
       end
 
+      # Validate and return an integer flag repeat count within the max_times limit
+      #
+      # @param value [Integer] the integer value to validate
+      #
+      # @param option_name [Symbol] the option name (for error messages)
+      #
+      # @param max_times [Integer] the maximum allowed repeat count
+      #
+      # @return [Integer] the validated repeat count
+      #
+      # @raise [ArgumentError] if value is not a positive Integer or exceeds max_times
+      #
+      # @api private
       def normalize_flag_integer_value!(value, option_name, max_times)
         raise ArgumentError, "Invalid value for :#{option_name}: expected a positive Integer" if value <= 0
 
@@ -2507,6 +2897,19 @@ module Git
         value
       end
 
+      # Raise an ArgumentError when a flag repeat count exceeds max_times
+      #
+      # @param option_name [Symbol] the option name (for the error message)
+      #
+      # @param value [Integer] the value that exceeded the limit
+      #
+      # @param max_times [Integer] the configured maximum
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] always
+      #
+      # @api private
       def raise_max_times_exceeded!(option_name, value, max_times)
         raise ArgumentError,
               "#{option_name}: #{value} exceeds max_times: #{max_times} for :#{option_name}"
@@ -2531,6 +2934,15 @@ module Git
         end
       end
 
+      # Determine whether an option value should be skipped during CLI build
+      #
+      # @param value [Object] the bound option value
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [Boolean] true if the option should be omitted from the CLI array
+      #
+      # @api private
       def should_skip_option?(value, definition)
         return true if value.nil?
         return true if value == false && %i[flag_or_inline_value flag_or_value].include?(definition[:type])
@@ -2541,6 +2953,14 @@ module Git
 
       # For value_as_operand, empty arrays always skip regardless of allow_empty
       # (allow_empty only applies to empty strings, not empty arrays)
+      #
+      # @param value [Array] the array value to evaluate
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [Boolean] true if the option should be skipped
+      #
+      # @api private
       def skip_value_as_operand_array?(value, definition)
         return value.empty? if definition[:type] == :value_as_operand
 
@@ -2568,12 +2988,28 @@ module Git
         end
       end
 
+      # Normalize a Hash to an array of [key, value] pairs
+      #
+      # @param hash [Hash] the input hash
+      #
+      # @return [Array<Array>] array of [key, value] pairs
+      #
+      # @api private
       def normalize_hash_to_pairs(hash)
         hash.flat_map do |k, v|
           v.is_a?(Array) ? v.map { |val| [k, val] } : [[k, v]]
         end
       end
 
+      # Normalize an Array to an array of [key, value] pairs
+      #
+      # @param array [Array] the input array
+      #
+      # @return [Array<Array>] array of [key, value] pairs
+      #
+      # @raise [ArgumentError] if the array is not a pair or array of pairs
+      #
+      # @api private
       def normalize_array_to_pairs(array)
         # Check if it's a single [key, value] pair or array of pairs
         if array.size == 2 && !array.first.is_a?(Array)
@@ -2592,8 +3028,11 @@ module Git
       #
       # @param option_name [Symbol] the option name for error messages
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if pair has more than 2 elements
       #
+      # @api private
       def validate_key_value_pair_size!(pair, option_name)
         return unless pair.is_a?(Array) && pair.size > 2
 
@@ -2609,8 +3048,11 @@ module Git
       #
       # @param option_name [Symbol] the option name for error messages
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if key is nil, empty, or contains the separator
       #
+      # @api private
       def validate_key_value_key!(key, separator, option_name)
         key_str = key.to_s
         raise ArgumentError, "key_value :#{option_name} requires a non-empty key" if key.nil? || key_str.empty?
@@ -2627,8 +3069,11 @@ module Git
       #
       # @param option_name [Symbol] the option name for error messages
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if value is a Hash or Array (non-scalar)
       #
+      # @api private
       def validate_key_value_value!(value, option_name)
         return if value.nil?
         return unless value.is_a?(Hash) || value.is_a?(Array)
@@ -2638,6 +3083,13 @@ module Git
               "got #{value.class}: #{value.inspect}"
       end
 
+      # Flatten a single-element array wrapper if the first element is itself an array
+      #
+      # @param positionals [Array] the raw positional values from the splat
+      #
+      # @return [Array] normalized positionals array
+      #
+      # @api private
       def normalize_positionals(positionals)
         # Flatten if first element is an array (allows both splat and array syntax)
         positionals = positionals.first if positionals.size == 1 && positionals.first.is_a?(Array)
@@ -2647,22 +3099,59 @@ module Git
       # Allocate positional arguments to definitions following Ruby semantics
       # Returns [allocation_hash, consumed_count] where consumed_count is the
       # number of non-nil positionals that were consumed by definitions.
+      #
+      # @param positionals [Array] the positional argument values
+      #
+      # @return [Array(Hash, Integer)] tuple of allocation hash and consumed count
+      #
+      # @api private
       def allocate_positionals(positionals)
         OperandAllocator.new(@operand_definitions).allocate(positionals)
       end
 
+      # Append a positional argument's value(s) to the CLI args array
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param value [Object] the positional value
+      #
+      # @param definition [Hash] the operand definition hash
+      #
+      # @return [void]
+      #
+      # @api private
       def append_positional_to_args(args, value, definition)
         return if positional_value_empty?(value, definition)
 
         append_positional_value(args, value, definition[:repeatable])
       end
 
+      # Return true if a positional value is empty and should be skipped
+      #
+      # @param value [Object] the positional value
+      #
+      # @param definition [Hash] the operand definition hash
+      #
+      # @return [Boolean] true if the value should be skipped
+      #
+      # @api private
       def positional_value_empty?(value, definition)
         return true if value.nil?
 
         definition[:repeatable] && value.respond_to?(:empty?) && value.empty?
       end
 
+      # Append a positional value to the args array, expanding arrays when repeatable
+      #
+      # @param args [Array<String>] the argument array to append to
+      #
+      # @param value [Object] the positional value
+      #
+      # @param repeatable [Boolean] whether the operand accepts multiple values
+      #
+      # @return [void]
+      #
+      # @api private
       def append_positional_value(args, value, repeatable)
         if repeatable
           args.concat(Array(value).map(&:to_s))
@@ -2671,6 +3160,17 @@ module Git
         end
       end
 
+      # Raise if more positional values were provided than definitions can absorb
+      #
+      # @param positionals [Array] the full list of provided positional values
+      #
+      # @param consumed_count [Integer] the number of positionals consumed by definitions
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if extra positional values remain after allocation
+      #
+      # @api private
       def check_unexpected_positionals(positionals, consumed_count)
         provided_count = positionals.compact.size
 
@@ -2681,6 +3181,17 @@ module Git
         raise ArgumentError, "Unexpected positional arguments: #{unexpected.join(', ')}"
       end
 
+      # Raise if a required positional argument is missing or empty
+      #
+      # @param value [Object] the allocated positional value
+      #
+      # @param definition [Hash] the operand definition hash
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if a required positional is missing
+      #
+      # @api private
       def validate_required_positional(value, definition)
         return unless definition[:required]
         return if definition[:allow_nil] && value.nil?
@@ -2691,6 +3202,17 @@ module Git
         raise ArgumentError, "#{definition[:name]} is required"
       end
 
+      # Raise if a repeatable positional array contains nil values
+      #
+      # @param value [Object] the allocated positional value
+      #
+      # @param definition [Hash] the operand definition hash
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the array contains nil elements
+      #
+      # @api private
       def validate_no_nil_values!(value, definition)
         return unless definition[:repeatable]
         return if value.nil? # Allow nil as "not provided"
@@ -2709,6 +3231,8 @@ module Git
       # a hyphen, which could be misinterpreted as a git option.
       #
       # @param allocation [Hash{Symbol => Object}] the allocated operand values
+      #
+      # @return [void]
       #
       # @raise [ArgumentError] if any pre-separator operand value starts with '-'
       #
@@ -2769,7 +3293,7 @@ module Git
       #
       # @param defn [Hash] the entry definition
       #
-      # @return [Boolean]
+      # @return [Boolean] true if the definition emits a literal `--` boundary
       #
       def literal_separator_flag?(defn)
         defn[:kind] == :static && defn[:flag] == '--'
@@ -2780,6 +3304,8 @@ module Git
       # @param name [Symbol] the operand name
       #
       # @param value [Object] the operand value
+      #
+      # @return [void]
       #
       # @raise [ArgumentError] if the value starts with '-'
       #
@@ -2792,12 +3318,32 @@ module Git
         end
       end
 
+      # Raise if a single operand string value looks like a command-line option
+      #
+      # @param name [Symbol] the operand name (for the error message)
+      #
+      # @param value [String] the option-like string value
+      #
+      # @return [void]
+      #
       # @raise [ArgumentError] if the string value starts with '-'
+      #
+      # @api private
       def raise_option_like_error(name, value)
         raise ArgumentError, "operand :#{name} value '#{value}' looks like a command-line option"
       end
 
+      # Raise if any element of an operand array looks like a command-line option
+      #
+      # @param name [Symbol] the operand name (for the error message)
+      #
+      # @param values [Array] the array of operand values to check
+      #
+      # @return [void]
+      #
       # @raise [ArgumentError] if any array element starts with '-'
+      #
+      # @api private
       def raise_option_like_array_error(name, values)
         invalid = values.select { |v| v.is_a?(String) && v.start_with?('-') }
         return if invalid.empty?
@@ -2819,6 +3365,17 @@ module Git
         value.nil?
       end
 
+      # Raise if opts contains any keys not registered in the alias map
+      #
+      # @param opts [Hash] the raw keyword options to check
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any option key is not registered
+      #
+      # @api private
       def validate_unsupported_options!(opts)
         unsupported = opts.keys - @alias_map.keys
         return if unsupported.empty?
@@ -2826,6 +3383,17 @@ module Git
         raise ArgumentError, "Unsupported options: #{unsupported.map(&:inspect).join(', ')}"
       end
 
+      # Raise if the caller provided more than one alias from the same option group
+      #
+      # @param opts [Hash] the raw keyword options
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if conflicting aliases are both present
+      #
+      # @api private
       def validate_conflicting_aliases!(opts)
         @option_definitions.each_value do |definition|
           aliases = definition[:aliases]
@@ -2838,16 +3406,45 @@ module Git
         end
       end
 
+      # Rekey opts so every alias maps to its primary option name
+      #
+      # @param opts [Hash] the raw keyword options
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [Hash] a new hash with all keys resolved to primary names
+      #
+      # @api private
       def normalize_aliases(opts)
         opts.transform_keys { |key| @alias_map[key] || key }
       end
 
+      # Raise if any required options are missing or nil when allow_nil is false
+      #
+      # @param opts [Hash] the normalized keyword options
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if required options are missing or nil
+      #
+      # @api private
       def validate_required_options!(opts)
         missing, nil_not_allowed = collect_required_option_errors(opts)
         raise_missing_options_error(missing) if missing.any?
         raise_nil_options_error(nil_not_allowed) if nil_not_allowed.any?
       end
 
+      # Collect missing and nil-not-allowed option names from opts
+      #
+      # @param opts [Hash] the normalized keyword options
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [Array(Array<Symbol>, Array<Symbol>)] tuple of missing and nil-invalid names
+      #
+      # @api private
       def collect_required_option_errors(opts)
         missing = []
         nil_not_allowed = []
@@ -2860,14 +3457,41 @@ module Git
         [missing, nil_not_allowed]
       end
 
+      # Raise an error listing required options that were not provided
+      #
+      # @param missing [Array<Symbol>] the names of missing required options
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] always
+      #
+      # @api private
       def raise_missing_options_error(missing)
         raise ArgumentError, "Required options not provided: #{missing.map(&:inspect).join(', ')}"
       end
 
+      # Raise an error listing required options that were provided as nil
+      #
+      # @param nil_not_allowed [Array<Symbol>] the names of options given nil when not allowed
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] always
+      #
+      # @api private
       def raise_nil_options_error(nil_not_allowed)
         raise ArgumentError, "Required options cannot be nil: #{nil_not_allowed.map(&:inspect).join(', ')}"
       end
 
+      # Run validators and allowed_values checks for each option present in opts
+      #
+      # @param opts [Hash] the normalized keyword options
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
+      # @api private
       def validate_option_values!(opts)
         @option_definitions.each do |name, definition|
           next unless opts.key?(name)
@@ -2876,11 +3500,37 @@ module Git
         end
       end
 
+      # Run the validator and allowed_values check for a single option value
+      #
+      # @param name [Symbol] the option name
+      #
+      # @param value [Object] the option value to validate
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if validation fails
+      #
+      # @api private
       def validate_single_option!(name, value, definition)
         run_validator!(name, value, definition[:validator]) if definition[:validator]
         check_allowed_values!(name, value, definition) if definition[:allowed_values]
       end
 
+      # Call the validator proc and raise if it returns an error
+      #
+      # @param name [Symbol] the option name (for the default error message)
+      #
+      # @param value [Object] the option value to validate
+      #
+      # @param validator [Proc] the validator callable
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the validator returns any value other than `true`
+      #
+      # @api private
       def run_validator!(name, value, validator)
         result = validator.call(value)
         return if result == true
@@ -2889,6 +3539,19 @@ module Git
         raise ArgumentError, error_msg
       end
 
+      # Check that the option value is within the declared allowed_values set
+      #
+      # @param name [Symbol] the option name
+      #
+      # @param value [Object] the option value to check
+      #
+      # @param definition [Hash] the option definition hash
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the value is not in the allowed set
+      #
+      # @api private
       def check_allowed_values!(name, value, definition)
         allowed = definition[:allowed_values]
         type = definition[:type]
@@ -2899,6 +3562,17 @@ module Git
         end
       end
 
+      # Convert an allowed_values enumerable to a frozen array of strings
+      #
+      # @param sym [Symbol] the option name (for error messages)
+      #
+      # @param values [Enumerable] the allowed values to coerce
+      #
+      # @return [Array<String>] a frozen array of stringified allowed values
+      #
+      # @raise [ArgumentError] if values is not Enumerable or is empty
+      #
+      # @api private
       def coerce_allowed_values_set!(sym, values)
         unless values.respond_to?(:map)
           raise ArgumentError,
@@ -2910,6 +3584,15 @@ module Git
         arr.freeze
       end
 
+      # Look up and validate the option definition for an allowed_values declaration
+      #
+      # @param sym [Symbol] the option or alias name
+      #
+      # @return [Hash] the option definition hash
+      #
+      # @raise [ArgumentError] if sym is unknown or not a value option type
+      #
+      # @api private
       def validate_allowed_values_definition!(sym)
         primary = @alias_map[sym]
         defn = primary && @option_definitions[primary]
@@ -2925,6 +3608,23 @@ module Git
         defn
       end
 
+      # Check each element of a repeatable option value against the allowed set
+      #
+      # @param name [Symbol] the option name
+      #
+      # @param values [Object] the repeatable value (array or scalar)
+      #
+      # @param allowed [Array<String>] the allowed string values
+      #
+      # @param allow_empty [Boolean] whether empty strings are permitted
+      #
+      # @param type [Symbol] the option type (for boolean skip logic)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if any element is not in the allowed set
+      #
+      # @api private
       def check_repeatable_allowed_values!(name, values, allowed, allow_empty, type)
         Array(values).each do |v|
           next if skip_allowed_values_check?(v, allow_empty, type)
@@ -2936,6 +3636,23 @@ module Git
         end
       end
 
+      # Check a single option value against the allowed set
+      #
+      # @param name [Symbol] the option name
+      #
+      # @param value [Object] the value to check
+      #
+      # @param allowed [Array<String>] the allowed string values
+      #
+      # @param allow_empty [Boolean] whether empty strings are permitted
+      #
+      # @param type [Symbol] the option type (for boolean skip logic)
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if the value is not in the allowed set
+      #
+      # @api private
       def check_single_allowed_value!(name, value, allowed, allow_empty, type)
         return if skip_allowed_values_check?(value, allow_empty, type)
 
@@ -2945,6 +3662,17 @@ module Git
               "Invalid value for :#{name}: expected one of #{allowed.inspect}, got #{value.inspect}"
       end
 
+      # Return true if an allowed_values check should be bypassed for this value
+      #
+      # @param value [Object] the value being checked
+      #
+      # @param allow_empty [Boolean] whether empty strings should be skipped
+      #
+      # @param type [Symbol] the option type (for flag_or_value boolean skip)
+      #
+      # @return [Boolean] true if the check should be skipped
+      #
+      # @api private
       def skip_allowed_values_check?(value, allow_empty, type)
         return true if value.nil?
         # Only skip boolean values for flag_or_value option types where true/false carry
@@ -2956,6 +3684,15 @@ module Git
         false
       end
 
+      # Build a lambda that validates a value is one of the expected types
+      #
+      # @param option_name [Symbol] the option name (for error messages)
+      #
+      # @param expected_type [Class, Array<Class>] the expected Ruby type(s)
+      #
+      # @return [Proc] a validator lambda
+      #
+      # @api private
       def create_type_validator(option_name, expected_type)
         types = Array(expected_type)
 
@@ -2970,6 +3707,19 @@ module Git
         end
       end
 
+      # Raise if any conflicting argument names are both present in the bound values
+      #
+      # @param opts [Hash] normalized keyword options
+      #
+      # @param allocated_positionals [Hash] the allocated positional values
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
+      # @raise [ArgumentError] if conflicting arguments are both present
+      #
+      # @api private
       def validate_conflicts!(opts, allocated_positionals = {})
         @conflicts.each do |conflict_group|
           provided = conflict_group.select { |name| conflict_present?(name, opts, allocated_positionals) }
@@ -2985,6 +3735,18 @@ module Git
       # For registered keyword options only looks in opts; positional slots use
       # allocated_positionals. This prevents a positional operand that shares a
       # name with a keyword option from spuriously triggering keyword conflicts.
+      #
+      # @param name [Symbol] the argument name to check
+      #
+      # @param opts [Hash] normalized keyword options
+      #
+      # @param allocated_positionals [Hash] the allocated positional values
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [Boolean] true if the named argument has a present bound value
+      #
+      # @api private
       def conflict_present?(name, opts, allocated_positionals)
         canonical_name = @alias_map[name] || name
         value = if @option_definitions.key?(canonical_name)
@@ -3000,6 +3762,10 @@ module Git
       # @param opts [Hash] normalized keyword options (aliases already resolved)
       #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
       #
       # @raise [ArgumentError] if all names in a forbidden tuple are present with
       #   their declared values
@@ -3025,7 +3791,9 @@ module Git
       #
       # @param allocated_positionals [Hash] the allocated positional values
       #
-      # @return [Boolean]
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [Boolean] true if all tuple entries match the bound values
       #
       def forbidden_tuple_matches?(tuple, opts, allocated_positionals)
         tuple.all? do |name, forbidden_value|
@@ -3051,6 +3819,10 @@ module Git
       #
       # @param allocated_positionals [Hash] the allocated positional values
       #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
+      #
       # @raise [ArgumentError] if none of the arguments in any applicable group is present
       #
       def validate_requires_one_of!(opts, allocated_positionals = {})
@@ -3066,6 +3838,10 @@ module Git
       # @param opts [Hash] normalized keyword options
       #
       # @param allocated_positionals [Hash] the allocated positional values
+      #
+      # @option opts [Object] :"option_name" value for any registered option name
+      #
+      # @return [void]
       #
       def validate_requires_one_of_entry!(entry, opts, allocated_positionals)
         condition = entry[:condition]
@@ -3100,6 +3876,8 @@ module Git
       #
       # @param sym [Symbol] the name to validate
       #
+      # @return [void]
+      #
       # @raise [ArgumentError] if sym is not a known option or operand
       #
       def validate_requires_one_of_name!(sym)
@@ -3109,6 +3887,8 @@ module Git
       # Validate a single name used in a requires or conditional requires_one_of declaration
       #
       # @param sym [Symbol] the name to validate
+      #
+      # @return [void]
       #
       # @raise [ArgumentError] if sym is not a known option or operand
       #
@@ -3152,7 +3932,7 @@ module Git
       #
       # @param name [Symbol] the argument name to look up
       #
-      # @return [Boolean]
+      # @return [Boolean] true if the name is an option, alias, or operand
       def known_argument?(name)
         @alias_map.key?(name) || @operand_definitions.any? { |d| d[:name] == name }
       end
@@ -3167,7 +3947,7 @@ module Git
       #
       # @param value [Object] the argument value to test
       #
-      # @return [Boolean]
+      # @return [Boolean] true if the value counts as present for validation
       def argument_present?(value)
         return false if value.nil?
         return false if value == false
@@ -3229,7 +4009,7 @@ module Git
         # Canonical frozen empty hash returned by {#execution_options} when no
         # non-nil execution options are present.
         #
-        # @return [Hash{Symbol => Object}]
+        # @return [Hash{Symbol => Object}] frozen empty execution options hash
         EMPTY_EXECUTION_OPTIONS = {}.freeze
 
         # Execution options and values for command execution.
@@ -3238,10 +4018,10 @@ module Git
         # excludes options with nil values.
         #
         # @return [Hash{Symbol => Object}] frozen hash of execution option values
-        #
-        # @!attribute [r] execution_options
         attr_reader :execution_options
 
+        # Initialize a new frozen Bound object with accessor methods for all defined arguments
+        #
         # @param args_array [Array<String>] the CLI argument array (frozen)
         #
         # @param options [Hash{Symbol => Object}] normalized options hash (frozen)
@@ -3251,6 +4031,8 @@ module Git
         # @param execution_option_names [Array<Symbol>] option names declared via {Arguments#execution_option}
         #
         # @param flag_names [Array<Symbol>] option names declared via {Arguments#flag_option}
+        #
+        # @option options [Object] :"option_name" bound value for any registered option name
         #
         def initialize(args_array, options, positionals, execution_option_names = [], flag_names = [])
           @args_array = args_array.freeze
@@ -3306,6 +4088,13 @@ module Git
 
         private
 
+        # Build the execution_options hash from the given option names
+        #
+        # @param execution_option_names [Array<Symbol>] option names declared as execution options
+        #
+        # @return [Hash{Symbol => Object}] frozen hash of non-nil execution option values
+        #
+        # @api private
         def build_execution_options(execution_option_names)
           result = execution_option_names.each_with_object({}) do |name, values|
             value = @options[name]
@@ -3346,6 +4135,13 @@ module Git
           end
         end
 
+        # Return true if a flag value represents a truthy flag state
+        #
+        # @param value [Boolean, Integer, nil] the flag value
+        #
+        # @return [Boolean] true if the flag value represents an enabled flag
+        #
+        # @api private
         def flag_predicate?(value)
           return value.positive? if value.is_a?(Integer)
 
@@ -3370,7 +4166,7 @@ module Git
       #
       # @param values [Array] the positional argument values
       #
-      # @return [Array(Hash, Integer)] [allocation_hash, consumed_count]
+      # @return [Array(Hash, Integer)] tuple of allocation hash and consumed count
       def allocate(values)
         allocation = {}
         repeatable_index = @definitions.find_index { |d| d[:repeatable] }
@@ -3390,6 +4186,14 @@ module Git
       # - Required positionals at the END are reserved first
       # - Leading positionals get remaining values left-to-right
       # - Optional positionals are skipped when there aren't enough values
+      #
+      # @param values [Array] the positional argument values
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @return [Integer] the number of non-nil positionals consumed
+      #
+      # @api private
       def allocate_without_repeatable(values, allocation)
         trailing = count_trailing_required
         leading_defs = @definitions[0...(@definitions.size - trailing)]
@@ -3403,6 +4207,11 @@ module Git
         consumed + allocate_trailing(allocation, trailing_defs, trailing_values)
       end
 
+      # Count the number of trailing required definitions
+      #
+      # @return [Integer] number of required definitions at the end of @definitions
+      #
+      # @api private
       def count_trailing_required
         count = 0
         @definitions.reverse_each do |d|
@@ -3413,12 +4222,29 @@ module Git
         count
       end
 
+      # Return true if a definition is required (required and has no default)
+      #
+      # @param definition [Hash] the operand definition hash
+      #
+      # @return [Boolean] true if the operand must be provided and has no default
+      #
+      # @api private
       def required?(definition)
         definition[:required] && definition[:default].nil?
       end
 
       # Allocate leading positionals (those before any trailing required)
       # Required positionals consume values; optional ones only consume if extras available
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param definitions [Array<Hash>] the leading operand definitions
+      #
+      # @param values [Array] the values available for leading allocation
+      #
+      # @return [Integer] the number of non-nil positionals consumed
+      #
+      # @api private
       def allocate_leading(allocation, definitions, values)
         return 0 if definitions.empty?
 
@@ -3426,6 +4252,17 @@ module Git
         state.allocate(allocation)
       end
 
+      # Allocate trailing required positionals from the end of the values array
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param definitions [Array<Hash>] the trailing operand definitions
+      #
+      # @param values [Array] the values remaining for trailing allocation
+      #
+      # @return [Integer] the number of non-nil positionals consumed
+      #
+      # @api private
       def allocate_trailing(allocation, definitions, values)
         consumed = 0
         definitions.each_with_index do |definition, index|
@@ -3435,6 +4272,17 @@ module Git
         consumed
       end
 
+      # Allocate values when a repeatable definition is present
+      #
+      # @param values [Array] the positional argument values
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param repeatable_index [Integer] the index of the repeatable definition
+      #
+      # @return [Integer] total non-nil positionals consumed
+      #
+      # @api private
       def allocate_with_repeatable(values, allocation, repeatable_index)
         parts = split_around_repeatable(repeatable_index)
         slices = calculate_repeatable_slices(values, parts)
@@ -3448,6 +4296,15 @@ module Git
         pre_consumed + repeatable_consumed + post_consumed
       end
 
+      # Calculate start/end indices for pre, repeatable, and post slices
+      #
+      # @param values [Array] the full positional values array
+      #
+      # @param parts [Hash] the pre/repeatable/post definition parts
+      #
+      # @return [Hash] slice indices: :pre_values, :var_start, :var_end, :post_start
+      #
+      # @api private
       def calculate_repeatable_slices(values, parts)
         post_required_count = count_required(parts[:post])
         pre_available = [values.size - post_required_count, 0].max
@@ -3462,10 +4319,24 @@ module Git
         }
       end
 
+      # Count required definitions in the given list
+      #
+      # @param definitions [Array<Hash>] the operand definitions to count
+      #
+      # @return [Integer] the number of required definitions
+      #
+      # @api private
       def count_required(definitions)
         definitions.count { |d| required?(d) }
       end
 
+      # Split @definitions into pre, repeatable, and post parts
+      #
+      # @param repeatable_index [Integer] the index of the repeatable definition
+      #
+      # @return [Hash] parts hash with :pre, :repeatable, and :post keys
+      #
+      # @api private
       def split_around_repeatable(repeatable_index)
         {
           pre: @definitions[0...repeatable_index],
@@ -3476,6 +4347,16 @@ module Git
 
       # Allocate pre-repeatable positionals with Ruby-like semantics
       # (required get values first, optional only if extra values available)
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param definitions [Array<Hash>] the pre-repeatable operand definitions
+      #
+      # @param values [Array] the values available for pre-repeatable allocation
+      #
+      # @return [Integer] the number of non-nil positionals consumed
+      #
+      # @api private
       def allocate_pre_repeatable_smart(allocation, definitions, values)
         return 0 if definitions.empty?
 
@@ -3483,6 +4364,21 @@ module Git
         state.allocate(allocation)
       end
 
+      # Allocate the repeatable definition's slice of values
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param definition [Hash] the repeatable operand definition
+      #
+      # @param values [Array] the full values array
+      #
+      # @param start_idx [Integer] the start index of the repeatable slice
+      #
+      # @param end_idx [Integer] the end index (exclusive) of the repeatable slice
+      #
+      # @return [Integer] the number of non-nil values consumed by the repeatable
+      #
+      # @api private
       def allocate_repeatable(allocation, definition, values, start_idx, end_idx)
         repeatable_values = values[start_idx...end_idx] || []
         allocation[definition[:name]] =
@@ -3494,6 +4390,19 @@ module Git
         repeatable_values.compact.size
       end
 
+      # Allocate post-repeatable positionals from the end of the values array
+      #
+      # @param allocation [Hash] the allocation hash to populate
+      #
+      # @param definitions [Array<Hash>] the post-repeatable operand definitions
+      #
+      # @param values [Array] the full values array
+      #
+      # @param post_start [Integer] the index where post definitions begin
+      #
+      # @return [Integer] the number of non-nil positionals consumed
+      #
+      # @api private
       def allocate_post_repeatable(allocation, definitions, values, post_start)
         consumed = 0
         definitions.each_with_index do |definition, offset|
@@ -3509,6 +4418,16 @@ module Git
       #
       # @api private
       class LeadingAllocationState
+        # Initialize allocation state for the given leading definitions and values
+        #
+        # @param definitions [Array<Hash>] the leading operand definitions
+        #
+        # @param values [Array] the values available for allocation
+        #
+        # @param required_check [Method] callable returning true if a definition is required
+        #
+        # @return [void]
+        #
         def initialize(definitions, values, required_check)
           @definitions = definitions
           @values = values
@@ -3533,6 +4452,15 @@ module Git
 
         private
 
+        # Allocate a single definition, dispatching to required or optional branch
+        #
+        # @param allocation [Hash] the allocation hash to populate
+        #
+        # @param definition [Hash] the operand definition to allocate
+        #
+        # @return [void]
+        #
+        # @api private
         def allocate_one(allocation, definition)
           if @required_check.call(definition)
             allocate_required(allocation, definition)
@@ -3541,12 +4469,30 @@ module Git
           end
         end
 
+        # Allocate a required definition, consuming the next value unconditionally
+        #
+        # @param allocation [Hash] the allocation hash to populate
+        #
+        # @param definition [Hash] the operand definition to allocate
+        #
+        # @return [void]
+        #
+        # @api private
         def allocate_required(allocation, definition)
           allocation[definition[:name]] = value_or_default(definition)
           @consumed += 1 if @val_idx < @values.size
           @val_idx += 1
         end
 
+        # Allocate an optional definition, consuming only if extra values remain
+        #
+        # @param allocation [Hash] the allocation hash to populate
+        #
+        # @param definition [Hash] the operand definition to allocate
+        #
+        # @return [void]
+        #
+        # @api private
         def allocate_optional(allocation, definition)
           if @opt_idx < @extra_for_optionals
             allocation[definition[:name]] = value_or_default(definition)
@@ -3558,6 +4504,13 @@ module Git
           @opt_idx += 1
         end
 
+        # Return the current value from @values or the definition default if exhausted
+        #
+        # @param definition [Hash] the operand definition
+        #
+        # @return [Object] the value or default
+        #
+        # @api private
         def value_or_default(definition)
           @val_idx < @values.size ? @values[@val_idx] : definition[:default]
         end
