@@ -70,17 +70,26 @@ RSpec.describe Git::Commands::Base do
 
     it 'raises ArgumentError for a non-semver min string' do
       expect { command_class.requires_git_version '2.46' }
-        .to raise_error(ArgumentError, /major\.minor\.patch/)
+        .to raise_error(
+          ArgumentError,
+          /requires_git_version expects min to be a 'major\.minor\.patch' version string, got: "2\.46"/
+        )
     end
 
     it 'raises ArgumentError for a non-semver before string' do
       expect { command_class.requires_git_version before: '2' }
-        .to raise_error(ArgumentError, /major\.minor\.patch/)
+        .to raise_error(
+          ArgumentError,
+          /requires_git_version expects before: to be a 'major\.minor\.patch' version string, got: "2"/
+        )
     end
 
     it 'raises ArgumentError for Ruby Range objects' do
       expect { command_class.requires_git_version 1..2 }
-        .to raise_error(ArgumentError, /major\.minor\.patch/)
+        .to raise_error(
+          ArgumentError,
+          /requires_git_version expects min to be a 'major\.minor\.patch' version string, got: 1\.\.2/
+        )
     end
 
     it 'raises ArgumentError when called twice' do
@@ -95,8 +104,13 @@ RSpec.describe Git::Commands::Base do
     end
 
     it 'raises ArgumentError for Hash argument' do
+      expected_message = Regexp.new(
+        "requires_git_version expects min to be a 'major\\.minor\\.patch' " \
+        'version string, got: \{(?::before=>|before: )"2\\.30\\.0"\}'
+      )
+
       expect { command_class.requires_git_version({ before: '2.30.0' }) }
-        .to raise_error(ArgumentError, /major\.minor\.patch/)
+        .to raise_error(ArgumentError, expected_message)
     end
 
     it 'returns nil when not declared' do
