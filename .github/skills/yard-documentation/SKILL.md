@@ -562,6 +562,33 @@ under that `@param` must reference the same parameter name. For keyword argument
 (`**options` or `**kwargs`), use `@param options [Hash]` (or the actual splat
 name) as the preceding `@param`.
 
+For public APIs with known option keys, every `@option` tag must document a real
+supported key, such as `:force` or `:timeout`. Do not invent placeholder option
+keys for a public `options` hash.
+
+For private helpers that accept arbitrary keyword collectors whose keys are
+validated elsewhere, use a neutral splat name such as `candidate_keywords` and
+document the collector shape with a single pseudo-option entry named `key`. This
+is only for arbitrary-keyword helpers where the accepted keys are intentionally
+not known at that abstraction layer:
+
+```ruby
+# Validate that candidate option keys are listed in `allowed`
+#
+# @param allowed [Array<Symbol>] the permitted option keys
+#
+# @param candidate_keywords [Hash<Symbol, Object>] the keywords to validate
+#
+# @option candidate_keywords [Object] key a candidate keyword value
+#
+# @return [void]
+#
+# @raise [ArgumentError] when any candidate key is not in `allowed`
+#
+def assert_valid_opts!(allowed, **candidate_keywords)
+end
+```
+
 The exception to parameter order: all `@param` tags must come before the first
 `@option` tag, because yard-lint's `Tags/Order` validator rejects a `@param` that
 follows an `@option`. When a positional parameter follows the options hash in the
@@ -677,6 +704,7 @@ Use this matrix to decide whether to use `@overload` and where to place tags:
 | --- | --- |
 | Single named signature, no `*`/`**`/`...` | Standard template (no `@overload`) |
 | Uses anonymous `*`, `**`, or `...` | `@overload` required |
+| Private arbitrary keyword collector | Neutral splat name plus pseudo-option `key` |
 | Multiple call shapes (different params and/or return types) | One `@overload` per shape |
 | Shared errors across all call shapes | Top-level `@raise` once |
 | Error only for specific call shape | `@raise` only in that overload |
