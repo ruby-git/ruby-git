@@ -179,7 +179,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/worktree/unlock.rb'
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/configuring.rb'
-    - 'lib/git/execution_context.rb'
     - 'lib/git/execution_context/repository.rb'
     - 'lib/git/object.rb'
     - 'lib/git/remote.rb'
