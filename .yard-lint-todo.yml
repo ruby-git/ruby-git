@@ -14,7 +14,8 @@ Documentation/UndocumentedMethodArguments:
   Exclude:
     - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
-    - 'lib/git/encoding_utils.rb'
+    - 'lib/git/diff_path_status.rb'
+    - 'lib/git/diff_stats.rb'
     - 'lib/git/escaped_path.rb'
     - 'lib/git/log.rb'
     - 'lib/git/parsers/diff.rb'
@@ -32,7 +33,8 @@ Documentation/UndocumentedObjects:
   Exclude:
     - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
-    - 'lib/git/encoding_utils.rb'
+    - 'lib/git/config.rb'
+    - 'lib/git/errors.rb'
     - 'lib/git/escaped_path.rb'
     - 'lib/git/log.rb'
     - 'lib/git/parsers/branch.rb'
