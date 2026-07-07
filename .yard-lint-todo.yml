@@ -174,7 +174,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/worktree/repair.rb'
     - 'lib/git/commands/worktree/unlock.rb'
     - 'lib/git/commands/write_tree.rb'
-    - 'lib/git/configuring.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
     - 'lib/git/repository/branching.rb'
@@ -191,7 +190,6 @@ Documentation/UndocumentedOptions:
 # Tags validators
 Tags/OptionTags:
   Exclude:
-    - 'lib/git/configuring.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
     - 'lib/git/repository/branching.rb'

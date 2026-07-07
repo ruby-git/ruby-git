@@ -113,7 +113,25 @@ module Git
     #
     # @param value_regex [String, nil] optional regex to filter by value
     #
-    # @param options [Hash] scope and filter options (see {#config_get})
+    # @param options [Hash] scope and filter options
+    #
+    # @option options [Boolean, nil] :global (nil) read from `~/.gitconfig`
+    #
+    # @option options [Boolean, nil] :system (nil) read from the system config file
+    #
+    # @option options [Boolean, nil] :local (nil) read from `.git/config`
+    #
+    # @option options [Boolean, nil] :worktree (nil) read from the worktree config
+    #
+    # @option options [String, nil] :file (nil) path to a custom config file (alias: `:f`)
+    #
+    # @option options [String, nil] :blob (nil) read from a git blob object
+    #
+    # @option options [Boolean, nil] :includes (nil) follow include directives
+    #
+    # @option options [Boolean, nil] :no_includes (nil) suppress include directives
+    #
+    # @option options [String, nil] :type (nil) enforce a type constraint on the value
     #
     # @return [Array<Git::ConfigEntryInfo>] all entries matching the key
     #
@@ -194,7 +212,25 @@ module Git
     #
     # @param value_regex [String, nil] optional regex to filter by value
     #
-    # @param options [Hash] scope and filter options (see {#config_get})
+    # @param options [Hash] scope and filter options
+    #
+    # @option options [Boolean, nil] :global (nil) read from `~/.gitconfig`
+    #
+    # @option options [Boolean, nil] :system (nil) read from the system config file
+    #
+    # @option options [Boolean, nil] :local (nil) read from `.git/config`
+    #
+    # @option options [Boolean, nil] :worktree (nil) read from the worktree config
+    #
+    # @option options [String, nil] :file (nil) path to a custom config file (alias: `:f`)
+    #
+    # @option options [String, nil] :blob (nil) read from a git blob object
+    #
+    # @option options [Boolean, nil] :includes (nil) follow include directives
+    #
+    # @option options [Boolean, nil] :no_includes (nil) suppress include directives
+    #
+    # @option options [String, nil] :type (nil) enforce a type constraint on the value
     #
     # @return [Array<Git::ConfigEntryInfo>] all entries whose key matches the regex
     #
@@ -227,7 +263,25 @@ module Git
     #
     # @param url [String] the URL to match against
     #
-    # @param options [Hash] scope and filter options (see {#config_get})
+    # @param options [Hash] scope and filter options
+    #
+    # @option options [Boolean, nil] :global (nil) read from `~/.gitconfig`
+    #
+    # @option options [Boolean, nil] :system (nil) read from the system config file
+    #
+    # @option options [Boolean, nil] :local (nil) read from `.git/config`
+    #
+    # @option options [Boolean, nil] :worktree (nil) read from the worktree config
+    #
+    # @option options [String, nil] :file (nil) path to a custom config file (alias: `:f`)
+    #
+    # @option options [String, nil] :blob (nil) read from a git blob object
+    #
+    # @option options [Boolean, nil] :includes (nil) follow include directives
+    #
+    # @option options [Boolean, nil] :no_includes (nil) suppress include directives
+    #
+    # @option options [String, nil] :type (nil) enforce a type constraint on the value
     #
     # @return [Array<Git::ConfigEntryInfo>] all entries matching the URL; `origin` is `nil` on each
     #
@@ -260,7 +314,25 @@ module Git
     #   entries = repo.config_list
     #   entries.first.scope  # => "local"
     #
-    # @param options [Hash] scope and filter options (see {#config_get})
+    # @param options [Hash] scope and filter options
+    #
+    # @option options [Boolean, nil] :global (nil) read from `~/.gitconfig`
+    #
+    # @option options [Boolean, nil] :system (nil) read from the system config file
+    #
+    # @option options [Boolean, nil] :local (nil) read from `.git/config`
+    #
+    # @option options [Boolean, nil] :worktree (nil) read from the worktree config
+    #
+    # @option options [String, nil] :file (nil) path to a custom config file (alias: `:f`)
+    #
+    # @option options [String, nil] :blob (nil) read from a git blob object
+    #
+    # @option options [Boolean, nil] :includes (nil) follow include directives
+    #
+    # @option options [Boolean, nil] :no_includes (nil) suppress include directives
+    #
+    # @option options [String, nil] :type (nil) enforce a type constraint on the value
     #
     # @return [Array<Git::ConfigEntryInfo>] all visible config entries
     #
@@ -422,7 +494,7 @@ module Git
 
     # @overload config_replace_all(name, value, value_regex = nil, **options)
     #
-    #   Replace all values matching a key (and optional value regex)
+    #   Replace all values matching a key and optional value regex
     #
     #   Wraps `git config --replace-all`.
     #
@@ -642,18 +714,20 @@ module Git
     module Private
       module_function
 
-      # Validate that `options` contains only keys listed in `allowed`
+      # Validate that candidate option keys are listed in `allowed`
       #
       # @param allowed [Array<Symbol>] the permitted option keys
       #
-      # @param options [Hash] the options hash provided by the caller
+      # @param candidate_keywords [Hash<Symbol, Object>] the keywords to validate
+      #
+      # @option candidate_keywords [Object] key a candidate keyword value
       #
       # @return [void]
       #
-      # @raise [ArgumentError] when `options` contains any key not in `allowed`
+      # @raise [ArgumentError] when any candidate key is not in `allowed`
       #
-      def assert_valid_opts!(allowed, **options)
-        unknown = options.keys - allowed
+      def assert_valid_opts!(allowed, **candidate_keywords)
+        unknown = candidate_keywords.keys - allowed
         return if unknown.empty?
 
         raise ArgumentError, "Unknown options: #{unknown.join(', ')}"
