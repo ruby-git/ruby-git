@@ -10,6 +10,7 @@ adherence to the Anthropic skill-authoring best practices.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [Input](#input)
@@ -76,11 +77,16 @@ skill is selected from potentially hundreds of available skills.
 
 ### 3. Body structure and size
 
-- [ ] SKILL.md body is **under 600 lines** (optimal performance threshold)
-- [ ] If approaching the limit, content is split into separate reference files
+- [ ] SKILL.md body targets **under 500 lines** and is reviewed carefully above
+      600 lines
+- [ ] Exceeding the target is justified when splitting always-needed workflow or
+      review rules would make the skill less effective
+- [ ] If approaching the limit, situational content is split into separate
+      reference files before core workflows or checklists are split
 - [ ] Reference files are at most **one level deep** from SKILL.md (no
       deeply-nested chains like SKILL → A.md → B.md → actual content)
 - [ ] Reference files longer than 100 lines include a table of contents
+- [ ] Reference files state their purpose and when the agent should load them
 
 ### 4. Conciseness
 
@@ -108,6 +114,10 @@ Match instruction specificity to task fragility:
 
 - [ ] SKILL.md serves as an overview / table of contents
 - [ ] Detailed materials are in separate files loaded only when needed
+- [ ] Mandatory workflow steps, validation loops, and review checklist items stay
+      in SKILL.md even when detailed examples move to references
+- [ ] Situational, element-specific, type-specific, or platform-specific rules
+      are good candidates for reference files
 - [ ] File names are descriptive (not `doc1.md`, `file2.md`)
 - [ ] Directory structure is organized by domain or feature
 
@@ -119,15 +129,26 @@ Match instruction specificity to task fragility:
       (run validator → fix errors → repeat until clean)
 - [ ] Decision points use conditional workflow patterns (if X → workflow A,
       if Y → workflow B)
+- [ ] For standards and review skills, rules are mandatory unless explicitly
+      marked `Optional`; advisory skills consistently distinguish requirements,
+      recommendations, and examples
 
 ### 8. Content quality
 
 - [ ] No time-sensitive information (dates that will become stale); if legacy
       context is needed, it is in a collapsible "old patterns" section
 - [ ] Consistent terminology throughout (one term per concept, not synonyms)
+- [ ] Named thresholds, modes, phases, or terms are defined before first use and
+      have one authoritative definition
 - [ ] Examples are concrete, not abstract
+- [ ] Examples and domain facts are technically accurate; repo-specific skills
+      use real project patterns where practical
 - [ ] All file paths use forward slashes (no Windows-style backslashes)
 - [ ] No "voodoo constants" — every magic number or config value is justified
+- [ ] Important rule sections use real markdown headings, not bold paragraphs as
+      pseudo-headings
+- [ ] Duplicate rationale and repeated examples are removed, while short
+      normative checklist rules remain self-contained
 
 ### 9. Cross-skill consistency
 
@@ -138,8 +159,12 @@ When reviewing multiple skills in the same repository:
 - [ ] Shared policies (branch rules, commit conventions, quality gates,
       changelog policy) do not contradict each other
 - [ ] Cross-skill links in `## Related skills` resolve to existing files
+- [ ] Intra-skill links, cross-skill deep links, table-of-contents anchors, and
+      referenced files resolve after heading or file moves
 - [ ] Every skill referenced in `.github/copilot-instructions.md`'s routing
       table resolves to an existing `.github/skills/*/SKILL.md` file
+- [ ] Skills that extend other skills clearly state what they inherit, override,
+      or add
 - [ ] Stop/ask checkpoints are used consistently for comparable risk levels
 
 ### 10. Discoverability sections
@@ -182,7 +207,7 @@ Key principles distilled:
 | No time-sensitive info | Avoid dates that will become stale |
 | Consistent terminology | One term per concept throughout |
 | One-level references | No deeply nested file chains |
-| Under 600 lines | Split if approaching the limit |
+| Size targets | Target under 500 lines; review carefully above 600 lines |
 | Test with real usage | Iterate based on observed agent behavior |
 
 > **Branch workflow:** Implement any fixes on a feature branch. Never commit or

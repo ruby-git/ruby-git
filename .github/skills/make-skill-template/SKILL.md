@@ -9,11 +9,19 @@ A meta-skill for creating new Agent Skills. Use this skill when you need to scaf
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Related skills](#related-skills)
 - [When to Use This Skill](#when-to-use-this-skill)
 - [Prerequisites](#prerequisites)
 - [Creating a New Skill](#creating-a-new-skill)
+  - [Step 1: Create the Skill Directory](#step-1-create-the-skill-directory)
+  - [Step 2: Generate SKILL.md with Frontmatter](#step-2-generate-skillmd-with-frontmatter)
+    - [Frontmatter Field Requirements](#frontmatter-field-requirements)
+    - [Description Best Practices](#description-best-practices)
+  - [Step 3: Write the Skill Body](#step-3-write-the-skill-body)
+  - [Step 4: Add Optional Directories (If Needed)](#step-4-add-optional-directories-if-needed)
+- [Skill Body Organization](#skill-body-organization)
 - [Example: Complete Skill Structure](#example-complete-skill-structure)
 - [Quick Start: Duplicate This Template](#quick-start-duplicate-this-template)
 - [Validation Checklist](#validation-checklist)
@@ -54,7 +62,7 @@ check discoverability quality before committing.
 
 Create a new folder with a lowercase, hyphenated name:
 
-```
+```text
 .github/skills/<skill-name>/
 └── SKILL.md          # Required
 ```
@@ -114,6 +122,17 @@ After the frontmatter, add markdown instructions. Recommended sections:
 | `## Troubleshooting` | Common issues and solutions |
 | `## References` | Links to bundled docs |
 
+For standards and review skills, rules are mandatory unless explicitly marked
+`Optional`. For advisory skills, distinguish requirements, recommendations, and
+examples with consistent labels.
+
+Define named thresholds, modes, phases, or terms before first use, and keep one
+authoritative definition for each concept.
+
+Use real markdown headings for durable rule sections. Avoid bold paragraphs as
+pseudo-headings when the section may need a table-of-contents entry, deep link,
+or review reference.
+
 ### Step 4: Add Optional Directories (If Needed)
 
 | Folder | Purpose | When to Use |
@@ -123,9 +142,35 @@ After the frontmatter, add markdown instructions. Recommended sections:
 | `assets/` | Static files used AS-IS | Images, fonts, templates |
 | `templates/` | Starter code agent modifies | Scaffolds to extend |
 
+## Skill Body Organization
+
+Target `SKILL.md` under 500 lines; review carefully above 600 lines. Exceeding
+the target is acceptable when splitting always-needed workflow or review rules
+would make the skill less effective. Split situational references first.
+
+Keep these in `SKILL.md`:
+
+- Routing, prerequisites, and precedence rules
+- The main workflow and required feedback loops
+- Mandatory validation or review checklists
+- Rules needed on nearly every invocation
+
+Move these to reference files:
+
+- Element-specific, type-specific, or platform-specific rules
+- Long examples and templates
+- Rare edge cases and background material
+- Appendices or migration notes
+
+Each reference file should state its purpose and when the agent should load it.
+Keep references one level deep from `SKILL.md`.
+
+When one skill extends another, state what it inherits, overrides, or adds. Link
+to the parent skill or reference file and keep child-skill overrides narrow.
+
 ## Example: Complete Skill Structure
 
-```
+```text
 my-awesome-skill/
 ├── SKILL.md                    # Required instructions
 ├── LICENSE.txt                 # Optional license file
@@ -158,7 +203,12 @@ my-awesome-skill/
 - [ ] `description` is 10-1024 characters
 - [ ] `description` explains WHAT and WHEN
 - [ ] `description` is wrapped in single quotes
-- [ ] Body content is under 500 lines
+- [ ] Body content targets under 500 lines and is reviewed carefully above 600 lines
+- [ ] Always-needed workflow and review rules remain in `SKILL.md`
+- [ ] Situational details are split into reference files with clear load conditions
+- [ ] Named thresholds, modes, phases, or terms are defined before first use
+- [ ] Standards/review rules are mandatory unless explicitly marked `Optional`
+- [ ] Deep links, TOC anchors, and referenced files resolve after heading changes
 - [ ] Bundled assets are under 5MB each
 
 ## Troubleshooting

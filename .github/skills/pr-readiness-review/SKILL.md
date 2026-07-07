@@ -5,12 +5,15 @@ description: "Performs a comprehensive pre-PR readiness review covering tests, c
 
 # PR Readiness Review Workflow
 
-Use this at the end of implementation to prepare for PR submission:
+Use this at the end of implementation to prepare for PR submission. Example
+request:
 
-**"I've completed the implementation. Please perform a comprehensive PR readiness review."**
+> I've completed the implementation. Please perform a comprehensive PR readiness
+> review.
 
 ## Contents
 
+- [Contents](#contents)
 - [How to use this skill](#how-to-use-this-skill)
 - [Prerequisites](#prerequisites)
 - [Related skills](#related-skills)
@@ -50,16 +53,21 @@ Before starting, you **MUST** load the following skill(s) in their entirety:
   unit/integration test conventions for `Git::Repository::*` facade methods
 - [Facade YARD Documentation](../facade-yard-documentation/SKILL.md) — verify
   facade module/method documentation completeness and consistency
+- [Reviewing Skills](../reviewing-skills/SKILL.md) — audit skill quality,
+  discoverability, reference structure, and cross-skill links when skill files
+  change
 
 ## 1. Run Final Validation
 
 Execute and report results for:
+
 - `bundle exec rake default` - all tests and linters must pass
 - Check test output for any Ruby warnings
 
 ## 2. Verify Testing Quality
 
 **Unit Tests (Critical):**
+
 - [ ] **100% coverage of all changed code** - every branch, edge case, error condition
 - [ ] All external dependencies properly mocked (execution_context, git commands)
 - [ ] Each test verifies one specific behavior
@@ -67,6 +75,7 @@ Execute and report results for:
 - [ ] Test only through public interfaces (see RSpec Unit Testing Standards Rule 6)
 
 **Integration Tests (Essential Only):**
+
 - [ ] **Minimal and purposeful** - only test what unit tests cannot verify
 - [ ] Each test validates one specific git interaction pattern
 - [ ] Tests verify mocked assumptions match real git behavior
@@ -74,6 +83,7 @@ Execute and report results for:
 - [ ] Follow CONTRIBUTING.md guidelines: test gem's interaction with git, not git itself
 
 **Command Tests (if any `Git::Commands::*` specs are included):**
+
 - [ ] Apply the [Command Test Conventions](../command-test-conventions/SKILL.md) skill to
   every new or modified unit and integration spec file for command classes. Resolve
   all findings before proceeding.
@@ -123,6 +133,10 @@ Execute and report results for:
 - [ ] README.md updated if public API changed
 - [ ] Examples are clear and demonstrate common use cases
 - [ ] All `@param`, `@return`, `@raise` tags are accurate
+- [ ] **Skill docs (if any `.github/skills/**` files are included):** Apply the
+  [Reviewing Skills](../reviewing-skills/SKILL.md) skill to every new or
+  modified skill. Verify TOC anchors, relative links, cross-skill deep links,
+  referenced files, and any stated inheritance/override relationships.
 
 ## 7. Verify Branch Placement
 
@@ -143,22 +157,26 @@ history), or recommit (uncommitted changes) — based on the situation.
 Provide a comprehensive report with:
 
 **Implementation Summary:**
+
 - What was implemented and why
 - Key design decisions made
 - Any trade-offs or limitations
 
 **Test Coverage:**
+
 - Unit tests: X examples covering Y scenarios
 - Integration tests: Z examples validating specific git interactions
 - Coverage: 100% of changed lines (or explain gaps)
 - Edge cases tested: [list critical ones]
 
 **Quality Verification:**
+
 - ✅ Items that passed all checks
 - ⚠️ Items that need attention (if any)
 - Reference to relevant documentation verified
 
 **Suggested PR Materials:**
+
 - PR Title: `type: clear description of change`
 - PR Description draft including:
   - Summary of changes
@@ -168,6 +186,7 @@ Provide a comprehensive report with:
   - Checklist from .github/pull_request_template.md
 
 **PR Body Editing Safety:**
+
 - The terminal tool mangles multi-line markdown (backticks, asterisks, newlines) in
   any shell command, including heredocs. Always write the PR body using the
   **`create_file` tool** (the VS Code Copilot agent tool that writes file content
@@ -180,6 +199,7 @@ Provide a comprehensive report with:
 - If the body is garbled, rewrite the file with `create_file` and re-run `gh pr edit`
 
 **Next Steps:**
+
 - Any remaining items to address before PR submission
 - Confirmation that all checklist items are complete
 - Make sure to create a feature branch for the PR -- never push directly to main
