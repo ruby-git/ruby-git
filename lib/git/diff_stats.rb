@@ -13,7 +13,22 @@ module Git
   #
   # @api public
   class DiffStats
+    # Initializes diff-stats state for a tree comparison.
+    #
     # @private
+    #
+    # @param base [Git::Repository] the git object used to fetch diff stats
+    #
+    # @param from [String] the first commit or object to compare
+    #
+    # @param to [String, nil] the second commit or object to compare
+    #
+    # @param path_limiter [String, Pathname, Array<String, Pathname>, nil]
+    #   path(s) to limit the diff
+    #
+    # @return [void]
+    #
+    # @raise [ArgumentError] when `from` or `to` starts with `"-"`
     def initialize(base, from, to, path_limiter = nil)
       # Eagerly check for invalid arguments
       [from, to].compact.each do |arg|

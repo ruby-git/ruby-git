@@ -14,7 +14,6 @@ Documentation/UndocumentedMethodArguments:
   Exclude:
     - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
-    - 'lib/git/diff_stats.rb'
     - 'lib/git/encoding_utils.rb'
     - 'lib/git/escaped_path.rb'
     - 'lib/git/log.rb'
