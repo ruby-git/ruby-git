@@ -139,7 +139,7 @@ module Git
     # Archives this branch and writes the result to a file
     #
     # @example Archive to a tar file
-    #   git.branch('main').archive('/tmp/main.tar')
+    #   git.branch('main').archive('/tmp/main.tar', format: 'tar')
     #
     # @example Archive to a zip file
     #   git.branch('main').archive('/tmp/main.zip', format: 'zip')
@@ -150,6 +150,21 @@ module Git
     # @param file [String] path to the destination archive file
     #
     # @param opts [Hash] archive options (see {Git::Repository#archive})
+    #
+    # @option opts [String] :format ('zip') archive format for this wrapper:
+    #   `'tar'`, `'zip'`, or `'tgz'`
+    #
+    # @option opts [String] :prefix (nil) prefix prepended to every filename
+    #   in the archive
+    #
+    # @option opts [String] :path (nil) path within the tree to include in the
+    #   archive
+    #
+    # @option opts [String] :remote (nil) retrieve the archive from a remote
+    #   repository
+    #
+    # @option opts [Boolean, nil] :add_gzip (nil) apply gzip compression after
+    #   writing the archive; set automatically when `format: 'tgz'` is given
     #
     # @return [String] the path to the written archive file
     #
