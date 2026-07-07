@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git/commands/base.rb'
     - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/diff_path_status.rb'
@@ -34,7 +33,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git/commands/base.rb'
     - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/config.rb'

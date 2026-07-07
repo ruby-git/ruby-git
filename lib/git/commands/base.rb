@@ -162,22 +162,43 @@ module Git
           raise ArgumentError, 'requires_git_version requires min or before:' unless min || before_version
 
           min_version = min ? parse_version(min, 'min') : nil
-          before_parsed = before_version ? parse_version(before_version, 'before') : nil
+          before_parsed = before_version ? parse_version(before_version, 'before:') : nil
 
           Git::VersionConstraint.new(min: min_version, before: before_parsed)
         end
 
+        # Parse a version string into a Git version object
+        #
+        # @param version [String] version string to parse
+        #
+        # @param key_name [String] argument name used in validation errors
+        #
+        # @return [Git::Version] the parsed version
+        #
+        # @raise [ArgumentError] if the version format is invalid
+        #
         def parse_version(version, key_name)
           validate_version_format!(version, key_name)
           Git::Version.parse(version)
         end
 
+        # Validate a version string uses the required format
+        #
+        # @param version [Object] value to validate
+        #
+        # @param context [String, nil] argument name included in validation errors
+        #
+        # @return [void]
+        #
+        # @raise [ArgumentError] if the value is not a `major.minor.patch` version string
+        #
         def validate_version_format!(version, context = nil)
           return if version.is_a?(String) && version.match?(/\A\d+\.\d+\.\d+\z/)
 
-          ctx = context ? " for #{context}" : ''
+          subject = context || 'a version'
           raise ArgumentError,
-                "requires_git_version expects a 'major.minor.patch' string#{ctx}, got: #{version.inspect}"
+                "requires_git_version expects #{subject} to be a 'major.minor.patch' version string, " \
+                "got: #{version.inspect}"
         end
       end
 
@@ -226,10 +247,22 @@ module Git
 
       private
 
+      # Return the argument definition declared by this command class
+      #
+      # @return [Git::Commands::Arguments] the argument definition
+      #
+      # @raise [ArgumentError] if no argument definition is declared
+      #
       def args_definition
         self.class.args_definition || raise(ArgumentError, "arguments not defined for #{self.class.name}")
       end
 
+      # Execute a bound git command through the execution context
+      #
+      # @param bound [Git::Commands::Arguments::Bound] bound command arguments
+      #
+      # @return [Git::CommandLineResult] the command result
+      #
       def execute_command(bound)
         exec_opts = execution_opts(bound)
 
@@ -240,6 +273,12 @@ module Git
         end
       end
 
+      # Build execution options for a bound command
+      #
+      # @param bound [Git::Commands::Arguments::Bound] bound command arguments
+      #
+      # @return [Hash] execution options for the command line
+      #
       def execution_opts(bound)
         caller_env = bound.execution_options.fetch(:env, {}) || {}
         merged_env = caller_env.merge(env)
@@ -247,6 +286,12 @@ module Git
         merged_env.empty? ? opts : opts.merge(env: merged_env)
       end
 
+      # Build options for captured command output
+      #
+      # @param exec_opts [Hash] execution options for the command line
+      #
+      # @return [Hash] options for captured command output
+      #
       def capturing_opts(exec_opts)
         opts = exec_opts
         opts = opts.merge(normalize: false) unless normalize_captured_stdout?
@@ -304,10 +349,22 @@ module Git
         {}
       end
 
+      # Return the allowed exit status range for this command
+      #
+      # @return [Range] range of accepted exit status values
+      #
       def allowed_exit_status_range
         self.class.allowed_exit_status_range || (0..0)
       end
 
+      # Validate that a command result has an accepted exit status
+      #
+      # @param result [Git::CommandLineResult] command result to validate
+      #
+      # @return [void]
+      #
+      # @raise [Git::FailedError] if the result exit status is not accepted
+      #
       def validate_exit_status!(result)
         raise Git::FailedError, result unless allowed_exit_status_range.include?(result.status.exitstatus)
       end
@@ -319,6 +376,12 @@ module Git
       # 2. The command has a class-level constraint that isn't satisfied
       #
       # Floor check always runs first and fails fast.
+      #
+      # @param exec_opts [Hash] execution options used to query git version
+      #
+      # @return [void]
+      #
+      # @raise [Git::VersionError] if the installed git version is unsupported
       #
       def validate_version!(exec_opts = {})
         return if self.class.skip_version_validation?
@@ -332,6 +395,14 @@ module Git
         validate_class_version_constraint!(actual_version)
       end
 
+      # Validate that git satisfies the gem-wide minimum version
+      #
+      # @param actual_version [Git::Version] installed git version
+      #
+      # @return [void]
+      #
+      # @raise [Git::VersionError] if the installed git version is too old
+      #
       def validate_floor_version!(actual_version)
         return if actual_version >= Git::MINIMUM_GIT_VERSION
 
@@ -342,6 +413,14 @@ module Git
         )
       end
 
+      # Validate that git satisfies this command class's version constraint
+      #
+      # @param actual_version [Git::Version] installed git version
+      #
+      # @return [void]
+      #
+      # @raise [Git::VersionError] if the installed git version is unsupported
+      #
       def validate_class_version_constraint!(actual_version)
         constraint = self.class.git_version_constraint
         return unless constraint
@@ -401,6 +480,13 @@ module Git
       # Spawns a thread that writes content to writer then closes it.
       # Rescues EPIPE/IOError so the thread exits cleanly when the subprocess
       # closes its stdin early (e.g. on error exit before reading all input).
+      #
+      # @param content [String] text to write to the pipe
+      #
+      # @param writer [IO] write end of the pipe
+      #
+      # @return [Thread] thread writing content to the pipe
+      #
       def start_stdin_writer(content, writer)
         Thread.new do
           writer.write(content) unless content.empty?
