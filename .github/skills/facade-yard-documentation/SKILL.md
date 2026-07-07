@@ -16,6 +16,7 @@ parser, or execution context that implements the behavior.
 
 ## Contents
 
+- [Contents](#contents)
 - [Related skills](#related-skills)
 - [Input](#input)
 - [Reference](#reference)
@@ -27,7 +28,12 @@ parser, or execution context that implements the behavior.
   - [Cross-referencing the implementation](#cross-referencing-the-implementation)
   - [Common issues](#common-issues)
 - [Workflow](#workflow)
+  - [1. Module-level docs](#1-module-level-docs)
+  - [2. Method-level docs (per method)](#2-method-level-docs-per-method)
+  - [3. Formatting consistency](#3-formatting-consistency)
 - [Output](#output)
+  - [When writing new facade YARD docs](#when-writing-new-facade-yard-docs)
+  - [When reviewing existing facade YARD docs](#when-reviewing-existing-facade-yard-docs)
 
 ## Related skills
 
@@ -82,7 +88,7 @@ end
 ```
 
 Module-level tags appear in the order required by
-[YARD Documentation — Modules](../yard-documentation/SKILL.md#element-specific-rules):
+[YARD element rules — Modules](../yard-documentation/element-rules.md#modules):
 `@note`, `@deprecated`, `@see`, `@api`. (Facade modules do not use module-level
 `@example` — see the override note below.)
 
@@ -104,7 +110,7 @@ Do **not** add:
   link is misleading; for single-command modules it is redundant with the
   method-level link.
 - `@example` blocks at the module level — **facade-specific override of
-  [YARD Documentation — Modules](../yard-documentation/SKILL.md#element-specific-rules)**,
+  [YARD element rules — Modules](../yard-documentation/element-rules.md#modules)**,
   which permits module-level `@example` when a module provides standalone
   methods. Facade modules do provide standalone methods, but every facade
   method already carries its own `@example`, so a module-level example would
