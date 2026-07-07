@@ -19,7 +19,6 @@ Documentation/UndocumentedMethodArguments:
     - 'lib/git/encoding_utils.rb'
     - 'lib/git/escaped_path.rb'
     - 'lib/git/log.rb'
-    - 'lib/git/object.rb'
     - 'lib/git/parsers/diff.rb'
     - 'lib/git/parsers/stash.rb'
     - 'lib/git/parsers/tag.rb'
@@ -40,7 +39,6 @@ Documentation/UndocumentedObjects:
     - 'lib/git/errors.rb'
     - 'lib/git/escaped_path.rb'
     - 'lib/git/log.rb'
-    - 'lib/git/object.rb'
     - 'lib/git/parsers/branch.rb'
     - 'lib/git/parsers/diff.rb'
     - 'lib/git/parsers/stash.rb'
@@ -177,7 +175,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/worktree/unlock.rb'
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/configuring.rb'
-    - 'lib/git/object.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
     - 'lib/git/repository/branching.rb'
@@ -195,7 +192,6 @@ Documentation/UndocumentedOptions:
 Tags/OptionTags:
   Exclude:
     - 'lib/git/configuring.rb'
-    - 'lib/git/object.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
     - 'lib/git/repository/branching.rb'

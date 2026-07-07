@@ -10,7 +10,17 @@ module Git
   class Object
     # A base class for all Git objects
     class AbstractObject
-      attr_accessor :objectish, :type, :mode
+      # @return [String] the object name, SHA, ref, or treeish path
+      #
+      attr_accessor :objectish
+
+      # @return [String, nil] the git object type
+      #
+      attr_accessor :type
+
+      # @return [String, nil] the file mode from tree listings
+      #
+      attr_accessor :mode
 
       # Sets the size of the git object in bytes
       #
@@ -21,6 +31,12 @@ module Git
       #
       attr_writer :size
 
+      # Creates a lazy wrapper for a git object
+      #
+      # @param base [Git::Repository] the repository used to query object data
+      #
+      # @param objectish [String, #to_s] the object name, SHA, ref, or treeish path
+      #
       def initialize(base, objectish)
         @base = base
         @objectish = objectish.to_s
@@ -30,10 +46,18 @@ module Git
         @sha = nil
       end
 
+      # Returns the resolved SHA for this object
+      #
+      # @return [String] the resolved object SHA
+      #
       def sha
         @sha ||= object_repository.rev_parse(@objectish)
       end
 
+      # Returns the size of this object in bytes
+      #
+      # @return [Integer] the object size in bytes
+      #
       def size
         @size ||= object_repository.cat_file_size(@objectish)
       end
@@ -83,22 +107,72 @@ module Git
         end
       end
 
+      # Returns the object contents split into lines
+      #
+      # @return [Array<String>] the raw contents split on newline boundaries
+      #
       def contents_array
         contents.split("\n")
       end
 
+      # Returns the original object expression
+      #
+      # @return [String] the object name, SHA, ref, or treeish path
+      #
       def to_s
         @objectish
       end
 
+      # Searches this object for matching tracked file contents
+      #
+      # Always searches this object's resolved SHA. A caller-provided `:object`
+      # option is ignored.
+      #
+      # @param string [String] the pattern to search for
+      #
+      # @param path_limiter [String, Pathname, Array<String, Pathname>, nil]
+      #   path or paths to limit the search to
+      #
+      # @param opts [Hash] additional grep options
+      #
+      # @option opts [Boolean, nil] :ignore_case (nil) ignore case
+      #   distinctions in the pattern and file contents
+      #
+      #   Alias: :i
+      #
+      # @option opts [Boolean, nil] :invert_match (nil) select non-matching
+      #   lines
+      #
+      #   Alias: :v
+      #
+      # @option opts [Boolean, nil] :extended_regexp (nil) use POSIX extended
+      #   regular expressions for the pattern
+      #
+      #   Alias: :E
+      #
+      # @return [Hash<String, Array<Array(Integer, String)>>] matching lines by path
+      #
       def grep(string, path_limiter = nil, opts = {})
         object_repository.grep(string, path_limiter, opts.merge(object: sha))
       end
 
+      # Returns a diff from this object to another object
+      #
+      # @param objectish [String] the object name, SHA, ref, or treeish path to diff
+      #   against
+      #
+      # @return [Git::Diff] the diff between the two objects
+      #
       def diff(objectish)
         Git::Diff.new(@base, @objectish, objectish)
       end
 
+      # Returns a log scoped to this object
+      #
+      # @param count [Integer] maximum number of commits to include
+      #
+      # @return [Git::Log] the scoped log object
+      #
       def log(count = 30)
         Git::Log.new(@base, count).object(@objectish)
       end
@@ -126,6 +200,20 @@ module Git
       #
       # @param opts [Hash] archive options (see {Git::Repository#archive})
       #
+      # @option opts [String] :format ('zip') archive format: `'tar'`, `'zip'`,
+      #   or `'tgz'`
+      #
+      # @option opts [String] :prefix (nil) prefix prepended to every filename
+      #   in the archive
+      #
+      # @option opts [String] :path (nil) path within the tree to include
+      #
+      # @option opts [String] :remote (nil) retrieve the archive from a remote
+      #   repository
+      #
+      # @option opts [Boolean, nil] :add_gzip (nil) apply gzip compression after
+      #   writing the archive
+      #
       # @return [String] the path to the written archive file
       #
       # @raise [ArgumentError] when archive options or destination path are invalid
@@ -138,17 +226,33 @@ module Git
         object_repository.archive(@objectish, file, opts)
       end
 
+      # Returns whether this object is a tree
+      #
+      # @return [Boolean] `true` when this object is a tree
+      #
       def tree? = false
 
+      # Returns whether this object is a blob
+      #
+      # @return [Boolean] `true` when this object is a blob
+      #
       def blob? = false
 
+      # Returns whether this object is a commit
+      #
+      # @return [Boolean] `true` when this object is a commit
+      #
       def commit? = false
 
+      # Returns whether this object is a tag
+      #
+      # @return [Boolean] `true` when this object is a tag
+      #
       def tag? = false
 
       private
 
-      # @return [Git::Repository]
+      # @return [Git::Repository] the repository used for object lookup
       #
       def object_repository
         @base
@@ -157,11 +261,23 @@ module Git
 
     # A Git blob object
     class Blob < AbstractObject
+      # Creates a blob object wrapper
+      #
+      # @param base [Git::Repository] the repository used to query object data
+      #
+      # @param sha [String] the blob SHA or object expression
+      #
+      # @param mode [String, nil] the file mode from tree listings
+      #
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
       end
 
+      # Returns whether this object is a blob
+      #
+      # @return [Boolean] `true`
+      #
       def blob?
         true
       end
@@ -169,6 +285,14 @@ module Git
 
     # A Git tree object
     class Tree < AbstractObject
+      # Creates a tree object wrapper
+      #
+      # @param base [Git::Repository] the repository used to query object data
+      #
+      # @param sha [String] the tree SHA or object expression
+      #
+      # @param mode [String, nil] the file mode from tree listings
+      #
       def initialize(base, sha, mode = nil)
         super(base, sha)
         @mode = mode
@@ -176,29 +300,53 @@ module Git
         @blobs = nil
       end
 
+      # Returns child blobs and subtrees keyed by name
+      #
+      # @return [Hash<String, Git::Object::AbstractObject>] child objects by name
+      #
       def children
         blobs.merge(subtrees)
       end
 
+      # Returns blobs directly under this tree
+      #
+      # @return [Hash<String, Git::Object::Blob>] blob objects by filename
+      #
       def blobs
         @blobs ||= check_tree[:blobs]
       end
       alias files blobs
 
+      # Returns subtrees directly under this tree
+      #
+      # @return [Hash<String, Git::Object::Tree>] subtree objects by directory name
+      #
       def trees
         @trees ||= check_tree[:trees]
       end
       alias subtrees trees
       alias subdirectories trees
 
+      # Returns the full tree listing for this tree
+      #
+      # @return [Hash] parsed recursive tree data
+      #
       def full_tree
         object_repository.full_tree(@objectish)
       end
 
+      # Returns the maximum depth of this tree
+      #
+      # @return [Integer] maximum tree depth
+      #
       def depth
         object_repository.tree_depth(@objectish)
       end
 
+      # Returns whether this object is a tree
+      #
+      # @return [Boolean] `true`
+      #
       def tree?
         true
       end
@@ -226,6 +374,14 @@ module Git
 
     # A Git commit object
     class Commit < AbstractObject
+      # Creates a commit object wrapper
+      #
+      # @param base [Git::Repository] the repository used to query object data
+      #
+      # @param sha [String] the commit SHA or object expression
+      #
+      # @param init [Hash, nil] parsed commit data used to initialize eagerly
+      #
       def initialize(base, sha, init = nil)
         super(base, sha)
         @tree = nil
@@ -238,20 +394,37 @@ module Git
         from_data(init)
       end
 
+      # Returns the commit message
+      #
+      # @return [String] the commit message without the trailing newline
+      #
       def message
         check_commit
         @message
       end
 
+      # Returns the symbolic name for this commit
+      #
+      # @return [String] the name produced by `git name-rev`
+      #
       def name
         object_repository.name_rev(sha)
       end
 
+      # Returns the tree for this commit
+      #
+      # @return [Git::Object::Tree] the commit tree
+      #
       def gtree
         check_commit
         Tree.new(@base, @tree)
       end
 
+      # Returns the first parent commit
+      #
+      # @return [Git::Object::Commit, nil] the first parent commit, or `nil`
+      #   for a root commit
+      #
       def parent
         parents.first
       end
@@ -268,6 +441,10 @@ module Git
         @author
       end
 
+      # Returns the author date
+      #
+      # @return [Time] the author timestamp
+      #
       def author_date
         author.date
       end
@@ -278,15 +455,31 @@ module Git
         @committer
       end
 
+      # Returns the committer date
+      #
+      # @return [Time] the committer timestamp
+      #
       def committer_date
         committer.date
       end
       alias date committer_date
 
+      # Returns the diff between this commit and its first parent
+      #
+      # @return [Git::Diff] the diff from the first parent to this commit
+      #
       def diff_parent
         diff(parent)
       end
 
+      # Sets parsed commit data on this commit object
+      #
+      # @param data [Hash] parsed commit data
+      #
+      # @return [void]
+      #
+      # @deprecated use {#from_data} instead
+      #
       def set_commit(data) # rubocop:disable Naming/AccessorMethodName
         Git::Deprecation.warn(
           'Git::Object::Commit#set_commit is deprecated and will be removed in a future version. ' \
@@ -295,6 +488,12 @@ module Git
         from_data(data)
       end
 
+      # Loads parsed commit data into this commit object
+      #
+      # @param data [Hash] parsed commit data from `git cat-file commit`
+      #
+      # @return [void]
+      #
       def from_data(data)
         @sha ||= data['sha']
         @committer = Git::Author.new(data['committer'])
@@ -304,6 +503,10 @@ module Git
         @message = data['message'].chomp
       end
 
+      # Returns whether this object is a commit
+      #
+      # @return [Boolean] `true`
+      #
       def commit?
         true
       end
@@ -327,6 +530,8 @@ module Git
     # the date when the tag was created, along with a message.
     #
     class Tag < AbstractObject
+      # @return [String] the tag name
+      #
       attr_accessor :name
 
       # @overload initialize(base, name)
@@ -357,19 +562,37 @@ module Git
         @loaded = false
       end
 
+      # Returns whether this tag is annotated
+      #
+      # @return [Boolean] `true` when the tag has an annotated tag object
+      #
       def annotated?
         @annotated = @annotated.nil? ? (object_repository.cat_file_type(name) == 'tag') : @annotated
       end
 
+      # Returns the tag message
+      #
+      # @return [String, nil] the annotated tag message, or `nil` for a
+      #   lightweight tag
+      #
       def message
         check_tag
         @message
       end
 
+      # Returns whether this object is a tag
+      #
+      # @return [Boolean] `true`
+      #
       def tag?
         true
       end
 
+      # Returns the tagger identity
+      #
+      # @return [Git::Author, nil] the tagger for an annotated tag, or `nil`
+      #   for a lightweight tag
+      #
       def tagger
         check_tag
         @tagger
@@ -377,6 +600,10 @@ module Git
 
       private
 
+      # Loads annotated tag data when available
+      #
+      # @return [void]
+      #
       def check_tag
         return if @loaded
 
@@ -394,6 +621,17 @@ module Git
 
     # if we're calling this, we don't know what type it is yet
     # so this is our little factory method
+    #
+    # @param base [Git::Repository] the repository used to query object data
+    #
+    # @param objectish [String] the object name, SHA, ref, or treeish path
+    #
+    # @param type [String, nil] object type hint: `blob`, `commit`, or `tree`
+    #
+    # @param is_tag [Boolean] whether to construct a tag object
+    #
+    # @return [Git::Object::AbstractObject] the concrete object wrapper
+    #
     def self.new(base, objectish, type = nil, is_tag = false) # rubocop:disable Style/OptionalBooleanParameter
       return new_tag(base, objectish) if is_tag
 
@@ -408,12 +646,26 @@ module Git
       klass.new(base, objectish)
     end
 
+    # Creates a tag object through the deprecated factory path
+    #
+    # @param base [Git::Repository] the repository used to query object data
+    #
+    # @param objectish [String] the tag name or SHA
+    #
+    # @return [Git::Object::Tag] the tag object wrapper
+    #
+    # @deprecated use `Git::Object::Tag.new` instead
+    #
     private_class_method def self.new_tag(base, objectish)
       Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
       Git::Object::Tag.new(base, objectish)
     end
 
-    # @return [Git::Repository]
+    # Returns the repository used for object lookup
+    #
+    # @param base [Git::Repository] the repository to return
+    #
+    # @return [Git::Repository] the repository used for object lookup
     #
     private_class_method def self.object_repository_for(base)
       base
