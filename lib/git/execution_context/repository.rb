@@ -116,6 +116,21 @@ module Git
       #
       # @param overrides [Hash] keyword arguments to override in the new instance
       #
+      # @option overrides [String, nil] :git_dir path to the `.git` directory
+      #
+      # @option overrides [String, nil] :git_work_dir path to the working tree
+      #
+      # @option overrides [String, nil] :git_index_file path to the index file
+      #
+      # @option overrides [String, :use_global_config] :binary_path path to the git
+      #   binary
+      #
+      # @option overrides [String, nil, :use_global_config] :git_ssh the SSH
+      #   wrapper path
+      #
+      # @option overrides [Logger, nil] :logger the logger to use in the
+      #   CommandLine layer
+      #
       # @return [Git::ExecutionContext::Repository] the new context
       #
       # @api private
