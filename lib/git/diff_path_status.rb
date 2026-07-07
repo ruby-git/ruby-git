@@ -13,6 +13,19 @@ module Git
     include Enumerable
 
     # @private
+    #
+    # @param base_or_hash [Git::Repository, Hash{String => String}] either a
+    #   repository object for legacy initialization or a pre-fetched name-status hash
+    #
+    # @param from [String, nil] the first commit/object to compare when using
+    #   legacy initialization
+    #
+    # @param to [String, nil] the second commit/object to compare when using
+    #   legacy initialization
+    #
+    # @param path_limiter [String, Pathname, Array, nil] path(s) to limit the
+    #   diff when using legacy initialization
+    #
     def initialize(base_or_hash, from = nil, to = nil, path_limiter = nil)
       if base_or_hash.is_a?(Hash)
         # New form: pre-fetched hash passed directly from Git::Repository::Diffing
