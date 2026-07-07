@@ -222,8 +222,6 @@ module Git
     #
     # @overload command_capturing(*args, **options_hash)
     #
-    #   Runs a git command and returns the result
-    #
     #   Args should exclude the 'git' command itself and global options. Remember to
     #   splat the arguments if given as an array.
     #
@@ -241,64 +239,64 @@ module Git
     #
     #   @param args [Array<String>] the command and its arguments
     #
-    #   @param options_hash [Hash] the options to pass to the command
-    #
-    #   @option options_hash [IO, nil] :in the IO object to use as stdin, or nil to
-    #     inherit the parent process stdin
-    #
-    #     Must be a real IO object with a file descriptor.
-    #
-    #   @option options_hash [IO, String, #write, nil] :out the destination for
-    #     captured stdout
-    #
-    #   @option options_hash [IO, String, #write, nil] :err the destination for
-    #     captured stderr
-    #
-    #   @option options_hash [Boolean, nil] :normalize (true) normalize the output
-    #     encoding to UTF-8
-    #
-    #   @option options_hash [Boolean, nil] :chomp (true) remove trailing newlines
-    #     from the output
-    #
-    #   @option options_hash [Boolean, nil] :merge (false) merge stdout and stderr
-    #     into a single output
-    #
-    #   @option options_hash [String, nil] :chdir the directory to run the command in
-    #
-    #   @option options_hash [Hash] :env additional environment variable overrides
-    #     for this command
-    #
-    #   @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
-    #     non-zero exit
-    #
-    #   @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for
-    #     the command to complete
-    #
-    #     If timeout is nil, the global timeout from {Git::Config} is used.
-    #
-    #     If timeout is zero, the timeout will not be enforced.
-    #
-    #     If the command times out, it is killed via a `SIGKILL` signal and
-    #     `Git::TimeoutError` is raised.
-    #
-    #     If the command does not respond to SIGKILL, it will hang this method.
-    #
     #   @return [Git::CommandLineResult] the result of the command
     #
-    #   @raise [ArgumentError] if an unknown option is passed
+    # @param options_hash [Hash] the options to pass to the command
     #
-    #   @raise [Git::FailedError] if the command failed (when raise_on_failure is
-    #     true)
+    # @option options_hash [IO, nil] :in the IO object to use as stdin, or nil to
+    #   inherit the parent process stdin
     #
-    #   @raise [Git::SignaledError] if the command was signaled
+    #   Must be a real IO object with a file descriptor.
     #
-    #   @raise [Git::TimeoutError] if the command times out
+    # @option options_hash [IO, String, #write, nil] :out the destination for
+    #   captured stdout
     #
-    #   @raise [Git::ProcessIOError] if an exception was raised while collecting
-    #     subprocess output
+    # @option options_hash [IO, String, #write, nil] :err the destination for
+    #   captured stderr
     #
-    #     The exception's `result` attribute is a {Git::CommandLineResult} which will
-    #     contain the result of the command including the exit status, stdout, and stderr.
+    # @option options_hash [Boolean, nil] :normalize (true) normalize the output
+    #   encoding to UTF-8
+    #
+    # @option options_hash [Boolean, nil] :chomp (true) remove trailing newlines
+    #   from the output
+    #
+    # @option options_hash [Boolean, nil] :merge (false) merge stdout and stderr
+    #   into a single output
+    #
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    #
+    # @option options_hash [Hash] :env additional environment variable overrides
+    #   for this command
+    #
+    # @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
+    #   non-zero exit
+    #
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for
+    #   the command to complete
+    #
+    #   If timeout is nil, the global timeout from {Git::Config} is used.
+    #
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and
+    #   `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
+    #
+    # @raise [ArgumentError] if an unknown option is passed
+    #
+    # @raise [Git::FailedError] if the command failed (when raise_on_failure is
+    #   true)
+    #
+    # @raise [Git::SignaledError] if the command was signaled
+    #
+    # @raise [Git::TimeoutError] if the command times out
+    #
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting
+    #   subprocess output
+    #
+    #   The exception's `result` attribute is a {Git::CommandLineResult} which will
+    #   contain the result of the command including the exit status, stdout, and stderr.
     #
     # @note Individual command classes (under {Git::Commands}) can selectively expose
     #   `:timeout` and `:env` and other options to their callers by declaring them as
@@ -340,58 +338,58 @@ module Git
     #
     #   @param args [Array<String>] the git command and its arguments
     #
-    #   @param options_hash [Hash] the options to pass to the command
-    #
-    #   @option options_hash [IO, nil] :in the IO object to use as stdin, or nil to
-    #     inherit the parent process stdin
-    #
-    #     Must be a real IO object with a file descriptor.
-    #
-    #   @option options_hash [#write, nil] :out destination for streamed stdout
-    #
-    #   @option options_hash [#write, nil] :err an optional additional destination
-    #     to receive stderr output in real time
-    #
-    #     Stderr is always captured internally; when `err:` is supplied, writes are
-    #     teed to both the internal buffer and this destination. `result.stderr`
-    #     always reflects the internal capture.
-    #
-    #   @option options_hash [String, nil] :chdir the directory to run the command in
-    #
-    #   @option options_hash [Hash] :env additional environment variable overrides
-    #     for this command
-    #
-    #   @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
-    #     non-zero exit
-    #
-    #   @option options_hash [Numeric, nil] :timeout
-    #     the maximum seconds to wait for the command to complete
-    #
-    #     If timeout is nil, the global timeout from {Git::Config} is used.
-    #
-    #     If timeout is zero, the timeout will not be enforced.
-    #
-    #     If the command times out, it is killed via a `SIGKILL` signal and
-    #     `Git::TimeoutError` is raised.
-    #
-    #     If the command does not respond to SIGKILL, it will hang this method.
-    #
     #   @return [Git::CommandLineResult] the result of the command
     #
-    #     `result.stdout` will always be `''` — stdout was streamed to `out:`.
+    # @param options_hash [Hash] the options to pass to the command
     #
-    #     `result.stderr` contains any stderr output captured for diagnostics.
+    # @option options_hash [IO, nil] :in the IO object to use as stdin, or nil to
+    #   inherit the parent process stdin
     #
-    #   @raise [ArgumentError] if an unknown option is passed
+    #   Must be a real IO object with a file descriptor.
     #
-    #   @raise [Git::FailedError] if the command failed (when raise_on_failure is true)
+    # @option options_hash [#write, nil] :out destination for streamed stdout
     #
-    #   @raise [Git::SignaledError] if the command was signaled
+    # @option options_hash [#write, nil] :err an optional additional destination
+    #   to receive stderr output in real time
     #
-    #   @raise [Git::TimeoutError] if the command times out
+    #   Stderr is always captured internally; when `err:` is supplied, writes are
+    #   teed to both the internal buffer and this destination. `result.stderr`
+    #   always reflects the internal capture.
     #
-    #   @raise [Git::ProcessIOError] if an exception was raised while collecting
-    #     subprocess output
+    # @option options_hash [String, nil] :chdir the directory to run the command in
+    #
+    # @option options_hash [Hash] :env additional environment variable overrides
+    #   for this command
+    #
+    # @option options_hash [Boolean, nil] :raise_on_failure (true) whether to raise on
+    #   non-zero exit
+    #
+    # @option options_hash [Numeric, nil] :timeout the maximum seconds to wait for
+    #   the command to complete
+    #
+    #   If timeout is nil, the global timeout from {Git::Config} is used.
+    #
+    #   If timeout is zero, the timeout will not be enforced.
+    #
+    #   If the command times out, it is killed via a `SIGKILL` signal and
+    #   `Git::TimeoutError` is raised.
+    #
+    #   If the command does not respond to SIGKILL, it will hang this method.
+    #
+    #   `result.stdout` will always be `''` — stdout was streamed to `out:`.
+    #
+    #   `result.stderr` contains any stderr output captured for diagnostics.
+    #
+    # @raise [ArgumentError] if an unknown option is passed
+    #
+    # @raise [Git::FailedError] if the command failed (when raise_on_failure is true)
+    #
+    # @raise [Git::SignaledError] if the command was signaled
+    #
+    # @raise [Git::TimeoutError] if the command times out
+    #
+    # @raise [Git::ProcessIOError] if an exception was raised while collecting
+    #   subprocess output
     #
     # @see Git::CommandLine::Streaming#run
     #
@@ -435,7 +433,14 @@ module Git
     #
     # Per `Process.spawn` semantics, a value of `nil` unsets the variable.
     #
-    # @param additional_overrides [Hash{String => String, nil}] per-call overrides
+    # @param additional_overrides [Hash{String => String, nil}] per-call
+    #   environment overrides keyed by variable name
+    #
+    #   Pass string environment variable names. Ruby preserves string keys when
+    #   callers forward a string-keyed Hash with `**`.
+    #
+    # @option additional_overrides [String, nil] :"ENV_VAR" value for an arbitrary
+    #   environment variable name
     #
     # @return [Hash{String => String, nil}] the merged environment variable overrides
     #
