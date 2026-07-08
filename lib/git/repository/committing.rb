@@ -59,7 +59,7 @@ module Git
       #
       # @option opts [String] :date (nil) override the author date
       #
-      # @option opts [Boolean, nil] :gpg_sign (nil) GPG-sign the commit
+      # @option opts [Boolean, String, nil] :gpg_sign (nil) GPG-sign the commit
       #
       # @option opts [Boolean, nil] :no_gpg_sign (nil) disable GPG signing
       #
@@ -94,9 +94,34 @@ module Git
       # @example Commit all changes with a message
       #   repo.commit_all('Update everything')
       #
-      # @param message [String] the commit message
+      # @param message [String, nil] the commit message; pass `nil` to omit
+      #   (e.g. when using `:amend` to reuse the previous message)
       #
       # @param opts [Hash] additional options forwarded to {#commit}
+      #
+      # @option opts [Boolean, nil] :all (nil) ignored because this method
+      #   always commits with `all: true`
+      #
+      # @option opts [Boolean, nil] :amend (nil) replace the tip of the current
+      #   branch with a new commit
+      #
+      # @option opts [Boolean, nil] :allow_empty (nil) allow committing with no
+      #   changes
+      #
+      # @option opts [Boolean, nil] :allow_empty_message (nil) allow committing
+      #   with an empty message
+      #
+      # @option opts [String] :author (nil) override the commit author in
+      #   `A U Thor <author@example.com>` format
+      #
+      # @option opts [String] :date (nil) override the author date
+      #
+      # @option opts [Boolean, String, nil] :gpg_sign (nil) GPG-sign the commit
+      #
+      # @option opts [Boolean, nil] :no_gpg_sign (nil) disable GPG signing
+      #
+      # @option opts [Boolean, nil] :no_verify (nil) bypass the pre-commit and
+      #   commit-msg hooks
       #
       # @return [String] git's stdout from the commit
       #
@@ -120,10 +145,11 @@ module Git
       #
       # @param opts [Hash] options for the commit-tree command
       #
-      # @option opts [String] :m (nil) the commit message (short form)
+      # @option opts [String, Array<String>] :m (nil) the commit message
+      #   paragraph(s) (short form)
       #
-      # @option opts [String] :message (nil) the commit message (normalized
-      #   to `:m` before passing to the command)
+      # @option opts [String, Array<String>] :message (nil) the commit message
+      #   paragraph(s) (normalized to `:m` before passing to the command)
       #
       # @option opts [String, Array<String>] :p (nil) parent commit SHA(s)
       #
@@ -172,6 +198,20 @@ module Git
       #   commit_sha = repo.write_and_commit_tree(message: 'snapshot')
       #
       # @param opts [Hash] options forwarded to {#commit_tree}
+      #
+      # @option opts [String, Array<String>] :m (nil) the commit message
+      #   paragraph(s) (short form)
+      #
+      # @option opts [String, Array<String>] :message (nil) the commit message
+      #   paragraph(s) (normalized to `:m` before passing to the command)
+      #
+      # @option opts [String, Array<String>] :p (nil) parent commit SHA(s)
+      #
+      # @option opts [String] :parent (nil) a single parent commit SHA
+      #   (normalized to `:p`)
+      #
+      # @option opts [Array<String>] :parents (nil) multiple parent commit
+      #   SHAs (normalized to `:p`)
       #
       # @return [String] the SHA of the newly created commit object
       #
