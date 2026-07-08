@@ -33,25 +33,28 @@ module Git
         flag_option :build_options
       end
 
-      # @!method call(*, **)
+      # @overload call(**options)
       #
-      #   @overload call(**options)
+      #   Execute the `git version` command
       #
-      #     Execute the `git version` command.
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
+      #   @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
+      #     for the command to complete; if nil, uses the global timeout from
+      #     {Git::Config}; if 0, no timeout is enforced
       #
-      #     @option options [Boolean, nil] :build_options (nil) include build options in the output
+      #   @option options [Boolean, nil] :build_options (nil) include build options in
+      #     the output
       #
-      #     @option options [Numeric, nil] :timeout (nil) the number of seconds to wait
-      #       for the command to complete; if nil, uses the global timeout from
-      #       {Git::Config}; if 0, no timeout is enforced
+      #   @return [Git::CommandLineResult] the result of calling `git version`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git version`
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @api public
+      #
+      def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
     end
   end
 end

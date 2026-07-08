@@ -32,34 +32,34 @@ module Git
           operand :new_path, required: true
         end
 
-        # @!method call(*, **)
+        # @overload call(worktree, new_path, **options)
         #
-        #   @overload call(worktree, new_path, **options)
+        #   Move a linked worktree to a new filesystem location
         #
-        #     Move a linked worktree to a new filesystem location
+        #   @param worktree [String] path or unique suffix identifying the
+        #     worktree to move
         #
-        #     @param worktree [String] path or unique suffix identifying the
-        #       worktree to move
+        #   @param new_path [String] destination path for the worktree
         #
-        #     @param new_path [String] destination path for the worktree
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, Integer, nil] :force (nil) allow moving a
+        #     locked worktree
         #
-        #     @option options [Boolean, Integer, nil] :force (nil) allow moving a
-        #       locked worktree
+        #     Pass `true` or `1` to emit `--force` once. Pass `2` to emit
+        #     `--force --force`, which also handles locked or missing destinations.
         #
-        #       Pass `true` or `1` to emit `--force` once. Pass `2` to emit
-        #       `--force --force`, which also handles locked or missing destinations.
+        #     Alias: :f
         #
-        #       Alias: :f
+        #   @return [Git::CommandLineResult] the result of calling `git worktree move`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree move`
+        # @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        # @api public
         #
-        #     @api public
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end

@@ -29,35 +29,35 @@ module Git
           value_option :expire
         end
 
-        # @!method call(*, **)
+        # @overload call(**options)
         #
-        #   @overload call(**options)
+        #   List all worktrees attached to the repository
         #
-        #     List all worktrees attached to the repository
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :porcelain (nil) produce machine-readable
+        #     output
         #
-        #     @option options [Boolean, nil] :porcelain (nil) produce machine-readable
-        #       output
+        #   @option options [Boolean, nil] :z (nil) terminate output lines with NUL
+        #     bytes (use with `:porcelain`)
         #
-        #     @option options [Boolean, nil] :z (nil) terminate output lines with NUL
-        #       bytes (use with `:porcelain`)
+        #   @option options [Boolean, nil] :verbose (nil) output additional information
+        #     about worktrees
         #
-        #     @option options [Boolean, nil] :verbose (nil) output additional information
-        #       about worktrees
+        #     Alias: :v
         #
-        #       Alias: :v
+        #   @option options [String] :expire (nil) annotate missing worktrees as
+        #     prunable if older than this time expression
         #
-        #     @option options [String] :expire (nil) annotate missing worktrees as
-        #       prunable if older than this time expression
+        #   @return [Git::CommandLineResult] the result of calling `git worktree list`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree list`
+        # @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        # @api public
         #
-        #     @api public
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
