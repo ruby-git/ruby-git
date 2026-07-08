@@ -169,11 +169,60 @@ When `@overload` blocks are present:
 - Keep signature-specific tags inside overload blocks only:
   `@example`, `@param`, `@option`, `@return`, overload-specific `@raise`,
   and `@yield`/`@yieldparam`/`@yieldreturn`
-- Keep shared `@raise` at top level only once (do not duplicate inside
-  overloads); duplicating it produces conflicting or noisy generated docs
+- Keep `@return` inside each `@overload` block. For overloaded methods,
+  `@return` is overload-scoped even when the return type/text is the same
+  across call shapes
+- Keep shared `@raise` at top level only once (outside all overload blocks)
+- Keep `@raise` inside an overload only when that exception applies to that
+  overload shape only
+- Never document the same `@raise` in both places (top-level and overload)
 - Keep non-signature tags (`@note`, `@deprecated`, `@see`, `@api`) at top level
 - Never nest `@api` inside an `@overload` block; it applies to the method
   itself, not to an individual call shape
+
+Correct placement pattern:
+
+```ruby
+# @overload fetch(name)
+#
+#   @param name [String] the remote name
+#
+#   @return [Git::CommandLineResult] the command result
+#
+# @overload fetch(name, **options)
+#
+#   @param name [String] the remote name
+#
+#   @param options [Hash] command options
+#
+#   @return [Git::CommandLineResult] the command result
+#
+# @raise [ArgumentError] when the remote name is invalid
+#
+# @api public
+```
+
+Incorrect placement pattern:
+
+```ruby
+# @overload fetch(name)
+#
+#   @param name [String] the remote name
+#
+# @return [Git::CommandLineResult] the command result
+#
+# @raise [ArgumentError] when the remote name is invalid
+#
+# @overload fetch(name, **options)
+#
+#   @param name [String] the remote name
+#
+#   @param options [Hash] command options
+#
+#   @raise [ArgumentError] when the remote name is invalid
+#
+#   @api public
+```
 
 **Trigger: always use `@overload` for anonymous `*`, anonymous `**`, or `...`**
 
@@ -285,7 +334,10 @@ Each `@overload` block carries only signature-specific tags: `@example`,
 `@param`, `@option`, `@return`, overload-specific `@raise`, and
 `@yield`/`@yieldparam`/`@yieldreturn`. Tags that are **not**
 call-signature-specific — `@note`, `@deprecated`, `@see`, `@api` — remain
-at the top level. Never place `@api` inside an overload block.
+at the top level. `@return` remains overload-scoped even when identical across
+call shapes. `@raise` can be top-level when shared across all call shapes, and
+overload-local when shape-specific. Never place `@api` inside an overload
+block.
 
 ```ruby
 # Short description of what the method does
@@ -317,6 +369,8 @@ at the top level. Never place `@api` inside an overload block.
 #
 #   @return [Array<String>] the results
 #
+# @raise [ArgumentError] when an invalid argument is provided
+#
 # @note This method is not thread-safe
 #
 # @deprecated Use {#new_method} instead
@@ -341,8 +395,10 @@ Use this matrix to decide whether to use `@overload` and where to place tags:
 | Uses anonymous `*`, `**`, or `...` | `@overload` required |
 | Private arbitrary keyword collector | Neutral splat name plus pseudo-option `key_name` |
 | Multiple call shapes (different params and/or return types) | One `@overload` per shape |
-| Shared errors across all call shapes | Top-level `@raise` once |
+| Return value for overloaded methods | `@return` in each overload; never top-level |
+| Shared errors across all call shapes | Top-level `@raise` once (outside overloads) |
 | Error only for specific call shape | `@raise` only in that overload |
+| Same error documented top-level and inside overloads | Invalid; choose one placement |
 | Method-level API visibility (`@api`) | Top-level `@api` only; never inside `@overload` |
 
 ### Documenting anonymous splats with `@overload`
