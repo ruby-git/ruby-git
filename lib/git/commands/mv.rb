@@ -41,7 +41,12 @@ module Git
         operand :destination, required: true
       end
 
-      # @!method call(*, **)
+      # @!method call(*, **options)
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean, nil] :verbose (nil) command option key; see overload
+      #     docs for the full option list
       #
       #   @overload call(*source, destination, **options)
       #

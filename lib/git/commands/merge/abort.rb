@@ -28,7 +28,7 @@ module Git
           literal '--abort'
         end
 
-        # @!method call(*, **)
+        # @!method call()
         #
         #   @overload call()
         #
