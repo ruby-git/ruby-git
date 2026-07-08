@@ -35,20 +35,16 @@ module Git
           operand :branch_name
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
-        #   @overload call(branch_name = nil, **options)
+        #   @overload call(branch_name = nil)
         #
-        #     Execute the `git branch --unset-upstream` command.
+        #     Execute the `git branch --unset-upstream` command
         #
         #     @param branch_name [String, nil] the branch to remove upstream tracking for
         #       (defaults to current branch if omitted)
         #
-        #     @param options [Hash] command options
-        #
         #     @return [Git::CommandLineResult] the result of calling `git branch --unset-upstream`
-        #
-        #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

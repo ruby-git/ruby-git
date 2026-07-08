@@ -344,6 +344,14 @@ module Git
           result
         end
 
+        # Run the bound command using the streaming execution path
+        #
+        # @param bound [Git::Commands::Arguments::Bound] bound argument list
+        #
+        # @param reader [IO] read end of the stdin pipe
+        #
+        # @return [Git::CommandLineResult] the command result
+        #
         def run_batch_streaming(bound, reader)
           @execution_context.command_streaming(
             *bound,
@@ -353,6 +361,14 @@ module Git
           )
         end
 
+        # Run the bound command using the capturing execution path
+        #
+        # @param bound [Git::Commands::Arguments::Bound] bound argument list
+        #
+        # @param reader [IO] read end of the stdin pipe
+        #
+        # @return [Git::CommandLineResult] the command result
+        #
         def run_batch_capturing(bound, reader)
           @execution_context.command_capturing(
             *bound,

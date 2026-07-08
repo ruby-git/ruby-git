@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/diff_path_status.rb'
     - 'lib/git/diff_stats.rb'
@@ -23,7 +22,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git/commands/cat_file/batch.rb'
     - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/config.rb'
     - 'lib/git/errors.rb'
@@ -40,10 +38,11 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/branch/delete.rb'
     - 'lib/git/commands/branch/list.rb'
     - 'lib/git/commands/branch/move.rb'
-    - 'lib/git/commands/branch/set_upstream.rb'
-    - 'lib/git/commands/branch/show_current.rb'
-    - 'lib/git/commands/branch/unset_upstream.rb'
-    - 'lib/git/commands/cat_file/filtered.rb'
+    - 'lib/git/commands/checkout/branch.rb'
+    - 'lib/git/commands/checkout/files.rb'
+    - 'lib/git/commands/checkout_index.rb'
+    - 'lib/git/commands/clean.rb'
+    - 'lib/git/commands/clone.rb'
     - 'lib/git/commands/commit.rb'
     - 'lib/git/commands/commit_tree.rb'
     - 'lib/git/commands/config_option_syntax/add.rb'
