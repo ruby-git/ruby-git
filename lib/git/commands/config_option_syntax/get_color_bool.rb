@@ -52,9 +52,7 @@ module Git
         # git config --get-colorbool exits 0 for color=yes, 1 for color=no
         allow_exit_status 0..1
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, stdout_is_tty = nil, **options)
+        # @overload call(name, stdout_is_tty = nil, **options)
         #
         #     Execute the `git config --get-colorbool` command
         #
@@ -87,6 +85,11 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #     @api public
+        def call(*, **)
+          super
+        end
       end
     end
   end
