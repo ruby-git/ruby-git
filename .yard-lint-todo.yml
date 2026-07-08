@@ -168,7 +168,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
-    - 'lib/git/repository/branching.rb'
     - 'lib/git/repository/committing.rb'
     - 'lib/git/repository/context_helpers.rb'
     - 'lib/git/repository/diffing.rb'
@@ -184,7 +183,6 @@ Tags/OptionTags:
   Exclude:
     - 'lib/git/remote.rb'
     - 'lib/git/repository.rb'
-    - 'lib/git/repository/branching.rb'
     - 'lib/git/repository/committing.rb'
     - 'lib/git/repository/diffing.rb'
     - 'lib/git/repository/factories.rb'
