@@ -67,7 +67,12 @@ module Git
         operand :tree_ish, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @!method call(*, **options)
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean, nil] :m (nil) command option key; see overload docs
+      #     for the full option list
       #
       #   @overload call(*tree_ish, **options)
       #
