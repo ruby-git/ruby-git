@@ -36,11 +36,16 @@ module Git
           operand :commit, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
         #
-        #   Store a commit in the stash reflog
+        #   @param options [Hash] command options
+        #
+        #   @option options [String] :message (nil) command option key; see overload docs for
+        #     the full option list
         #
         #   @overload call(commit, **options)
+        #
+        #     Store a commit in the stash reflog
         #
         #     @param commit [String] the commit SHA to store in the stash (required)
         #
@@ -56,7 +61,11 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash store`
         #
-        #     @raise [Git::FailedError] if the commit is not a valid stash commit
+        #   @raise [ArgumentError] if unsupported options are provided
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
       end
     end
   end

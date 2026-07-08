@@ -39,9 +39,12 @@ module Git
           operand :stash
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
         #
-        #   Pop stashed changes
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :index (nil) command option key; see overload docs
+        #     for the full option list
         #
         #   @overload call(**options)
         #
@@ -54,6 +57,8 @@ module Git
         #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
         #       Alias: :q
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git stash pop`
         #
         #   @overload call(stash, **options)
         #
@@ -69,9 +74,13 @@ module Git
         #
         #       Alias: :q
         #
-        #   @return [Git::CommandLineResult] the result of calling `git stash pop`
+        #     @return [Git::CommandLineResult] the result of calling `git stash pop`
         #
-        #   @raise [Git::FailedError] if the stash does not exist
+        #   @raise [ArgumentError] if unsupported options are provided
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
       end
     end
   end

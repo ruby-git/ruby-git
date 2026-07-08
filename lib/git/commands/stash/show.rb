@@ -50,9 +50,12 @@ module Git
           operand :stash
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
         #
-        #   Show stash diff
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :patch (nil) command option key; see overload docs
+        #     for the full option list
         #
         #   @overload call(**options)
         #
@@ -95,6 +98,8 @@ module Git
         #     @option options [Boolean, String, nil] :dirstat (nil) include directory statistics
         #
         #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
+        #
+        #     @return [Git::CommandLineResult] the result of calling `git stash show`
         #
         #   @overload call(stash, **options)
         #
@@ -140,9 +145,13 @@ module Git
         #
         #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
         #
-        #   @return [Git::CommandLineResult] the result of calling `git stash show`
+        #     @return [Git::CommandLineResult] the result of calling `git stash show`
         #
-        #   @raise [Git::FailedError] if git returns a non-zero exit status
+        #   @raise [ArgumentError] if unsupported options are provided
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
       end
     end
   end
