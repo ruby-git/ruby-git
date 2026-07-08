@@ -161,9 +161,7 @@ module Git
       # git diff-index exits 1 when differences are found (e.g. with --exit-code)
       allow_exit_status 0..1
 
-      # @!method call(*, **)
-      #
-      #   @overload call(tree_ish, **options)
+      # @overload call(tree_ish, **options)
       #     Compare a tree to the index or working tree
       #
       #     @example Compare HEAD to the working tree
@@ -467,7 +465,9 @@ module Git
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
-      #   @overload call(tree_ish, *paths, **options)
+      #     @api public
+      #
+      # @overload call(tree_ish, *paths, **options)
       #     Compare a tree to the index or working tree, limiting output to specific paths
       #
       #     @example Compare HEAD to the index for a single directory
@@ -490,7 +490,10 @@ module Git
       #
       #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
       #
-      #   @api public
+      #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end

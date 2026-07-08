@@ -153,9 +153,7 @@ module Git
       # git diff-files exits 1 when differences are found (not an error)
       allow_exit_status 0..1
 
-      # @!method call(*, **)
-      #
-      #   @overload call(**options)
+      # @overload call(**options)
       #     Compare the index to the working tree with no path restriction
       #
       #     @param options [Hash] command options
@@ -498,7 +496,7 @@ module Git
       #
       #     @api public
       #
-      #   @overload call(*path, **options)
+      # @overload call(*path, **options)
       #     Compare the index to the working tree, limiting output to specific paths
       #
       #     @param path [Array<String>] pathspecs limiting which files are compared
@@ -513,6 +511,9 @@ module Git
       #       (exit code > 1)
       #
       #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end

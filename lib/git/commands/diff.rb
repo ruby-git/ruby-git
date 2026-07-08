@@ -155,9 +155,7 @@ module Git
       # with --check: 2 = whitespace/conflict-marker errors
       allow_exit_status 0..2
 
-      # @!method call(*, **)
-      #
-      #   @overload call(**options)
+      # @overload call(**options)
       #
       #     Compare the index to the working tree
       #
@@ -175,7 +173,7 @@ module Git
       #
       #     @api public
       #
-      #   @overload call(no_index: true, path:, **options)
+      # @overload call(no_index: true, path:, **options)
       #
       #     Compare two paths on the filesystem (outside git)
       #
@@ -200,7 +198,7 @@ module Git
       #
       #     @api public
       #
-      #   @overload call(commit = nil, cached:, **options)
+      # @overload call(commit = nil, cached:, **options)
       #
       #     Compare the index to HEAD or the named commit
       #
@@ -222,7 +220,7 @@ module Git
       #
       #     @api public
       #
-      #   @overload call(commit, **options)
+      # @overload call(commit, **options)
       #
       #     Compare the working tree to the named commit
       #
@@ -243,7 +241,7 @@ module Git
       #
       #     @api public
       #
-      #   @overload call(commit, *commits, **options)
+      # @overload call(commit, *commits, **options)
       #
       #     Compare two or more commits or show a combined diff
       #
@@ -651,6 +649,9 @@ module Git
       #       range (exit code > 2)
       #
       #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end
