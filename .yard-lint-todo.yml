@@ -162,7 +162,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/object_operations.rb'
     - 'lib/git/repository/remote_operations.rb'
-    - 'lib/git/repository/staging.rb'
 
 # Tags validators
 Tags/OptionTags:
@@ -170,4 +169,3 @@ Tags/OptionTags:
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/object_operations.rb'
     - 'lib/git/repository/remote_operations.rb'
-    - 'lib/git/repository/staging.rb'

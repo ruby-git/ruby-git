@@ -105,6 +105,9 @@ module Git
       #
       # @param opts [Hash] options passed through to {#reset}
       #
+      # @option opts [Boolean, nil] :hard (nil) ignored; this method always forces
+      #   `hard: true`
+      #
       # @return [String] git's stdout from the reset
       #
       # @raise [ArgumentError] when unsupported options are provided
@@ -421,29 +424,47 @@ module Git
         #
         # @param opts [Hash] the caller-provided clean options
         #
+        # @option opts [Boolean, nil] :ff (nil) deprecated alias for requesting a
+        #   double-force clean
+        #
+        # @option opts [Boolean, nil] :force_force (nil) deprecated alias for
+        #   requesting a double-force clean
+        #
+        # @option opts [Boolean, Integer, nil] :force (nil) existing force value
+        #   merged with deprecated options when present
+        #
         # @return [Hash] a new options hash with deprecated keys translated
         #
         # @raise [ArgumentError] when a deprecated value is not `true`, `false`, or `nil`
         #
         def migrate_clean_legacy_options(opts)
-          opts = deprecate_clean_option(opts, :ff, ':ff option is deprecated. Use force: 2 instead.')
-          deprecate_clean_option(opts, :force_force, ':force_force option is deprecated. Use force: 2 instead.')
+          opts = deprecate_clean_option(:ff, ':ff option is deprecated. Use force: 2 instead.', opts)
+          deprecate_clean_option(:force_force, ':force_force option is deprecated. Use force: 2 instead.', opts)
         end
 
         # Translate a single deprecated clean option key onto `:force`
         #
-        # @param opts [Hash] the clean options
-        #
         # @param key [Symbol] the deprecated option key (`:ff` or `:force_force`)
         #
         # @param message [String] the deprecation message to emit
+        #
+        # @param opts [Hash] the clean options
+        #
+        # @option opts [Boolean, nil] :ff (nil) deprecated alias for requesting a
+        #   double-force clean
+        #
+        # @option opts [Boolean, nil] :force_force (nil) deprecated alias for
+        #   requesting a double-force clean
+        #
+        # @option opts [Boolean, Integer, nil] :force (nil) existing force value
+        #   updated when the deprecated key is true
         #
         # @return [Hash] a new options hash with the deprecated key removed
         #
         # @raise [ArgumentError] when the deprecated value is not `true`, `false`,
         #   or `nil`
         #
-        def deprecate_clean_option(opts, key, message)
+        def deprecate_clean_option(key, message, opts)
           return opts unless opts.key?(key)
 
           opts = opts.dup
@@ -460,6 +481,9 @@ module Git
         # Whether the caller explicitly set a non-nil `:force` value
         #
         # @param opts [Hash] the clean options
+        #
+        # @option opts [Boolean, Integer, nil] :force (nil) the clean force value
+        #   to inspect
         #
         # @return [Boolean] true if `:force` was set to a non-nil value, false
         #   otherwise
