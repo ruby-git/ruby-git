@@ -28,7 +28,7 @@ module Git
           literal '--quit'
         end
 
-        # @!method call(*, **)
+        # @!method call()
         #
         #   @overload call()
         #
