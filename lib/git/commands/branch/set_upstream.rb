@@ -39,17 +39,16 @@ module Git
           operand :branch_name
         end
 
-        # @!method call(*, **)
-        #
-        #   Execute the git branch --set-upstream-to command
+        # @!method call(*)
         #
         #   @overload call(**options)
         #
-        #     Sets upstream for the current branch
+        #     Set upstream for the current branch
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #     @option options [String] :set_upstream_to (required)
+        #       upstream branch to set (e.g., `origin/main`)
         #
         #       Alias: :u
         #
@@ -69,7 +68,8 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :set_upstream_to (required) the upstream branch (e.g., 'origin/main')
+        #     @option options [String] :set_upstream_to (required)
+        #       upstream branch to set (e.g., `origin/main`)
         #
         #       Alias: :u
         #

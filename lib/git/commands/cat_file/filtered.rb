@@ -56,9 +56,7 @@ module Git
           operand :rev, required: true
         end
 
-        # @!method call(*, **)
-        #
-        #   Execute `git cat-file --textconv` or `git cat-file --filters`.
+        # @!method call(*)
         #
         #   @overload call(rev, textconv: true, **options)
         #     Apply the textconv filter to a single object
@@ -70,7 +68,8 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :path (nil) Path to the blob when `rev` is a bare revision
+        #     @option options [String] :path (nil)
+        #       path to the blob when `rev` is a bare revision
         #
         #     @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
@@ -78,7 +77,7 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the object does not exist or the path is missing
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #
         #   @overload call(rev, filters: true, **options)
         #     Apply the full working-tree filter pipeline to a single object
@@ -90,7 +89,8 @@ module Git
         #
         #     @param options [Hash] command options
         #
-        #     @option options [String] :path (nil) Path to the blob when `rev` is a bare revision
+        #     @option options [String] :path (nil)
+        #       path to the blob when `rev` is a bare revision
         #
         #     @return [Git::CommandLineResult] the result of calling `git cat-file`
         #
@@ -98,7 +98,7 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if the object does not exist or the path is missing
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
     end
   end

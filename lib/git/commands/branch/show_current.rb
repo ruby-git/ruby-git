@@ -34,11 +34,11 @@ module Git
           literal '--show-current'
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call()
         #
-        #     Execute the git branch --show-current command.
+        #     Execute the `git branch --show-current` command
         #
         #     @return [Git::CommandLineResult] the result of calling `git branch --show-current`
         #
