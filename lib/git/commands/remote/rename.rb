@@ -42,7 +42,7 @@ module Git
           operand :new, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(old, new, **options)
         #
@@ -63,6 +63,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end

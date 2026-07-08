@@ -31,7 +31,7 @@ module Git
           flag_option %i[verbose v]
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(**options)
         #
@@ -48,6 +48,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end

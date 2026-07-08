@@ -35,7 +35,7 @@ module Git
           operand :name, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(name)
         #
@@ -46,6 +46,8 @@ module Git
         #     @return [Git::CommandLineResult] the result of calling `git remote remove`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
