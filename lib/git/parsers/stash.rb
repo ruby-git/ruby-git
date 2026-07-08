@@ -67,15 +67,34 @@ module Git
 
       # Field indices for parsed output
       module Fields
+        # Index of the full object ID (`%H`) field
         OID = 0
+
+        # Index of the abbreviated object ID (`%h`) field
         SHORT_OID = 1
+
+        # Index of the reflog selector (`%gd`) field
         REFLOG = 2
+
+        # Index of the reflog subject (`%gs`) field
         MESSAGE = 3
+
+        # Index of the author name (`%an`) field
         AUTHOR_NAME = 4
+
+        # Index of the author email (`%ae`) field
         AUTHOR_EMAIL = 5
+
+        # Index of the author date (`%aI`) field
         AUTHOR_DATE = 6
+
+        # Index of the committer name (`%cn`) field
         COMMITTER_NAME = 7
+
+        # Index of the committer email (`%ce`) field
         COMMITTER_EMAIL = 8
+
+        # Index of the committer date (`%cI`) field
         COMMITTER_DATE = 9
       end
 
@@ -147,6 +166,14 @@ module Git
         core_attrs(parts, index).merge(author_attrs(parts)).merge(committer_attrs(parts))
       end
 
+      # Build core StashInfo attributes from parsed fields
+      #
+      # @param parts [Array<String>] the parsed format fields
+      #
+      # @param index [Integer] the resolved stash index
+      #
+      # @return [Hash<Symbol, Object>] core attributes for StashInfo.new
+      #
       def core_attrs(parts, index)
         {
           index: index, name: parts[Fields::REFLOG], oid: parts[Fields::OID],
@@ -155,6 +182,12 @@ module Git
         }
       end
 
+      # Build author-related StashInfo attributes from parsed fields
+      #
+      # @param parts [Array<String>] the parsed format fields
+      #
+      # @return [Hash<Symbol, String>] author attributes for StashInfo.new
+      #
       def author_attrs(parts)
         {
           author_name: parts[Fields::AUTHOR_NAME], author_email: parts[Fields::AUTHOR_EMAIL],
@@ -162,6 +195,12 @@ module Git
         }
       end
 
+      # Build committer-related StashInfo attributes from parsed fields
+      #
+      # @param parts [Array<String>] the parsed format fields
+      #
+      # @return [Hash<Symbol, String>] committer attributes for StashInfo.new
+      #
       def committer_attrs(parts)
         {
           committer_name: parts[Fields::COMMITTER_NAME], committer_email: parts[Fields::COMMITTER_EMAIL],
