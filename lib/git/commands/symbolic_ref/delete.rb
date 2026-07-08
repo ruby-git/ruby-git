@@ -38,30 +38,34 @@ module Git
           operand :name, required: true
         end
 
-        # @!method call(*, **)
+        # Executes the git symbolic-ref --delete command
         #
-        #   @overload call(name, **options)
+        # @overload call(name, **options)
         #
-        #     Execute the `git symbolic-ref --delete` command
+        #   @param name [String] the symbolic ref name to delete
+        #     (e.g. `HEAD`)
         #
-        #     @param name [String] the symbolic ref name to delete
-        #       (e.g. `HEAD`)
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :quiet (nil) suppress error message
+        #     when the name is not a symbolic ref
         #
-        #     @option options [Boolean, nil] :quiet (nil) suppress error message
-        #       when the name is not a symbolic ref
+        #     Alias: :q
         #
-        #       Alias: :q
+        #   @return [Git::CommandLineResult] the result of calling
+        #     `git symbolic-ref --delete`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git symbolic-ref --delete`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [ArgumentError] if the name operand is missing
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

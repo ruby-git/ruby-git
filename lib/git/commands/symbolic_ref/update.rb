@@ -42,34 +42,37 @@ module Git
           operand :ref, required: true
         end
 
-        # @!method call(*, **)
+        # Executes the git symbolic-ref command to create or update a symbolic ref
         #
-        #   @overload call(name, ref, **options)
+        # @overload call(name, ref, **options)
         #
-        #     Execute the `git symbolic-ref` command to create or update a
-        #     symbolic ref
+        #   @param name [String] the symbolic ref name to update
+        #     (e.g. `HEAD`)
         #
-        #     @param name [String] the symbolic ref name to update
-        #       (e.g. `HEAD`)
+        #   @param ref [String] the target ref to point to
+        #     (e.g. `refs/heads/main`)
         #
-        #     @param ref [String] the target ref to point to
-        #       (e.g. `refs/heads/main`)
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [String] :m (nil) a reflog message for
+        #     the update
         #
-        #     @option options [String] :m (nil) a reflog message for
-        #       the update
+        #   @return [Git::CommandLineResult] the result of calling
+        #     `git symbolic-ref`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git symbolic-ref`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [ArgumentError] if the name operand is missing
+        #   @raise [ArgumentError] if the ref operand is missing
         #
-        #     @raise [ArgumentError] if the ref operand is missing
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
