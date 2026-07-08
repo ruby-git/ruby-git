@@ -46,86 +46,94 @@ module Git
         operand :pathspec, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @overload call(*pathspec, **options)
       #
-      #   @overload call(*pathspec, **options)
+      #   Execute the `git add` command
       #
-      #     Execute the `git add` command
+      #   @param pathspec [Array<String>] files to be added to the repository
+      #     (relative to the worktree root)
       #
-      #     @param pathspec [Array<String>] files to be added to the repository
-      #       (relative to the worktree root)
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
+      #   @option options [Boolean, nil] :verbose (nil) be verbose
       #
-      #     @option options [Boolean, nil] :verbose (nil) be verbose
+      #     Alias: :v
       #
-      #       Alias: :v
+      #   @option options [Boolean, nil] :dry_run (nil) don't actually add files;
+      #     show what would be added
       #
-      #     @option options [Boolean, nil] :dry_run (nil) don't actually add files; show what would be added
+      #     Alias: :n
       #
-      #       Alias: :n
+      #   @option options [Boolean, nil] :force (nil) allow adding otherwise ignored
+      #     files
       #
-      #     @option options [Boolean, nil] :force (nil) allow adding otherwise ignored files
+      #     Alias: :f
       #
-      #       Alias: :f
+      #   @option options [Boolean, nil] :all (nil) add, modify, and remove index
+      #     entries to match the worktree (--all)
       #
-      #     @option options [Boolean, nil] :all (nil) add, modify, and remove index entries to
-      #       match the worktree (--all)
+      #     Alias: :A
       #
-      #       Alias: :A
+      #   @option options [Boolean, nil] :no_all (nil) add and modify index entries
+      #     without staging removals (--no-all)
       #
-      #     @option options [Boolean, nil] :no_all (nil) add and modify index entries without staging
-      #       removals (--no-all)
+      #   @option options [Boolean, nil] :ignore_removal (nil) add and modify files;
+      #     ignore removals (--ignore-removal)
       #
-      #     @option options [Boolean, nil] :ignore_removal (nil) add and modify files; ignore removals
-      #       (--ignore-removal)
+      #   @option options [Boolean, nil] :no_ignore_removal (nil) include file removals
+      #     (--no-ignore-removal)
       #
-      #     @option options [Boolean, nil] :no_ignore_removal (nil) include file removals (--no-ignore-removal)
+      #   @option options [Boolean, nil] :update (nil) update tracked files only; does
+      #     not add new files
       #
-      #     @option options [Boolean, nil] :update (nil) update tracked files only; does not add new files
+      #     Alias: :u
       #
-      #       Alias: :u
+      #   @option options [Boolean, nil] :sparse (nil) allow updating index entries
+      #     outside the sparse-checkout cone
       #
-      #     @option options [Boolean, nil] :sparse (nil) allow updating index entries outside the
-      #       sparse-checkout cone
+      #   @option options [Boolean, nil] :intent_to_add (nil) record that the path
+      #     will be added later, placing an empty entry in the index
       #
-      #     @option options [Boolean, nil] :intent_to_add (nil) record that the path will be added later,
-      #       placing an empty entry in the index
+      #     Alias: :N
       #
-      #       Alias: :N
+      #   @option options [Boolean, nil] :refresh (nil) refresh stat() information in
+      #     the index without adding files
       #
-      #     @option options [Boolean, nil] :refresh (nil) refresh stat() information in the index without
-      #       adding files
+      #   @option options [Boolean, nil] :ignore_errors (nil) continue adding other
+      #     files if some files cannot be added due to indexing errors
       #
-      #     @option options [Boolean, nil] :ignore_errors (nil) continue adding other files if some files
-      #       cannot be added due to indexing errors
+      #   @option options [Boolean, nil] :ignore_missing (nil) check whether any given
+      #     files would be ignored
       #
-      #     @option options [Boolean, nil] :ignore_missing (nil) check whether any given files would be
-      #       ignored
+      #   @option options [Boolean, nil] :renormalize (nil) apply the "clean" process
+      #     freshly to all tracked files to forcibly re-add them with correct line
+      #     endings
       #
-      #     @option options [Boolean, nil] :renormalize (nil) apply the "clean" process freshly to all tracked
-      #       files to forcibly re-add them with correct line endings
+      #   @option options [Boolean, nil] :no_warn_embedded_repo (nil) suppress warning
+      #     when adding an embedded repository without using `git submodule add`
       #
-      #     @option options [Boolean, nil] :no_warn_embedded_repo (nil) suppress warning when adding an
-      #       embedded repository without using `git submodule add`
+      #   @option options [String] :chmod (nil) override the executable bit of added
+      #     files in the index
       #
-      #     @option options [String] :chmod (nil) override the executable bit of added files in the index
+      #     Value must be `'+x'` or `'-x'`
       #
-      #       Value must be `'+x'` or `'-x'`
+      #   @option options [String] :pathspec_from_file (nil) read pathspec from the
+      #     given file (use `'-'` for stdin)
       #
-      #     @option options [String] :pathspec_from_file (nil) read pathspec from the given file
-      #       (use `'-'` for stdin)
+      #   @option options [Boolean, nil] :pathspec_file_nul (nil) separate pathspec
+      #     elements with NUL when reading from a file
       #
-      #     @option options [Boolean, nil] :pathspec_file_nul (nil) separate pathspec elements with NUL
-      #       when reading from a file
+      #   @return [Git::CommandLineResult] the result of calling `git add`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git add`
+      #   @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @api public
       #
-      #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end
