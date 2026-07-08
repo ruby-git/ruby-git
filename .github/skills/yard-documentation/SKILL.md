@@ -166,11 +166,14 @@ parameters or return types.
 
 When `@overload` blocks are present:
 
-- Keep `@param`, `@option`, and `@return` inside overload blocks only
-- Keep overload-specific `@raise` inside the relevant overload block
+- Keep signature-specific tags inside overload blocks only:
+  `@example`, `@param`, `@option`, `@return`, overload-specific `@raise`,
+  and `@yield`/`@yieldparam`/`@yieldreturn`
 - Keep shared `@raise` at top level only once (do not duplicate inside
   overloads); duplicating it produces conflicting or noisy generated docs
 - Keep non-signature tags (`@note`, `@deprecated`, `@see`, `@api`) at top level
+- Never nest `@api` inside an `@overload` block; it applies to the method
+  itself, not to an individual call shape
 
 **Trigger: always use `@overload` for anonymous `*`, anonymous `**`, or `...`**
 
@@ -278,10 +281,11 @@ end
 
 ### Overload template
 
-Each `@overload` block carries its own `@example`, `@param`, `@option`, `@return`,
-`@raise`, `@yield`, `@yieldparam`, and `@yieldreturn` tags. Tags that are
-**not** call-signature-specific — `@note`, `@deprecated`, `@see`, `@api` — remain
-at the top level:
+Each `@overload` block carries only signature-specific tags: `@example`,
+`@param`, `@option`, `@return`, overload-specific `@raise`, and
+`@yield`/`@yieldparam`/`@yieldreturn`. Tags that are **not**
+call-signature-specific — `@note`, `@deprecated`, `@see`, `@api` — remain
+at the top level. Never place `@api` inside an overload block.
 
 ```ruby
 # Short description of what the method does
@@ -339,6 +343,7 @@ Use this matrix to decide whether to use `@overload` and where to place tags:
 | Multiple call shapes (different params and/or return types) | One `@overload` per shape |
 | Shared errors across all call shapes | Top-level `@raise` once |
 | Error only for specific call shape | `@raise` only in that overload |
+| Method-level API visibility (`@api`) | Top-level `@api` only; never inside `@overload` |
 
 ### Documenting anonymous splats with `@overload`
 
@@ -863,7 +868,8 @@ e.g. `@deprecated Use {#new_method} instead`.
 `@api` is optional on methods — when omitted, the method inherits the containing
 class's `@api` level. Use it only when the method's intended visibility differs
 from the class's level (e.g. an `@api private` helper inside an `@api public`
-class).
+class). For overloaded methods, place `@api` once at top level and never nest it
+inside an `@overload` block.
 
 ## Command Reference
 
