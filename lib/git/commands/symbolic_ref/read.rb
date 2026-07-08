@@ -56,39 +56,43 @@ module Git
         # (e.g. detached HEAD) — this is not an error
         allow_exit_status 0..1
 
-        # @!method call(*, **)
+        # Executes the git symbolic-ref command to read a symbolic ref
         #
-        #   @overload call(name, **options)
+        # @overload call(name, **options)
         #
-        #     Execute the `git symbolic-ref` command to read a symbolic ref
+        #   @param name [String] the symbolic ref name to read
+        #     (e.g. `HEAD`)
         #
-        #     @param name [String] the symbolic ref name to read
-        #       (e.g. `HEAD`)
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :quiet (nil) suppress error message
+        #     when the name is not a symbolic ref
         #
-        #     @option options [Boolean, nil] :quiet (nil) suppress error message
-        #       when the name is not a symbolic ref
+        #     Alias: :q
         #
-        #       Alias: :q
+        #   @option options [Boolean, nil] :short (nil) shorten the ref output
+        #     (e.g. `refs/heads/main` → `main`)
         #
-        #     @option options [Boolean, nil] :short (nil) shorten the ref output
-        #       (e.g. `refs/heads/main` → `main`)
+        #   @option options [Boolean, nil] :recurse (nil) follow chain of symbolic refs
+        #     until result no longer points at a symbolic ref (`--recurse`)
         #
-        #     @option options [Boolean, nil] :recurse (nil) follow chain of symbolic refs
-        #       until result no longer points at a symbolic ref (`--recurse`)
+        #   @option options [Boolean, nil] :no_recurse (nil) stop after a single level
+        #     of dereferencing (`--no-recurse`)
         #
-        #     @option options [Boolean, nil] :no_recurse (nil) stop after a single level
-        #       of dereferencing (`--no-recurse`)
+        #   @return [Git::CommandLineResult] the result of calling
+        #     `git symbolic-ref`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git symbolic-ref`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if the name operand is missing
         #
-        #     @raise [ArgumentError] if the name operand is missing
+        #   @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

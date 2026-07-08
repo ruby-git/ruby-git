@@ -35,7 +35,7 @@ module Git
         # git tag --delete exits with status 1 when a tag does not exist, which is acceptable
         allow_exit_status 0..1
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(*tagname)
         #
@@ -45,9 +45,11 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git tag --delete`
         #
-        #     @raise [ArgumentError] if no tag names are provided or unsupported options are provided
+        #     @raise [ArgumentError] if no tag names are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #     @api public
         #
       end
     end

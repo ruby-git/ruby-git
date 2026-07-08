@@ -54,85 +54,88 @@ module Git
           operand :commit
         end
 
-        # @!method call(*, **)
+        # Executes the git tag command to create a new tag
         #
-        #   Execute the git tag command to create a new tag
+        # @overload call(tagname, commit = nil, **options)
         #
-        #   @overload call(tagname, commit = nil, **options)
+        #   @param tagname [String] the name of the tag to create
         #
-        #     @param tagname [String] the name of the tag to create
+        #   @param commit [String, nil] the commit, branch, or object to tag
         #
-        #     @param commit [String, nil] the commit, branch, or object to tag
+        #     Defaults to HEAD when omitted.
         #
-        #       Defaults to HEAD when omitted.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
         #
-        #     @option options [Boolean, nil] :annotate (nil) make an unsigned, annotated tag object
+        #     Requires a message via `:message` or `:file`.
         #
-        #       Requires a message via `:message` or `:file`.
+        #     Alias: :a
         #
-        #       Alias: :a
+        #   @option options [Boolean, nil] :sign (nil) make a GPG-signed tag using the default signing
+        #     key (`--sign`)
         #
-        #     @option options [Boolean, nil] :sign (nil) make a GPG-signed tag using the default signing
-        #       key (`--sign`)
+        #     Requires a message via `:message` or `:file`.
         #
-        #       Requires a message via `:message` or `:file`.
+        #     Alias: :s
         #
-        #       Alias: :s
+        #   @option options [Boolean, nil] :no_sign (nil) override `tag.gpgSign` config to disable
+        #     signing (`--no-sign`)
         #
-        #     @option options [Boolean, nil] :no_sign (nil) override `tag.gpgSign` config to disable
-        #       signing (`--no-sign`)
+        #   @option options [String] :local_user (nil) make a cryptographically signed tag using the given key
         #
-        #     @option options [String] :local_user (nil) make a cryptographically signed tag using the given key
+        #     Requires a message via `:message` or `:file`.
         #
-        #       Requires a message via `:message` or `:file`.
+        #     Alias: :u
         #
-        #       Alias: :u
+        #   @option options [Boolean, nil] :force (nil) replace an existing tag with the given name instead of failing
         #
-        #     @option options [Boolean, nil] :force (nil) replace an existing tag with the given name instead of failing
+        #     Alias: :f
         #
-        #       Alias: :f
+        #   @option options [String] :message (nil) use the given message as the tag message
         #
-        #     @option options [String] :message (nil) use the given message as the tag message
+        #     Implies `--annotate` if none of `--annotate`, `--sign`, or `--local-user` is given.
         #
-        #       Implies `--annotate` if none of `--annotate`, `--sign`, or `--local-user` is given.
+        #     Alias: :m
         #
-        #       Alias: :m
+        #   @option options [String] :file (nil) take the tag message from the given file
         #
-        #     @option options [String] :file (nil) take the tag message from the given file
+        #     Use `-` to read from standard input. Implies `--annotate` if none of
+        #     `--annotate`, `--sign`, or `--local-user` is given.
         #
-        #       Use `-` to read from standard input. Implies `--annotate` if none of
-        #       `--annotate`, `--sign`, or `--local-user` is given.
+        #     Alias: :F
         #
-        #       Alias: :F
+        #   @option options [Boolean, nil] :edit (nil) open an editor to further edit the tag message (`--edit`)
         #
-        #     @option options [Boolean, nil] :edit (nil) open an editor to further edit the tag message (`--edit`)
+        #     Alias: :e
         #
-        #       Alias: :e
+        #   @option options [Boolean, nil] :no_edit (nil) suppress the editor (`--no-edit`)
         #
-        #     @option options [Boolean, nil] :no_edit (nil) suppress the editor (`--no-edit`)
+        #   @option options [Hash, Array<Array>] :trailer (nil) add trailers to the tag message
         #
-        #     @option options [Hash, Array<Array>] :trailer (nil) add trailers to the tag message
+        #     Can be a Hash `{ 'Key' => 'value' }` or Array of pairs `[['Key', 'value']]`.
+        #     Multiple trailers can be specified.
         #
-        #       Can be a Hash `{ 'Key' => 'value' }` or Array of pairs `[['Key', 'value']]`.
-        #       Multiple trailers can be specified.
+        #   @option options [String] :cleanup (nil) set how the tag message is cleaned up
         #
-        #     @option options [String] :cleanup (nil) set how the tag message is cleaned up
+        #     Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
+        #     whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
         #
-        #       Must be one of: `verbatim` (no changes), `whitespace` (remove leading/trailing
-        #       whitespace lines), or `strip` (remove whitespace and commentary). Default is `strip`.
+        #   @option options [Boolean, nil] :create_reflog (nil) create a reflog for the tag
         #
-        #     @option options [Boolean, nil] :create_reflog (nil) create a reflog for the tag
+        #     Enables date-based sha1 expressions such as `tag@{yesterday}`.
         #
-        #       Enables date-based sha1 expressions such as `tag@{yesterday}`.
+        #   @return [Git::CommandLineResult] the result of calling `git tag`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git tag`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
         #
+        def call(*, **)
+          super
+        end
       end
     end
   end
