@@ -62,80 +62,83 @@ module Git
           operand :pattern, repeatable: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*pattern, **options)
         #
-        #   Execute the git tag --list command
+        #   Execute the `git tag --list` command
         #
-        #   @overload call(*pattern, **options)
+        #   @param pattern [Array<String>] shell wildcard patterns to filter tags
         #
-        #     @param pattern [Array<String>] Shell wildcard patterns to filter tags
+        #     Multiple patterns can be provided; a tag is shown if it matches any pattern.
         #
-        #       Multiple patterns can be provided; a tag is shown if it matches any pattern.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, Integer, nil] :n (nil) number of annotation lines to print
         #
-        #     @option options [Boolean, Integer, nil] :n (nil) Number of annotation lines to print
+        #     Pass `true` to print the first annotation line, or an integer to print that
+        #     many lines. If the tag is not annotated, the commit message is displayed instead.
         #
-        #       Pass `true` to print the first annotation line, or an integer to print that
-        #       many lines. If the tag is not annotated, the commit message is displayed instead.
+        #   @option options [String, Array<String>] :sort (nil) sort tags by the specified
+        #     key(s)
         #
-        #     @option options [String, Array<String>] :sort (nil) Sort tags by the specified
-        #       key(s)
+        #     Prefix `-` to sort in descending order. Common keys: 'refname',
+        #     '-refname', 'creatordate', '-creatordate', and 'version:refname'.
         #
-        #       Prefix `-` to sort in descending order. Common keys: 'refname',
-        #       '-refname', 'creatordate', '-creatordate', 'version:refname' (for semantic
-        #       version sorting).
+        #   @option options [Boolean, String, nil] :color (nil) colorize output per colors
+        #     specified in `--format`
         #
-        #     @option options [Boolean, String, nil] :color (nil) Colorize output per colors
-        #       specified in `--format`
+        #     Pass `true` for `--color`, or one of `'always'`, `'never'`, `'auto'`.
         #
-        #       Pass `true` for `--color`, or one of `'always'`, `'never'`, `'auto'`.
+        #   @option options [Boolean, nil] :ignore_case (nil) sort and filter tags without
+        #     case sensitivity
         #
-        #     @option options [Boolean, nil] :ignore_case (nil) Sorting and filtering tags are
-        #       case insensitive
+        #     Alias: :i
         #
-        #       Alias: :i
+        #   @option options [Boolean, nil] :omit_empty (nil) skip trailing newlines for
+        #     refs whose formatted output is empty
         #
-        #     @option options [Boolean, nil] :omit_empty (nil) Do not print a newline after
-        #       formatted refs where the format expands to the empty string
+        #   @option options [Boolean, String, nil] :column (nil) display tag listing in
+        #     columns
         #
-        #     @option options [Boolean, String, nil] :column (nil) Display tag listing in columns
+        #     Pass `true` for `--column` or a comma-separated options string for
+        #     `--column=<options>`.
         #
-        #       Pass `true` for `--column` or a comma-separated options string
-        #       (see `column.tag` configuration for syntax) for `--column=<options>`.
+        #   @option options [Boolean, nil] :no_column (nil) disable column output
+        #     (`--no-column`)
         #
-        #     @option options [Boolean, nil] :no_column (nil) disable column output (`--no-column`)
+        #   @option options [Boolean, String, nil] :contains (nil) list only tags that
+        #     contain the specified commit
         #
-        #     @option options [Boolean, String, nil] :contains (nil) List only tags that contain the
-        #       specified commit
+        #     Pass `true` to use HEAD, or a commit reference string.
         #
-        #       Pass `true` to use HEAD, or a commit reference string.
+        #   @option options [Boolean, String, nil] :no_contains (nil) list only tags that do
+        #     not contain the specified commit
         #
-        #     @option options [Boolean, String, nil] :no_contains (nil) List only tags that don't contain
-        #       the specified commit
+        #     Pass `true` to use HEAD, or a commit reference string.
         #
-        #       Pass `true` to use HEAD, or a commit reference string.
+        #   @option options [Boolean, String, nil] :merged (nil) list only tags whose commits
+        #     are reachable from the specified commit
         #
-        #     @option options [Boolean, String, nil] :merged (nil) List only tags whose commits are
-        #       reachable from the specified commit
+        #     Pass `true` to use HEAD, or a commit reference string.
         #
-        #       Pass `true` to use HEAD, or a commit reference string.
+        #   @option options [Boolean, String, nil] :no_merged (nil) list only tags whose
+        #     commits are not reachable from the specified commit
         #
-        #     @option options [Boolean, String, nil] :no_merged (nil) List only tags whose commits are
-        #       not reachable from the specified commit
+        #     Pass `true` to use HEAD, or a commit reference string.
         #
-        #       Pass `true` to use HEAD, or a commit reference string.
+        #   @option options [Boolean, String, nil] :points_at (nil) list only tags that point
+        #     at the specified object
         #
-        #     @option options [Boolean, String, nil] :points_at (nil) List only tags that point at the
-        #       specified object
+        #     Pass `true` to use HEAD, or an object reference string.
         #
-        #       Pass `true` to use HEAD, or an object reference string.
+        #   @option options [String] :format (nil) output format string for each tag
         #
-        #     @option options [String] :format (nil) Output format string for each tag
+        #   @return [Git::CommandLineResult] the result of calling `git tag --list`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git tag --list`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git returns a non-zero exit code
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
         #
       end
     end

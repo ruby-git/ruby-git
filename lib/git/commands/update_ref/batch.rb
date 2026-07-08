@@ -130,6 +130,11 @@ module Git
 
         private
 
+        # Build stdin payload for `git update-ref --stdin`
+        #
+        # @param bound [Git::Commands::Arguments::Bound] bound command arguments
+        #
+        # @return [String] instruction stream with delimiter applied per `z:`
         def build_stdin(bound)
           delimiter = bound.z? ? "\0" : "\n"
           Array(bound.instructions).map { |i| "#{i}#{delimiter}" }.join
