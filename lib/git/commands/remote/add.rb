@@ -46,7 +46,12 @@ module Git
           operand :url, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [String, Array<String>] :track (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, url, **options)
         #

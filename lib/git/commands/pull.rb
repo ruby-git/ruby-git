@@ -112,7 +112,12 @@ module Git
         operand :refspec, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @!method call(*, **options)
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean, nil] :quiet (nil) command option key; see overload
+      #     docs for the full option list
       #
       #   Execute the `git pull` command
       #
