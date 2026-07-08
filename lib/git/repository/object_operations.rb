@@ -912,12 +912,12 @@ module Git
       #
       # @deprecated Use {#tag_add} instead
       #
-      def add_tag(name, *options)
+      def add_tag(name, *)
         Git::Deprecation.warn(
           'Git::Repository#add_tag is deprecated and will be removed in v6.0.0. ' \
           'Use Git::Repository#tag_add instead.'
         )
-        tag_add(name, *options)
+        tag_add(name, *)
       end
 
       # Delete a tag
@@ -966,6 +966,26 @@ module Git
         #
         # @param opts [Hash] the tag-creation options
         #
+        # @option opts [Boolean, nil] :annotate request an annotated tag
+        #
+        # @option opts [Boolean, nil] :a alias for `:annotate`
+        #
+        # @option opts [Boolean, nil] :sign request a signed tag
+        #
+        # @option opts [Boolean, nil] :s alias for `:sign`
+        #
+        # @option opts [String] :local_user key id used when signing
+        #
+        # @option opts [String] :u alias for `:local_user`
+        #
+        # @option opts [String] :message tag message text
+        #
+        # @option opts [String] :m alias for `:message`
+        #
+        # @option opts [String] :file path to a tag message file
+        #
+        # @option opts [String] :F alias for `:file`
+        #
         # @return [void]
         #
         # @raise [ArgumentError] when an annotated or signed tag is requested
@@ -993,6 +1013,11 @@ module Git
         #
         # @param opts [Hash] options hash (must contain only :d/:delete)
         #
+        # @option opts [Boolean] :d (true) request deletion in the deprecated
+        #   `tag_add` form
+        #
+        # @option opts [Boolean] :delete (true) alias for `:d`
+        #
         # @return [String] stdout from tag_delete
         #
         # @api private
@@ -1010,6 +1035,20 @@ module Git
           facade.tag_delete(name)
         end
 
+        # Returns the direct SHA for a tag reference
+        #
+        # Returns the hash from `refs/tags/<name>` only. Returns an empty string
+        # when the ref does not exist.
+        #
+        # @param execution_context [Git::ExecutionContext] for running
+        #   `git show-ref`
+        #
+        # @param tag_name [String] tag name without the `refs/tags/` prefix
+        #
+        # @return [String] direct ref SHA or an empty string when missing
+        #
+        # @api private
+        #
         def show_ref_tag_sha(execution_context, tag_name)
           ref = "refs/tags/#{tag_name}"
           result = Git::Commands::ShowRef::List.new(execution_context).call(ref)
@@ -1064,10 +1103,23 @@ module Git
         #
         # @param treeish [String] tree-ish passed to `git archive`
         #
-        # @param opts [Hash] caller-supplied options (read-only)
-        #
         # @param dest_dir [String] directory for the staging temp file; use
         #   {#staging_dir_for} to select the optimal directory for the destination
+        #
+        # @param opts [Hash] caller-supplied options (read-only)
+        #
+        # @option opts [String] :format ('zip') archive format (`'tar'`, `'zip'`,
+        #   or `'tgz'`)
+        #
+        # @option opts [Boolean, nil] :add_gzip (nil) apply gzip post-processing
+        #   to the generated archive
+        #
+        # @option opts [String] :prefix (nil) prefix for entries in the archive
+        #
+        # @option opts [String] :path (nil) path within `treeish` to archive
+        #
+        # @option opts [String] :remote (nil) remote repository from which to
+        #   retrieve the archive
         #
         # @return [String] path to the populated temporary file
         #
@@ -1094,12 +1146,19 @@ module Git
         #
         # @param treeish [String] tree-ish passed to `git archive`
         #
-        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
-        #   :remote, and :path)
-        #
         # @param format [String] archive format string (e.g. `'zip'` or `'tar'`)
         #
         # @param dest_dir [String] directory in which to create the temp file
+        #
+        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
+        #   :remote, and :path)
+        #
+        # @option opts [String] :prefix (nil) prefix for entries in the archive
+        #
+        # @option opts [String] :path (nil) path within `treeish` to archive
+        #
+        # @option opts [String] :remote (nil) remote repository from which to
+        #   retrieve the archive
         #
         # @return [File] the closed file containing the archive
         #
@@ -1122,12 +1181,19 @@ module Git
         #
         # @param treeish [String] tree-ish passed to `git archive`
         #
-        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
-        #   :remote, and :path)
-        #
         # @param format [String] archive format to pass to `git archive --format`
         #
         # @param tmp_file [File] open, binary-mode IO to write archive data to
+        #
+        # @param opts [Hash] caller-supplied options (read-only; used for :prefix,
+        #   :remote, and :path)
+        #
+        # @option opts [String] :prefix (nil) prefix for entries in the archive
+        #
+        # @option opts [String] :path (nil) path within `treeish` to archive
+        #
+        # @option opts [String] :remote (nil) remote repository from which to
+        #   retrieve the archive
         #
         # @return [Git::CommandLineResult] the result of the git command
         #
@@ -1178,6 +1244,12 @@ module Git
         # applies gzip compression after the archive is written.
         #
         # @param opts [Hash] caller-supplied options hash (read-only)
+        #
+        # @option opts [String] :format ('zip') archive format (`'tar'`, `'zip'`,
+        #   or `'tgz'`)
+        #
+        # @option opts [Boolean, nil] :add_gzip (nil) apply gzip post-processing
+        #   after archive generation
         #
         # @return [Array(String, Boolean)] a two-element array `[format, gzip]`
         #

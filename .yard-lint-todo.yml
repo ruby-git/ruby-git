@@ -20,7 +20,6 @@ Documentation/UndocumentedMethodArguments:
     - 'lib/git/log.rb'
     - 'lib/git/parsers/stash.rb'
     - 'lib/git/remote.rb'
-    - 'lib/git/repository/object_operations.rb'
 
 Documentation/UndocumentedObjects:
   Exclude:
@@ -31,7 +30,6 @@ Documentation/UndocumentedObjects:
     - 'lib/git/parsers/branch.rb'
     - 'lib/git/parsers/stash.rb'
     - 'lib/git/remote.rb'
-    - 'lib/git/repository/object_operations.rb'
 
 Documentation/UndocumentedOptions:
   Exclude:
@@ -159,12 +157,10 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/worktree/unlock.rb'
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/repository/factories.rb'
-    - 'lib/git/repository/object_operations.rb'
     - 'lib/git/repository/remote_operations.rb'
 
 # Tags validators
 Tags/OptionTags:
   Exclude:
     - 'lib/git/repository/factories.rb'
-    - 'lib/git/repository/object_operations.rb'
     - 'lib/git/repository/remote_operations.rb'
