@@ -155,10 +155,31 @@ module Git
         build_tag_info_object(parts, oid, target_oid)
       end
 
+      # Resolves canonical and target object OIDs from git tag format fields
+      #
+      # @param objecttype [String] the object type from git output
+      #
+      # @param objectname [String] the object OID from %(objectname)
+      #
+      # @param dereferenced [String] the object OID from %(*objectname)
+      #
+      # @return [Array((String, nil), String)] the two-element tuple
+      #   `[oid, target_oid]`
+      #
       def resolve_oids(objecttype, objectname, dereferenced)
         objecttype == 'tag' ? [objectname, dereferenced] : [nil, objectname]
       end
 
+      # Builds a TagInfo object from normalized parser values
+      #
+      # @param parts [Array<String>] the parsed format fields
+      #
+      # @param oid [String, nil] the tag object's OID or nil for lightweight tags
+      #
+      # @param target_oid [String] the target object OID
+      #
+      # @return [Git::TagInfo] the tag info with all fields populated
+      #
       def build_tag_info_object(parts, oid, target_oid)
         Git::TagInfo.new(
           name: parts[0], oid: oid, target_oid: target_oid, objecttype: parts[3],
