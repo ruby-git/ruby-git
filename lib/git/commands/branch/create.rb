@@ -55,118 +55,122 @@ module Git
           operand :start_point
         end
 
-        # @!method call(*, **)
+        # @overload call(branch_name, **options)
         #
-        #   @overload call(branch_name, **options)
+        #   Create a new branch from the current HEAD
         #
-        #     Create a new branch from the current HEAD
+        #   @param branch_name [String] the name of the branch to create
         #
-        #     @param branch_name [String] the name of the branch to create
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, String, nil] :track (nil) configure upstream tracking for
+        #     the new branch
         #
-        #     @option options [Boolean, String, nil] :track (nil)
-        #       configure upstream tracking for the new branch
+        #     - `true`: Set up tracking using the start-point branch itself (`--track`)
+        #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
+        #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        #       - `true`: Set up tracking using the start-point branch itself (`--track`)
-        #       - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
-        #       - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #     Alias: :t
         #
-        #       Alias: :t
+        #   @option options [Boolean, nil] :no_track (nil) do not set up tracking even if
+        #     `branch.autoSetupMerge` is set (`--no-track`)
         #
-        #     @option options [Boolean, nil] :no_track (nil)
-        #       do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
+        #   @option options [Boolean, nil] :force (nil) reset the branch to start point even if
+        #     it already exists
         #
-        #     @option options [Boolean, nil] :force (nil)
-        #       reset the branch to start point even if it already exists
+        #     Without this, git branch refuses to change an existing branch
         #
-        #       Without this, git branch refuses to change an existing branch.
+        #     Alias: :f
         #
-        #       Alias: :f
+        #   @option options [Boolean, nil] :recurse_submodules (nil) create the branch in the
+        #     superproject and all submodules
         #
-        #     @option options [Boolean, nil] :recurse_submodules (nil)
-        #       create the branch in the superproject and all submodules
+        #     This is an experimental feature
         #
-        #       This is an experimental feature.
+        #   @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
-        #     @option options [Boolean, nil] :quiet (nil)
-        #       suppress informational messages
+        #     Alias: :q
         #
-        #       Alias: :q
+        #   @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
+        #     (`--create-reflog`)
         #
-        #     @option options [Boolean, nil] :create_reflog (nil)
-        #       create the branch's reflog (`--create-reflog`)
+        #     Enables date-based sha1 expressions such as `branch@\\{yesterday}`
+        #     In non-bare repositories, reflogs are usually enabled by default via
+        #     `core.logAllRefUpdates`
         #
-        #       Enables date-based sha1 expressions such as `branch@{yesterday}`.
-        #       In non-bare repositories, reflogs are usually enabled by default
-        #       via `core.logAllRefUpdates`.
+        #   @option options [Boolean, nil] :no_create_reflog (nil) forcibly disable the
+        #     branch's reflog (`--no-create-reflog`)
         #
-        #     @option options [Boolean, nil] :no_create_reflog (nil)
-        #       forcibly disable the branch's reflog (`--no-create-reflog`)
+        #   @return [Git::CommandLineResult] the result of calling `git branch`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
         #
-        #   @overload call(branch_name, start_point, **options)
+        # @overload call(branch_name, start_point, **options)
         #
-        #     Create a new branch from the specified start point
+        #   Create a new branch from the specified start point
         #
-        #     @param branch_name [String] the name of the branch to create
+        #   @param branch_name [String] the name of the branch to create
         #
-        #     @param start_point [String, nil] the commit, branch, or tag to
-        #       start the new branch from
+        #   @param start_point [String, nil] the commit, branch, or tag to
+        #     start the new branch from
         #
-        #       Can also use `<rev-A>...<rev-B>` syntax for merge base.
+        #     Can also use `<rev-A>...<rev-B>` syntax for merge base
         #
-        #     @param options [Hash] command options
+        #   @param options [Hash] command options
         #
-        #     @option options [Boolean, String, nil] :track (nil)
-        #       configure upstream tracking for the new branch
+        #   @option options [Boolean, String, nil] :track (nil) configure upstream tracking for
+        #     the new branch
         #
-        #       - `true`: Set up tracking using the start-point branch itself (`--track`)
-        #       - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
-        #       - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
+        #     - `true`: Set up tracking using the start-point branch itself (`--track`)
+        #     - `'direct'`: Same as `true`, explicitly use start-point as upstream (`--track=direct`)
+        #     - `'inherit'`: Copy upstream configuration from start-point branch (`--track=inherit`)
         #
-        #       Alias: :t
+        #     Alias: :t
         #
-        #     @option options [Boolean, nil] :no_track (nil)
-        #       do not set up tracking even if `branch.autoSetupMerge` is set (`--no-track`)
+        #   @option options [Boolean, nil] :no_track (nil) do not set up tracking even if
+        #     `branch.autoSetupMerge` is set (`--no-track`)
         #
-        #     @option options [Boolean, nil] :force (nil)
-        #       reset the branch to start point even if it already exists
+        #   @option options [Boolean, nil] :force (nil) reset the branch to start point even if
+        #     it already exists
         #
-        #       Without this, git branch refuses to change an existing branch.
+        #     Without this, git branch refuses to change an existing branch
         #
-        #       Alias: :f
+        #     Alias: :f
         #
-        #     @option options [Boolean, nil] :recurse_submodules (nil)
-        #       create the branch in the superproject and all submodules
+        #   @option options [Boolean, nil] :recurse_submodules (nil) create the branch in the
+        #     superproject and all submodules
         #
-        #       This is an experimental feature.
+        #     This is an experimental feature
         #
-        #     @option options [Boolean, nil] :quiet (nil)
-        #       suppress informational messages
+        #   @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
-        #       Alias: :q
+        #     Alias: :q
         #
-        #     @option options [Boolean, nil] :create_reflog (nil)
-        #       create the branch's reflog (`--create-reflog`)
+        #   @option options [Boolean, nil] :create_reflog (nil) create the branch's reflog
+        #     (`--create-reflog`)
         #
-        #       Enables date-based sha1 expressions such as `branch@{yesterday}`.
-        #       In non-bare repositories, reflogs are usually enabled by default
-        #       via `core.logAllRefUpdates`.
+        #     Enables date-based sha1 expressions such as `branch@\\{yesterday}`
+        #     In non-bare repositories, reflogs are usually enabled by default via
+        #     `core.logAllRefUpdates`
         #
-        #     @option options [Boolean, nil] :no_create_reflog (nil)
-        #       forcibly disable the branch's reflog (`--no-create-reflog`)
+        #   @option options [Boolean, nil] :no_create_reflog (nil) forcibly disable the
+        #     branch's reflog (`--no-create-reflog`)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch`
+        #   @return [Git::CommandLineResult] the result of calling `git branch`
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

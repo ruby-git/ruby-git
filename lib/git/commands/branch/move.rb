@@ -47,47 +47,55 @@ module Git
           operand :new_branch, required: true
         end
 
-        # @!method call(*, **)
+        # Executes the git branch --move command to rename a branch
         #
-        #   Execute the git branch --move command to rename a branch
+        # @overload call(new_branch, **options)
         #
-        #   @overload call(new_branch, **options)
+        #   Rename the current branch to new_branch
         #
-        #     Rename the current branch to new_branch
+        #   @param new_branch [String] the new name for the branch
         #
-        #     @param new_branch [String] the new name for the branch
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already
+        #     exists
         #
-        #     @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already exists
+        #     Alias: :f
         #
-        #       Alias: :f
+        #   @return [Git::CommandLineResult] the result of calling `git branch --move`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
         #
-        #   @overload call(old_branch, new_branch, **options)
+        # @overload call(old_branch, new_branch, **options)
         #
-        #     Rename old_branch to new_branch
+        #   Rename old_branch to new_branch
         #
-        #     @param old_branch [String] the current name of the branch
+        #   @param old_branch [String] the current name of the branch
         #
-        #     @param new_branch [String] the new name for the branch
+        #   @param new_branch [String] the new name for the branch
         #
-        #     @param options [Hash] command options
+        #   @param options [Hash] command options
         #
-        #     @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already exists
+        #   @option options [Boolean, nil] :force (nil) allow renaming even if new_branch already
+        #     exists
         #
-        #       Alias: :f
+        #     Alias: :f
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #   @return [Git::CommandLineResult] the result of calling `git branch --move`
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
