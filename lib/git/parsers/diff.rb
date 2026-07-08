@@ -57,6 +57,8 @@ module Git
       #   \\{old_dir => new_dir}/file.rb
       #   dir/\\{old_name.rb => new_name.rb}
       RENAME_PATTERN = /\A(.+) => (.+)\z/
+
+      # Brace-expanded rename format from git numstat -M output
       BRACE_RENAME_PATTERN = /\A(.*)\{(.+) => (.+)\}(.*)\z/
 
       module_function
@@ -212,6 +214,16 @@ module Git
           end
         end
 
+        # Builds stats data from a numstat entry
+        #
+        # @param insertions_s [String] insertions field from numstat output
+        #
+        # @param deletions_s [String] deletions field from numstat output
+        #
+        # @param include_binary [Boolean] whether to include the `:binary` key
+        #
+        # @return [Hash] stats hash with insertion and deletion totals
+        #
         def build_stats(insertions_s, deletions_s, include_binary)
           stats = { insertions: Diff.parse_stat_value(insertions_s),
                     deletions: Diff.parse_stat_value(deletions_s) }
@@ -310,6 +322,12 @@ module Git
           build_raw_info(parsed, stats)
         end
 
+        # Parses the fields from a raw diff line
+        #
+        # @param line [String] a single raw output line
+        #
+        # @return [Hash] parsed metadata for one raw diff entry
+        #
         def parse_raw_line_parts(line)
           parts = line[1..].split(/\s+/, 5)
           status_char, *paths = parts[4].split("\t")
@@ -319,6 +337,14 @@ module Git
             similarity: similarity, src_path: src_path, dst_path: dst_path }
         end
 
+        # Builds a raw diff file info object from parsed metadata and stats
+        #
+        # @param parsed [Hash] parsed metadata from {#parse_raw_line_parts}
+        #
+        # @param stats [Hash] insertion, deletion, and binary information
+        #
+        # @return [Git::DiffFileRawInfo]
+        #
         def build_raw_info(parsed, stats)
           Git::DiffFileRawInfo.new(
             src: build_file_ref(parsed[:modes][0], parsed[:shas][0], parsed[:src_path]),
@@ -373,19 +399,43 @@ module Git
 
       # Parser for --patch output (combined with numstat)
       module Patch
+        # Header line pattern for each patch file section
         DIFF_HEADER_PATTERN = %r{\Adiff --git ("?)a/(.+?)\1 ("?)b/(.+?)\3\z}
+
+        # Index line pattern with source/destination SHAs and optional mode
         INDEX_PATTERN = /^index ([0-9a-f]{4,40})\.\.([0-9a-f]{4,40})( ......)?/
+
+        # File mode line pattern for file creation and deletion
         FILE_MODE_PATTERN = /^(new|deleted) file mode (......)/
+
+        # Old mode line pattern for mode changes
         OLD_MODE_PATTERN = /^old mode (......)/
+
+        # New mode line pattern for mode changes
         NEW_MODE_PATTERN = /^new mode (......)/
+
+        # Binary patch marker line pattern
         BINARY_PATTERN = /^Binary files /
+
+        # Git binary patch header line pattern
         GIT_BINARY_PATCH_PATTERN = /^GIT binary patch$/
+
+        # Rename source path line pattern
         RENAME_FROM_PATTERN = /^rename from (.+)$/
+
+        # Rename destination path line pattern
         RENAME_TO_PATTERN = /^rename to (.+)$/
+
+        # Copy source path line pattern
         COPY_FROM_PATTERN = /^copy from (.+)$/
+
+        # Copy destination path line pattern
         COPY_TO_PATTERN = /^copy to (.+)$/
+
+        # Similarity percentage line pattern
         SIMILARITY_PATTERN = /^similarity index (\d+)%$/
 
+        # Maps patch metadata status words to diff status symbols
         PATCH_STATUS_MAP = {
           'new' => :added,
           'deleted' => :deleted,
@@ -434,6 +484,16 @@ module Git
           split_pre_diff(pre_diff_lines, include_dirstat, patch_text)
         end
 
+        # Splits pre-patch lines into numstat, shortstat, and dirstat sections
+        #
+        # @param pre_diff_lines [Array<String>] lines before the first diff header
+        #
+        # @param include_dirstat [Boolean] whether dirstat output is expected
+        #
+        # @param patch_text [String] patch text starting at the first diff header
+        #
+        # @return [Array(Array<String>, (String, nil), Array<String>, String)]
+        #
         def split_pre_diff(pre_diff_lines, include_dirstat, patch_text)
           shortstat_index = pre_diff_lines.index { |l| l.match?(/^\s*\d+\s+files?\s+changed/) }
           return [pre_diff_lines, nil, [], patch_text] unless shortstat_index
@@ -448,6 +508,12 @@ module Git
         module PatchMetadataParser
           private
 
+          # Parses a metadata line for the current patch file
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [void]
+          #
           def parse_metadata_line(line)
             try_parse_index(line)
             try_parse_file_mode(line)
@@ -457,6 +523,12 @@ module Git
             try_mark_binary(line)
           end
 
+          # Parses index metadata and updates mode defaults when present
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [void]
+          #
           def try_parse_index(line)
             return unless (match = line.match(INDEX_PATTERN))
 
@@ -468,6 +540,12 @@ module Git
             @current_file[:src_mode] = @current_file[:dst_mode] = mode
           end
 
+          # Parses file creation and deletion mode lines
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [void]
+          #
           def try_parse_file_mode(line)
             return unless (match = line.match(FILE_MODE_PATTERN))
 
@@ -476,6 +554,12 @@ module Git
             apply_file_mode(type, mode)
           end
 
+          # Parses old/new mode lines and detects type changes
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [void]
+          #
           def try_parse_old_new_mode(line)
             if (match = line.match(OLD_MODE_PATTERN))
               @current_file[:src_mode] = match[1]
@@ -486,6 +570,10 @@ module Git
             end
           end
 
+          # Marks the current entry as a type change when type bits differ
+          #
+          # @return [void]
+          #
           def detect_type_change
             src_mode = @current_file[:src_mode]
             dst_mode = @current_file[:dst_mode]
@@ -496,6 +584,14 @@ module Git
             @current_file[:status] = :type_changed if src_mode[0, 3] != dst_mode[0, 3]
           end
 
+          # Applies source or destination mode updates based on file operation type
+          #
+          # @param type [String] operation type (`'new'` or `'deleted'`)
+          #
+          # @param mode [String] file mode from patch metadata
+          #
+          # @return [void]
+          #
           def apply_file_mode(type, mode)
             case type
             when 'new'
@@ -507,11 +603,29 @@ module Git
             end
           end
 
+          # Parses rename or copy metadata for the current patch file
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [Symbol, nil] parsed status when a rename or copy line matches
+          #
           def try_parse_rename(line)
             try_parse_rename_or_copy(line, RENAME_FROM_PATTERN, RENAME_TO_PATTERN, :renamed) ||
               try_parse_rename_or_copy(line, COPY_FROM_PATTERN, COPY_TO_PATTERN, :copied)
           end
 
+          # Parses one side of rename or copy metadata
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @param from_pattern [Regexp] pattern for source path lines
+          #
+          # @param to_pattern [Regexp] pattern for destination path lines
+          #
+          # @param status [Symbol] status to set when a pattern matches
+          #
+          # @return [Symbol, nil] the assigned status when matched
+          #
           def try_parse_rename_or_copy(line, from_pattern, to_pattern, status)
             if (match = line.match(from_pattern))
               @current_file[:src_path] = Diff.unescape_path(match[1])
@@ -522,12 +636,24 @@ module Git
             end
           end
 
+          # Parses similarity index metadata
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [Integer, nil] parsed similarity percentage when matched
+          #
           def try_parse_similarity(line)
             return unless (match = line.match(SIMILARITY_PATTERN))
 
             @current_file[:similarity] = match[1].to_i
           end
 
+          # Marks the current file as binary when binary markers are present
+          #
+          # @param line [String] a metadata line from the patch block
+          #
+          # @return [Boolean, nil] true when binary metadata is detected
+          #
           def try_mark_binary(line)
             @current_file[:binary] = true if line.match?(BINARY_PATTERN) || line.match?(GIT_BINARY_PATCH_PATTERN)
           end
@@ -539,6 +665,14 @@ module Git
         class PatchFileParser
           include PatchMetadataParser
 
+          # Initializes parser state for a patch text block
+          #
+          # @param patch_text [String] unified diff patch text
+          #
+          # @param numstat_map [Hash<String, Hash>] path to insert/delete stats
+          #
+          # @return [void]
+          #
           def initialize(patch_text, numstat_map = {})
             @patch_text = patch_text
             @numstat_map = numstat_map
@@ -546,6 +680,10 @@ module Git
             @current_file = nil
           end
 
+          # Parses patch text into file patch info objects
+          #
+          # @return [Array<Git::DiffFilePatchInfo>]
+          #
           def parse
             @patch_text.split("\n").each { |line| process_line(line) }
             finalize_current_file
@@ -554,6 +692,12 @@ module Git
 
           private
 
+          # Processes one patch line and updates parser state
+          #
+          # @param line [String] a single line from patch text
+          #
+          # @return [void]
+          #
           def process_line(line)
             if (match = line.match(DIFF_HEADER_PATTERN))
               start_new_file(match, line)
@@ -562,6 +706,14 @@ module Git
             end
           end
 
+          # Starts a new file section from a `diff --git` header
+          #
+          # @param match [MatchData] parsed header match for current diff file
+          #
+          # @param line [String] raw `diff --git` header line
+          #
+          # @return [void]
+          #
           def start_new_file(match, line)
             finalize_current_file
             @current_file = default_file_state.merge(
@@ -571,16 +723,30 @@ module Git
             )
           end
 
+          # Builds the default state hash for a new patch file entry
+          #
+          # @return [Hash] default metadata for an in-progress file parse
+          #
           def default_file_state
             { src_mode: nil, dst_mode: nil, src_sha: '', dst_sha: '',
               src_path: nil, dst_path: nil, status: :modified, similarity: nil, binary: false }
           end
 
+          # Appends metadata and patch text to the current file entry
+          #
+          # @param line [String] a metadata or patch content line
+          #
+          # @return [void]
+          #
           def append_to_current_file(line)
             parse_metadata_line(line)
             @current_file[:patch] = "#{@current_file[:patch]}\n#{line}"
           end
 
+          # Finalizes and stores the current file entry
+          #
+          # @return [void]
+          #
           def finalize_current_file
             return unless @current_file
 
@@ -588,6 +754,10 @@ module Git
             @current_file = nil
           end
 
+          # Builds a finalized patch info object for the current file
+          #
+          # @return [Git::DiffFilePatchInfo]
+          #
           def build_patch_info
             path = @current_file[:dst_path] || @current_file[:src_path]
             stats = @numstat_map.fetch(path, { insertions: 0, deletions: 0 })
@@ -600,6 +770,12 @@ module Git
             )
           end
 
+          # Builds a file reference for one side of the diff entry
+          #
+          # @param side [Symbol] diff side key (`:src` or `:dst`)
+          #
+          # @return [Git::FileRef, nil]
+          #
           def build_file_ref(side)
             path = @current_file[:"#{side}_path"]
             return nil if path.nil?
