@@ -93,9 +93,7 @@ module Git
         operand :pathspec, repeatable: true
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(*pathspec, **options)
+      # @overload call(*pathspec, **options)
       #
       #     Execute the `git commit` command.
       #
@@ -267,6 +265,9 @@ module Git
       #
       #   @api public
       #
+      def call(*, **)
+        super
+      end
     end
   end
 end

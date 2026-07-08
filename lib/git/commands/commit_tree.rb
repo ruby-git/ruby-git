@@ -46,9 +46,7 @@ module Git
         operand :tree, required: true
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(tree, **options)
+      # @overload call(tree, **options)
       #
       #     Execute the `git commit-tree` command
       #
@@ -95,6 +93,9 @@ module Git
       #       status
       #
       #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end

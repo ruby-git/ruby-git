@@ -44,9 +44,7 @@ module Git
           operand :value, required: true
         end
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, value, **options)
+        # @overload call(name, value, **options)
         #
         #     Execute the `git config --add` command
         #
@@ -77,6 +75,11 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
+        def call(*, **)
+          super
+        end
       end
     end
   end
