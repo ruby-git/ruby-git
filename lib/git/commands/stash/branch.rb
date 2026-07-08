@@ -38,7 +38,7 @@ module Git
           operand :stash
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   Create a branch from a stash entry
         #
@@ -59,6 +59,8 @@ module Git
         #   @return [Git::CommandLineResult] the result of calling `git stash branch`
         #
         #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
       end
     end
   end
