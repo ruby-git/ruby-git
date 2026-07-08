@@ -38,7 +38,12 @@ module Git
           operand :newurl, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :push (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, newurl, **options)
         #
@@ -54,7 +59,11 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote set-url --add`
         #
+        #     @raise [ArgumentError] if unsupported options are provided
+        #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end

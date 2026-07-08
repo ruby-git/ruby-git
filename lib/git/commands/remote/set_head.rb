@@ -39,7 +39,12 @@ module Git
           operand :branch
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :auto (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, branch)
         #
@@ -51,9 +56,9 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git remote set-head`
         #
-        #     @raise [ArgumentError] if unsupported options are provided
-        #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
         #
         #   @overload call(name, **options)
         #
@@ -76,6 +81,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
