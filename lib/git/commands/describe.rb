@@ -64,9 +64,7 @@ module Git
         operand :commit_ish, repeatable: true
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(*commit_ish, **options)
+      # @overload call(*commit_ish, **options)
       #
       #     Execute the `git describe` command
       #
@@ -150,6 +148,9 @@ module Git
       #       status
       #
       #     @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end

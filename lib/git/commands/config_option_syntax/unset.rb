@@ -50,9 +50,7 @@ module Git
         # git config --unset exits 5 when trying to unset a non-existent or multi-valued key
         allow_exit_status 0..5
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, value_regex = nil, **options)
+        # @overload call(name, value_regex = nil, **options)
         #
         #     Execute the `git config --unset` command
         #
@@ -83,6 +81,11 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 5)
+        #
+        #     @api public
+        def call(*, **)
+          super
+        end
       end
     end
   end
