@@ -46,34 +46,42 @@ module Git
         # git branch --delete exits 1 when one or more branches cannot be deleted
         allow_exit_status 0..1
 
-        # @!method call(*, **)
+        # Executes the git branch --delete command to delete branches
         #
-        #   Execute the git branch --delete command to delete branches
+        # @overload call(*branch_name, **options)
         #
-        #   @overload call(*branch_name, **options)
+        #   @param branch_name [Array<String>] one or more branch names to delete
         #
-        #     @param branch_name [Array<String>] One or more branch names to delete.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :force (nil) allow deleting the branch irrespective of
+        #     its merged status, or whether it even points to a valid commit
         #
-        #     @option options [Boolean, nil] :force (nil) allow deleting the branch irrespective of its merged
-        #       status, or whether it even points to a valid commit. This is equivalent
-        #       to the `-D` shortcut (`--delete --force`).
+        #     Equivalent to the `-D` shortcut (`--delete --force`)
         #
-        #       Alias: :f
+        #     Alias: :f
         #
-        #     @option options [Boolean, nil] :remotes (nil) delete remote-tracking branches. Use this together
-        #       with `--delete` to delete remote-tracking branches. Note that this only
-        #       makes sense if the remote-tracking branches no longer exist in the remote
-        #       repository or if `git fetch` was configured not to fetch them again.
+        #   @option options [Boolean, nil] :remotes (nil) delete remote-tracking branches
         #
-        #       Alias: :r
+        #     Use this together with `--delete` to remove remote-tracking branches that no
+        #     longer exist in the remote repository, or if `git fetch` was configured not to
+        #     fetch them again
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --delete`
+        #     Alias: :r
         #
-        #     @raise [ArgumentError] if no branch names are provided
+        #   @return [Git::CommandLineResult] the result of calling `git branch --delete`
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #   @raise [ArgumentError] if no branch names are provided
+        #
+        #   @raise [ArgumentError] if unsupported options are provided
+        #
+        #   @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

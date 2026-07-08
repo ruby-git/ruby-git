@@ -57,105 +57,121 @@ module Git
           operand :pattern, repeatable: true
         end
 
-        # @!method call(*, **)
+        # @overload call(*pattern, **options)
         #
-        #   @overload call(*pattern, **options)
+        #   Execute the `git branch --list` command
         #
-        #     Execute the `git branch --list` command
+        #   @param pattern [Array<String>] shell wildcard patterns to filter branches
         #
-        #     @param pattern [Array<String>] shell wildcard patterns to filter branches
+        #     If multiple patterns are given, a branch is shown if it matches any
+        #     of the patterns
         #
-        #       If multiple patterns are given, a branch is shown if it matches any of the patterns.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, String, nil] :color (nil) color branches output
         #
-        #     @option options [Boolean, String, nil] :color (nil) color branches output
+        #     Pass `true` for `--color` or a string (`'always'`, `'never'`,
+        #     `'auto'`) for `--color=<when>`
         #
-        #       Pass `true` for `--color` or a string (`'always'`, `'never'`, `'auto'`) for `--color=<when>`.
+        #   @option options [Boolean, nil] :no_color (nil) suppress colored output
+        #     (`--no-color`)
         #
-        #     @option options [Boolean, nil] :no_color (nil) suppress colored output (`--no-color`)
+        #   @option options [Boolean, Integer, nil] :verbose (nil) show sha1 and
+        #     commit subject for each branch
         #
-        #     @option options [Boolean, Integer, nil] :verbose (nil) show sha1 and commit
-        #       subject for each branch
+        #     Pass `true` for `--verbose` (show sha1 and subject); pass `2` for
+        #     `--verbose --verbose` (also show the linked worktree path and
+        #     upstream branch name)
         #
-        #       Pass `true` for `--verbose` (show sha1 and subject); pass `2` for
-        #       `--verbose --verbose` (also show the linked worktree path and upstream
-        #       branch name).
+        #     Alias: :v
         #
-        #       Alias: :v
+        #   @option options [Boolean, Integer, nil] :abbrev (nil) minimum sha1
+        #     display length when used with verbose mode
         #
-        #     @option options [Boolean, Integer, nil] :abbrev (nil) minimum sha1 display
-        #       length when used with verbose mode
+        #     Pass an integer for `--abbrev=<n>` or `true` for `--abbrev`
+        #     (default length)
         #
-        #       Pass an integer for `--abbrev=<n>` or `true` for `--abbrev` (default length).
+        #   @option options [Boolean, nil] :no_abbrev (nil) show full sha1s
+        #     (`--no-abbrev`)
         #
-        #     @option options [Boolean, nil] :no_abbrev (nil) show full sha1s (`--no-abbrev`)
+        #   @option options [Boolean, String, nil] :column (nil) display branch
+        #     listing in columns
         #
-        #     @option options [Boolean, String, nil] :column (nil) display branch listing in
-        #       columns
+        #     Pass `true` for `--column` or a string of options for
+        #     `--column=<options>`
         #
-        #       Pass `true` for `--column` or a string of options for `--column=<options>`.
-        #       Only applicable in non-verbose mode.
+        #     Only applicable in non-verbose mode
         #
-        #     @option options [Boolean, nil] :no_column (nil) disable column output (`--no-column`)
+        #   @option options [Boolean, nil] :no_column (nil) disable column output
+        #     (`--no-column`)
         #
-        #     @option options [String, Array<String>] :sort (nil) sort branches by the
-        #       specified key(s)
+        #   @option options [String, Array<String>] :sort (nil) sort branches by
+        #     the specified key(s)
         #
-        #       Give an array to add multiple --sort options. Prefix each key with '-' for
-        #       descending order. For example, sort: ['refname', '-committerdate'].
+        #     Give an array to add multiple --sort options
+        #     Prefix each key with '-' for descending order
+        #     For example, sort: ['refname', '-committerdate']
         #
-        #     @option options [Boolean, String, nil] :merged (nil) list only branches merged
-        #       into the specified commit
+        #   @option options [Boolean, String, nil] :merged (nil) list only branches
+        #     merged into the specified commit
         #
-        #       Pass `true` to default to HEAD or a commit ref string to filter by
-        #       that commit.
+        #     Pass `true` to default to HEAD or a commit ref string to filter by
+        #     that commit
         #
-        #     @option options [Boolean, String, nil] :no_merged (nil) list only branches not
-        #       merged into the specified commit
+        #   @option options [Boolean, String, nil] :no_merged (nil) list only
+        #     branches not merged into the specified commit
         #
-        #       Pass `true` to default to HEAD or a commit ref string to filter by
-        #       that commit.
+        #     Pass `true` to default to HEAD or a commit ref string to filter by
+        #     that commit
         #
-        #     @option options [Boolean, String, nil] :contains (nil) list only branches that
-        #       contain the specified commit
+        #   @option options [Boolean, String, nil] :contains (nil) list only
+        #     branches that contain the specified commit
         #
-        #       Pass `true` to default to HEAD or a commit ref string to filter by
-        #       that commit.
+        #     Pass `true` to default to HEAD or a commit ref string to filter by
+        #     that commit
         #
-        #     @option options [Boolean, String, nil] :no_contains (nil) list only branches
-        #       that don't contain the specified commit
+        #   @option options [Boolean, String, nil] :no_contains (nil) list only
+        #     branches that don't contain the specified commit
         #
-        #       Pass `true` to default to HEAD or a commit ref string to filter by
-        #       that commit.
+        #     Pass `true` to default to HEAD or a commit ref string to filter by
+        #     that commit
         #
-        #     @option options [String] :points_at (nil) list only branches that point
-        #       at the specified object
+        #   @option options [String] :points_at (nil) list only branches that
+        #     point at the specified object
         #
-        #     @option options [String] :format (nil) output format string for each branch
+        #   @option options [String] :format (nil) output format string for each
+        #     branch
         #
-        #     @option options [Boolean, nil] :remotes (nil) list only remote-tracking
-        #       branches
+        #   @option options [Boolean, nil] :remotes (nil) list only remote-tracking
+        #     branches
         #
-        #       Alias: :r
+        #     Alias: :r
         #
-        #     @option options [Boolean, nil] :all (nil) list both local and remote branches
+        #   @option options [Boolean, nil] :all (nil) list both local and remote
+        #     branches
         #
-        #       Alias: :a
+        #     Alias: :a
         #
-        #     @option options [Boolean, nil] :ignore_case (nil) sort and filter branches
-        #       case insensitively
+        #   @option options [Boolean, nil] :ignore_case (nil) sort and filter
+        #     branches case insensitively
         #
-        #       Alias: :i
+        #     Alias: :i
         #
-        #     @option options [Boolean, nil] :omit_empty (nil) do not print a newline after
-        #       formatted refs where the format expands to the empty string
+        #   @option options [Boolean, nil] :omit_empty (nil) do not print a
+        #     newline after formatted refs where the format expands to the empty
+        #     string
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --list`
+        #   @return [Git::CommandLineResult] the result of calling `git branch --list`
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
