@@ -73,119 +73,123 @@ module Git
         execution_option :chdir
       end
 
-      # @!method call(*, **)
       #
-      #   @overload call(*file, **options)
+      # @overload call(*file, **options)
       #
-      #     Execute the `git ls-files` command.
+      #   Execute the `git ls-files` command.
       #
-      #     @param file [Array<String>] paths to limit file listing
+      #   @param file [Array<String>] paths to limit file listing
       #
-      #     @param options [Hash] command options
+      #   @param options [Hash] command options
       #
-      #     @option options [Boolean, nil] :z (nil) use NUL line termination and do not quote filenames
+      #   @option options [Boolean, nil] :z (nil) use NUL line termination and do not quote filenames
       #
-      #     @option options [Boolean, nil] :t (nil) show status tags together with filenames
+      #   @option options [Boolean, nil] :t (nil) show status tags together with filenames
       #
-      #     @option options [Boolean, nil] :v (nil) similar to `-t` but use lowercase letters for files
-      #       that are marked as assume unchanged
+      #   @option options [Boolean, nil] :v (nil) similar to `-t` but use lowercase letters for files
+      #     that are marked as assume unchanged
       #
-      #     @option options [Boolean, nil] :f (nil) similar to `-t` but use lowercase letters for files
-      #       that are marked as fsmonitor valid
+      #   @option options [Boolean, nil] :f (nil) similar to `-t` but use lowercase letters for files
+      #     that are marked as fsmonitor valid
       #
-      #     @option options [Boolean, nil] :cached (nil) show all files cached in the index
+      #   @option options [Boolean, nil] :cached (nil) show all files cached in the index
       #
-      #       Alias: :c
+      #     Alias: :c
       #
-      #     @option options [Boolean, nil] :deleted (nil) show files with an unstaged deletion
+      #   @option options [Boolean, nil] :deleted (nil) show files with an unstaged deletion
       #
-      #       Alias: :d
+      #     Alias: :d
       #
-      #     @option options [Boolean, nil] :others (nil) show other (i.e. untracked) files in the output
+      #   @option options [Boolean, nil] :others (nil) show other (i.e. untracked) files in the output
       #
-      #       Alias: :o
+      #     Alias: :o
       #
-      #     @option options [Boolean, nil] :ignored (nil) show only ignored files in the output
+      #   @option options [Boolean, nil] :ignored (nil) show only ignored files in the output
       #
-      #       Must be used with either `:cached` or `:others`. When used with `:cached`, shows only
-      #       cached files matching an exclude pattern. When used with `:others`, shows only
-      #       untracked files matched by an exclude pattern.
+      #     Must be used with either `:cached` or `:others`. When used with `:cached`, shows only
+      #     cached files matching an exclude pattern. When used with `:others`, shows only
+      #     untracked files matched by an exclude pattern.
       #
-      #       Alias: :i
+      #     Alias: :i
       #
-      #     @option options [Boolean, nil] :stage (nil) show object name, mode bits, and stage number
+      #   @option options [Boolean, nil] :stage (nil) show object name, mode bits, and stage number
       #
-      #       Alias: :s
+      #     Alias: :s
       #
-      #     @option options [Boolean, nil] :unmerged (nil) show information about unmerged files
+      #   @option options [Boolean, nil] :unmerged (nil) show information about unmerged files
       #
-      #       Alias: :u
+      #     Alias: :u
       #
-      #     @option options [Boolean, nil] :killed (nil) show untracked files that need to be removed
-      #       due to file/directory conflicts for tracked files
+      #   @option options [Boolean, nil] :killed (nil) show untracked files that need to be removed
+      #     due to file/directory conflicts for tracked files
       #
-      #       Alias: :k
+      #     Alias: :k
       #
-      #     @option options [Boolean, nil] :modified (nil) show files with an unstaged modification
+      #   @option options [Boolean, nil] :modified (nil) show files with an unstaged modification
       #
-      #       Alias: :m
+      #     Alias: :m
       #
-      #     @option options [Boolean, nil] :resolve_undo (nil) show files having resolve-undo information
+      #   @option options [Boolean, nil] :resolve_undo (nil) show files having resolve-undo information
       #
-      #     @option options [Boolean, nil] :directory (nil) show just the directory name (with trailing
-      #       slash) when a whole directory is classified as "other"
+      #   @option options [Boolean, nil] :directory (nil) show just the directory name (with trailing
+      #     slash) when a whole directory is classified as "other"
       #
-      #     @option options [Boolean, nil] :no_empty_directory (nil) do not list empty directories
+      #   @option options [Boolean, nil] :no_empty_directory (nil) do not list empty directories
       #
-      #     @option options [Boolean, nil] :eol (nil) show EOL and encoding attributes of files
+      #   @option options [Boolean, nil] :eol (nil) show EOL and encoding attributes of files
       #
-      #     @option options [Boolean, nil] :deduplicate (nil) suppress duplicate filenames when showing
-      #       only filenames
+      #   @option options [Boolean, nil] :deduplicate (nil) suppress duplicate filenames when showing
+      #     only filenames
       #
-      #     @option options [String] :exclude (nil) skip untracked files matching the given pattern
+      #   @option options [String] :exclude (nil) skip untracked files matching the given pattern
       #
-      #       Alias: :x
+      #     Alias: :x
       #
-      #     @option options [String] :exclude_from (nil) read exclude patterns from the given file
+      #   @option options [String] :exclude_from (nil) read exclude patterns from the given file
       #
-      #       Alias: :X
+      #     Alias: :X
       #
-      #     @option options [String] :exclude_per_directory (nil) read additional exclude patterns
-      #       from the named file in each directory
+      #   @option options [String] :exclude_per_directory (nil) read additional exclude patterns
+      #     from the named file in each directory
       #
-      #     @option options [Boolean, nil] :exclude_standard (nil) add the standard git exclusions
+      #   @option options [Boolean, nil] :exclude_standard (nil) add the standard git exclusions
       #
-      #     @option options [Boolean, nil] :error_unmatch (nil) treat unmatched files as an error
+      #   @option options [Boolean, nil] :error_unmatch (nil) treat unmatched files as an error
       #
-      #     @option options [String] :with_tree (nil) pretend paths removed since the named
-      #       tree-ish are still present when using `--error-unmatch`
+      #   @option options [String] :with_tree (nil) pretend paths removed since the named
+      #     tree-ish are still present when using `--error-unmatch`
       #
-      #     @option options [Boolean, nil] :full_name (nil) force paths to be output relative to the
-      #       project top-level directory
+      #   @option options [Boolean, nil] :full_name (nil) force paths to be output relative to the
+      #     project top-level directory
       #
-      #     @option options [Boolean, nil] :recurse_submodules (nil) recursively calls ls-files on each
-      #       active submodule in the repository
+      #   @option options [Boolean, nil] :recurse_submodules (nil) recursively calls ls-files on each
+      #     active submodule in the repository
       #
-      #     @option options [Boolean, Integer, String, nil] :abbrev (nil) show only a partial prefix of the
-      #       object name; pass `true` for the default number of hex digits, or an Integer or String
-      #       for a specific prefix length (e.g., `abbrev: 10` or `abbrev: "10"`)
+      #   @option options [Boolean, Integer, String, nil] :abbrev (nil) show only a partial prefix of the
+      #     object name; pass `true` for the default number of hex digits, or an Integer or String
+      #     for a specific prefix length (e.g., `abbrev: 10` or `abbrev: "10"`)
       #
-      #     @option options [Boolean, nil] :debug (nil) after each filename, output raw index information
-      #       (ctime data, mtime data, dev, ino, uid, gid, size, flags, flagsx)
+      #   @option options [Boolean, nil] :debug (nil) after each filename, output raw index information
+      #     (ctime data, mtime data, dev, ino, uid, gid, size, flags, flagsx)
       #
-      #     @option options [Boolean, nil] :sparse (nil) if the index is sparse, show the sparse directory
-      #       entries rather than expanding to the contained files
+      #   @option options [Boolean, nil] :sparse (nil) if the index is sparse, show the sparse directory
+      #     entries rather than expanding to the contained files
       #
-      #     @option options [String] :format (nil) a string that interpolates %(fieldname) from
-      #       the index entry for each file
+      #   @option options [String] :format (nil) a string that interpolates %(fieldname) from
+      #     the index entry for each file
       #
-      #     @option options [String] :chdir (nil) run the command from the specified directory
+      #   @option options [String] :chdir (nil) run the command from the specified directory
       #
-      #     @return [Git::CommandLineResult] the result of calling `git ls-files`
+      #   @return [Git::CommandLineResult] the result of calling `git ls-files`
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      #   @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      #   @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end

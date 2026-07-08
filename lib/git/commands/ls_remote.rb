@@ -71,85 +71,91 @@ module Git
       # Exit status 2 means no matching refs were found (used with --exit-code)
       allow_exit_status 0..2
 
-      # @!method call(*, **)
       #
-      #   @overload call(repository = nil, *patterns, **options)
+      # @overload call(repository = nil, *patterns, **options)
       #
-      #     Execute the `git ls-remote` command
+      #   Execute the `git ls-remote` command
       #
-      #     @param repository [String, nil] The remote name or URL to query
+      #   @param repository [String, nil] the remote name or URL to query
       #
-      #       When nil, git uses the remote inferred from the current branch's
-      #       tracking configuration, or "origin" if no tracking remote is set.
+      #     When nil, git uses the remote inferred from the current branch's
+      #     tracking configuration, or "origin" if no tracking remote is set.
       #
-      #     @param patterns [Array<String>] One or more ref patterns to filter results
+      #   @param patterns [Array<String>] one or more ref patterns to filter results
       #
-      #       When omitted, all references (after filtering via `--branches`, `--tags`,
-      #       `--refs`) are shown. When specified, only refs matching one or more
-      #       patterns are displayed.
+      #     When omitted, all references (after filtering via `--branches`, `--tags`,
+      #     `--refs`) are shown. When specified, only refs matching one or more
+      #     patterns are displayed.
       #
-      #     @param options [Hash] command options
+      #   @param options [Hash] command options
       #
-      #     @option options [Boolean, nil] :branches (nil) limit output to refs under `refs/heads/`
+      #   @option options [Boolean, nil] :branches (nil) limit output to refs under `refs/heads/`
       #
-      #       Alias: :b
+      #     Alias: :b
       #
-      #     @option options [Boolean, nil] :heads (nil) limit output to refs under `refs/heads/`
+      #   @option options [Boolean, nil] :heads (nil) limit output to refs under `refs/heads/`
       #
-      #       Deprecated: use `:branches` instead. Kept for backward compatibility with
-      #       older git versions where `--heads` is the only supported flag.
+      #     Deprecated: use `:branches` instead. Kept for backward compatibility with
+      #     older git versions where `--heads` is the only supported flag.
       #
-      #       Alias: :h
+      #     Alias: :h
       #
-      #     @option options [Boolean, nil] :tags (nil) limit output to refs under `refs/tags/`
+      #   @option options [Boolean, nil] :tags (nil) limit output to refs under `refs/tags/`
       #
-      #       Alias: :t
+      #     Alias: :t
       #
-      #     @option options [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
-      #       like `HEAD` from the output
+      #   @option options [Boolean, nil] :refs (nil) exclude peeled tags and pseudorefs
+      #     like `HEAD` from the output
       #
-      #     @option options [String] :upload_pack (nil) full path to `git-upload-pack`
-      #       on the remote host
+      #   @option options [String] :upload_pack (nil) full path to `git-upload-pack`
+      #     on the remote host
       #
-      #       Useful when accessing repositories via SSH where the daemon does not
-      #       use the PATH configured by the user.
+      #     Useful when accessing repositories via SSH where the daemon does not
+      #     use the PATH configured by the user.
       #
-      #     @option options [Boolean, nil] :quiet (nil) do not print the remote URL to stderr
+      #   @option options [Boolean, nil] :quiet (nil) do not print the remote URL to stderr
       #
-      #       Alias: :q
+      #     Alias: :q
       #
-      #     @option options [Boolean, nil] :exit_code (nil) exit with status `2` when no
-      #       matching refs are found in the remote repository
+      #   @option options [Boolean, nil] :exit_code (nil) exit with status `2` when no
+      #     matching refs are found in the remote repository
       #
-      #       Without this option, the command exits `0` whenever it successfully
-      #       communicates with the remote, even if no refs match.
+      #     Without this option, the command exits `0` whenever it successfully
+      #     communicates with the remote, even if no refs match.
       #
-      #     @option options [Boolean, nil] :get_url (nil) expand and print the remote URL
-      #       (respecting `url.<base>.insteadOf` config) and exit without contacting
-      #       the remote
+      #   @option options [Boolean, nil] :get_url (nil) expand and print the remote URL
+      #     (respecting `url.<base>.insteadOf` config) and exit without contacting
+      #     the remote
       #
-      #     @option options [String] :sort (nil) sort output by the given key
+      #   @option options [String] :sort (nil) sort output by the given key
       #
-      #       Prefix `-` for descending order. Supports `"version:refname"` or
-      #       `"v:refname"`. See `git for-each-ref` for sort key documentation.
+      #     Prefix `-` for descending order. Supports `"version:refname"` or
+      #     `"v:refname"`. See `git for-each-ref` for sort key documentation.
       #
-      #     @option options [Boolean, nil] :symref (nil) show the underlying ref pointed to by
-      #       symbolic refs
+      #   @option options [Boolean, nil] :symref (nil) show the underlying ref pointed to by
+      #     symbolic refs
       #
-      #       The `upload-pack` protocol currently surfaces only the `HEAD` symref,
-      #       so that is typically the only symref shown.
+      #     The `upload-pack` protocol currently surfaces only the `HEAD` symref,
+      #     so that is typically the only symref shown.
       #
-      #     @option options [String, Array<String>] :server_option (nil) transmit a
-      #       string to the server when communicating using protocol version 2
+      #   @option options [String, Array<String>] :server_option (nil) transmit a
+      #     string to the server when communicating using protocol version 2
       #
-      #       The string must not contain NUL or LF characters. Repeatable by
-      #       passing an Array. Alias: :o
+      #     The string must not contain NUL or LF characters. Repeatable by
+      #     passing an Array. Alias: :o
       #
-      #     @option options [Numeric] :timeout (nil) execution timeout in seconds
+      #   @option options [Numeric] :timeout (nil) execution timeout in seconds
       #
-      #     @return [Git::CommandLineResult] the result of calling `git ls-remote`
+      #   @return [Git::CommandLineResult] the result of calling `git ls-remote`
       #
-      #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+      #   @raise [ArgumentError] if unsupported options are provided
+      #
+      #   @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
+      #
+      #   @api public
+      def call(*, **)
+        super
+      end
     end
   end
 end
