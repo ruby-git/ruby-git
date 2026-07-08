@@ -51,27 +51,30 @@ module Git
         # All three are valid results — callers check exitstatus to distinguish them.
         allow_exit_status 0..2
 
-        # @!method call(*, **)
+        # @overload call(ref, **options)
         #
-        #   @overload call(ref, **options)
+        #   Execute `git show-ref --exists` to check whether a ref exists
         #
-        #     Execute `git show-ref --exists` to check whether a ref exists
+        #   @param ref [String] the fully-qualified ref name to check
+        #     (e.g. `"refs/heads/main"`)
         #
-        #     @param ref [String] the fully-qualified ref name to check
-        #       (e.g. `"refs/heads/main"`)
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Numeric] :timeout (nil) abort the command after this many
+        #     seconds
         #
-        #     @option options [Numeric] :timeout (nil) abort the command after this many
-        #       seconds
+        #   @return [Git::CommandLineResult] the result of calling
+        #     `git show-ref --exists`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git show-ref --exists`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if no ref is provided
+        #   @raise [Git::FailedError] if git exits outside the allowed range (exit code > 2)
         #
-        #     @raise [Git::FailedError] if git exits with a status outside `0..2`
+        # @api public
         #
+        def call(*, **)
+          super
+        end
       end
     end
   end

@@ -36,39 +36,45 @@ module Git
           operand :stash
         end
 
-        # @!method call(*, **)
+        # @overload call(**options)
         #
-        #   Apply stashed changes
+        #   Apply the latest stash
         #
-        #   @overload call(**options)
+        #   @param options [Hash] command options
         #
-        #     Apply the latest stash
+        #   @option options [Boolean, nil] :index (nil) restore the index state as well
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
-        #     @option options [Boolean, nil] :index (nil) restore the index state as well
+        #     Alias: :q
         #
-        #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #       Alias: :q
+        # @overload call(stash, **options)
         #
-        #   @overload call(stash, **options)
+        #   Apply a specific stash
         #
-        #     Apply a specific stash
+        #   @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :index (nil) restore the index state as well
         #
-        #     @option options [Boolean, nil] :index (nil) restore the index state as well
+        #   @option options [Boolean, nil] :quiet (nil) suppress informational messages
         #
-        #     @option options [Boolean, nil] :quiet (nil) suppress informational messages
+        #     Alias: :q
         #
-        #       Alias: :q
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #   @return [Git::CommandLineResult] the result of calling `git stash apply`
+        # @return [Git::CommandLineResult] the result of calling `git stash apply`
         #
-        #   @raise [Git::FailedError] if the stash does not exist
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        # @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

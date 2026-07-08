@@ -72,48 +72,51 @@ module Git
           operand :ref, repeatable: true, required: true
         end
 
-        # @!method call(*ref, **options)
+        # @overload call(*ref, **options)
         #
-        #   @overload call(*ref, **options)
+        #   Execute `git show-ref --verify` to verify refs by their full name
         #
-        #     Execute `git show-ref --verify` to verify refs by their full name
+        #   @param ref [Array<String>] one or more fully-qualified ref names
         #
-        #     @param ref [Array<String>] one or more fully-qualified ref names
+        #     Each name must begin with `refs/` (or be `HEAD`). At least one is required.
         #
-        #       Each name must begin with `refs/` (or be `HEAD`). At least one is required.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :quiet (nil) suppress all output
         #
-        #     @option options [Boolean, nil] :quiet (nil) suppress all output
+        #     Useful when you only care whether the ref exists.
         #
-        #       Useful when you only care whether the ref exists.
+        #     Alias: `:q`
         #
-        #       Alias: `:q`
+        #   @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
+        #     emitting an extra `^{}` line per tag
         #
-        #     @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
-        #       emitting an extra `^{}` line per tag
+        #     Alias: `:d`
         #
-        #       Alias: `:d`
+        #   @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part
         #
-        #     @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part
+        #     Pass `true` for full-length SHAs or an integer for abbreviation length.
         #
-        #       Pass `true` for full-length SHAs or an integer for abbreviation length.
+        #     Alias: `:s`
         #
-        #       Alias: `:s`
+        #   @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
         #
-        #     @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
+        #     Pass `true` for the default length or an integer for a specific length.
         #
-        #       Pass `true` for the default length or an integer for a specific length.
+        #   @option options [Numeric] :timeout (nil) abort the command after this many
+        #     seconds
         #
-        #     @option options [Numeric] :timeout (nil) abort the command after this many
-        #       seconds
+        #   @return [Git::CommandLineResult] the result of calling `git show-ref --verify`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git show-ref --verify`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if no ref names are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if any ref cannot be resolved (exit status 1)
+        # @api public
         #
+        def call(*, **)
+          super
+        end
       end
     end
   end
