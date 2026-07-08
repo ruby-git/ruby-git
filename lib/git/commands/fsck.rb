@@ -55,9 +55,7 @@ module Git
       # git fsck uses exit codes 0-7 as bit flags for findings
       allow_exit_status 0..7
 
-      # @!method call(*, **)
-      #
-      #   @overload call(*object, **options)
+      # @overload call(*object, **options)
       #
       #     Execute the `git fsck` command
       #
@@ -131,6 +129,10 @@ module Git
       #       (exit code > 7)
       #
       #     @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end
