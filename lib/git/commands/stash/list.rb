@@ -26,13 +26,17 @@ module Git
           literal "--format=#{Git::Parsers::Stash::STASH_FORMAT}"
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   List all stash entries
         #
         #   @overload call()
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash list`
+        #
+        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
