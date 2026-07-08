@@ -22,7 +22,6 @@ Documentation/UndocumentedMethodArguments:
     - 'lib/git/remote.rb'
     - 'lib/git/repository/logging.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/remote_operations.rb'
     - 'lib/git/url.rb'
 
 Documentation/UndocumentedObjects:
@@ -165,7 +164,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/logging.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/remote_operations.rb'
     - 'lib/git/repository/shared_private.rb'
     - 'lib/git/repository/staging.rb'
 
@@ -175,6 +173,5 @@ Tags/OptionTags:
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/logging.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/remote_operations.rb'
     - 'lib/git/repository/shared_private.rb'
     - 'lib/git/repository/staging.rb'
