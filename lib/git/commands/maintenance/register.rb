@@ -32,43 +32,45 @@ module Git
           execution_option :env
         end
 
-        # @!method call(*, **)
         #
-        #   @overload call(**options)
+        # @overload call(**options)
         #
-        #     Initialize config values so scheduled maintenance will start running
+        #   Initialize config values so scheduled maintenance will start running
         #
-        #     This adds the repository to the `maintenance.repo` config variable
-        #     in the current user's global config (or the specified config file)
-        #     and enables recommended configuration values for
-        #     `maintenance.<task>.schedule`.
+        #   This adds the repository to the `maintenance.repo` config variable
+        #   in the current user's global config (or the specified config file)
+        #   and enables recommended configuration values for
+        #   `maintenance.<task>.schedule`.
         #
-        #     Also sets `maintenance.strategy` to 'incremental' if not previously set,
-        #     and disables foreground maintenance by setting `maintenance.auto = false`
-        #     in the current repository.
+        #   Also sets `maintenance.strategy` to 'incremental' if not previously set,
+        #   and disables foreground maintenance by setting `maintenance.auto = false`
+        #   in the current repository.
         #
-        #     @param options [Hash] command options
+        #   @param options [Hash] command options
         #
-        #     @option options [Boolean, String, nil] :config_file (nil) use a specified
-        #       config file instead of the global config (`--config-file`)
+        #   @option options [Boolean, String, nil] :config_file (nil) use a specified
+        #     config file instead of the global config (`--config-file`)
         #
-        #       When a String, the path is passed as `--config-file <file>`.
+        #     When a String, the path is passed as `--config-file <file>`.
         #
-        #     @option options [Boolean, nil] :no_config_file (nil) disable the config file
-        #       (`--no-config-file`)
+        #   @option options [Boolean, nil] :no_config_file (nil) disable the config file
+        #     (`--no-config-file`)
         #
-        #     @option options [Hash] :env (nil) environment variables to set for the git
-        #       process; merged with the default environment; not passed to the git CLI
+        #   @option options [Hash] :env (nil) environment variables to set for the git
+        #     process; merged with the default environment; not passed to the git CLI
         #
-        #     @return [Git::CommandLineResult] the result of calling `git maintenance register`
+        #   @return [Git::CommandLineResult] the result of calling `git maintenance register`
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::VersionError] if git version is below 2.30.0
+        #   @raise [Git::VersionError] if git version is below 2.30.0
         #
-        #     @api public
+        #   @api public
+        def call(*, **)
+          super
+        end
       end
     end
   end
