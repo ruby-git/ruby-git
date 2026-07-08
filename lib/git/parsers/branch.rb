@@ -5,6 +5,10 @@ require 'git/branch_delete_result'
 require 'git/branch_delete_failure'
 
 module Git
+  # Internal parsers that translate raw git command output into structured Ruby objects.
+  #
+  # @api private
+  #
   module Parsers
     # Parser for git branch command output
     #
