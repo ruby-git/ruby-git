@@ -59,7 +59,31 @@ module Git
     # @example Fetch from origin
     #   git.remote('origin').fetch
     #
-    # @param opts [Hash] fetch options (see `Git::Repository#fetch`)
+    # @param opts [Hash] options for the fetch command
+    #
+    # @option opts [Boolean, nil] :tags (nil) fetch all tags from the remote
+    #   (`--tags`)
+    #
+    # @option opts [Boolean, nil] :prune (nil) remove remote-tracking references
+    #   that no longer exist on the remote (`--prune`)
+    #
+    # @option opts [Boolean, nil] :prune_tags (nil) remove local tags that no
+    #   longer exist on the remote (`--prune-tags`)
+    #
+    # @option opts [Boolean, nil] :force (nil) override the fast-forward check
+    #   when using explicit refspecs (`--force`)
+    #
+    # @option opts [Boolean, nil] :update_head_ok (nil) allow `git fetch` to
+    #   update the branch pointed to by `HEAD` (`--update-head-ok`)
+    #
+    # @option opts [Boolean, nil] :unshallow (nil) convert a shallow clone into a
+    #   full repository (`--unshallow`)
+    #
+    # @option opts [String, Integer, nil] :depth (nil) limit history to N commits
+    #   from each branch tip (`--depth=N`)
+    #
+    # @option opts [String, Array<String>, nil] :ref (nil) one or more refspecs to
+    #   fetch as positional arguments after the remote name
     #
     # @return [String] git's stdout from the fetch
     #
@@ -136,6 +160,14 @@ module Git
       @base
     end
 
+    # Builds branch metadata for a remote-tracking branch
+    #
+    # @param refname [String] remote-tracking branch name (for example,
+    #   `'origin/main'`)
+    #
+    # @return [Git::BranchInfo] minimal branch metadata for constructing
+    #   {Git::Branch}
+    #
     def build_branch_info(refname)
       Git::BranchInfo.new(
         refname: refname,
