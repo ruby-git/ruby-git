@@ -1,19 +1,8 @@
-inherit_from:
-  - .yard-lint-todo.yml
-
 # Configuration for yard-lint (https://github.com/mensfeld/yard-lint)
 #
 # This config enforces the project's YARD documentation standards as described
 # in .github/skills/yard-documentation/SKILL.md. It replaces the retired
 # yardstick audit/coverage tooling.
-#
-# Legacy offenses are silenced via .yard-lint-todo.yml (generated with
-# `bundle exec yard-lint lib/ --auto-gen-config`), which excludes whole files
-# per validator. CI reports offenses only in files that are not baselined for a
-# given validator (new files, or files whose exclusions have been removed); a
-# new offense in a still-excluded file is not caught until its exclusion is
-# removed. Burn down the baseline over time by removing entries from that file
-# and fixing the underlying documentation.
 
 AllValidators:
   # Lint private and protected objects too: the yard-documentation skill

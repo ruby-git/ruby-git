@@ -46,7 +46,12 @@ module Git
       # ancestor (both are valid non-error exits)
       allow_exit_status 0..1
 
-      # @!method call(*, **)
+      # @!method call(*, **options)
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [Boolean, nil] :octopus (nil) command option key; see overload docs
+      #     for the full option list
       #
       #   @overload call(*commit, **options)
       #

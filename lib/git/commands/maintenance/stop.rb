@@ -28,7 +28,12 @@ module Git
           execution_option :env
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Hash] :env (nil) command option key; see overload docs
+        #     for the full option list
         #
         #   @overload call(**options)
         #
