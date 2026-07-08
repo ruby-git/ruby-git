@@ -31,7 +31,7 @@ module Git
     # The URI returned can be converted back to a string with 'to_s'. This is
     # guaranteed to return the same URL string that was parsed.
     #
-    # @example
+    # @example Parsing clone target from HTTPS and local paths
     #   uri = Git::URL.parse('https://github.com/ruby-git/ruby-git.git')
     #     #=> #<Addressable::URI:0x44c URI:https://github.com/ruby-git/ruby-git.git>
     #   uri.scheme #=> "https"
@@ -55,10 +55,14 @@ module Git
 
     # The directory `git clone` would use for the repository directory for the given URL
     #
-    # @example
+    # @example Deriving the clone directory name
     #   Git::URL.clone_to('https://github.com/ruby-git/ruby-git.git') #=> 'ruby-git'
     #
     # @param url [String] the Git URL containing the repository directory
+    #
+    # @param bare [Boolean] whether the repository should be cloned as bare
+    #
+    # @param mirror [Boolean] whether the repository should be cloned as a mirror
     #
     # @return [String] the name of the repository directory
     #
