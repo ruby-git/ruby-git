@@ -72,76 +72,83 @@ module Git
         value_option :pathspec, as_operand: true, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @overload call(commit = nil, **options)
       #
-      #   Execute the git reset command.
+      #   Execute the `git reset` command
       #
-      #   @overload call(commit = nil, **options)
+      #   @param commit [String, nil] (nil) commit or tree-ish to reset to;
+      #     defaults to HEAD when not given
       #
-      #     @param commit [String, nil] (nil) commit or tree-ish to reset to;
-      #       defaults to HEAD when not given
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
+      #   @option options [Boolean, nil] :soft (nil) leave working tree and index unchanged;
+      #     reset HEAD to the specified commit
       #
-      #     @option options [Boolean, nil] :soft (nil) leave working tree and index unchanged;
-      #       reset HEAD to the specified commit
+      #   @option options [Boolean, nil] :mixed (nil) reset the index but not the working tree;
+      #     default mode when no mode flag is given
       #
-      #     @option options [Boolean, nil] :mixed (nil) reset the index but not the working tree;
-      #       default mode when no mode flag is given
+      #   @option options [Boolean, nil] :N (nil) mark removed paths as intent-to-add;
+      #     only meaningful alongside `:mixed`
       #
-      #     @option options [Boolean, nil] :N (nil) mark removed paths as intent-to-add;
-      #       only meaningful alongside `:mixed`
+      #   @option options [Boolean, nil] :hard (nil) reset the index and working tree to the
+      #     specified commit; discards all tracked changes since that commit
       #
-      #     @option options [Boolean, nil] :hard (nil) reset the index and working tree to the
-      #       specified commit; discards all tracked changes since that commit
+      #   @option options [Boolean, nil] :merge (nil) reset the index and update files that
+      #     differ between the commit and HEAD, while preserving uncommitted changes
       #
-      #     @option options [Boolean, nil] :merge (nil) reset the index and update files that
-      #       differ between the commit and HEAD, while preserving uncommitted changes
+      #   @option options [Boolean, nil] :keep (nil) reset index entries and update files that
+      #     differ between the commit and HEAD; aborts if any such file has local changes
       #
-      #     @option options [Boolean, nil] :keep (nil) reset index entries and update files that
-      #       differ between the commit and HEAD; aborts if any such file has local changes
+      #   @option options [Boolean, nil] :quiet (nil) suppress all output; report errors only
+      #     (`--quiet`)
       #
-      #     @option options [Boolean, nil] :quiet (nil) suppress all output; report errors only
-      #       (`--quiet`)
+      #     Alias: :q
       #
-      #       Alias: :q
+      #   @option options [Boolean, nil] :no_quiet (nil) do not suppress output (`--no-quiet`)
       #
-      #     @option options [Boolean, nil] :no_quiet (nil) do not suppress output (`--no-quiet`)
+      #   @option options [Boolean, nil] :refresh (nil) refresh the index after a mixed reset;
+      #     enabled by default when omitted (`--refresh`)
       #
-      #     @option options [Boolean, nil] :refresh (nil) refresh the index after a mixed reset;
-      #       enabled by default when omitted (`--refresh`)
+      #   @option options [Boolean, nil] :no_refresh (nil) do not refresh the index after a mixed
+      #     reset (`--no-refresh`)
       #
-      #     @option options [Boolean, nil] :no_refresh (nil) do not refresh the index after a mixed
-      #       reset (`--no-refresh`)
+      #   @option options [Integer, String] :unified (nil) number of context lines around each
+      #     diff hunk
       #
-      #     @option options [Integer, String] :unified (nil) number of context lines around each diff hunk
+      #     Alias: :U
       #
-      #       Alias: :U
+      #   @option options [Integer, String] :inter_hunk_context (nil) number of context lines to
+      #     show between diff hunks
       #
-      #     @option options [Integer, String] :inter_hunk_context (nil) number of context lines to show
-      #       between diff hunks
+      #   @option options [String] :pathspec_from_file (nil) read pathspec from the given file;
+      #     pass `"-"` to read from standard input
       #
-      #     @option options [String] :pathspec_from_file (nil) read pathspec from the given file;
-      #       pass `"-"` to read from standard input
+      #   @option options [Boolean, nil] :pathspec_file_nul (nil) delimit pathspec elements with
+      #     NUL when reading from `:pathspec_from_file`; only meaningful alongside
+      #     `:pathspec_from_file`
       #
-      #     @option options [Boolean, nil] :pathspec_file_nul (nil) delimit pathspec elements with NUL
-      #       when reading from `:pathspec_from_file`; only meaningful alongside `:pathspec_from_file`
+      #   @option options [Boolean, nil] :recurse_submodules (nil) also reset the working tree of
+      #     all active submodules to the commit recorded in the superproject
+      #     (`--recurse-submodules`)
       #
-      #     @option options [Boolean, nil] :recurse_submodules (nil) also reset the working tree of
-      #       all active submodules to the commit recorded in the superproject
-      #       (`--recurse-submodules`)
+      #   @option options [Boolean, nil] :no_recurse_submodules (nil) do not reset submodule
+      #     working trees (`--no-recurse-submodules`)
       #
-      #     @option options [Boolean, nil] :no_recurse_submodules (nil) do not reset submodule
-      #       working trees (`--no-recurse-submodules`)
+      #   @option options [String, Array<String>] :pathspec (nil) path(s) to
+      #     reset in the index; when given, only the index entries for the
+      #     matching paths are updated
       #
-      #     @option options [Array<String>] :pathspec (nil) path(s) to reset in the index;
-      #       when given, only the index entries for the matching paths are updated
+      #   @return [Git::CommandLineResult] the result of calling `git reset`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git reset`
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end

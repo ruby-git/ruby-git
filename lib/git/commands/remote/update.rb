@@ -43,29 +43,36 @@ module Git
           operand :remote_or_group, repeatable: true
         end
 
-        # @!method call(*, **)
+        # @overload call(*remote_or_group, **options)
         #
-        #   @overload call(*remote_or_group, **options)
+        #   Execute the `git remote update` command
         #
-        #     Execute the `git remote update` command
+        #   @param remote_or_group [Array<String>] zero or more remote names or
+        #     remote group names
         #
-        #     @param remote_or_group [Array<String>] zero or more remote names or remote group names
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :verbose (nil) show remote URLs alongside
+        #     remote names
         #
-        #     @option options [Boolean, nil] :verbose (nil) show remote URLs alongside remote names
+        #     Alias: :v
         #
-        #       Alias: :v
+        #   @option options [Boolean, nil] :prune (nil) prune stale tracking refs
+        #     while updating remotes
         #
-        #     @option options [Boolean, nil] :prune (nil) prune stale tracking refs while updating remotes
+        #     Alias: :p
         #
-        #       Alias: :p
+        #   @return [Git::CommandLineResult] the result of calling `git remote update`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote update`
+        # @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        # @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

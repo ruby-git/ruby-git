@@ -42,29 +42,35 @@ module Git
           operand :name, repeatable: true, required: true
         end
 
-        # @!method call(*, **)
+        # @overload call(*name, **options)
         #
-        #   @overload call(*name, **options)
+        #   Execute the `git remote show` command
         #
-        #     Execute the `git remote show` command
+        #   @param name [Array<String>] one or more remote names to inspect
         #
-        #     @param name [Array<String>] one or more remote names to inspect
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :verbose (nil) show the remote URL after
+        #     the remote name
         #
-        #     @option options [Boolean, nil] :verbose (nil) show the remote URL after the remote name
+        #     Alias: :v
         #
-        #       Alias: :v
+        #   @option options [Boolean, nil] :n (nil) do not query remote heads with
+        #     `git ls-remote`
         #
-        #     @option options [Boolean, nil] :n (nil) do not query remote heads with `git ls-remote`
+        #     Uses cached information instead of contacting the remote server.
         #
-        #       Uses cached information instead of contacting the remote server.
+        #   @return [Git::CommandLineResult] the result of calling `git remote show`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote show`
+        # @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        # @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
