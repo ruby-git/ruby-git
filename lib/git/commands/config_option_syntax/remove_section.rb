@@ -39,7 +39,12 @@ module Git
           operand :name, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :global (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, **options)
         #

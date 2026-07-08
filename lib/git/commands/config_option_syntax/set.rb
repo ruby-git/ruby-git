@@ -62,7 +62,12 @@ module Git
           operand :value_regex
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :replace_all (nil) command option key;
+        #     see overload docs for the full option list
         #
         #   @overload call(name, value, value_regex = nil, **options)
         #
