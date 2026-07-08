@@ -161,7 +161,7 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/shared_private.rb'
+    - 'lib/git/repository/remote_operations.rb'
     - 'lib/git/repository/staging.rb'
 
 # Tags validators
@@ -169,5 +169,5 @@ Tags/OptionTags:
   Exclude:
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/repository/shared_private.rb'
+    - 'lib/git/repository/remote_operations.rb'
     - 'lib/git/repository/staging.rb'

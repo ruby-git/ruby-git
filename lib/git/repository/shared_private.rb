@@ -17,7 +17,7 @@ module Git
     module SharedPrivate
       module_function
 
-      # Validate that `options` contains only keys listed in `allowed`
+      # Validate that candidate option keys are listed in `allowed`
       #
       # Used by facade methods to enforce that only documented options (those
       # named in `@option` tags) are accepted, even when the underlying command
@@ -32,14 +32,16 @@ module Git
       #
       # @param allowed [Array<Symbol>] the keys permitted by the facade method
       #
-      # @param options [Hash] the options hash provided by the caller
+      # @param candidate_keywords [Hash<Symbol, Object>] the keywords to validate
+      #
+      # @option candidate_keywords [Object] key_name a candidate keyword value
       #
       # @return [void]
       #
-      # @raise [ArgumentError] when `options` contains any key not in `allowed`
+      # @raise [ArgumentError] when any candidate key is not in `allowed`
       #
-      def assert_valid_opts!(allowed, **options)
-        unknown = options.keys - allowed
+      def assert_valid_opts!(allowed, **candidate_keywords)
+        unknown = candidate_keywords.keys - allowed
         return if unknown.empty?
 
         raise ArgumentError, "Unknown options: #{unknown.join(', ')}"
