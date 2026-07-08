@@ -35,7 +35,6 @@ Documentation/UndocumentedObjects:
     - 'lib/git/config.rb'
     - 'lib/git/errors.rb'
     - 'lib/git/log.rb'
-    - 'lib/git/parsers/branch.rb'
     - 'lib/git/parsers/diff.rb'
     - 'lib/git/parsers/stash.rb'
     - 'lib/git/parsers/tag.rb'
