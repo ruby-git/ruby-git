@@ -20,7 +20,7 @@ unless RUBY_PLATFORM == 'java' || RUBY_ENGINE == 'truffleruby'
 
   # Lints YARD documentation against the project's standards and enforces the
   # minimum documentation coverage threshold. Configuration lives in
-  # .yard-lint.yml; legacy offenses are baselined in .yard-lint-todo.yml.
+  # .yard-lint.yml.
   #
   # yard-lint requires Ruby >= 3.3, so the lint task is only defined and only
   # included in the aggregate `yard` task on Ruby 3.3+.
