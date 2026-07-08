@@ -84,168 +84,179 @@ module Git
           operand :mbox, repeatable: true
         end
 
-        # @!method call(*, **)
+        # @overload call(*mbox, **options)
         #
-        #   @overload call(*mbox, **options)
+        #   Apply patches from one or more mailbox files to the current branch
         #
-        #     Apply patches from one or more mailbox files to the current branch.
+        #   @param mbox [Array<String>] zero or more mailbox file paths or Maildir
+        #     directories
         #
-        #     @param mbox [Array<String>] zero or more mailbox file paths or Maildir
-        #       directories
+        #     If omitted, reads from standard input.
         #
-        #       If omitted, reads from standard input.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :signoff (nil) add Signed-off-by trailer
         #
-        #     @option options [Boolean, nil] :signoff (nil) add Signed-off-by trailer
+        #     Alias: `:s`
         #
-        #       Alias: `:s`
+        #   @option options [Boolean, nil] :keep (nil) preserve the Subject line
+        #     in commit messages (`--keep`)
         #
-        #     @option options [Boolean, nil] :keep (nil) pass -k flag to git-mailinfo,
-        #       preserving the Subject line intact
+        #     Alias: `:k`
         #
-        #       Alias: `:k`
+        #   @option options [Boolean, nil] :keep_non_patch (nil) retain non-patch
+        #     parts of the message body (`--keep-non-patch`)
         #
-        #     @option options [Boolean, nil] :keep_non_patch (nil) pass -b flag to
-        #       git-mailinfo
+        #   @option options [Boolean, nil] :keep_cr (nil) retain CR at end of
+        #     lines (`--keep-cr`)
         #
-        #     @option options [Boolean, nil] :keep_cr (nil) retain CR at end of lines (`--keep-cr`)
+        #   @option options [Boolean, nil] :no_keep_cr (nil) strip CR at end of
+        #     lines (`--no-keep-cr`)
         #
-        #     @option options [Boolean, nil] :no_keep_cr (nil) strip CR at end of lines (`--no-keep-cr`)
+        #   @option options [Boolean, nil] :scissors (nil) remove everything in the
+        #     body before a scissors line (`--scissors`)
         #
-        #     @option options [Boolean, nil] :scissors (nil) remove everything in the
-        #       body before a scissors line (`--scissors`)
+        #     Alias: `:c`
         #
-        #       Alias: `:c`
+        #   @option options [Boolean, nil] :no_scissors (nil) disable scissors
+        #     mode (`--no-scissors`)
         #
-        #     @option options [Boolean, nil] :no_scissors (nil) disable scissors mode (`--no-scissors`)
+        #   @option options [String] :quoted_cr (nil) how to handle CR in quoted
+        #     text passed to git-mailinfo
         #
-        #     @option options [String] :quoted_cr (nil) how to handle CR in quoted
-        #       text passed to git-mailinfo
+        #     Valid actions: `'nowarn'`, `'warn'`, `'error'`.
         #
-        #       Valid actions: `'nowarn'`, `'warn'`, `'error'`.
+        #   @option options [String] :empty (nil) how to handle an e-mail message
+        #     lacking a patch
         #
-        #     @option options [String] :empty (nil) how to handle an e-mail message
-        #       lacking a patch
+        #     Valid values: `'stop'` (fail, default), `'drop'` (skip the message),
+        #     `'keep'` (create an empty commit).
         #
-        #       Valid values: `'stop'` (fail, default), `'drop'` (skip the message),
-        #       `'keep'` (create an empty commit).
+        #   @option options [Boolean, nil] :message_id (nil) add the Message-ID
+        #     header to commit messages (`--message-id`)
         #
-        #     @option options [Boolean, nil] :message_id (nil) pass -m flag to
-        #       git-mailinfo, adding the Message-ID header to the commit message (`--message-id`)
+        #     Alias: `:m`
         #
-        #       Alias: `:m`
+        #   @option options [Boolean, nil] :no_message_id (nil) do not add the
+        #     Message-ID header (`--no-message-id`)
         #
-        #     @option options [Boolean, nil] :no_message_id (nil) do not add the Message-ID header (`--no-message-id`)
+        #   @option options [Boolean, nil] :quiet (nil) be quiet; only print error
+        #     messages
         #
-        #     @option options [Boolean, nil] :quiet (nil) be quiet; only print error
-        #       messages
+        #     Alias: `:q`
         #
-        #       Alias: `:q`
+        #   @option options [Boolean, nil] :utf8 (nil) re-code the commit log message
+        #     in UTF-8 (`--utf8`)
         #
-        #     @option options [Boolean, nil] :utf8 (nil) re-code the commit log message
-        #       in UTF-8 (`--utf8`)
+        #     Alias: `:u`
         #
-        #       Alias: `:u`
+        #   @option options [Boolean, nil] :no_utf8 (nil) do not re-code the
+        #     commit log message (`--no-utf8`)
         #
-        #     @option options [Boolean, nil] :no_utf8 (nil) do not re-code the commit log message (`--no-utf8`)
+        #   @option options [Boolean, nil] :three_way (nil) attempt 3-way merge when
+        #     context does not match (`--3way`)
         #
-        #     @option options [Boolean, nil] :three_way (nil) attempt 3-way merge when
-        #       context does not match (`--3way`)
+        #   @option options [Boolean, nil] :no_three_way (nil) disable 3-way
+        #     merge fallback (`--no-3way`)
         #
-        #     @option options [Boolean, nil] :no_three_way (nil) disable 3-way merge fallback (`--no-3way`)
+        #   @option options [Boolean, nil] :rerere_autoupdate (nil) allow rerere to
+        #     update the index with auto-resolved conflicts (`--rerere-autoupdate`)
         #
-        #     @option options [Boolean, nil] :rerere_autoupdate (nil) allow rerere to
-        #       update the index with auto-resolved conflicts (`--rerere-autoupdate`)
+        #   @option options [Boolean, nil] :no_rerere_autoupdate (nil) prevent rerere from
+        #     auto-updating the index (`--no-rerere-autoupdate`)
         #
-        #     @option options [Boolean, nil] :no_rerere_autoupdate (nil) prevent rerere from
-        #       auto-updating the index (`--no-rerere-autoupdate`)
+        #   @option options [Boolean, nil] :ignore_space_change (nil) ignore whitespace
+        #     changes when applying (passed to git-apply)
         #
-        #     @option options [Boolean, nil] :ignore_space_change (nil) ignore whitespace
-        #       changes when applying (passed to git-apply)
+        #   @option options [Boolean, nil] :ignore_whitespace (nil) ignore whitespace
+        #     when applying (passed to git-apply)
         #
-        #     @option options [Boolean, nil] :ignore_whitespace (nil) ignore whitespace
-        #       when applying (passed to git-apply)
+        #   @option options [String] :whitespace (nil) whitespace error handling
+        #     (e.g., `'nowarn'`, `'warn'`, `'fix'`, `'error'`)
         #
-        #     @option options [String] :whitespace (nil) whitespace error handling
-        #       (e.g., `'nowarn'`, `'warn'`, `'fix'`, `'error'`)
+        #     Passed to git-apply.
         #
-        #       Passed to git-apply.
+        #   @option options [Integer, String] :C (nil) ensure at least `<n>` lines of
+        #     surrounding context match when applying (`-C<n>`)
         #
-        #     @option options [Integer] :C (nil) ensure at least `<n>` lines of
-        #       surrounding context match when applying (`-C<n>`)
+        #     Passed to git-apply.
         #
-        #       Passed to git-apply.
+        #   @option options [Integer, String] :p (nil) strip `<n>` leading path
+        #     components
+        #     from file names (`-p<n>`)
         #
-        #     @option options [Integer] :p (nil) strip `<n>` leading path components
-        #       from file names (`-p<n>`)
+        #     Passed to git-apply.
         #
-        #       Passed to git-apply.
+        #   @option options [String] :directory (nil) prepend `<dir>` to all
+        #     filenames
         #
-        #     @option options [String] :directory (nil) prepend `<dir>` to all
-        #       filenames
+        #     Passed to git-apply.
         #
-        #       Passed to git-apply.
+        #   @option options [String, Array<String>] :exclude (nil) skip files
+        #     matching the given path pattern
         #
-        #     @option options [Array<String>] :exclude (nil) skip files matching the
-        #       given path pattern
+        #     May be repeated. Passed to git-apply.
         #
-        #       May be repeated. Passed to git-apply.
+        #   @option options [String, Array<String>] :include (nil) apply only to
+        #     files matching the given path pattern
         #
-        #     @option options [Array<String>] :include (nil) apply only to files
-        #       matching the given path pattern
+        #     May be repeated. Passed to git-apply.
         #
-        #       May be repeated. Passed to git-apply.
+        #   @option options [Boolean, nil] :reject (nil) leave rejected hunks in
+        #     `*.rej` files instead of aborting
         #
-        #     @option options [Boolean, nil] :reject (nil) leave rejected hunks in
-        #       `*.rej` files instead of aborting
+        #     Passed to git-apply.
         #
-        #       Passed to git-apply.
+        #   @option options [String] :patch_format (nil) override patch format
+        #     detection
         #
-        #     @option options [String] :patch_format (nil) override patch format
-        #       detection
+        #     Valid formats: `'mbox'`, `'mboxrd'`, `'stgit'`, `'stgit-series'`,
+        #     `'hg'`.
         #
-        #       Valid formats: `'mbox'`, `'mboxrd'`, `'stgit'`, `'stgit-series'`,
-        #       `'hg'`.
+        #   @option options [Boolean, nil] :interactive (nil) run interactively,
+        #     prompting before each patch is applied
         #
-        #     @option options [Boolean, nil] :interactive (nil) run interactively,
-        #       prompting before each patch is applied
+        #     Alias: `:i`
         #
-        #       Alias: `:i`
+        #   @option options [Boolean, nil] :verify (nil) run pre-applypatch and
+        #     applypatch-msg hooks (`--verify`)
         #
-        #     @option options [Boolean, nil] :verify (nil) run pre-applypatch and
-        #       applypatch-msg hooks (`--verify`)
+        #     Hooks are run by default when this option is omitted.
         #
-        #       Hooks are run by default when this option is omitted.
+        #   @option options [Boolean, nil] :no_verify (nil) bypass pre-applypatch and
+        #     applypatch-msg hooks (`--no-verify`)
         #
-        #     @option options [Boolean, nil] :no_verify (nil) bypass pre-applypatch and
-        #       applypatch-msg hooks (`--no-verify`)
+        #   @option options [Boolean, nil] :committer_date_is_author_date (nil) use the
+        #     author date as the committer date
         #
-        #     @option options [Boolean, nil] :committer_date_is_author_date (nil) use the
-        #       author date as the committer date
+        #   @option options [Boolean, nil] :ignore_date (nil) use the committer date as
+        #     the author date
         #
-        #     @option options [Boolean, nil] :ignore_date (nil) use the committer date as
-        #       the author date
+        #   @option options [Boolean, String, nil] :gpg_sign (nil) sign commits using
+        #     GPG (`--gpg-sign`)
         #
-        #     @option options [Boolean, String, nil] :gpg_sign (nil) sign commits using
-        #       GPG (`--gpg-sign`)
+        #     Pass a key-ID string to select the signing key; pass `true` to use
+        #     the committer identity. Alias: `:S`
         #
-        #       Pass a key-ID string to select the signing key; pass `true` to use
-        #       the committer identity. Alias: `:S`
+        #   @option options [Boolean, nil] :no_gpg_sign (nil) countermand commit.gpgSign
+        #     configuration (`--no-gpg-sign`)
         #
-        #     @option options [Boolean, nil] :no_gpg_sign (nil) countermand commit.gpgSign
-        #       configuration (`--no-gpg-sign`)
+        #   @option options [String] :chdir (nil) change to this directory before
+        #     running git
         #
-        #     @option options [String] :chdir (nil) change to this directory before
-        #       running git
+        #     Not passed to the git CLI.
         #
-        #       Not passed to the git CLI.
+        #   @return [Git::CommandLineResult] the result of calling `git am`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
