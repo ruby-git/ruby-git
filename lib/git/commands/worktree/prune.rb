@@ -34,7 +34,7 @@ module Git
           value_option :expire
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(**options)
         #

@@ -38,7 +38,7 @@ module Git
         value_option :prefix, inline: true
       end
 
-      # @!method call(*, **)
+      # @!method call(*)
       #
       #   @overload call(**options)
       #
