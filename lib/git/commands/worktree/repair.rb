@@ -37,7 +37,7 @@ module Git
         # git worktree repair was introduced in git 2.29.0
         requires_git_version '2.29.0'
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(*path, **options)
         #

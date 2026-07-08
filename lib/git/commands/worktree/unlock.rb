@@ -27,7 +27,7 @@ module Git
           operand :worktree, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*)
         #
         #   @overload call(worktree)
         #

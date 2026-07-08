@@ -101,11 +101,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/worktree/list.rb'
     - 'lib/git/commands/worktree/lock.rb'
     - 'lib/git/commands/worktree/move.rb'
-    - 'lib/git/commands/worktree/prune.rb'
-    - 'lib/git/commands/worktree/remove.rb'
-    - 'lib/git/commands/worktree/repair.rb'
-    - 'lib/git/commands/worktree/unlock.rb'
-    - 'lib/git/commands/write_tree.rb'
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/remote_operations.rb'
 
