@@ -50,7 +50,12 @@ module Git
         # git config --unset-all exits 5 when trying to unset a non-existent key
         allow_exit_status 0..5
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :global (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, value_regex = nil, **options)
         #
