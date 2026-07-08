@@ -48,7 +48,12 @@ module Git
           operand :pathspec, repeatable: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :patch (nil) command option key; see overload docs
+        #     for the full option list
         #
         #   @overload call(*pathspec, **options)
         #
@@ -95,7 +100,11 @@ module Git
         #
         #     @return [Git::CommandLineResult] the result of calling `git stash push`
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @raise [ArgumentError] if unsupported options are provided
+        #
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #   @api public
         #
       end
     end
