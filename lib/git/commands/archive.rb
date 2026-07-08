@@ -55,7 +55,12 @@ module Git
         operand :path, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @!method call(*, **options)
+      #
+      #   @param options [Hash] command options
+      #
+      #   @option options [String] :format (nil) command option key; see overload docs
+      #     for the full option list
       #
       #   @overload call(tree_ish = nil, *path, **options)
       #
