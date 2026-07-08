@@ -85,6 +85,10 @@ logically appear in the class body. Tags inside the directive block follow the
 same indentation rule as `@!attribute` — indented two extra spaces relative to
 the directive.
 
+If an `@!method` block uses `@overload`, follow overload tag-placement rules in
+[SKILL.md](SKILL.md): keep `@return` inside each overload, keep shared
+`@raise` at top level, and keep `@api` at top level.
+
 ## `Data.define` classes
 
 Immutable value objects defined with `Data.define` use the following conventions
