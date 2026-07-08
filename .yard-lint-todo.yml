@@ -95,11 +95,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/stash/show.rb'
     - 'lib/git/commands/stash/store.rb'
     - 'lib/git/commands/status.rb'
-    - 'lib/git/commands/version.rb'
-    - 'lib/git/commands/worktree/add.rb'
-    - 'lib/git/commands/worktree/list.rb'
-    - 'lib/git/commands/worktree/lock.rb'
-    - 'lib/git/commands/worktree/move.rb'
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/remote_operations.rb'
 

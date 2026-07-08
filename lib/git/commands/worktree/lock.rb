@@ -31,27 +31,27 @@ module Git
           operand :worktree, required: true
         end
 
-        # @!method call(*, **)
+        # @overload call(worktree, **options)
         #
-        #   @overload call(worktree, **options)
+        #   Lock a worktree to prevent it from being pruned
         #
-        #     Lock a worktree to prevent it from being pruned
+        #   @param worktree [String] path or unique suffix identifying the
+        #     worktree to lock
         #
-        #     @param worktree [String] path or unique suffix identifying the
-        #       worktree to lock
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [String] :reason (nil) human-readable explanation stored
+        #     alongside the lock
         #
-        #     @option options [String] :reason (nil) human-readable explanation stored
-        #       alongside the lock
+        #   @return [Git::CommandLineResult] the result of calling `git worktree lock`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree lock`
+        # @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        # @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        # @api public
         #
-        #     @api public
+        def call(...) = super # rubocop:disable Lint/UselessMethodDefinition
       end
     end
   end
