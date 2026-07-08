@@ -60,9 +60,7 @@ module Git
         # git config --get-regexp exits 1 when no match is found (not an error)
         allow_exit_status 0..1
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name_regex, value_regex = nil, **options)
+        # @overload call(name_regex, value_regex = nil, **options)
         #
         #     Execute the `git config --get-regexp` command
         #
@@ -109,6 +107,12 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #     @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

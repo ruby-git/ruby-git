@@ -48,9 +48,7 @@ module Git
           operand :default
         end
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, default = nil, **options)
+        # @overload call(name, default = nil, **options)
         #
         #     Execute the `git config --get-color` command
         #
@@ -85,6 +83,12 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

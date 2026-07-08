@@ -57,9 +57,7 @@ module Git
         # git config --get-urlmatch exits 1 when no match is found (not an error)
         allow_exit_status 0..1
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, url, **options)
+        # @overload call(name, url, **options)
         #
         #     Execute the `git config --get-urlmatch` command
         #
@@ -101,6 +99,12 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #     @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
