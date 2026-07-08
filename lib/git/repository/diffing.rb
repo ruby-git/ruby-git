@@ -503,6 +503,12 @@ module Git
         #
         # @param opts [Hash] the options hash from {#diff_path_status}
         #
+        # @option opts [String, Pathname, Array<String, Pathname>, nil] :path_limiter (nil)
+        #   primary path limiter value used as-is when present
+        #
+        # @option opts [String, Pathname, Array<String, Pathname>, nil] :path (nil)
+        #   **deprecated** — fallback path limiter when `:path_limiter` is not provided
+        #
         # @return [String, Pathname, Array<String, Pathname>, nil]
         #   the effective path limiter
         #

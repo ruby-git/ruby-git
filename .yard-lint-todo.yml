@@ -166,7 +166,6 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/write_tree.rb'
     - 'lib/git/repository/committing.rb'
     - 'lib/git/repository/context_helpers.rb'
-    - 'lib/git/repository/diffing.rb'
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/logging.rb'
     - 'lib/git/repository/object_operations.rb'
@@ -178,7 +177,6 @@ Documentation/UndocumentedOptions:
 Tags/OptionTags:
   Exclude:
     - 'lib/git/repository/committing.rb'
-    - 'lib/git/repository/diffing.rb'
     - 'lib/git/repository/factories.rb'
     - 'lib/git/repository/logging.rb'
     - 'lib/git/repository/object_operations.rb'
