@@ -29,7 +29,12 @@ module Git
           flag_option %i[edit e], negatable: true
         end
 
-        # @!method call(*, **)
+        # @!method call(**options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :edit (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(**options)
         #
