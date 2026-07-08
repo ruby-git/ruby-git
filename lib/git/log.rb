@@ -30,10 +30,53 @@ module Git
     Result = Data.define(:commits) do
       include Enumerable
 
+      # Iterates over each commit in query order
+      #
+      # @overload each
+      #   @example Get an enumerator
+      #     results.each.map(&:sha)
+      #
+      #   @return [Enumerator<Git::Object::Commit>] an enumerator over commits
+      #
+      # @overload each(&block)
+      #   @example Iterate with a block
+      #     results.each { |commit| puts commit.sha }
+      #
+      #   @yield [commit] each commit from the result
+      #
+      #   @yieldparam commit [Git::Object::Commit] a commit in query order
+      #
+      #   @yieldreturn [void]
+      #
+      #   @return [Array<Git::Object::Commit>] the commit array
+      #
       def each(&block) = commits.each(&block)
+
+      # Returns the last commit in the result
+      #
+      # @return [Git::Object::Commit, nil] the last commit, or `nil` when empty
+      #
       def last = commits.last
+
+      # Returns a commit by index or a slice of commits by range
+      #
+      # @param index [Integer, Range] the commit index or range to retrieve
+      #
+      # @return [Git::Object::Commit, Array<Git::Object::Commit>, nil] the selected
+      #   commit or commits
+      #
       def [](index) = commits[index]
+
+      # Returns the commits joined with newlines
+      #
+      # @return [String] newline-separated commits
+      #
       def to_s = commits.join("\n")
+
+      # Returns the number of commits in the result
+      #
+      # @return [Integer] the commit count
+      #
       def size = commits.size
     end
 
@@ -60,17 +103,98 @@ module Git
     # Set query options using a fluent interface.
     # Each method returns `self` to allow for chaining.
     #
+    # Sets the maximum number of commits to return
+    #
+    # @param num [Integer, Symbol, nil] the maximum commit count, or `:all` / `nil`
+    #   for no limit
+    #
+    # @return [Git::Log] the current query builder
+    #
     def max_count(num)      = set_option(:count, num == :all ? nil : num)
+
+    # Includes commits reachable from all refs
+    #
+    # @return [Git::Log] the current query builder
+    #
     def all                 = set_option(:all, true)
+
+    # Sets the revision range expression for the log query
+    #
+    # @param objectish [String] a git revision expression to pass to `git log`
+    #
+    # @return [Git::Log] the current query builder
+    #
     def object(objectish)   = set_option(:object, objectish)
+
+    # Filters commits by author pattern
+    #
+    # @param regex [String] a pattern matched against author names
+    #
+    # @return [Git::Log] the current query builder
+    #
     def author(regex)       = set_option(:author, regex)
+
+    # Filters commits by commit message pattern
+    #
+    # @param regex [String] a pattern matched against commit messages
+    #
+    # @return [Git::Log] the current query builder
+    #
     def grep(regex)         = set_option(:grep, regex)
+
+    # Limits commits to those that touch the given path or paths
+    #
+    # @param path [String, Pathname, Array<String, Pathname>] path limiter input
+    #
+    # @return [Git::Log] the current query builder
+    #
     def path(path)          = set_option(:path_limiter, path)
+
+    # Skips a number of commits before returning results
+    #
+    # @param num [Integer] the number of commits to skip
+    #
+    # @return [Git::Log] the current query builder
+    #
     def skip(num)           = set_option(:skip, num)
+
+    # Includes only commits newer than the given date expression
+    #
+    # @param date [String] a git-compatible date expression
+    #
+    # @return [Git::Log] the current query builder
+    #
     def since(date)         = set_option(:since, date)
+
+    # Includes only commits older than the given date expression
+    #
+    # @param date [String] a git-compatible date expression
+    #
+    # @return [Git::Log] the current query builder
+    #
     def until(date)         = set_option(:until, date)
+
+    # Limits commits to the given revision range
+    #
+    # @param val1 [String] the first revision
+    #
+    # @param val2 [String, nil] the second revision; when `nil`, validation fails
+    #   at execution time
+    #
+    # @return [Git::Log] the current query builder
+    #
     def between(val1, val2 = nil) = set_option(:between, [val1, val2])
+
+    # Omits commits equivalent to cherry-picked commits
+    #
+    # @return [Git::Log] the current query builder
+    #
     def cherry              = set_option(:cherry, true)
+
+    # Includes only merge commits
+    #
+    # @return [Git::Log] the current query builder
+    #
     def merges              = set_option(:merges, true)
 
     # Executes the git log command and returns an immutable result object
@@ -140,7 +264,13 @@ module Git
       @commits.last
     end
 
+    # @param index [Integer, Range] the commit index or range to retrieve
+    #
+    # @return [Git::Object::Commit, Array<Git::Object::Commit>, nil] the selected
+    #   commit or commits
+    #
     # @deprecated Use {#execute} and call the method on the result.
+    #
     def [](index)
       Git::Deprecation.warn(
         'Calling Git::Log#[] is deprecated. Call #execute and then #[] on the result object.'
@@ -153,6 +283,14 @@ module Git
 
     private
 
+    # Sets a log query option and marks cached results dirty
+    #
+    # @param key [Symbol] the option key
+    #
+    # @param value [Object] the option value
+    #
+    # @return [Git::Log] the current query builder
+    #
     def set_option(key, value)
       @dirty = true
       @options[key] = value
@@ -165,6 +303,14 @@ module Git
       @base
     end
 
+    # Refreshes cached commits when query options have changed
+    #
+    # @return [void]
+    #
+    # @raise [ArgumentError] if configured query options are invalid
+    #
+    # @raise [Git::FailedError] if the underlying `git log` command fails
+    #
     def run_log_if_dirty
       return unless @dirty
 
