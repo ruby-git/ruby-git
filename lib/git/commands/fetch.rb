@@ -116,9 +116,7 @@ module Git
         operand :refspec, repeatable: true
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(repository = nil, *refspec, **options)
+      # @overload call(repository = nil, *refspec, **options)
       #
       #     Execute the `git fetch` command
       #
@@ -347,6 +345,10 @@ module Git
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       #     @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end

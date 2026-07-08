@@ -112,9 +112,7 @@ module Git
       # `git grep` exits with 1 when no lines are selected — not an error
       allow_exit_status 0..1
 
-      # @!method call(*, **)
-      #
-      #   @overload call(*tree, **options)
+      # @overload call(*tree, **options)
       #
       #     Execute the `git grep` command
       #
@@ -331,8 +329,11 @@ module Git
       #     @raise [Git::FailedError] if git exits outside the allowed range
       #       (exit code > 1)
       #
-      #   @api public
+      #     @api public
       #
+      def call(*, **)
+        super
+      end
     end
   end
 end

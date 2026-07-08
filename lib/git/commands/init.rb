@@ -40,9 +40,7 @@ module Git
         operand :directory
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(directory = nil, **options)
+      # @overload call(directory = nil, **options)
       #
       #     Execute the `git init` command
       #
@@ -94,6 +92,10 @@ module Git
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       #     @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end

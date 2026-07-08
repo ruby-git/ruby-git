@@ -53,9 +53,7 @@ module Git
         flag_option :keep_largest_pack
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(**options)
+      # @overload call(**options)
       #
       #     Execute the `git gc` command
       #
@@ -127,6 +125,10 @@ module Git
       #     @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       #     @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end
