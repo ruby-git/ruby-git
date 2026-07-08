@@ -32,13 +32,15 @@ module Git
         # git am --retry was introduced in git 2.46.0
         requires_git_version '2.46.0'
 
-        # @!method call(*, **)
+        # @!method call()
         #
         #   @overload call()
         #
         #     Retry applying the most-recently-failed patch
         #
         #     @return [Git::CommandLineResult] the result of calling `git am --retry`
+        #
+        #     @raise [Git::VersionError] if git version is below 2.46.0
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

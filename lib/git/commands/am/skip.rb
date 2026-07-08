@@ -27,7 +27,7 @@ module Git
           literal '--skip'
         end
 
-        # @!method call(*, **)
+        # @!method call()
         #
         #   @overload call()
         #

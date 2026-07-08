@@ -34,11 +34,12 @@ Documentation/UndocumentedObjects:
 Documentation/UndocumentedOptions:
   Exclude:
     - 'lib/git/commands/am/abort.rb'
-    - 'lib/git/commands/am/retry.rb'
-    - 'lib/git/commands/am/skip.rb'
-    - 'lib/git/commands/apply.rb'
-    - 'lib/git/commands/archive.rb'
-    - 'lib/git/commands/archive/list_formats.rb'
+    - 'lib/git/commands/am/apply.rb'
+    - 'lib/git/commands/branch/copy.rb'
+    - 'lib/git/commands/branch/create.rb'
+    - 'lib/git/commands/branch/delete.rb'
+    - 'lib/git/commands/branch/list.rb'
+    - 'lib/git/commands/branch/move.rb'
     - 'lib/git/commands/branch/set_upstream.rb'
     - 'lib/git/commands/branch/show_current.rb'
     - 'lib/git/commands/branch/unset_upstream.rb'

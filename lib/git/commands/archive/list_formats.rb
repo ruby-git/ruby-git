@@ -31,9 +31,9 @@ module Git
           literal '--list'
         end
 
-        # @!method call(*, **)
+        # @!method call()
         #
-        #   @overload call
+        #   @overload call()
         #
         #     Execute `git archive --list` to show available formats.
         #
