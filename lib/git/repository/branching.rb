@@ -343,7 +343,7 @@ module Git
       # @param start_point [String, nil] the commit, branch, or tag to start the
       #   new branch from; defaults to the current HEAD when `nil`
       #
-      # @param options [Hash] reserved; must be empty — no options are currently
+      # @param branch_options [Hash] reserved; must be empty — no options are currently
       #   supported
       #
       # @return [void]
@@ -352,14 +352,14 @@ module Git
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def branch_new(branch, start_point = nil, options = {})
-        if start_point.is_a?(Hash) && options.empty?
-          options = start_point
+      def branch_new(branch, start_point = nil, branch_options = {})
+        if start_point.is_a?(Hash) && branch_options.empty?
+          branch_options = start_point
           start_point = nil
         end
 
-        SharedPrivate.assert_valid_opts!(BRANCH_NEW_ALLOWED_OPTS, **options)
-        Git::Commands::Branch::Create.new(@execution_context).call(branch, start_point, **options)
+        SharedPrivate.assert_valid_opts!(BRANCH_NEW_ALLOWED_OPTS, **branch_options)
+        Git::Commands::Branch::Create.new(@execution_context).call(branch, start_point, **branch_options)
 
         nil
       end
@@ -652,7 +652,7 @@ module Git
         #
         # @param branch [String, nil] the branch argument passed to {#checkout}
         #
-        # @param options [Hash] the raw options passed to {#checkout}
+        # @param checkout_options [Hash] the raw options passed to {#checkout}
         #
         # @return [Array] a two-element tuple `[target, options]` containing the
         #   translated checkout arguments
@@ -663,13 +663,13 @@ module Git
         #
         # @api private
         #
-        def translate_checkout_opts(branch, options)
-          if options[:new_branch] == true || options[:b] == true
-            [options[:start_point], options.except(:new_branch, :b, :start_point).merge(b: branch)]
-          elsif options[:new_branch].is_a?(String)
-            [branch, options.except(:new_branch).merge(b: options[:new_branch])]
+        def translate_checkout_opts(branch, checkout_options)
+          if checkout_options[:new_branch] == true || checkout_options[:b] == true
+            [checkout_options[:start_point], checkout_options.except(:new_branch, :b, :start_point).merge(b: branch)]
+          elsif checkout_options[:new_branch].is_a?(String)
+            [branch, checkout_options.except(:new_branch).merge(b: checkout_options[:new_branch])]
           else
-            [branch, options]
+            [branch, checkout_options]
           end
         end
 
