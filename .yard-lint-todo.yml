@@ -21,7 +21,6 @@ Documentation/UndocumentedMethodArguments:
     - 'lib/git/parsers/stash.rb'
     - 'lib/git/remote.rb'
     - 'lib/git/repository/object_operations.rb'
-    - 'lib/git/url.rb'
 
 Documentation/UndocumentedObjects:
   Exclude:
