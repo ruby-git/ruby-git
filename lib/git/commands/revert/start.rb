@@ -70,7 +70,12 @@ module Git
           operand :commit, repeatable: true, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :edit (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(*commit, **options)
         #
