@@ -34,7 +34,6 @@ Documentation/UndocumentedObjects:
 Documentation/UndocumentedOptions:
   Exclude:
     - 'lib/git/commands/add.rb'
-    - 'lib/git/commands/am/abort.rb'
     - 'lib/git/commands/am/apply.rb'
     - 'lib/git/commands/am/continue.rb'
     - 'lib/git/commands/am/quit.rb'
