@@ -84,194 +84,198 @@ module Git
         flag_option :path_walk
       end
 
-      # @!method call(*, **)
+      # @overload call(**options)
       #
-      #   @overload call(**options)
+      #   Execute the `git repack` command
       #
-      #     Execute the `git repack` command
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
-      #
-      #     @option options [Boolean, nil] :a (nil) pack all objects into a single pack
+      #   @option options [Boolean, nil] :a (nil) pack all objects into a single pack
       #
       #       When `true`, passes `-a`. Especially useful when packing a repository
       #       used for private development. Use with `:d` to clean up objects.
       #
-      #     @option options [Boolean, nil] :A (nil) pack all objects, loosening unreachable
-      #       objects when combined with `:d`
+      #   @option options [Boolean, nil] :A (nil) pack all objects, loosening unreachable
+      #     objects when combined with `:d`
       #
       #       When `true`, passes `-A`. Like `:a`, but any unreachable objects in a
       #       previous pack become loose unpacked objects instead of being removed. The
       #       loose unreachable objects are pruned by the next `git gc` invocation.
       #
-      #     @option options [Boolean, nil] :d (nil) delete redundant packs after repacking
+      #   @option options [Boolean, nil] :d (nil) delete redundant packs after repacking
       #
       #       When `true`, passes `-d`. After packing, removes any existing packs that
       #       are made redundant by the newly created pack. Also runs `git prune-packed`.
       #
-      #     @option options [Boolean, nil] :cruft (nil) pack unreachable objects into a
-      #       separate cruft pack when combined with `:d`
+      #   @option options [Boolean, nil] :cruft (nil) pack unreachable objects into a
+      #     separate cruft pack when combined with `:d`
       #
       #       When `true`, passes `--cruft`. Like `:a`, but any unreachable objects are
       #       packed into a separate cruft pack instead of being removed. Incompatible
       #       with `:keep_unreachable`.
       #
-      #     @option options [String] :cruft_expiration (nil) expire cruft objects older
-      #       than the given date immediately
+      #   @option options [String] :cruft_expiration (nil) expire cruft objects older
+      #     than the given date immediately
       #
       #       Passed as `--cruft-expiration=<approxidate>`. Only useful with
       #       `--cruft -d`.
       #
-      #     @option options [Integer, String] :max_cruft_size (nil) override
-      #       `--max-pack-size` for cruft packs
+      #   @option options [Integer, String] :max_cruft_size (nil) override
+      #     `--max-pack-size` for cruft packs
       #
       #       Passed as `--max-cruft-size=<n>`. Accepts size suffixes (`k`, `m`, `g`).
       #       Inherits the value of `:max_pack_size` by default.
       #
-      #     @option options [Integer, String] :combine_cruft_below_size (nil) only
-      #       repack cruft packs strictly smaller than this size
+      #   @option options [Integer, String] :combine_cruft_below_size (nil) only
+      #     repack cruft packs strictly smaller than this size
       #
       #       Passed as `--combine-cruft-below-size=<n>`. Accepts size suffixes
       #       (`k`, `m`, `g`). Useful to avoid repacking large cruft packs.
       #
-      #     @option options [String] :expire_to (nil) write pruned cruft objects to
-      #       a directory
+      #   @option options [String] :expire_to (nil) write pruned cruft objects to
+      #     a directory
       #
       #       Passed as `--expire-to=<dir>`. Only useful with `--cruft -d`.
       #
-      #     @option options [Boolean, nil] :l (nil) pass `--local` to `git pack-objects`
+      #   @option options [Boolean, nil] :l (nil) pass `--local` to `git pack-objects`
       #
       #       When `true`, passes `-l`. Ignores objects that come from an alternates
       #       object store.
       #
-      #     @option options [Boolean, nil] :f (nil) pass `--no-reuse-delta` to
-      #       `git pack-objects`
+      #   @option options [Boolean, nil] :f (nil) pass `--no-reuse-delta` to
+      #     `git pack-objects`
       #
       #       When `true`, passes `-f`. Forces reconstruction of all pack deltas.
       #
-      #     @option options [Boolean, nil] :F (nil) pass `--no-reuse-object` to
-      #       `git pack-objects`
+      #   @option options [Boolean, nil] :F (nil) pass `--no-reuse-object` to
+      #     `git pack-objects`
       #
       #       When `true`, passes `-F`. Forces reconstruction of all object data, not
       #       just deltas.
       #
-      #     @option options [Boolean, nil] :quiet (nil) suppress progress reporting
+      #   @option options [Boolean, nil] :quiet (nil) suppress progress reporting
       #
       #       When `true`, passes `--quiet`.
       #
       #       Alias: `:q`
       #
-      #     @option options [Boolean, nil] :n (nil) do not update server information
+      #   @option options [Boolean, nil] :n (nil) do not update server information
       #
       #       When `true`, passes `-n`. Skips running `git update-server-info`, which
       #       updates local catalog files needed to publish the repository
       #       over HTTP or FTP.
       #
-      #     @option options [Integer, String] :window (nil) number of previous objects
-      #       used to generate delta compressions
+      #   @option options [Integer, String] :window (nil) number of previous objects
+      #     used to generate delta compressions
       #
       #       Passed as `--window=<n>` to `git pack-objects`.
       #
-      #     @option options [Integer, String] :depth (nil) maximum delta depth
+      #   @option options [Integer, String] :depth (nil) maximum delta depth
       #
       #       Passed as `--depth=<n>` to `git pack-objects`.
       #
-      #     @option options [Integer, String] :threads (nil) number of threads for
-      #       delta search
+      #   @option options [Integer, String] :threads (nil) number of threads for
+      #     delta search
       #
       #       Passed as `--threads=<n>` to `git pack-objects`.
       #
-      #     @option options [Integer, String] :window_memory (nil) maximum memory usage
-      #       for delta window
+      #   @option options [Integer, String] :window_memory (nil) maximum memory usage
+      #     for delta window
       #
       #       Passed as `--window-memory=<n>` to `git pack-objects`. Accepts size
       #       suffixes (`k`, `m`, `g`).
       #
-      #     @option options [Integer, String] :max_pack_size (nil) maximum size of each
-      #       output pack file
+      #   @option options [Integer, String] :max_pack_size (nil) maximum size of each
+      #     output pack file
       #
       #       Passed as `--max-pack-size=<n>`. Accepts size suffixes (`k`, `m`, `g`).
       #
-      #     @option options [String] :filter (nil) remove objects matching the filter
-      #       specification from the resulting packfile
+      #   @option options [String] :filter (nil) remove objects matching the filter
+      #     specification from the resulting packfile
       #
       #       Passed as `--filter=<filter-spec>`. Filtered objects are placed in a
       #       separate packfile. Best used with `-a -d` and in a bare repository.
       #
-      #     @option options [String] :filter_to (nil) write the pack containing filtered
-      #       objects to a directory
+      #   @option options [String] :filter_to (nil) write the pack containing filtered
+      #     objects to a directory
       #
       #       Passed as `--filter-to=<dir>`. Only useful with `:filter`.
       #
-      #     @option options [Boolean, nil] :write_bitmap_index (nil) write a reachability
-      #       bitmap index as part of the repack
+      #   @option options [Boolean, nil] :write_bitmap_index (nil) write a reachability
+      #     bitmap index as part of the repack
       #
       #       When `true`, passes `--write-bitmap-index`. Only meaningful when used with
       #       `:a`, `:A`, or `:write_midx`. Overrides `repack.writeBitmaps`.
       #
       #       Alias: `:b`
       #
-      #     @option options [Boolean, nil] :pack_kept_objects (nil) include objects in
-      #       `.keep` files when repacking
+      #   @option options [Boolean, nil] :pack_kept_objects (nil) include objects in
+      #     `.keep` files when repacking
       #
       #       When `true`, passes `--pack-kept-objects`. Generally only useful when
       #       writing bitmaps with `:write_bitmap_index`.
       #
-      #     @option options [String, Array<String>] :keep_pack (nil) exclude named
-      #       pack(s) from repacking
+      #   @option options [String, Array<String>] :keep_pack (nil) exclude named
+      #     pack(s) from repacking
       #
       #       Pass a pack file name (without leading directory, e.g. `'pack-abc123.pack'`)
       #       or an array of pack file names. Each value is passed as a separate
       #       `--keep-pack=<name>` argument.
       #
-      #     @option options [Boolean, nil] :write_midx (nil) write a multi-pack index
-      #       containing the non-redundant packs
+      #   @option options [Boolean, nil] :write_midx (nil) write a multi-pack index
+      #     containing the non-redundant packs
       #
       #       When `true`, passes `--write-midx`.
       #
       #       Alias: `:m`
       #
-      #     @option options [String] :unpack_unreachable (nil) do not loosen unreachable
-      #       objects older than the given date
+      #   @option options [String] :unpack_unreachable (nil) do not loosen unreachable
+      #     objects older than the given date
       #
       #       Passed as `--unpack-unreachable=<when>`. Objects older than the given date
       #       are not loosened, since they would be immediately pruned by a follow-up
       #       `git prune`.
       #
-      #     @option options [Boolean, nil] :keep_unreachable (nil) keep unreachable objects
-      #       in the new packfile rather than removing them
+      #   @option options [Boolean, nil] :keep_unreachable (nil) keep unreachable objects
+      #     in the new packfile rather than removing them
       #
       #       When `true`, passes `--keep-unreachable`. Appends unreachable objects from
       #       existing packs to the end of the new packfile. For use with `-ad`.
       #
       #       Alias: `:k`
       #
-      #     @option options [Boolean, nil] :delta_islands (nil) pass `--delta-islands` to
-      #       `git pack-objects`
+      #   @option options [Boolean, nil] :delta_islands (nil) pass `--delta-islands` to
+      #     `git pack-objects`
       #
       #       When `true`, passes `--delta-islands`.
       #
       #       Alias: `:i`
       #
-      #     @option options [Integer, String] :geometric (nil) arrange pack structure so
-      #       each successive pack contains at least this many times the objects of the
-      #       next-largest pack
+      #   @option options [Integer, String] :geometric (nil) arrange pack structure so
+      #     each successive pack contains at least this many times the objects of the
+      #     next-largest pack
       #
       #       Passed as `--geometric=<factor>`.
       #
       #       Alias: `:g`
       #
-      #     @option options [Integer, String] :name_hash_version (nil) pass
-      #       `--name-hash-version=<n>` to `git pack-objects`
+      #   @option options [Integer, String] :name_hash_version (nil) pass
+      #     `--name-hash-version=<n>` to `git pack-objects`
       #
-      #     @option options [Boolean, nil] :path_walk (nil) pass `--path-walk` to
-      #       `git pack-objects`
+      #   @option options [Boolean, nil] :path_walk (nil) pass `--path-walk` to
+      #     `git pack-objects`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git repack`
+      #   @return [Git::CommandLineResult] the result of calling `git repack`
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      # @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @raise [Git::FailedError] if git exits with a non-zero exit status
+      #
+      # @api public
+      #
+      def call(*, **)
+        super
+      end
     end
   end
 end
