@@ -38,7 +38,12 @@ module Git
           operand :branch, repeatable: true, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :add (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, *branch, **options)
         #
@@ -57,6 +62,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end

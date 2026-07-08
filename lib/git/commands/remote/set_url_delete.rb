@@ -39,7 +39,12 @@ module Git
           operand :url, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*, **options)
+        #
+        #   @param options [Hash] command options
+        #
+        #   @option options [Boolean, nil] :push (nil) command option key; see
+        #     overload docs for the full option list
         #
         #   @overload call(name, url, **options)
         #
@@ -58,6 +63,8 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
       end
     end
   end
