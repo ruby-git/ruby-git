@@ -231,6 +231,14 @@ module Git
 
       private
 
+      # Resolves deprecated `check` argument semantics with `must_exist:`
+      #
+      # @param check [Boolean, nil] deprecated positional existence-check value
+      #
+      # @param must_exist [Boolean, nil] keyword existence-check override
+      #
+      # @return [Boolean] whether path existence must be enforced
+      #
       def context_helpers_deprecate_check_argument(check, must_exist)
         if !check.nil? && defined?(Git::Deprecation)
           Git::Deprecation.warn(
@@ -250,12 +258,33 @@ module Git
         must_exist | check
       end
 
+      # Expands `path` and validates existence when required
+      #
+      # @param path [String, Pathname] path to normalize and validate
+      #
+      # @param must_exist [Boolean] whether the expanded path must already exist
+      #
+      # @return [Pathname] the expanded absolute path
+      #
+      # @raise [ArgumentError] if `must_exist` is `true` and the path does not exist
+      #
       def context_helpers_validate_path(path, must_exist)
         Pathname.new(File.expand_path(path.to_s)).tap do |expanded_path|
           raise ArgumentError, "path does not exist: #{expanded_path}" if must_exist && !expanded_path.exist?
         end
       end
 
+      # Rebuilds the repository execution context with selected overrides
+      #
+      # @param overrides [Hash] execution-context attributes to override
+      #
+      # @option overrides [String, nil] :git_index_file replacement index file path
+      #
+      # @option overrides [String, nil] :git_work_dir replacement working directory
+      #   path
+      #
+      # @return [void]
+      #
       def context_helpers_rebuild_context(**overrides)
         @execution_context = @execution_context.dup_with(**overrides)
       end
