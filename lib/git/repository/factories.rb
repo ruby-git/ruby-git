@@ -350,6 +350,17 @@ module Git
       # @param context_opts [Hash] context options produced while preparing clone
       #   options
       #
+      # @option opts [Boolean, nil] :bare clone as a bare repository
+      #
+      # @option context_opts [String, :use_global_config] :binary_path path to
+      #   the git binary
+      #
+      # @option context_opts [String, nil, :use_global_config] :git_ssh path to
+      #   a custom SSH executable
+      #
+      # @option context_opts [Logger, nil] :logger logger used for clone
+      #   operations
+      #
       # @return [Git::CommandLineResult] the result of running `git clone`
       #
       # @raise [ArgumentError] if unsupported options are provided
@@ -376,6 +387,16 @@ module Git
       #
       # @param context_opts [Hash] context options produced while preparing clone
       #   options
+      #
+      # @option opts [String, Pathname, nil] :chdir run `git clone` from within
+      #   this directory
+      #
+      # @option opts [Boolean, nil] :bare clone as a bare repository
+      #
+      # @option opts [Boolean, nil] :mirror set up a mirror of the source
+      #
+      # @option context_opts [String, nil] :index custom index path for the
+      #   returned repository
       #
       # @return [Hash{Symbol => (String, nil)}] resolved path hash
       #
@@ -417,6 +438,12 @@ module Git
       #
       # @param options [Hash] the caller-supplied options hash
       #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
       # @return [Hash] context defaults with two keys: `:binary_path`
       #   (`String` or `:use_global_config` — `nil` is not valid and raises
       #   `ArgumentError` in {Git::ExecutionContext#initialize}) and `:git_ssh`
@@ -437,6 +464,12 @@ module Git
       #
       # @param options [Hash] the caller-supplied options hash from {.open}
       #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
       # @return [String] the absolute path to the root of the working tree
       #
       # @raise [ArgumentError] if `working_dir` is not inside a git working tree
@@ -453,6 +486,14 @@ module Git
       #   `:binary_path`, `:log`)
       #
       # @param paths [Hash{Symbol => (String, nil)}] the resolved paths
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [Logger, nil] :log logger used for git operations
       #
       # @return [Git::Repository] the constructed repository
       #
@@ -475,6 +516,8 @@ module Git
       #
       # @param options [Hash] raw caller-supplied options
       #
+      # @option options [Boolean, nil] :bare clone as a bare repository
+      #
       # @return [Array<Hash>] a two-element tuple `[command_opts, context_opts]`
       #
       # @api private
@@ -494,6 +537,17 @@ module Git
       #
       # @param opts [Hash] clone options (mutated in place)
       #
+      # @option opts [Logger, nil] :log logger used for clone operations
+      #
+      # @option opts [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option opts [String, :use_global_config] :binary_path path to the git
+      #   binary
+      #
+      # @option opts [String, nil] :index custom index path for the returned
+      #   repository
+      #
       # @return [Hash{Symbol => Object}] context options for clone setup
       #
       # @api private
@@ -510,6 +564,8 @@ module Git
       # Normalize the clone repository option for `git clone`
       #
       # @param opts [Hash] clone options (mutated in place)
+      #
+      # @option opts [String, nil] :repository alternate git directory path
       #
       # @return [void] mutates `opts` in place
       #
@@ -545,6 +601,22 @@ module Git
       #
       # @param options [Hash] the normalized options hash (after alias resolution)
       #
+      # @option options [Boolean, nil] :bare create a bare repository at
+      #   `directory`
+      #
+      # @option options [String, nil] :initial_branch the name for the initial
+      #   branch
+      #
+      # @option options [String, nil] :repository path for the `.git` directory
+      #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option options [Logger, nil] :log logger used for git operations
+      #
       # @return [Git::CommandLineResult] the result of running `git init`
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
@@ -565,6 +637,22 @@ module Git
       #
       # @param options [Hash] the normalized options hash
       #
+      # @option options [Boolean, nil] :bare create a bare repository at
+      #   `directory`
+      #
+      # @option options [String, nil] :repository path for the `.git` directory
+      #
+      # @option options [String, nil] :index custom index path for the returned
+      #   repository
+      #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option options [Logger, nil] :log logger used for git operations
+      #
       # @return [Git::Repository] the repository opened after initialization
       #
       # @api private
@@ -578,6 +666,14 @@ module Git
       # Build common options for opening a repository after `git init`
       #
       # @param options [Hash] the normalized options hash
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [Logger, nil] :log logger used for git operations
       #
       # @return [Hash{Symbol => Object}] options accepted by {.open} and {.bare}
       #
@@ -595,6 +691,19 @@ module Git
       # Build worktree options for opening a repository after `git init`
       #
       # @param options [Hash] the normalized options hash
+      #
+      # @option options [String, nil, :use_global_config] :git_ssh path to a
+      #   custom SSH executable
+      #
+      # @option options [String, :use_global_config] :binary_path path to the
+      #   git binary
+      #
+      # @option options [Logger, nil] :log logger used for git operations
+      #
+      # @option options [String, nil] :index custom index path for the returned
+      #   repository
+      #
+      # @option options [String, nil] :repository path for the `.git` directory
       #
       # @return [Hash{Symbol => Object}] options accepted by {.open}
       #
@@ -628,6 +737,12 @@ module Git
       #
       # @param opts [Hash] clone options (mutated in place)
       #
+      # @option opts [String, Pathname, nil] :path deprecated; use `:chdir`
+      #   instead
+      #
+      # @option opts [String, Pathname, nil] :chdir run `git clone` from within
+      #   this directory
+      #
       # @return [void] mutates `opts` in place
       #
       # @api private
@@ -645,6 +760,12 @@ module Git
       # Handle the deprecated `:recursive` option for {clone}
       #
       # @param opts [Hash] clone options (mutated in place)
+      #
+      # @option opts [Boolean, nil] :recursive deprecated; use
+      #   `:recurse_submodules` instead
+      #
+      # @option opts [Boolean, String, Array<String>, nil] :recurse_submodules
+      #   initialize submodules after cloning
       #
       # @return [void] mutates `opts` in place
       #
@@ -664,6 +785,11 @@ module Git
       # Handle the deprecated `:remote` option for {clone}
       #
       # @param opts [Hash] clone options (mutated in place)
+      #
+      # @option opts [String, nil] :remote deprecated; use `:origin` instead
+      #
+      # @option opts [String, nil] :origin remote name to use instead of
+      #   `origin`
       #
       # @return [void] mutates `opts` in place
       #
