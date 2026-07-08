@@ -42,28 +42,28 @@ module Git
           operand :tagname, repeatable: true, required: true
         end
 
-        # @!method call(*, **)
+        # @!method call(*tagname, **options)
         #
-        #   Execute the git tag --verify command to verify tag signatures
+        #   Execute the `git tag --verify` command to verify tag signatures
         #
-        #   @overload call(*tagname, **options)
+        #   @param tagname [Array<String>] one or more tag names to verify
         #
-        #     @param tagname [Array<String>] one or more tag names to verify
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [String] :format (nil) a format string interpolating
+        #     `%(fieldname)` from the tag ref being shown and the object it points at
         #
-        #     @option options [String] :format (nil) a format string interpolating
-        #       `%(fieldname)` from the tag ref being shown and the object it points at
+        #     The format is the same as that of git-for-each-ref(1)
         #
-        #       The format is the same as that of git-for-each-ref(1).
+        #   @return [Git::CommandLineResult] the result of calling `git tag --verify`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git tag --verify`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if no tagname operands are provided
         #
-        #     @raise [ArgumentError] if no tagname operands are provided
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
         #
       end
     end

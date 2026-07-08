@@ -52,40 +52,38 @@ module Git
           operand :oldvalue
         end
 
-        # @!method call(*, **)
+        # @!method call(ref, oldvalue = nil, **options)
         #
-        #   @overload call(ref, oldvalue = nil, **options)
+        #   Execute the `git update-ref -d` command
         #
-        #     Execute the `git update-ref -d` command
+        #   @param ref [String] the ref to delete
+        #     (e.g. `refs/heads/old-branch`)
         #
-        #     @param ref [String] the ref to delete
-        #       (e.g. `refs/heads/old-branch`)
+        #   @param oldvalue [String, nil] (nil) expected current value of the ref
         #
-        #     @param oldvalue [String, nil] (nil) expected current value of
-        #       the ref
+        #     When provided, the delete is rejected unless the ref currently points to this
+        #     object.
         #
-        #       When provided, the delete is rejected unless the ref
-        #       currently points to this object.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [String] :m (nil) a reflog message for the deletion
         #
-        #     @option options [String] :m (nil) a reflog message for
-        #       the deletion
+        #   @option options [Boolean, nil] :no_deref (nil) overwrite the ref itself rather
+        #     than following symbolic refs
         #
-        #     @option options [Boolean, nil] :no_deref (nil) overwrite the ref
-        #       itself rather than following symbolic refs
+        #   @option options [Numeric] :timeout (nil) abort the command after this many
+        #     seconds
         #
-        #     @option options [Numeric] :timeout (nil) abort the command after this many
-        #       seconds
+        #   @return [Git::CommandLineResult] the result of calling `git update-ref -d`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git update-ref -d`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if the ref operand is missing
         #
-        #     @raise [ArgumentError] if the ref operand is missing
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
+        #
       end
     end
   end

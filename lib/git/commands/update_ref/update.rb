@@ -60,46 +60,43 @@ module Git
           operand :oldvalue
         end
 
-        # @!method call(*, **)
+        # @!method call(ref, newvalue, oldvalue = nil, **options)
         #
-        #   @overload call(ref, newvalue, oldvalue = nil, **options)
+        #   Execute the `git update-ref` command
         #
-        #     Execute the `git update-ref` command
+        #   @param ref [String] the ref to update (e.g. `refs/heads/main`)
         #
-        #     @param ref [String] the ref to update (e.g. `refs/heads/main`)
+        #   @param newvalue [String] the new object name to store
         #
-        #     @param newvalue [String] the new object name to store
+        #   @param oldvalue [String, nil] (nil) expected current value of the ref
         #
-        #     @param oldvalue [String, nil] (nil) expected current value of
-        #       the ref
+        #     When provided, the update is rejected unless the ref currently points to this
+        #     object. Use 40 `"0"` characters or an empty string to assert the ref does
+        #     not yet exist.
         #
-        #       When provided, the update is rejected unless the ref
-        #       currently points to this object. Use 40 `"0"` characters
-        #       or an empty string to assert the ref does not yet exist.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [String] :m (nil) a reflog message for the update
         #
-        #     @option options [String] :m (nil) a reflog message for
-        #       the update
+        #   @option options [Boolean, nil] :no_deref (nil) overwrite the ref itself rather
+        #     than following symbolic refs
         #
-        #     @option options [Boolean, nil] :no_deref (nil) overwrite the ref
-        #       itself rather than following symbolic refs
+        #   @option options [Boolean, nil] :create_reflog (nil) create a reflog even if one
+        #     would not ordinarily be created
         #
-        #     @option options [Boolean, nil] :create_reflog (nil) create a reflog
-        #       even if one would not ordinarily be created
+        #   @option options [Numeric] :timeout (nil) abort the command after this many
+        #     seconds
         #
-        #     @option options [Numeric] :timeout (nil) abort the command after this many
-        #       seconds
+        #   @return [Git::CommandLineResult] the result of calling `git update-ref`
         #
-        #     @return [Git::CommandLineResult] the result of calling
-        #       `git update-ref`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [ArgumentError] if unsupported options are provided
+        #   @raise [ArgumentError] if the ref or newvalue operand is missing
         #
-        #     @raise [ArgumentError] if the ref or newvalue operand is
-        #       missing
+        #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #   @api public
+        #
       end
     end
   end

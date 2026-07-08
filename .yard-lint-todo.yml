@@ -12,7 +12,6 @@
 # Documentation validators
 Documentation/UndocumentedMethodArguments:
   Exclude:
-    - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/diff_path_status.rb'
     - 'lib/git/diff_stats.rb'
     - 'lib/git/escaped_path.rb'
@@ -22,7 +21,6 @@ Documentation/UndocumentedMethodArguments:
 
 Documentation/UndocumentedObjects:
   Exclude:
-    - 'lib/git/commands/update_ref/batch.rb'
     - 'lib/git/config.rb'
     - 'lib/git/errors.rb'
     - 'lib/git/parsers/branch.rb'
@@ -92,10 +90,11 @@ Documentation/UndocumentedOptions:
     - 'lib/git/commands/show_ref/list.rb'
     - 'lib/git/commands/show_ref/verify.rb'
     - 'lib/git/commands/stash/apply.rb'
-    - 'lib/git/commands/tag/list.rb'
-    - 'lib/git/commands/tag/verify.rb'
-    - 'lib/git/commands/update_ref/delete.rb'
-    - 'lib/git/commands/update_ref/update.rb'
+    - 'lib/git/commands/stash/pop.rb'
+    - 'lib/git/commands/stash/push.rb'
+    - 'lib/git/commands/stash/show.rb'
+    - 'lib/git/commands/stash/store.rb'
+    - 'lib/git/commands/status.rb'
     - 'lib/git/commands/version.rb'
     - 'lib/git/commands/worktree/add.rb'
     - 'lib/git/commands/worktree/list.rb'
