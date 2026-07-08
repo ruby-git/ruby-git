@@ -692,6 +692,10 @@ module Git
     end
   end
 
+  # Clear the cached git version for all binary paths
+  #
+  # @return [void]
+  #
   # @api private
   def self.clear_git_version_cache
     @git_version_cache_mutex.synchronize do
