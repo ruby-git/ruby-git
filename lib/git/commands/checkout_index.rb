@@ -42,9 +42,7 @@ module Git
         operand :file, required: false, repeatable: true
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(*file, **options)
+      # @overload call(*file, **options)
       #
       #     Execute the `git checkout-index` command
       #
@@ -100,6 +98,9 @@ module Git
       #
       #   @api public
       #
+      def call(*, **)
+        super
+      end
     end
   end
 end

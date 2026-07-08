@@ -47,9 +47,7 @@ module Git
           value_option :pathspec, as_operand: true, repeatable: true
         end
 
-        # @!method call(*, **)
-        #
-        #   @overload call(tree_ish = nil, **options)
+        # @overload call(tree_ish = nil, **options)
         #
         #     Execute the git checkout command for restoring files
         #
@@ -109,6 +107,9 @@ module Git
         #
         #   @api public
         #
+        def call(*, **)
+          super
+        end
       end
     end
   end

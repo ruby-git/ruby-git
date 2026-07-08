@@ -53,9 +53,7 @@ module Git
           operand :branch
         end
 
-        # @!method call(*, **)
-        #
-        #   @overload call(branch = nil, **options)
+        # @overload call(branch = nil, **options)
         #
         #     Execute the git checkout command for branch switching
         #
@@ -144,7 +142,11 @@ module Git
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #
-        #     @api public
+        #   @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

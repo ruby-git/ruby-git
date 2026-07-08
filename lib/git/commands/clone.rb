@@ -68,9 +68,7 @@ module Git
         execution_option :chdir
       end
 
-      # @!method call(*, **)
-      #
-      #   @overload call(repository, directory = nil, **options)
+      # @overload call(repository, directory = nil, **options)
       #
       #     Execute the `git clone` command
       #
@@ -235,6 +233,9 @@ module Git
       #
       #   @api public
       #
+      def call(*, **)
+        super
+      end
     end
   end
 end
