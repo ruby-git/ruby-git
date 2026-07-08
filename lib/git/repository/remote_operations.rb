@@ -71,62 +71,60 @@ module Git
       # @example Fetch and include all tags
       #   repo.fetch('origin', tags: true)
       #
-      # @overload fetch(remote = 'origin', opts = {})
+      # @param remote [String, Hash, nil] the remote name or URL to fetch from
       #
-      #   @param remote [String, Hash, nil] the remote name or URL to fetch from
+      #   When a Hash is given it is treated as `opts` and `remote` defaults to
+      #   `nil` (which omits the remote positional argument and lets git use the
+      #   configured default).
       #
-      #     When a Hash is given it is treated as `opts` and `remote` defaults to
-      #     `nil` (which omits the remote positional argument and lets git use the
-      #     configured default).
+      # @param opts [Hash] options for the fetch command
       #
-      #   @param opts [Hash] options for the fetch command
+      # @option opts [Boolean, nil] :all (nil) fetch from all configured remotes
+      #   (`--all`)
       #
-      #   @option opts [Boolean, nil] :all (nil) fetch from all configured remotes
-      #     (`--all`)
+      # @option opts [Boolean, nil] :tags (nil) fetch all tags from the remote
+      #   (`--tags`)
       #
-      #   @option opts [Boolean, nil] :tags (nil) fetch all tags from the remote
-      #     (`--tags`)
+      #   Alias: `:t`
       #
-      #     Alias: `:t`
+      # @option opts [Boolean, nil] :prune (nil) remove remote-tracking references
+      #   that no longer exist on the remote (`--prune`)
       #
-      #   @option opts [Boolean, nil] :prune (nil) remove remote-tracking references
-      #     that no longer exist on the remote (`--prune`)
+      #   Alias: `:p`
       #
-      #     Alias: `:p`
+      # @option opts [Boolean, nil] :prune_tags (nil) remove local tags that no
+      #   longer exist on the remote (`--prune-tags`)
       #
-      #   @option opts [Boolean, nil] :prune_tags (nil) remove local tags that no
-      #     longer exist on the remote (`--prune-tags`)
+      #   Alias: `:P`. The legacy dash-style key `:'prune-tags'` is also accepted
+      #   and normalized automatically.
       #
-      #     Alias: `:P`. The legacy dash-style key `:'prune-tags'` is also accepted
-      #     and normalized automatically.
+      # @option opts [Boolean, nil] :force (nil) override the fast-forward check
+      #   when using explicit refspecs (`--force`)
       #
-      #   @option opts [Boolean, nil] :force (nil) override the fast-forward check
-      #     when using explicit refspecs (`--force`)
+      #   Alias: `:f`
       #
-      #     Alias: `:f`
+      # @option opts [Boolean, nil] :update_head_ok (nil) allow `git fetch` to
+      #   update the branch pointed to by `HEAD` (`--update-head-ok`)
       #
-      #   @option opts [Boolean, nil] :update_head_ok (nil) allow `git fetch` to
-      #     update the branch pointed to by `HEAD` (`--update-head-ok`)
+      #   Alias: `:u`. The legacy dash-style key `:'update-head-ok'` is also
+      #   accepted and normalized automatically.
       #
-      #     Alias: `:u`. The legacy dash-style key `:'update-head-ok'` is also
-      #     accepted and normalized automatically.
+      # @option opts [Boolean, nil] :unshallow (nil) convert a shallow clone into a
+      #   full repository (`--unshallow`)
       #
-      #   @option opts [Boolean, nil] :unshallow (nil) convert a shallow clone into a
-      #     full repository (`--unshallow`)
+      # @option opts [String, Integer] :depth (nil) limit history to N commits from
+      #   each branch tip (`--depth=N`)
       #
-      #   @option opts [String, Integer] :depth (nil) limit history to N commits
-      #     from each branch tip (`--depth=N`)
+      # @option opts [String, Array<String>] :ref (nil) one or more refspecs to
+      #   fetch; forwarded as positional arguments after the remote name. An explicit
+      #   `remote` is required when `:ref` is given.
       #
-      #   @option opts [String, Array<String>] :ref (nil) one or more refspecs to
-      #     fetch; forwarded as positional arguments after the remote name. An
-      #     explicit `remote` is required when `:ref` is given.
+      # @return [String] the merged stdout from the fetch command
       #
-      #   @return [String] the merged stdout from the fetch command
+      # @raise [ArgumentError] when unsupported option keys are provided or `:ref`
+      #   is supplied without an explicit remote
       #
-      #   @raise [ArgumentError] when unsupported option keys are provided or `:ref`
-      #     is supplied without an explicit remote
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero status
+      # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def fetch(remote = 'origin', opts = {})
         remote, opts = Private.resolve_fetch_target(remote, opts)
@@ -171,29 +169,27 @@ module Git
       # @example Pull allowing unrelated histories
       #   repo.pull('origin', 'main', allow_unrelated_histories: true)
       #
-      # @overload pull(remote = nil, branch = nil, opts = {})
+      # @param remote [String, nil] the remote name or URL to pull from
       #
-      #   @param remote [String, nil] the remote name or URL to pull from
+      #   When nil, git uses the tracking remote for the current branch.
       #
-      #     When nil, git uses the tracking remote for the current branch.
+      # @param branch [String, nil] the remote branch name to pull
       #
-      #   @param branch [String, nil] the remote branch name to pull
+      #   When nil, git uses the tracking branch for the current branch.
+      #   A branch may not be specified without also specifying a remote.
       #
-      #     When nil, git uses the tracking branch for the current branch.
-      #     A branch may not be specified without also specifying a remote.
+      # @param opts [Hash] options for the pull command
       #
-      #   @param opts [Hash] options for the pull command
+      # @option opts [Boolean, nil] :allow_unrelated_histories (nil) allow merging
+      #   histories that do not share a common ancestor
+      #   (`--allow-unrelated-histories`)
       #
-      #   @option opts [Boolean, nil] :allow_unrelated_histories (nil) allow merging
-      #     histories that do not share a common ancestor
-      #     (`--allow-unrelated-histories`)
+      # @return [String] the stdout from the pull command
       #
-      #   @return [String] the stdout from the pull command
+      # @raise [ArgumentError] when a branch is given without a remote, or when
+      #   unsupported option keys are provided
       #
-      #   @raise [ArgumentError] when a branch is given without a remote, or when
-      #     unsupported option keys are provided
-      #
-      #   @raise [Git::FailedError] when git exits with a non-zero status
+      # @raise [Git::FailedError] when git exits with a non-zero status
       #
       def pull(remote = nil, branch = nil, opts = {})
         raise ArgumentError, 'You must specify a remote if a branch is specified' if remote.nil? && !branch.nil?
@@ -240,122 +236,46 @@ module Git
       # @example Mirror all refs to a named remote
       #   repo.push('origin', mirror: true)
       #
-      # @overload push(options = {})
-      #   Push using the current branch's default remote and push configuration
+      # @param remote [String, Hash, nil] the remote name or URL to push to
       #
-      #   @param options [Hash] push options (see option list below)
+      #   When a Hash is given it is treated as `opts` and `remote` defaults to
+      #   `nil` so git uses the configured default push target.
       #
-      #   @option options [Boolean, nil] :all (nil) push all branches (`--all`)
+      # @param branch [String, Hash, nil] the branch name or refspec to push
       #
-      #   @option options [Boolean, nil] :mirror (nil) push all refs under
-      #     `refs/` to the remote (`--mirror`)
+      #   When a Hash is given it is treated as `opts` and `branch` defaults to
+      #   `nil`. A branch may not be specified without also specifying a remote.
       #
-      #     When `:tags` is also given, the separate tags push is suppressed.
+      # @param opts [Hash, Boolean, nil] options for the push command
       #
-      #   @option options [Boolean, nil] :tags (nil) push all refs under
-      #     `refs/tags/` in a second `git push` invocation (`--tags`)
+      #   For backward compatibility, a Boolean is interpreted as
+      #   `tags: <Boolean>`.
       #
-      #     When `:mirror` is also given, the tags push is suppressed because
-      #     `--mirror` already includes tags.
+      # @option opts [Boolean, nil] :all (nil) push all branches (`--all`)
       #
-      #   @option options [Boolean, nil] :force (nil) force updates,
-      #     overriding the fast-forward check (`--force`)
+      # @option opts [Boolean, nil] :mirror (nil) push all refs under `refs/` to
+      #   the remote (`--mirror`)
       #
-      #     Alias: `:f`
+      # @option opts [Boolean, nil] :tags (nil) push all refs under `refs/tags/`
+      #   in a second `git push` invocation (`--tags`)
       #
-      #   @option options [Boolean, nil] :delete (nil) delete the named refs
-      #     from the remote (`--delete`)
+      #   When `:mirror` is also given, the tags push is suppressed because
+      #   `--mirror` already includes tags.
       #
-      #   @option options [String, Array<String>] :push_option (nil) one or
-      #     more server-side push option values (`--push-option=<value>`,
-      #     repeatable)
+      # @option opts [Boolean, nil] :force (nil) force updates, overriding the
+      #   fast-forward check (`--force`)
       #
-      #   @return [String] the stdout from the push command
+      #   Alias: `:f`
       #
-      # @overload push(remote, options = {})
-      #   Push to the given remote using the current branch's default push configuration
+      # @option opts [Boolean, nil] :delete (nil) delete the named refs from the
+      #   remote (`--delete`)
       #
-      #   @param remote [String] the remote name or URL to push to
+      # @option opts [String, Array<String>] :push_option (nil) one or more
+      #   server-side push option values (`--push-option=<value>`, repeatable)
       #
-      #   @param options [Hash] push options (see option list below)
+      # @return [String] the stdout from the push command
       #
-      #   @option options [Boolean, nil] :all (nil) push all branches (`--all`)
-      #
-      #   @option options [Boolean, nil] :mirror (nil) push all refs under
-      #     `refs/` to the remote (`--mirror`)
-      #
-      #     When `:tags` is also given, the separate tags push is suppressed.
-      #
-      #   @option options [Boolean, nil] :tags (nil) push all refs under
-      #     `refs/tags/` in a second `git push` invocation (`--tags`)
-      #
-      #     When `:mirror` is also given, the tags push is suppressed because
-      #     `--mirror` already includes tags.
-      #
-      #   @option options [Boolean, nil] :force (nil) force updates,
-      #     overriding the fast-forward check (`--force`)
-      #
-      #     Alias: `:f`
-      #
-      #   @option options [Boolean, nil] :delete (nil) delete the named refs
-      #     from the remote (`--delete`)
-      #
-      #   @option options [String, Array<String>] :push_option (nil) one or
-      #     more server-side push option values (`--push-option=<value>`,
-      #     repeatable)
-      #
-      #   @return [String] the stdout from the push command
-      #
-      # @overload push(remote, branch, options = {})
-      #   Push a branch or refspec to the given remote
-      #
-      #   @param remote [String] the remote name or URL to push to
-      #
-      #   @param branch [String] the branch name or refspec to push
-      #
-      #   @param options [Hash] push options (see option list below)
-      #
-      #   @option options [Boolean, nil] :all (nil) push all branches (`--all`)
-      #
-      #   @option options [Boolean, nil] :mirror (nil) push all refs under
-      #     `refs/` to the remote (`--mirror`)
-      #
-      #     When `:tags` is also given, the separate tags push is suppressed.
-      #
-      #   @option options [Boolean, nil] :tags (nil) push all refs under
-      #     `refs/tags/` in a second `git push` invocation (`--tags`)
-      #
-      #     When `:mirror` is also given, the tags push is suppressed because
-      #     `--mirror` already includes tags.
-      #
-      #   @option options [Boolean, nil] :force (nil) force updates,
-      #     overriding the fast-forward check (`--force`)
-      #
-      #     Alias: `:f`
-      #
-      #   @option options [Boolean, nil] :delete (nil) delete the named refs
-      #     from the remote (`--delete`)
-      #
-      #   @option options [String, Array<String>] :push_option (nil) one or
-      #     more server-side push option values (`--push-option=<value>`,
-      #     repeatable)
-      #
-      #   @return [String] the stdout from the push command
-      #
-      #   @raise [ArgumentError] if `remote` is nil when `branch` is given
-      #
-      # @overload push(remote, branch, tags)
-      #   Backward-compatible shorthand for `push(remote, branch, tags: tags)`
-      #
-      #   @param remote [String] the remote name or URL to push to
-      #
-      #   @param branch [String] the branch name or refspec to push
-      #
-      #   @param tags [Boolean] whether to push all tags; equivalent to `tags: tags`
-      #
-      #   @return [String] the stdout from the push command
-      #
-      #   @raise [ArgumentError] if a branch is given and remote is nil
+      # @raise [ArgumentError] when `branch` is given without `remote`
       #
       # @raise [ArgumentError] when unsupported option keys are provided
       #
@@ -733,6 +653,11 @@ module Git
         #
         # @param opts [Hash] the options hash when remote is given positionally
         #
+        # @option opts [String, Array<String>, nil] :ref (nil) one or more refspecs
+        #   forwarded after the remote name
+        #
+        #   Requires an explicit `remote`.
+        #
         # @return [Array(String, Hash), Array(nil, Hash)] the resolved remote and opts
         #
         # @raise [ArgumentError] when :ref is supplied without an explicit remote
@@ -758,6 +683,11 @@ module Git
         #
         # @param opts [Hash] the raw options hash passed by the caller
         #
+        # @option opts [Object] :'prune-tags' a legacy dash-style fetch option value
+        #
+        # @option opts [Object] :'update-head-ok' a legacy dash-style fetch option
+        #   value
+        #
         # @return [Hash] a new hash with all applicable keys normalized
         #
         # @api private
@@ -782,6 +712,19 @@ module Git
         # @param branch [String, Hash, nil] branch/refspec, or opts hash
         #
         # @param opts [Hash, Boolean, nil] options hash or legacy Boolean shorthand
+        #
+        # @option opts [Boolean, nil] :all (nil) push all branches
+        #
+        # @option opts [Boolean, nil] :mirror (nil) mirror all refs
+        #
+        # @option opts [Boolean, nil] :tags (nil) push all tags
+        #
+        # @option opts [Boolean, nil] :delete (nil) delete refs on the remote
+        #
+        # @option opts [Boolean, nil] :force (nil) force updates
+        #
+        # @option opts [String, Array<String>] :push_option (nil) one or more
+        #   push-option values
         #
         # @return [Array((String, nil), (String, nil), Hash)] normalized [remote, branch, opts]
         #
@@ -819,6 +762,17 @@ module Git
         #
         # @param opts [Hash] push options (`:tags` key will be stripped)
         #
+        # @option opts [Boolean, nil] :all (nil) push all branches
+        #
+        # @option opts [Boolean, nil] :mirror (nil) mirror all refs
+        #
+        # @option opts [Boolean, nil] :delete (nil) delete refs on the remote
+        #
+        # @option opts [Boolean, nil] :force (nil) force updates
+        #
+        # @option opts [String, Array<String>] :push_option (nil) one or more
+        #   push-option values
+        #
         # @return [Git::CommandLineResult]
         #
         # @api private
@@ -836,6 +790,11 @@ module Git
         #
         # @param opts [Hash] the normalized push options
         #
+        # @option opts [Boolean, nil] :tags (nil) request a separate tags push
+        #
+        # @option opts [Boolean, nil] :mirror (nil) indicates refs are mirrored and
+        #   tags are already covered
+        #
         # @return [Boolean]
         #
         # @api private
@@ -852,6 +811,11 @@ module Git
         #
         # @param opts [Hash] push options (`:tags` key included to emit `--tags`)
         #
+        # @option opts [Boolean, nil] :tags (nil) emit `--tags`
+        #
+        # @option opts [String, Array<String>] :push_option (nil) one or more
+        #   push-option values
+        #
         # @return [Git::CommandLineResult]
         #
         # @api private
@@ -866,6 +830,13 @@ module Git
         # the copy. When both keys are present, `:with_fetch` takes precedence.
         #
         # @param opts [Hash] the raw options hash passed by the caller
+        #
+        # @option opts [Boolean, nil] :with_fetch (nil) deprecated alias for
+        #   immediate fetch behavior
+        #
+        # @option opts [Boolean, nil] :fetch (nil) fetch from the remote after adding
+        #
+        # @option opts [String, nil] :track (nil) track the given branch during fetch
         #
         # @return [Hash] a new hash with all applicable keys normalized
         #
