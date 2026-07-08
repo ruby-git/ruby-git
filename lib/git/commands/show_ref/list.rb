@@ -92,53 +92,58 @@ module Git
         # Exit status 1 means no refs matched; that is a normal (non-error) outcome
         allow_exit_status 0..1
 
-        # @!method call(*pattern, **options)
+        # @overload call(*pattern, **options)
         #
-        #   @overload call(*pattern, **options)
+        #   Execute `git show-ref` to list matching refs
         #
-        #     Execute `git show-ref` to list matching refs
+        #   @param pattern [Array<String>] zero or more patterns to filter refs
         #
-        #     @param pattern [Array<String>] zero or more patterns to filter refs
+        #     When empty, all refs are listed.
         #
-        #       When empty, all refs are listed.
+        #   @param options [Hash] command options
         #
-        #     @param options [Hash] command options
+        #   @option options [Boolean, nil] :head (nil) show the HEAD ref even when filtered
         #
-        #     @option options [Boolean, nil] :head (nil) show the HEAD ref even when filtered
+        #   @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
+        #     emitting an extra line per tag whose SHA points to the tagged object
         #
-        #     @option options [Boolean, nil] :dereference (nil) dereference annotated tags,
-        #       emitting an extra line per tag whose SHA points to the tagged object
+        #     Alias: `:d`
         #
-        #       Alias: `:d`
+        #   @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part of each ref
         #
-        #     @option options [Boolean, Integer, nil] :hash (nil) show only the SHA part of each ref
+        #     Pass `true` for full-length SHAs or an integer for the abbreviation length
+        #     (e.g. `hash: 7`).
         #
-        #       Pass `true` for full-length SHAs or an integer for the abbreviation length
-        #       (e.g. `hash: 7`).
+        #     Alias: `:s`
         #
-        #       Alias: `:s`
+        #   @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
         #
-        #     @option options [Boolean, Integer, nil] :abbrev (nil) abbreviate object names
+        #     Pass `true` for the default length or an integer for a specific length.
         #
-        #       Pass `true` for the default length or an integer for a specific length.
+        #   @option options [Boolean, nil] :branches (nil) limit output to local branches (refs/heads/)
         #
-        #     @option options [Boolean, nil] :branches (nil) limit output to local branches (refs/heads/)
+        #     Prefer `:branches` over `:heads` on git >= 2.46; `:heads` emits the deprecated
+        #     `--heads` flag.
         #
-        #       Prefer `:branches` over `:heads` on git >= 2.46; `:heads` emits the deprecated
-        #       `--heads` flag.
+        #   @option options [Boolean, nil] :heads (nil) limit output to refs under refs/heads/
         #
-        #     @option options [Boolean, nil] :heads (nil) limit output to refs under refs/heads/
+        #     Deprecated at the git level in git 2.46. Use `:branches` instead.
         #
-        #       Deprecated at the git level in git 2.46. Use `:branches` instead.
+        #   @option options [Boolean, nil] :tags (nil) limit output to refs under refs/tags/
         #
-        #     @option options [Boolean, nil] :tags (nil) limit output to refs under refs/tags/
+        #   @option options [Numeric] :timeout (nil) abort the command after this many seconds
         #
-        #     @option options [Numeric] :timeout (nil) abort the command after this many seconds
+        #   @return [Git::CommandLineResult] the result of calling `git show-ref`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git show-ref`
+        #   @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits with a status outside `0..1`
+        #   @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
         #
+        # @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

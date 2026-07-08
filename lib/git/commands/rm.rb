@@ -52,63 +52,62 @@ module Git
         operand :pathspec, repeatable: true
       end
 
-      # @!method call(*, **)
+      # @overload call(*pathspec, **options)
       #
-      #   @overload call(*pathspec, **options)
+      #   Execute the git rm command
       #
-      #     Execute the git rm command
+      #   @param pathspec [Array<String>] files or directories to be removed from the
+      #     repository (relative to the worktree root)
       #
-      #     @param pathspec [Array<String>] files or directories to be removed from the
-      #       repository (relative to the worktree root)
+      #     At least one positional pathspec or the `:pathspec_from_file` option must
+      #     be provided; git will fail at runtime if neither is given.
       #
-      #       At least one positional pathspec or the `:pathspec_from_file` option must
-      #       be provided; git will fail at runtime if neither is given.
+      #   @param options [Hash] command options
       #
-      #     @param options [Hash] command options
+      #   @option options [Boolean, nil] :force (nil) override the up-to-date check and
+      #     remove files with local modifications
       #
-      #     @option options [Boolean, nil] :force (nil) override the up-to-date check and
-      #       remove files with local modifications
+      #     Alias: :f
       #
-      #       Alias: :f
+      #   @option options [Boolean, nil] :dry_run (nil) do not actually remove any files;
+      #     instead, just show if they exist in the index and would otherwise be removed
+      #     by the command
       #
-      #     @option options [Boolean, nil] :dry_run (nil) do not actually remove any files;
-      #       instead, just show if they exist in the index and would otherwise be removed
-      #       by the command
+      #     Alias: :n
       #
-      #       Alias: :n
+      #   @option options [Boolean, nil] :r (nil) allow recursive removal when a leading
+      #     directory name is given
       #
-      #     @option options [Boolean, nil] :r (nil) allow recursive removal when a leading
-      #       directory name is given
+      #   @option options [Boolean, nil] :cached (nil) only remove from the index, keeping
+      #     the working tree files
       #
-      #     @option options [Boolean, nil] :cached (nil) only remove from the index, keeping
-      #       the working tree files
+      #   @option options [Boolean, nil] :ignore_unmatch (nil) exit with a zero status
+      #     even if no files matched
       #
-      #     @option options [Boolean, nil] :ignore_unmatch (nil) exit with a zero status
-      #       even if no files matched
+      #   @option options [Boolean, nil] :sparse (nil) allow updating index entries outside
+      #     of the sparse-checkout cone
       #
-      #     @option options [Boolean, nil] :sparse (nil) allow updating index entries outside
-      #       of the sparse-checkout cone
+      #   @option options [Boolean, nil] :quiet (nil) suppress the one-line-per-file output
       #
-      #     @option options [Boolean, nil] :quiet (nil) suppress the one-line-per-file output
+      #     Alias: :q
       #
-      #       Alias: :q
+      #   @option options [String] :pathspec_from_file (nil) read pathspec from the given
+      #     file, one pathspec element per line; pass `-` to read from standard input
       #
-      #     @option options [String] :pathspec_from_file (nil) read pathspec from the
-      #       given file, one pathspec element per line; pass `-` to read from standard
-      #       input
+      #   @option options [Boolean, nil] :pathspec_file_nul (nil) when used with
+      #     `:pathspec_from_file`, separate pathspec elements with NUL instead of newlines
       #
-      #     @option options [Boolean, nil] :pathspec_file_nul (nil) when used with
-      #       `:pathspec_from_file`, separate pathspec elements with NUL instead of
-      #       newlines
+      #   @return [Git::CommandLineResult] the result of calling `git rm`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git rm`
+      #   @raise [ArgumentError] if unsupported options are provided
       #
-      #     @raise [ArgumentError] if unsupported options are provided
+      #   @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      #     @raise [Git::FailedError] if git exits with a non-zero exit status
+      # @api public
       #
-      #   @api public
-      #
+      def call(*, **)
+        super
+      end
     end
   end
 end
