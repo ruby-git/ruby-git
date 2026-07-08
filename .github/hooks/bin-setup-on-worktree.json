@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": ".github/hooks/run-bin-setup-once.sh",
+        "timeout": 900
+      }
+    ]
+  }
+}
