@@ -63,9 +63,7 @@ module Git
         # git config --get exits 1 when the key is not found (not an error)
         allow_exit_status 0..1
 
-        # @!method call(*, **)
-        #
-        #   @overload call(name, value_regex = nil, **options)
+        # @overload call(name, value_regex = nil, **options)
         #
         #     Execute the `git config --get` command
         #
@@ -110,7 +108,13 @@ module Git
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #
-        #     @raise [Git::FailedError] if git exits outside the allowed status range (0..1)
+        #     @raise [Git::FailedError] if git exits outside the allowed range (exit code > 1)
+        #
+        #     @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end

@@ -56,9 +56,7 @@ module Git
           value_option :type, inline: true
         end
 
-        # @!method call(*, **)
-        #
-        #   @overload call(**options)
+        # @overload call(**options)
         #
         #     Execute the `git config --list` command
         #
@@ -101,6 +99,12 @@ module Git
         #     @raise [ArgumentError] if unsupported options are provided
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
+        #
+        #     @api public
+        #
+        def call(*, **)
+          super
+        end
       end
     end
   end
