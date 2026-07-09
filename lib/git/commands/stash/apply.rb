@@ -66,7 +66,7 @@ module Git
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #
-        # @return [Git::CommandLineResult] the result of calling `git stash apply`
+        # @return [Git::CommandLine::Result] the result of calling `git stash apply`
         #
         # @raise [Git::FailedError] if git exits with a non-zero exit status
         #

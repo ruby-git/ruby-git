@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::Remote::Prune, :integration do
 
         result = command.call('origin', dry_run: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'prunes stale tracking refs for a configured remote' do
@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::Remote::Prune, :integration do
 
         result = command.call('origin')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

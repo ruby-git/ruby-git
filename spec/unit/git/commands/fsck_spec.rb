@@ -207,28 +207,28 @@ RSpec.describe Git::Commands::Fsck do
       it 'handles exit code 0 (no issues)' do
         mock_command('fsck')
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 1 (errors found)' do
         output = "missing tree 1234567890abcdef1234567890abcdef12345678\n"
         mock_command('fsck', stdout: output, exitstatus: 1)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 2 (missing objects)' do
         output = "missing blob abcdef1234567890abcdef1234567890abcdef12\n"
         mock_command('fsck', stdout: output, exitstatus: 2)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 4 (warnings)' do
         output = "warning in commit 1234567890abcdef1234567890abcdef12345678: bad date\n"
         mock_command('fsck', stdout: output, exitstatus: 4)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       # Exit codes are bit flags that can be combined
@@ -239,7 +239,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', stdout: output, exitstatus: 3)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 5 (errors + warnings)' do
@@ -249,7 +249,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', stdout: output, exitstatus: 5)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 6 (missing + warnings)' do
@@ -259,7 +259,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', stdout: output, exitstatus: 6)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles exit code 7 (errors + missing + warnings)' do
@@ -270,7 +270,7 @@ RSpec.describe Git::Commands::Fsck do
         OUTPUT
         mock_command('fsck', stdout: output, exitstatus: 7)
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'raises for exit code > 7 (fatal errors)' do

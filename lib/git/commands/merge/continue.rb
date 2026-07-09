@@ -34,7 +34,7 @@ module Git
         #
         #     Resume the in-progress merge after conflicts have been resolved
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git merge --continue`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

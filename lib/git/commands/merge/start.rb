@@ -239,7 +239,7 @@ module Git
         #     @option options [Boolean, nil] :no_overwrite_ignore (nil) abort if the merge result
         #       would overwrite any ignored files (`--no-overwrite-ignore`)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git merge`
+        #     @return [Git::CommandLine::Result] the result of calling `git merge`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

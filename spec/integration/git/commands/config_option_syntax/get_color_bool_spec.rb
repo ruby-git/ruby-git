@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColorBool, :integration do
         repo.config_set('color.test', 'always')
         result = command.call('color.test')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 

@@ -17,14 +17,14 @@ RSpec.describe Git::Commands::Branch::List, :integration do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns empty output when there are no branches' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to be_empty
       end
     end

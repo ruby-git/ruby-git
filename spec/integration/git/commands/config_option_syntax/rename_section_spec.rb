@@ -17,7 +17,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RenameSection, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('oldsection', 'newsection')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns result with exit status 0' do

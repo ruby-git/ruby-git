@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Remote::GetUrl, :integration do
 
         result = command.call('origin')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout.strip).to eq(remote_repo.dir.to_s)
       end
     end

@@ -1057,7 +1057,7 @@ RSpec.describe Git::Commands::Diff do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
@@ -1066,7 +1066,7 @@ RSpec.describe Git::Commands::Diff do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(1)
       end
 
@@ -1076,7 +1076,7 @@ RSpec.describe Git::Commands::Diff do
 
         result = command.call(check: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(2)
       end
 

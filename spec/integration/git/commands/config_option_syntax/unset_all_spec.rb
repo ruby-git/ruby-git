@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::UnsetAll, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('test.multi')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns exit status 0 when the key exists' do

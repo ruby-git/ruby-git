@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Checkout::Files, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('HEAD', pathspec: ['file.txt'])
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

@@ -19,14 +19,14 @@ RSpec.describe Git::Commands::RevParse, :integration do
       it 'returns a CommandLineResult for --verify HEAD' do
         result = command.call('HEAD', verify: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns a CommandLineResult for --show-toplevel' do
         result = command.call(show_toplevel: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
     end

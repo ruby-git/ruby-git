@@ -71,7 +71,7 @@ module Git
         #     @option options [String] :path (nil)
         #       path to the blob when `rev` is a bare revision
         #
-        #     @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #     @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #       Stdout contains the textconv-processed content
         #
@@ -92,7 +92,7 @@ module Git
         #     @option options [String] :path (nil)
         #       path to the blob when `rev` is a bare revision
         #
-        #     @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #     @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #       Stdout contains the filter-processed content
         #

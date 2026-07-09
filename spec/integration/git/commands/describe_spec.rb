@@ -20,14 +20,14 @@ RSpec.describe Git::Commands::Describe, :integration do
       it 'returns a CommandLineResult describing HEAD' do
         result = command.call(tags: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns a CommandLineResult with :long option' do
         result = command.call(tags: true, long: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Describe, :integration do
 
         result = command.call(always: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
     end

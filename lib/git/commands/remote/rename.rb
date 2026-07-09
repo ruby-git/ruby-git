@@ -58,7 +58,7 @@ module Git
         #
         #     @option options [Boolean, nil] :no_progress (nil) suppress progress output (`--no-progress`)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote rename`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote rename`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

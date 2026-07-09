@@ -121,7 +121,7 @@ module Git
       #     @option options [Boolean, nil] :no_references (nil) skip reference checking
       #       (`--no-references`)
       #
-      #     @return [Git::CommandLineResult] the result of calling `git fsck`
+      #     @return [Git::CommandLine::Result] the result of calling `git fsck`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

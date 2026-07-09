@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Am::Abort, :integration do
 
       it 'aborts the in-progress am session' do
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

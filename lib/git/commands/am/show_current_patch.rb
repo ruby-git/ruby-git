@@ -41,7 +41,7 @@ module Git
         #
         #   @param options [Hash] command options
         #
-        #   @return [Git::CommandLineResult] the result of calling
+        #   @return [Git::CommandLine::Result] the result of calling
         #     `git am --show-current-patch`
         #
         #   @raise [ArgumentError] if `show_current_patch` is `false` or `nil`

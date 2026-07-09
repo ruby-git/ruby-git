@@ -65,7 +65,7 @@ module Git
         #
         #     @option options [Boolean, nil] :push (nil) update push URLs instead of fetch URLs
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote set-url`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote set-url`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

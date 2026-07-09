@@ -14,7 +14,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', 'abc123')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts a branch as target' do
@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', 'main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts HEAD as target' do
@@ -40,7 +40,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', 'HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', annotate: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :a alias' do
@@ -58,7 +58,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', a: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when false' do
@@ -66,7 +66,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', annotate: false)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -76,7 +76,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', sign: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :s alias' do
@@ -84,7 +84,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', s: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'when :no_sign is true' do
@@ -93,7 +93,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
           result = command.call('v1.0.0', no_sign: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end
@@ -105,7 +105,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', local_user: 'ABCD1234', message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :u alias' do
@@ -114,7 +114,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', u: 'ABCD1234', message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -124,7 +124,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', force: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :f alias' do
@@ -132,7 +132,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', f: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when false' do
@@ -140,7 +140,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', force: false)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -150,7 +150,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release version 1.0.0')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :m alias' do
@@ -158,7 +158,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', m: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'handles message with special characters' do
@@ -166,7 +166,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release "quoted"')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -176,7 +176,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', file: '/path/to/message.txt')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :F alias' do
@@ -184,7 +184,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', F: '/path/to/message.txt')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'supports reading from stdin with -' do
@@ -192,7 +192,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', file: '-')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -202,7 +202,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', edit: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :e alias' do
@@ -210,7 +210,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', e: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'when :no_edit is true' do
@@ -219,7 +219,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
           result = command.call('v1.0.0', message: 'Release', no_edit: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end
@@ -230,7 +230,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', create_reflog: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when false' do
@@ -238,7 +238,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', create_reflog: false)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -249,7 +249,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', annotate: true, force: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'creates a signed tag at specific commit' do
@@ -258,7 +258,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', 'abc123', sign: true, message: 'Signed release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'creates tag with custom signing key at specific commit' do
@@ -267,7 +267,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', 'main', local_user: 'KEY123', message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'combines create_reflog with annotated tag' do
@@ -276,7 +276,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', annotate: true, create_reflog: true, message: 'Release')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'allows annotate with file instead of message' do
@@ -285,7 +285,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', annotate: true, file: '/path/to/msg.txt')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -296,7 +296,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release', trailer: { 'Signed-off-by' => 'John Doe' })
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes multiple trailers' do
@@ -312,7 +312,7 @@ RSpec.describe Git::Commands::Tag::Create do
                                 'Reviewed-by' => 'Jane Smith'
                               })
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes trailers with array of pairs' do
@@ -328,7 +328,7 @@ RSpec.describe Git::Commands::Tag::Create do
                                 %w[Co-authored-by Bob]
                               ])
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -339,7 +339,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'strip')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --cleanup=verbatim' do
@@ -348,7 +348,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'verbatim')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --cleanup=whitespace' do
@@ -357,7 +357,7 @@ RSpec.describe Git::Commands::Tag::Create do
 
         result = command.call('v1.0.0', message: 'Release', cleanup: 'whitespace')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
   end

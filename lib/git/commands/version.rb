@@ -46,7 +46,7 @@ module Git
       #   @option options [Boolean, nil] :build_options (nil) include build options in
       #     the output
       #
-      #   @return [Git::CommandLineResult] the result of calling `git version`
+      #   @return [Git::CommandLine::Result] the result of calling `git version`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #

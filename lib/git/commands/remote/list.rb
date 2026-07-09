@@ -43,7 +43,7 @@ module Git
         #
         #       Alias: :v
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

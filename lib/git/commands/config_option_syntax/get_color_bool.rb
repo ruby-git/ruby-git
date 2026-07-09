@@ -80,7 +80,7 @@ module Git
         #
         #     @option options [Boolean, nil] :no_includes (nil) disable include directive processing (`--no-includes`)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get-colorbool`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get-colorbool`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

@@ -43,7 +43,7 @@ module Git
         #
         #     @param name [String] the remote name to remove
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote remove`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote remove`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #

@@ -62,7 +62,7 @@ module Git
         #
         #     Alias: :p
         #
-        #   @return [Git::CommandLineResult] the result of calling `git remote update`
+        #   @return [Git::CommandLine::Result] the result of calling `git remote update`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

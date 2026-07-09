@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Stash::Store, :integration do
 
         result = command.call(sha)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::SymbolicRef::Read, :integration do
       it 'returns the full ref path' do
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout.strip).to eq('refs/heads/main')
       end
 

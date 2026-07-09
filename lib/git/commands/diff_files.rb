@@ -487,7 +487,7 @@ module Git
       #     @option options [Integer, String] :max_depth (nil) maximum directory depth to
       #       descend for pathspecs
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff-files`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff-files`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -503,7 +503,7 @@ module Git
       #
       #     @param options [Hash] command options (same as the no-path overload)
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff-files`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff-files`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

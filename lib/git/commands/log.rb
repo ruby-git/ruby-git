@@ -618,7 +618,7 @@ module Git
       #   @option options [Integer, Float] :timeout (nil) number of seconds to wait before the
       #     command is aborted with a timeout error
       #
-      #   @return [Git::CommandLineResult] the result of calling `git log`
+      #   @return [Git::CommandLine::Result] the result of calling `git log`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

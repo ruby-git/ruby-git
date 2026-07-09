@@ -50,7 +50,7 @@ module Git
         #     @option options [Boolean, nil] :no_edit (nil) suppress the editor for
         #       the commit message (`--no-edit`)
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git revert --continue`
         #
         #     @raise [ArgumentError] if unsupported options are provided

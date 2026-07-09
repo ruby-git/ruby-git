@@ -44,7 +44,7 @@ module Git
         #     @param branch_name [String, nil] the branch to remove upstream tracking for
         #       (defaults to current branch if omitted)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --unset-upstream`
+        #     @return [Git::CommandLine::Result] the result of calling `git branch --unset-upstream`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

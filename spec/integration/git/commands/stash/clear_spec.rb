@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Stash::Clear, :integration do
       it 'returns CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
     end

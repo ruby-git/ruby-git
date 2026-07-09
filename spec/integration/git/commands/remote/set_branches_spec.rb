@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Remote::SetBranches, :integration do
 
         result = command.call('origin', 'feature/*')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns a CommandLineResult with :add option' do
@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Remote::SetBranches, :integration do
 
         result = command.call('origin', 'release/*', add: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

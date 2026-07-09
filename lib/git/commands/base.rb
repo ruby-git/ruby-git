@@ -230,7 +230,7 @@ module Git
       #
       #   @param kwargs [Hash] keyword arguments forwarded to {Arguments#bind}
       #
-      # @return [Git::CommandLineResult] the result of calling `git`
+      # @return [Git::CommandLine::Result] the result of calling `git`
       #
       # @raise [ArgumentError] if no arguments definition is declared on the command class
       #
@@ -261,7 +261,7 @@ module Git
       #
       # @param bound [Git::Commands::Arguments::Bound] bound command arguments
       #
-      # @return [Git::CommandLineResult] the command result
+      # @return [Git::CommandLine::Result] the command result
       #
       def execute_command(bound)
         exec_opts = execution_opts(bound)
@@ -359,7 +359,7 @@ module Git
 
       # Validate that a command result has an accepted exit status
       #
-      # @param result [Git::CommandLineResult] command result to validate
+      # @param result [Git::CommandLine::Result] command result to validate
       #
       # @return [void]
       #

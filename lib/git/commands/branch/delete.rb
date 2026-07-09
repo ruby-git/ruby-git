@@ -69,7 +69,7 @@ module Git
         #
         #     Alias: :r
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch --delete`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch --delete`
         #
         #   @raise [ArgumentError] if no branch names are provided
         #

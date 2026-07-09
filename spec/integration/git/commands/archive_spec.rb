@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Archive, :integration do
         # Capture in-memory and compare byte-for-byte
         result = command.call('HEAD', format: 'tar')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq(streamed_bytes)
       end
 

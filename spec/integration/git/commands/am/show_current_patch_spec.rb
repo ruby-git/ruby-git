@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Am::ShowCurrentPatch, :integration do
       it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

@@ -16,7 +16,7 @@ RSpec.describe Git::Commands::SymbolicRef::Delete, :integration do
 
         result = command.call('refs/heads/sym-link')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
     end

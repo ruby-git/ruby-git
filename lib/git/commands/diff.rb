@@ -164,7 +164,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -189,7 +189,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -211,7 +211,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -232,7 +232,7 @@ module Git
       #
       #     @param options [Hash] command options
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -640,7 +640,7 @@ module Git
       #     @option options [Array<String>] :path (nil) zero or more paths
       #       to limit diff to
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git diff`
       #
       #     @raise [ArgumentError] if unsupported options are provided

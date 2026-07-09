@@ -265,7 +265,7 @@ module Git
       #   @option options [Boolean, nil] :path_walk (nil) pass `--path-walk` to
       #     `git pack-objects`
       #
-      #   @return [Git::CommandLineResult] the result of calling `git repack`
+      #   @return [Git::CommandLine::Result] the result of calling `git repack`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #

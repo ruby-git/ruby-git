@@ -947,7 +947,7 @@ RSpec.describe Git::Commands::DiffIndex do
 
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
@@ -957,7 +957,7 @@ RSpec.describe Git::Commands::DiffIndex do
 
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(1)
       end
 

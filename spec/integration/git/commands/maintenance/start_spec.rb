@@ -51,7 +51,7 @@ RSpec.describe Git::Commands::Maintenance::Start, :integration,
       it 'returns a CommandLineResult' do
         result = command.call(scheduler: scheduler, env: isolated_env)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns exit code 0' do

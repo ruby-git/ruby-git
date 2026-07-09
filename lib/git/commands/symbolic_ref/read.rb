@@ -79,7 +79,7 @@ module Git
         #   @option options [Boolean, nil] :no_recurse (nil) stop after a single level
         #     of dereferencing (`--no-recurse`)
         #
-        #   @return [Git::CommandLineResult] the result of calling
+        #   @return [Git::CommandLine::Result] the result of calling
         #     `git symbolic-ref`
         #
         #   @raise [ArgumentError] if unsupported options are provided

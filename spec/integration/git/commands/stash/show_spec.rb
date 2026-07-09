@@ -22,21 +22,21 @@ RSpec.describe Git::Commands::Stash::Show, :integration do
       it 'returns a CommandLineResult with numstat output' do
         result = command.call(numstat: true, shortstat: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns a CommandLineResult with patch output' do
         result = command.call(patch: true, numstat: true, shortstat: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns a CommandLineResult with raw output' do
         result = command.call(raw: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
     end

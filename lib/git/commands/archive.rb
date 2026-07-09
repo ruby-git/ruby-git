@@ -116,7 +116,7 @@ module Git
       #     @option options [IO, #write] :out (nil) stream archive output to this IO object
       #       instead of capturing it; the result's `.stdout` will be `''`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git archive`
+      #     @return [Git::CommandLine::Result] the result of calling `git archive`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

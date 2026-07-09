@@ -91,7 +91,7 @@ module Git
       #   overrides for this command.  String keys map to String values (to set) or
       #   `nil` (to unset).
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @return [Git::CommandLine::Result] the result of the command
       #
       #   `result.stdout` will always be `''` (empty) — stdout was streamed to `out:`.
       #   `result.stderr` contains any stderr output captured for diagnostics.
@@ -206,7 +206,7 @@ module Git
         end
       end
 
-      # Process the result of a streaming command and return a Git::CommandLineResult
+      # Process the result of a streaming command and return a Git::CommandLine::Result
       #
       # Constructs stdout as `''` (not captured) and stderr from the internal StringIO.
       #
@@ -220,7 +220,7 @@ module Git
       #
       # @option options [Boolean] :raise_on_failure (true) raise {Git::FailedError} on non-zero exit
       #
-      # @return [Git::CommandLineResult]
+      # @return [Git::CommandLine::Result]
       #
       # @api private
       def process_result(result, err_io, options)

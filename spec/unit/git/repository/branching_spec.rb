@@ -944,7 +944,7 @@ RSpec.describe Git::Repository::Branching do
       result
     end
 
-    it 'returns the Git::CommandLineResult from the command' do
+    it 'returns the Git::CommandLine::Result from the command' do
       expect(result).to eq(update_ref_result)
     end
 

@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
       it 'returns a CommandLineResult with output' do
         result = command.call('v1.0.0')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 

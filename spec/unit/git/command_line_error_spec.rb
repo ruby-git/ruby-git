@@ -14,7 +14,7 @@ RSpec.describe Git::CommandLineError do
   end
 
   let(:result) do
-    Git::CommandLineResult.new(%w[git status], status, 'stdout', 'stderr')
+    Git::CommandLine::Result.new(%w[git status], status, 'stdout', 'stderr')
   end
 
   let(:described_instance) { described_class.new(result) }

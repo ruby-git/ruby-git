@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Reset, :integration do
       it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns a result with exit status 0' do
@@ -36,7 +36,7 @@ RSpec.describe Git::Commands::Reset, :integration do
       it 'hard resets the index and working tree' do
         result = command.call(hard: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
@@ -46,7 +46,7 @@ RSpec.describe Git::Commands::Reset, :integration do
 
         result = command.call(pathspec: ['file.txt'])
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
     end

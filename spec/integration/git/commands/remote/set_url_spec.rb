@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
 
         result = command.call('origin', replacement_repo.dir.to_s)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(repo.remote('origin').url).to eq(replacement_repo.dir.to_s)
       end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
 
         result = command.call('origin', replacement_repo.dir.to_s, push: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

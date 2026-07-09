@@ -20,14 +20,14 @@ RSpec.describe Git::Commands::Init, :integration do
       it 'returns a CommandLineResult' do
         result = command.call(init_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'with bare option' do
         it 'returns a CommandLineResult' do
           result = command.call(init_dir, bare: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end

@@ -98,7 +98,7 @@ module Git
         #     @option options [Boolean, nil] :no_type (nil) unset the previously set type specifier;
         #       `true` emits `--no-type`
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --replace-all`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --replace-all`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

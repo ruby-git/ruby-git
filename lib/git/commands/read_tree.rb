@@ -142,7 +142,7 @@ module Git
       #
       #       Alias: `:q`
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git read-tree`
       #
       #     @raise [ArgumentError] if unsupported options are provided

@@ -132,7 +132,7 @@ module Git
         #
         #   @option options [String] :format (nil) output format string for each tag
         #
-        #   @return [Git::CommandLineResult] the result of calling `git tag --list`
+        #   @return [Git::CommandLine::Result] the result of calling `git tag --list`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

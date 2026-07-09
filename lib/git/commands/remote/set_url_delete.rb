@@ -58,7 +58,7 @@ module Git
         #
         #     @option options [Boolean, nil] :push (nil) delete push URLs instead of fetch URLs
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote set-url --delete`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote set-url --delete`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

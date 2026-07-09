@@ -123,7 +123,7 @@ module Git
       #   @option options [Boolean, nil] :pathspec_file_nul (nil) separate pathspec
       #     elements with NUL when reading from a file
       #
-      #   @return [Git::CommandLineResult] the result of calling `git add`
+      #   @return [Git::CommandLine::Result] the result of calling `git add`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

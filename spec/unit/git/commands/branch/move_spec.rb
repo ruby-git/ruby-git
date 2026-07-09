@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('new-name')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq('')
       end
     end
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('old-name', 'new-name')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('new-name', force: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'adds --force flag when renaming specific branch' do
@@ -47,7 +47,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('old-name', 'new-name', force: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when false' do
@@ -56,7 +56,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('new-name', force: false)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -67,7 +67,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('new-name', f: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'adds --force flag when renaming specific branch' do
@@ -76,7 +76,7 @@ RSpec.describe Git::Commands::Branch::Move do
 
         result = command.call('old-name', 'new-name', f: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

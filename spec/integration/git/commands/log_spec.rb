@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Log, :integration do
       it 'returns a CommandLineResult with non-empty output' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Log, :integration do
           first_sha = repo.rev_parse('HEAD~1')
           result = command.call("#{first_sha}..")
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end

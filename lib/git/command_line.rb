@@ -19,7 +19,7 @@ module Git
   # {Git::ExecutionContext#command_streaming}.
   #
   # Results are returned as {Git::CommandLine::Result} objects (also accessible
-  # as {Git::CommandLineResult} for backward compatibility).
+  # as {Git::CommandLine::Result} for backward compatibility).
   #
   # @example Buffered command via Git::CommandLine::Capturing
   #   cli = Git::CommandLine::Capturing.new(

@@ -14,7 +14,7 @@ RSpec.describe 'CommandLine::Capturing#run raise_on_failure integration' do
     it 'returns CommandLineResult without raising on non-zero exit' do
       result = command_line.run('rev-parse', 'nonexistent-ref', chdir: repo_dir, raise_on_failure: false)
 
-      expect(result).to be_a(Git::CommandLineResult)
+      expect(result).to be_a(Git::CommandLine::Result)
       expect(result.status.success?).to be false
       expect(result.stderr).to include('unknown revision')
     end

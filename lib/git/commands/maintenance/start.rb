@@ -58,7 +58,7 @@ module Git
         #     @option options [Hash] :env (nil) environment variables to set for the git
         #       process; merged with the default environment; not passed to the git CLI
         #
-        #     @return [Git::CommandLineResult] the result of calling `git maintenance start`
+        #     @return [Git::CommandLine::Result] the result of calling `git maintenance start`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

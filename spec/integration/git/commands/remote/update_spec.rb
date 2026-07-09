@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::Remote::Update, :integration do
 
         result = command.call('origin')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(repo.branches.remote.map(&:full)).to include("remotes/origin/#{initial_branch}")
       end
     end

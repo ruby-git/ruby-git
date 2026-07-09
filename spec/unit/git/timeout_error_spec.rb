@@ -14,7 +14,7 @@ RSpec.describe Git::TimeoutError do
   end
 
   let(:result) do
-    Git::CommandLineResult.new(%w[git status], status, 'stdout', 'Waiting...')
+    Git::CommandLine::Result.new(%w[git status], status, 'stdout', 'Waiting...')
   end
 
   let(:timeout_duration) { 10 }

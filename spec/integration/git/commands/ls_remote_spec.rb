@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::LsRemote, :integration do
       it 'returns a CommandLineResult with refs output' do
         result = command.call(bare_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
         expect(result.stdout).not_to be_empty
       end

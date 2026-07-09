@@ -69,7 +69,7 @@ module Git
         #     @option options [Hash] :env (nil) environment variables to set for the git
         #       process; merged with the default environment; not passed to the git CLI
         #
-        #     @return [Git::CommandLineResult] the result of calling `git maintenance unregister`
+        #     @return [Git::CommandLine::Result] the result of calling `git maintenance unregister`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

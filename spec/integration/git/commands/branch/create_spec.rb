@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Branch::Create, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('feature-branch')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

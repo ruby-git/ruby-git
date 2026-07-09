@@ -74,7 +74,7 @@ module Git
         #   @option options [Numeric] :timeout (nil) abort the command after this many
         #     seconds
         #
-        #   @return [Git::CommandLineResult] the result of calling
+        #   @return [Git::CommandLine::Result] the result of calling
         #     `git show-ref --exclude-existing`
         #
         #   @raise [Git::FailedError] if git exits with a non-zero exit status
@@ -99,7 +99,7 @@ module Git
         #
         # @param reader [IO] readable IO connected to git's stdin
         #
-        # @return [Git::CommandLineResult] the result of calling
+        # @return [Git::CommandLine::Result] the result of calling
         #   `git show-ref --exclude-existing`
         #
         # @raise [Git::FailedError] if git exits with a non-zero exit status

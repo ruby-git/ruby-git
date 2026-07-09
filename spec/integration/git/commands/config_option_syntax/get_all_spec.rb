@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetAll, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('user.name')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns the configured value in stdout' do

@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Show, :integration do
       it 'returns a CommandLineResult with commit information' do
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.success?).to be true
         expect(result.stdout).not_to be_empty
       end

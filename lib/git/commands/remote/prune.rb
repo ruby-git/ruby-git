@@ -50,7 +50,7 @@ module Git
         #
         #       Alias: :n
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote prune`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote prune`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

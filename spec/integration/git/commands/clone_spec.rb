@@ -33,20 +33,20 @@ RSpec.describe Git::Commands::Clone, :integration do
       it 'returns a CommandLineResult' do
         result = command.call(source_dir, File.join(clone_dir, 'cloned'))
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns a CommandLineResult when cloning with chdir' do
         result = command.call(source_dir, 'chdir-cloned', chdir: clone_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(File.directory?(File.join(clone_dir, 'chdir-cloned'))).to be true
       end
 
       it 'returns a CommandLineResult for a bare clone' do
         result = command.call(source_dir, File.join(clone_dir, 'bare.git'), bare: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(File.directory?(File.join(clone_dir, 'bare.git'))).to be true
       end
     end

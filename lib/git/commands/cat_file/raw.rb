@@ -96,7 +96,7 @@ module Git
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Exit status 0 means the object exists; exit status 1 means it does not
         #
@@ -120,7 +120,7 @@ module Git
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the object type string
         #
@@ -144,7 +144,7 @@ module Git
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the object size as a decimal string
         #
@@ -165,7 +165,7 @@ module Git
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the formatted object content
         #
@@ -186,7 +186,7 @@ module Git
         #
         #   @option options [Boolean, nil] :no_use_mailmap (nil) suppress mailmap remapping (`--no-use-mailmap`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the raw object content
         #

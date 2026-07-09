@@ -94,7 +94,7 @@ module Git
         #
         #     @option options [Boolean, nil] :show_scope (nil) show the scope of each config entry
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get-urlmatch`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get-urlmatch`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

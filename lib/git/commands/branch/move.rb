@@ -62,7 +62,7 @@ module Git
         #
         #     Alias: :f
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch --move`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #
@@ -85,7 +85,7 @@ module Git
         #
         #     Alias: :f
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch --move`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch --move`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

@@ -123,7 +123,7 @@ RSpec.describe Git::Repository do
         result
       end
 
-      it 'returns the Git::CommandLineResult from the set command' do
+      it 'returns the Git::CommandLine::Result from the set command' do
         allow(set_command).to receive(:call).with('user.name', 'Alice').and_return(set_result)
         expect(result).to eq(set_result)
       end
@@ -323,7 +323,7 @@ RSpec.describe Git::Repository do
         result
       end
 
-      it 'returns the Git::CommandLineResult from the set command' do
+      it 'returns the Git::CommandLine::Result from the set command' do
         allow(set_command).to receive(:call).with('user.name', 'Alice', global: true).and_return(set_result)
         expect(result).to eq(set_result)
       end

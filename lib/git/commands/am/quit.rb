@@ -34,7 +34,7 @@ module Git
         #
         #     Abort the am session but keep the current HEAD position
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am --quit`
+        #     @return [Git::CommandLine::Result] the result of calling `git am --quit`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

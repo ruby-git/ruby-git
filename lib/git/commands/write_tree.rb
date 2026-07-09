@@ -55,7 +55,7 @@ module Git
       #
       #       The prefix path should end with `/` (e.g., `'lib/'`).
       #
-      #     @return [Git::CommandLineResult] the result of calling `git write-tree`
+      #     @return [Git::CommandLine::Result] the result of calling `git write-tree`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

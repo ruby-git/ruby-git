@@ -98,7 +98,7 @@ module Git
         #
         #     @option options [Boolean, nil] :pathspec_file_nul (nil) pathspecs in the file are NUL-separated
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash push`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash push`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

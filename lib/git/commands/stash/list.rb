@@ -32,7 +32,7 @@ module Git
         #
         #   @overload call()
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash list`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash list`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #

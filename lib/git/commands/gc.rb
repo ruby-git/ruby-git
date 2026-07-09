@@ -118,7 +118,7 @@ module Git
       #
       #       When `true`, `gc.bigPackThreshold` is ignored.
       #
-      #     @return [Git::CommandLineResult] the result of calling `git gc`
+      #     @return [Git::CommandLine::Result] the result of calling `git gc`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

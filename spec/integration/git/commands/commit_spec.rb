@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::Commit, :integration do
       it 'returns a CommandLineResult' do
         result = command.call(message: 'Test commit')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'with allow_empty option' do
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Commit, :integration do
         it 'returns a CommandLineResult' do
           result = command.call(message: 'Empty commit', allow_empty: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end

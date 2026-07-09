@@ -240,7 +240,7 @@ module Git
       #
       #     @option options [Integer] :timeout (nil) maximum seconds to wait for the command to complete
       #
-      #     @return [Git::CommandLineResult] the result of calling `git push`
+      #     @return [Git::CommandLine::Result] the result of calling `git push`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

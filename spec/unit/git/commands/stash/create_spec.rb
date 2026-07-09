@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Stash::Create do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq("abc123def456789\n")
       end
     end

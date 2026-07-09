@@ -246,7 +246,7 @@ module Git
         #
         #     Not passed to the git CLI.
         #
-        #   @return [Git::CommandLineResult] the result of calling `git am`
+        #   @return [Git::CommandLine::Result] the result of calling `git am`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

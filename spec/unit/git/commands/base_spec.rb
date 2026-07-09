@@ -422,7 +422,7 @@ RSpec.describe Git::Commands::Base do
           .and_return(command_result)
 
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -441,7 +441,7 @@ RSpec.describe Git::Commands::Base do
           .and_return(command_result)
 
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
   end

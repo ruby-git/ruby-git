@@ -82,7 +82,7 @@ module Git
       #       Use `"-"` to read from standard input. Can be given more than
       #       once; each file's content becomes its own paragraph.
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git commit-tree`
       #
       #     @raise [ArgumentError] if unsupported options are provided

@@ -94,7 +94,7 @@ module Git
         #
         #     @option options [String] :type (nil) ensure values conform to the given type
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --list`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --list`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

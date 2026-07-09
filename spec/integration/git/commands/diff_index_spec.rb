@@ -18,19 +18,19 @@ RSpec.describe Git::Commands::DiffIndex, :integration do
     context 'when the command succeeds' do
       it 'returns a CommandLineResult with exit code 0 when no working-tree changes exist' do
         result = command.call('HEAD')
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
       it 'returns a CommandLineResult with exit code 0 when nothing is staged' do
         result = command.call('HEAD', cached: true)
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
       it 'accepts a path operand and returns a CommandLineResult' do
         result = command.call('HEAD', 'file.txt')
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'exits with status 1 when staged changes are present and --exit-code is given' do

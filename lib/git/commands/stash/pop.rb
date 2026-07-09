@@ -58,7 +58,7 @@ module Git
         #
         #       Alias: :q
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash pop`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash pop`
         #
         #   @overload call(stash, **options)
         #
@@ -74,7 +74,7 @@ module Git
         #
         #       Alias: :q
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash pop`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash pop`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

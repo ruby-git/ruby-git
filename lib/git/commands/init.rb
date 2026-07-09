@@ -85,7 +85,7 @@ module Git
       #       Pass a string (e.g. `'group'`, `'all'`, `'0660'`) to emit
       #       `--shared=<permissions>`.
       #
-      #     @return [Git::CommandLineResult] the result of calling `git init`
+      #     @return [Git::CommandLine::Result] the result of calling `git init`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

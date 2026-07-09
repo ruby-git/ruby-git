@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq('')
       end
     end
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
 
         result = command.call('feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Branch::UnsetUpstream do
 
         result = command.call(nil)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

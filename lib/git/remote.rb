@@ -131,7 +131,7 @@ module Git
     # @example Remove the upstream remote
     #   git.remote('upstream').remove
     #
-    # @return [Git::CommandLineResult] the result of `git remote remove`
+    # @return [Git::CommandLine::Result] the result of `git remote remove`
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #

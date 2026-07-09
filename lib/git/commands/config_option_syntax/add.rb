@@ -70,7 +70,7 @@ module Git
         #
         #     @option options [String] :type (nil) ensure the value conforms to the given type
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --add`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --add`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

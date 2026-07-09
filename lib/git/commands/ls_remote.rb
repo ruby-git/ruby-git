@@ -146,7 +146,7 @@ module Git
       #
       #   @option options [Numeric] :timeout (nil) execution timeout in seconds
       #
-      #   @return [Git::CommandLineResult] the result of calling `git ls-remote`
+      #   @return [Git::CommandLine::Result] the result of calling `git ls-remote`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

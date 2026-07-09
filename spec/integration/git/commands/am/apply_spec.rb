@@ -33,7 +33,7 @@ RSpec.describe Git::Commands::Am::Apply, :integration do
       it 'returns a CommandLineResult' do
         result = command.call(mbox_file, chdir: repo_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'applies the patch as a new commit' do

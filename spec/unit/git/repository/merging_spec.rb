@@ -407,7 +407,7 @@ RSpec.describe Git::Repository::Merging do
   describe '#each_conflict' do
     let(:diff_command) { instance_double(Git::Commands::Diff) }
     let(:show_command) { instance_double(Git::Commands::Show) }
-    let(:show_result) { instance_double(Git::CommandLineResult) }
+    let(:show_result) { instance_double(Git::CommandLine::Result) }
 
     before do
       allow(Git::Commands::Diff).to receive(:new).with(execution_context).and_return(diff_command)

@@ -34,7 +34,7 @@ module Git
         #
         #     Abort the current merge and reconstruct the pre-merge state
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git merge --abort`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

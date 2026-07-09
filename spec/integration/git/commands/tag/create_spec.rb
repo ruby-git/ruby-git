@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Tag::Create, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('v1.0.0')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

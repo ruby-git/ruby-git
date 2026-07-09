@@ -180,7 +180,7 @@ module Git
       #
       #   @option options [String] :chdir (nil) run the command from the specified directory
       #
-      #   @return [Git::CommandLineResult] the result of calling `git ls-files`
+      #   @return [Git::CommandLine::Result] the result of calling `git ls-files`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

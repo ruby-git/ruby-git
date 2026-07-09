@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Remote::Remove, :integration do
 
         result = command.call('origin')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(repo.remotes.map(&:name)).not_to include('origin')
       end
     end

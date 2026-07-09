@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Unset, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('test.key')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns result with exit status 0' do

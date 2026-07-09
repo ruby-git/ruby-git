@@ -36,7 +36,7 @@ module Git
         #     Forget about the current merge in progress, leaving the index
         #     and working tree as-is
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git merge --quit`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

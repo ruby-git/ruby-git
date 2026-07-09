@@ -389,7 +389,7 @@ module Git
       #
       # @param name [String] the name of the remote to remove
       #
-      # @return [Git::CommandLineResult] the result of calling `git remote remove`
+      # @return [Git::CommandLine::Result] the result of calling `git remote remove`
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
@@ -399,7 +399,7 @@ module Git
 
       # @param name [String] the name of the remote to remove
       #
-      # @return [Git::CommandLineResult] the result of calling `git remote remove`
+      # @return [Git::CommandLine::Result] the result of calling `git remote remove`
       #
       # @raise [Git::FailedError] when git exits with a non-zero status
       #
@@ -773,7 +773,7 @@ module Git
         # @option opts [String, Array<String>] :push_option (nil) one or more
         #   push-option values
         #
-        # @return [Git::CommandLineResult]
+        # @return [Git::CommandLine::Result]
         #
         # @api private
         #
@@ -816,7 +816,7 @@ module Git
         # @option opts [String, Array<String>] :push_option (nil) one or more
         #   push-option values
         #
-        # @return [Git::CommandLineResult]
+        # @return [Git::CommandLine::Result]
         #
         # @api private
         #

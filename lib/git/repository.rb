@@ -232,7 +232,7 @@ module Git
     #
     # @option options [String, nil] :file (nil) path to a custom config file
     #
-    # @return [Hash{String => String}, String, Git::CommandLineResult] all config
+    # @return [Hash{String => String}, String, Git::CommandLine::Result] all config
     #   entries, a single value, or the command result for set mode
     #
     # @raise [ArgumentError] if unsupported options are provided
@@ -293,7 +293,7 @@ module Git
     #   @param value [#to_s] the value to assign; any object is accepted and
     #     converted to a String via `#to_s` before being passed to git
     #
-    #   @return [Git::CommandLineResult] the raw result of
+    #   @return [Git::CommandLine::Result] the raw result of
     #     `git config --global <name> <value>`
     #
     #   @raise [Git::FailedError] if git exits with a non-zero exit status
@@ -380,7 +380,7 @@ module Git
     #
     #   @option options [String, nil] :file (nil) path to a custom config file
     #
-    #   @return [Git::CommandLineResult] the command result
+    #   @return [Git::CommandLine::Result] the command result
     #
     #   @raise [ArgumentError] if unsupported options are provided
     #
@@ -471,7 +471,7 @@ module Git
     #
     # @param value [#to_s] the value to assign
     #
-    # @return [Git::CommandLineResult] the command result
+    # @return [Git::CommandLine::Result] the command result
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #

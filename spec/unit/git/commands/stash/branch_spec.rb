@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Stash::Branch do
 
         result = command.call('my-feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq("Switched to a new branch 'my-feature'\n")
       end
     end

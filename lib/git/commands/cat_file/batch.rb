@@ -154,7 +154,7 @@ module Git
         #   @option options [#write, nil] :out (nil) stream stdout to this IO object
         #     instead of buffering in memory; when given, `result.stdout` will be `''`
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the batch output stream (or `''` when `out:` is given)
         #
@@ -196,7 +196,7 @@ module Git
         #   @option options [#write, nil] :out (nil) stream stdout to this IO object
         #     instead of buffering in memory; when given, `result.stdout` will be `''`
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains one metadata line per object (or `''` when `out:` is given)
         #
@@ -236,7 +236,7 @@ module Git
         #   @option options [#write, nil] :out (nil) stream stdout to this IO object
         #     instead of buffering in memory; when given, `result.stdout` will be `''`
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the interleaved command output (or `''` when `out:` is given)
         #
@@ -270,7 +270,7 @@ module Git
         #   @option options [#write, nil] :out (nil) stream stdout to this IO object
         #     instead of buffering in memory; when given, `result.stdout` will be `''`
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains the full batch output (or `''` when `out:` is given)
         #
@@ -307,7 +307,7 @@ module Git
         #
         #   @option options [Numeric, nil] :timeout (nil) abort the command after this many seconds
         #
-        #   @return [Git::CommandLineResult] the result of calling `git cat-file`
+        #   @return [Git::CommandLine::Result] the result of calling `git cat-file`
         #
         #     Stdout contains one metadata line per object (or `''` when `out:` is given)
         #
@@ -332,7 +332,7 @@ module Git
         #
         # @param reader [IO] read end of the stdin pipe
         #
-        # @return [Git::CommandLineResult]
+        # @return [Git::CommandLine::Result]
         #
         def run_batch(bound, reader)
           result = if bound.execution_options.key?(:out)
@@ -350,7 +350,7 @@ module Git
         #
         # @param reader [IO] read end of the stdin pipe
         #
-        # @return [Git::CommandLineResult] the command result
+        # @return [Git::CommandLine::Result] the command result
         #
         def run_batch_streaming(bound, reader)
           @execution_context.command_streaming(
@@ -367,7 +367,7 @@ module Git
         #
         # @param reader [IO] read end of the stdin pipe
         #
-        # @return [Git::CommandLineResult] the command result
+        # @return [Git::CommandLine::Result] the command result
         #
         def run_batch_capturing(bound, reader)
           @execution_context.command_capturing(

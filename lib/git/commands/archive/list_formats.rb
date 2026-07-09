@@ -37,7 +37,7 @@ module Git
         #
         #     Execute `git archive --list` to show available formats.
         #
-        #     @return [Git::CommandLineResult] the result of calling `git archive --list`
+        #     @return [Git::CommandLine::Result] the result of calling `git archive --list`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end
