@@ -9,10 +9,15 @@
 > the C1b documentation-coverage work and the C1d coverage-gate work are already
 > done (see Done-When). `UPGRADING.md` also already exists.
 >
+> **C1a is ✅ complete.** The public API scope TSV has been produced at
+> `redesign/c1a-public-api-scope.tsv` (255 rows: 42 public, 213 internal).
+> 37 internal constants still need `@api private` flipped in C1c.
+>
 > Remaining work:
 >
-> - **C1c:** finish the `@api`-visibility decisions (e.g., the `Git::Repository::*`
->   topic modules are still `@api public`; decide/flip per plan)
+> - **C1c:** flip `@api` tags for the 37 internal constants identified in
+>   `redesign/c1a-public-api-scope.tsv` that still have `api_private_current=no`
+>   (see TSV for the complete list)
 > - **C2:** confirm `README.md` reflects the new entry points and links to the
 >   migration guide, and review `UPGRADING.md`
 > - **C3:** run the full final documentation verification before v5.0.0 release.
@@ -221,8 +226,8 @@ redesign/c1a-public-api-scope.tsv
 
 This TSV file will contain columns:
 
-- `constant_name` — fully qualified class/module/method name
-- `type` — "class", "module", or "method"
+- `constant_name` — fully qualified class or module name
+- `type` — "class" or "module" (C1a is scoped to classes and modules only; methods are not included)
 - `scope` — "public" or "internal"
 - `category` — e.g. "entry-point", "return-type", "value-object", "topic-module",
   "command-wrapper", "parser", "plumbing", "state-object", etc.
@@ -230,7 +235,9 @@ This TSV file will contain columns:
   (drives the C1c gap-fill so it only touches what's still unmarked)
 - `defining_file` — path to the file where the constant is defined (e.g.,
   `lib/git/object.rb` for `Git::Object::Blob`)
-- `notes` — any relevant context or classification rationale
+- `notes` — any relevant context or classification rationale. A note may also
+  carry an **actionable instruction** for a later phase, prefixed with the phase
+  name (e.g. `C1c action: ...`); the consuming phase must read and follow it.
 
 Subsequent PRs (C1b, C1c, C1d) will reference this file to understand the scope
 decisions made in C1a. The file serves as the source of truth for public vs.
@@ -461,10 +468,38 @@ For each internal class needing the marker:
    public** and should be fully documented (they are mixed into the public
    `Git::Repository` class). Do not add `@api private` to those methods.
 
-3. **Verify the tag renders.** Run `bundle exec rake yard:build` (CI-equivalent)
-   and confirm generated docs show `@api private` objects with a private
-   annotation. They remain documented (and linted) but are marked as internal,
-   non-public contract.
+3. **Read and follow per-row `notes` instructions.** Some rows carry an actionable
+   instruction in the `notes` column prefixed `C1c action: ...`. Apply it in
+   addition to setting the `@api` tag. For example, several work-in-progress diff
+   value objects (e.g. `Git::DiffResult`, `Git::DiffInfo`, `Git::FileDiffInfo`,
+   `Git::FileRef`, the `Git::DiffFile*Info` classes, `Git::Dirstat*`,
+   `Git::DetachedHeadInfo`) instruct you to also add a YARD comment noting the
+   class is work-in-progress and may be made public in a later release. Example:
+
+   ```ruby
+   module Git
+     # Immutable result object from git diff commands.
+     #
+     # @note Work in progress: this class is not yet part of the public API and
+     #   may be made public in a later release (targeted for a future
+     #   Git::Repository::Diffing refactor). Do not depend on it.
+     #
+     # @api private
+     #
+     DiffResult = Data.define(...)
+   end
+   ```
+
+4. **Verify the tags are applied.** Run:
+
+   ```
+   bundle exec yard list --query 'object.has_tag?(:api) && object.tag(:api).text == "private"'
+   ```
+
+   and confirm all 37 target constants from `redesign/c1a-public-api-scope.tsv`
+   (those with `api_private_current=no`) appear in the output. Also run
+   `bundle exec rake yard:build` (included in the CI `yard`/`default` task) and
+   examine the build output for any warnings or errors introduced by the changes.
 
 **Done-when (C1c):** Every element in `redesign/c1a-public-api-scope.tsv` has an
 effective `@api` status matching its recorded `scope` — `internal` rows resolve to
@@ -476,7 +511,9 @@ tag on every element. Concretely: all `Git::Repository::*` topic modules are
 `@api private`; the per-constant `@api private` query from C1a step 3 lists every
 `internal` element and no `public` one; `bundle exec rake yard:lint` passes with no
 offenses; and generated docs render internal elements with `@api private`
-annotation (not as public API contract).
+annotation (not as public API contract). Additionally, every `C1c action: ...`
+instruction recorded in a row's `notes` column has been applied (e.g. the
+work-in-progress diff value objects carry a `@note` marking them not-yet-public).
 
 ### C1d — Coverage gate (already complete)
 
