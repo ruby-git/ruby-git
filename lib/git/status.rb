@@ -7,6 +7,14 @@ module Git
   # files have been modified, added, or deleted, including untracked files.
   # The Status object is an Enumerable of StatusFile objects.
   #
+  # @example Inspect repository status
+  #   repo = Git.open('/path/to/repo')
+  #   status = repo.status
+  #   status.changed.each { |path, _file| puts "Modified: #{path}" }
+  #   status.added.each { |path, _file| puts "Added: #{path}" }
+  #   status.deleted.each { |path, _file| puts "Deleted: #{path}" }
+  #   status.untracked.each { |path, _file| puts "Untracked: #{path}" }
+  #
   # @api public
   #
   class Status
