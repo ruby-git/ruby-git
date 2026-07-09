@@ -2,24 +2,22 @@
 
 > **🚧 Status: Partial.**
 >
-> **Documentation coverage is complete.** `yardstick` has been retired and
-> replaced by [`yard-lint`](https://github.com/mensfeld/yard-lint) (config in
-> `.yard-lint.yml`, run via `bundle exec rake yard:lint`). Every file under
-> `lib/` passes `yard-lint` with **no offenses and no baseline exceptions**, so
-> the C1b documentation-coverage work and the C1d coverage-gate work are already
-> done (see Done-When). `UPGRADING.md` also already exists.
->
-> **C1a is ✅ complete.** The public API scope TSV has been produced at
-> `redesign/c1a-public-api-scope.tsv` (255 rows: 42 public, 213 internal).
-> 37 internal constants still need `@api private` flipped in C1c.
+> **C1 (YARD audit) is fully complete:**
+> - **C1a ✅** — Public API scope TSV produced at `redesign/c1a-public-api-scope.tsv`
+>   (255 rows: 42 public, 213 internal).
+> - **C1b ✅** — All of `lib/` passes `bundle exec yard-lint lib/` with no offenses
+>   (`yardstick` retired in favor of `yard-lint`; the `rake yard:lint` alias is
+>   Ruby 3.3+ only).
+> - **C1c ✅** — `@api` tags set for all 37 previously-unmarked internal constants
+>   (commit `83225f3f`).
+> - **C1d ✅** — Coverage gate enforced by `yard-lint` + `.yard-lint.yml`; no PR needed.
 >
 > Remaining work:
 >
-> - **C1c:** flip `@api` tags for the 37 internal constants identified in
->   `redesign/c1a-public-api-scope.tsv` that still have `api_private_current=no`
->   (see TSV for the complete list)
-> - **C2:** confirm `README.md` reflects the new entry points and links to the
->   migration guide, and review `UPGRADING.md`
+> - **C2a:** review and expand `UPGRADING.md` to comprehensively cover all
+>   v4.x → v5.0.0 breaking changes
+> - **C2b:** update `README.md` to reflect the new entry points and link to the
+>   migration guide
 > - **C3:** run the full final documentation verification before v5.0.0 release.
 >
 
@@ -137,21 +135,21 @@ All breaking changes are complete; this step documents them for users.
 
 This step is organized into workstreams, each with **one PR per substep** for finer-grained reviews:
 
-- **C1a: Identify Public API Scope** (1 PR) — informs C1c
+- **C1a: Identify Public API Scope** — ✅ **done** (`redesign/c1a-public-api-scope.tsv` produced)
 - **C1b: Document All Elements** — ✅ **already done** (all of `lib/` passes
   `yard-lint`; no PR needed)
-- **C1c: Set Correct @api Tags (incl. flip topic modules to private)** (1 PR)
+- **C1c: Set Correct @api Tags (incl. flip topic modules to private)** — ✅ **done**
+  (commit `83225f3f`; all 37 previously-unmarked internal constants tagged)
 - **C1d: Coverage Gate** — ✅ **already done** (`yard-lint` + `.yard-lint.yml`
   replaced the retired `yardstick` gate and pass; no PR needed)
 - **C2a: Update UPGRADING.md** (1 PR)
 - **C2b: Update README.md** (1 PR)
 - **C3: Documentation Completeness Verification** (1 PR)
 
-Dependencies (remaining): C1a → C1c → C3; C2a, C2b → C3. (C1b and C1d are
-already complete.)
+Dependencies (remaining): C2a, C2b → C3. (C1a–C1d are all complete.)
 
 **Documentation skill requirements:** Any remaining PR that touches YARD
-comments (e.g., C1c) must apply the
+comments must apply the
 [yard-documentation](../.github/skills/yard-documentation/SKILL.md) skill to all
 YARD comments changed or added. Additionally:
 
@@ -164,25 +162,25 @@ YARD comments changed or added. Additionally:
 graph LR
     C1a["C1a: Identify Scope"]
     C1b["C1b: Add Docs (done)"]
-    C1c["C1c: Mark Private"]
+    C1c["C1c: Mark Private (done)"]
     C1d["C1d: Coverage Gate (done)"]
     C2a["C2a: UPGRADING"]
     C2b["C2b: README"]
     C3["C3: Docs Verification"]
 
-    %% Remaining (active) gating dependencies:
-    C1a --> C1c
-    C1c --> C3
+    %% All C1 steps are complete; C2a/C2b gate C3:
     C2a --> C3
     C2b --> C3
 
-    %% Already-satisfied historical dependencies (C1b, C1d complete):
+    %% Already-satisfied historical dependencies:
     C1a -.-> C1b
     C1b -.-> C1c
+    C1a -.-> C1c
+    C1c -.-> C3
     C1d -.-> C3
 
     classDef done fill:#e6ffe6,stroke:#2e7d32;
-    class C1b,C1d done;
+    class C1a,C1b,C1c,C1d done;
 ```
 
 ---
@@ -412,6 +410,12 @@ For **other public classes** (e.g., `Git::Object`, `Git::Branch`):
    that parameter names, types, and examples are rendered correctly.
 
 ### C1c — Set correct `@api` tags
+
+> ✅ **Done.** Commit `83225f3f` set the correct `@api` tags for all 37 previously-unmarked
+> internal constants identified in `redesign/c1a-public-api-scope.tsv`. All
+> `Git::Repository::*` topic modules are now `@api private`. `bundle exec yard-lint lib/`
+> passes with no offenses (the `rake yard:lint` alias is Ruby 3.3+ only). The steps
+> below are retained for historical context.
 
 **Input:** `redesign/c1a-public-api-scope.tsv` (from C1a). Set the correct `@api`
 tag on **every** element per the TSV: `@api public` for the `public` surface,
