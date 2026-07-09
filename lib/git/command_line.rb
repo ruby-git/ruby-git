@@ -40,7 +40,7 @@ module Git
   #
   # @see Git::CommandLine::Result
   #
-  # @api public
+  # @api private
   #
   module CommandLine
   end

@@ -12,7 +12,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Committing
       # Option keys accepted by {#commit}

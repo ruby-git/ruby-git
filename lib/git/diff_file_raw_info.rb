@@ -63,7 +63,9 @@ module Git
   # @!attribute [r] binary
   #   @return [Boolean] whether this is a binary file
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   DiffFileRawInfo = Data.define(:src, :dst, :status, :similarity, :insertions, :deletions, :binary) do
     # Get the primary file path
     #

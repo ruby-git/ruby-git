@@ -27,7 +27,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module ObjectOperations # rubocop:disable Metrics/ModuleLength
       # Returns the raw content of a git object, or streams it into a tempfile

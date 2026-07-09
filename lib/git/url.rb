@@ -11,7 +11,7 @@ module Git
   #
   # @see https://github.com/sporkmonger/addressable Addressable::URI
   #
-  # @api public
+  # @api private
   #
   class URL
     # Regexp used to match a Git URL with an alternative SSH syntax
@@ -85,7 +85,7 @@ module Git
   # This class is necessary to ensure that #to_s returns the same string
   # that was passed to the initializer.
   #
-  # @api public
+  # @api private
   #
   class GitAltURI < Addressable::URI
     # Create a new GitAltURI object

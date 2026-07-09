@@ -17,7 +17,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module RemoteOperations # rubocop:disable Metrics/ModuleLength
       # Key normalizations for {#fetch} options

@@ -41,7 +41,9 @@ module Git
   # @!attribute [r] binary
   #   @return [Boolean] whether this is a binary file
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   FileDiffInfo = Data.define(
     :path,
     :patch,
@@ -88,7 +90,9 @@ module Git
   #   info.lines       # => 15
   #   info.file_count  # => 2
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] stats
   #   @return [Hash] the statistics hash with :total and :files keys

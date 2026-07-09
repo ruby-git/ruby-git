@@ -3,6 +3,8 @@
 module Git
   # An author in a Git commit
   #
+  # @api public
+  #
   class Author
     # @return [String, nil] the author's name
     attr_accessor :name

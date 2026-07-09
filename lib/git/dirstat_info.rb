@@ -8,7 +8,9 @@ module Git
   #   info.directory   #=> "lib/commands/"
   #   info.percentage  #=> 45.2
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] directory
   #   @return [String] the directory path (always ends with '/')
@@ -33,7 +35,9 @@ module Git
   #   dirstat['lib/commands/']         #=> 45.2
   #   dirstat.to_h  #=> { "lib/commands/" => 45.2, "spec/unit/" => 30.1 }
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] entries
   #   @return [Array<DirstatEntry>] directory statistics in order from git output

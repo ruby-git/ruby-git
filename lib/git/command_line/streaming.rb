@@ -30,6 +30,8 @@ module Git
     #
     # @see Git::CommandLine::Capturing
     #
+    # @api private
+    #
     class Streaming < Git::CommandLine::Base
       # Default options accepted by {#run}
       #

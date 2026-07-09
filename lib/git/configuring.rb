@@ -39,7 +39,7 @@ module Git
   #   end
   #   private_class_method :assert_valid_scope!
   #
-  # @api public
+  # @api private
   #
   module Configuring # rubocop:disable Metrics/ModuleLength
     # @!group Read Operations

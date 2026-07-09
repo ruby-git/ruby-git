@@ -2,6 +2,9 @@
 
 module Git
   # The global configuration for this gem
+  #
+  # @api public
+  #
   class Config
     # Returns the process-wide singleton {Git::Config} instance
     #

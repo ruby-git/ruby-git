@@ -15,7 +15,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module StatusOperations
       # Returns `true` if the repository has no commits yet

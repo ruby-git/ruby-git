@@ -11,7 +11,7 @@ module Git
   # @example Decode octal UTF-8 bytes
   #   Git::EscapedPath.new('\302\265').unescape # => "µ"
   #
-  # @api public
+  # @api private
   #
   class EscapedPath
     # Maps single-character escapes to their decoded byte values

@@ -9,6 +9,9 @@ module Git
   # represents a git object
   class Object
     # A base class for all Git objects
+    #
+    # @api private
+    #
     class AbstractObject
       # @return [String] the object name, SHA, ref, or treeish path
       #
