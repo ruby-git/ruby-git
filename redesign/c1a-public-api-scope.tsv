@@ -1,0 +1,256 @@
+constant_name	type	scope	category	api_private_current	defining_file	notes
+Git	module	public	entry-point	no	lib/git.rb	Primary entry point module with .open, .clone, .init, .bare, .git_version factory methods
+Git::Author	class	public	value-object	no	lib/git/author.rb	Public value object returned from facade methods
+Git::Branch	class	public	return-type	no	lib/git/branch.rb	Public return type from facade methods
+Git::BranchDeleteFailure	class	public	value-object	no	lib/git/branch_delete_failure.rb	Public value object returned from facade methods
+Git::BranchDeleteResult	class	public	value-object	no	lib/git/branch_delete_result.rb	Public value object returned from facade methods
+Git::BranchInfo	class	public	value-object	no	lib/git/branch_info.rb	Public value object returned from facade methods
+Git::Branches	class	public	return-type	no	lib/git/branches.rb	Public return type from facade methods
+Git::CommandLine	module	internal	plumbing	no	lib/git/command_line.rb	Internal command-line execution infrastructure; not part of public API
+Git::CommandLine::Base	class	internal	plumbing	no	lib/git/command_line/base.rb	Internal command-line execution infrastructure; not part of public API
+Git::CommandLine::Capturing	class	internal	plumbing	no	lib/git/command_line/capturing.rb	Internal command-line execution infrastructure; not part of public API
+Git::CommandLine::Result	class	internal	plumbing	no	lib/git/command_line/result.rb	Internal command-line execution infrastructure; not part of public API
+Git::CommandLine::Streaming	class	internal	plumbing	no	lib/git/command_line/streaming.rb	Internal command-line execution infrastructure; not part of public API
+Git::CommandLineError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::Commands	module	internal	command-wrapper	yes	lib/git/commands.rb	Command implementation detail; not part of public API
+Git::Commands::Add	class	internal	command-wrapper	yes	lib/git/commands/add.rb	Command implementation detail; not part of public API
+Git::Commands::Am	class	internal	command-wrapper	yes	lib/git/commands/am.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Abort	class	internal	command-wrapper	yes	lib/git/commands/am/abort.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Apply	class	internal	command-wrapper	yes	lib/git/commands/am/apply.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Continue	class	internal	command-wrapper	yes	lib/git/commands/am/continue.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Quit	class	internal	command-wrapper	yes	lib/git/commands/am/quit.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Retry	class	internal	command-wrapper	yes	lib/git/commands/am/retry.rb	Command implementation detail; not part of public API
+Git::Commands::Am::ShowCurrentPatch	class	internal	command-wrapper	yes	lib/git/commands/am/show_current_patch.rb	Command implementation detail; not part of public API
+Git::Commands::Am::Skip	class	internal	command-wrapper	yes	lib/git/commands/am/skip.rb	Command implementation detail; not part of public API
+Git::Commands::Apply	class	internal	command-wrapper	yes	lib/git/commands/apply.rb	Command implementation detail; not part of public API
+Git::Commands::Archive	class	internal	command-wrapper	yes	lib/git/commands/archive.rb	Command implementation detail; not part of public API
+Git::Commands::Archive::ListFormats	class	internal	command-wrapper	yes	lib/git/commands/archive/list_formats.rb	Command implementation detail; not part of public API
+Git::Commands::Arguments	module	internal	command-arguments	yes	lib/git/commands/arguments.rb	Command implementation detail; not part of public API
+Git::Commands::Arguments::Bound	class	internal	command-arguments	yes	lib/git/commands/arguments.rb	Command implementation detail; not part of public API
+Git::Commands::Base	class	internal	command-wrapper	yes	lib/git/commands/base.rb	Command implementation detail; not part of public API
+Git::Commands::Branch	class	internal	command-wrapper	yes	lib/git/commands/branch.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::Copy	class	internal	command-wrapper	yes	lib/git/commands/branch/copy.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::Create	class	internal	command-wrapper	yes	lib/git/commands/branch/create.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::Delete	class	internal	command-wrapper	yes	lib/git/commands/branch/delete.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::List	class	internal	command-wrapper	yes	lib/git/commands/branch/list.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::Move	class	internal	command-wrapper	yes	lib/git/commands/branch/move.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::SetUpstream	class	internal	command-wrapper	yes	lib/git/commands/branch/set_upstream.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::ShowCurrent	class	internal	command-wrapper	yes	lib/git/commands/branch/show_current.rb	Command implementation detail; not part of public API
+Git::Commands::Branch::UnsetUpstream	class	internal	command-wrapper	yes	lib/git/commands/branch/unset_upstream.rb	Command implementation detail; not part of public API
+Git::Commands::CatFile	class	internal	command-wrapper	yes	lib/git/commands/cat_file.rb	Command implementation detail; not part of public API
+Git::Commands::CatFile::Batch	class	internal	command-wrapper	yes	lib/git/commands/cat_file/batch.rb	Command implementation detail; not part of public API
+Git::Commands::CatFile::Filtered	class	internal	command-wrapper	yes	lib/git/commands/cat_file/filtered.rb	Command implementation detail; not part of public API
+Git::Commands::CatFile::Raw	class	internal	command-wrapper	yes	lib/git/commands/cat_file/raw.rb	Command implementation detail; not part of public API
+Git::Commands::Checkout	class	internal	command-wrapper	yes	lib/git/commands/checkout.rb	Command implementation detail; not part of public API
+Git::Commands::Checkout::Branch	class	internal	command-wrapper	yes	lib/git/commands/checkout/branch.rb	Command implementation detail; not part of public API
+Git::Commands::Checkout::Files	class	internal	command-wrapper	yes	lib/git/commands/checkout/files.rb	Command implementation detail; not part of public API
+Git::Commands::CheckoutIndex	class	internal	command-wrapper	yes	lib/git/commands/checkout_index.rb	Command implementation detail; not part of public API
+Git::Commands::Clean	class	internal	command-wrapper	yes	lib/git/commands/clean.rb	Command implementation detail; not part of public API
+Git::Commands::Clone	class	internal	command-wrapper	yes	lib/git/commands/clone.rb	Command implementation detail; not part of public API
+Git::Commands::Commit	class	internal	command-wrapper	yes	lib/git/commands/commit.rb	Command implementation detail; not part of public API
+Git::Commands::CommitTree	class	internal	command-wrapper	yes	lib/git/commands/commit_tree.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::Add	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/add.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::Get	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::GetAll	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get_all.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::GetColor	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get_color.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::GetColorBool	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get_color_bool.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::GetRegexp	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get_regexp.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::GetUrlmatch	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/get_urlmatch.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::List	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/list.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::RemoveSection	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/remove_section.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::RenameSection	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/rename_section.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::ReplaceAll	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/replace_all.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::Set	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/set.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::Unset	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/unset.rb	Command implementation detail; not part of public API
+Git::Commands::ConfigOptionSyntax::UnsetAll	class	internal	command-wrapper	yes	lib/git/commands/config_option_syntax/unset_all.rb	Command implementation detail; not part of public API
+Git::Commands::Describe	class	internal	command-wrapper	yes	lib/git/commands/describe.rb	Command implementation detail; not part of public API
+Git::Commands::Diff	class	internal	command-wrapper	yes	lib/git/commands/diff.rb	Command implementation detail; not part of public API
+Git::Commands::DiffFiles	class	internal	command-wrapper	yes	lib/git/commands/diff_files.rb	Command implementation detail; not part of public API
+Git::Commands::DiffIndex	class	internal	command-wrapper	yes	lib/git/commands/diff_index.rb	Command implementation detail; not part of public API
+Git::Commands::Fetch	class	internal	command-wrapper	yes	lib/git/commands/fetch.rb	Command implementation detail; not part of public API
+Git::Commands::Fsck	class	internal	command-wrapper	yes	lib/git/commands/fsck.rb	Command implementation detail; not part of public API
+Git::Commands::Gc	class	internal	command-wrapper	yes	lib/git/commands/gc.rb	Command implementation detail; not part of public API
+Git::Commands::Grep	class	internal	command-wrapper	yes	lib/git/commands/grep.rb	Command implementation detail; not part of public API
+Git::Commands::Init	class	internal	command-wrapper	yes	lib/git/commands/init.rb	Command implementation detail; not part of public API
+Git::Commands::Log	class	internal	command-wrapper	yes	lib/git/commands/log.rb	Command implementation detail; not part of public API
+Git::Commands::LsFiles	class	internal	command-wrapper	yes	lib/git/commands/ls_files.rb	Command implementation detail; not part of public API
+Git::Commands::LsRemote	class	internal	command-wrapper	yes	lib/git/commands/ls_remote.rb	Command implementation detail; not part of public API
+Git::Commands::LsTree	class	internal	command-wrapper	yes	lib/git/commands/ls_tree.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance	class	internal	command-wrapper	yes	lib/git/commands/maintenance.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance::Register	class	internal	command-wrapper	yes	lib/git/commands/maintenance/register.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance::Run	class	internal	command-wrapper	yes	lib/git/commands/maintenance/run.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance::Start	class	internal	command-wrapper	yes	lib/git/commands/maintenance/start.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance::Stop	class	internal	command-wrapper	yes	lib/git/commands/maintenance/stop.rb	Command implementation detail; not part of public API
+Git::Commands::Maintenance::Unregister	class	internal	command-wrapper	yes	lib/git/commands/maintenance/unregister.rb	Command implementation detail; not part of public API
+Git::Commands::Merge	class	internal	command-wrapper	yes	lib/git/commands/merge.rb	Command implementation detail; not part of public API
+Git::Commands::Merge::Abort	class	internal	command-wrapper	yes	lib/git/commands/merge/abort.rb	Command implementation detail; not part of public API
+Git::Commands::Merge::Continue	class	internal	command-wrapper	yes	lib/git/commands/merge/continue.rb	Command implementation detail; not part of public API
+Git::Commands::Merge::Quit	class	internal	command-wrapper	yes	lib/git/commands/merge/quit.rb	Command implementation detail; not part of public API
+Git::Commands::Merge::Start	class	internal	command-wrapper	yes	lib/git/commands/merge/start.rb	Command implementation detail; not part of public API
+Git::Commands::MergeBase	class	internal	command-wrapper	yes	lib/git/commands/merge_base.rb	Command implementation detail; not part of public API
+Git::Commands::Mv	class	internal	command-wrapper	yes	lib/git/commands/mv.rb	Command implementation detail; not part of public API
+Git::Commands::NameRev	class	internal	command-wrapper	yes	lib/git/commands/name_rev.rb	Command implementation detail; not part of public API
+Git::Commands::OperandAllocator	class	internal	command-arguments	yes	lib/git/commands/arguments.rb	Command implementation detail; not part of public API
+Git::Commands::OperandAllocator::LeadingAllocationState	class	internal	command-arguments	yes	lib/git/commands/arguments.rb	Command implementation detail; not part of public API
+Git::Commands::Pull	class	internal	command-wrapper	yes	lib/git/commands/pull.rb	Command implementation detail; not part of public API
+Git::Commands::Push	class	internal	command-wrapper	yes	lib/git/commands/push.rb	Command implementation detail; not part of public API
+Git::Commands::ReadTree	class	internal	command-wrapper	yes	lib/git/commands/read_tree.rb	Command implementation detail; not part of public API
+Git::Commands::Remote	class	internal	command-wrapper	yes	lib/git/commands/remote.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Add	class	internal	command-wrapper	yes	lib/git/commands/remote/add.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::GetUrl	class	internal	command-wrapper	yes	lib/git/commands/remote/get_url.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::List	class	internal	command-wrapper	yes	lib/git/commands/remote/list.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Prune	class	internal	command-wrapper	yes	lib/git/commands/remote/prune.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Remove	class	internal	command-wrapper	yes	lib/git/commands/remote/remove.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Rename	class	internal	command-wrapper	yes	lib/git/commands/remote/rename.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::SetBranches	class	internal	command-wrapper	yes	lib/git/commands/remote/set_branches.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::SetHead	class	internal	command-wrapper	yes	lib/git/commands/remote/set_head.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::SetUrl	class	internal	command-wrapper	yes	lib/git/commands/remote/set_url.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::SetUrlAdd	class	internal	command-wrapper	yes	lib/git/commands/remote/set_url_add.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::SetUrlDelete	class	internal	command-wrapper	yes	lib/git/commands/remote/set_url_delete.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Show	class	internal	command-wrapper	yes	lib/git/commands/remote/show.rb	Command implementation detail; not part of public API
+Git::Commands::Remote::Update	class	internal	command-wrapper	yes	lib/git/commands/remote/update.rb	Command implementation detail; not part of public API
+Git::Commands::Repack	class	internal	command-wrapper	yes	lib/git/commands/repack.rb	Command implementation detail; not part of public API
+Git::Commands::Reset	class	internal	command-wrapper	yes	lib/git/commands/reset.rb	Command implementation detail; not part of public API
+Git::Commands::RevParse	class	internal	command-wrapper	yes	lib/git/commands/rev_parse.rb	Command implementation detail; not part of public API
+Git::Commands::Revert	class	internal	command-wrapper	yes	lib/git/commands/revert.rb	Command implementation detail; not part of public API
+Git::Commands::Revert::Abort	class	internal	command-wrapper	yes	lib/git/commands/revert/abort.rb	Command implementation detail; not part of public API
+Git::Commands::Revert::Continue	class	internal	command-wrapper	yes	lib/git/commands/revert/continue.rb	Command implementation detail; not part of public API
+Git::Commands::Revert::Quit	class	internal	command-wrapper	yes	lib/git/commands/revert/quit.rb	Command implementation detail; not part of public API
+Git::Commands::Revert::Skip	class	internal	command-wrapper	yes	lib/git/commands/revert/skip.rb	Command implementation detail; not part of public API
+Git::Commands::Revert::Start	class	internal	command-wrapper	yes	lib/git/commands/revert/start.rb	Command implementation detail; not part of public API
+Git::Commands::Rm	class	internal	command-wrapper	yes	lib/git/commands/rm.rb	Command implementation detail; not part of public API
+Git::Commands::Show	class	internal	command-wrapper	yes	lib/git/commands/show.rb	Command implementation detail; not part of public API
+Git::Commands::ShowRef	class	internal	command-wrapper	yes	lib/git/commands/show_ref.rb	Command implementation detail; not part of public API
+Git::Commands::ShowRef::ExcludeExisting	class	internal	command-wrapper	yes	lib/git/commands/show_ref/exclude_existing.rb	Command implementation detail; not part of public API
+Git::Commands::ShowRef::Exists	class	internal	command-wrapper	yes	lib/git/commands/show_ref/exists.rb	Command implementation detail; not part of public API
+Git::Commands::ShowRef::List	class	internal	command-wrapper	yes	lib/git/commands/show_ref/list.rb	Command implementation detail; not part of public API
+Git::Commands::ShowRef::Verify	class	internal	command-wrapper	yes	lib/git/commands/show_ref/verify.rb	Command implementation detail; not part of public API
+Git::Commands::Stash	class	internal	command-wrapper	yes	lib/git/commands/stash.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Apply	class	internal	command-wrapper	yes	lib/git/commands/stash/apply.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Branch	class	internal	command-wrapper	yes	lib/git/commands/stash/branch.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Clear	class	internal	command-wrapper	yes	lib/git/commands/stash/clear.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Create	class	internal	command-wrapper	yes	lib/git/commands/stash/create.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Drop	class	internal	command-wrapper	yes	lib/git/commands/stash/drop.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::List	class	internal	command-wrapper	yes	lib/git/commands/stash/list.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Pop	class	internal	command-wrapper	yes	lib/git/commands/stash/pop.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Push	class	internal	command-wrapper	yes	lib/git/commands/stash/push.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Show	class	internal	command-wrapper	yes	lib/git/commands/stash/show.rb	Command implementation detail; not part of public API
+Git::Commands::Stash::Store	class	internal	command-wrapper	yes	lib/git/commands/stash/store.rb	Command implementation detail; not part of public API
+Git::Commands::Status	class	internal	command-wrapper	yes	lib/git/commands/status.rb	Command implementation detail; not part of public API
+Git::Commands::SymbolicRef	class	internal	command-wrapper	yes	lib/git/commands/symbolic_ref.rb	Command implementation detail; not part of public API
+Git::Commands::SymbolicRef::Delete	class	internal	command-wrapper	yes	lib/git/commands/symbolic_ref/delete.rb	Command implementation detail; not part of public API
+Git::Commands::SymbolicRef::Read	class	internal	command-wrapper	yes	lib/git/commands/symbolic_ref/read.rb	Command implementation detail; not part of public API
+Git::Commands::SymbolicRef::Update	class	internal	command-wrapper	yes	lib/git/commands/symbolic_ref/update.rb	Command implementation detail; not part of public API
+Git::Commands::Tag	class	internal	command-wrapper	yes	lib/git/commands/tag.rb	Command implementation detail; not part of public API
+Git::Commands::Tag::Create	class	internal	command-wrapper	yes	lib/git/commands/tag/create.rb	Command implementation detail; not part of public API
+Git::Commands::Tag::Delete	class	internal	command-wrapper	yes	lib/git/commands/tag/delete.rb	Command implementation detail; not part of public API
+Git::Commands::Tag::List	class	internal	command-wrapper	yes	lib/git/commands/tag/list.rb	Command implementation detail; not part of public API
+Git::Commands::Tag::Verify	class	internal	command-wrapper	yes	lib/git/commands/tag/verify.rb	Command implementation detail; not part of public API
+Git::Commands::UpdateRef	class	internal	command-wrapper	yes	lib/git/commands/update_ref.rb	Command implementation detail; not part of public API
+Git::Commands::UpdateRef::Batch	class	internal	command-wrapper	yes	lib/git/commands/update_ref/batch.rb	Command implementation detail; not part of public API
+Git::Commands::UpdateRef::Delete	class	internal	command-wrapper	yes	lib/git/commands/update_ref/delete.rb	Command implementation detail; not part of public API
+Git::Commands::UpdateRef::Update	class	internal	command-wrapper	yes	lib/git/commands/update_ref/update.rb	Command implementation detail; not part of public API
+Git::Commands::Version	class	internal	command-wrapper	yes	lib/git/commands/version.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree	class	internal	command-wrapper	yes	lib/git/commands/worktree.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Add	class	internal	command-wrapper	yes	lib/git/commands/worktree/add.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::List	class	internal	command-wrapper	yes	lib/git/commands/worktree/list.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Lock	class	internal	command-wrapper	yes	lib/git/commands/worktree/lock.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::ManagementBase	class	internal	command-wrapper	yes	lib/git/commands/worktree/management_base.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Move	class	internal	command-wrapper	yes	lib/git/commands/worktree/move.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Prune	class	internal	command-wrapper	yes	lib/git/commands/worktree/prune.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Remove	class	internal	command-wrapper	yes	lib/git/commands/worktree/remove.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Repair	class	internal	command-wrapper	yes	lib/git/commands/worktree/repair.rb	Command implementation detail; not part of public API
+Git::Commands::Worktree::Unlock	class	internal	command-wrapper	yes	lib/git/commands/worktree/unlock.rb	Command implementation detail; not part of public API
+Git::Commands::WriteTree	class	internal	command-wrapper	yes	lib/git/commands/write_tree.rb	Command implementation detail; not part of public API
+Git::Config	class	public	entry-point	no	lib/git/config.rb	Global git configuration access
+Git::ConfigEntryInfo	class	public	value-object	no	lib/git/config_entry_info.rb	Public value object returned from facade methods
+Git::Configuring	module	internal	topic-module	no	lib/git/configuring.rb	Organizational container for config facade methods; included by Git::Repository — currently @api public; C1c will flip to @api private; its methods are public
+Git::DetachedHeadInfo	class	internal	value-object	no	lib/git/detached_head_info.rb	WIP: not yet produced by any command (intended for a future show_current detached-HEAD result); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::Diff	class	public	return-type	no	lib/git/diff.rb	Public return type from facade methods
+Git::Diff::DiffFile	class	public	value-object	no	lib/git/diff.rb	Public value object returned from facade methods
+Git::Diff::FullDiffParser	class	internal	parser	yes	lib/git/diff.rb	Internal diff parser; not part of public API
+Git::DiffFileNumstatInfo	class	internal	value-object	no	lib/git/diff_file_numstat_info.rb	WIP: only used by internal Git::Parsers::Diff, partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DiffFilePatchInfo	class	internal	value-object	no	lib/git/diff_file_patch_info.rb	WIP: only used by internal Git::Parsers::Diff, partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DiffFileRawInfo	class	internal	value-object	no	lib/git/diff_file_raw_info.rb	WIP: only used by internal Git::Parsers::Diff, partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DiffInfo	class	internal	value-object	no	lib/git/diff_info.rb	WIP: not currently instantiated anywhere; part of a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DiffPathStatus	class	public	value-object	no	lib/git/diff_path_status.rb	Public value object returned from facade methods
+Git::DiffResult	class	internal	value-object	no	lib/git/diff_result.rb	WIP: only constructed by internal Git::Parsers::Diff, partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DiffStats	class	public	value-object	no	lib/git/diff_stats.rb	Public value object returned from facade methods
+Git::DirstatEntry	class	internal	value-object	no	lib/git/dirstat_info.rb	WIP: only used by internal Git::Parsers::Diff (element of Git::DirstatInfo#entries), partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::DirstatInfo	class	internal	value-object	no	lib/git/dirstat_info.rb	WIP: only used by internal Git::Parsers::Diff, partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::EncodingUtils	class	internal	plumbing	yes	lib/git/encoding_utils.rb	Internal encoding utility; not part of public API
+Git::Error	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::EscapedPath	class	internal	plumbing	no	lib/git/escaped_path.rb	Internal path escaping utility; currently @api public — needs flip to @api private in C1c
+Git::ExecutionContext	class	internal	execution-context	yes	lib/git/execution_context.rb	Internal execution context; not part of public API
+Git::ExecutionContext::Global	class	internal	execution-context	yes	lib/git/execution_context/global.rb	Internal execution context; not part of public API
+Git::ExecutionContext::Repository	class	internal	execution-context	yes	lib/git/execution_context/repository.rb	Internal execution context; not part of public API
+Git::FailedError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::FileDiffInfo	class	internal	value-object	no	lib/git/diff_info.rb	WIP: not currently instantiated anywhere; part of a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::FileRef	class	internal	value-object	no	lib/git/file_ref.rb	WIP: only used by internal Git::Parsers::Diff (nested in raw/patch info), partial work for a future Git::Repository::Diffing refactor (v6.x or later); internal for now. C1c action: when setting @api private, also add a YARD comment noting this class is work-in-progress and may be made public in a later release.
+Git::FsckObject	class	public	value-object	no	lib/git/fsck_object.rb	Public value object returned from facade methods
+Git::FsckResult	class	public	value-object	no	lib/git/fsck_result.rb	Public value object returned from facade methods
+Git::GitAltURI	class	internal	plumbing	no	lib/git/url.rb	Internal URL parsing helper for SCP-style SSH syntax; never returned to users
+Git::Log	class	public	return-type	no	lib/git/log.rb	Public return type from facade methods
+Git::Log::Result	class	public	value-object	no	lib/git/log.rb	Public value object returned from facade methods
+Git::Object	class	public	value-object	no	lib/git/object.rb	Public git object type in the Git::Object hierarchy
+Git::Object::AbstractObject	class	internal	abstract-base	no	lib/git/object.rb	Abstract base class for git objects; not directly instantiated by users
+Git::Object::Blob	class	public	value-object	no	lib/git/object.rb	Public git object type in the Git::Object hierarchy
+Git::Object::Commit	class	public	value-object	no	lib/git/object.rb	Public git object type in the Git::Object hierarchy
+Git::Object::Tag	class	public	value-object	no	lib/git/object.rb	Public git object type in the Git::Object hierarchy
+Git::Object::Tree	class	public	value-object	no	lib/git/object.rb	Public git object type in the Git::Object hierarchy
+Git::Parsers	module	internal	parser	yes	lib/git/parsers/branch.rb	Parser implementation detail; not part of public API
+Git::Parsers::Branch	class	internal	parser	yes	lib/git/parsers/branch.rb	Parser implementation detail; not part of public API
+Git::Parsers::CatFile	class	internal	parser	yes	lib/git/parsers/cat_file.rb	Parser implementation detail; not part of public API
+Git::Parsers::ConfigEntry	class	internal	parser	yes	lib/git/parsers/config_entry.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff::Numstat	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff::Patch	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff::Patch::PatchFileParser	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff::Patch::PatchMetadataParser	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Diff::Raw	class	internal	parser	yes	lib/git/parsers/diff.rb	Parser implementation detail; not part of public API
+Git::Parsers::Fsck	class	internal	parser	yes	lib/git/parsers/fsck.rb	Parser implementation detail; not part of public API
+Git::Parsers::Grep	class	internal	parser	yes	lib/git/parsers/grep.rb	Parser implementation detail; not part of public API
+Git::Parsers::LsRemote	class	internal	parser	yes	lib/git/parsers/ls_remote.rb	Parser implementation detail; not part of public API
+Git::Parsers::LsTree	class	internal	parser	yes	lib/git/parsers/ls_tree.rb	Parser implementation detail; not part of public API
+Git::Parsers::Stash	class	internal	parser	yes	lib/git/parsers/stash.rb	Parser implementation detail; not part of public API
+Git::Parsers::Stash::Fields	class	internal	parser	yes	lib/git/parsers/stash.rb	Parser implementation detail; not part of public API
+Git::Parsers::Tag	class	internal	parser	yes	lib/git/parsers/tag.rb	Parser implementation detail; not part of public API
+Git::ProcessIOError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::Remote	class	public	return-type	no	lib/git/remote.rb	Public return type from facade methods
+Git::Repository	class	public	return-type	no	lib/git/repository.rb	Main facade for repository operations; return type of Git factory methods (.open, .clone, .init, .bare)
+Git::Repository::Branching	module	internal	topic-module	no	lib/git/repository/branching.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Branching::HeadState	class	internal	state-object	no	lib/git/repository/branching.rb	Internal state/path helper within a topic module
+Git::Repository::Committing	module	internal	topic-module	no	lib/git/repository/committing.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::ContextHelpers	module	internal	topic-module	no	lib/git/repository/context_helpers.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Diffing	module	internal	topic-module	no	lib/git/repository/diffing.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Factories	module	internal	topic-module	yes	lib/git/repository/factories.rb	Organizational container; @api private set in PR 1597; its methods are public
+Git::Repository::Inspecting	module	internal	topic-module	no	lib/git/repository/inspecting.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Logging	module	internal	topic-module	no	lib/git/repository/logging.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Maintenance	module	internal	topic-module	no	lib/git/repository/maintenance.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Merging	module	internal	topic-module	no	lib/git/repository/merging.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::ObjectOperations	module	internal	topic-module	no	lib/git/repository/object_operations.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::PathResolver	module	internal	plumbing	yes	lib/git/repository/path_resolver.rb	Internal path resolution helper; already @api private
+Git::Repository::RemoteOperations	module	internal	topic-module	no	lib/git/repository/remote_operations.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Staging	module	internal	topic-module	no	lib/git/repository/staging.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::Stashing	module	internal	topic-module	no	lib/git/repository/stashing.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::StatusOperations	module	internal	topic-module	no	lib/git/repository/status_operations.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::Repository::WorktreeOperations	module	internal	topic-module	no	lib/git/repository/worktree_operations.rb	Organizational container; currently @api public — C1c will flip to @api private; its methods are public
+Git::SignaledError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::Stash	class	public	return-type	no	lib/git/stash.rb	Public return type from facade methods
+Git::StashInfo	class	public	value-object	no	lib/git/stash_info.rb	Public value object returned from facade methods
+Git::Stashes	class	public	return-type	no	lib/git/stashes.rb	Public return type from facade methods
+Git::Status	class	public	return-type	no	lib/git/status.rb	Public return type from facade methods
+Git::Status::StatusFile	class	public	return-type	no	lib/git/status.rb	Public return type from facade methods
+Git::Status::StatusFileFactory	class	internal	plumbing	yes	lib/git/status.rb	Internal factory for StatusFile objects; not part of public API
+Git::TagDeleteFailure	class	public	value-object	no	lib/git/tag_delete_failure.rb	Public value object returned from facade methods
+Git::TagDeleteResult	class	public	value-object	no	lib/git/tag_delete_result.rb	Public value object returned from facade methods
+Git::TagInfo	class	public	value-object	no	lib/git/tag_info.rb	Public value object returned from facade methods
+Git::TimeoutError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::URL	class	internal	plumbing	no	lib/git/url.rb	Internal URL utility used by clone/remote internals; never returned to users
+Git::UnexpectedResultError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::Version	class	internal	plumbing	no	lib/git/version.rb	Internal version type used by command layer; surfaces in Git::VersionError but users don't need to instantiate or subclass it
+Git::VersionConstraint	class	internal	plumbing	no	lib/git/version_constraint.rb	Internal constraint type used by Git::Commands::Base; surfaces via Git::VersionError#constraint but users don't need to construct or depend on it
+Git::VersionError	class	public	error	no	lib/git/errors.rb	Public exception class raised by facade methods
+Git::Worktree	class	public	return-type	no	lib/git/worktree.rb	Public return type from facade methods
+Git::Worktrees	class	public	return-type	no	lib/git/worktrees.rb	Public return type from facade methods
