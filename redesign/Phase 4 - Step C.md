@@ -1,6 +1,6 @@
 # Phase 4 / Step C — Update Documentation: Execution Plan
 
-> **🚧 Status: Partial — C1 and C2 complete; C3 remains.**
+> **✅ Status: Complete — C1, C2, and C3 all complete.**
 >
 > **C1 (YARD audit) is fully complete:**
 > - **C1a ✅** — Public API scope TSV produced at `redesign/c1a-public-api-scope.tsv`
@@ -20,10 +20,15 @@
 >   section added, `UPGRADING.md` linked from the Deprecations section, outdated
 >   version-pinned install snippets removed, and ToC updated.
 >
-> Remaining work:
->
-> - **C3:** run the full final documentation verification before v5.0.0 release.
->
+> **C3 (documentation completeness verification) is fully complete:**
+> - **C3a ✅** — Full CI pipeline green: all unit and integration examples pass,
+>   0 failures; `yard:lint` no offenses; 100.00% documented; gem builds.
+> - **C3b ✅** — Manual spot-check of 10 key public-API classes passed; one gap
+>   found and fixed (`Git::Status` was missing a class-level `@example`).
+> - **C3c ✅** — All internal file links in `README.md` and `UPGRADING.md` verified
+>   present; anchors resolve correctly; no stale `Git::Base`/`Git::Lib` references
+>   outside migration-guide context.
+> - **C3d ✅** — Redesign tracker updated; Step C signed off.
 
 - [Goal](#goal)
 - [Done-When Criteria](#done-when-criteria)

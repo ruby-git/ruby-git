@@ -9,7 +9,7 @@ risk and allows for a gradual, controlled migration to the new architecture.
   - [Facade Modules Completed](#facade-modules-completed)
     - [Facade module naming convention](#facade-module-naming-convention)
   - [Next Task](#next-task)
-    - [Phase 4 Steps A, B, and W6 complete — Step C remains](#phase-4-steps-a-b-and-w6-complete--step-c-remains)
+    - [Phase 4 complete — architectural redesign is done 🎉](#phase-4-complete--architectural-redesign-is-done-)
     - [Phase 3 Overview](#phase-3-overview)
     - [Workstream A — Fill facade coverage gaps](#workstream-a--fill-facade-coverage-gaps)
     - [Workstream B — C0: Redirect `Git::Base` factory methods to `facade_repository`](#workstream-b--c0-redirect-gitbase-factory-methods-to-facade_repository)
@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 ✅; Step C: C1a ✅ C1b ✅ C1c ✅ C1d ✅ C2a ✅ C2b ✅ complete; C3 pending | 10% | 98% |
-| **TOTAL** | -- | -- | **100%** | **99%** |
+| Phase 4 | ✅ Complete | Final cleanup and release — Steps A, B, and C all complete | 10% | 100% |
+| **TOTAL** | ✅ **Complete** | -- | **100%** | **100%** |
 
 ### Facade Modules Completed
 
@@ -85,7 +85,7 @@ such as `Branch`, `Diff`, `Log`, `Object`, `Remote`, `Status`, `Worktree`, etc.
 
 ### Next Task
 
-#### Phase 4 Steps A, B, and W6 complete — Step C remains
+#### Phase 4 complete — architectural redesign is done 🎉
 
 Phase 4 **Step A — Remove old code** is ✅ complete. The atomic removal landed in
 [PR #1456](https://github.com/ruby-git/ruby-git/pull/1456) (commit `c1c53999`),
@@ -103,13 +103,24 @@ removed (W4b), the full quality gate was verified green (W5 — 5668 unit + 893
 integration examples, 0 failures), and stale `Git::Base`/`Git::Lib` references were
 removed from active Copilot skills (W6 — [PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)).
 
-The remaining redesign work is the rest of Phase 4:
+Phase 4 **Step C — Update documentation** is ✅ complete. C1a–C1d (YARD audit and
+coverage gate), C2a–C2b (`UPGRADING.md` and `README.md`), and C3 (documentation
+completeness verification) are all done. Final state: all unit and integration examples
+pass, 0 failures; 100.00% documented; `yard:lint` no offenses; gem builds.
+One gap found and fixed during C3b: `Git::Status` was missing a class-level
+`@example` (added in this PR).
+
+All Phase 4 steps are now complete:
 
 | Step | Status | Summary |
 | ---- | ------ | ------- |
 | A — Remove old code | ✅ Complete | `Git::Base`/`Git::Lib` and the bridge deleted ([PR #1456](https://github.com/ruby-git/ruby-git/pull/1456)) |
 | B — Finalize test suite | ✅ Complete | W2 ✅ (all 159 PORT rows ported and merged after dedup, batches U1–U21); W3 ✅ (removed `tests/` and Test::Unit tooling); W4a ✅ (deprecated `extract-*` skills); W4b ✅ (removed Test::Unit doc references); W5 ✅ (gate green: 5668 unit + 893 integration, 0 failures); W6 ✅ (removed stale `Git::Base`/`Git::Lib` skill refs, [PR #1509](https://github.com/ruby-git/ruby-git/pull/1509)) |
-| C — Update documentation | 🚧 Partial | `UPGRADING.md` and broad `@api private` coverage exist; verify `yard stats` reports no missing public-API docs and that `README.md` reflects the new entry points |
+| C — Update documentation | ✅ Complete | C1a–C1d ✅ (YARD audit + coverage gate); C2a ✅ (`UPGRADING.md`); C2b ✅ (`README.md`); C3 ✅ (docs verification: CI green, spot-check passed, links valid) |
+
+The architectural redesign is now **fully complete**. The codebase is ready for the
+v5.0.0 release process (see the
+[release-management](../.github/skills/release-management/SKILL.md) skill).
 
 The following earlier prerequisites are all ✅ complete:
 
@@ -139,10 +150,10 @@ All 9 domain-object migrations are ✅ complete:
 | `Git::Branches` | [PR #1356](https://github.com/ruby-git/ruby-git/pull/1356), [PR #1357](https://github.com/ruby-git/ruby-git/pull/1357), [PR #1358](https://github.com/ruby-git/ruby-git/pull/1358), [PR #1359](https://github.com/ruby-git/ruby-git/pull/1359) |
 | `Git::Worktree` + `Git::Worktrees` | — |
 
-The work was organized into six workstreams (A–F). All workstreams that are
-prerequisites for C1d are now ✅ complete. F1 and F2 are both ✅ complete — F2
-moved the remaining `Git` module utility methods off `Git::Lib`. Phase 4 Step A
-is complete; Steps B and C remain (see [Next Task](#next-task)).
+The work was organized into six workstreams (A–F). All workstreams are ✅ complete.
+F1 and F2 are both ✅ complete — F2 moved the remaining `Git` module utility methods
+off `Git::Lib`. Phase 4 Steps A, B, and C are all ✅ complete (see
+[Next Task](#next-task)).
 
 **Sequencing** (see [Phase 3 dependency order](#phase-3-dependency-order) for the
 reasoning behind each edge):
