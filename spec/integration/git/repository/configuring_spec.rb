@@ -3,7 +3,10 @@
 require 'spec_helper'
 require 'git/repository'
 
-# Integration tests for deprecated Git::Repository#config and #global_config.
+# Integration tests for Git::Repository config facade methods.
+#
+# Covers the deprecated #config and #global_config methods, and the current
+# #config_get and #config_list methods.
 #
 # #config (list mode) performs facade-owned post-processing: it parses the raw
 # stdout of `git config --list` into a Ruby Hash. A real git invocation is
@@ -133,6 +136,38 @@ RSpec.describe Git::Repository, :integration do
       yield
     ensure
       saved.nil? ? ENV.delete('GIT_CONFIG_GLOBAL') : ENV['GIT_CONFIG_GLOBAL'] = saved
+    end
+  end
+
+  describe '#config_get' do
+    it 'returns a Git::ConfigEntryInfo for an existing key' do
+      entry = described_instance.config_get('user.name')
+
+      expect(entry).to be_a(Git::ConfigEntryInfo)
+      expect(entry.value).to eq('Test User')
+    end
+
+    it 'returns nil when the key does not exist' do
+      entry = described_instance.config_get('nonexistent.key', local: true)
+
+      expect(entry).to be_nil
+    end
+  end
+
+  describe '#config_list' do
+    it 'returns an Array of Git::ConfigEntryInfo objects' do
+      entries = described_instance.config_list
+
+      expect(entries).to be_an(Array)
+      expect(entries).to all(be_a(Git::ConfigEntryInfo))
+    end
+
+    it 'includes an entry for user.name from local config' do
+      entries = described_instance.config_list(local: true)
+
+      user_name_entry = entries.find { |e| e.key == 'user.name' }
+      expect(user_name_entry).not_to be_nil
+      expect(user_name_entry.value).to eq('Test User')
     end
   end
 end

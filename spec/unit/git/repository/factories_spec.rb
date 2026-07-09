@@ -5,9 +5,10 @@ require 'git/repository'
 
 RSpec.describe Git::Repository::Factories do
   let(:execution_context) { instance_double(Git::ExecutionContext::Repository) }
+  let(:host) { Module.new { extend Git::Repository::Factories } }
 
   describe '.open' do
-    subject(:repository) { Git::Repository.open(working_dir, options) }
+    subject(:repository) { host.open(working_dir, options) }
 
     let(:working_dir) { '/repo' }
     let(:options) { {} }
@@ -135,7 +136,7 @@ RSpec.describe Git::Repository::Factories do
   end
 
   describe '.clone' do
-    subject(:repository) { Git::Repository.clone(repository_url, directory, options) }
+    subject(:repository) { host.clone(repository_url, directory, options) }
 
     let(:repository_url) { 'https://github.com/ruby-git/ruby-git.git' }
     let(:directory) { nil }
@@ -409,7 +410,7 @@ RSpec.describe Git::Repository::Factories do
   end
 
   describe '.init' do
-    subject(:repository) { Git::Repository.init(directory, options) }
+    subject(:repository) { host.init(directory, options) }
 
     let(:directory) { '/new-repo' }
     let(:options) { {} }
@@ -583,7 +584,7 @@ RSpec.describe Git::Repository::Factories do
   end
 
   describe '.bare' do
-    subject(:repository) { Git::Repository.bare(git_dir, options) }
+    subject(:repository) { host.bare(git_dir, options) }
 
     let(:git_dir) { '/repo.git' }
     let(:options) { {} }

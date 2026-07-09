@@ -49,8 +49,6 @@ module Git
   # @api public
   #
   class Repository # rubocop:disable Metrics/ClassLength
-    extend Git::Repository::Factories
-
     include Git::Configuring
     include Git::Repository::Branching
     include Git::Repository::ContextHelpers

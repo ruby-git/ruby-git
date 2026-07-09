@@ -24,7 +24,7 @@ RSpec.describe Git, :integration do
         threads = repo_dirs.map do |dir|
           Thread.new do
             barrier.pop
-            described_class.init(dir, bare: true, initial_branch: 'main')
+            Git.init(dir, bare: true, initial_branch: 'main')
           end
         end
         repo_dirs.size.times { barrier << true }
