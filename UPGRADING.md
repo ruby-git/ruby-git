@@ -1,83 +1,165 @@
 # Upgrading the `git` Gem
 
-> **⚠️ Work in progress — v5.0.0 is currently in beta.**
-> This document is updated incrementally as development continues and is not yet
-> complete. If you encounter a compatibility problem not covered here, please
-> [open an issue](https://github.com/ruby-git/ruby-git/issues).
+This document covers breaking changes and migration steps when upgrading the
+`git` gem to a new major version. Each section describes what changed and how
+to update your code when upgrading from the preceding major version.
 
-- [Upgrading from v4.x to v5.x](#upgrading-from-v4x-to-v5x)
+- [Upgrading to v5.x](#upgrading-to-v5x)
   - [Overview](#overview)
-  - [`Git::Lib` removal](#gitlib-removal)
-    - [Methods with a direct replacement](#methods-with-a-direct-replacement)
-    - [Methods with no replacement](#methods-with-no-replacement)
-    - [Internal plumbing methods (no replacement)](#internal-plumbing-methods-no-replacement)
+  - [Breaking changes](#breaking-changes)
+    - [`Git::Base` removed](#gitbase-removed)
+    - [Return type of `Git.open`, `Git.clone`, `Git.init`, `Git.bare`](#return-type-of-gitopen-gitclone-gitinit-gitbare)
+    - [`Git::Lib` removed](#gitlib-removed)
+    - [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated)
   - [Deprecated methods](#deprecated-methods)
+    - [Facade method renames](#facade-method-renames)
+    - [v4.x-style configuration methods](#v4x-style-configuration-methods)
+    - [`Git` module mixin deprecations](#git-module-mixin-deprecations)
 
-## Upgrading from v4.x to v5.x
+## Upgrading to v5.x
 
 ### Overview
 
-The primary goal of v5.0.0 is to move everyone onto a new internal architecture
-while keeping the existing v4.x API working. The vast majority of v4.x code
-requires no changes to run on v5.x.
+v5.0.0 delivers a new internal architecture while keeping the v4.x API working
+for the vast majority of users. Most v4.x code requires **no changes** to run on
+v5.x.
 
-The new architecture delivered in v5.0.0 is the foundation for future API
-improvements across upcoming major releases.
+The new architecture introduces a layered design (`Git::Commands`,
+`Git::Repository`, and associated parsers). Compatibility shims — deprecated
+forwarding methods that map old call patterns to the new API — ensure that v4.x
+code continues to work. These shims emit deprecation warnings that tell you
+exactly what to change and what will be eliminated in v6.0.0.
 
-The new architecture introduces a layered design (`Git::Commands`, `Git::Repository`,
-and associated parsers). Compatibility shims — deprecated forwarding methods that map
-old call patterns to the new API — ensure that v4.x code continues to work. These
-shims emit deprecation warnings that tell you exactly what to change and what will be
-eliminated in a future major release (most likely v6.0.0).
+Hard breaks are limited to a small number of things that had no safe migration
+path. These are described in the [Breaking changes](#breaking-changes) section,
+followed by [Deprecated methods](#deprecated-methods) that still work in v5.x
+but are removed in v6.0.0.
 
-Hard breaks are limited to a small number of methods that had no safe
-migration path — these are described in detail below.
-
-Our intent is to make upgrading to v5.x as smooth as possible. For information
-on how to suppress or configure deprecation warnings, see the
+For information on how to suppress or configure deprecation warnings, see the
 [Deprecations](README.md#deprecations) section of the README.
+
+**Changes at a glance:**
+
+| Change | Type | Impact | Action required |
+|--------|------|--------|-----------------|
+| `Git::Base` removed | Hard break | High for code that references it by name | Replace with `Git::Repository` (returned by `Git.open` etc.) |
+| `Git::Lib` removed | Hard break | High for `.lib.*` callers | Use the equivalent method directly on the repo object (see table below) |
+| `Git.open` etc. return `Git::Repository` (not `Git::Base`) | Hard break | Low for most callers; breaks `is_a?(Git::Base)` | Update type checks and update `be_a(Git::Base)` in tests |
+| `Git::CommandLineResult` deprecated | Deprecation (removed in v6.0.0) | Low; only affects code that references the constant by name | Use `Git::CommandLine::Result` instead |
 
 ---
 
-### `Git::Lib` removal
+### Breaking changes
 
-The object returned by `Git.open`, `Git.clone`, and `Git.init` — the object
-you call methods on to interact with your repository — inadvertently exposed
-a `#lib` method that gave access to `Git::Lib`, the gem's internal
-implementation class. This was never intended to be public; it was an
-implementation detail that leaked out. `Git::Lib` is removed in v5.0.0.
+#### `Git::Base` removed
 
-Calling `#lib` on the repository object returns `self` with a deprecation
-warning so that existing `g.lib.*` call chains continue to work during
-migration. The `#lib` method itself is removed in v6.0.0. Calls to methods
-that have no replacement (see below) raise `NoMethodError` with an
-informative message.
+`Git::Base` — the class previously returned by `Git.open`, `Git.clone`,
+`Git.init`, and `Git.bare` — is removed in v5.0.0. The replacement is
+`Git::Repository`, which is returned by all four entry points and exposes the
+same public API.
 
-Most public behavior previously accessible via `g.lib.*` is available
-directly on the repository object (i.e., `g.*`). A small number of methods
-have no replacement — see below. The sections below list every affected method.
+**Code that must be updated:**
 
-#### Methods with a direct replacement
+```ruby
+# v4.x — explicit Git::Base reference (raises NameError in v5.x)
+repo = Git::Base.new(working_directory: '/path/to/repo')
 
-All of the following `g.lib.*` calls work in v5.x but emit a deprecation
-warning. Migrate to the replacement shown to silence the `g.lib.*` deprecation
-warning; note that some replacements are themselves deprecated — see the table
-notes for the final migration target.
+# v5.x — use the entry-point methods; do not construct Git::Repository directly
+repo = Git.open('/path/to/repo')
+```
 
-| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
-|---------------------------------------------------|-------------|
-| `g.lib.config_get(name)` | `g.config(name)` |
-| `g.lib.config_list` | `g.config` |
-| `g.lib.config_set(name, value)` | `g.config(name, value)` |
+```ruby
+# v4.x — type-checking against Git::Base (raises NameError in v5.x because Git::Base is removed)
+raise unless repo.is_a?(Git::Base)
+
+# v5.x — check against Git::Repository
+raise unless repo.is_a?(Git::Repository)
+```
+
+```ruby
+# v4.x — requiring the internal file (raises LoadError in v5.x)
+require 'git/base'
+
+# v5.x — the public entry point is git itself; no internal require needed
+require 'git'
+```
+
+**Public API is preserved:** `Git::Repository` provides every method that
+`Git::Base` did. Code that simply calls methods on the object returned by
+`Git.open` (e.g., `repo.commit`, `repo.status`, `repo.add`) requires no
+changes.
+
+---
+
+#### Return type of `Git.open`, `Git.clone`, `Git.init`, `Git.bare`
+
+`Git.open`, `Git.clone`, `Git.init`, and `Git.bare` now return
+`Git::Repository` instead of `Git::Base`.
+
+For most callers this is transparent — the returned object responds to the same
+methods. Code that explicitly checks `is_a?(Git::Base)` or `be_a(Git::Base)` in
+tests must be updated:
+
+```ruby
+# v4.x
+expect(Git.open(repo_path)).to be_a(Git::Base)
+
+# v5.x
+expect(Git.open(repo_path)).to be_a(Git::Repository)
+```
+
+`Git::Repository` does not define `.open`, `.bare`, `.clone`, or `.init` class
+methods. Always use `Git.open`, `Git.bare`, `Git.clone`, and `Git.init` to
+construct a repository object.
+
+---
+
+#### `Git::Lib` removed
+
+The object returned by `Git.open`, `Git.clone`, `Git.init`, and `Git.bare` previously
+exposed a `#lib` method that gave access to `Git::Lib`, the gem's internal
+implementation class. `Git::Lib` is removed in v5.0.0.
+
+In v5.x, calling `#lib` on a repo object returns `self` with a deprecation
+warning. This means `g.lib.some_method(args)` is forwarded to
+`g.some_method(args)` — but only if `some_method` exists on `Git::Repository`.
+Methods that were unique to `Git::Lib` and have no counterpart on
+`Git::Repository` raise `NoMethodError` immediately. The `#lib` method itself
+is removed in v6.0.0.
+
+Most public behavior previously accessible via `g.lib.*` is available directly
+on the repository object (`g.*`). See the tables below for every affected
+method.
+
+##### Methods that work via the `#lib` shim (with deprecation warning)
+
+The following v4.x `g.lib.*` call shapes are forwarded to their `Git::Repository`
+counterpart by the `#lib → self` shim. They emit a deprecation warning; migrate
+to the replacement shown to silence it.
+
+> **Note — config return type change:** `g.lib.config_get(name)` returned a
+> `String`; `g.lib.config_list` returned a `Hash`.
+> The v5.x replacements `config_get` and `config_list` return
+> `Git::ConfigEntryInfo` and `Array<Git::ConfigEntryInfo>` respectively — richer
+> objects that expose `.value` (the String), `.key`, `.scope`, and `.origin`.
+>
+> If you only need the String value:
+> - `g.config_get(name)&.value` → replaces `g.lib.config_get(name)`
+> - `g.config_list.to_h { |e| [e.key, e.value] }` → replaces `g.lib.config_list`
+>
+> If your code was using the v4.x public `g.config(name)` API (not `g.lib.*`),
+> that deprecated bridge still returns a `String` in v5.x and continues to work
+> until v6.0.0.
+
+| v4.x call | Replacement in v5.x |
+|-----------|---------------------|
+| `g.lib.config_get(name)` | `g.config_get(name)` — returns `Git::ConfigEntryInfo`; use `.value` for the String |
+| `g.lib.config_list` | `g.config_list` — returns `Array<Git::ConfigEntryInfo>` |
+| `g.lib.config_set(name, value)` | `g.config_set(name, value)` |
 | `g.lib.git_version` | `g.git_version` |
-| `g.lib.global_config_get(name)` | `g.global_config(name)` |
-| `g.lib.global_config_list` | `g.global_config` |
-| `g.lib.global_config_set(name, value)` | `g.global_config(name, value)` |
-| `g.lib.parse_config(file)` | `g.config(file: file)` |
-| `g.lib.stash_list` | `g.stash_list` *(also deprecated — use `g.stashes_all`)* |
+| `g.lib.stash_list` | `g.stashes_all` |
 | `g.lib.unmerged` | `g.unmerged` |
 | `g.lib.change_head_branch(name)` | `g.change_head_branch(name)` |
-| `g.lib.branch_current` | `g.current_branch` |
 | `g.lib.ls_remote(location, opts)` | `g.ls_remote(location, opts)` |
 | `g.lib.current_branch_state` | `g.current_branch_state` |
 
@@ -89,13 +171,27 @@ notes for the final migration target.
 > (`Git::Lib::HeadState.new(:active, 'main')`), update to keyword construction:
 > `Git::Repository::Branching::HeadState.new(state: :active, name: 'main')`.
 
-#### Methods with no replacement
+##### Methods that raise `NoMethodError` in v5.x
+
+These `Git::Lib` method names have no counterpart on `Git::Repository`, so
+`g.lib.method_name` raises `NoMethodError` even in v5.x (the `#lib → self`
+shim cannot forward them). Update call sites directly:
+
+| v4.x call | Replacement in v5.x |
+|-----------|---------------------|
+| `g.lib.global_config_get(name)` | `g.config_get(name, global: true)` |
+| `g.lib.global_config_list` | `g.config_list(global: true)` |
+| `g.lib.global_config_set(name, value)` | `g.config_set(name, value, global: true)` |
+| `g.lib.branch_current` | `g.current_branch` |
+| `g.lib.parse_config(file)` | `g.config_list(file: file)` |
+
+##### Methods with no replacement
 
 | v4.x call | Notes |
 |-----------|-------|
 | `g.lib.list_files(ref_dir)` | Walked `.git/refs/` directly. Use `g.branches`, `g.tags`, or `g.remotes` instead. |
 
-#### Internal plumbing methods (no replacement)
+##### Internal plumbing methods (no replacement)
 
 The following methods were technically public on `Git::Lib` but are internal
 helpers with no plausible external use. They have no replacement in v5.0.0:
@@ -115,27 +211,80 @@ helpers with no plausible external use. They have no replacement in v5.0.0:
 
 ---
 
+#### `Git::CommandLineResult` deprecated
+
+`Git::CommandLineResult` was an alias for `Git::CommandLine::Result` introduced
+for backward compatibility. It is deprecated in v5.0.0 and removed in v6.0.0.
+Accessing `Git::CommandLineResult` emits a deprecation warning.
+
+```ruby
+# v4.x
+result.is_a?(Git::CommandLineResult)
+
+# v5.x
+result.is_a?(Git::CommandLine::Result)
+```
+
+This change is only relevant if your code references `Git::CommandLineResult`
+by name (typically in type checks or documentation). Code that simply uses the
+result object returned by git commands is unaffected.
+
+---
+
 ### Deprecated methods
 
-The following methods are available in v5.x with deprecation warnings and
-are removed in v6.0.0.
+The following methods are available in v5.x with deprecation warnings and are
+removed in v6.0.0. Migrate to the replacement shown to silence the warnings.
+
+#### Facade method renames
+
+Five methods were renamed to follow the project's `noun_verb` naming convention.
+The old names continue to work but emit deprecation warnings:
 
 | Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
-|---------------------------------------------------|-------------|
-| `g.config_get(name)` | `g.config(name)` |
-| `g.config_list` | `g.config` |
-| `g.config_set(name, value)` | `g.config(name, value)` |
-| `g.global_config_get(name)` | `g.global_config(name)` |
-| `g.global_config_list` | `g.global_config` |
-| `g.global_config_set(name, value)` | `g.global_config(name, value)` |
-| `g.parse_config(file)` | `g.config(file: file)` |
-| `g.stash_list` | `g.stashes_all` |
+|-----------------------------------------------------|-------------|
 | `g.add_remote(name, url, opts)` | `g.remote_add(name, url, opts)` |
 | `g.remove_remote(name)` | `g.remote_remove(name)` |
 | `g.set_remote_url(name, url)` | `g.remote_set_url(name, url)` |
 | `g.add_tag(name, ...)` | `g.tag_add(name, ...)` |
 | `g.delete_tag(name)` | `g.tag_delete(name)` |
-| `include Git; config(...)` | `Git.open(Dir.pwd).config(...)` |
-| `include Git; global_config(...)` | `Git.global_config(...)` |
+
+#### v4.x-style configuration methods
+
+The v4.x `config` and `global_config` methods accepted varying argument shapes
+to read, write, or list configuration. These are replaced by separate,
+purpose-named methods.
+
+> **Return type change:** The v4.x `g.config(name)` returned a `String` and
+> `g.config` returned a `Hash`. The v5.x replacements `config_get` and
+> `config_list` return `Git::ConfigEntryInfo` and `Array<Git::ConfigEntryInfo>`
+> respectively. Use `.value` to get the String value:
+> - `g.config_get(name)&.value` → String or nil
+> - `g.config_list.to_h { |e| [e.key, e.value] }` → Hash (key → value)
+
+| Deprecated call (works in v5.x, removed in v6.0.0) | Replacement |
+|-----------------------------------------------------|-------------|
+| `g.config(name)` | `g.config_get(name)` — returns `Git::ConfigEntryInfo`; use `.value` for the String |
+| `g.config` | `g.config_list` — returns `Array<Git::ConfigEntryInfo>` |
+| `g.config(name, value)` | `g.config_set(name, value)` |
+| `g.global_config(name)` | `g.config_get(name, global: true)` |
+| `g.global_config` | `g.config_list(global: true)` |
+| `g.global_config(name, value)` | `g.config_set(name, value, global: true)` |
+| `g.parse_config(file)` | `g.config_list(file: file)` |
+| `g.stash_list` | `g.stashes_all` |
+
+#### `Git` module mixin deprecations
+
+Extending or including the `Git` module to call `config` and `global_config`
+as bare methods is deprecated:
+
+| Deprecated usage | Replacement |
+|-----------------|-------------|
+| `include Git; config(name)` | `Git.open(Dir.pwd).config_get(name)` |
+| `include Git; config(name, value)` | `Git.open(Dir.pwd).config_set(name, value)` |
+| `include Git; config` | `Git.open(Dir.pwd).config_list` |
+| `include Git; global_config(name)` | `Git.config_get(name, global: true)` |
+| `include Git; global_config(name, value)` | `Git.config_set(name, value, global: true)` |
+| `include Git; global_config` | `Git.config_list(global: true)` |
 
 ---
