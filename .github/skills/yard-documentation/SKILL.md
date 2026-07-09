@@ -43,6 +43,7 @@ General YARD documentation rules and workflow for all Ruby source code.
     - [Type specifier conventions](#type-specifier-conventions)
     - [`Array<...>` (collection) vs `Array(...)` (tuple)](#array-collection-vs-array-tuple)
     - [`@api private` vs `@private`](#api-private-vs-private)
+    - [Class and module `@api` visibility (Required)](#class-and-module-api-visibility-required)
     - [`@since` tags are not used](#since-tags-are-not-used)
     - [`@todo` tags are not used](#todo-tags-are-not-used)
     - [`@abstract`](#abstract)
@@ -509,7 +510,8 @@ bundle exec rake yard
 A clean `yard-lint` run is necessary but not sufficient: the linter cannot check
 every rule here (e.g. the `LINE_LIMIT`/`LINE_MAX` distinction, `SUMMARY_LIMIT`,
 short-description capitalization and punctuation, noun-phrase class descriptions,
-required `@example` titles). Still perform the manual checks below.
+required `@example` titles, class/module-level `@api` visibility correctness).
+Still perform the manual checks below.
 
 Legacy offenses are baselined in `.yard-lint-todo.yml`; when you touch a file
 listed there, remove it from every `Exclude:` list that names it (a file may be
@@ -834,6 +836,23 @@ Use `@api private` (not `@private`) to mark internal classes and modules. `@api
 private` includes the object in generated docs with a private annotation; YARD's
 `@private` tag excludes the object from docs entirely.
 
+#### Class and module `@api` visibility (Required)
+
+Every documented class and module must declare API visibility explicitly with
+exactly one tag:
+
+- `@api public` for user-facing API
+- `@api private` for internal implementation details
+
+Do not rely on YARD's implicit default visibility.
+
+`@api` visibility is inherited by child objects. Omit redundant method-level or
+constant-level `@api` tags when a child matches its enclosing class/module
+visibility.
+
+Add method-level or constant-level `@api` only when a child intentionally differs
+from its enclosing class/module visibility.
+
 #### `@since` tags are not used
 
 Do not add `@since` tags. The project has no historical `@since` annotations, and
@@ -921,11 +940,11 @@ e.g. `@deprecated Use {#new_method} instead`.
 
 #### `@api` on methods (Optional)
 
-`@api` is optional on methods — when omitted, the method inherits the containing
-class's `@api` level. Use it only when the method's intended visibility differs
-from the class's level (e.g. an `@api private` helper inside an `@api public`
-class). For overloaded methods, place `@api` once at top level and never nest it
-inside an `@overload` block.
+Method-level `@api` is exception-only: when omitted, the method inherits the
+containing class's `@api` level. Use it only when the method's intended visibility
+differs from the class's level (e.g. an `@api private` helper inside an `@api
+public` class). For overloaded methods, place `@api` once at top level and never
+nest it inside an `@overload` block.
 
 ## Command Reference
 
