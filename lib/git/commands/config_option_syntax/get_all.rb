@@ -102,7 +102,7 @@ module Git
         #
         #       Alias: :z
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get-all`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get-all`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

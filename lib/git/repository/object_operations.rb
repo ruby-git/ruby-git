@@ -1060,7 +1060,7 @@ module Git
 
         # Parses the result of a git grep command
         #
-        # @param result [Git::CommandLineResult] the result of a git grep command
+        # @param result [Git::CommandLine::Result] the result of a git grep command
         #
         # @return [Hash<String, Array<Array(Integer, String)>>] hash mapping "treeish:filename"
         #   keys to arrays of [line_number, text] pairs
@@ -1195,7 +1195,7 @@ module Git
         # @option opts [String] :remote (nil) remote repository from which to
         #   retrieve the archive
         #
-        # @return [Git::CommandLineResult] the result of the git command
+        # @return [Git::CommandLine::Result] the result of the git command
         #
         # @api private
         #

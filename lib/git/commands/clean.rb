@@ -86,7 +86,7 @@ module Git
       #     @option options [String, nil] :chdir (nil) change to this directory before
       #       running git; not passed to the git CLI
       #
-      #     @return [Git::CommandLineResult] the result of calling `git clean`
+      #     @return [Git::CommandLine::Result] the result of calling `git clean`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

@@ -37,7 +37,7 @@ module Git
         #     working tree as-is. If no revert is in progress, this is a
         #     no-op and still succeeds.
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git revert --quit`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

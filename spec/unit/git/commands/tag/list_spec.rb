@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq(sample_output)
       end
     end
@@ -39,7 +39,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call('v1.*')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'adds multiple pattern arguments after end-of-options separator' do
@@ -47,7 +47,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call('v1.*', 'v2.*')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -57,7 +57,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(sort: 'refname')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes multiple --sort flags for array' do
@@ -66,7 +66,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(sort: ['refname', '-creatordate'])
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'supports version:refname sort key' do
@@ -74,7 +74,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(sort: 'version:refname')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -84,7 +84,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(contains: 'abc123')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --contains flag when true' do
@@ -92,7 +92,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(contains: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -102,7 +102,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(no_contains: 'abc123')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --no-contains flag when true' do
@@ -110,7 +110,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(no_contains: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -120,7 +120,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(merged: 'main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --merged flag when true' do
@@ -128,7 +128,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(merged: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -138,7 +138,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(no_merged: 'main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --no-merged flag when true' do
@@ -146,7 +146,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(no_merged: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -156,7 +156,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(points_at: 'HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --points-at flag when true' do
@@ -164,7 +164,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(points_at: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -174,7 +174,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(n: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes -n<num> when given an integer' do
@@ -182,7 +182,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(n: 5)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when nil' do
@@ -190,7 +190,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(n: nil)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -200,7 +200,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(color: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --color=<value> when given a string' do
@@ -208,7 +208,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(color: 'always')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -218,7 +218,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(ignore_case: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :i alias' do
@@ -226,7 +226,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(i: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'does not add flag when false' do
@@ -234,7 +234,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(ignore_case: false)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -244,7 +244,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(omit_empty: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -254,7 +254,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(column: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'includes --column=<value> when given a string' do
@@ -262,7 +262,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call(column: 'always')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'when :no_column is true' do
@@ -271,7 +271,7 @@ RSpec.describe Git::Commands::Tag::List do
 
           result = command.call(no_column: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end
@@ -283,7 +283,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call('v1.*', sort: 'refname', contains: 'abc123')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'combines multiple patterns with options' do
@@ -292,7 +292,7 @@ RSpec.describe Git::Commands::Tag::List do
 
         result = command.call('release-*', 'v*', merged: 'main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
   end

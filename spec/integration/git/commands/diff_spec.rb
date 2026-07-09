@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Diff, :integration do
                               numstat: true, shortstat: true,
                               src_prefix: 'a/', dst_prefix: 'b/')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 

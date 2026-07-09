@@ -102,7 +102,7 @@ module Git
         #
         #     @option options [Boolean, nil] :name_only (nil) output only the names of config keys
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get-regexp`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get-regexp`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

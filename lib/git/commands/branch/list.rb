@@ -161,7 +161,7 @@ module Git
         #     newline after formatted refs where the format expands to the empty
         #     string
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch --list`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch --list`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

@@ -108,7 +108,7 @@ module Git
       #     @option options [Boolean, nil] :always (nil) show uniquely abbreviated
       #       commit object as fallback
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git name-rev`
       #
       #     @raise [ArgumentError] if unsupported options are provided

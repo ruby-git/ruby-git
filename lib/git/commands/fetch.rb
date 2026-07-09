@@ -338,7 +338,7 @@ module Git
       #       Pass `true` to capture git fetch output (which is written to stderr
       #       by default).
       #
-      #     @return [Git::CommandLineResult] the result of calling `git fetch`
+      #     @return [Git::CommandLine::Result] the result of calling `git fetch`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

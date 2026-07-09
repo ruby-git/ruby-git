@@ -19,13 +19,13 @@ RSpec.describe Git::Commands::Status, :integration do
       it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns a CommandLineResult with a path operand' do
         result = command.call('file.txt')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

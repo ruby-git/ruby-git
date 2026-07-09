@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
       it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns exit status 0 when refs are found' do

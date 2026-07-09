@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::UpdateRef::Delete, :integration do
       it 'deletes a ref' do
         result = command.call('refs/heads/doomed')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect { repo.rev_parse('refs/heads/doomed') }.to raise_error(Git::FailedError)
       end
     end

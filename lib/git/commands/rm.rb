@@ -97,7 +97,7 @@ module Git
       #   @option options [Boolean, nil] :pathspec_file_nul (nil) when used with
       #     `:pathspec_from_file`, separate pathspec elements with NUL instead of newlines
       #
-      #   @return [Git::CommandLineResult] the result of calling `git rm`
+      #   @return [Git::CommandLine::Result] the result of calling `git rm`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

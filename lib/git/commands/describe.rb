@@ -139,7 +139,7 @@ module Git
       #     @option options [Boolean, nil] :first_parent (nil) follow only the
       #       first parent of a merge commit
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git describe`
       #
       #     @raise [ArgumentError] if unsupported options are provided

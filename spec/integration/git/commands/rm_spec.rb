@@ -19,14 +19,14 @@ RSpec.describe Git::Commands::Rm, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('file.txt')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       context 'with cached option' do
         it 'returns a CommandLineResult' do
           result = command.call('file.txt', cached: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end

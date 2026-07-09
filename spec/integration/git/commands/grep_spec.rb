@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::Grep, :integration do
       it 'returns a CommandLineResult with exit status 0' do
         result = command.call('HEAD', pattern: 'foo')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
         expect(result.stdout).to include('foo')
       end

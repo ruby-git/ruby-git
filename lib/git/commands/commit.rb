@@ -257,7 +257,7 @@ module Git
       #     @option options [Boolean, nil] :pathspec_file_nul (nil) pathspec elements in
       #       `:pathspec_from_file` are NUL-separated instead of newline-separated
       #
-      #     @return [Git::CommandLineResult] the result of calling `git commit`
+      #     @return [Git::CommandLine::Result] the result of calling `git commit`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

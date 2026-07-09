@@ -72,7 +72,7 @@ module Git
       #
       #     @option options [Boolean, nil] :k (nil) skip move or rename actions which would lead to an error
       #
-      #     @return [Git::CommandLineResult] the result of calling `git mv`
+      #     @return [Git::CommandLine::Result] the result of calling `git mv`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::CommitTree, :integration do
       it 'returns a CommandLineResult with the new commit SHA on stdout' do
         result = command.call(tree_sha, m: 'Test commit')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
       end
 

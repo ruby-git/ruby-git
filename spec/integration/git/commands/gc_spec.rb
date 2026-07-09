@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::Gc, :integration do
       it 'returns a CommandLineResult' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
     end

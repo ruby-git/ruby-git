@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
 
         result = command.call('feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
@@ -46,7 +46,7 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
         # Exit code 1 does not raise, but exit code > 1 would
         result = command.call('nonexistent')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(1)
       end
     end

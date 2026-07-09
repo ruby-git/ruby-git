@@ -18,14 +18,14 @@ RSpec.describe Git::Commands::Tag::List, :integration do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'returns empty stdout when there are no tags' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to be_empty
       end
     end

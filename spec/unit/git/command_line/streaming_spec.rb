@@ -49,7 +49,7 @@ RSpec.describe Git::CommandLine::Streaming do
       end
 
       it 'returns a result with empty stdout and stderr' do
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq('')
         expect(result.stderr).to eq('')
       end
@@ -188,7 +188,7 @@ RSpec.describe Git::CommandLine::Streaming do
       end
 
       it 'returns a CommandLineResult without raising when success? is false' do
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.success?).to be false
         expect(result.status.exitstatus).to eq(1)
         expect(result.stderr).to eq('fatal: not a git repository')

@@ -56,7 +56,7 @@ module Git
         #
         #     @param stash [String] stash reference (e.g., 'stash@\\{0}', '0')
         #
-        #   @return [Git::CommandLineResult] the result of calling `git stash branch`
+        #   @return [Git::CommandLine::Result] the result of calling `git stash branch`
         #
         #   @raise [Git::FailedError] if git exits with a non-zero exit status
         #

@@ -54,7 +54,7 @@ module Git
         #     @option options [String] :expire (nil) only prune entries older than
         #       this time expression
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree prune`
+        #     @return [Git::CommandLine::Result] the result of calling `git worktree prune`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

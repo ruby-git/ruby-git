@@ -57,7 +57,7 @@ module Git
         #
         #     @option options [Boolean, nil] :add (nil) append the given branches instead of replacing them
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote set-branches`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote set-branches`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

@@ -23,7 +23,7 @@ RSpec.describe Git::Commands::Stash::List do
 
       result = command.call
 
-      expect(result).to be_a(Git::CommandLineResult)
+      expect(result).to be_a(Git::CommandLine::Result)
       expect(result.stdout).to eq(stash_output)
     end
   end

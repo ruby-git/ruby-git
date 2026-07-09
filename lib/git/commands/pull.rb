@@ -371,7 +371,7 @@ module Git
       #
       #       If nil, uses the global timeout from {Git::Config}.
       #
-      #     @return [Git::CommandLineResult] the result of calling `git pull`
+      #     @return [Git::CommandLine::Result] the result of calling `git pull`
       #
       #     @raise [ArgumentError] if argument validation fails (e.g., unsupported options
       #       are provided or option values are invalid)

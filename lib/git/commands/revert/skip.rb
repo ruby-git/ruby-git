@@ -34,7 +34,7 @@ module Git
         #
         #     Skip the current commit and continue with the remaining sequence
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git revert --skip`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

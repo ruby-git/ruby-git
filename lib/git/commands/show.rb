@@ -611,7 +611,7 @@ module Git
       #     @option options [IO, #write] :out (nil) stream output to this IO object
       #       instead of capturing it; `result.stdout` will be `''`
       #
-      #     @return [Git::CommandLineResult] the result of calling `git show`
+      #     @return [Git::CommandLine::Result] the result of calling `git show`
       #
       #        If `out:` is given, output is streamed directly to the provided IO
       #        object and `result.stdout` is `''`.

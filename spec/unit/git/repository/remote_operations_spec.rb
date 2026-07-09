@@ -751,7 +751,7 @@ RSpec.describe Git::Repository::RemoteOperations do
       result
     end
 
-    it 'returns the Git::CommandLineResult' do
+    it 'returns the Git::CommandLine::Result' do
       expect(result).to be(remove_result)
     end
   end

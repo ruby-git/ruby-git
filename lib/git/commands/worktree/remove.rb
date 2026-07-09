@@ -50,7 +50,7 @@ module Git
         #
         #       Alias: :f
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree remove`
+        #     @return [Git::CommandLine::Result] the result of calling `git worktree remove`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

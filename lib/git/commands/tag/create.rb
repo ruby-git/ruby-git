@@ -125,7 +125,7 @@ module Git
         #
         #     Enables date-based sha1 expressions such as `tag@{yesterday}`.
         #
-        #   @return [Git::CommandLineResult] the result of calling `git tag`
+        #   @return [Git::CommandLine::Result] the result of calling `git tag`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

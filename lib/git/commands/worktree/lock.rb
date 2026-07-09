@@ -43,7 +43,7 @@ module Git
         #   @option options [String] :reason (nil) human-readable explanation stored
         #     alongside the lock
         #
-        #   @return [Git::CommandLineResult] the result of calling `git worktree lock`
+        #   @return [Git::CommandLine::Result] the result of calling `git worktree lock`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

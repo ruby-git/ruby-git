@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::ReplaceAll, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('test.multi', 'new-value')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

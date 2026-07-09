@@ -32,7 +32,7 @@ RSpec.describe Git::Commands::Apply, :integration do
       it 'returns a CommandLineResult' do
         result = command.call(patch_file, chdir: repo_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'applies the patch to the working tree' do
@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::Apply, :integration do
       it 'checks the patch cleanly without applying it when :check is passed' do
         result = command.call(patch_file, check: true, chdir: repo_dir)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(File.read(File.join(repo_dir, 'file.txt'))).to eq("line1\n")
       end
     end

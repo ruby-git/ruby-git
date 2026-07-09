@@ -85,7 +85,7 @@ module Git
         #
         #       Common values are `'fetch'` and `'push'`.
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote add`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote add`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

@@ -54,7 +54,7 @@ module Git
         #
         #     @param branch [String] the branch to set as the remote HEAD
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote set-head`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote set-head`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #
@@ -76,7 +76,7 @@ module Git
         #
         #       Mutually exclusive with `:auto`. Alias: :d
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote set-head`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote set-head`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

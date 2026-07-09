@@ -55,7 +55,7 @@ module Git
         #
         #     @option options [Boolean, nil] :all (nil) return all configured URLs instead of only the first one
         #
-        #     @return [Git::CommandLineResult] the result of calling `git remote get-url`
+        #     @return [Git::CommandLine::Result] the result of calling `git remote get-url`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

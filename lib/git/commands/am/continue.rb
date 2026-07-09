@@ -34,7 +34,7 @@ module Git
         #
         #     Resume applying patches after conflicts have been resolved
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am --continue`
+        #     @return [Git::CommandLine::Result] the result of calling `git am --continue`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

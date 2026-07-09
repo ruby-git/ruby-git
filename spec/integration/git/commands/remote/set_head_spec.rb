@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
 
         result = command.call('origin', initial_branch)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'auto-detects the remote HEAD with :auto' do
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
 
         result = command.call('origin', auto: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'deletes the remote HEAD when :delete is given' do
@@ -48,7 +48,7 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
 
         result = command.call('origin', delete: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

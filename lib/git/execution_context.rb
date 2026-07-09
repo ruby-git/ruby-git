@@ -239,7 +239,7 @@ module Git
     #
     #   @param args [Array<String>] the command and its arguments
     #
-    #   @return [Git::CommandLineResult] the result of the command
+    #   @return [Git::CommandLine::Result] the result of the command
     #
     # @param options_hash [Hash] the options to pass to the command
     #
@@ -295,7 +295,7 @@ module Git
     # @raise [Git::ProcessIOError] if an exception was raised while collecting
     #   subprocess output
     #
-    #   The exception's `result` attribute is a {Git::CommandLineResult} which will
+    #   The exception's `result` attribute is a {Git::CommandLine::Result} which will
     #   contain the result of the command including the exit status, stdout, and stderr.
     #
     # @note Individual command classes (under {Git::Commands}) can selectively expose
@@ -338,7 +338,7 @@ module Git
     #
     #   @param args [Array<String>] the git command and its arguments
     #
-    #   @return [Git::CommandLineResult] the result of the command
+    #   @return [Git::CommandLine::Result] the result of the command
     #
     # @param options_hash [Hash] the options to pass to the command
     #

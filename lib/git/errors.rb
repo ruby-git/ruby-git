@@ -100,11 +100,11 @@ module Git
     #
     # @example
     #   `exit 1` # set $? appropriately for this example
-    #   result = Git::CommandLineResult.new(%w[git status], $?, 'stdout', 'stderr')
+    #   result = Git::CommandLine::Result.new(%w[git status], $?, 'stdout', 'stderr')
     #   error = Git::CommandLineError.new(result)
     #   error.to_s #=> '["git", "status"], status: pid 89784 exit 1, stderr: "stderr"'
     #
-    # @param result [Git::CommandLineResult] the result of the git command including
+    # @param result [Git::CommandLine::Result] the result of the git command including
     #   the git command, status, stdout, and stderr
     #
     def initialize(result)
@@ -126,9 +126,9 @@ module Git
     # The result of the git command including the git command and its status and output
     #
     # @example
-    #   error.result #=> #<Git::CommandLineResult:0x00000001046bd488 ...>
+    #   error.result #=> #<Git::CommandLine::Result:0x00000001046bd488 ...>
     #
-    # @return [Git::CommandLineResult]
+    # @return [Git::CommandLine::Result]
     #
     attr_reader :result
   end
@@ -164,12 +164,12 @@ module Git
     #   command = %w[sleep 10]
     #   timeout_duration = 1
     #   status = ProcessExecuter.spawn(*command, timeout: timeout_duration)
-    #   result = Git::CommandLineResult.new(command, status, 'stdout', 'err output')
+    #   result = Git::CommandLine::Result.new(command, status, 'stdout', 'err output')
     #   error = Git::TimeoutError.new(result, timeout_duration)
     #   error.error_message
     #   #=> '["sleep", "10"], status: pid 70144 SIGKILL (signal 9), stderr: "err output", timed out after 1s'
     #
-    # @param result [Git::CommandLineResult] the result of the git command including
+    # @param result [Git::CommandLine::Result] the result of the git command including
     #   the git command, status, stdout, and stderr
     #
     # @param timeout_duration [Numeric] the amount of time the subprocess was allowed
@@ -196,7 +196,7 @@ module Git
     #
     # @example
     #   `kill -9 $$` # set $? appropriately for this example
-    #   result = Git::CommandLineResult.new(%w[git status], $?, '', "killed")
+    #   result = Git::CommandLine::Result.new(%w[git status], $?, '', "killed")
     #   error = Git::TimeoutError.new(result, 10)
     #   error.timeout_duration #=> 10
     #

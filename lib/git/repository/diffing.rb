@@ -552,7 +552,7 @@ module Git
         #
         # @param pathspecs [Array<String>, nil] path limiters
         #
-        # @return [Git::CommandLineResult] the result of calling `git diff`
+        # @return [Git::CommandLine::Result] the result of calling `git diff`
         #
         def call_diff_command(execution_context, from, to, pathspecs)
           Git::Commands::Diff.new(execution_context).call(

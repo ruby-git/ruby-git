@@ -225,7 +225,7 @@ module Git
       #     @option options [String, nil] :chdir (nil) the working directory in which to
       #       run the git clone command
       #
-      #     @return [Git::CommandLineResult] the result of calling `git clone`
+      #     @return [Git::CommandLine::Result] the result of calling `git clone`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

@@ -34,7 +34,7 @@ module Git
         #
         #     Abort the in-progress am session and restore the branch
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am --abort`
+        #     @return [Git::CommandLine::Result] the result of calling `git am --abort`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

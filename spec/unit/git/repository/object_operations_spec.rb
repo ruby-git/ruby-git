@@ -1258,7 +1258,7 @@ RSpec.describe Git::Repository::ObjectOperations do
     subject(:result) { described_instance.tags }
 
     let(:list_command) { instance_double(Git::Commands::Tag::List) }
-    let(:command_result) { instance_double(Git::CommandLineResult, stdout: 'raw-stdout') }
+    let(:command_result) { instance_double(Git::CommandLine::Result, stdout: 'raw-stdout') }
     let(:tag_first) { instance_double(Git::Object::Tag) }
     let(:tag_second) { instance_double(Git::Object::Tag) }
 
@@ -1304,7 +1304,7 @@ RSpec.describe Git::Repository::ObjectOperations do
 
   describe '#tag_add' do
     let(:create_command) { instance_double(Git::Commands::Tag::Create) }
-    let(:command_result) { instance_double(Git::CommandLineResult) }
+    let(:command_result) { instance_double(Git::CommandLine::Result) }
     let(:tag_object) { instance_double(Git::Object::Tag) }
 
     before do
@@ -1505,7 +1505,7 @@ RSpec.describe Git::Repository::ObjectOperations do
     let(:status) { instance_double(Process::Status, exitstatus: 0) }
     let(:command_result) do
       instance_double(
-        Git::CommandLineResult,
+        Git::CommandLine::Result,
         stdout: "Deleted tag 'v1.0.0' (was abc123)\n", stderr: '', status: status,
         git_cmd: %w[git tag --delete v1.0.0]
       )

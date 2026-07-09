@@ -90,7 +90,7 @@ module Git
       #     @option options [Boolean, nil] :ignore_skip_worktree_bits (nil) check out
       #       all files, including those with the skip-worktree bit set
       #
-      #     @return [Git::CommandLineResult] the result of calling `git checkout-index`
+      #     @return [Git::CommandLine::Result] the result of calling `git checkout-index`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

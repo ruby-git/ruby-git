@@ -68,7 +68,7 @@ module Git
         #
         #     @option options [String] :blob (nil) read from the specified blob
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --remove-section`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --remove-section`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

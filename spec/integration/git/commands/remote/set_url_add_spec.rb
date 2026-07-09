@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd, :integration do
 
         result = command.call('origin', extra_repo.dir.to_s)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'adds a push url when :push is given' do
@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::Remote::SetUrlAdd, :integration do
 
         result = command.call('origin', extra_repo.dir.to_s, push: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

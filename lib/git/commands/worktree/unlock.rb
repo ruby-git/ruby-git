@@ -36,7 +36,7 @@ module Git
         #     @param worktree [String] path or unique suffix identifying the worktree
         #       to unlock
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree unlock`
+        #     @return [Git::CommandLine::Result] the result of calling `git worktree unlock`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
         #

@@ -21,7 +21,7 @@ RSpec.describe Git::Commands::LsTree, :integration do
       it 'returns a CommandLineResult with output' do
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::LsTree, :integration do
         it 'returns a CommandLineResult' do
           result = command.call('HEAD', r: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 
@@ -37,7 +37,7 @@ RSpec.describe Git::Commands::LsTree, :integration do
         it 'returns a CommandLineResult' do
           result = command.call('HEAD', r: true, name_only: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 
@@ -45,7 +45,7 @@ RSpec.describe Git::Commands::LsTree, :integration do
         it 'returns a CommandLineResult' do
           result = command.call('HEAD', 'lib/')
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end

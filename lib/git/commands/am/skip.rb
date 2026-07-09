@@ -33,7 +33,7 @@ module Git
         #
         #     Skip the current patch and continue with remaining patches
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am --skip`
+        #     @return [Git::CommandLine::Result] the result of calling `git am --skip`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

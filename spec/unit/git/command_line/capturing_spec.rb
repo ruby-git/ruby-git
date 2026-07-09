@@ -52,7 +52,7 @@ RSpec.describe Git::CommandLine::Capturing do
       end
 
       it 'returns a result with the captured output' do
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq("git version 2.39.1\n")
         expect(result.stderr).to eq('')
       end
@@ -283,7 +283,7 @@ RSpec.describe Git::CommandLine::Capturing do
       end
 
       it 'returns a CommandLineResult without raising when success? is false' do
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.success?).to be false
         expect(result.status.exitstatus).to eq(1)
         expect(result.stdout).to eq("Changes to be committed:\n  modified: foo.rb\n")

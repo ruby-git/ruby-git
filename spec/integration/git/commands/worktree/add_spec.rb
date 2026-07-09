@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Worktree::Add, :integration do
 
         it 'returns a CommandLineResult' do
           result = command.call(worktree_path)
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
 
         it 'creates the worktree directory on disk' do
@@ -45,7 +45,7 @@ RSpec.describe Git::Commands::Worktree::Add, :integration do
 
         it 'creates a detached HEAD worktree' do
           result = command.call(worktree_path, detach: true)
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(File.directory?(worktree_path)).to be(true)
         end
       end

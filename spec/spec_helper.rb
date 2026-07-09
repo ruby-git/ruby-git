@@ -186,10 +186,10 @@ warn '[spec_helper] spec_helper fully loaded' if RUBY_ENGINE == 'jruby'
 # @param stdout [String] the stdout to return
 # @param stderr [String] the stderr to return (default: '')
 # @param exitstatus [Integer] the exit status code (default: 0)
-# @return [Git::CommandLineResult] a CommandLineResult object
+# @return [Git::CommandLine::Result] a CommandLineResult object
 def command_result(stdout = '', stderr: '', exitstatus: 0)
   status = double('status', success?: exitstatus.zero?, exitstatus: exitstatus, signaled?: false)
-  Git::CommandLineResult.new(%w[git], status, stdout, stderr)
+  Git::CommandLine::Result.new(%w[git], status, stdout, stderr)
 end
 
 # Helper to expect a command call with raise_on_failure: false automatically included

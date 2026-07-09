@@ -60,7 +60,7 @@ module Git
         #
         #     Uses cached information instead of contacting the remote server.
         #
-        #   @return [Git::CommandLineResult] the result of calling `git remote show`
+        #   @return [Git::CommandLine::Result] the result of calling `git remote show`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

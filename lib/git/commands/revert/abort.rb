@@ -35,7 +35,7 @@ module Git
         #     Cancel the in-progress revert and restore the branch to its
         #     pre-revert state
         #
-        #     @return [Git::CommandLineResult] the result of calling
+        #     @return [Git::CommandLine::Result] the result of calling
         #       `git revert --abort`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status

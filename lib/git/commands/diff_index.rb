@@ -459,7 +459,7 @@ module Git
       #     @option options [Integer, String] :max_depth (nil) maximum directory depth to descend for
       #       each pathspec (tree-to-tree diffs only)
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff-index`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff-index`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #
@@ -484,7 +484,7 @@ module Git
       #
       #     @param options [Hash] command options (same as the single-argument overload)
       #
-      #     @return [Git::CommandLineResult] the result of calling `git diff-index`
+      #     @return [Git::CommandLine::Result] the result of calling `git diff-index`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

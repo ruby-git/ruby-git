@@ -106,7 +106,7 @@ module Git
         #   @option options [Numeric] :timeout (nil) abort the command after this many
         #     seconds
         #
-        #   @return [Git::CommandLineResult] the result of calling `git show-ref --verify`
+        #   @return [Git::CommandLine::Result] the result of calling `git show-ref --verify`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

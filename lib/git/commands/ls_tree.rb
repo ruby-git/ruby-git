@@ -118,7 +118,7 @@ module Git
       #
       #     Cannot be combined with `:long`, `:name_only`, or `:object_only`.
       #
-      #   @return [Git::CommandLineResult] the result of calling `git ls-tree`
+      #   @return [Git::CommandLine::Result] the result of calling `git ls-tree`
       #
       #   @raise [ArgumentError] if unsupported options are provided
       #

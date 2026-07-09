@@ -138,7 +138,7 @@ module Git
       #     reset in the index; when given, only the index entries for the
       #     matching paths are updated
       #
-      #   @return [Git::CommandLineResult] the result of calling `git reset`
+      #   @return [Git::CommandLine::Result] the result of calling `git reset`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #

@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::ShowRef::Exists, :integration, skip: unless_git('2
       it 'returns a CommandLineResult for an existing ref' do
         result = command.call('refs/heads/main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'returns exit code 0 when the ref exists' do

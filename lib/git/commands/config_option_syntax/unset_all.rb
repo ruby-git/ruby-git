@@ -83,7 +83,7 @@ module Git
         #
         #     @option options [Boolean, nil] :fixed_value (nil) treat the value regex as an exact string
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --unset-all`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --unset-all`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

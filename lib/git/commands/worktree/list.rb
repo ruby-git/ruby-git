@@ -49,7 +49,7 @@ module Git
         #   @option options [String] :expire (nil) annotate missing worktrees as
         #     prunable if older than this time expression
         #
-        #   @return [Git::CommandLineResult] the result of calling `git worktree list`
+        #   @return [Git::CommandLine::Result] the result of calling `git worktree list`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

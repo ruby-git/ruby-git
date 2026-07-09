@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::MergeBase, :integration do
       it 'returns a CommandLineResult with output' do
         result = command.call('main', 'feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 

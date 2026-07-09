@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('feature-branch')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq("Deleted branch feature-branch (was abc1234).\n")
       end
     end
@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('branch1', 'branch2', 'branch3')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -41,7 +41,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('feature-branch', force: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :f alias' do
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('feature-branch', f: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -61,7 +61,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('origin/feature', remotes: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'accepts :r alias' do
@@ -70,7 +70,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('origin/feature', r: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -81,7 +81,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('origin/feature', force: true, remotes: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -92,7 +92,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
@@ -108,7 +108,7 @@ RSpec.describe Git::Commands::Branch::Delete do
 
         result = command.call('feature', 'nonexistent')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(1)
       end
 

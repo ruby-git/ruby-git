@@ -52,7 +52,7 @@ module Git
         #
         #       Alias: :u
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --set-upstream-to`
+        #     @return [Git::CommandLine::Result] the result of calling `git branch --set-upstream-to`
         #
         #     @raise [ArgumentError] if set_upstream_to is not provided
         #
@@ -73,7 +73,7 @@ module Git
         #
         #       Alias: :u
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --set-upstream-to`
+        #     @return [Git::CommandLine::Result] the result of calling `git branch --set-upstream-to`
         #
         #     @raise [ArgumentError] if set_upstream_to is not provided
         #

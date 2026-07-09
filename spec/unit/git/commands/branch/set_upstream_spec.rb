@@ -15,7 +15,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
         result = command.call(set_upstream_to: 'origin/main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq("branch 'main' set up to track 'origin/main'.\n")
       end
     end
@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
         result = command.call(u: 'origin/main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
         result = command.call('feature', set_upstream_to: 'origin/main')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
@@ -49,7 +49,7 @@ RSpec.describe Git::Commands::Branch::SetUpstream do
 
         result = command.call(set_upstream_to: 'upstream/develop')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

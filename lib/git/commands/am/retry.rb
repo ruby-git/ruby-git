@@ -38,7 +38,7 @@ module Git
         #
         #     Retry applying the most-recently-failed patch
         #
-        #     @return [Git::CommandLineResult] the result of calling `git am --retry`
+        #     @return [Git::CommandLine::Result] the result of calling `git am --retry`
         #
         #     @raise [Git::VersionError] if git version is below 2.46.0
         #

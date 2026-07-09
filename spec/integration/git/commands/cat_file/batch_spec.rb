@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::CatFile::Batch, :integration do
         it 'returns a CommandLineResult with output for the specified object' do
           result = command.call('HEAD:README.md', batch: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
 
@@ -35,7 +35,7 @@ RSpec.describe Git::Commands::CatFile::Batch, :integration do
         it 'returns a CommandLineResult with metadata for the specified object' do
           result = command.call('HEAD', batch_check: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
 
@@ -50,7 +50,7 @@ RSpec.describe Git::Commands::CatFile::Batch, :integration do
         it 'enumerates all objects and returns non-empty output' do
           result = command.call(batch_all_objects: true, batch_check: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end

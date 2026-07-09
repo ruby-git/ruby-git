@@ -55,7 +55,7 @@ module Git
         #
         #     The format is the same as that of git-for-each-ref(1)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git tag --verify`
+        #   @return [Git::CommandLine::Result] the result of calling `git tag --verify`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

@@ -79,7 +79,7 @@ module Git
       #
       #       Alias: :a
       #
-      #     @return [Git::CommandLineResult] the result of calling
+      #     @return [Git::CommandLine::Result] the result of calling
       #       `git merge-base`
       #
       #     @raise [ArgumentError] if unsupported options are provided

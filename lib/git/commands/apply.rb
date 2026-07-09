@@ -230,7 +230,7 @@ module Git
       #     @option options [String] :chdir (nil) change to this directory before
       #       running git; not passed to the git CLI
       #
-      #     @return [Git::CommandLineResult] the result of calling `git apply`
+      #     @return [Git::CommandLine::Result] the result of calling `git apply`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

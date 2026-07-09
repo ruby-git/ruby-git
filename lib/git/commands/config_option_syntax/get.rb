@@ -104,7 +104,7 @@ module Git
         #
         #     @option options [String] :default (nil) default value when the key is not found
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

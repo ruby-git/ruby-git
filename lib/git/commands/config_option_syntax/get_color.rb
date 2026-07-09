@@ -78,7 +78,7 @@ module Git
         #     @option options [Boolean, nil] :no_includes (nil) suppress include directive processing
         #       (`--no-includes`)
         #
-        #     @return [Git::CommandLineResult] the result of calling `git config --get-color`
+        #     @return [Git::CommandLine::Result] the result of calling `git config --get-color`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

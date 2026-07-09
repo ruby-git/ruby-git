@@ -101,7 +101,7 @@ module Git
         #   @option options [Boolean, nil] :no_create_reflog (nil) forcibly disable the
         #     branch's reflog (`--no-create-reflog`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #
@@ -160,7 +160,7 @@ module Git
         #   @option options [Boolean, nil] :no_create_reflog (nil) forcibly disable the
         #     branch's reflog (`--no-create-reflog`)
         #
-        #   @return [Git::CommandLineResult] the result of calling `git branch`
+        #   @return [Git::CommandLine::Result] the result of calling `git branch`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

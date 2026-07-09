@@ -124,7 +124,7 @@ module Git
         #
         #     Only meaningful when used with `:lock`.
         #
-        #   @return [Git::CommandLineResult] the result of calling `git worktree add`
+        #   @return [Git::CommandLine::Result] the result of calling `git worktree add`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

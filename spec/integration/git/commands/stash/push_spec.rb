@@ -25,7 +25,7 @@ RSpec.describe Git::Commands::Stash::Push, :integration do
         it 'returns a CommandLineResult with output' do
           result = command.call
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end
@@ -34,7 +34,7 @@ RSpec.describe Git::Commands::Stash::Push, :integration do
         it 'returns a CommandLineResult' do
           result = command.call
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end

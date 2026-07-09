@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::LsFiles, :integration do
         it 'returns a CommandLineResult' do
           result = command.call
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 
@@ -28,7 +28,7 @@ RSpec.describe Git::Commands::LsFiles, :integration do
         it 'returns a CommandLineResult' do
           result = command.call('.', stage: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 
@@ -38,7 +38,7 @@ RSpec.describe Git::Commands::LsFiles, :integration do
         it 'returns a CommandLineResult' do
           result = command.call(others: true, exclude_standard: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 
@@ -53,7 +53,7 @@ RSpec.describe Git::Commands::LsFiles, :integration do
         it 'returns a CommandLineResult' do
           result = command.call(others: true, ignored: true, exclude_standard: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
 

@@ -51,7 +51,7 @@ module Git
         #
         #     Alias: :f
         #
-        #   @return [Git::CommandLineResult] the result of calling `git worktree move`
+        #   @return [Git::CommandLine::Result] the result of calling `git worktree move`
         #
         # @raise [ArgumentError] if unsupported options are provided
         #

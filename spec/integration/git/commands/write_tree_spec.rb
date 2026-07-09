@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::WriteTree, :integration do
       it 'returns a CommandLineResult with the tree SHA on stdout' do
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
       end
 
@@ -30,7 +30,7 @@ RSpec.describe Git::Commands::WriteTree, :integration do
 
           result = command.call(prefix: 'sub/')
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
         end
       end

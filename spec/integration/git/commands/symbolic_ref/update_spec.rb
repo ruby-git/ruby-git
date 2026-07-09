@@ -13,7 +13,7 @@ RSpec.describe Git::Commands::SymbolicRef::Update, :integration do
       it 'changes the symbolic ref target' do
         result = command.call('HEAD', 'refs/heads/new-branch')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
 
         head_content = File.read(File.join(repo_dir, '.git', 'HEAD')).strip

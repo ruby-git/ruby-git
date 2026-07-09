@@ -18,7 +18,7 @@ RSpec.describe Git::Commands::DiffFiles, :integration do
     context 'when the command succeeds' do
       it 'returns a CommandLineResult with exit code 0 when no unstaged changes exist' do
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
 
@@ -26,13 +26,13 @@ RSpec.describe Git::Commands::DiffFiles, :integration do
         write_file('file.txt', "modified content\n")
 
         result = command.call
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
 
       it 'accepts a path operand and returns a CommandLineResult' do
         result = command.call('file.txt')
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

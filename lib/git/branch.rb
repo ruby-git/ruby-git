@@ -347,7 +347,7 @@ module Git
     #
     # @param commit [String] the commit SHA to point this branch at
     #
-    # @return [Git::CommandLineResult] the result of calling `git update-ref`
+    # @return [Git::CommandLine::Result] the result of calling `git update-ref`
     #
     # @raise [Git::FailedError] if git exits with a non-zero exit status
     #

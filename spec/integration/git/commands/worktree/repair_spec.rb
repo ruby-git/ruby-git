@@ -22,7 +22,7 @@ RSpec.describe Git::Commands::Worktree::Repair, :integration do
         # test runner's CWD.
         Dir.chdir(repo_dir) do
           result = command.call
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
         end
       end
     end

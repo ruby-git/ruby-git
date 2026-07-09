@@ -61,7 +61,7 @@ module Git
         #       repair to update linking files if there is an absolute/relative
         #       mismatch, even if the links are already correct.
         #
-        #     @return [Git::CommandLineResult] the result of calling `git worktree repair`
+        #     @return [Git::CommandLine::Result] the result of calling `git worktree repair`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

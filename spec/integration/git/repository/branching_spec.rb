@@ -496,9 +496,9 @@ RSpec.describe Git::Repository::Branching, :integration do
       expect(repo.revparse('refs/heads/feature')).to eq(new_sha)
     end
 
-    it 'returns a Git::CommandLineResult' do
+    it 'returns a Git::CommandLine::Result' do
       result = described_instance.update_ref('feature', repo.revparse('HEAD'))
-      expect(result).to be_a(Git::CommandLineResult)
+      expect(result).to be_a(Git::CommandLine::Result)
     end
   end
 

@@ -162,7 +162,7 @@ module Git
       #       When `true`, enables rename detection without a threshold. When a string
       #       (e.g. `'50'`), adds `--find-renames=<n>`.
       #
-      #     @return [Git::CommandLineResult] the result of calling `git status`
+      #     @return [Git::CommandLine::Result] the result of calling `git status`
       #
       #     @raise [ArgumentError] if unsupported options are provided
       #

@@ -57,7 +57,7 @@ module Git
         #   @option options [String] :m (nil) a reflog message for
         #     the update
         #
-        #   @return [Git::CommandLineResult] the result of calling
+        #   @return [Git::CommandLine::Result] the result of calling
         #     `git symbolic-ref`
         #
         #   @raise [ArgumentError] if unsupported options are provided

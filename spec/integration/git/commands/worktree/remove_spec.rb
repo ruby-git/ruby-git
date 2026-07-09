@@ -26,7 +26,7 @@ RSpec.describe Git::Commands::Worktree::Remove, :integration do
 
       it 'returns a CommandLineResult' do
         result = command.call(worktree_path)
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
 
       it 'removes the worktree directory from disk' do

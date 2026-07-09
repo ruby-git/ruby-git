@@ -99,7 +99,7 @@ module Git
         #
         #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash show`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash show`
         #
         #   @overload call(stash, **options)
         #
@@ -145,7 +145,7 @@ module Git
         #
         #       Pass `true` for default, or a string like `'lines,cumulative'` for options.
         #
-        #     @return [Git::CommandLineResult] the result of calling `git stash show`
+        #     @return [Git::CommandLine::Result] the result of calling `git stash show`
         #
         #   @raise [ArgumentError] if unsupported options are provided
         #

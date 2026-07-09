@@ -43,7 +43,7 @@ module Git
         #
         #     @param tagname [Array<String>] one or more tag names to delete
         #
-        #     @return [Git::CommandLineResult] the result of calling `git tag --delete`
+        #     @return [Git::CommandLine::Result] the result of calling `git tag --delete`
         #
         #     @raise [ArgumentError] if no tag names are provided
         #

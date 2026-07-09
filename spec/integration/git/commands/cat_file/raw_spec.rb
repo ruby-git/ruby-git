@@ -20,7 +20,7 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
         it 'returns exit status 0 when the object exists' do
           result = command.call('HEAD', e: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.status.exitstatus).to eq(0)
         end
 
@@ -35,7 +35,7 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
         it 'returns a CommandLineResult with the object type' do
           result = command.call('HEAD', t: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end
@@ -44,7 +44,7 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
         it 'returns a CommandLineResult with the object size' do
           result = command.call('HEAD', s: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end
@@ -53,7 +53,7 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
         it 'returns a CommandLineResult with the pretty-printed object content' do
           result = command.call('HEAD', p: true)
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end
@@ -62,7 +62,7 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
         it 'returns a CommandLineResult when the type matches' do
           result = command.call('blob', 'HEAD:README.md')
 
-          expect(result).to be_a(Git::CommandLineResult)
+          expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
       end

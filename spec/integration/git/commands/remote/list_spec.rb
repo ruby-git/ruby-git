@@ -24,7 +24,7 @@ RSpec.describe Git::Commands::Remote::List, :integration do
 
         result = command.call
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout.lines.map(&:strip)).to include('origin')
       end
     end

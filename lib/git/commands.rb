@@ -58,7 +58,7 @@ module Git
   # Each git operation is represented by a class within this namespace. Command
   # classes define the CLI contract via the {Arguments} DSL, bind caller-supplied
   # parameters to command-line flags and operands, execute the subprocess through
-  # {Git::CommandLine}, and return a raw {Git::CommandLineResult}.
+  # {Git::CommandLine}, and return a raw {Git::CommandLine::Result}.
   #
   # Commands do **not** parse output — that responsibility belongs to the
   # {Git::Parsers} layer, orchestrated by the facade ({Git::Repository}).

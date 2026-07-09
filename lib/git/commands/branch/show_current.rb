@@ -40,7 +40,7 @@ module Git
         #
         #     Execute the `git branch --show-current` command
         #
-        #     @return [Git::CommandLineResult] the result of calling `git branch --show-current`
+        #     @return [Git::CommandLine::Result] the result of calling `git branch --show-current`
         #
         #     @raise [Git::FailedError] if git exits with a non-zero exit status
       end

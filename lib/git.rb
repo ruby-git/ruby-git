@@ -84,7 +84,7 @@ module Git
   #
   #   @param value [String, Boolean] the value to set for the git configuration option
   #
-  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #   @return [Git::CommandLine::Result] the result of the git configuration command
   #
   # @overload config(name)
   #   Get the value for the git named configuration option
@@ -147,7 +147,7 @@ module Git
   #
   #   @param value [String, Boolean] the value to set for the git configuration option
   #
-  #   @return [Git::CommandLineResult] the result of the git configuration command
+  #   @return [Git::CommandLine::Result] the result of the git configuration command
   #
   # @overload global_config(name)
   #   Get the value for the git named configuration option
@@ -259,7 +259,7 @@ module Git
   #
   # @param value [Object, nil] the value to set; omit to get or list
   #
-  # @return [String, Hash, Git::CommandLineResult] the config value, all entries,
+  # @return [String, Hash, Git::CommandLine::Result] the config value, all entries,
   #   or the result of the set command
   #
   # @deprecated Use {Git.config_get}, {Git.config_set}, or {Git.config_list} instead.
@@ -490,7 +490,7 @@ module Git
   #   @param global [Boolean] true to use the global git configuration, false for the
   #     local repo config
   #
-  #   @return [Git::CommandLineResult] the result of the git config command
+  #   @return [Git::CommandLine::Result] the result of the git config command
   #
   # @overload legacy_config_set_get_list(name, global:)
   #

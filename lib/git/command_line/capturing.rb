@@ -141,7 +141,7 @@ module Git
       #   overrides for this command.  String keys map to String values (to set) or
       #   `nil` (to unset).
       #
-      # @return [Git::CommandLineResult] the result of the command
+      # @return [Git::CommandLine::Result] the result of the command
       #
       # @raise [ArgumentError] if `args` contains an array or an unknown option is
       #   passed
@@ -265,7 +265,7 @@ module Git
       #
       # @option options [Boolean] :raise_on_failure (true) raise {Git::FailedError} on non-zero exit
       #
-      # @return [Git::CommandLineResult]
+      # @return [Git::CommandLine::Result]
       #
       # @raise [Git::FailedError] if the command failed and raise_on_failure is true
       #

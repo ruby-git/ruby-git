@@ -19,7 +19,7 @@ RSpec.describe Git::Commands::NameRev, :integration do
       it 'returns a CommandLineResult with the symbolic name' do
         result = command.call('HEAD')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to include('main')
       end
 

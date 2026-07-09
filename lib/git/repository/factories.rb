@@ -360,7 +360,7 @@ module Git
       # @option context_opts [Logger, nil] :logger logger used for clone
       #   operations
       #
-      # @return [Git::CommandLineResult] the result of running `git clone`
+      # @return [Git::CommandLine::Result] the result of running `git clone`
       #
       # @raise [ArgumentError] if unsupported options are provided
       #
@@ -380,7 +380,7 @@ module Git
 
       # Resolve repository paths from a completed clone result
       #
-      # @param clone_result [Git::CommandLineResult] the completed clone result
+      # @param clone_result [Git::CommandLine::Result] the completed clone result
       #
       # @param opts [Hash] command-ready clone options
       #
@@ -616,7 +616,7 @@ module Git
       #
       # @option options [Logger, nil] :log logger used for git operations
       #
-      # @return [Git::CommandLineResult] the result of running `git init`
+      # @return [Git::CommandLine::Result] the result of running `git init`
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #

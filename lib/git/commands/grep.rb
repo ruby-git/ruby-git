@@ -317,7 +317,7 @@ module Git
       #       Multiple pathspecs may be passed as an Array. Appended to the
       #       command after `--`.
       #
-      #     @return [Git::CommandLineResult] the result of calling `git grep`
+      #     @return [Git::CommandLine::Result] the result of calling `git grep`
       #
       #       Exit status 0 means matches were found; exit status 1 means no
       #       lines were selected (not an error).

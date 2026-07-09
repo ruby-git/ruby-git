@@ -147,7 +147,7 @@ module Git
         #     @option options [Boolean, nil] :reference (nil) use compact reference
         #       format in the revert commit message instead of the full object name
         #
-        #     @return [Git::CommandLineResult] the result of calling `git revert`
+        #     @return [Git::CommandLine::Result] the result of calling `git revert`
         #
         #     @raise [ArgumentError] if unsupported options are provided
         #

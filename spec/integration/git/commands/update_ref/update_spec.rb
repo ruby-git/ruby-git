@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::UpdateRef::Update, :integration do
 
         result = command.call('refs/heads/test-branch', new_sha)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
         expect(repo.rev_parse('refs/heads/test-branch')).to eq(new_sha)
       end
     end

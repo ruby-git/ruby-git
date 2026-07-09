@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Fetch, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('origin', merge: true)
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 

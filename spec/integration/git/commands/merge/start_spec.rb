@@ -27,7 +27,7 @@ RSpec.describe Git::Commands::Merge::Start, :integration do
       it 'returns a CommandLineResult' do
         result = command.call('feature')
 
-        expect(result).to be_a(Git::CommandLineResult)
+        expect(result).to be_a(Git::CommandLine::Result)
       end
     end
 
