@@ -10,7 +10,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Logging
       # Allowed option keys for {#full_log_commits}

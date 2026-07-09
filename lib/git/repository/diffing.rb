@@ -17,7 +17,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Diffing
       # Option keys accepted by {#diff_full}

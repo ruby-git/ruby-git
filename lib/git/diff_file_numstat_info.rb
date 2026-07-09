@@ -3,7 +3,9 @@
 module Git
   # Immutable value object representing stats for a single file from git numstat output
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] path
   #   @return [String] the file path (destination path for renames)

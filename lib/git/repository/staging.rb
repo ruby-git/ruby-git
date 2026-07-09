@@ -19,7 +19,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Staging
       # Option keys accepted by {#add}

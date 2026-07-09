@@ -14,7 +14,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Inspecting
       # Give a human-readable name to a commit based on the most recent reachable tag

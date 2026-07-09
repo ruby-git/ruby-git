@@ -58,7 +58,9 @@ module Git
   # @!attribute [r] deletions
   #   @return [Integer] number of lines deleted
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   DiffFilePatchInfo = Data.define(
     :src,
     :dst,

@@ -12,7 +12,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Maintenance
       # Repack loose objects into pack files

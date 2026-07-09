@@ -19,7 +19,9 @@ module Git
   #   # src = nil
   #   dst = Git::FileRef.new(mode: '100644', sha: 'def5678', path: 'lib/new_file.rb')
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] mode
   #   @return [String] the file mode (e.g., '100644' for regular file, '100755' for executable,

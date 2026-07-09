@@ -11,7 +11,9 @@ module Git
   # - DiffFileRawInfo (from --raw)
   # - DiffFilePatchInfo (from --patch)
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] files_changed
   #   @return [Integer] number of files changed (from --shortstat)

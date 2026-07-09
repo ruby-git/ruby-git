@@ -23,7 +23,7 @@ module Git
     #
     # @abstract Subclass and implement {#run}
     #
-    # @api public
+    # @api private
     #
     class Base
       # Create a Base (or subclass) object

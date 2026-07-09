@@ -31,7 +31,9 @@ module Git
   #
   # @see Git::Commands::Branch::ShowCurrent for the command that produces this
   #
-  # @api public
+  # @api private
+  #
+  # Work in progress; this class is internal for now and may be made public in a future release.
   #
   # @!attribute [r] target_oid
   #

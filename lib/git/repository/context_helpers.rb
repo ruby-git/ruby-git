@@ -15,7 +15,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module ContextHelpers
       # Changes the current working directory to the repository working directory

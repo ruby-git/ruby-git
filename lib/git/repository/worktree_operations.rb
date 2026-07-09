@@ -10,7 +10,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module WorktreeOperations
       # Returns all worktrees as an array of directory and SHA pairs

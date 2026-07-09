@@ -9,7 +9,7 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Stashing
       # Returns all stash entries as an array of index and message pairs

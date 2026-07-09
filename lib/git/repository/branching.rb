@@ -24,10 +24,12 @@ module Git
     #
     # Included by {Git::Repository}.
     #
-    # @api public
+    # @api private
     #
     module Branching # rubocop:disable Metrics/ModuleLength
       # Represents the state of HEAD in a repository
+      #
+      # @api private
       #
       # @!attribute [r] state
       #   @return [Symbol] one of `:active`, `:unborn`, or `:detached`
