@@ -26,6 +26,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
 - [Errors Raised By This Gem](#errors-raised-by-this-gem)
 - [Specifying And Handling Timeouts](#specifying-and-handling-timeouts)
 - [Deprecations](#deprecations)
+- [Upgrading from v4.x to v5.0.0](#upgrading-from-v4x-to-v500)
 - [Project Policies](#project-policies)
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
@@ -64,22 +65,10 @@ Install the gem and add to the application's Gemfile by executing:
 bundle add git
 ```
 
-to install version 1.x:
-
-```shell
-bundle add git --version "~> 1.19"
-```
-
 If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```shell
 gem install git
-```
-
-to install version 1.x:
-
-```shell
-gem install git --version "~> 1.19"
 ```
 
 ## Quick Start
@@ -601,6 +590,14 @@ for more details.
 If deprecation warnings are silenced, you should reenable them before upgrading the
 git gem to the next major version. This will make it easier to identify changes
 needed for the upgrade.
+
+For the full list of deprecated methods and their replacements, see
+[UPGRADING.md](UPGRADING.md).
+
+## Upgrading from v4.x to v5.0.0
+
+v5.0.0 is a major release with breaking changes. See
+[UPGRADING.md](UPGRADING.md) for a comprehensive migration guide.
 
 ## Project Policies
 

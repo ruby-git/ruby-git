@@ -11,13 +11,14 @@
 > - **C1c ✅** — `@api` tags set for all 37 previously-unmarked internal constants
 >   (commit `83225f3f`).
 > - **C1d ✅** — Coverage gate enforced by `yard-lint` + `.yard-lint.yml`; no PR needed.
+> - **C2b ✅** — `README.md` updated: prominent `## Upgrading from v4.x to v5.0.0`
+>   section added, `UPGRADING.md` linked from the Deprecations section, outdated
+>   version-pinned install snippets removed, and ToC updated.
 >
 > Remaining work:
 >
 > - **C2a:** review and expand `UPGRADING.md` to comprehensively cover all
 >   v4.x → v5.0.0 breaking changes
-> - **C2b:** update `README.md` to reflect the new entry points and link to the
->   migration guide
 > - **C3:** run the full final documentation verification before v5.0.0 release.
 >
 
@@ -143,10 +144,11 @@ This step is organized into workstreams, each with **one PR per substep** for fi
 - **C1d: Coverage Gate** — ✅ **already done** (`yard-lint` + `.yard-lint.yml`
   replaced the retired `yardstick` gate and pass; no PR needed)
 - **C2a: Update UPGRADING.md** (1 PR)
-- **C2b: Update README.md** (1 PR)
+- **C2b: Update README.md** — ✅ **done** (prominent upgrade section added,
+  `UPGRADING.md` linked from Deprecations, outdated version-pinned install snippets removed)
 - **C3: Documentation Completeness Verification** (1 PR)
 
-Dependencies (remaining): C2a, C2b → C3. (C1a–C1d are all complete.)
+Dependencies (remaining): C2a → C3. (C1a–C1d and C2b are all complete.)
 
 **Documentation skill requirements:** Any remaining PR that touches YARD
 comments must apply the
