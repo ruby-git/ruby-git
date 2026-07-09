@@ -1,6 +1,6 @@
 # Phase 4 / Step C — Update Documentation: Execution Plan
 
-> **🚧 Status: Partial.**
+> **🚧 Status: Partial — C1 and C2 complete; C3 remains.**
 >
 > **C1 (YARD audit) is fully complete:**
 > - **C1a ✅** — Public API scope TSV produced at `redesign/c1a-public-api-scope.tsv`
@@ -11,14 +11,17 @@
 > - **C1c ✅** — `@api` tags set for all 37 previously-unmarked internal constants
 >   (commit `83225f3f`).
 > - **C1d ✅** — Coverage gate enforced by `yard-lint` + `.yard-lint.yml`; no PR needed.
+>
+> **C2 (guidance & README) is fully complete:**
+> - **C2a ✅** — `UPGRADING.md` expanded with comprehensive v4.x → v5.0.0 migration
+>   guide: beta banner removed, ToC added, breaking-changes quick-reference table,
+>   `Git::Base` removal section with before/after examples (commit `fb66404a`).
 > - **C2b ✅** — `README.md` updated: prominent `## Upgrading from v4.x to v5.0.0`
 >   section added, `UPGRADING.md` linked from the Deprecations section, outdated
 >   version-pinned install snippets removed, and ToC updated.
 >
 > Remaining work:
 >
-> - **C2a:** review and expand `UPGRADING.md` to comprehensively cover all
->   v4.x → v5.0.0 breaking changes
 > - **C3:** run the full final documentation verification before v5.0.0 release.
 >
 
@@ -143,12 +146,14 @@ This step is organized into workstreams, each with **one PR per substep** for fi
   (commit `83225f3f`; all 37 previously-unmarked internal constants tagged)
 - **C1d: Coverage Gate** — ✅ **already done** (`yard-lint` + `.yard-lint.yml`
   replaced the retired `yardstick` gate and pass; no PR needed)
-- **C2a: Update UPGRADING.md** (1 PR)
+- **C2a: Update UPGRADING.md** — ✅ **done** (beta banner removed, ToC added,
+  breaking-changes quick-reference table, `Git::Base` removal section with
+  before/after examples; commit `fb66404a`)
 - **C2b: Update README.md** — ✅ **done** (prominent upgrade section added,
   `UPGRADING.md` linked from Deprecations, outdated version-pinned install snippets removed)
 - **C3: Documentation Completeness Verification** (1 PR)
 
-Dependencies (remaining): C2a → C3. (C1a–C1d and C2b are all complete.)
+Dependencies (remaining): C3 only. (C1a–C1d, C2a, and C2b are all complete.)
 
 **Documentation skill requirements:** Any remaining PR that touches YARD
 comments must apply the
