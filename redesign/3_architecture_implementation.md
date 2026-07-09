@@ -44,8 +44,8 @@ risk and allows for a gradual, controlled migration to the new architecture.
 | Phase 1 | ✅ Complete | Foundation and scaffolding | 5% | 100% |
 | Phase 2 | ✅ Complete | Migrating commands (all checklist items done) | 40% | 100% |
 | Phase 3 | ✅ Complete | Refactoring public interface — see [Facade Modules Completed](#facade-modules-completed) and [Facade coverage checklist](#facade-coverage-checklist) | 45% | 100% |
-| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 ✅ (remove stale `Git::Base`/`Git::Lib` skill refs); Step C: C1a ✅ complete (TSV produced), C1c/C2a/C2b/C3 pending | 10% | 82% |
-| **TOTAL** | -- | -- | **100%** | **98%** |
+| Phase 4 | 🚧 In Progress | Final cleanup and release — Steps A and B complete; W6 ✅; Step C: C1a ✅ C1b ✅ C1c ✅ C1d ✅ complete; C2a/C2b/C3 pending | 10% | 90% |
+| **TOTAL** | -- | -- | **100%** | **99%** |
 
 ### Facade Modules Completed
 
