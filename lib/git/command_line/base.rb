@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require 'git/command_line'
+require 'git/command_line/result'
 require 'git/errors'
+require 'process_executer'
 
 module Git
   module CommandLine

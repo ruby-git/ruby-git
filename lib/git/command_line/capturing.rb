@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'git/command_line'
+require 'git/command_line/base'
+require 'git/encoding_utils'
 
 module Git
   module CommandLine
