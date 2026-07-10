@@ -13,7 +13,8 @@ RSpec.describe Git::URL, :integration do
     around do |example|
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do
-          init_test_repo('server/my_project')
+          repo = init_test_repo('server/my_project')
+          repo.commit('Initial commit', allow_empty: true)
           example.run
         end
       end
