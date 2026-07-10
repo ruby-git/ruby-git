@@ -501,6 +501,3 @@ module Git
     end
   end
 end
-
-require 'git/execution_context/global'
-require 'git/execution_context/repository'

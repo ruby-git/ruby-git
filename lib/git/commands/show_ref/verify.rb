@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'git/commands/base'
-require 'git/commands/show_ref'
 
 module Git
   module Commands
