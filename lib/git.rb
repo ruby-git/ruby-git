@@ -1,29 +1,35 @@
 # frozen_string_literal: true
 
-require 'active_support'
 require 'active_support/deprecation'
 
-require 'git/deprecation'
-require 'git/version'
-
+# Define Git::Deprecation before requiring the rest of the library to ensure that
+# any deprecation warnings emitted during the loading of the library are properly
+# configured according to the GIT_DEPRECATION_BEHAVIOR environment variable.
+#
 module Git
-  # Minimum git version required by this gem
-  #
-  # Commands and features may require newer versions, but this is the absolute
-  # minimum supported version for the gem as a whole.
-  #
-  # @return [Git::Version]
+  # The deprecation instance used to emit deprecation warnings for the Git gem
   #
   # @api public
-  #
-  MINIMUM_GIT_VERSION = Version.parse('2.28.0')
+  Deprecation = ActiveSupport::Deprecation.new('6.0.0', 'Git')
+
+  if (behavior = ENV.fetch('GIT_DEPRECATION_BEHAVIOR', nil))
+    behavior = behavior.strip
+    allowed_behaviors = ActiveSupport::Deprecation::DEFAULT_BEHAVIORS.keys.map(&:to_s)
+
+    unless allowed_behaviors.include?(behavior)
+      raise ArgumentError,
+            "Invalid GIT_DEPRECATION_BEHAVIOR=#{behavior.inspect}; " \
+            "expected one of: #{allowed_behaviors.join(', ')}"
+    end
+
+    Deprecation.behavior = behavior.to_sym
+  end
 end
 
 require 'git/author'
 require 'git/branch'
 require 'git/branch_info'
 require 'git/branches'
-require 'git/command_line_result'
 require 'git/command_line'
 require 'process_executer'
 require 'git/config'
@@ -61,6 +67,7 @@ require 'git/tag_delete_failure'
 require 'git/tag_delete_result'
 require 'git/tag_info'
 require 'git/url'
+require 'git/version'
 require 'git/worktree'
 require 'git/worktrees'
 
@@ -74,6 +81,41 @@ require 'git/worktrees'
 module Git
   extend Git::Configuring
   extend Git::Repository::Factories
+
+  # Minimum git version required by this gem
+  #
+  # Commands and features may require newer versions, but this is the absolute
+  # minimum supported version for the gem as a whole.
+  #
+  # @return [Git::Version]
+  #
+  # @api public
+  #
+  MINIMUM_GIT_VERSION = Version.parse('2.28.0')
+
+  # Intercept the first lookup of the deprecated `Git::CommandLineResult` constant
+  #
+  # When `name` is `:CommandLineResult`, caches and returns {Git::CommandLine::Result}
+  # after emitting a deprecation warning. Calls `super` for any other unknown constant,
+  # preserving normal Ruby `NameError` behaviour.
+  #
+  # @param name [Symbol] the name of the missing constant
+  #
+  # @return [Class] the resolved constant value
+  #
+  # @api private
+  def self.const_missing(name)
+    return super unless name == :CommandLineResult
+
+    # Cache the constant first so subsequent accesses are zero-cost even if
+    # the deprecation behavior raises (e.g. in the test suite).
+    const_set(:CommandLineResult, Git::CommandLine::Result)
+    Git::Deprecation.warn(
+      'Git::CommandLineResult is deprecated and will be removed in v6.0.0. ' \
+      'Use Git::CommandLine::Result instead.'
+    )
+    Git::CommandLine::Result
+  end
 
   # Gets or sets local git configuration options
   #
