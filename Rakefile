@@ -36,7 +36,7 @@ module Rake
       # rake rubocop      # => do not output the task name
       # rake rubocop yard # => output task name for rubocop and yard
       top_level_tasks = Rake.application.top_level_tasks
-      box("Rake task: #{name}") unless top_level_tasks.length == 1 && name == top_level_tasks[0]
+      box("rake #{name}") unless top_level_tasks.length == 1 && name == top_level_tasks[0]
       original_execute(args)
     end
 
