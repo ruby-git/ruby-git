@@ -176,13 +176,13 @@ class TestDeprecations < Test::Unit::TestCase
 
   def test_lib_warn_if_old_command_deprecation
     # Ensure class-level check does not short-circuit the call in this test
-    Git::Lib.instance_variable_set(:@version_checked, nil)
+    Git::LibImpl.instance_variable_set(:@version_checked, nil)
 
     Git::Deprecation.expects(:warn).with(
       'Git::Lib#warn_if_old_command is deprecated. Use meets_required_version?.'
     )
 
-    assert_equal(true, Git::Lib.warn_if_old_command(@git.lib))
+    assert_equal(true, Git::LibImpl.warn_if_old_command(@git.lib))
   end
 
   # --- Git::Path deprecations ---
