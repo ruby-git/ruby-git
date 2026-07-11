@@ -31,6 +31,7 @@ Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?log
   - [Ruby Version Support Policy](#ruby-version-support-policy)
   - [Git Version Support Policy](#git-version-support-policy)
 - [📢 Project Announcements 📢](#-project-announcements-)
+  - [2026-07-11: v5.0.0.beta.4 Released](#2026-07-11-v500beta4-released)
   - [2026-06-26: v5.0.0.beta.3 Released](#2026-06-26-v500beta3-released)
   - [2026-06-25: v5.0.0.beta.2 Released](#2026-06-25-v500beta2-released)
   - [2026-06-04: v5.0.0.beta.1 Released](#2026-06-04-v500beta1-released)
@@ -662,6 +663,31 @@ impractical. Such changes will be clearly documented in the CHANGELOG and releas
 notes.
 
 ## 📢 Project Announcements 📢
+
+### 2026-07-11: v5.0.0.beta.4 Released
+
+The architectural redesign is **feature complete** and we have published
+[`git v5.0.0.beta.4`](https://rubygems.org/gems/git/versions/5.0.0.beta.4) as our
+fourth pre-release.
+
+**To try the beta**, add the pre-release version to your `Gemfile`:
+
+```ruby
+gem 'git', '~> 5.0.0.beta'
+```
+
+Or install it directly:
+
+```sh
+gem install git --pre
+```
+
+The intent is full backward compatibility with v4.x, but given the size and scope of
+the redesign, some incompatibilities may exist. Please give the latest beta a try and
+[open an issue](https://github.com/ruby-git/ruby-git/issues) if you hit anything
+unexpected — your feedback helps us ship a solid v5.0.0.
+
+See [UPGRADING.md](UPGRADING.md) for a full list of deprecations and breaking changes.
 
 ### 2026-06-26: v5.0.0.beta.3 Released
 
