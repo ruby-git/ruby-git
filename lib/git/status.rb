@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# These would be required by the main `git.rb` file
-
 module Git
   # The Status class gets the status of a git repository. It identifies which
   # files have been modified, added, or deleted, including untracked files.

@@ -589,6 +589,18 @@ You can silence deprecation warnings by adding this line to your source code:
 Git::Deprecation.behavior = :silence
 ```
 
+Or by setting this environment variable before loading the gem:
+
+```sh
+GIT_DEPRECATION_BEHAVIOR=silence
+```
+
+Accepted environment variable values are the behavior names supported by your
+installed ActiveSupport version.
+
+If `GIT_DEPRECATION_BEHAVIOR` is set to an unsupported value, loading the gem
+raises `ArgumentError` with the accepted behavior names.
+
 See [the Active Support Deprecation
 documentation](https://api.rubyonrails.org/classes/ActiveSupport/Deprecation.html)
 for more details.

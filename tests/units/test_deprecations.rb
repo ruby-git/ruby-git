@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'open3'
+require 'rbconfig'
 require_relative '../test_helper'
 
 # Consolidated deprecation tests to ensure all deprecated entry points emit
@@ -212,5 +214,38 @@ class TestDeprecations < Test::Unit::TestCase
     )
 
     @git.repo.path
+  end
+end
+
+# Tests for the GIT_DEPRECATION_BEHAVIOR environment variable
+class TestGitDeprecationBehaviorEnvVar < Test::Unit::TestCase
+  GEM_ROOT = File.expand_path('../..', __dir__)
+  RUBY_EXE = RbConfig.ruby
+
+  DEPRECATION_SCRIPT = <<~RUBY
+    require 'git'
+    Git::Deprecation.warn('deprecated message')
+  RUBY
+
+  LOAD_SCRIPT = "require 'git'"
+
+  def run_with_env(env_vars, script)
+    Open3.capture3(env_vars, RUBY_EXE, '-Ilib', '-e', script, chdir: GEM_ROOT)
+  end
+
+  def test_silence_behavior_suppresses_warnings
+    _out, err, status = run_with_env({ 'GIT_DEPRECATION_BEHAVIOR' => 'silence' }, DEPRECATION_SCRIPT)
+
+    assert status.success?, "Script failed unexpectedly:\n#{err}"
+    assert_no_match(/DEPRECATION WARNING: deprecated message/, err)
+  end
+
+  def test_invalid_behavior_raises_argument_error
+    allowed_behaviors = ActiveSupport::Deprecation::DEFAULT_BEHAVIORS.keys.map(&:to_s)
+    _out, err, status = run_with_env({ 'GIT_DEPRECATION_BEHAVIOR' => 'silent' }, LOAD_SCRIPT)
+
+    assert !status.success?, 'Expected script to fail but it succeeded'
+    assert_match(/Invalid GIT_DEPRECATION_BEHAVIOR="silent"/, err)
+    assert_match(/expected one of: #{Regexp.escape(allowed_behaviors.join(', '))}/, err)
   end
 end
