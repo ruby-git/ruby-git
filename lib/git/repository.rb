@@ -4,7 +4,6 @@ require 'find'
 require 'pathname'
 
 require 'git/configuring'
-require 'git/deprecation'
 require 'git/execution_context/repository'
 require 'git/repository/branching'
 require 'git/repository/context_helpers'

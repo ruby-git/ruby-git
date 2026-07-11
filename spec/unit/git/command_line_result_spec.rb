@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require 'git/command_line_result'
 
 RSpec.describe 'Git::CommandLineResult (deprecated)' do
   before do
