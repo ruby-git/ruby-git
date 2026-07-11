@@ -44,12 +44,28 @@ require 'git/worktrees'
 # @author Scott Chacon (mailto:schacon@gmail.com)
 #
 module Git # rubocop:disable Style/OneClassPerFile
+  # Internal alias for Git::Lib, used by the gem itself after the public constant
+  # is deprecated. Code outside the gem should not reference this constant.
+  # @api private
+  LibImpl = remove_const(:Lib)
+
+  # @api private
+  def self.const_missing(name)
+    return super unless name == :Lib
+
+    Git::Deprecation.warn(
+      'Git::Lib is deprecated and will be removed in version 5.x. ' \
+      'Use the #lib accessor on the object returned by Git.init, Git.open, or Git.clone instead.'
+    )
+    const_set(:Lib, LibImpl)
+  end
+
   # g.config('user.name', 'Scott Chacon') # sets value
   # g.config('user.email', 'email@email.com')  # sets value
   # g.config('user.name')  # returns 'Scott Chacon'
   # g.config # returns whole config hash
   def config(name = nil, value = nil)
-    lib = Git::Lib.new
+    lib = LibImpl.new
     if name && value
       # set value
       lib.config_set(name, value)
@@ -287,7 +303,7 @@ module Git # rubocop:disable Style/OneClassPerFile
   # g.config('user.name')  # returns 'Scott Chacon'
   # g.config # returns whole config hash
   def self.global_config(name = nil, value = nil)
-    lib = Git::Lib.new(nil, nil)
+    lib = LibImpl.new(nil, nil)
     if name && value
       # set value
       lib.global_config_set(name, value)
@@ -369,7 +385,7 @@ module Git # rubocop:disable Style/OneClassPerFile
   # @param [String|NilClass] location the target repository location or nil for '.'
   # @return [{String=>Hash}] the available references of the target repo.
   def self.ls_remote(location = nil, options = {})
-    Git::Lib.new.ls_remote(location, options)
+    LibImpl.new.ls_remote(location, options)
   end
 
   # Open a an existing Git working directory

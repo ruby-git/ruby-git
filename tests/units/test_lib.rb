@@ -358,7 +358,7 @@ class TestLib < Test::Unit::TestCase
       saved_git_ssh = Git::Base.config.git_ssh
       Git::Base.config.git_ssh = '/global/ssh'
 
-      lib = Git::Lib.new
+      lib = Git::LibImpl.new
 
       env = lib.send(:env_overrides)
       assert_equal '/global/ssh', env['GIT_SSH'], 'env_overrides should honor global git_ssh'
@@ -442,7 +442,7 @@ class TestLib < Test::Unit::TestCase
   end
 
   def test_compare_version_to
-    lib = Git::Lib.new(nil, nil)
+    lib = Git::LibImpl.new(nil, nil)
     current_version = [2, 42, 0]
     lib.define_singleton_method(:current_command_version) { current_version }
     assert lib.compare_version_to(0, 43, 9) == 1

@@ -23,14 +23,14 @@ module Git
     def self.clone(repository_url, directory, options = {})
       lib_options = {}
       lib_options[:git_ssh] = options[:git_ssh] if options.key?(:git_ssh)
-      new_options = Git::Lib.new(lib_options, options[:log]).clone(repository_url, directory, options)
+      new_options = LibImpl.new(lib_options, options[:log]).clone(repository_url, directory, options)
       normalize_paths(new_options, bare: options[:bare] || options[:mirror])
       new(new_options)
     end
 
     # (see Git.default_branch)
     def self.repository_default_branch(repository, options = {})
-      Git::Lib.new(nil, options[:log]).repository_default_branch(repository)
+      LibImpl.new(nil, options[:log]).repository_default_branch(repository)
     end
 
     # Returns (and initialize if needed) a Git::Config instance
@@ -90,7 +90,7 @@ module Git
       #   repository you have a Git::Base instance for.  This would not
       #   change the existing interface (other than adding to it).
       #
-      Git::Lib.new(options).init(init_options)
+      LibImpl.new(options).init(init_options)
 
       new(options)
     end
@@ -335,7 +335,7 @@ module Git
     # actual 'git' forked system calls.  At some point I hope to replace the Git::Lib
     # class with one that uses native methods or libgit C bindings
     def lib
-      @lib ||= Git::Lib.new(self, @logger)
+      @lib ||= LibImpl.new(self, @logger)
     end
 
     # Returns the per-instance git_ssh configuration value.

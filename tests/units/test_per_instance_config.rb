@@ -8,7 +8,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
     begin
       Git::Base.config.git_ssh = '/global/ssh'
 
-      lib = Git::Lib.new
+      lib = Git::LibImpl.new
       env = lib.send(:env_overrides)
 
       assert_equal '/global/ssh', env['GIT_SSH']
@@ -22,7 +22,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
     begin
       Git::Base.config.git_ssh = '/global/ssh'
 
-      lib = Git::Lib.new(nil, Logger.new(nil))
+      lib = Git::LibImpl.new(nil, Logger.new(nil))
       env = lib.send(:env_overrides)
 
       assert_equal '/global/ssh', env['GIT_SSH']
@@ -32,7 +32,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
   end
 
   test 'Git::Lib initialized from hash sets git_ssh' do
-    lib = Git::Lib.new(git_ssh: '/custom/ssh')
+    lib = Git::LibImpl.new(git_ssh: '/custom/ssh')
     env = lib.send(:env_overrides)
     assert_equal '/custom/ssh', env['GIT_SSH']
   end
@@ -43,7 +43,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
     # Git.clone calls Git::Lib.new({git_ssh: ...}, ...).clone(...)
     # We verify that Git::Lib.new is called with the correct git_ssh option
 
-    Git::Lib.expects(:new).with(has_entry(git_ssh: git_ssh), anything).returns(stub_everything(clone: {}))
+    Git::LibImpl.expects(:new).with(has_entry(git_ssh: git_ssh), anything).returns(stub_everything(clone: {}))
 
     begin
       Git.clone('url', 'dir', git_ssh: git_ssh)
@@ -61,7 +61,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
       end
 
       # When git_ssh: nil is passed, GIT_SSH should not be set for clone
-      Git::Lib.stubs(:new).with(has_entry(git_ssh: nil), anything).returns(stub_everything(clone: {}))
+      Git::LibImpl.stubs(:new).with(has_entry(git_ssh: nil), anything).returns(stub_everything(clone: {}))
       begin
         Git.clone('url', 'dir', git_ssh: nil)
       rescue StandardError
@@ -69,7 +69,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
       end
 
       # For env_overrides, use the real class
-      lib_real = Git::Lib.allocate
+      lib_real = Git::LibImpl.allocate
       lib_real.send(:initialize_from_hash, { git_ssh: nil })
       env = lib_real.send(:env_overrides)
       assert_nil env['GIT_SSH'], 'GIT_SSH should not be set when git_ssh: nil is passed'
@@ -83,7 +83,7 @@ class TestPerInstanceConfig < Test::Unit::TestCase
 
     # Git.init passes the options hash (including git_ssh) to Git::Lib.new(options).init(init_options)
 
-    Git::Lib.expects(:new).with(has_entry(git_ssh: git_ssh)).returns(stub_everything(init: true))
+    Git::LibImpl.expects(:new).with(has_entry(git_ssh: git_ssh)).returns(stub_everything(init: true))
 
     begin
       Git.init('dir', git_ssh: git_ssh)
