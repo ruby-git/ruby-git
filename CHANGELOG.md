@@ -5,6 +5,19 @@
 
 # Change Log
 
+## [4.4.0](https://github.com/ruby-git/ruby-git/compare/v4.3.2...v4.4.0) (2026-07-11)
+
+
+### Features
+
+* Allow deprecation behavior env var ([fd622be](https://github.com/ruby-git/ruby-git/commit/fd622bea6513d78f2dbed8dc19c110be80d07ec8))
+* Warn on first direct access to Git::Lib constant ([52059c6](https://github.com/ruby-git/ruby-git/commit/52059c63d5c23b4d80025b95332e946aba942f0c))
+
+
+### Other Changes
+
+* Improve YARD documentation for Git::Branch ([#1277](https://github.com/ruby-git/ruby-git/issues/1277)) ([0769bf9](https://github.com/ruby-git/ruby-git/commit/0769bf91a21ecb24d48a31439de073b689bc62b6))
+
 ## [4.3.2](https://github.com/ruby-git/ruby-git/compare/v4.3.1...v4.3.2) (2026-03-31)
 
 
