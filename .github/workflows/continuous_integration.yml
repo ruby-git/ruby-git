@@ -21,17 +21,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.2", "4.0"]
-        # Temporarily disabled; restore in a follow-up PR.
-        # ruby: ["3.2", "3.4", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
+        # Only the minimum required versions of JRuby and TruffleRuby are tested
+        ruby: ["3.2", "3.4", "4.0", "truffleruby-24.2.1", "jruby-10.0.0.1"]
         operating-system: [ubuntu-latest]
         experimental: [No]
         java_version: [""]
-        include: []
-          # Temporarily disabled; restore in a follow-up PR.
-          # - ruby: 3.2
-          #   operating-system: windows-latest
-          #   experimental: No
+        include:
+          - ruby: "3.2"
+            operating-system: windows-latest
+            experimental: No
+            java_version: ""
 
     steps:
       - name: Checkout Code
