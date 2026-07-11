@@ -7,5 +7,5 @@ module Git
   # The deprecation instance used to emit deprecation warnings for the Git gem
   #
   # @api private
-  Deprecation = ActiveSupport::Deprecation.new('5.0.0', 'Git')
+  Deprecation = ActiveSupport::Deprecation.new('6.0.0', 'Git')
 end
