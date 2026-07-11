@@ -12,7 +12,23 @@ module Git
   # @api public
   Deprecation = ActiveSupport::Deprecation.new('6.0.0', 'Git')
 
-  if (behavior = ENV.fetch('GIT_DEPRECATION_BEHAVIOR', nil))
+  # Configure a deprecation instance from a GIT_DEPRECATION_BEHAVIOR value
+  #
+  # @param deprecation [ActiveSupport::Deprecation] the deprecation instance to configure
+  #
+  # @param behavior [String, nil] the desired behavior name (e.g. `'silence'`); when
+  #   `nil` the deprecation instance is left unchanged
+  #
+  # @return [void]
+  #
+  # @raise [ArgumentError] if `behavior` is not one of the keys of
+  #   `ActiveSupport::Deprecation::DEFAULT_BEHAVIORS`
+  #
+  # @api private
+  #
+  def self.configure_deprecation_behavior(deprecation, behavior)
+    return if behavior.nil?
+
     behavior = behavior.strip
     allowed_behaviors = ActiveSupport::Deprecation::DEFAULT_BEHAVIORS.keys.map(&:to_s)
 
@@ -22,8 +38,11 @@ module Git
             "expected one of: #{allowed_behaviors.join(', ')}"
     end
 
-    Deprecation.behavior = behavior.to_sym
+    deprecation.behavior = behavior.to_sym
   end
+  private_class_method :configure_deprecation_behavior
+
+  configure_deprecation_behavior(Deprecation, ENV.fetch('GIT_DEPRECATION_BEHAVIOR', nil))
 end
 
 require 'git/author'
@@ -76,8 +95,6 @@ require 'git/worktrees'
 # open a bare repository, initialize a new repo or clone an
 # existing remote repository.
 #
-# @author Scott Chacon (mailto:schacon@gmail.com)
-#
 module Git
   extend Git::Configuring
   extend Git::Repository::Factories
@@ -97,7 +114,7 @@ module Git
   #
   # When `name` is `:CommandLineResult`, caches and returns {Git::CommandLine::Result}
   # after emitting a deprecation warning. Calls `super` for any other unknown constant,
-  # preserving normal Ruby `NameError` behaviour.
+  # preserving normal Ruby `NameError` behavior.
   #
   # @param name [Symbol] the name of the missing constant
   #
