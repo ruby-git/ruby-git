@@ -110,6 +110,43 @@ module Git
   #
   MINIMUM_GIT_VERSION = Version.parse('2.28.0')
 
+  # Compatibility shim for code that monkeypatches the `Git::Base` class from
+  # versions prior to 5.0.0.
+  #
+  # `Git::Base` is a module included in {Git::Repository}, so any instance
+  # methods added to `Git::Base` are automatically available on
+  # {Git::Repository} instances. A deprecation warning is emitted for each
+  # method added, encouraging migration to {Git::Repository}.
+  #
+  # @example Monkeypatching Git::Base (deprecated)
+  #   module Git::Base
+  #     def my_helper = "hello"
+  #   end
+  #   Git.open('.').my_helper  # => "hello"
+  #
+  # @deprecated Define instance methods on {Git::Repository} instead.
+  #
+  # @api public
+  Base = Module.new do
+    # Emit a deprecation warning each time a method is defined in Git::Base so
+    # that authors of monkeypatches are nudged toward Git::Repository.
+    def self.method_added(method_name)
+      Git::Deprecation.warn(
+        'Monkeypatching Git::Base is deprecated and will be removed in v6.0.0. ' \
+        "Define #{method_name} in Git::Repository instead."
+      )
+      super
+    end
+
+    # Raise a clear error when legacy code calls Git::Base.new directly.
+    def self.new(...)
+      raise NoMethodError,
+            'Git::Base.new is not supported. Use Git.open, Git.clone, or Git.init instead.'
+    end
+  end
+
+  Repository.include(Base)
+
   # Intercept the first lookup of the deprecated `Git::CommandLineResult` constant
   #
   # When `name` is `:CommandLineResult`, caches and returns {Git::CommandLine::Result}
