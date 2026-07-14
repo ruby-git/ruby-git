@@ -134,7 +134,7 @@ RSpec.describe Git do
       described_class.binary_version
 
       expect(Git::Deprecation).to have_received(:warn).with(
-        'Git.binary_version is deprecated and will be removed in 6.0. ' \
+        'Git.binary_version is deprecated and will be removed in v6.0.0. ' \
         'Use Git.git_version instead, which returns a Git::Version ' \
         '(not an Array). For the legacy array shape, call: Git.git_version.to_a. ' \
         'The optional binary_path argument is preserved: Git.git_version(binary_path).'

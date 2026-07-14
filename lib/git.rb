@@ -116,7 +116,7 @@ module Git
   # `Git::Base` is a module included in {Git::Repository}, so any instance
   # methods added to `Git::Base` are automatically available on
   # {Git::Repository} instances. A deprecation warning is emitted for each
-  # method added, encouraging migration to {Git::Repository}.
+  # method added, encouraging migration to an application-owned extension module.
   #
   # @example Monkeypatching Git::Base (deprecated)
   #   module Git::Base
@@ -124,16 +124,17 @@ module Git
   #   end
   #   Git.open('.').my_helper  # => "hello"
   #
-  # @deprecated Define instance methods on {Git::Repository} instead.
+  # @deprecated Move custom methods to an application-owned extension module and
+  #   include or prepend it into {Git::Repository}.
   #
   # @api public
   Base = Module.new do
     # Emit a deprecation warning each time a method is defined in Git::Base so
-    # that authors of monkeypatches are nudged toward Git::Repository.
+    # that authors of monkeypatches are nudged toward application-owned extensions.
     def self.method_added(method_name)
       Git::Deprecation.warn(
         'Monkeypatching Git::Base is deprecated and will be removed in v6.0.0. ' \
-        "Define #{method_name} in Git::Repository instead."
+        "Move #{method_name} to an application-owned extension module for Git::Repository."
       )
       super
     end
@@ -751,7 +752,7 @@ module Git
   def self.binary_version(binary_path = nil)
     binary_path ||= Git::Config.instance.binary_path
     Git::Deprecation.warn(
-      'Git.binary_version is deprecated and will be removed in 6.0. ' \
+      'Git.binary_version is deprecated and will be removed in v6.0.0. ' \
       'Use Git.git_version instead, which returns a Git::Version ' \
       '(not an Array). For the legacy array shape, call: Git.git_version.to_a. ' \
       'The optional binary_path argument is preserved: Git.git_version(binary_path).'

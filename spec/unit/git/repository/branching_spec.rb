@@ -1061,7 +1061,7 @@ RSpec.describe Git::Repository::Branching do
 
     it 'emits a deprecation warning mentioning is_local_branch? and local_branch?' do
       expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#is_local_branch? is deprecated and will be removed in a future version. ' \
+        'Git::Repository#is_local_branch? is deprecated and will be removed in v6.0.0. ' \
         'Use Git::Repository#local_branch? instead.'
       )
       result
@@ -1105,7 +1105,7 @@ RSpec.describe Git::Repository::Branching do
 
     it 'emits a deprecation warning mentioning is_remote_branch? and remote_branch?' do
       expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#is_remote_branch? is deprecated and will be removed in a future version. ' \
+        'Git::Repository#is_remote_branch? is deprecated and will be removed in v6.0.0. ' \
         'Use Git::Repository#remote_branch? instead.'
       )
       result
@@ -1149,7 +1149,7 @@ RSpec.describe Git::Repository::Branching do
 
     it 'emits a deprecation warning mentioning is_branch? and branch?' do
       expect(Git::Deprecation).to receive(:warn).with(
-        'Git::Repository#is_branch? is deprecated and will be removed in a future version. ' \
+        'Git::Repository#is_branch? is deprecated and will be removed in v6.0.0. ' \
         'Use Git::Repository#branch? instead.'
       )
       result

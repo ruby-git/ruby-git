@@ -245,7 +245,7 @@ module Git
       #
       def conflicts(&)
         Git::Deprecation.warn(
-          'Git::Repository#conflicts is deprecated and will be removed in a future version. ' \
+          'Git::Repository#conflicts is deprecated and will be removed in v6.0.0. ' \
           'Use Git::Repository#each_conflict instead.'
         )
         each_conflict(&)

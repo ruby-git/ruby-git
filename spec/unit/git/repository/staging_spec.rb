@@ -492,7 +492,8 @@ RSpec.describe Git::Repository::Staging do
         # The facade passes force: 0 through to the Clean command, which rejects
         # values <= 0. The ff: true should not mask the invalid force value.
         allow(Git::Commands::Clean).to receive(:new).with(execution_context).and_call_original
-        expect(Git::Deprecation).to receive(:warn).with(':ff option is deprecated. Use force: 2 instead.')
+        expected_message = ':ff option is deprecated and will be removed in v6.0.0. Use force: 2 instead.'
+        expect(Git::Deprecation).to receive(:warn).with(expected_message)
         expect { result }.to raise_error(ArgumentError, /force.*positive Integer/)
       end
     end

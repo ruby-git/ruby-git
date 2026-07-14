@@ -158,7 +158,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
       it 'warns with the documented "check" argument deprecation message' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'The "check" argument is deprecated and will be removed in v6.0.0. ' \
           'Use "must_exist:" instead.'
         )
         described_instance.set_index('/nonexistent/index', false)
@@ -334,7 +334,7 @@ RSpec.describe Git::Repository::ContextHelpers do
 
       it 'warns with the documented "check" argument deprecation message' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'The "check" argument is deprecated and will be removed in a future version. ' \
+          'The "check" argument is deprecated and will be removed in v6.0.0. ' \
           'Use "must_exist:" instead.'
         )
         described_instance.set_working('/nonexistent/dir', false)

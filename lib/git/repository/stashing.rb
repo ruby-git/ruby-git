@@ -65,7 +65,7 @@ module Git
       #
       def stash_list
         Git::Deprecation.warn(
-          'Git::Repository#stash_list is deprecated and will be removed in a future version. ' \
+          'Git::Repository#stash_list is deprecated and will be removed in v6.0.0. ' \
           'Use Git::Repository#stashes_all instead.'
         )
         result = Git::Commands::Stash::List.new(@execution_context).call
