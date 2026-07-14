@@ -25,12 +25,6 @@ RSpec.describe Git::Commands::Clean, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
         end
       end
-
-      context 'with untracked directories' do
-        before do
-          write_file('subdir/untracked.txt', "content\n")
-        end
-      end
     end
 
     describe 'when the command fails' do

@@ -139,14 +139,4 @@ RSpec.describe Git::Parsers::Stash, :integration do
       end
     end
   end
-
-  describe 'STASH_FORMAT validation' do
-    # These tests validate that real git output matches the format assumptions
-    # used in unit test fixtures
-
-    before do
-      write_file('file.txt', 'modified content')
-      repo.stash_save('Test stash message')
-    end
-  end
 end

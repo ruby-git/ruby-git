@@ -20,10 +20,6 @@ RSpec.describe Git::Commands::Commit, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      context 'with allow_empty option' do
-        before { repo.commit('Initial commit') }
-      end
     end
 
     describe 'when the command fails' do

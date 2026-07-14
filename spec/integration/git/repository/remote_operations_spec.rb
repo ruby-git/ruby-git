@@ -39,55 +39,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #push — basic invocations
-  # ---------------------------------------------------------------------------
-
-  describe '#push' do
-    context 'with tags: true' do
-      before do
-        repo.tag_add('v1.0')
-      end
-    end
-
-    context 'with no remote or branch arguments (tracking branch workflow)' do
-      let(:clone_parent_dir) { Dir.mktmpdir('clone_parent') }
-      let(:bare_origin_dir) { File.join(clone_parent_dir, 'origin.git') }
-      let(:clone_dir) { File.join(clone_parent_dir, 'clone') }
-
-      after { FileUtils.rm_rf(clone_parent_dir) }
-
-      context 'when the clone has a new commit to push' do
-        let(:clone_instance) do
-          Git.init(bare_origin_dir, bare: true)
-          git = Git.clone(bare_origin_dir, clone_dir)
-          git.config_set('user.email', 'test@example.com')
-          git.config_set('user.name', 'Test User')
-          git.config_set('commit.gpgsign', 'false')
-          File.write(File.join(clone_dir, 'file.txt'), 'content')
-          git.add('file.txt')
-          git.commit('First commit')
-          Git::Repository.new(execution_context: git.execution_context)
-        end
-      end
-
-      context 'when the clone has no commits to push' do
-        let(:clone_instance) do
-          Git.init(bare_origin_dir, bare: true)
-          git = Git.clone(bare_origin_dir, clone_dir)
-          git.config_set('user.email', 'test@example.com')
-          git.config_set('user.name', 'Test User')
-          git.config_set('commit.gpgsign', 'false')
-          Git::Repository.new(execution_context: git.execution_context)
-        end
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #pull — basic invocations
-  # ---------------------------------------------------------------------------
-
-  # ---------------------------------------------------------------------------
   # #remote_add — basic invocations
   # ---------------------------------------------------------------------------
 
@@ -99,7 +50,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     end
 
     before do
-      Git.init(remote_dir, bare: true)
+      Git.init(remote_dir, bare: true, initial_branch: 'main')
     end
 
     it 'registers the remote so it appears in the repository config' do
@@ -140,10 +91,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #remote (factory)
-  # ---------------------------------------------------------------------------
-
-  # ---------------------------------------------------------------------------
   # #remotes
   # ---------------------------------------------------------------------------
 
@@ -171,7 +118,7 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
 
     after { FileUtils.rm_rf(other_dir) }
 
-    before { Git.init(other_dir, bare: true) }
+    before { Git.init(other_dir, bare: true, initial_branch: 'main') }
 
     it 'updates the fetch URL for the named remote' do
       described_instance.remote_set_url('origin', other_dir)

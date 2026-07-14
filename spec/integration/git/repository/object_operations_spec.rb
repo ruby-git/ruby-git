@@ -74,17 +74,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
 
-    context 'with a bare repository clone' do
-      let(:clone_parent_dir) { Dir.mktmpdir }
-      let(:bare_clone_dir) { File.join(clone_parent_dir, 'bare') }
-      let(:bare_repo) { Git.clone(repo_dir, bare_clone_dir, bare: true) }
-      let(:bare_instance) { Git::Repository.new(execution_context: bare_repo.execution_context) }
-
-      after do
-        FileUtils.rm_rf(clone_parent_dir)
-      end
-    end
-
     context 'with a real SSH-signed commit',
             if: !Gem.win_platform?,
             skip: unless_git('2.34', 'SSH commit signing') || unless_command('ssh-keygen', 'SSH commit signing') do
@@ -464,15 +453,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   # spec/unit/git/repository/object_operations_spec.rb verify the delegation
   # contract and argument forwarding.
 
-  describe '#tags' do
-    context 'when the repository has tags' do
-      before do
-        described_instance.tag_add('v1.0.0')
-        described_instance.tag_add('v2.0.0', annotate: true, message: 'Release 2.0.0')
-      end
-    end
-  end
-
   describe '#tag_add' do
     context 'with no target and no options' do
       it 'creates a lightweight tag on HEAD' do
@@ -511,12 +491,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(replaced.annotated?).to be(true)
         expect(replaced.message).to eq('replaced')
       end
-    end
-  end
-
-  describe '#tag_delete' do
-    context 'when the tag exists' do
-      before { described_instance.tag_add('v1.0.0') }
     end
   end
 end

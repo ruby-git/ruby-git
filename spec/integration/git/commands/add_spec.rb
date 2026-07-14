@@ -25,10 +25,6 @@ RSpec.describe Git::Commands::Add, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
         end
       end
-
-      context 'with the all option' do
-        before { write_file('file.txt', "modified\n") }
-      end
     end
 
     describe 'when the command fails' do

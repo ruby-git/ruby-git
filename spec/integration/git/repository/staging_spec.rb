@@ -128,20 +128,4 @@ RSpec.describe Git::Repository::Staging, :integration do
       end
     end
   end
-
-  describe '#read_tree' do
-    before do
-      write_file('hello.txt', "hello\n")
-      repo.add(all: true)
-      repo.commit('Initial commit')
-    end
-  end
-
-  describe '#rm' do
-    before do
-      write_file('README.txt', 'hello world')
-      repo.add('README.txt')
-      repo.commit('Initial commit')
-    end
-  end
 end

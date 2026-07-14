@@ -24,16 +24,6 @@ RSpec.describe Git::Commands::Revert::Quit, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      context 'when a revert is in progress' do
-        before do
-          # Start a conflicting revert to open a revert session
-          execution_context.command_capturing(
-            'revert', '--no-edit', 'HEAD~1',
-            chdir: repo_dir, raise_on_failure: false
-          )
-        end
-      end
-
       context 'when no revert is in progress' do
         it 'returns a CommandLineResult (no-op unlike --abort)' do
           result = command.call

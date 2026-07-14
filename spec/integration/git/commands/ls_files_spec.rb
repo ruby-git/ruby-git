@@ -23,19 +23,6 @@ RSpec.describe Git::Commands::LsFiles, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
         end
       end
-
-      context 'with :others and :exclude_standard options' do
-        before { write_file('untracked.txt', "new content\n") }
-      end
-
-      context 'with :others, :ignored, and :exclude_standard options' do
-        before do
-          write_file('ignored_file.log', "log content\n")
-          write_file('.gitignore', "*.log\n")
-          repo.add('.gitignore')
-          repo.commit('Add gitignore')
-        end
-      end
     end
 
     context 'when the command fails' do

@@ -27,12 +27,6 @@ RSpec.describe Git::Commands::Worktree::Add, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
         end
       end
-
-      context 'with --detach' do
-        let(:worktree_path) { File.join(repo_dir, '..', "worktree-detach-#{SecureRandom.hex(4)}") }
-
-        after { FileUtils.rm_rf(worktree_path) }
-      end
     end
 
     context 'when the command fails' do

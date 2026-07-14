@@ -17,22 +17,6 @@ RSpec.describe Git::Repository::Merging, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #merge — single branch
-  # ---------------------------------------------------------------------------
-
-  describe '#merge single branch' do
-    before do
-      # Create and populate a feature branch
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('feature.txt', "feature content\n")
-      repo.add('feature.txt')
-      repo.commit('Add feature file')
-      repo.checkout('main')
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #merge — Git::Branch object coercion
   # ---------------------------------------------------------------------------
 
@@ -54,43 +38,6 @@ RSpec.describe Git::Repository::Merging, :integration do
   end
 
   # ---------------------------------------------------------------------------
-  # #merge — Array of branches (octopus merge)
-  # ---------------------------------------------------------------------------
-
-  describe '#merge octopus (Array of branches)' do
-    before do
-      repo.branch_new('branch-a')
-      repo.checkout('branch-a')
-      write_file('file_a.txt', "content from branch-a\n")
-      repo.add('file_a.txt')
-      repo.commit('Add file_a.txt')
-      repo.checkout('main')
-
-      repo.branch_new('branch-b')
-      repo.checkout('branch-b')
-      write_file('file_b.txt', "content from branch-b\n")
-      repo.add('file_b.txt')
-      repo.commit('Add file_b.txt')
-      repo.checkout('main')
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #merge — no_ff: true with a commit message
-  # ---------------------------------------------------------------------------
-
-  describe '#merge with no_ff: true and a message' do
-    before do
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('noff.txt', "no-ff content\n")
-      repo.add('noff.txt')
-      repo.commit('Add noff.txt')
-      repo.checkout('main')
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # #merge — fast-forward with message (git ignores -m on ff)
   # ---------------------------------------------------------------------------
 
@@ -108,32 +55,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       described_instance.merge('feature', 'merge commit message')
       commits = repo.log.execute
       expect(commits.first.message).to eq('first commit message')
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  # #merge — no_commit: true (HEAD unchanged after merge)
-  #
-  # NOTE: git ignores --no-commit on fast-forward merges. The test therefore
-  # creates a divergent history (main has a commit that feature does not) so
-  # that a real three-way merge is required and --no-commit takes effect.
-  # ---------------------------------------------------------------------------
-
-  describe '#merge with no_commit: true' do
-    before do
-      # Branch feature off the initial commit
-      repo.branch_new('feature')
-      repo.checkout('feature')
-      write_file('staged.txt', "staged content\n")
-      repo.add('staged.txt')
-      repo.commit('Add staged.txt')
-      repo.checkout('main')
-
-      # Create a commit on main so that main and feature have diverged;
-      # this prevents a fast-forward and makes --no-commit effective.
-      write_file('main_only.txt', "main content\n")
-      repo.add('main_only.txt')
-      repo.commit('Add main_only.txt')
     end
   end
 

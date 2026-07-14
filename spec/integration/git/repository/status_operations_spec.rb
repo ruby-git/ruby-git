@@ -165,12 +165,5 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
         expect(described_instance.untracked_files).to contain_exactly('a.rb', 'lib/b.rb')
       end
     end
-
-    context 'when a file matches a .gitignore pattern' do
-      before do
-        write_file('ignored.log', 'log content')
-        write_file('.gitignore', "ignored.log\n")
-      end
-    end
   end
 end
