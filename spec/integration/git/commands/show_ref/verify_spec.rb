@@ -21,25 +21,12 @@ RSpec.describe Git::Commands::ShowRef::Verify, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns exit status 0 for an existing ref' do
-        result = command.call('refs/heads/main')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do
       it 'raises FailedError for a nonexistent ref' do
         expect { command.call('refs/heads/nonexistent') }
           .to raise_error(Git::FailedError, /nonexistent/)
-      end
-
-      it 'raises FailedError when not in a git repository' do
-        FileUtils.rm_rf(File.join(repo_dir, '.git'))
-
-        expect { command.call('refs/heads/main') }
-          .to raise_error(Git::FailedError, /git repository/)
       end
     end
   end

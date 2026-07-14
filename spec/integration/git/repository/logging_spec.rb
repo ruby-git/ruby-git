@@ -37,20 +37,6 @@ RSpec.describe Git::Repository::Logging, :integration do
         expect(result.first['message']).to eq("Add changelog\n")
         expect(result.first['parent']).to be_a(Array)
       end
-
-      it 'supports the between option' do
-        result = described_instance.full_log_commits(between: [first_sha, 'HEAD'])
-
-        expect(result.length).to eq(1)
-        expect(result.first['message']).to eq("Add changelog\n")
-      end
-
-      it 'supports the path_limiter option' do
-        result = described_instance.full_log_commits(path_limiter: 'README.md')
-
-        expect(result.length).to eq(1)
-        expect(result.first['message']).to eq("Initial commit\n")
-      end
     end
   end
 
@@ -79,13 +65,6 @@ RSpec.describe Git::Repository::Logging, :integration do
 
         expect(result.size).to eq(1)
         expect(result.first.message.strip).to eq('Add changelog')
-      end
-
-      it 'returns commits in reverse-chronological order' do
-        result = described_instance.log.execute
-
-        expect(result.first.message.strip).to eq('Add changelog')
-        expect(result.last.message.strip).to eq('Initial commit')
       end
     end
   end

@@ -32,12 +32,6 @@ RSpec.describe Git::Commands::Revert::Quit, :integration do
             chdir: repo_dir, raise_on_failure: false
           )
         end
-
-        it 'returns a CommandLineResult' do
-          result = command.call
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
       end
 
       context 'when no revert is in progress' do

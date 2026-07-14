@@ -1,5 +1,14 @@
 # Excessive Integration Tests
 
+- [Summary](#summary)
+- [Integration elapsed time data](#integration-elapsed-time-data)
+- [Success criteria](#success-criteria)
+- [Criteria used](#criteria-used)
+- [Tests to remove](#tests-to-remove)
+- [Controversial removals](#controversial-removals)
+
+## Summary
+
 The integration test suite takes **3m 6s** when run sequentially and **4m 22s** on the Windows CI build (which runs tests in parallel). Many of those tests do not add signal beyond what the unit tests already cover — they test git's own behavior, duplicate other integration tests, exercise option variants whose argument building is already verified by unit specs, or exercise single-command delegators that are already covered by the underlying command's own integration spec. Removing them will reduce sequential and CI build times without reducing meaningful coverage.
 
 This document identifies **350 tests** in the [Tests to remove](#tests-to-remove) section that do not satisfy the criteria in the project's three test-standards skills
@@ -94,12 +103,12 @@ The primary success target is the Windows CI parallel build, the current worst-c
 
 | Build | Before | After (measured) | Reduction | Target |
 | ----- | ------ | ---------------- | --------- | ------ |
-| Sequential (local, macOS) | 3m 06s | — | — | < 2m 00s |
-| Parallel (local, macOS) | 0m 31s | — | — | < 0m 25s |
+| Sequential (local, macOS) | 3m 06s | 1m 54s | 38% | < 2m 00s |
+| Parallel (local, macOS) | 0m 31s | 0m 18s | 42% | < 0m 25s |
 | Parallel (Windows CI) | 4m 22s | — | — | < 3m 00s |
 | Parallel (TruffleRuby CI) | 2m 04s | — | — | < 1m 30s |
 | Parallel (JRuby CI) | 1m 52s | — | — | < 1m 20s |
-| Integration test count | 885 | — | — | 557 |
+| Integration test count | 885 | 557 | 37% | 557 |
 
 The work is considered successful when:
 

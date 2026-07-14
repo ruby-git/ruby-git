@@ -32,14 +32,6 @@ RSpec.describe Git::Commands::Remote::SetUrl, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(repo.remote('origin').url).to eq(replacement_repo.dir.to_s)
       end
-
-      it 'returns a CommandLineResult with :push option' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-
-        result = command.call('origin', replacement_repo.dir.to_s, push: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

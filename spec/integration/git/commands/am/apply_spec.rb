@@ -35,12 +35,6 @@ RSpec.describe Git::Commands::Am::Apply, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'applies the patch as a new commit' do
-        command.call(mbox_file, chdir: repo_dir)
-
-        expect(File.read(File.join(repo_dir, 'file.txt'))).to eq("line1\nline2\n")
-      end
     end
 
     context 'when the command fails' do

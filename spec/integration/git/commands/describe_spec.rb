@@ -23,24 +23,6 @@ RSpec.describe Git::Commands::Describe, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
-
-      it 'returns a CommandLineResult with :long option' do
-        result = command.call(tags: true, long: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
-
-      it 'returns a CommandLineResult with :always option when no tag is reachable' do
-        write_file('file2.txt', 'more content')
-        repo.add('file2.txt')
-        repo.commit('Second commit')
-
-        result = command.call(always: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
     end
 
     describe 'when the command fails' do

@@ -10,15 +10,6 @@ RSpec.describe Git::Commands::Diff, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
-        result = command.call('initial', 'after_modify',
-                              numstat: true, shortstat: true,
-                              src_prefix: 'a/', dst_prefix: 'b/')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
-
       it 'returns exit code 0 with no differences' do
         result = command.call('initial', 'initial',
                               numstat: true, shortstat: true,

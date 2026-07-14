@@ -33,16 +33,6 @@ RSpec.describe Git::Commands::Remote::SetUrlDelete, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'deletes a push url when :push is given' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-        execution_context.command_capturing('remote', 'set-url', '--add', '--push', 'origin', extra_repo.dir.to_s,
-                                            raise_on_failure: false)
-
-        result = command.call('origin', extra_repo.dir.to_s, push: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

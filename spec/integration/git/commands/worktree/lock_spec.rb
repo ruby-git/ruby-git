@@ -27,11 +27,6 @@ RSpec.describe Git::Commands::Worktree::Lock, :integration do
         result = command.call(worktree_path)
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'locks the worktree with a reason' do
-        result = command.call(worktree_path, reason: 'on NFS share')
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

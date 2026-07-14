@@ -91,10 +91,6 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
         repo.commit('Initial commit')
       end
 
-      it 'returns a Git::Status instance' do
-        expect(described_instance.status).to be_a(Git::Status)
-      end
-
       context 'when an untracked file exists' do
         before { write_file('untracked.rb', 'content') }
 
@@ -174,10 +170,6 @@ RSpec.describe Git::Repository::StatusOperations, :integration do
       before do
         write_file('ignored.log', 'log content')
         write_file('.gitignore', "ignored.log\n")
-      end
-
-      it 'does not include the ignored file' do
-        expect(described_instance.untracked_files).not_to include('ignored.log')
       end
     end
   end

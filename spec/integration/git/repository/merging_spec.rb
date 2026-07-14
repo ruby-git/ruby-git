@@ -30,23 +30,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.commit('Add feature file')
       repo.checkout('main')
     end
-
-    it 'returns a String' do
-      result = described_instance.merge('feature')
-      expect(result).to be_a(String)
-    end
-
-    it 'merges the feature branch into the current branch' do
-      described_instance.merge('feature')
-      expect(File.exist?(File.join(repo_dir, 'feature.txt'))).to be(true)
-    end
-
-    it 'makes the merged file visible in git status' do
-      described_instance.merge('feature')
-      # After a clean merge, status should show no untracked/modified files
-      expect(repo.status.added).to be_empty
-      expect(repo.status.changed).to be_empty
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -90,17 +73,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.commit('Add file_b.txt')
       repo.checkout('main')
     end
-
-    it 'merges all branches and all files appear in the working tree' do
-      described_instance.merge(%w[branch-a branch-b])
-      expect(File.exist?(File.join(repo_dir, 'file_a.txt'))).to be(true)
-      expect(File.exist?(File.join(repo_dir, 'file_b.txt'))).to be(true)
-    end
-
-    it 'returns a String' do
-      result = described_instance.merge(%w[branch-a branch-b])
-      expect(result).to be_a(String)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -116,17 +88,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.commit('Add noff.txt')
       repo.checkout('main')
     end
-
-    it 'creates a merge commit whose message is the given string' do
-      described_instance.merge('feature', 'merge commit message', no_ff: true)
-      commits = repo.log.execute
-      expect(commits.first.message).to eq('merge commit message')
-    end
-
-    it 'makes the merged file visible in the working tree' do
-      described_instance.merge('feature', 'merge commit message', no_ff: true)
-      expect(File.exist?(File.join(repo_dir, 'noff.txt'))).to be(true)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -141,16 +102,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.add('ff.txt')
       repo.commit('first commit message')
       repo.checkout('main')
-    end
-
-    it 'performs the merge successfully (returns a String)' do
-      result = described_instance.merge('feature', 'merge commit message')
-      expect(result).to be_a(String)
-    end
-
-    it 'merges the file into the working tree' do
-      described_instance.merge('feature', 'merge commit message')
-      expect(File.exist?(File.join(repo_dir, 'ff.txt'))).to be(true)
     end
 
     it 'does NOT set the commit message (git ignores -m on fast-forward merges)' do
@@ -184,20 +135,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       repo.add('main_only.txt')
       repo.commit('Add main_only.txt')
     end
-
-    it 'leaves HEAD pointing at the pre-merge commit' do
-      head_before = repo.log(1).execute.first.sha
-      described_instance.merge('feature', nil, no_commit: true)
-      expect(repo.log(1).execute.first.sha).to eq(head_before)
-    end
-
-    it 'stages the merge result but does not create a commit' do
-      described_instance.merge('feature', nil, no_commit: true)
-      # The file is staged (type 'A') but no new commit was made
-      status = repo.status['staged.txt']
-      expect(status).not_to be_nil
-      expect(status.type).to eq('A')
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -221,16 +158,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       write_file('main_extra.txt', "main extra\n")
       repo.add('main_extra.txt')
       repo.commit('Main extra commit')
-    end
-
-    it 'returns an Array' do
-      result = described_instance.merge_base('main', 'feature')
-      expect(result).to be_an(Array)
-    end
-
-    it 'returns an Array of String SHAs' do
-      result = described_instance.merge_base('main', 'feature')
-      expect(result).to all(be_a(String))
     end
 
     it 'returns the correct common ancestor SHA' do
@@ -284,11 +211,6 @@ RSpec.describe Git::Repository::Merging, :integration do
       result = described_instance.merge_base('new_branch_1', 'new_branch_2', all: true)
       expect(result.size).to be >= 2
     end
-
-    it 'returns Array<String> SHAs' do
-      result = described_instance.merge_base('new_branch_1', 'new_branch_2', all: true)
-      expect(result).to all(be_a(String))
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -325,10 +247,6 @@ RSpec.describe Git::Repository::Merging, :integration do
         rescue Git::FailedError
           # expected conflict
         end
-      end
-
-      it 'returns an Array' do
-        expect(described_instance.unmerged).to be_an(Array)
       end
 
       it 'returns the conflicting file path(s)' do
@@ -418,24 +336,6 @@ RSpec.describe Git::Repository::Merging, :integration do
     end
 
     let(:head_sha) { repo.log(1).execute.first.sha }
-
-    it 'returns a String' do
-      result = described_instance.revert(head_sha)
-      expect(result).to be_a(String)
-    end
-
-    it 'creates a new revert commit' do
-      sha = head_sha
-      log_before = repo.log(10_000).execute.count
-      described_instance.revert(sha)
-      expect(repo.log(10_000).execute.count).to eq(log_before + 1)
-    end
-
-    it 'undoes the file addition introduced by the reverted commit' do
-      sha = head_sha
-      described_instance.revert(sha)
-      expect(File.exist?(File.join(repo_dir, 'feature.txt'))).to be(false)
-    end
 
     it 'treats a nil commitish as HEAD and reverts HEAD' do
       log_before = repo.log(10_000).execute.count

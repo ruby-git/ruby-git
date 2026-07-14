@@ -19,18 +19,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetColor, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns result with exit status 0' do
-        result = command.call('color.test.slot')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 when a default is provided for an unset key' do
-        result = command.call('color.nonexistent.slot', 'green')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

@@ -24,12 +24,6 @@ RSpec.describe Git::Commands::Tag::Delete, :integration do
         expect(result.stdout).not_to be_empty
       end
 
-      it 'returns exit code 0 when all tags are deleted' do
-        result = command.call('v1.0.0')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
       it 'returns exit code 1 for partial failure' do
         repo.tag_add('v2.0.0')
 

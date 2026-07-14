@@ -23,14 +23,6 @@ RSpec.describe Git::Commands::Show, :integration do
         expect(result.status.success?).to be true
         expect(result.stdout).not_to be_empty
       end
-
-      it 'streams blob content into an IO object when out: is given' do
-        io = StringIO.new
-        result = command.call('HEAD:test.txt', out: io)
-
-        expect(io.string).to eq("Hello, World!\n")
-        expect(result.stdout).to eq('')
-      end
     end
 
     context 'when the command fails' do

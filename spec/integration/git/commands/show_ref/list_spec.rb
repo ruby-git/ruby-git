@@ -17,12 +17,6 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
-        result = command.call
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'returns exit status 0 when refs are found' do
         result = command.call
 
@@ -33,39 +27,6 @@ RSpec.describe Git::Commands::ShowRef::List, :integration do
         result = command.call('nonexistent-ref-xyz')
 
         expect(result.status.exitstatus).to eq(1)
-      end
-
-      it 'returns exit status 0 with the :tags option' do
-        result = command.call(tags: true)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 with the :heads option' do
-        result = command.call(heads: true)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 with the :branches option',
-         skip: unless_git('2.46.0', 'git show-ref --branches') do
-        result = command.call(branches: true)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 with the :head option' do
-        result = command.call(head: true)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 with the :dereference option' do
-        repo.tag_add('v1.0-annotated', annotate: true, message: 'annotation')
-
-        result = command.call(dereference: true)
-
-        expect(result.status.exitstatus).to eq(0)
       end
     end
 

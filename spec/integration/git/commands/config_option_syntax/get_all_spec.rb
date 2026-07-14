@@ -16,12 +16,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetAll, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
       end
 
-      it 'returns the configured value in stdout' do
-        result = command.call('user.name', local: true)
-
-        expect(result.stdout.strip).to eq('Test User')
-      end
-
       it 'returns result with exit status 1 when the key is not found' do
         result = command.call('nonexistent.key')
 

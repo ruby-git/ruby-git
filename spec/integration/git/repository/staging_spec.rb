@@ -79,10 +79,6 @@ RSpec.describe Git::Repository::Staging, :integration do
         described_instance.apply(patch_file)
         expect(read_file('hello.txt')).to eq("hello world\n")
       end
-
-      it 'returns a String' do
-        expect(described_instance.apply(patch_file)).to be_a(String)
-      end
     end
 
     context 'when the patch file does not exist' do
@@ -119,10 +115,6 @@ RSpec.describe Git::Repository::Staging, :integration do
         described_instance.apply_mail(mbox_file)
         expect(read_file('hello.txt')).to eq("hello world\n")
       end
-
-      it 'returns a String' do
-        expect(described_instance.apply_mail(mbox_file)).to be_a(String)
-      end
     end
 
     context 'when the mbox file does not exist' do
@@ -143,33 +135,6 @@ RSpec.describe Git::Repository::Staging, :integration do
       repo.add(all: true)
       repo.commit('Initial commit')
     end
-
-    it 'reads the tree into the index without error' do
-      expect { described_instance.read_tree('HEAD') }.not_to raise_error
-    end
-
-    it 'returns a String' do
-      expect(described_instance.read_tree('HEAD')).to be_a(String)
-    end
-
-    context 'with prefix option' do
-      it 'reads the tree under the given prefix without error' do
-        expect { described_instance.read_tree('HEAD', { prefix: 'sub/' }) }.not_to raise_error
-      end
-    end
-
-    context 'with an unknown option' do
-      it 'raises ArgumentError before calling git' do
-        expect { described_instance.read_tree('HEAD', { bogus: true }) }
-          .to raise_error(ArgumentError, /Unknown options: bogus/)
-      end
-    end
-
-    context 'legacy positional hash signature' do
-      it 'accepts opts as a positional hash' do
-        expect { described_instance.read_tree('HEAD', { prefix: 'sub/' }) }.not_to raise_error
-      end
-    end
   end
 
   describe '#rm' do
@@ -177,14 +142,6 @@ RSpec.describe Git::Repository::Staging, :integration do
       write_file('README.txt', 'hello world')
       repo.add('README.txt')
       repo.commit('Initial commit')
-    end
-
-    context 'when removing a tracked file with force: true' do
-      it 'removes the file from the working tree' do
-        described_instance.rm('README.txt', force: true)
-
-        expect(file_exist?('README.txt')).to be(false)
-      end
     end
   end
 end

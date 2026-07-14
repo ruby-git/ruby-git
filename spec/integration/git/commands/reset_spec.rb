@@ -26,29 +26,6 @@ RSpec.describe Git::Commands::Reset, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns a result with exit status 0' do
-        result = command.call
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'hard resets the index and working tree' do
-        result = command.call(hard: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'resets specific files via :pathspec' do
-        write_file('other.txt', "other\n")
-        repo.add('other.txt')
-
-        result = command.call(pathspec: ['file.txt'])
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

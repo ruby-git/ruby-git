@@ -35,20 +35,6 @@ RSpec.describe Git::Commands::Clone, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns a CommandLineResult when cloning with chdir' do
-        result = command.call(source_dir, 'chdir-cloned', chdir: clone_dir)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(File.directory?(File.join(clone_dir, 'chdir-cloned'))).to be true
-      end
-
-      it 'returns a CommandLineResult for a bare clone' do
-        result = command.call(source_dir, File.join(clone_dir, 'bare.git'), bare: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(File.directory?(File.join(clone_dir, 'bare.git'))).to be true
-      end
     end
 
     describe 'when the command fails' do
@@ -62,12 +48,6 @@ RSpec.describe Git::Commands::Clone, :integration do
       let(:log_output) { StringIO.new }
       let(:logger) { Logger.new(log_output, level: Logger::DEBUG) }
       let(:execution_context) { Git::ExecutionContext::Global.new(logger: logger) }
-
-      it 'logs the clone command to the configured logger' do
-        command.call(source_dir, File.join(clone_dir, 'logged'))
-
-        expect(log_output.string).to match(/clone/)
-      end
     end
   end
 end

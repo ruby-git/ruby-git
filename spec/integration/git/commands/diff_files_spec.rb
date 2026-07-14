@@ -21,19 +21,6 @@ RSpec.describe Git::Commands::DiffFiles, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
-
-      it 'returns a CommandLineResult with diff output when unstaged changes exist' do
-        write_file('file.txt', "modified content\n")
-
-        result = command.call
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
-
-      it 'accepts a path operand and returns a CommandLineResult' do
-        result = command.call('file.txt')
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

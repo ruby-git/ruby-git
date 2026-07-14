@@ -22,13 +22,6 @@ RSpec.describe Git::Commands::RevParse, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
-
-      it 'returns a CommandLineResult for --show-toplevel' do
-        result = command.call(show_toplevel: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
     end
 
     context 'when the command fails' do

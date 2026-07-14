@@ -23,12 +23,6 @@ RSpec.describe Git::Commands::Commit, :integration do
 
       context 'with allow_empty option' do
         before { repo.commit('Initial commit') }
-
-        it 'returns a CommandLineResult' do
-          result = command.call(message: 'Empty commit', allow_empty: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
       end
     end
 

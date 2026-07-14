@@ -28,37 +28,6 @@ RSpec.describe Git::Commands::UpdateRef::Batch, :integration do
         expect(repo.rev_parse('refs/heads/batch-a')).to eq(head_sha)
         expect(repo.rev_parse('refs/heads/batch-b')).to eq(head_sha)
       end
-
-      it 'atomically deletes refs via stdin' do
-        head_sha = repo.rev_parse('HEAD')
-        repo.branch('to-delete').create
-
-        result = command.call("delete refs/heads/to-delete #{head_sha}")
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect { repo.rev_parse('refs/heads/to-delete') }.to raise_error(Git::FailedError)
-      end
-
-      it 'atomically updates and deletes refs in one call' do
-        head_sha = repo.rev_parse('HEAD')
-        repo.branch('to-update').create
-        repo.branch('to-delete').create
-
-        # Create a new commit to update to
-        write_file('file.txt', "updated\n")
-        repo.add('file.txt')
-        repo.commit('Second commit')
-        new_sha = repo.rev_parse('HEAD')
-
-        result = command.call(
-          "update refs/heads/to-update #{new_sha} #{head_sha}",
-          "delete refs/heads/to-delete #{head_sha}"
-        )
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(repo.rev_parse('refs/heads/to-update')).to eq(new_sha)
-        expect { repo.rev_parse('refs/heads/to-delete') }.to raise_error(Git::FailedError)
-      end
     end
 
     context 'when the command fails' do

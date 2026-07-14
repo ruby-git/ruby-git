@@ -16,15 +16,6 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
     end
 
     describe 'when the command succeeds' do
-      it 'returns a CommandLineResult with output' do
-        repo.branch('feature').create
-
-        result = command.call('feature')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
-
       it 'returns exit code 0 when all branches deleted' do
         repo.branch('feature').create
 
@@ -32,14 +23,6 @@ RSpec.describe Git::Commands::Branch::Delete, :integration do
 
         expect(result.status.exitstatus).to eq(0)
         expect(result.stdout).not_to be_empty
-      end
-
-      it 'returns exit code 1 for partial failure' do
-        repo.branch('exists').create
-
-        result = command.call('exists', 'nonexistent')
-
-        expect(result.status.exitstatus).to eq(1)
       end
 
       it 'returns exit code 1 for nonexistent branch' do

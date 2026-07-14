@@ -53,12 +53,6 @@ RSpec.describe Git::Commands::Maintenance::Start, :integration,
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns exit code 0' do
-        result = command.call(scheduler: scheduler, env: isolated_env)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

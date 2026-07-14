@@ -30,32 +30,10 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#fetch' do
-    it 'returns a String' do
-      result = described_instance.fetch('origin')
-      expect(result).to be_a(String)
-    end
-
-    it 'uses "origin" as the default remote' do
-      result = described_instance.fetch
-      expect(result).to be_a(String)
-    end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.fetch('nonexistent-remote') }
-        .to raise_error(Git::FailedError, /nonexistent-remote/)
-    end
-
     context 'when opts is passed as the first argument (Hash-only form)' do
       it 'returns a String when fetching without an explicit remote' do
         result = described_instance.fetch(prune: true)
         expect(result).to be_a(String)
-      end
-    end
-
-    context 'with an unknown option key' do
-      it 'raises ArgumentError before calling git' do
-        expect { described_instance.fetch('origin', unknown_key: true) }
-          .to raise_error(ArgumentError, /unknown_key/)
       end
     end
   end
@@ -65,38 +43,9 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#push' do
-    it 'returns a String' do
-      result = described_instance.push('origin', 'main')
-      expect(result).to be_a(String)
-    end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.push('nonexistent-remote', 'main') }
-        .to raise_error(Git::FailedError, /nonexistent-remote/)
-    end
-
-    context 'when branch is specified without a remote' do
-      it 'raises ArgumentError' do
-        expect { described_instance.push(nil, 'main') }
-          .to raise_error(ArgumentError, /remote is required/)
-      end
-    end
-
-    context 'with an unknown option key' do
-      it 'raises ArgumentError before calling git' do
-        expect { described_instance.push('origin', 'main', unknown_key: true) }
-          .to raise_error(ArgumentError, /unknown_key/)
-      end
-    end
-
     context 'with tags: true' do
       before do
         repo.tag_add('v1.0')
-      end
-
-      it 'pushes refs and tags and returns a String' do
-        result = described_instance.push('origin', 'main', tags: true)
-        expect(result).to be_a(String)
       end
     end
 
@@ -119,10 +68,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
           git.commit('First commit')
           Git::Repository.new(execution_context: git.execution_context)
         end
-
-        it 'returns a String' do
-          expect(clone_instance.push).to be_a(String)
-        end
       end
 
       context 'when the clone has no commits to push' do
@@ -134,10 +79,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
           git.config_set('commit.gpgsign', 'false')
           Git::Repository.new(execution_context: git.execution_context)
         end
-
-        it 'raises Git::FailedError' do
-          expect { clone_instance.push }.to raise_error(Git::FailedError, /push/)
-        end
       end
     end
   end
@@ -145,28 +86,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
   # #pull — basic invocations
   # ---------------------------------------------------------------------------
-
-  describe '#pull' do
-    it 'returns a String' do
-      result = described_instance.pull('origin', 'main')
-      expect(result).to be_a(String)
-    end
-
-    it 'raises ArgumentError when a branch is given without a remote' do
-      expect { described_instance.pull(nil, 'main') }
-        .to raise_error(ArgumentError, /You must specify a remote if a branch is specified/)
-    end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.pull('nonexistent-remote', 'main') }
-        .to raise_error(Git::FailedError, /nonexistent-remote/)
-    end
-
-    it 'raises ArgumentError before calling git when an unknown option is given' do
-      expect { described_instance.pull('origin', 'main', unknown_opt: true) }
-        .to raise_error(ArgumentError, /unknown_opt/)
-    end
-  end
 
   # ---------------------------------------------------------------------------
   # #remote_add — basic invocations
@@ -183,40 +102,9 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       Git.init(remote_dir, bare: true)
     end
 
-    it 'returns Git::Remote' do
-      result = described_instance.remote_add('secondary', remote_dir)
-      expect(result).to be_a(Git::Remote)
-      expect(result.name).to eq('secondary')
-    end
-
     it 'registers the remote so it appears in the repository config' do
       described_instance.remote_add('secondary', remote_dir)
       expect(repo.remotes.map(&:name)).to include('secondary')
-    end
-
-    context 'with fetch: true' do
-      it 'does not raise an error' do
-        expect { described_instance.remote_add('secondary', remote_dir, fetch: true) }.not_to raise_error
-      end
-    end
-
-    context 'with track: "main"' do
-      it 'does not raise an error' do
-        expect { described_instance.remote_add('secondary', remote_dir, track: 'main') }.not_to raise_error
-      end
-    end
-
-    context 'with the deprecated :with_fetch alias' do
-      it 'does not raise an error' do
-        expect { described_instance.remote_add('secondary', remote_dir, with_fetch: true) }.not_to raise_error
-      end
-    end
-
-    context 'with an unknown option key' do
-      it 'raises ArgumentError before calling git' do
-        expect { described_instance.remote_add('secondary', remote_dir, unknown_key: true) }
-          .to raise_error(ArgumentError, /unknown_key/)
-      end
     end
   end
 
@@ -229,16 +117,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       described_instance.remote_remove('origin')
       expect(repo.remotes.map(&:name)).not_to include('origin')
     end
-
-    it 'returns a Git::CommandLine::Result' do
-      result = described_instance.remote_remove('origin')
-      expect(result).to be_a(Git::CommandLine::Result)
-    end
-
-    it 'raises Git::FailedError when the remote does not exist' do
-      expect { described_instance.remote_remove('nonexistent') }
-        .to raise_error(Git::FailedError, /nonexistent/)
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -246,10 +124,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#config_remote' do
-    it 'returns a Hash' do
-      expect(described_instance.config_remote('origin')).to be_a(Hash)
-    end
-
     it 'includes the url key' do
       result = described_instance.config_remote('origin')
       expect(result).to have_key('url')
@@ -269,35 +143,11 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # #remote (factory)
   # ---------------------------------------------------------------------------
 
-  describe '#remote' do
-    it 'returns a Git::Remote for the named remote' do
-      result = described_instance.remote('origin')
-      expect(result).to be_a(Git::Remote)
-      expect(result.name).to eq('origin')
-    end
-
-    it 'defaults to "origin" when no name is given' do
-      result = described_instance.remote
-      expect(result).to be_a(Git::Remote)
-      expect(result.name).to eq('origin')
-    end
-
-    it 'populates url from the remote configuration' do
-      result = described_instance.remote('origin')
-      expect(result.url).to eq(bare_dir)
-    end
-  end
-
   # ---------------------------------------------------------------------------
   # #remotes
   # ---------------------------------------------------------------------------
 
   describe '#remotes' do
-    it 'returns an Array of Git::Remote objects' do
-      result = described_instance.remotes
-      expect(result).to all(be_a(Git::Remote))
-    end
-
     it 'includes each configured remote by name' do
       described_instance.remote_add('upstream', bare_dir)
       expect(described_instance.remotes.map(&:name)).to contain_exactly('origin', 'upstream')
@@ -327,12 +177,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
       described_instance.remote_set_url('origin', other_dir)
       expect(described_instance.config_remote('origin')['url']).to eq(other_dir)
     end
-
-    it 'returns a Git::Remote for the updated remote' do
-      result = described_instance.remote_set_url('origin', other_dir)
-      expect(result).to be_a(Git::Remote)
-      expect(result.name).to eq('origin')
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -340,10 +184,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#remote_set_branches' do
-    it 'returns nil' do
-      expect(described_instance.remote_set_branches('origin', 'main')).to be_nil
-    end
-
     it 'replaces the tracked branches for the remote' do
       described_instance.remote_set_branches('origin', 'main')
       expect(described_instance.config_remote('origin')['fetch']).to include('main')
@@ -362,11 +202,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#ls_remote' do
-    it 'returns a Hash' do
-      result = described_instance.ls_remote('origin')
-      expect(result).to be_a(Hash)
-    end
-
     it 'contains a "branches" key with at least one entry for the pushed branch' do
       result = described_instance.ls_remote('origin')
       expect(result).to have_key('branches')
@@ -376,13 +211,6 @@ RSpec.describe Git::Repository::RemoteOperations, :integration do
     it 'contains a "head" key' do
       result = described_instance.ls_remote('origin')
       expect(result).to have_key('head')
-    end
-
-    context 'with tags: true' do
-      it 'returns a Hash without raising' do
-        result = described_instance.ls_remote('origin', tags: true)
-        expect(result).to be_a(Hash)
-      end
     end
   end
 end

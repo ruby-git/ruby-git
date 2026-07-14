@@ -18,10 +18,6 @@ RSpec.describe Git, :integration do
 
     let(:options) { {} }
 
-    it 'returns a Git::Repository' do
-      expect(repository).to be_a(Git::Repository)
-    end
-
     it 'exposes the working directory through #dir' do
       expect(repository.dir).to eq(Pathname.new(repo_dir).realpath)
     end
@@ -125,10 +121,6 @@ RSpec.describe Git, :integration do
 
     after { FileUtils.rm_rf(bare_dir) }
 
-    it 'returns a Git::Repository' do
-      expect(repository).to be_a(Git::Repository)
-    end
-
     it 'has no working directory' do
       expect(repository.dir).to be_nil
     end
@@ -161,10 +153,6 @@ RSpec.describe Git, :integration do
       FileUtils.rm_rf(parent_dir)
     end
 
-    it 'returns a Git::Repository' do
-      expect(repository).to be_a(Git::Repository)
-    end
-
     it 'sets #dir to the cloned working directory' do
       expect(repository.dir).to be_a(Pathname)
       expect(repository.dir.directory?).to be(true)
@@ -184,10 +172,6 @@ RSpec.describe Git, :integration do
 
       subject(:repository) { Git.clone(source_dir, bare_clone_dir, bare: true) }
 
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
-
       it 'has no working directory' do
         expect(repository.dir).to be_nil
       end
@@ -205,10 +189,6 @@ RSpec.describe Git, :integration do
 
       subject(:repository) { Git.clone(source_dir, 'my-clone', chdir: chdir_dir) }
 
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
-
       it 'sets #dir to the clone subdirectory within chdir' do
         expected_path = File.join(chdir_dir, 'my-clone')
         expect(repository.dir).to eq(Pathname.new(expected_path))
@@ -219,10 +199,6 @@ RSpec.describe Git, :integration do
       let(:custom_index) { File.join(parent_dir, 'custom.index') }
 
       subject(:repository) { Git.clone(source_dir, clone_dir, index: custom_index) }
-
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
 
       it 'uses the given index path' do
         expect(repository.index).to eq(Pathname.new(custom_index))
@@ -235,10 +211,6 @@ RSpec.describe Git, :integration do
       after { FileUtils.rm_rf(File.dirname(separate_git_dir)) }
 
       subject(:repository) { Git.clone(source_dir, clone_dir, repository: separate_git_dir) }
-
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
 
       it 'sets #repo to the separate git directory' do
         expect(repository.repo).to eq(Pathname.new(separate_git_dir).realpath)
@@ -259,10 +231,6 @@ RSpec.describe Git, :integration do
     let(:init_dir) { Dir.mktmpdir }
 
     after { FileUtils.rm_rf(init_dir) }
-
-    it 'returns a Git::Repository' do
-      expect(repository).to be_a(Git::Repository)
-    end
 
     it 'sets #dir to the initialized working directory' do
       expect(repository.dir).to be_a(Pathname)
@@ -285,10 +253,6 @@ RSpec.describe Git, :integration do
 
       subject(:repository) { Git.init(bare_dir, bare: true) }
 
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
-
       it 'has no working directory' do
         expect(repository.dir).to be_nil
       end
@@ -304,10 +268,6 @@ RSpec.describe Git, :integration do
 
       subject(:repository) { Git.init(init_dir, separate_git_dir: separate_git_dir) }
 
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
-
       it 'stores the .git data in the separate directory' do
         expect(repository.repo).to eq(Pathname.new(separate_git_dir))
       end
@@ -322,10 +282,6 @@ RSpec.describe Git, :integration do
 
     context 'with :initial_branch option' do
       subject(:repository) { Git.init(init_dir, initial_branch: 'trunk') }
-
-      it 'returns a Git::Repository' do
-        expect(repository).to be_a(Git::Repository)
-      end
 
       it 'initializes with the specified branch name' do
         head_content = File.read(File.join(repository.repo.to_s, 'HEAD'))

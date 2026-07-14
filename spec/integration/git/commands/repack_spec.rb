@@ -16,13 +16,6 @@ RSpec.describe Git::Commands::Repack, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.status.exitstatus).to eq(0)
       end
-
-      it 'returns a CommandLineResult with :a and :d options' do
-        result = command.call(a: true, d: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

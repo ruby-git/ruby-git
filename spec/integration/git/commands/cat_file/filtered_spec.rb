@@ -23,22 +23,6 @@ RSpec.describe Git::Commands::CatFile::Filtered, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
           expect(result.stdout).not_to be_empty
         end
-
-        it 'accepts a blob ref with --path= to identify the filter path' do
-          result = command.call('HEAD:README.md', textconv: true, path: 'README.md')
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
-
-      context 'with --filters mode' do
-        it 'returns a CommandLineResult with the processed blob content' do
-          result = command.call('HEAD:README.md', filters: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
       end
     end
 

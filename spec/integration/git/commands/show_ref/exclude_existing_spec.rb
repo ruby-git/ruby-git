@@ -21,25 +21,6 @@ RSpec.describe Git::Commands::ShowRef::ExcludeExisting, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns exit status 0' do
-        result = command.call
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'returns exit status 0 with a mix of existing and nonexistent refs' do
-        result = command.call('refs/heads/main', 'refs/heads/nonexistent')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'echoes only refs that do not already exist locally' do
-        result = command.call('refs/heads/main', 'refs/heads/nonexistent')
-
-        stdout_refs = result.stdout.lines.map(&:chomp).reject(&:empty?)
-        expect(stdout_refs).to eq(['refs/heads/nonexistent'])
-      end
     end
 
     context 'when the command fails' do

@@ -58,51 +58,9 @@ RSpec.describe Git::Repository::Committing, :integration do
     end
   end
 
-  describe '#commit' do
-    context 'with an empty message' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.commit('', allow_empty: true) }
-          .to raise_error(Git::FailedError, /empty commit message|Aborting commit/i)
-      end
-    end
-
-    context 'with an empty message and allow_empty_message: true' do
-      it 'creates a commit and returns a String' do
-        result = described_instance.commit('', allow_empty: true, allow_empty_message: true)
-
-        expect(result).to be_a(String)
-        expect(repo.log.execute.to_a.size).to be >= 2
-      end
-    end
-  end
-
   describe '#set_index' do
     let(:custom_index_path) { File.join(repo_dir, 'custom_index') }
 
     after { FileUtils.rm_rf(custom_index_path) }
-
-    context 'with a programmatic commit workflow' do
-      it 'creates a new commit on a separate branch without touching the working tree' do
-        main_commit = repo.gcommit('main')
-
-        described_instance.set_index(custom_index_path, must_exist: false)
-        described_instance.read_tree(main_commit.gtree.sha)
-
-        new_tree_sha = described_instance.write_tree.strip
-        new_commit = described_instance.commit_tree(
-          new_tree_sha,
-          parents: [main_commit.sha],
-          message: 'Programmatic commit via custom index'
-        )
-
-        expect(new_commit.strip).to match(/\A[0-9a-f]{40}\z/)
-
-        repo.branch('feature-branch').update_ref(new_commit.strip)
-        feature_log = repo.log.object('feature-branch').execute
-
-        expect(feature_log.to_a.size).to eq(2)
-        expect(repo.log.object('main').execute.to_a.size).to eq(1)
-      end
-    end
   end
 end

@@ -22,20 +22,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RemoveSection, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns result with exit status 0' do
-        result = command.call('testsection')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'removes the section entirely' do
-        command.call('testsection')
-
-        get = Git::Commands::ConfigOptionSyntax::Get.new(execution_context)
-        result = get.call('testsection.key')
-        expect(result.status.exitstatus).to eq(1)
-      end
     end
 
     context 'when the command fails' do

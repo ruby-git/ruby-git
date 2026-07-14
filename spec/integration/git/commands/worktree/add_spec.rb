@@ -26,28 +26,12 @@ RSpec.describe Git::Commands::Worktree::Add, :integration do
           result = command.call(worktree_path)
           expect(result).to be_a(Git::CommandLine::Result)
         end
-
-        it 'creates the worktree directory on disk' do
-          command.call(worktree_path)
-          expect(File.directory?(worktree_path)).to be(true)
-        end
-
-        it 'creates a .git file in the worktree' do
-          command.call(worktree_path)
-          expect(File.exist?(File.join(worktree_path, '.git'))).to be(true)
-        end
       end
 
       context 'with --detach' do
         let(:worktree_path) { File.join(repo_dir, '..', "worktree-detach-#{SecureRandom.hex(4)}") }
 
         after { FileUtils.rm_rf(worktree_path) }
-
-        it 'creates a detached HEAD worktree' do
-          result = command.call(worktree_path, detach: true)
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(File.directory?(worktree_path)).to be(true)
-        end
       end
     end
 

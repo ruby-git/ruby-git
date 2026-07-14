@@ -10,12 +10,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::GetRegexp, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'returns a CommandLineResult' do
-        result = command.call('user\\..*')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'returns exit status 0 when entries match' do
         result = command.call('user\\..*')
 

@@ -38,10 +38,6 @@ RSpec.describe Git::Commands::Branch::SetUpstream, :integration do
       it 'raises FailedError when upstream does not exist' do
         expect { command.call(set_upstream_to: 'origin/nonexistent') }.to raise_error(Git::FailedError)
       end
-
-      it 'raises FailedError when branch does not exist' do
-        expect { command.call('nonexistent', set_upstream_to: 'origin/main') }.to raise_error(Git::FailedError)
-      end
     end
   end
 end
