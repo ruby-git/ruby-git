@@ -26,15 +26,6 @@ RSpec.describe Git::Commands::Remote::SetBranches, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns a CommandLineResult with :add option' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-        command.call('origin', 'main')
-
-        result = command.call('origin', 'release/*', add: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

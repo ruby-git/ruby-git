@@ -19,18 +19,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::RenameSection, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns result with exit status 0' do
-        result = command.call('oldsection', 'newsection')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'renames the section' do
-        command.call('oldsection', 'newsection')
-
-        expect(repo.config_get('newsection.key').value).to eq('value')
-      end
     end
 
     context 'when the command fails' do

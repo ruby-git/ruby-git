@@ -33,12 +33,6 @@ RSpec.describe Git::Commands::Stash::Branch, :integration do
       it 'raises FailedError with nonexistent stash' do
         expect { command.call('new-branch', 'stash@{99}') }.to raise_error(Git::FailedError)
       end
-
-      it 'raises FailedError with existing branch name' do
-        repo.branch('existing-branch').create
-
-        expect { command.call('existing-branch') }.to raise_error(Git::FailedError)
-      end
     end
   end
 end

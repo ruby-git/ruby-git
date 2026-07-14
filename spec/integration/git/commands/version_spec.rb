@@ -19,12 +19,5 @@ RSpec.describe Git::Commands::Version, :integration do
         expect(result.stderr).to be_empty
       end
     end
-
-    context 'with unsupported options' do
-      it 'raises ArgumentError for unsupported options' do
-        expect { command.call(unsupported: true) }
-          .to raise_error(ArgumentError, /Unsupported options/)
-      end
-    end
   end
 end

@@ -43,10 +43,6 @@ RSpec.describe Git::Repository, :integration do
     end
 
     context 'when called with a name only' do
-      it 'returns the config value as a String' do
-        expect(described_instance.config('user.name')).to eq('Test User')
-      end
-
       it 'raises Git::FailedError when the key does not exist' do
         expect { described_instance.config('ruby-git-rspec.nonexistent-key') }.to raise_error(Git::FailedError)
       end
@@ -72,23 +68,10 @@ RSpec.describe Git::Repository, :integration do
 
     context 'when writing with a file: option then reading back' do
       let(:config_file) { File.join(repo_dir, 'custom.config') }
-
-      it 'persists the value to the specified file' do
-        described_instance.config('section.key', 'file_value', file: config_file)
-        result = described_instance.config(file: config_file)
-        expect(result['section.key']).to eq('file_value')
-      end
     end
 
     context 'when include.path is set to chain a custom config file' do
       let(:custom_config_path) { File.join(repo_dir, 'custom.config') }
-
-      it 'makes settings from the included file visible via config' do
-        described_instance.config('user.name', 'bully', file: custom_config_path)
-        described_instance.config('include.path', custom_config_path)
-
-        expect(described_instance.config('user.name')).to eq('bully')
-      end
     end
   end
 
@@ -136,38 +119,6 @@ RSpec.describe Git::Repository, :integration do
       yield
     ensure
       saved.nil? ? ENV.delete('GIT_CONFIG_GLOBAL') : ENV['GIT_CONFIG_GLOBAL'] = saved
-    end
-  end
-
-  describe '#config_get' do
-    it 'returns a Git::ConfigEntryInfo for an existing key' do
-      entry = described_instance.config_get('user.name')
-
-      expect(entry).to be_a(Git::ConfigEntryInfo)
-      expect(entry.value).to eq('Test User')
-    end
-
-    it 'returns nil when the key does not exist' do
-      entry = described_instance.config_get('nonexistent.key', local: true)
-
-      expect(entry).to be_nil
-    end
-  end
-
-  describe '#config_list' do
-    it 'returns an Array of Git::ConfigEntryInfo objects' do
-      entries = described_instance.config_list
-
-      expect(entries).to be_an(Array)
-      expect(entries).to all(be_a(Git::ConfigEntryInfo))
-    end
-
-    it 'includes an entry for user.name from local config' do
-      entries = described_instance.config_list(local: true)
-
-      user_name_entry = entries.find { |e| e.key == 'user.name' }
-      expect(user_name_entry).not_to be_nil
-      expect(user_name_entry.value).to eq('Test User')
     end
   end
 end

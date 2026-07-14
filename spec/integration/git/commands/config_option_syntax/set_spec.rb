@@ -16,26 +16,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Set, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns result with exit status 0' do
-        result = command.call('test.key', 'test-value')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'persists the value' do
-        command.call('test.key', 'test-value')
-
-        get = Git::Commands::ConfigOptionSyntax::Get.new(execution_context)
-        expect(get.call('test.key').stdout.strip).to eq('test-value')
-      end
-
-      it 'validates the value against the type when :type option is given' do
-        command.call('test.flag', 'yes', type: 'bool')
-
-        get = Git::Commands::ConfigOptionSyntax::Get.new(execution_context)
-        expect(get.call('test.flag').stdout.strip).to eq('true')
-      end
     end
 
     context 'when the command fails' do

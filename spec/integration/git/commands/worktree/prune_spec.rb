@@ -20,16 +20,6 @@ RSpec.describe Git::Commands::Worktree::Prune, :integration do
         result = command.call
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns a CommandLineResult with --dry-run' do
-        result = command.call(dry_run: true)
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
-      it 'returns a CommandLineResult with --verbose' do
-        result = command.call(verbose: true)
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

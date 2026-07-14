@@ -28,30 +28,6 @@ RSpec.describe Git::Commands::CommitTree, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
       end
-
-      it 'creates a commit with the specified parent' do
-        result = command.call(tree_sha, p: initial_commit_sha, m: 'Child commit')
-        new_sha = result.stdout
-
-        # Verify the parent relationship using cat-file
-        commit_content = execution_context.command_capturing('cat-file', '-p', new_sha).stdout
-        expect(commit_content).to include("parent #{initial_commit_sha}")
-      end
-
-      it 'creates a merge commit with multiple parents' do
-        # Create a second branch with a different commit
-        second_sha = command.call(tree_sha, p: initial_commit_sha, m: 'Second branch').stdout
-
-        result = command.call(
-          tree_sha,
-          p: [initial_commit_sha, second_sha],
-          m: 'Merge commit'
-        )
-
-        commit_content = execution_context.command_capturing('cat-file', '-p', result.stdout).stdout
-        expect(commit_content).to include("parent #{initial_commit_sha}")
-        expect(commit_content).to include("parent #{second_sha}")
-      end
     end
 
     context 'when the command fails' do

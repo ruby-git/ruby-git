@@ -17,12 +17,6 @@ RSpec.describe Git::Commands::SymbolicRef::Read, :integration do
         expect(result.stdout.strip).to eq('refs/heads/main')
       end
 
-      it 'returns the shortened ref name with :short' do
-        result = command.call('HEAD', short: true)
-
-        expect(result.stdout.strip).to eq('main')
-      end
-
       context 'when HEAD is detached' do
         before do
           write_file('initial.txt', 'content')

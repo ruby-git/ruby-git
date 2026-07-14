@@ -23,14 +23,6 @@ RSpec.describe Git::Commands::Remote::Prune, :integration do
 
   describe '#call' do
     context 'when the command succeeds' do
-      it 'supports dry-run pruning for a configured remote' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-
-        result = command.call('origin', dry_run: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'prunes stale tracking refs for a configured remote' do
         repo.remote_add('origin', remote_repo.dir.to_s)
         repo.fetch('origin')

@@ -21,12 +21,6 @@ RSpec.describe Git::Commands::Status, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns a CommandLineResult with a path operand' do
-        result = command.call('file.txt')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

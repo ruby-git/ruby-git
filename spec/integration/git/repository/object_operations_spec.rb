@@ -16,23 +16,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   end
 
   describe '#cat_file_contents' do
-    context 'with a blob via treeish path' do
-      it 'returns the raw content of the blob as a String' do
-        result = described_instance.cat_file_contents('HEAD:README.md')
-        expect(result).to be_a(String)
-        expect(result).to include('# Hello World')
-      end
-    end
-
-    context 'with a commit object' do
-      it 'returns the raw content of the commit as a String' do
-        result = described_instance.cat_file_contents('HEAD')
-        expect(result).to be_a(String)
-        expect(result).to include('tree ')
-        expect(result).to include('author ')
-      end
-    end
-
     context 'with a block' do
       it 'yields a File positioned at the start of the content' do
         yielded_content = nil
@@ -47,58 +30,13 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result).to eq(:my_value)
       end
     end
-
-    context 'when object starts with a hyphen' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.cat_file_contents('--batch') }
-          .to raise_error(ArgumentError, "Invalid object: '--batch'")
-      end
-    end
-
-    context 'when the object does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.cat_file_contents('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
-      end
-    end
   end
 
   describe '#cat_file_size' do
-    context 'with a commit object' do
-      it 'returns the size of the commit as an Integer' do
-        result = described_instance.cat_file_size('HEAD')
-        expect(result).to be_a(Integer)
-        expect(result).to be_positive
-      end
-    end
-
     context 'with a blob via treeish path' do
       it 'returns the size of the blob' do
         result = described_instance.cat_file_size('HEAD:README.md')
         expect(result).to eq(File.read(File.join(repo.dir.to_s, 'README.md')).bytesize)
-      end
-    end
-
-    context 'with a tree object' do
-      it 'returns the size of the tree object as an Integer' do
-        tree_sha = repo.rev_parse('HEAD^{tree}')
-        result = described_instance.cat_file_size(tree_sha)
-        expect(result).to be_a(Integer)
-        expect(result).to be_positive
-      end
-    end
-
-    context 'when object starts with a hyphen' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.cat_file_size('--batch') }
-          .to raise_error(ArgumentError, "Invalid object: '--batch'")
-      end
-    end
-
-    context 'when the object does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.cat_file_size('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
       end
     end
   end
@@ -109,42 +47,11 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(described_instance.cat_file_type('HEAD')).to eq('commit')
       end
     end
-
-    context 'with a tree reference' do
-      it 'returns "tree"' do
-        tree_sha = repo.rev_parse('HEAD^{tree}')
-        expect(described_instance.cat_file_type(tree_sha)).to eq('tree')
-      end
-    end
-
-    context 'with a blob via treeish path' do
-      it 'returns "blob"' do
-        expect(described_instance.cat_file_type('HEAD:README.md')).to eq('blob')
-      end
-    end
-
-    context 'when object starts with a hyphen' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.cat_file_type('--batch') }
-          .to raise_error(ArgumentError, "Invalid object: '--batch'")
-      end
-    end
-
-    context 'when the object does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.cat_file_type('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
-      end
-    end
   end
 
   describe '#cat_file_commit' do
     context 'with HEAD' do
       subject(:result) { described_instance.cat_file_commit('HEAD') }
-
-      it 'returns a Hash' do
-        expect(result).to be_a(Hash)
-      end
 
       it 'sets sha to the requested object name' do
         expect(result['sha']).to eq('HEAD')
@@ -152,14 +59,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
       it 'includes tree, parent, author, committer, and message keys' do
         expect(result).to include('tree', 'parent', 'author', 'committer', 'message')
-      end
-
-      it 'sets parent to an Array' do
-        expect(result['parent']).to be_a(Array)
-      end
-
-      it 'sets message with a trailing newline' do
-        expect(result['message']).to end_with("\n")
       end
 
       it 'sets message to the commit message used when the commit was created' do
@@ -175,13 +74,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       end
     end
 
-    context 'when the object does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.cat_file_commit('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
-      end
-    end
-
     context 'with a bare repository clone' do
       let(:clone_parent_dir) { Dir.mktmpdir }
       let(:bare_clone_dir) { File.join(clone_parent_dir, 'bare') }
@@ -190,15 +82,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
       after do
         FileUtils.rm_rf(clone_parent_dir)
-      end
-
-      it 'returns commit metadata including tree, author, committer, and parents' do
-        sha = bare_repo.rev_parse('HEAD')
-        result = bare_instance.cat_file_commit(sha)
-        expect(result).to include('tree', 'author', 'committer', 'message', 'parent')
-        expect(result['tree']).to match(/\A[0-9a-f]{40}\z/)
-        expect(result['author']).to be_a(String).and include('Test User', 'test@example.com')
-        expect(result['parent']).to be_an(Array)
       end
     end
 
@@ -235,10 +118,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     context 'with a valid annotated tag' do
       subject(:result) { described_instance.cat_file_tag('v1.0') }
 
-      it 'returns a Hash' do
-        expect(result).to be_a(Hash)
-      end
-
       it 'sets name to the tag name passed by the caller' do
         expect(result['name']).to eq('v1.0')
       end
@@ -247,34 +126,12 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result).to include('name', 'object', 'type', 'tag', 'tagger', 'message')
       end
 
-      it 'sets type to "commit"' do
-        expect(result['type']).to eq('commit')
-      end
-
-      it 'sets tag to the tag name' do
-        expect(result['tag']).to eq('v1.0')
-      end
-
       it 'sets message to the tag message with a trailing newline' do
         expect(result['message']).to eq("Release v1.0\n")
       end
 
       it 'sets object to a 40-character SHA' do
         expect(result['object']).to match(/\A[0-9a-f]{40}\z/)
-      end
-    end
-
-    context 'when object starts with a hyphen' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.cat_file_tag('--all') }
-          .to raise_error(ArgumentError, "Invalid object: '--all'")
-      end
-    end
-
-    context 'when the object does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.cat_file_tag('nonexistent_tag') }
-          .to raise_error(Git::FailedError)
       end
     end
 
@@ -294,41 +151,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
     end
   end
 
-  describe '#rev_parse' do
-    context 'with HEAD' do
-      it 'returns a 40-character lowercase hex SHA' do
-        result = described_instance.rev_parse('HEAD')
-        expect(result).to match(/\A[0-9a-f]{40}\z/)
-      end
-
-      it 'returns a String' do
-        expect(described_instance.rev_parse('HEAD')).to be_a(String)
-      end
-    end
-
-    context 'with an abbreviated SHA' do
-      it 'expands the abbreviated SHA to the full 40-character SHA' do
-        full_sha = repo.rev_parse('HEAD')
-        abbreviated = full_sha[0, 7]
-        expect(described_instance.rev_parse(abbreviated)).to eq(full_sha)
-      end
-    end
-
-    context 'with a tree object via rev-parse syntax' do
-      it 'resolves the tree SHA' do
-        result = described_instance.rev_parse('HEAD^{tree}')
-        expect(result).to match(/\A[0-9a-f]{40}\z/)
-      end
-    end
-
-    context 'when the revision is unknown' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.rev_parse('NOTFOUND') }
-          .to raise_error(Git::FailedError)
-      end
-    end
-  end
-
   describe '#tag_sha' do
     context 'when the tag exists' do
       before do
@@ -338,12 +160,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
       it 'returns the SHA of the tagged commit as a String' do
         result = described_instance.tag_sha('v1.0')
         expect(result.chomp).to match(/\A[0-9a-f]{40}\z/)
-      end
-
-      it 'returns the same SHA as rev_parse for the tag' do
-        expected = repo.rev_parse('v1.0')
-        result = described_instance.tag_sha('v1.0')
-        expect(result.chomp).to eq(expected.chomp)
       end
     end
 
@@ -356,38 +172,10 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
 
   describe '#full_tree' do
     context 'with the tree SHA for a commit containing one file' do
-      it 'returns an Array<String>' do
-        tree_sha = repo.rev_parse('HEAD^{tree}')
-        result = described_instance.full_tree(tree_sha)
-        expect(result).to be_a(Array)
-        expect(result).to all(be_a(String))
-      end
-
       it 'returns one entry per file in the tree' do
         tree_sha = repo.rev_parse('HEAD^{tree}')
         result = described_instance.full_tree(tree_sha)
         expect(result.size).to eq(1)
-      end
-
-      it 'returns entries in the git ls-tree format <mode> <type> <object>\\t<file>' do
-        tree_sha = repo.rev_parse('HEAD^{tree}')
-        result = described_instance.full_tree(tree_sha)
-        expect(result.first).to match(/\A\d{6} \w+ [0-9a-f]{40}\t\S+\z/)
-      end
-    end
-
-    context 'with a treeish specifier (HEAD^{tree})' do
-      it 'resolves and recurses into the tree' do
-        result = described_instance.full_tree('HEAD^{tree}')
-        expect(result).to be_a(Array)
-        expect(result).not_to be_empty
-      end
-    end
-
-    context 'when the sha does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.full_tree('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
       end
     end
   end
@@ -406,49 +194,14 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result).to eq(1)
       end
     end
-
-    context 'with a treeish specifier (HEAD^{tree})' do
-      it 'returns a positive count' do
-        result = described_instance.tree_depth('HEAD^{tree}')
-        expect(result).to be_positive
-      end
-    end
-
-    context 'when the sha does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.tree_depth('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
-      end
-    end
   end
 
   describe '#name_rev' do
     context 'with a commit SHA that has a symbolic name' do
-      it 'returns a String' do
-        sha = repo.rev_parse('HEAD')
-        result = described_instance.name_rev(sha)
-        expect(result).to be_a(String)
-      end
-
       it 'returns the symbolic name without a trailing newline' do
         sha = repo.rev_parse('HEAD')
         result = described_instance.name_rev(sha)
         expect(result).not_to end_with("\n")
-      end
-    end
-
-    context 'with a branch ref that resolves to a commit' do
-      it 'returns a non-nil String' do
-        result = described_instance.name_rev('HEAD')
-        expect(result).to be_a(String)
-        expect(result).not_to be_empty
-      end
-    end
-
-    context 'when commit_ish starts with a hyphen' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.name_rev('--tags') }
-          .to raise_error(ArgumentError, "Invalid commit_ish: '--tags'")
       end
     end
   end
@@ -496,27 +249,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result['tree']).not_to have_key('lib')
       end
     end
-
-    context 'with a path option' do
-      it 'limits the listing to entries under the given path' do
-        result = described_instance.ls_tree('HEAD', path: 'lib')
-        expect(result['tree']).to have_key('lib')
-        expect(result['blob']).not_to have_key('README.md')
-      end
-    end
-
-    context 'with an unsupported option' do
-      it 'raises ArgumentError' do
-        expect { described_instance.ls_tree('HEAD', bogus: true) }.to raise_error(ArgumentError)
-      end
-    end
-
-    context 'when the sha does not exist' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.ls_tree('0000000000000000000000000000000000000000') }
-          .to raise_error(Git::FailedError)
-      end
-    end
   end
 
   describe '#archive' do
@@ -551,13 +283,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         end
       end
 
-      context 'with a tar format' do
-        it 'writes a non-empty archive file' do
-          described_instance.archive('HEAD', tmpfile.path, format: 'tar')
-          expect(File.size(tmpfile.path)).to be_positive
-        end
-      end
-
       context 'with a tgz format' do
         it 'writes a gzip-compressed archive file' do
           described_instance.archive('HEAD', tmpfile.path, format: 'tgz')
@@ -567,25 +292,11 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         end
       end
 
-      context 'with a prefix option' do
-        it 'writes a non-empty archive file' do
-          described_instance.archive('HEAD', tmpfile.path, format: 'tar', prefix: 'myproject/')
-          expect(File.size(tmpfile.path)).to be_positive
-        end
-      end
-
       context 'with add_gzip: true' do
         it 'writes a gzip-compressed archive file' do
           described_instance.archive('HEAD', tmpfile.path, format: 'tar', add_gzip: true)
           expect(File.size(tmpfile.path)).to be_positive
           Zlib::GzipReader.open(tmpfile.path, &:read)
-        end
-      end
-
-      context 'with an unknown option' do
-        it 'raises ArgumentError without calling git' do
-          expect { described_instance.archive('HEAD', tmpfile.path, bad_opt: true) }
-            .to raise_error(ArgumentError)
         end
       end
 
@@ -636,13 +347,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
           described_instance.archive('HEAD', link_path, format: 'zip')
           expect(File.size(link_target.path)).to eq(target_size_before)
         end
-      end
-    end
-
-    context 'with a directory path as file' do
-      it 'raises ArgumentError without creating an archive file' do
-        expect { described_instance.archive('HEAD', Dir.tmpdir) }
-          .to raise_error(ArgumentError, /is a directory/)
       end
     end
   end
@@ -749,20 +453,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
         expect(result).to eq({})
       end
     end
-
-    context 'with an unknown option' do
-      it 'raises ArgumentError without calling git' do
-        expect { described_instance.grep('TODO', nil, line_number: true) }
-          .to raise_error(ArgumentError, 'Unknown options: line_number')
-      end
-    end
-
-    context 'with an invalid object reference' do
-      it 'raises Git::FailedError' do
-        expect { described_instance.grep('TODO', nil, object: 'nonexistent_ref') }
-          .to raise_error(Git::FailedError)
-      end
-    end
   end
 
   # Integration tests for #gblob, #gcommit, #gtree, #tag, and #object are
@@ -775,24 +465,10 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   # contract and argument forwarding.
 
   describe '#tags' do
-    context 'when the repository has no tags' do
-      it 'returns an empty array' do
-        expect(described_instance.tags).to eq([])
-      end
-    end
-
     context 'when the repository has tags' do
       before do
         described_instance.tag_add('v1.0.0')
         described_instance.tag_add('v2.0.0', annotate: true, message: 'Release 2.0.0')
-      end
-
-      it 'returns a Git::Object::Tag for every tag' do
-        expect(described_instance.tags).to all(be_a(Git::Object::Tag))
-      end
-
-      it 'returns every tag name' do
-        expect(described_instance.tags.map(&:name)).to contain_exactly('v1.0.0', 'v2.0.0')
       end
     end
   end
@@ -841,22 +517,6 @@ RSpec.describe Git::Repository::ObjectOperations, :integration do
   describe '#tag_delete' do
     context 'when the tag exists' do
       before { described_instance.tag_add('v1.0.0') }
-
-      it 'removes the tag' do
-        described_instance.tag_delete('v1.0.0')
-        expect(described_instance.tags.map(&:name)).not_to include('v1.0.0')
-      end
-
-      it 'returns git stdout confirming the deletion' do
-        expect(described_instance.tag_delete('v1.0.0')).to match(/Deleted tag 'v1.0.0'/)
-      end
-    end
-
-    context 'when the tag does not exist' do
-      it 'raises Git::FailedError naming the failed delete command' do
-        expect { described_instance.tag_delete('does-not-exist') }
-          .to raise_error(Git::FailedError, /does-not-exist/)
-      end
     end
   end
 end

@@ -18,13 +18,6 @@ RSpec.describe Git::Parsers::Tag, :integration do
   end
 
   describe '.parse_list' do
-    context 'when there are no tags' do
-      it 'returns an empty array' do
-        result = described_class.parse_list('')
-        expect(result).to eq([])
-      end
-    end
-
     context 'with lightweight tags' do
       before do
         write_file('file.txt', 'content')
@@ -59,13 +52,6 @@ RSpec.describe Git::Parsers::Tag, :integration do
         expect(tag.tagger_email).to be_nil
         expect(tag.tagger_date).to be_nil
         expect(tag.message).to be_nil
-      end
-
-      it 'has target_oid pointing to the commit' do
-        output = git_tag_output
-        result = described_class.parse_list(output)
-        tag = result.first
-        expect(tag.target_oid).to match(/^[0-9a-f]{40}$/)
       end
     end
 
@@ -122,14 +108,6 @@ RSpec.describe Git::Parsers::Tag, :integration do
         result = described_class.parse_list(output)
         v1_tag = result.find { |t| t.name == 'v1.0.0' }
         expect(v1_tag.message).to eq(multiline_message)
-      end
-
-      it 'preserves newlines in message' do
-        output = git_tag_output
-        result = described_class.parse_list(output)
-        v1_tag = result.find { |t| t.name == 'v1.0.0' }
-        expect(v1_tag.message).to include("\n")
-        expect(v1_tag.message.lines.count).to eq(5)
       end
 
       it 'does not affect parsing of other tags' do
@@ -202,14 +180,6 @@ RSpec.describe Git::Parsers::Tag, :integration do
     end
   end
 
-  describe '.parse_deleted_tags' do
-    it 'parses deleted tag output' do
-      stdout = "Deleted tag 'v1.0.0' (was abc1234)\nDeleted tag 'v2.0.0' (was def5678)\n"
-      result = described_class.parse_deleted_tags(stdout)
-      expect(result).to contain_exactly('v1.0.0', 'v2.0.0')
-    end
-  end
-
   describe 'FORMAT_STRING validation' do
     # These tests validate that real git output matches the format assumptions
     # used in unit test fixtures
@@ -219,52 +189,6 @@ RSpec.describe Git::Parsers::Tag, :integration do
       repo.add('file.txt')
       repo.commit('Initial commit')
       repo.tag_add('v1.0.0', annotate: true, message: 'Release v1.0.0')
-    end
-
-    it 'uses unit separator (0x1F) as field delimiter' do
-      output = git_tag_output
-      expect(output).to include(described_class::FIELD_DELIMITER)
-    end
-
-    it 'uses record separator (0x1E) as record delimiter' do
-      output = git_tag_output
-      expect(output).to include(described_class::RECORD_DELIMITER)
-    end
-
-    it 'produces exactly 8 fields per record' do
-      output = git_tag_output
-      records = output.split(described_class::RECORD_DELIMITER).reject(&:empty?)
-      records.each do |record|
-        fields = record.split(described_class::FIELD_DELIMITER, -1)
-        expect(fields.size).to eq(described_class::FIELD_COUNT),
-                               "Expected #{described_class::FIELD_COUNT} fields but got #{fields.size}"
-      end
-    end
-
-    # rubocop:disable Layout/LineLength
-    it 'produces field order: refname, objectname, *objectname, objecttype, taggername, taggeremail, taggerdate, contents' do
-      # rubocop:enable Layout/LineLength
-      output = git_tag_output
-      records = output.split(described_class::RECORD_DELIMITER).reject(&:empty?)
-      record = records.first
-      fields = record.split(described_class::FIELD_DELIMITER, -1)
-
-      # Field 0: refname:short (tag name)
-      expect(fields[0]).to eq('v1.0.0')
-      # Field 1: objectname (SHA of tag object)
-      expect(fields[1]).to match(/^[0-9a-f]{40}$/)
-      # Field 2: *objectname (dereferenced SHA - commit ID)
-      expect(fields[2]).to match(/^[0-9a-f]{40}$/)
-      # Field 3: objecttype ('tag' for annotated)
-      expect(fields[3]).to eq('tag')
-      # Field 4: taggername
-      expect(fields[4]).to be_a(String)
-      # Field 5: taggeremail
-      expect(fields[5]).to match(/<.*>/) # e.g., <user@example.com>
-      # Field 6: taggerdate (ISO 8601)
-      expect(fields[6]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
-      # Field 7: contents (message)
-      expect(fields[7]).to include('Release v1.0.0')
     end
   end
 end

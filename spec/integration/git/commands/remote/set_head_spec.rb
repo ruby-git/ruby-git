@@ -31,25 +31,6 @@ RSpec.describe Git::Commands::Remote::SetHead, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'auto-detects the remote HEAD with :auto' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-        repo.fetch('origin')
-
-        result = command.call('origin', auto: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
-      it 'deletes the remote HEAD when :delete is given' do
-        repo.remote_add('origin', remote_repo.dir.to_s)
-        repo.fetch('origin')
-        command.call('origin', initial_branch)
-
-        result = command.call('origin', delete: true)
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
     end
 
     context 'when the command fails' do

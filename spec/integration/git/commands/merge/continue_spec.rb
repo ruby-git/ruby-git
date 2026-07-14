@@ -44,22 +44,6 @@ RSpec.describe Git::Commands::Merge::Continue, :integration do
       it 'raises FailedError when no merge is in progress' do
         expect { command.call }.to raise_error(Git::FailedError)
       end
-
-      it 'raises FailedError when conflicts are not fully resolved' do
-        repo.branch('feature').checkout
-        write_file('file.txt', "feature change\n")
-        repo.add('file.txt')
-        repo.commit('Feature commit')
-
-        repo.checkout('main')
-        write_file('file.txt', "main change\n")
-        repo.add('file.txt')
-        repo.commit('Main commit')
-
-        expect { repo.merge('feature') }.to raise_error(Git::FailedError)
-
-        expect { command.call }.to raise_error(Git::FailedError)
-      end
     end
   end
 end

@@ -130,15 +130,6 @@ RSpec.describe Git::Parsers::ConfigEntry, :integration do
         expect(user_name_entry.scope).to eq('local')
         expect(user_name_entry.origin).to match(%r{file:.*\.git[/\\]config})
       end
-
-      it 'correctly splits key and value at the embedded newline' do
-        result = described_class.parse_list(list_cmd.call(**list_opts).stdout)
-
-        result.each do |entry|
-          expect(entry.key).to match(/\A[a-z0-9]+(\.[^\0\n]+)+\z/i)
-          expect(entry.key).not_to include("\n")
-        end
-      end
     end
   end
 

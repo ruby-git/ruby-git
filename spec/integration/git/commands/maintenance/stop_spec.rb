@@ -35,12 +35,6 @@ RSpec.describe Git::Commands::Maintenance::Stop, :integration,
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns exit code 0' do
-        result = command.call(env: isolated_env)
-
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

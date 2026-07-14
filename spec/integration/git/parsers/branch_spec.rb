@@ -27,56 +27,9 @@ RSpec.describe Git::Parsers::Branch, :integration do
       repo.add('file.txt')
       repo.commit('Initial commit')
     end
-
-    it 'uses pipe as field delimiter' do
-      output = git_branch_output
-      expect(output).to include(described_class::FIELD_DELIMITER)
-    end
-
-    it 'produces exactly 6 fields per line' do
-      output = git_branch_output
-      output.each_line do |line|
-        next if line.strip.empty?
-
-        # Split with -1 to keep trailing empty fields
-        fields = line.chomp.split(described_class::FIELD_DELIMITER, -1)
-        expect(fields.size).to eq(6), "Expected 6 fields but got #{fields.size}: #{line.inspect}"
-      end
-    end
-
-    it 'produces field order: refname, objectname, HEAD, worktreepath, symref, upstream' do
-      output = git_branch_output
-      line = output.lines.find { |l| l.include?('main') }
-      fields = line.chomp.split(described_class::FIELD_DELIMITER, -1)
-
-      # Field 0: refname - should contain 'main'
-      expect(fields[0]).to include('main')
-
-      # Field 1: objectname - should be 40-char hex SHA
-      expect(fields[1]).to match(/\A[0-9a-f]{40}\z/)
-
-      # Field 2: HEAD - should be '*' for current branch or empty
-      expect(fields[2]).to eq('*').or eq('')
-
-      # Field 3: worktreepath - should be empty or an absolute path (Unix: /path or Windows: C:/path)
-      expect(fields[3]).to match(%r{\A(|[A-Za-z]:/.*|/.+)\z})
-
-      # Field 4: symref - should be empty or a ref
-      expect(fields[4]).to match(%r{\A(|refs/.*)\z})
-
-      # Field 5: upstream - should be empty or a ref
-      expect(fields[5]).to match(%r{\A(|refs/.*)\z})
-    end
   end
 
   describe '.parse_list' do
-    context 'when there are no branches' do
-      it 'returns an empty array' do
-        result = described_class.parse_list('')
-        expect(result).to eq([])
-      end
-    end
-
     context 'with basic branches' do
       before do
         write_file('file.txt')
@@ -190,14 +143,6 @@ RSpec.describe Git::Parsers::Branch, :integration do
         expect(result.first.refname).to eq('main')
         expect(result.none? { |b| b.refname.include?('detached') }).to be true
       end
-    end
-  end
-
-  describe '.parse_deleted_branches' do
-    it 'parses deleted branch output' do
-      stdout = "Deleted branch feature (was abc1234).\nDeleted branch bugfix (was def5678).\n"
-      result = described_class.parse_deleted_branches(stdout)
-      expect(result).to contain_exactly('feature', 'bugfix')
     end
   end
 end

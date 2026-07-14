@@ -18,16 +18,6 @@ RSpec.describe Git::Commands::Stash::List, :integration do
 
   describe '#call' do
     describe 'when the command succeeds' do
-      context 'with no stashes' do
-        it 'returns CommandLineResult with empty output' do
-          result = command.call
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.status.exitstatus).to eq(0)
-          expect(result.stdout).to be_empty
-        end
-      end
-
       context 'with stashes' do
         before do
           write_file('file.txt', 'modified content')

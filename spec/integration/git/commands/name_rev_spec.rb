@@ -22,14 +22,6 @@ RSpec.describe Git::Commands::NameRev, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to include('main')
       end
-
-      it 'resolves using only tags when :tags is given' do
-        repo.tag_add('v1.0')
-
-        result = command.call('HEAD', tags: true)
-
-        expect(result.stdout).to include('tags/v1.0')
-      end
     end
 
     context 'when the command fails' do

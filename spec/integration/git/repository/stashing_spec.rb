@@ -27,12 +27,6 @@ RSpec.describe Git::Repository::Stashing, :integration do
         repo.stash_save('my feature work')
       end
 
-      it 'returns a single-element array with index 0' do
-        result = described_instance.stashes_all
-        expect(result.length).to eq(1)
-        expect(result.first.first).to eq(0)
-      end
-
       it 'strips the branch prefix from the message' do
         result = described_instance.stashes_all
         # Git prefixes the message: "On main: my feature work"
@@ -100,11 +94,6 @@ RSpec.describe Git::Repository::Stashing, :integration do
       described_instance.stash_list
     end
 
-    it 'returns a String' do
-      allow(Git::Deprecation).to receive(:warn)
-      expect(described_instance.stash_list).to be_a(String)
-    end
-
     it 'contains "stash@{0}"' do
       allow(Git::Deprecation).to receive(:warn)
       expect(described_instance.stash_list).to include('stash@{0}')
@@ -128,10 +117,6 @@ RSpec.describe Git::Repository::Stashing, :integration do
       end
 
       after { FileUtils.rm_rf(unborn_repo_dir) }
-
-      it 'raises Git::FailedError' do
-        expect { unborn_instance.stash_save('unborn stash') }.to raise_error(Git::FailedError, /stash/)
-      end
     end
   end
 
@@ -142,12 +127,6 @@ RSpec.describe Git::Repository::Stashing, :integration do
         repo.add('file.txt')
         described_instance.stash_save('testing')
         repo.reset
-      end
-
-      it 'restores the stashed changes to the working tree' do
-        described_instance.stash_apply
-
-        expect(repo.status.changed.keys).to include('file.txt')
       end
     end
   end

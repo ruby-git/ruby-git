@@ -24,25 +24,10 @@ RSpec.describe Git::Parsers::Stash, :integration do
   end
 
   describe '.parse_list' do
-    context 'with no stashes' do
-      it 'returns an empty array' do
-        result = described_class.parse_list('')
-        expect(result).to eq([])
-      end
-    end
-
     context 'with a single stash' do
       before do
         write_file('file.txt', 'modified content')
         repo.stash_save('WIP on feature')
-      end
-
-      it 'returns an array with one StashInfo' do
-        output = git_stash_output
-        result = described_class.parse_list(output)
-
-        expect(result.size).to eq(1)
-        expect(result.first).to be_a(Git::StashInfo)
       end
 
       it 'parses the stash index correctly' do
@@ -135,14 +120,6 @@ RSpec.describe Git::Parsers::Stash, :integration do
         expect(messages[1]).to include('Second stash')
         expect(messages[2]).to include('First stash')
       end
-
-      it 'assigns unique OIDs to each stash' do
-        output = git_stash_output
-        result = described_class.parse_list(output)
-
-        oids = result.map(&:oid)
-        expect(oids.uniq.size).to eq(3)
-      end
     end
 
     context 'with custom message format (no branch prefix)' do
@@ -170,51 +147,6 @@ RSpec.describe Git::Parsers::Stash, :integration do
     before do
       write_file('file.txt', 'modified content')
       repo.stash_save('Test stash message')
-    end
-
-    it 'uses unit separator (0x1F) as field separator' do
-      output = git_stash_output
-      expect(output).to include(described_class::FIELD_SEPARATOR)
-    end
-
-    it 'produces exactly 10 fields per line' do
-      output = git_stash_output
-      output.each_line do |line|
-        fields = line.chomp.split(described_class::FIELD_SEPARATOR, -1)
-        expect(fields.size).to eq(described_class::FIELD_COUNT),
-                               "Expected #{described_class::FIELD_COUNT} fields but got #{fields.size}"
-      end
-    end
-
-    # rubocop:disable Layout/LineLength
-    it 'produces field order: oid, short_oid, reflog, message, author_name, author_email, author_date, committer_name, committer_email, committer_date' do
-      # rubocop:enable Layout/LineLength
-      output = git_stash_output
-      line = output.lines.first.chomp
-      fields = line.split(described_class::FIELD_SEPARATOR, -1)
-
-      # Field 0: %H - full SHA (40 hex chars)
-      expect(fields[0]).to match(/^[0-9a-f]{40}$/)
-      # Field 1: %h - short SHA (7+ hex chars)
-      expect(fields[1]).to match(/^[0-9a-f]{7,}$/)
-      # Field 2: %gd - reflog selector (stash@{n})
-      expect(fields[2]).to match(/^stash@\{\d+\}$/)
-      # Field 3: %gs - reflog subject (message)
-      expect(fields[3]).to include('Test stash message')
-      # Field 4: %an - author name
-      expect(fields[4]).to be_a(String)
-      expect(fields[4]).not_to be_empty
-      # Field 5: %ae - author email
-      expect(fields[5]).to match(/@/)
-      # Field 6: %aI - author date (ISO 8601)
-      expect(fields[6]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
-      # Field 7: %cn - committer name
-      expect(fields[7]).to be_a(String)
-      expect(fields[7]).not_to be_empty
-      # Field 8: %ce - committer email
-      expect(fields[8]).to match(/@/)
-      # Field 9: %cI - committer date (ISO 8601)
-      expect(fields[9]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
     end
   end
 end

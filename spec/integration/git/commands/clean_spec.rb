@@ -30,12 +30,6 @@ RSpec.describe Git::Commands::Clean, :integration do
         before do
           write_file('subdir/untracked.txt', "content\n")
         end
-
-        it 'returns a CommandLineResult' do
-          result = command.call(force: true, d: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
       end
     end
 

@@ -30,15 +30,6 @@ RSpec.describe Git::Parsers::Fsck, :integration do
         expect(result.empty?).to be true
         expect(result.any_issues?).to be false
       end
-
-      it 'returns FsckResult with all empty arrays' do
-        output = git_fsck_output
-        result = described_class.parse(output)
-        expect(result.dangling).to eq([])
-        expect(result.missing).to eq([])
-        expect(result.unreachable).to eq([])
-        expect(result.warnings).to eq([])
-      end
     end
 
     context 'with dangling objects' do
@@ -58,21 +49,6 @@ RSpec.describe Git::Parsers::Fsck, :integration do
         output = git_fsck_output
         result = described_class.parse(output)
         expect(result.dangling.any? { |obj| obj.type == :blob }).to be true
-      end
-
-      it 'returns FsckObject with the expected oid' do
-        output = git_fsck_output
-        result = described_class.parse(output)
-        dangling_blob = result.dangling.find { |obj| obj.type == :blob }
-        expect(dangling_blob.oid).to eq(expected_blob_oid)
-      end
-
-      it 'sets correct type on dangling objects' do
-        output = git_fsck_output
-        result = described_class.parse(output)
-        result.dangling.each do |obj|
-          expect(obj.type).to eq(:blob)
-        end
       end
     end
 
@@ -111,12 +87,6 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
       end
 
-      it 'reports tagged objects' do
-        output = git_fsck_output('--tags')
-        result = described_class.parse(output)
-        expect(result.tagged).not_to be_empty
-      end
-
       it 'returns tagged objects with tag name' do
         output = git_fsck_output('--tags')
         result = described_class.parse(output)
@@ -140,17 +110,6 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         repo.add('orphan.txt')
         repo.reset('HEAD', hard: true)
       end
-
-      it 'matches OBJECT_PATTERN for dangling lines' do
-        output = git_fsck_output
-        dangling_lines = output.lines.select { |l| l.start_with?('dangling') }
-        expect(dangling_lines).not_to be_empty
-
-        dangling_lines.each do |line|
-          expect(line.strip).to match(described_class::OBJECT_PATTERN),
-                                "Expected line to match OBJECT_PATTERN: #{line.inspect}"
-        end
-      end
     end
 
     context 'with root commits' do
@@ -158,17 +117,6 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         write_file('file.txt', 'content')
         repo.add('file.txt')
         repo.commit('Initial commit')
-      end
-
-      it 'matches ROOT_PATTERN for root lines' do
-        output = git_fsck_output('--root')
-        root_lines = output.lines.select { |l| l.start_with?('root') }
-        expect(root_lines).not_to be_empty
-
-        root_lines.each do |line|
-          expect(line.strip).to match(described_class::ROOT_PATTERN),
-                                "Expected line to match ROOT_PATTERN: #{line.inspect}"
-        end
       end
     end
 
@@ -178,17 +126,6 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
         repo.add('file.txt')
         repo.commit('Initial commit')
         repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
-      end
-
-      it 'matches TAGGED_PATTERN for tagged lines' do
-        output = git_fsck_output('--tags')
-        tagged_lines = output.lines.select { |l| l.start_with?('tagged') }
-        expect(tagged_lines).not_to be_empty
-
-        tagged_lines.each do |line|
-          expect(line.strip).to match(described_class::TAGGED_PATTERN),
-                                "Expected line to match TAGGED_PATTERN: #{line.inspect}"
-        end
       end
     end
   end

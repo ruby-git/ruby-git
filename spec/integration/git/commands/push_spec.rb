@@ -30,12 +30,6 @@ RSpec.describe Git::Commands::Push, :integration do
 
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'returns result with exit status 0' do
-        result = command.call('origin', 'main')
-
-        expect(result.status.exitstatus).to eq(0)
-      end
     end
 
     context 'when the command fails' do

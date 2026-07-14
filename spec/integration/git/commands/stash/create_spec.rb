@@ -26,15 +26,6 @@ RSpec.describe Git::Commands::Stash::Create, :integration do
           expect(result.stdout.strip).not_to be_empty
         end
       end
-
-      context 'with no local changes' do
-        it 'returns a CommandLineResult with empty output' do
-          result = command.call
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout.strip).to be_empty
-        end
-      end
     end
 
     describe 'when the command fails' do

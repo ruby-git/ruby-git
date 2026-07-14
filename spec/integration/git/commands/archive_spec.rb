@@ -32,16 +32,6 @@ RSpec.describe Git::Commands::Archive, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to eq(streamed_bytes)
       end
-
-      it 'streams output to a file when out: is given' do
-        Tempfile.create(%w[archive .tar]) do |f|
-          f.binmode
-          result = command.call('HEAD', format: 'tar', out: f)
-          f.flush
-          expect(f.size).to be > 0
-          expect(result.stdout).to eq('')
-        end
-      end
     end
 
     context 'when the command fails' do

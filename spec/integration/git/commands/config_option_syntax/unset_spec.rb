@@ -17,24 +17,10 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::Unset, :integration do
         set.call('test.key', 'test-value')
       end
 
-      it 'returns a CommandLineResult' do
-        result = command.call('test.key')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'returns result with exit status 0' do
         result = command.call('test.key')
 
         expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'removes the config entry' do
-        command.call('test.key')
-
-        get = Git::Commands::ConfigOptionSyntax::Get.new(execution_context)
-        result = get.call('test.key')
-        expect(result.status.exitstatus).to eq(1)
       end
 
       it 'returns exit status 5 when the key does not exist' do

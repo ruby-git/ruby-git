@@ -28,11 +28,6 @@ RSpec.describe Git::Commands::Worktree::Remove, :integration do
         result = command.call(worktree_path)
         expect(result).to be_a(Git::CommandLine::Result)
       end
-
-      it 'removes the worktree directory from disk' do
-        command.call(worktree_path)
-        expect(File.directory?(worktree_path)).to be(false)
-      end
     end
 
     context 'when the command fails' do

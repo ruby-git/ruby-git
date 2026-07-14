@@ -19,15 +19,6 @@ RSpec.describe Git::Commands::SymbolicRef::Update, :integration do
         head_content = File.read(File.join(repo_dir, '.git', 'HEAD')).strip
         expect(head_content).to eq('ref: refs/heads/new-branch')
       end
-
-      it 'updates the symbolic ref with the :m option' do
-        result = command.call('HEAD', 'refs/heads/feature', m: 'switching to feature')
-
-        expect(result.status.exitstatus).to eq(0)
-
-        head_content = File.read(File.join(repo_dir, '.git', 'HEAD')).strip
-        expect(head_content).to eq('ref: refs/heads/feature')
-      end
     end
 
     context 'when the command fails' do

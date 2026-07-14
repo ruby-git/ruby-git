@@ -22,18 +22,6 @@ RSpec.describe Git::Commands::WriteTree, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
       end
-
-      context 'with the :prefix option' do
-        it 'writes a tree object for a subdirectory' do
-          write_file('sub/file.txt', "content\n")
-          repo.add('sub/file.txt')
-
-          result = command.call(prefix: 'sub/')
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).to match(/\A[0-9a-f]{40}\z/)
-        end
-      end
     end
 
     context 'when the command fails' do

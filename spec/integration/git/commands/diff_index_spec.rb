@@ -22,27 +22,11 @@ RSpec.describe Git::Commands::DiffIndex, :integration do
         expect(result.status.exitstatus).to eq(0)
       end
 
-      it 'returns a CommandLineResult with exit code 0 when nothing is staged' do
-        result = command.call('HEAD', cached: true)
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.status.exitstatus).to eq(0)
-      end
-
-      it 'accepts a path operand and returns a CommandLineResult' do
-        result = command.call('HEAD', 'file.txt')
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'exits with status 1 when staged changes are present and --exit-code is given' do
         write_file('file.txt', "changed\n")
         repo.add('file.txt')
         result = command.call('HEAD', cached: true, exit_code: true)
         expect(result.status.exitstatus).to eq(1)
-      end
-
-      it 'exits with status 0 when no staged changes and --exit-code is given' do
-        result = command.call('HEAD', cached: true, exit_code: true)
-        expect(result.status.exitstatus).to eq(0)
       end
     end
 

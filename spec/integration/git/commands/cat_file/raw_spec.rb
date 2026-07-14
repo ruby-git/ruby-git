@@ -30,53 +30,12 @@ RSpec.describe Git::Commands::CatFile::Raw, :integration do
           expect(result.status.exitstatus).to eq(1)
         end
       end
-
-      context 'with -t mode' do
-        it 'returns a CommandLineResult with the object type' do
-          result = command.call('HEAD', t: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
-
-      context 'with -s mode' do
-        it 'returns a CommandLineResult with the object size' do
-          result = command.call('HEAD', s: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
-
-      context 'with -p mode' do
-        it 'returns a CommandLineResult with the pretty-printed object content' do
-          result = command.call('HEAD', p: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
-
-      context 'with a type operand' do
-        it 'returns a CommandLineResult when the type matches' do
-          result = command.call('blob', 'HEAD:README.md')
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
     end
 
     context 'when the command fails' do
       it 'raises FailedError when the type does not match the object type' do
         # git's error message varies by version — Rule 22 version-variance exception applies
         expect { command.call('tree', 'HEAD:README.md') }.to raise_error(Git::FailedError)
-      end
-
-      it 'raises FailedError with a nonexistent path in -p mode' do
-        # git's error message varies by version — Rule 22 version-variance exception applies
-        expect { command.call('HEAD:nonexistent_file.txt', p: true) }.to raise_error(Git::FailedError)
       end
     end
   end

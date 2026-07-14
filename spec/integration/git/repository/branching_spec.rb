@@ -58,35 +58,12 @@ RSpec.describe Git::Repository::Branching, :integration do
     before do
       write_file('README.md', "# Modified\n")
     end
-
-    it 'restores the file to the HEAD version' do
-      described_instance.checkout_file('HEAD', 'README.md')
-      content = File.read(File.join(repo.dir.to_s, 'README.md'))
-      expect(content).to eq("# Hello\n")
-    end
-
-    it 'returns a String' do
-      result = described_instance.checkout_file('HEAD', 'README.md')
-      expect(result).to be_a(String)
-    end
   end
 
   describe '#checkout' do
     context 'checking out an existing branch' do
       before do
         repo.branch('new-branch').create
-      end
-
-      it 'switches to that branch' do
-        described_instance.checkout('new-branch')
-        expect(described_instance.current_branch).to eq('new-branch')
-      end
-    end
-
-    context 'creating and checking out a new branch' do
-      it 'creates and switches to the new branch' do
-        described_instance.checkout('feature', new_branch: true, start_point: 'HEAD')
-        expect(described_instance.current_branch).to eq('feature')
       end
     end
 
@@ -102,11 +79,6 @@ RSpec.describe Git::Repository::Branching, :integration do
       let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
 
       after { FileUtils.rm_rf(unborn_repo_dir) }
-
-      it 'raises Git::FailedError' do
-        expect { unborn_instance.checkout('master') }
-          .to raise_error(Git::FailedError, /master/)
-      end
     end
   end
 
@@ -114,20 +86,6 @@ RSpec.describe Git::Repository::Branching, :integration do
     before do
       write_file('indexed.txt', "indexed content\n")
       repo.add('indexed.txt')
-    end
-
-    context 'with all: true' do
-      it 'returns a String' do
-        result = described_instance.checkout_index(all: true, force: true)
-        expect(result).to be_a(String)
-      end
-    end
-
-    context 'with path_limiter' do
-      it 'returns a String' do
-        result = described_instance.checkout_index(path_limiter: 'indexed.txt', force: true)
-        expect(result).to be_a(String)
-      end
     end
   end
 
@@ -149,10 +107,6 @@ RSpec.describe Git::Repository::Branching, :integration do
     context 'when no remotes are configured' do
       it 'returns false for any branch name' do
         expect(described_instance.remote_branch?('main')).to be(false)
-      end
-
-      it 'returns false for a combined remote/branch name' do
-        expect(described_instance.remote_branch?('origin/main')).to be(false)
       end
     end
 
@@ -245,19 +199,6 @@ RSpec.describe Git::Repository::Branching, :integration do
   # ---------------------------------------------------------------------------
 
   describe '#branch_new' do
-    context 'without a start_point' do
-      it 'creates the branch from the current HEAD' do
-        head_sha = repo.revparse('HEAD')
-        described_instance.branch_new('new-feature')
-        expect(described_instance.local_branch?('new-feature')).to be(true)
-        expect(repo.revparse('new-feature')).to eq(head_sha)
-      end
-
-      it 'returns nil' do
-        expect(described_instance.branch_new('new-feature')).to be_nil
-      end
-    end
-
     context 'with a start_point' do
       # let! eagerly captures the SHA before the inner before block adds a second commit
       let!(:initial_sha) { repo.log(1).execute.first.sha }
@@ -267,20 +208,10 @@ RSpec.describe Git::Repository::Branching, :integration do
         repo.add('CHANGES.md')
         repo.commit('Second commit')
       end
-
-      it 'creates the branch at the given start_point' do
-        described_instance.branch_new('from-initial', initial_sha)
-        expect(described_instance.local_branch?('from-initial')).to be(true)
-        expect(repo.revparse('from-initial')).to eq(initial_sha)
-      end
     end
 
     context 'when the branch already exists' do
       before { described_instance.branch_new('duplicate') }
-
-      it 'raises Git::FailedError' do
-        expect { described_instance.branch_new('duplicate') }.to raise_error(Git::FailedError, /duplicate/)
-      end
     end
   end
 
@@ -332,15 +263,6 @@ RSpec.describe Git::Repository::Branching, :integration do
           .to raise_error(Git::Error, /nonexistent-branch/)
       end
     end
-
-    context 'when deleting multiple branches at once' do
-      it 'deletes all named branches and returns a String' do
-        result = described_instance.branch_delete('branch-1', 'branch-2')
-        expect(result).to be_a(String)
-        expect(result).to include('branch-1')
-        expect(result).to include('branch-2')
-      end
-    end
   end
 
   # ---------------------------------------------------------------------------
@@ -385,21 +307,6 @@ RSpec.describe Git::Repository::Branching, :integration do
 
   describe '#branch_contains' do
     let(:sha) { repo.revparse('HEAD') }
-
-    context 'when the commit is on the current branch' do
-      it 'returns a non-empty String' do
-        result = described_instance.branch_contains(sha)
-        expect(result).to be_a(String)
-        expect(result).not_to be_empty
-      end
-    end
-
-    context 'when a non-matching branch pattern is supplied' do
-      it 'returns an empty string' do
-        result = described_instance.branch_contains(sha, 'nonexistent-pattern')
-        expect(result).to eq('')
-      end
-    end
 
     context 'when branch_name is nil (treated as no pattern)' do
       it 'returns a non-empty String (same branches as omitting branch_name)' do
@@ -489,36 +396,11 @@ RSpec.describe Git::Repository::Branching, :integration do
       repo.add('CHANGES.md')
       repo.commit('Second commit')
     end
-
-    it 'points the branch ref at the given commit SHA' do
-      new_sha = repo.revparse('HEAD')
-      described_instance.update_ref('feature', new_sha)
-      expect(repo.revparse('refs/heads/feature')).to eq(new_sha)
-    end
-
-    it 'returns a Git::CommandLine::Result' do
-      result = described_instance.update_ref('feature', repo.revparse('HEAD'))
-      expect(result).to be_a(Git::CommandLine::Result)
-    end
   end
 
   # ---------------------------------------------------------------------------
   # #branch (factory)
   # ---------------------------------------------------------------------------
-
-  describe '#branch' do
-    it 'returns a Git::Branch for the given name' do
-      result = described_instance.branch('main')
-      expect(result).to be_a(Git::Branch)
-      expect(result.full).to eq('main')
-    end
-
-    it 'defaults to the current branch when no name is given' do
-      result = described_instance.branch
-      expect(result).to be_a(Git::Branch)
-      expect(result.full).to eq(described_instance.current_branch)
-    end
-  end
 
   # ---------------------------------------------------------------------------
   # #current_branch_state

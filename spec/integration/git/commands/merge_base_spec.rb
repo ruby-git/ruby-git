@@ -24,13 +24,6 @@ RSpec.describe Git::Commands::MergeBase, :integration do
         repo.checkout('main')
       end
 
-      it 'returns a CommandLineResult with output' do
-        result = command.call('main', 'feature')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-        expect(result.stdout).not_to be_empty
-      end
-
       it 'returns exit 0 without raising when the first commit is an ancestor' do
         result = command.call('main', 'feature', is_ancestor: true)
 

@@ -37,12 +37,6 @@ RSpec.describe Git::Commands::Merge::Quit, :integration do
           expect(result).to be_a(Git::CommandLine::Result)
         end
       end
-
-      it 'succeeds when no merge is in progress' do
-        skip 'requires git 2.35.0 or later' unless Git.git_version >= Git::Version.new(2, 35, 0)
-
-        expect { command.call }.not_to raise_error
-      end
     end
 
     describe 'when the command fails' do

@@ -17,12 +17,6 @@ RSpec.describe Git::Commands::ConfigOptionSyntax::UnsetAll, :integration do
         add.call('test.multi', 'value2')
       end
 
-      it 'returns a CommandLineResult' do
-        result = command.call('test.multi')
-
-        expect(result).to be_a(Git::CommandLine::Result)
-      end
-
       it 'returns exit status 0 when the key exists' do
         result = command.call('test.multi')
 

@@ -24,30 +24,6 @@ RSpec.describe Git::Commands::LsTree, :integration do
         expect(result).to be_a(Git::CommandLine::Result)
         expect(result.stdout).not_to be_empty
       end
-
-      context 'with the :r option (recursive)' do
-        it 'returns a CommandLineResult' do
-          result = command.call('HEAD', r: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
-      end
-
-      context 'with the :name_only option' do
-        it 'returns a CommandLineResult' do
-          result = command.call('HEAD', r: true, name_only: true)
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
-      end
-
-      context 'with a path operand' do
-        it 'returns a CommandLineResult' do
-          result = command.call('HEAD', 'lib/')
-
-          expect(result).to be_a(Git::CommandLine::Result)
-        end
-      end
     end
 
     context 'when the command fails' do

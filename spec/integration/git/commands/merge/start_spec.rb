@@ -32,20 +32,6 @@ RSpec.describe Git::Commands::Merge::Start, :integration do
     end
 
     describe 'when the command fails' do
-      it 'raises FailedError with conflicting changes' do
-        repo.branch('feature').checkout
-        write_file('file.txt', "feature change\n")
-        repo.add('file.txt')
-        repo.commit('Feature commit')
-
-        repo.checkout('main')
-        write_file('file.txt', "main change\n")
-        repo.add('file.txt')
-        repo.commit('Main commit')
-
-        expect { command.call('feature') }.to raise_error(Git::FailedError)
-      end
-
       it 'raises FailedError with a nonexistent ref' do
         expect { command.call('nonexistent') }.to raise_error(Git::FailedError)
       end

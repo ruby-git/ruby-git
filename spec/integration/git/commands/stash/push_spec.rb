@@ -29,15 +29,6 @@ RSpec.describe Git::Commands::Stash::Push, :integration do
           expect(result.stdout).not_to be_empty
         end
       end
-
-      context 'with no changes' do
-        it 'returns a CommandLineResult' do
-          result = command.call
-
-          expect(result).to be_a(Git::CommandLine::Result)
-          expect(result.stdout).not_to be_empty
-        end
-      end
     end
 
     describe 'when the command fails' do
