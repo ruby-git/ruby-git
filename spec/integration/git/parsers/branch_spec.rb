@@ -20,15 +20,6 @@ RSpec.describe Git::Parsers::Branch, :integration do
     repo.execution_context.command_capturing('branch', '--list', format_arg, *args).stdout
   end
 
-  describe 'FORMAT_STRING validation' do
-    # These tests validate that real git output matches the format assumed by unit tests
-    before do
-      write_file('file.txt')
-      repo.add('file.txt')
-      repo.commit('Initial commit')
-    end
-  end
-
   describe '.parse_list' do
     context 'with basic branches' do
       before do

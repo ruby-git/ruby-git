@@ -104,30 +104,4 @@ RSpec.describe Git::Repository::Stashing, :integration do
       expect(described_instance.stash_list).to include('WIP')
     end
   end
-
-  describe '#stash_save' do
-    context 'when the repository has no commits (unborn branch)' do
-      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
-      let(:unborn_repo) { init_test_repo(unborn_repo_dir) }
-      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
-
-      before do
-        File.write(File.join(unborn_repo_dir, 'file.txt'), 'hello')
-        unborn_repo.add('file.txt')
-      end
-
-      after { FileUtils.rm_rf(unborn_repo_dir) }
-    end
-  end
-
-  describe '#stash_apply' do
-    context 'after saving a stash and resetting the working tree' do
-      before do
-        write_file('file.txt', 'modified content')
-        repo.add('file.txt')
-        described_instance.stash_save('testing')
-        repo.reset
-      end
-    end
-  end
 end

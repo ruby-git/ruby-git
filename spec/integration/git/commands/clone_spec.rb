@@ -29,7 +29,7 @@ RSpec.describe Git::Commands::Clone, :integration do
   end
 
   describe '#call' do
-    describe 'when the command succeeds' do
+    context 'when the command succeeds' do
       it 'returns a CommandLineResult' do
         result = command.call(source_dir, File.join(clone_dir, 'cloned'))
 
@@ -37,17 +37,11 @@ RSpec.describe Git::Commands::Clone, :integration do
       end
     end
 
-    describe 'when the command fails' do
+    context 'when the command fails' do
       it 'raises FailedError with a nonexistent source' do
         nonexistent = File.join(clone_dir, 'nonexistent_source')
         expect { command.call(nonexistent, File.join(clone_dir, 'cloned')) }.to raise_error(Git::FailedError)
       end
-    end
-
-    describe 'when the execution context has a logger' do
-      let(:log_output) { StringIO.new }
-      let(:logger) { Logger.new(log_output, level: Logger::DEBUG) }
-      let(:execution_context) { Git::ExecutionContext::Global.new(logger: logger) }
     end
   end
 end

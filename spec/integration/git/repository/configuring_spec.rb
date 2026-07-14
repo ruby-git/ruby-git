@@ -65,14 +65,6 @@ RSpec.describe Git::Repository, :integration do
         expect(result['section.key']).to eq('value')
       end
     end
-
-    context 'when writing with a file: option then reading back' do
-      let(:config_file) { File.join(repo_dir, 'custom.config') }
-    end
-
-    context 'when include.path is set to chain a custom config file' do
-      let(:custom_config_path) { File.join(repo_dir, 'custom.config') }
-    end
   end
 
   describe '#global_config', skip: unless_git('2.32.0', 'GIT_CONFIG_GLOBAL isolation') do

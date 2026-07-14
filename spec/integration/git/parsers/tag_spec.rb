@@ -179,16 +179,4 @@ RSpec.describe Git::Parsers::Tag, :integration do
       end
     end
   end
-
-  describe 'FORMAT_STRING validation' do
-    # These tests validate that real git output matches the format assumptions
-    # used in unit test fixtures
-
-    before do
-      write_file('file.txt', 'content')
-      repo.add('file.txt')
-      repo.commit('Initial commit')
-      repo.tag_add('v1.0.0', annotate: true, message: 'Release v1.0.0')
-    end
-  end
 end

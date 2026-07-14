@@ -57,10 +57,4 @@ RSpec.describe Git::Repository::Committing, :integration do
       end
     end
   end
-
-  describe '#set_index' do
-    let(:custom_index_path) { File.join(repo_dir, 'custom_index') }
-
-    after { FileUtils.rm_rf(custom_index_path) }
-  end
 end

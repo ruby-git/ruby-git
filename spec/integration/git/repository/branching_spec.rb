@@ -54,41 +54,6 @@ RSpec.describe Git::Repository::Branching, :integration do
     end
   end
 
-  describe '#checkout_file' do
-    before do
-      write_file('README.md', "# Modified\n")
-    end
-  end
-
-  describe '#checkout' do
-    context 'checking out an existing branch' do
-      before do
-        repo.branch('new-branch').create
-      end
-    end
-
-    context 'when the repository has no commits' do
-      let(:unborn_repo_dir) { Dir.mktmpdir('unborn_repo') }
-      let(:unborn_repo) do
-        r = Git.init(unborn_repo_dir, initial_branch: 'master')
-        r.config_set('user.email', 'test@example.com')
-        r.config_set('user.name', 'Test User')
-        r.config_set('commit.gpgsign', 'false')
-        r
-      end
-      let(:unborn_instance) { Git::Repository.new(execution_context: unborn_repo.execution_context) }
-
-      after { FileUtils.rm_rf(unborn_repo_dir) }
-    end
-  end
-
-  describe '#checkout_index' do
-    before do
-      write_file('indexed.txt', "indexed content\n")
-      repo.add('indexed.txt')
-    end
-  end
-
   describe '#local_branch?' do
     context 'when the branch exists locally' do
       it 'returns true' do
@@ -197,23 +162,6 @@ RSpec.describe Git::Repository::Branching, :integration do
   # ---------------------------------------------------------------------------
   # #branch_new
   # ---------------------------------------------------------------------------
-
-  describe '#branch_new' do
-    context 'with a start_point' do
-      # let! eagerly captures the SHA before the inner before block adds a second commit
-      let!(:initial_sha) { repo.log(1).execute.first.sha }
-
-      before do
-        write_file('CHANGES.md', "changes\n")
-        repo.add('CHANGES.md')
-        repo.commit('Second commit')
-      end
-    end
-
-    context 'when the branch already exists' do
-      before { described_instance.branch_new('duplicate') }
-    end
-  end
 
   # ---------------------------------------------------------------------------
   # #branch_delete
@@ -388,15 +336,6 @@ RSpec.describe Git::Repository::Branching, :integration do
   # ---------------------------------------------------------------------------
   # #update_ref
   # ---------------------------------------------------------------------------
-
-  describe '#update_ref' do
-    before do
-      repo.branch('feature').create
-      write_file('CHANGES.md', "changes\n")
-      repo.add('CHANGES.md')
-      repo.commit('Second commit')
-    end
-  end
 
   # ---------------------------------------------------------------------------
   # #branch (factory)

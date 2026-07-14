@@ -96,37 +96,4 @@ git commit --allow-empty -m "Another root" >/dev/null 2>&1`
       end
     end
   end
-
-  describe 'output format validation' do
-    # These tests validate that fsck output patterns match the regex patterns
-    # used in unit test fixtures
-
-    context 'with dangling objects' do
-      before do
-        write_file('file.txt', 'original content')
-        repo.add('file.txt')
-        repo.commit('Initial commit')
-        write_file('orphan.txt', 'orphaned content')
-        repo.add('orphan.txt')
-        repo.reset('HEAD', hard: true)
-      end
-    end
-
-    context 'with root commits' do
-      before do
-        write_file('file.txt', 'content')
-        repo.add('file.txt')
-        repo.commit('Initial commit')
-      end
-    end
-
-    context 'with tagged objects' do
-      before do
-        write_file('file.txt', 'content')
-        repo.add('file.txt')
-        repo.commit('Initial commit')
-        repo.tag_add('v1.0.0', annotate: true, message: 'Version 1.0.0')
-      end
-    end
-  end
 end
