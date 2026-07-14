@@ -485,7 +485,7 @@ module Git
       #
       def set_commit(data) # rubocop:disable Naming/AccessorMethodName
         Git::Deprecation.warn(
-          'Git::Object::Commit#set_commit is deprecated and will be removed in a future version. ' \
+          'Git::Object::Commit#set_commit is deprecated and will be removed in v6.0.0. ' \
           'Use #from_data instead.'
         )
         from_data(data)
@@ -660,7 +660,10 @@ module Git
     # @deprecated use `Git::Object::Tag.new` instead
     #
     private_class_method def self.new_tag(base, objectish)
-      Git::Deprecation.warn('Git::Object.new with is_tag argument is deprecated. Use Git::Object::Tag.new instead.')
+      Git::Deprecation.warn(
+        'Git::Object.new with is_tag argument is deprecated and will be removed in v6.0.0. ' \
+        'Use Git::Object::Tag.new instead.'
+      )
       Git::Object::Tag.new(base, objectish)
     end
 

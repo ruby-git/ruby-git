@@ -93,6 +93,32 @@ require 'git'
 `Git.open` (e.g., `repo.commit`, `repo.status`, `repo.add`) requires no
 changes.
 
+**Monkeypatching `Git::Base` is deprecated:** v5.x includes a temporary
+compatibility shim for applications that define instance methods on `Git::Base`.
+Those methods are made available on `Git::Repository` instances, but each method
+definition emits a deprecation warning and this shim will be removed in v6.0.0.
+
+Move custom repository helpers to an application-owned extension module and
+include or prepend that module into `Git::Repository` during application setup:
+
+```ruby
+# Deprecated in v5.x and will be removed in v6.0.0
+module Git::Base
+  def worktree_clean?
+    status.changed.empty?
+  end
+end
+
+# v5.x — keep the extension in application-owned code
+module MyAppGitRepositoryExtensions
+  def worktree_clean?
+    status.changed.empty?
+  end
+end
+
+Git::Repository.include(MyAppGitRepositoryExtensions)
+```
+
 ---
 
 #### Return type of `Git.open`, `Git.clone`, `Git.init`, `Git.bare`

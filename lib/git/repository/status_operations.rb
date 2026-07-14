@@ -58,7 +58,7 @@ module Git
       #
       def empty?
         Git::Deprecation.warn(
-          'Git::Repository#empty? is deprecated and will be removed in a future version. ' \
+          'Git::Repository#empty? is deprecated and will be removed in v6.0.0. ' \
           'Use Git::Repository#no_commits? instead.'
         )
         no_commits?

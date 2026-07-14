@@ -242,7 +242,7 @@ module Git
       def context_helpers_deprecate_check_argument(check, must_exist)
         if !check.nil? && defined?(Git::Deprecation)
           Git::Deprecation.warn(
-            'The "check" argument is deprecated and will be removed in a future version. ' \
+            'The "check" argument is deprecated and will be removed in v6.0.0. ' \
             'Use "must_exist:" instead.'
           )
         end

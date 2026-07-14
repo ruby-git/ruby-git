@@ -22,10 +22,10 @@ RSpec.describe Git::Base do
     end
 
     context 'when a method is defined in Git::Base' do
-      it 'emits a deprecation warning naming the method and pointing to Git::Repository' do
+      it 'emits a deprecation warning naming the method and recommending an extension module' do
         expect(Git::Deprecation).to receive(:warn).with(
           'Monkeypatching Git::Base is deprecated and will be removed in v6.0.0. ' \
-          "Define #{test_method_name} in Git::Repository instead."
+          "Move #{test_method_name} to an application-owned extension module for Git::Repository."
         )
         described_class.define_method(test_method_name) { nil }
       end

@@ -260,7 +260,8 @@ RSpec.describe Git::Log do
     describe '#each' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#each is deprecated. Call #execute and then #each on the result object.'
+          'Calling Git::Log#each is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #each on the result object.'
         )
         described_instance.each { |_commit| nil }
       end
@@ -273,7 +274,8 @@ RSpec.describe Git::Log do
     describe '#size' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#size is deprecated. Call #execute and then #size on the result object.'
+          'Calling Git::Log#size is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #size on the result object.'
         )
         described_instance.size
       end
@@ -286,7 +288,8 @@ RSpec.describe Git::Log do
     describe '#to_s' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#to_s is deprecated. Call #execute and then #to_s on the result object.'
+          'Calling Git::Log#to_s is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #to_s on the result object.'
         )
         described_instance.to_s
       end
@@ -299,7 +302,8 @@ RSpec.describe Git::Log do
     describe '#first' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#first is deprecated. Call #execute and then #first on the result object.'
+          'Calling Git::Log#first is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #first on the result object.'
         )
         described_instance.first
       end
@@ -312,7 +316,8 @@ RSpec.describe Git::Log do
     describe '#last' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#last is deprecated. Call #execute and then #last on the result object.'
+          'Calling Git::Log#last is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #last on the result object.'
         )
         described_instance.last
       end
@@ -325,7 +330,8 @@ RSpec.describe Git::Log do
     describe '#[]' do
       it 'emits a deprecation warning directing callers to #execute' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Calling Git::Log#[] is deprecated. Call #execute and then #[] on the result object.'
+          'Calling Git::Log#[] is deprecated and will be removed in v6.0.0. ' \
+          'Call #execute and then #[] on the result object.'
         )
         described_instance[0]
       end

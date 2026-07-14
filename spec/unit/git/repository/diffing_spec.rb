@@ -634,7 +634,8 @@ RSpec.describe Git::Repository::Diffing do
 
       it 'emits a deprecation warning naming the facade method' do
         expect(Git::Deprecation).to receive(:warn).with(
-          'Git::Repository#diff_path_status :path option is deprecated. Use :path_limiter instead.'
+          'Git::Repository#diff_path_status :path option is deprecated and will be removed in v6.0.0. ' \
+          'Use :path_limiter instead.'
         )
         subject
       end

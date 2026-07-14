@@ -73,12 +73,7 @@ module Git
       # @raise [Git::FailedError] when git exits with a non-zero exit status
       #
       def commit(message, opts = {})
-        opts = opts.dup
-        if opts.key?(:add_all)
-          Git::Deprecation.warn('The :add_all option for #commit is deprecated, use :all instead')
-          opts[:all] = opts.delete(:add_all)
-        end
-
+        opts = normalize_commit_options(opts)
         SharedPrivate.assert_valid_opts!(COMMIT_ALLOWED_OPTS, **opts)
 
         call_opts = { no_edit: true }
@@ -221,6 +216,30 @@ module Git
       #
       def write_and_commit_tree(opts = {})
         commit_tree(write_tree, opts)
+      end
+
+      private
+
+      # Normalizes deprecated commit options into their supported form
+      #
+      # @param opts [Hash] caller-provided commit options
+      #
+      # @option opts [Boolean, nil] :add_all (nil) deprecated alias for `:all`
+      #
+      # @return [Hash] options with deprecated aliases translated
+      #
+      # @api private
+      #
+      def normalize_commit_options(opts)
+        opts = opts.dup
+        return opts unless opts.key?(:add_all)
+
+        Git::Deprecation.warn(
+          'The :add_all option for #commit is deprecated and will be removed in v6.0.0. ' \
+          'Use :all instead.'
+        )
+        opts[:all] = opts.delete(:add_all)
+        opts
       end
     end
   end

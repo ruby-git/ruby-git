@@ -750,7 +750,10 @@ module Git
         return unless opts.key?(:path)
 
         if defined?(Git::Deprecation)
-          Git::Deprecation.warn('The :path option for Git.clone is deprecated, use :chdir instead')
+          Git::Deprecation.warn(
+            'The :path option for Git.clone is deprecated and will be removed in v6.0.0. ' \
+            'Use :chdir instead.'
+          )
         end
         path = opts.delete(:path)
         opts[:chdir] ||= path
@@ -775,7 +778,8 @@ module Git
 
         if defined?(Git::Deprecation)
           Git::Deprecation.warn(
-            'The :recursive option for Git.clone is deprecated, use :recurse_submodules instead'
+            'The :recursive option for Git.clone is deprecated and will be removed in v6.0.0. ' \
+            'Use :recurse_submodules instead.'
           )
         end
         opts[:recurse_submodules] = opts.delete(:recursive)
@@ -798,7 +802,10 @@ module Git
         return unless opts.key?(:remote)
 
         if defined?(Git::Deprecation)
-          Git::Deprecation.warn('The :remote option for Git.clone is deprecated, use :origin instead')
+          Git::Deprecation.warn(
+            'The :remote option for Git.clone is deprecated and will be removed in v6.0.0. ' \
+            'Use :origin instead.'
+          )
         end
         opts[:origin] = opts.delete(:remote)
       end

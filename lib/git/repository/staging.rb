@@ -118,8 +118,8 @@ module Git
       #
       def reset_hard(commitish = nil, opts = {})
         Git::Deprecation.warn(
-          'Git::Repository::Staging#reset_hard is deprecated and will be removed in a future version. ' \
-          'Use #reset(commitish, hard: true) instead.'
+          'Git::Repository#reset_hard is deprecated and will be removed in v6.0.0. ' \
+          'Use Git::Repository#reset(commitish, hard: true) instead.'
         )
         reset(commitish, **opts, hard: true)
       end
@@ -438,8 +438,17 @@ module Git
         # @raise [ArgumentError] when a deprecated value is not `true`, `false`, or `nil`
         #
         def migrate_clean_legacy_options(opts)
-          opts = deprecate_clean_option(:ff, ':ff option is deprecated. Use force: 2 instead.', opts)
-          deprecate_clean_option(:force_force, ':force_force option is deprecated. Use force: 2 instead.', opts)
+          opts = deprecate_clean_option(
+            :ff,
+            ':ff option is deprecated and will be removed in v6.0.0. Use force: 2 instead.',
+            opts
+          )
+
+          deprecate_clean_option(
+            :force_force,
+            ':force_force option is deprecated and will be removed in v6.0.0. Use force: 2 instead.',
+            opts
+          )
         end
 
         # Translate a single deprecated clean option key onto `:force`

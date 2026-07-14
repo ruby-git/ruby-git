@@ -222,7 +222,8 @@ module Git
     # @deprecated Use {#execute} and call `each` on the result.
     def each(&)
       Git::Deprecation.warn(
-        'Calling Git::Log#each is deprecated. Call #execute and then #each on the result object.'
+        'Calling Git::Log#each is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #each on the result object.'
       )
       run_log_if_dirty
       @commits.each(&)
@@ -231,7 +232,8 @@ module Git
     # @deprecated Use {#execute} and call `size` on the result.
     def size
       Git::Deprecation.warn(
-        'Calling Git::Log#size is deprecated. Call #execute and then #size on the result object.'
+        'Calling Git::Log#size is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #size on the result object.'
       )
       run_log_if_dirty
       @commits.size
@@ -240,7 +242,8 @@ module Git
     # @deprecated Use {#execute} and call `to_s` on the result.
     def to_s
       Git::Deprecation.warn(
-        'Calling Git::Log#to_s is deprecated. Call #execute and then #to_s on the result object.'
+        'Calling Git::Log#to_s is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #to_s on the result object.'
       )
       run_log_if_dirty
       @commits.join("\n")
@@ -249,7 +252,8 @@ module Git
     # @deprecated Use {#execute} and call the method on the result.
     def first
       Git::Deprecation.warn(
-        'Calling Git::Log#first is deprecated. Call #execute and then #first on the result object.'
+        'Calling Git::Log#first is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #first on the result object.'
       )
       run_log_if_dirty
       @commits.first
@@ -258,7 +262,8 @@ module Git
     # @deprecated Use {#execute} and call the method on the result.
     def last
       Git::Deprecation.warn(
-        'Calling Git::Log#last is deprecated. Call #execute and then #last on the result object.'
+        'Calling Git::Log#last is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #last on the result object.'
       )
       run_log_if_dirty
       @commits.last
@@ -273,7 +278,8 @@ module Git
     #
     def [](index)
       Git::Deprecation.warn(
-        'Calling Git::Log#[] is deprecated. Call #execute and then #[] on the result object.'
+        'Calling Git::Log#[] is deprecated and will be removed in v6.0.0. ' \
+        'Call #execute and then #[] on the result object.'
       )
       run_log_if_dirty
       @commits[index]

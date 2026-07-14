@@ -517,7 +517,8 @@ module Git
             opts[:path_limiter]
           elsif opts.key?(:path)
             Git::Deprecation.warn(
-              'Git::Repository#diff_path_status :path option is deprecated. Use :path_limiter instead.'
+              'Git::Repository#diff_path_status :path option is deprecated and will be removed in v6.0.0. ' \
+              'Use :path_limiter instead.'
             )
             opts[:path]
           end
