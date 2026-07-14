@@ -84,11 +84,11 @@ On the JRuby 10.0.0.1 build, running integration tests takes 1m 52s.
 
 ## Success criteria
 
-**Scope of the planned deletion work:** remove all 328 tests listed in [Tests to remove](#tests-to-remove) that
+**Scope of the deletion work:** remove all 328 tests listed in [Tests to remove](#tests-to-remove) that
 are *not* also listed in [Controversial removals](#controversial-removals). The 22 controversial
 tests are explicitly out of scope and should not be touched until a separate discussion has reached
-a disposition on each one. This document does not perform any deletions; it records the analysis
-so the deletion work can be done in a subsequent PR.
+a disposition on each one. This document records the analysis and rationale; the deletions are
+implemented in [PR #1622](https://github.com/ruby-git/ruby-git/pull/1622).
 
 328 deletions from a suite of 885 leaves **557 integration tests** (885 − 328 = 557).
 
@@ -101,14 +101,14 @@ builds**.
 
 The primary success target is the Windows CI parallel build, the current worst-case at 4m 22s.
 
-| Build | Before | After (measured) | Reduction | Target |
-| ----- | ------ | ---------------- | --------- | ------ |
-| Sequential (local, macOS) | 3m 06s | 1m 54s | 38% | < 2m 00s |
-| Parallel (local, macOS) | 0m 31s | 0m 18s | 42% | < 0m 25s |
-| Parallel (Windows CI) | 4m 22s | — | — | < 3m 00s |
-| Parallel (TruffleRuby CI) | 2m 04s | — | — | < 1m 30s |
-| Parallel (JRuby CI) | 1m 52s | — | — | < 1m 20s |
-| Integration test count | 885 | 557 | 37% | 557 |
+| Build | Before | After (measured) | Reduction | Target | Success |
+| ----- | ------ | ---------------- | --------- | ------ | ------- |
+| Sequential (local, macOS) | 3m 06s | 1m 54s | 38% | < 2m 00s | YES |
+| Parallel (local, macOS) | 0m 31s | 0m 18s | 42% | < 0m 25s | YES |
+| Parallel (Windows CI) | 4m 22s | 3m 11s | 35% | < 3m 00s | **NO** |
+| Parallel (TruffleRuby CI) | 2m 04s | 1m 19s | 36% | < 1m 30s | YES |
+| Serial (JRuby CI) | 1m 52s | 1m 20s | 29% | < 1m 20s | **NO** |
+| Integration test count | 885 | 557 | 37% | 557 | YES |
 
 The work is considered successful when:
 
