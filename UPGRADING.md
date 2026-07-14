@@ -9,6 +9,7 @@ to update your code when upgrading from the preceding major version.
   - [Breaking changes](#breaking-changes)
     - [`Git::Base` removed](#gitbase-removed)
     - [Return type of `Git.open`, `Git.clone`, `Git.init`, `Git.bare`](#return-type-of-gitopen-gitclone-gitinit-gitbare)
+    - [Unsupported options raise `ArgumentError`](#unsupported-options-raise-argumenterror)
     - [`Git::Lib` removed](#gitlib-removed)
     - [`Git::Log#object` is not a path limiter](#gitlogobject-is-not-a-path-limiter)
     - [`Git::CommandLineResult` deprecated](#gitcommandlineresult-deprecated)
@@ -46,6 +47,7 @@ For information on how to suppress or configure deprecation warnings, see the
 | `Git::Base` removed | Hard break | High for code that references it by name | Replace with `Git::Repository` (returned by `Git.open` etc.) |
 | `Git::Lib` removed | Hard break | High for `.lib.*` callers | Use the equivalent method directly on the repo object (see table below) |
 | `Git.open` etc. return `Git::Repository` (not `Git::Base`) | Hard break | Low for most callers; breaks `is_a?(Git::Base)` | Update type checks and update `be_a(Git::Base)` in tests |
+| Unsupported options now raise `ArgumentError` | Behavior change | Medium for code passing unknown or misspelled options | Check option names against the documented API |
 | `Git::Log#object` is not a path limiter | Behavior change | Medium for code that used `object(path)` to filter logs by path | Use `Git::Log#path` for path filtering |
 | `Git::CommandLineResult` deprecated | Deprecation (removed in v6.0.0) | Low; only affects code that references the constant by name | Use `Git::CommandLine::Result` instead |
 
@@ -113,6 +115,27 @@ expect(Git.open(repo_path)).to be_a(Git::Repository)
 `Git::Repository` does not define `.open`, `.bare`, `.clone`, or `.init` class
 methods. Always use `Git.open`, `Git.bare`, `Git.clone`, and `Git.init` to
 construct a repository object.
+
+---
+
+#### Unsupported options raise `ArgumentError`
+
+v5.x validates options more strictly for factory methods and command APIs.
+Unknown options that were silently ignored in v4.x may now raise
+`ArgumentError`. Check option names against the documented API when upgrading,
+especially for calls that pass keyword options through helper methods or shared
+option hashes.
+
+For example, `Git.clone` supports `log:`, not `logger:`. A misspelled or
+unsupported option that v4.x ignored must be corrected:
+
+```ruby
+# v4.x — silently ignored; did not configure clone logging
+Git.clone(url, path, logger: logger)
+
+# v5.x — use the documented option name
+Git.clone(url, path, log: logger)
+```
 
 ---
 
