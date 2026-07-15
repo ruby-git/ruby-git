@@ -509,16 +509,26 @@ module Git
       # @example List only local branches
       #   repo.branches_all.reject(&:remote?)
       #
-      # @return [Array<Git::BranchInfo>] parsed branch information for every
-      #   local and remote-tracking branch
+      # @example Filter by short name pattern
+      #   repo.branches_all(pattern: ['foo'])
+      #   # => [#<data Git::BranchInfo refname="foo", ...>]
       #
-      #   Returns an empty array when the repository has no branches.
+      # @param pattern [Array<String>] optional shell wildcard patterns passed
+      #   directly to `git branch --list`; an empty array (the default) returns
+      #   all branches.  Pattern matching follows git's own rules; behavior may
+      #   differ between local and remote-tracking branches.
+      #
+      # @return [Array<Git::BranchInfo>] parsed branch information for every
+      #   local and remote-tracking branch matching the pattern
+      #
+      #   Returns an empty array when the repository has no branches or no branches
+      #   match the given pattern.
       #
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
-      def branches_all
+      def branches_all(pattern: [])
         result = Git::Commands::Branch::List.new(@execution_context).call(
-          all: true, format: Git::Parsers::Branch::FORMAT_STRING
+          *pattern, all: true, format: Git::Parsers::Branch::FORMAT_STRING
         )
         Git::Parsers::Branch.parse_list(result.stdout)
       end
@@ -573,13 +583,11 @@ module Git
       # @raise [Git::FailedError] if git exits with a non-zero exit status
       #
       def branch(branch_name = current_branch)
-        branch_info = Git::BranchInfo.new(
-          refname: branch_name,
-          target_oid: nil,
-          current: false,
-          worktree: false,
-          symref: nil,
-          upstream: nil
+        short_name = branch_name.match(Git::BRANCH_REFNAME_REGEXP)[:branch_name]
+        branch_info = branches_all(pattern: [short_name]).find { |b| b.refname == branch_name }
+        branch_info ||= Git::BranchInfo.new(
+          refname: branch_name, target_oid: nil, current: false,
+          worktree: false, symref: nil, upstream: nil
         )
         Git::Branch.new(self, branch_info)
       end

@@ -341,9 +341,63 @@ RSpec.describe Git::Repository::Branching, :integration do
   # #branch (factory)
   # ---------------------------------------------------------------------------
 
-  # ---------------------------------------------------------------------------
-  # #current_branch_state
-  # ---------------------------------------------------------------------------
+  describe '#branch' do
+    context 'when the local branch has an upstream tracking branch on a remote' do
+      let(:bare_dir) { Dir.mktmpdir('bare_repo') }
+      let(:branch) { described_instance.branch('foo') }
+
+      after { FileUtils.rm_rf(bare_dir) }
+
+      # Reproduces the user scenario from issue #1270:
+      # local branch 'foo' tracking remote 'origin' branch 'bar'
+      # (deliberately different names to verify upstream.short_name)
+      before do
+        Git.init(bare_dir, bare: true)
+        repo.remote_add('origin', bare_dir)
+        # Create foo, push it to origin as 'bar', then configure tracking
+        repo.branch('foo').create
+        repo.checkout('foo')
+        repo.push('origin', 'foo:bar')
+        repo.config_set('branch.foo.remote', 'origin')
+        repo.config_set('branch.foo.merge', 'refs/heads/bar')
+      end
+
+      it 'returns a Branch whose upstream is the upstream BranchInfo' do
+        expect(branch.upstream).to be_a(Git::BranchInfo)
+      end
+
+      it 'returns a Branch whose upstream remote_name is origin' do
+        expect(branch.upstream.remote_name).to eq('origin')
+      end
+
+      it 'returns a Branch whose upstream short_name is the remote branch name' do
+        expect(branch.upstream.short_name).to eq('bar')
+      end
+
+      it 'returns a Branch whose upstream_remote is a Git::Remote for origin' do
+        expect(branch.upstream_remote).to be_a(Git::Remote)
+        expect(branch.upstream_remote.name).to eq('origin')
+      end
+    end
+
+    context 'when the local branch has no upstream' do
+      it 'returns a Branch with nil upstream' do
+        branch = described_instance.branch('main')
+        expect(branch.upstream).to be_nil
+      end
+
+      it 'returns a Branch with nil upstream_remote' do
+        branch = described_instance.branch('main')
+        expect(branch.upstream_remote).to be_nil
+      end
+    end
+
+    # The bare BranchInfo fallback for non-existent branch names (the ||=
+    # assignment in Branching#branch) is pure-Ruby logic covered by unit
+    # tests. branches_all is still called first and runs git, but the
+    # fallback path itself adds no new git behavior worth integration-testing.
+  end
+
   #
   # current_branch_state calls both ShowCurrent and RevParse, so integration
   # tests confirm the multi-command orchestration produces the correct HeadState
